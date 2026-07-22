@@ -1,0 +1,1 @@
+class ModelTree{constructor(a,b){let c=this;this['Main']=a,this['Show']=function(d){c['Main']['Tree']['Show'](d);};}}export default ModelTree;

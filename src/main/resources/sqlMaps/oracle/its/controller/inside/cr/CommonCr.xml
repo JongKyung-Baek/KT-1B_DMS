@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="sql.CommonCr">
+
+<select id="selectInsideFilePath" resultType="crFileVO">
+	SELECT *
+	FROM ITN_CR_FILE
+	WHERE CN_SERIAL = #{cnSerial}
+	  AND FILE_NO = #{fileNo}
+</select>
+
+<select id="selectOutsideFilePath" resultType="crFileVO">
+	SELECT FILE_PATH_NM AS docsFilePathNm
+		 , ORG_FILE_NM AS orgFileNm
+	FROM DOCS_REQUEST_FILE
+	WHERE OBJECT_ID = #{crNo}
+	  AND FILE_NO = #{fileNo}
+</select>
+
+<select id="selectInsideFileList" resultType="crFileVO">
+	SELECT *
+	FROM ITN_CR_FILE
+	WHERE CR_NO = #{crNo}
+</select>
+
+<select id="selectOutsideFileList" resultType="crFileVO">
+	SELECT OBJECT_ID AS crNo
+		 , FILE_NO AS fileNo
+		 , ORG_FILE_NM AS orgFileNm
+	FROM DOCS_REQUEST_FILE
+	WHERE OBJECT_ID = #{crNo}
+</select>
+
+</mapper>

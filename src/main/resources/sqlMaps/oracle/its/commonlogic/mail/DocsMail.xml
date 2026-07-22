@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="sql.DocsMail">
+<select id="selectReceiveUser" resultType="mailInfoVO">
+	SELECT userInfo.USER_ID AS toUserId,
+		   userInfo.EMAIL AS toMail,
+		   COALESCE(position.POSITION_NM, '') AS approvalGrade
+	FROM DOCS_USER userInfo
+	LEFT JOIN DOCS_POSITION position
+	  ON userInfo.POSITION_CD = position.POSITION_CD
+	WHERE userInfo.USER_NM = #{value}
+</select>
+
+<select id="selectApprovalUserInfo" resultType="mailInfoVO">
+	SELECT USER_ID AS toUserId,
+		   EMAIL AS toEmail
+	FROM DOCS_USER
+	WHERE USER_CD = #{approvalUser}
+</select>
+
+<select id="selectDeployUserInfo" resultType="mailInfoVo">
+	SELECT docsUser.USER_NM AS toUserId,
+		   docsUser.EMAIL AS toMail,
+		   company.BIZ_NO AS bizNo
+	FROM DOCS_USER docsUser
+			 JOIN DOCS_REQUEST_DEPLOY deploy ON deploy.DEPLOY_USER_CD = docsUser.USER_CD
+			 JOIN DOCS_COMPANY company ON docsUser.COMPANY_CD = company.COMPANY_CD
+	WHERE deploy.REQUEST_NO = #{requestNo}
+</select>
+
+<select id="selectDefUserInfo" resultType="mailInfoVo">
+	SELECT docsUser.USER_ID AS toUserId,
+		   docsUser.EMAIL AS toMail
+	FROM DOCS_USER docsUser
+			 JOIN DOCS_REQUEST_DETAIL detail ON detail.ACTUAL_USER_CD = docsUser.USER_CD
+	WHERE detail.REQUEST_NO = #{requestNo}
+	  AND detail.APPROVAL_GRADE_CD = 'DEF'
+</select>
+
+<select id="selectPrintUserInfo" resultType="mailInfoVo">
+	SELECT docsUser.USER_ID AS toUserId,
+		   docsUser.EMAIL AS toEmail
+	FROM DOCS_USER docsUser
+			 JOIN DOCS_REQUEST request ON docsUser.USER_CD = request.INSERT_USER_CD
+	WHERE request.REQUEST_NO = #{requestNo}
+</select>
+
+<select id="selectRequestUserInfo" resultType="mailInfoVo">
+	SELECT docsUser.USER_ID AS toUserId,
+		   docsUser.EMAIL AS toEmail
+	FROM DOCS_USER docsUser
+			 JOIN DOCS_REQUEST request ON docsUser.USER_CD = request.INSERT_USER_CD
+	WHERE request.REQUEST_NO = #{requestNo}
+</select>
+
+<select id="selectCrRequestUserInfo" resultType="mailInfoVO">
+	SELECT docsUser.USER_ID AS toUserId,
+		   docsUser.EMAIL AS toEmail
+	FROM DOCS_USER docsUser
+			 JOIN DOCS_REQUEST request ON docsUser.USER_CD = request.INSERT_USER_CD
+	WHERE request.REQUEST_NO = (
+		SELECT REQUEST_NO
+		FROM DOCS_REQUEST_MAPPING
+		WHERE OBJECT_ID = #{crNo}
+			LIMIT 1
+	)
+</select>
+
+<select id="selectUnregSecurityUserInfo" resultType="string">
+	SELECT EMAIL
+	FROM DOCS_USER
+	WHERE USER_CD IN (
+		WITH USERLIST AS (
+			SELECT DEPLOY_EMAIL_CC USER_CD
+			FROM DOCS_REQUEST_DEPLOY
+			WHERE REQUEST_NO = #{requestNo}
+		)
+		SELECT TRIM(REGEXP_SUBSTR(USER_CD, '[^,]+', 1, LEVEL)) AS USER_CD
+		FROM USERLIST
+		CONNECT BY INSTR(USER_CD, ',', 1, LEVEL - 1) > 0
+	)
+</select>
+
+<select id="selectCompanyUserList" resultType="mailInfoVO">
+	SELECT docsUser.USER_ID AS toUserId,
+		   docsUser.EMAIL AS toEmail
+	FROM DOCS_USER docsUser
+	WHERE docsUser.COMPANY_CD = #{companyCd}
+</select>
+
+<select id="selectUserInfo" resultType="kr.esob.fdms.controller.login.UserVO">
+	SELECT AUTH_SITE AS authSite,
+		   DOCS_COMPANY.COMPANY_NM AS companyNm
+	FROM DOCS_USER
+			 LEFT JOIN DOCS_COMPANY ON DOCS_COMPANY.COMPANY_CD = DOCS_USER.COMPANY_CD
+	WHERE USER_ID = #{userId}
+</select>
+
+<select id="selectPurchaserEmail" resultType="string">
+	SELECT docsUser.EMAIL
+	FROM DOCS_USER docsUser
+			 JOIN DOCS_REQUEST_DETAIL reqDetail ON docsUser.USER_CD = reqDetail.ACTUAL_USER_CD
+	WHERE reqDetail.REQUEST_NO = #{requestNo}
+	  AND reqDetail.APPROVAL_STATUS_CD = 'ACCEPT'
+</select>
+
+<insert id="insertMail">
+	INSERT INTO DOCS_MAIL (
+		MAIL_ID, FROM_MAIL, TO_MAIL, TITLE, CONTENT, RESULT, INSERT_DT, MAIL_TYPE, REVISION_MAIL_ID
+	)
+	VALUES (
+			   #{processSeq}, #{fromMail}, #{toMail}, #{title}, #{content}, 'I', CURRENT_TIMESTAMP, #{mailEnum}, #{referenceKeys}
+		   )
+</insert>
+
+<select id="selectMail" resultType="mailInfoVO">
+	SELECT MAIL_ID AS processSeq,
+		   FROM_MAIL AS fromMail,
+		   TO_MAIL AS toMail,
+		   TITLE AS title,
+		   CONTENT AS content,
+		   RESULT AS result,
+		   MAIL_TYPE AS mailEnum,
+		   REVISION_MAIL_ID AS referenceKeys
+	FROM DOCS_MAIL
+	WHERE RESULT = 'I'
+	AND MAIL_ID > 561
+	ORDER BY MAIL_ID ASC
+</select>
+
+<update id="updateMail">
+	UPDATE DOCS_MAIL
+	SET RESULT = #{result},
+		DETAIL = #{detail},
+		UPDATE_DT = CURRENT_TIMESTAMP
+	WHERE MAIL_ID = #{processSeq}
+</update>
+
+	<select id="selectRevisionCoreData" resultType="kr.esob.fdms.controller.outside.drawing.request.RequestListVO">
+		SELECT DRAWING_NO AS drawingNo,
+			   DRAWING_NM AS drawingNm,
+			   REV_NO AS revNo
+		FROM DOCS_MAIL_REVISION
+		WHERE MAIL_ID IN
+		<foreach item="item" index="index" collection="list" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+		ORDER BY MAIL_ID ASC
+	</select>
+
+
+</mapper>
+
+

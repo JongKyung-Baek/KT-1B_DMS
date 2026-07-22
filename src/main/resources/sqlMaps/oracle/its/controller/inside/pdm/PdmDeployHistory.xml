@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+
+<!--<mapper namespace="sql.PdmDeployHistory">-->
+
+<!--	<select id="selectList" resultType="kr.esob.fdms.controller.inside.pdm.deployhistory.PdmDeployHistoryVO" parameterType="kr.esob.fdms.controller.inside.pdm.deployhistory.PdmDeployHistoryParam">-->
+<!--		SELECT *-->
+<!--		FROM-->
+<!--		(-->
+<!--			SELECT-->
+<!--			<if test='sortColumn == null or "".equals(sortColumn)'>-->
+<!--				ROW_NUMBER() OVER(ORDER BY createDate desc) AS PAGEINDEX-->
+<!--			</if>-->
+<!--			<if test='sortColumn != null and !"".equals(sortColumn)'>-->
+<!--			    ROW_NUMBER() OVER(ORDER BY ${sortColumn} ${order}) AS PAGEINDEX-->
+<!--	       	</if>-->
+<!--				, A1.*-->
+<!--			FROM-->
+<!--				(-->
+<!--				SELECT SEND_ID AS sendId-->
+<!--					, SEND_USER AS sendUser-->
+<!--					, RECEIVE_USER AS receiveUser-->
+<!--					, TITLE AS title-->
+<!--					, CONTENTS AS contents-->
+<!--					, SEND_STATUS_GROUP AS sendStatusGroup-->
+<!--					, SEND_STATUS_CODE AS sendStatusCode-->
+<!--					, SEND_DATE AS sendDate-->
+<!--					, DEL_YN AS delYn-->
+<!--					, CREATE_USER AS createUser-->
+<!--					, CREATE_DATE AS createDate-->
+<!--					, UPDATE_USER AS updateUser-->
+<!--					, UPDATE_DATE AS updateDate-->
+<!--				FROM ITS_SEND-->
+<!--				ORDER BY SEND_ID ASC-->
+<!--				) A1-->
+<!--			WHERE 1=1-->
+<!--			AND ROWNUM <![CDATA[ <= ]]> #{end}-->
+<!--		)-->
+<!--		WHERE PAGEINDEX <![CDATA[ >= ]]> #{start}-->
+
+<!--	</select>-->
+
+<!--	<select id="selectListCount" resultType="Integer">-->
+<!--		SELECT COUNT(*) AS TOTAL_COUNT-->
+<!--		FROM ITS_SEND-->
+<!--	</select>-->
+
+<!--	<update id="updateList" parameterType="kr.esob.fdms.controller.inside.pdm.deployhistory.PdmDeployHistoryParam">-->
+<!--		UPDATE docs_SEND-->
+<!--		SET TITLE='111'-->
+<!--		WHERE-->
+<!--		<foreach collection="list" open="(" close=")" separator="," item="PdmDeployHistoryParam">-->
+<!--		SEND_ID IN #{PdmDeployHistoryParam.sendId}-->
+<!--		</foreach>-->
+<!--	</update>-->
+
+
+<!--	<select id="selectTestUser" resultType="kr.esob.fdms.commonlogic.combo.ComboInfoVO">-->
+<!--		SELECT 'userList' AS comboCd-->
+<!--		     , USER_NM AS comboLabel-->
+<!--		     , USER_CD AS comboVal-->
+<!--		  FROM DOCS_USER-->
+<!--		 WHERE DEPT_CD = 'D1CJ240'-->
+<!--	</select>-->
+<!--</mapper>-->
+
+
+
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+
+
+
+<mapper namespace="sql.PdmDeployHistory">
+
+<select id="selectList" resultType="kr.esob.fdms.controller.inside.pdm.deployhistory.PdmDeployHistoryVO" parameterType="kr.esob.fdms.controller.inside.pdm.deployhistory.PdmDeployHistoryParam">
+	SELECT *
+	FROM
+	(
+	SELECT
+	<if test='sortColumn == null or "".equals(sortColumn)'>
+		ROW_NUMBER() OVER(ORDER BY createDate desc) AS PAGEINDEX
+	</if>
+	<if test='sortColumn != null and !"".equals(sortColumn)'>
+		ROW_NUMBER() OVER(ORDER BY ${sortColumn} ${order}) AS PAGEINDEX
+	</if>
+	, A1.*
+	FROM
+	(
+	SELECT SEND_ID AS sendId
+	, SEND_USER AS sendUser
+	, RECEIVE_USER AS receiveUser
+	, TITLE AS title
+	, CONTENTS AS contents
+	, SEND_STATUS_GROUP AS sendStatusGroup
+	, SEND_STATUS_CODE AS sendStatusCode
+	, SEND_DATE AS sendDate
+	, DEL_YN AS delYn
+	, CREATE_USER AS createUser
+	, CREATE_DATE AS createDate
+	, UPDATE_USER AS updateUser
+	, UPDATE_DATE AS updateDate
+	FROM ITS_SEND
+	ORDER BY SEND_ID ASC
+	) A1
+	WHERE 1=1
+	LIMIT #{end}
+	) B
+	WHERE B.PAGEINDEX >= #{start}
+
+</select>
+
+<select id="selectListCount" resultType="Integer">
+	SELECT COUNT(*) AS TOTAL_COUNT
+	FROM ITS_SEND
+</select>
+
+<update id="updateList" parameterType="kr.esob.fdms.controller.inside.pdm.deployhistory.PdmDeployHistoryParam">
+	UPDATE ITS_SEND
+	SET TITLE = '111'
+	WHERE SEND_ID IN
+	<foreach collection="list" open="(" close=")" separator="," item="PdmDeployHistoryParam">
+		#{PdmDeployHistoryParam.sendId}
+	</foreach>
+</update>
+
+<select id="selectTestUser" resultType="kr.esob.fdms.commonlogic.combo.ComboInfoVO">
+	SELECT 'userList' AS comboCd
+		 , USER_NM AS comboLabel
+		 , USER_CD AS comboVal
+	FROM DOCS_USER
+	WHERE DEPT_CD = 'D1CJ240'
+</select>
+</mapper>

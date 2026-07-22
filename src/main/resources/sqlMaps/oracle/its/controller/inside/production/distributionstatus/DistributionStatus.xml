@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+
+<!--<mapper namespace="sql.ProductionDistributionStatus">-->
+
+<!--	<select id="selectList" resultType="kr.esob.fdms.controller.inside.production.distributionstatus.DistributionStatusListVO">-->
+<!--	SELECT-->
+<!--		B1.*-->
+<!--	FROM-->
+<!--	(-->
+<!--		SELECT-->
+<!--			A1.*-->
+<!--			, ROWNUM AS PAGEINDEX-->
+<!--		FROM-->
+<!--		(-->
+<!--			SELECT-->
+<!--				DEPT_CD										AS deptCd-->
+<!--				, (-->
+<!--				  SELECT DEPT_NM-->
+<!--				  FROM DOCS_DEPT dept-->
+<!--				  WHERE dept.DEPT_CD = deployUser.DEPT_CD-->
+<!--				) 											AS deptNm-->
+<!--				, SUM(NVL(DEPLOY_COUNT, 0) * NVL(COPY, 0)) 																					AS deployCount			/* 배포매수 */-->
+<!--			FROM DOCS_REQUEST request-->
+<!--			  INNER JOIN DOCS_DEPLOY_INFO deployInfo ON deployInfo.REQUEST_NO = request.REQUEST_NO-->
+<!--			  INNER JOIN DOCS_USER deployUser ON deployUser.USER_CD = deployInfo.DEPLOY_USER_CD-->
+<!--			WHERE request.REQUEST_TYPE = 'PRODUCT'-->
+<!--			AND request.STATUS_CD = 'APPROVAL'-->
+<!--			<if test='deployStartDt != null and !deployStartDt.equals("")'>-->
+<!--			AND request.USE_START_YMD BETWEEN TO_DATE(#{deployStartDt}, 'YYYY-MM-DD')-->
+<!--	                         AND TO_DATE(#{deployEndDt}, 'YYYY-MM-DD')+1-->
+<!--			</if>-->
+<!--			<if test='businessAreaCd != null and !businessAreaCd.equals("")'>-->
+<!--			AND request.BUSINESS_AREA_CD = #{businessAreaCd}-->
+<!--			</if>-->
+<!--			GROUP BY deployUser.DEPT_CD-->
+<!--			<if test='sortColumn == null or "".equals(sortColumn)'>-->
+<!--           		ORDER BY deptNm asc-->
+<!--			</if>-->
+<!--         	<if test='sortColumn != null and !"".equals(sortColumn)'>-->
+<!--         		ORDER BY ${sortColumn} ${order}-->
+<!--         	</if>-->
+<!--		) A1-->
+<!--		WHERE 1=1-->
+<!--		<if test='end != null and !end.equals("")'>-->
+<!--		AND ROWNUM <![CDATA[ <= ]]> #{end}-->
+<!--		</if>-->
+<!--	) B1-->
+<!--	<if test='start != null and !start.equals("")'>-->
+<!--	WHERE PAGEINDEX <![CDATA[ >= ]]>#{start}-->
+<!--	</if>-->
+<!--	</select>-->
+
+<!--	<select id="selectListCount" resultType="Integer">-->
+<!--		SELECT-->
+<!--			COUNT(*) AS TOTAL_COUNT-->
+<!--		FROM-->
+<!--		(-->
+<!--			SELECT-->
+<!--				A1.*-->
+<!--				, ROWNUM AS PAGEINDEX-->
+<!--			FROM-->
+<!--			(-->
+<!--				SELECT-->
+<!--					DEPT_CD										AS deptCd-->
+<!--					, (-->
+<!--					  SELECT DEPT_NM-->
+<!--					  FROM DOCS_DEPT dept-->
+<!--					  WHERE dept.DEPT_CD = deployUser.DEPT_CD-->
+<!--					) 											AS deptNm-->
+<!--					, SUM(NVL(DEPLOY_COUNT, 0) * NVL(COPY, 0)) 																					AS deployCount			/* 배포매수 */-->
+<!--				FROM DOCS_REQUEST request-->
+<!--				  INNER JOIN DOCS_DEPLOY_INFO deployInfo ON deployInfo.REQUEST_NO = request.REQUEST_NO-->
+<!--				  INNER JOIN DOCS_USER deployUser ON deployUser.USER_CD = deployInfo.DEPLOY_USER_CD-->
+<!--				WHERE request.REQUEST_TYPE = 'PRODUCT'-->
+<!--				AND request.STATUS_CD = 'APPROVAL'-->
+<!--				<if test='deployStartDt != null and !deployStartDt.equals("")'>-->
+<!--				AND TO_DATE(request.USE_START_YMD, 'YYYY-MM-DD') BETWEEN TO_DATE(#{deployStartDt}, 'YYYY-MM-DD')-->
+<!--	            	             AND TO_DATE(#{deployEndDt}, 'YYYY-MM-DD')-->
+<!--				</if>-->
+<!--				<if test='businessAreaCd != null and !businessAreaCd.equals("")'>-->
+<!--				AND request.BUSINESS_AREA_CD = #{businessAreaCd}-->
+<!--				</if>-->
+<!--				GROUP BY deployUser.DEPT_CD-->
+<!--				<if test='sortColumn == null or "".equals(sortColumn)'>-->
+<!--	           		ORDER BY deptNm asc-->
+<!--				</if>-->
+<!--	         	<if test='sortColumn != null and !"".equals(sortColumn)'>-->
+<!--	         		ORDER BY ${sortColumn} ${order}-->
+<!--	         	</if>-->
+<!--			) A1-->
+<!--			WHERE 1=1-->
+<!--		) B1-->
+<!--	</select>-->
+
+<!--</mapper>-->
+
+
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+
+
+
+
+<mapper namespace="sql.ProductionDistributionStatus">
+
+<select id="selectList" resultType="kr.esob.fdms.controller.inside.production.distributionstatus.DistributionStatusListVO">
+	SELECT
+	B1.*
+	FROM
+	(
+	SELECT
+	A1.*
+	, ROW_NUMBER() OVER(ORDER BY deptNm ASC) AS PAGEINDEX
+	FROM
+	(
+	SELECT
+	deployUser.DEPT_CD AS deptCd
+	, (
+	SELECT DEPT_NM
+	FROM DOCS_DEPT dept
+	WHERE dept.DEPT_CD = deployUser.DEPT_CD
+	) AS deptNm
+	, SUM(COALESCE(DEPLOY_COUNT, 0) * COALESCE(COPY, 0)) AS deployCount /* 배포매수 */
+	FROM DOCS_REQUEST request
+	INNER JOIN DOCS_DEPLOY_INFO deployInfo ON deployInfo.REQUEST_NO = request.REQUEST_NO
+	INNER JOIN DOCS_USER deployUser ON deployUser.USER_CD = deployInfo.DEPLOY_USER_CD
+	WHERE request.REQUEST_TYPE = 'PRODUCT'
+	AND request.STATUS_CD = 'APPROVAL'
+	<if test='deployStartDt != null and !deployStartDt.equals("")'>
+		AND request.USE_START_YMD BETWEEN TO_DATE(#{deployStartDt}, 'YYYY-MM-DD')
+		AND TO_DATE(#{deployEndDt}, 'YYYY-MM-DD') + INTERVAL '1 DAY'
+	</if>
+	<if test='businessAreaCd != null and !businessAreaCd.equals("")'>
+		AND request.BUSINESS_AREA_CD = #{businessAreaCd}
+	</if>
+	GROUP BY deployUser.DEPT_CD
+	<if test='sortColumn == null or "".equals(sortColumn)'>
+		ORDER BY deptNm ASC
+	</if>
+	<if test='sortColumn != null and !"".equals(sortColumn)'>
+		ORDER BY ${sortColumn} ${order}
+	</if>
+	) A1
+	) B1
+	WHERE 1=1
+	<if test='end != null and !end.equals("")'>
+		<![CDATA[
+            AND PAGEINDEX <= #{end}
+            ]]>
+	</if>
+	<if test='start != null and !start.equals("")'>
+		<![CDATA[
+            AND PAGEINDEX >= #{start}
+            ]]>
+	</if>
+</select>
+
+<select id="selectListCount" resultType="Integer">
+	SELECT
+	COUNT(*) AS TOTAL_COUNT
+	FROM
+	(
+	SELECT
+	deployUser.DEPT_CD AS deptCd
+	, (
+	SELECT DEPT_NM
+	FROM DOCS_DEPT dept
+	WHERE dept.DEPT_CD = deployUser.DEPT_CD
+	) AS deptNm
+	, SUM(COALESCE(DEPLOY_COUNT, 0) * COALESCE(COPY, 0)) AS deployCount /* 배포매수 */
+	FROM DOCS_REQUEST request
+	INNER JOIN DOCS_DEPLOY_INFO deployInfo ON deployInfo.REQUEST_NO = request.REQUEST_NO
+	INNER JOIN DOCS_USER deployUser ON deployUser.USER_CD = deployInfo.DEPLOY_USER_CD
+	WHERE request.REQUEST_TYPE = 'PRODUCT'
+	AND request.STATUS_CD = 'APPROVAL'
+	<if test='deployStartDt != null and !deployStartDt.equals("")'>
+		AND TO_DATE(request.USE_START_YMD, 'YYYY-MM-DD') BETWEEN TO_DATE(#{deployStartDt}, 'YYYY-MM-DD')
+		AND TO_DATE(#{deployEndDt}, 'YYYY-MM-DD')
+	</if>
+	<if test='businessAreaCd != null and !businessAreaCd.equals("")'>
+		AND request.BUSINESS_AREA_CD = #{businessAreaCd}
+	</if>
+	GROUP BY deployUser.DEPT_CD
+	<if test='sortColumn == null or "".equals(sortColumn)'>
+		ORDER BY deptNm ASC
+	</if>
+	<if test='sortColumn != null and !"".equals(sortColumn)'>
+		ORDER BY ${sortColumn} ${order}
+	</if>
+	) A1
+</select>
+
+</mapper>
+

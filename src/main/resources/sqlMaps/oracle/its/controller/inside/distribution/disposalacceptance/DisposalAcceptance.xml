@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="sql.DisposalAcceptance">
+
+	<select id="selectList" resultType="kr.esob.fdms.controller.inside.distribution.disposalacceptance.DisposalAcceptanceListVO">
+		SELECT A1.*
+		FROM
+		(
+		SELECT ROW_NUMBER() OVER (
+		ORDER BY
+		<if test='sortColumn == null or "".equals(sortColumn)'>
+			destroyRequest.INSERT_DT desc, destroyRequest.DESTROY_REQUEST_NO desc
+		</if>
+		<if test='sortColumn != null and !"".equals(sortColumn)'>
+			<choose>
+				<when test="sortColumn == 'currentPageNo' or sortColumn == 'totalPageNo'">
+					CAST(${sortColumn} AS INTEGER) ${order}
+				</when>
+				<otherwise>
+					${sortColumn} ${order}
+				</otherwise>
+			</choose>
+		</if>
+		) AS PAGEINDEX
+		, destroyRequest.DESTROY_REQUEST_NO 												AS destroyRequestNo
+		, destroyRequest.APPROVAL_LINE_ID													AS approvalLineId
+		, destroyRequest.CURRENT_PROCESS_SEQ_NO												AS currentProcessSeqNo
+		, destroyRequest.STATUS_CD															AS statusCd
+		, FN_GET_CD_NM('destroyRequestStatusCd', destroyRequest.STATUS_CD, #{sessionLang})  AS statusNm
+		, destroyRequest.INSERT_DT															AS requestDt
+		, destroyRequest.DESTROY_TYPE														AS destroyType
+		, destroyRequest.DESTROY_STATUS_CD													AS destroyStatusCd
+		, destroyRequest.BUSINESS_AREA_CD													AS businessAreaCd
+		, FN_GET_CD_NM('businessAreaCd', destroyRequest.BUSINESS_AREA_CD, #{sessionLang})	AS businessAreaNm
+		, purchaserUser.USER_CD                                                        		AS purchaserUserCd    /* 구매담당자 */
+		, purchaserUser.USER_NM                                                        		AS purchaserUserNm    /* 구매담당자 */
+		, destroyUser.USER_CD                                                        		AS destroyUserCd      /* 폐기자 */
+		, destroyUser.USER_NM                                                        		AS destroyUserNm      /* 폐기자 */
+		, info.OBJECT_NO															        AS objectNo
+		, info.OBJECT_TYPE																    AS objectType
+		, FN_GET_CD_NM('objectTypeWithP', info.OBJECT_TYPE, #{sessionLang}) 				AS objectTypeNm
+		, info.DEPLOY_COMPANY_CD															AS requestCompanyCd
+		, info.COMPANY_NM																    AS requestCompanyNm
+		, info.INSERT_USER_CD														        AS requestUserCd
+		, info.USER_NM																	    AS requestUserNm
+
+		FROM
+		(
+		SELECT destroyRequest.DESTROY_REQUEST_NO DESTROY_REQUEST_NO
+		, request.REQUEST_NO REQUEST_NO
+		, destroyMapping.DESTROY_REQUEST_NO mappingDestroyRequestNo
+		, destroyMapping.OBJECT_NO
+		, destroyMapping.OBJECT_ID
+		, request.OBJECT_TYPE
+		, request.DEPLOY_COMPANY_CD
+		, company.COMPANY_NM
+		, destroyRequest.INSERT_USER_CD
+		, docsUser.USER_NM
+		FROM DOCS_DESTROY_REQUEST destroyRequest
+		INNER JOIN
+		(
+		SELECT DESTROY_REQUEST_NO
+		, MAX(OBJECT_ID) OBJECT_ID
+		, MAX(OBJECT_NO) OBJECT_NO
+		, MAX(REQUEST_NO) REQUEST_NO
+		, MAX(DEPLOY_USER_CD) DEPLOY_USER_CD
+		FROM DOCS_DESTROY_REQUEST_MAPPING
+		GROUP BY DESTROY_REQUEST_NO
+		) destroyMapping
+		ON destroyRequest.DESTROY_REQUEST_NO = destroyMapping.DESTROY_REQUEST_NO
+		INNER JOIN DOCS_REQUEST request
+		ON request.REQUEST_NO = destroyMapping.REQUEST_NO
+		INNER JOIN DOCS_COMPANY company
+		ON request.DEPLOY_COMPANY_CD = company.COMPANY_CD
+		INNER JOIN DOCS_USER docsUser
+		ON destroyRequest.INSERT_USER_CD = docsUser.USER_CD
+		<if test='sortColumn == null or "".equals(sortColumn)'>
+			ORDER BY destroyRequest.INSERT_DT desc, destroyRequest.DESTROY_REQUEST_NO desc
+		</if>
+		<if test='sortColumn != null and !"".equals(sortColumn)'>
+			ORDER BY ${sortColumn} ${order}, request.REQUEST_NO ${order}
+		</if>
+		) info
+		INNER JOIN DOCS_DESTROY_REQUEST destroyRequest
+		ON destroyRequest.DESTROY_REQUEST_NO = info.DESTROY_REQUEST_NO
+		INNER JOIN DOCS_DESTROY_REQUEST_DETAIL detail
+		ON destroyRequest.DESTROY_REQUEST_NO = detail.DESTROY_REQUEST_NO
+		AND detail.APPROVAL_STATUS_CD = 'APPROVAL'
+		INNER JOIN DOCS_USER purchaserUser
+		ON purchaserUser.USER_CD = detail.ORIGINAL_USER_CD
+		INNER JOIN DOCS_USER destroyUser
+		ON destroyUser.USER_CD = detail.ACTUAL_USER_CD
+		WHERE 1=1
+		AND destroyRequest.REQUEST_TYPE = 'DISTRIBUTION'
+		<if test='statusCd != null and !"".equals(statusCd)'>
+			AND destroyRequest.STATUS_CD = #{statusCd}
+		</if>
+		<if test='purchaserUserCd != null and !"".equals(purchaserUserCd)'>
+			AND ORIGINAL_USER_CD = #{purchaserUserCd}
+		</if>
+		<if test='requestStartDt != null and !requestStartDt.equals("")'>
+			AND destroyRequest.INSERT_DT BETWEEN #{requestStartDt}::DATE
+			AND #{requestEndDt}::DATE
+		</if>
+		<if test='businessAreaCd != null and !"".equals(businessAreaCd)'>
+			AND destroyRequest.BUSINESS_AREA_CD = #{businessAreaCd}
+		</if>
+		<if test='objectType != null and !"".equals(objectType)'>
+			AND info.OBJECT_TYPE = #{objectType}
+		</if>
+		<if test='companyCd != null and !"".equals(companyCd)'>
+			AND destroyRequest.COMPANY_CD = #{companyCd}
+		</if>
+		<if test='end != null and !end.equals("")'>
+			LIMIT #{end}
+		</if>
+		) A1
+		<if test='start != null and !start.equals("")'>
+			WHERE PAGEINDEX >= #{start}
+		</if>
+	</select>
+
+	<select id="selectListCount" resultType="Integer">
+		SELECT COUNT(*) AS TOTAL_COUNT
+		FROM
+		(
+		SELECT 1
+		FROM DOCS_DESTROY_REQUEST destroyRequest
+		INNER JOIN
+		(
+		SELECT DESTROY_REQUEST_NO
+		, MAX(OBJECT_ID) OBJECT_ID
+		, MAX(OBJECT_NO) OBJECT_NO
+		, MAX(REQUEST_NO) REQUEST_NO
+		, MAX(DEPLOY_USER_CD) DEPLOY_USER_CD
+		FROM DOCS_DESTROY_REQUEST_MAPPING
+		GROUP BY DESTROY_REQUEST_NO
+		) destroyMapping
+		ON destroyRequest.DESTROY_REQUEST_NO = destroyMapping.DESTROY_REQUEST_NO
+		INNER JOIN DOCS_REQUEST request
+		ON request.REQUEST_NO = destroyMapping.REQUEST_NO
+		INNER JOIN DOCS_COMPANY company
+		ON request.DEPLOY_COMPANY_CD = company.COMPANY_CD
+		INNER JOIN DOCS_USER docsUser
+		ON destroyRequest.INSERT_USER_CD = docsUser.USER_CD
+		INNER JOIN DOCS_DESTROY_REQUEST_DETAIL detail
+		ON destroyRequest.DESTROY_REQUEST_NO = detail.DESTROY_REQUEST_NO
+		AND detail.APPROVAL_STATUS_CD = 'APPROVAL'
+		INNER JOIN DOCS_USER purchaserUser
+		ON purchaserUser.USER_CD = detail.ORIGINAL_USER_CD
+		INNER JOIN DOCS_USER destroyUser
+		ON destroyUser.USER_CD = detail.ACTUAL_USER_CD
+		WHERE 1=1
+		AND destroyRequest.REQUEST_TYPE = 'DISTRIBUTION'
+		<if test='statusCd != null and !"".equals(statusCd)'>
+			AND destroyRequest.STATUS_CD = #{statusCd}
+		</if>
+		<if test='purchaserUserCd != null and !"".equals(purchaserUserCd)'>
+			AND ORIGINAL_USER_CD = #{purchaserUserCd}
+		</if>
+		<if test='requestStartDt != null and !requestStartDt.equals("")'>
+			AND destroyRequest.INSERT_DT BETWEEN #{requestStartDt}::DATE
+			AND #{requestEndDt}::DATE
+		</if>
+		<if test='businessAreaCd != null and !"".equals(businessAreaCd)'>
+			AND destroyRequest.BUSINESS_AREA_CD = #{businessAreaCd}
+		</if>
+		<if test='objectType != null and !"".equals(objectType)'>
+			AND info.OBJECT_TYPE = #{objectType}
+		</if>
+		<if test='companyCd != null and !"".equals(companyCd)'>
+			AND destroyRequest.COMPANY_CD = #{companyCd}
+		</if>
+		)
+	</select>
+
+	<select id="selectDisposalInfo" resultType="kr.esob.fdms.controller.inside.distribution.disposalacceptance.DisposalAcceptancePopupVO">
+		SELECT destroyRequest.DESTROY_REQUEST_NO
+			 , destroyRequest.INSERT_USER_CD requestUserCd
+			 , docsUser.USER_NM AS requestUserNm
+			 , (SELECT COMPANY_CD FROM DOCS_COMPANY WHERE COMPANY_CD = docsUser.COMPANY_CD) AS requestCompanyCd
+			 , (SELECT COMPANY_NM FROM DOCS_COMPANY WHERE COMPANY_CD = docsUser.COMPANY_CD) AS requestCompanyNm
+			 , destroyRequest.BUSINESS_AREA_CD
+			 , FN_GET_CD_NM('businessAreaCd', destroyRequest.BUSINESS_AREA_CD, #{sessionLang}) AS businessAreaNm
+			 , destroyRequest.INSERT_DT requestDt
+			 , (SELECT detail.ORIGINAL_USER_CD
+				FROM DOCS_DESTROY_REQUEST_DETAIL detail
+				WHERE detail.DESTROY_REQUEST_NO = destroyRequest.DESTROY_REQUEST_NO
+				  AND APPROVAL_STATUS_CD = 'APPROVAL') AS purchaserUserCd
+			 , (SELECT detail.REQUEST_DESC
+				FROM DOCS_DESTROY_REQUEST_DETAIL detail
+				WHERE detail.DESTROY_REQUEST_NO = destroyRequest.DESTROY_REQUEST_NO
+				  AND APPROVAL_STATUS_CD = 'REQUEST') AS requestDesc
+			 , (SELECT detail.REQUEST_DESC
+				FROM DOCS_DESTROY_REQUEST_DETAIL detail
+				WHERE detail.DESTROY_REQUEST_NO = destroyRequest.DESTROY_REQUEST_NO
+				  AND ACTION_CD = 'REJECT') AS rejectDesc
+			 , destroyRequest.Status_Cd AS statusCd
+		FROM DOCS_DESTROY_REQUEST destroyRequest
+				 INNER JOIN DOCS_USER docsUser
+							ON destroyRequest.INSERT_USER_CD = docsUser.USER_CD
+		WHERE destroyRequest.DESTROY_REQUEST_NO = #{destroyRequestNo}
+	</select>
+
+	<select id="selectPopupList" resultType="kr.esob.fdms.controller.inside.distribution.disposalacceptance.DisposalAcceptancePopupListVO">
+		SELECT dm.DESTROY_REQUEST_NO
+			 , dm.REQUEST_NO
+			 , dm.OBJECT_ID
+			 , dm.FILE_NO
+			 , dm.BUSINESS_AREA_CD
+			 , FN_GET_CD_NM('businessAreaCd', dm.BUSINESS_AREA_CD, #{sessionLang}) AS businessAreaNm
+			 , rf.FILE_PATH_NM
+			 , rf.ORG_FILE_NM
+			 , rf.FILE_NM
+			 , rf.FILE_SIZE
+			 , rf.PRINT_COUNT
+			 , m.REV_NO
+			 , m.DISTRIBUTE_TYPE_CD
+			 , FN_GET_CD_NM('distributeTypeCd', m.DISTRIBUTE_TYPE_CD, #{sessionLang}) AS distributeTypeNm
+			 , m.PRODUCT_CD
+			 , COALESCE(m.PRODUCT_CD, '') AS PRODUCT_NM
+			 , m.CURRENT_PAGE_NO
+			 , m.TOTAL_PAGE_NO
+			 , m.ECN_NO
+			 , m.STD_GAPP_DT
+			 , m.CHANGE_GAPP_DT
+			 , m.SW_VERSION_NO
+			 , m.DOC_VERSION_NO
+			 , m.BUSINESS_TYPE_CD
+			 , FN_GET_CD_NM('businessTypeCd', m.BUSINESS_TYPE_CD, #{sessionLang}) AS businessTypeNm
+			 , m.OBJECT_NM
+			 , m.OBJECT_NO
+			 , r.OBJECT_TYPE
+		FROM DOCS_DESTROY_REQUEST_MAPPING dm
+				 INNER JOIN DOCS_REQUEST_MAPPING m
+							ON dm.REQUEST_NO = m.REQUEST_NO
+								AND dm.OBJECT_ID = m.OBJECT_ID
+				 INNER JOIN DOCS_REQUEST_FILE rf
+							ON dm.REQUEST_NO = rf.REQUEST_NO
+								AND dm.OBJECT_ID = rf.OBJECT_ID
+								AND dm.FILE_NO = rf.FILE_NO
+				 INNER JOIN DOCS_REQUEST r
+							ON r.REQUEST_NO = m.REQUEST_NO
+		WHERE dm.DESTROY_REQUEST_NO = #{destroyRequestNo}
+	</select>
+
+	<select id="selectDisposalFileList" resultType="kr.esob.fdms.controller.outside.commondestroystatus.DestroyFileVO">
+		SELECT DESTROY_NO
+			 , DESTROY_FILE_SEQ
+			 , FILE_NM AS fileName
+		FROM DOCS_DESTROY_FILE
+		WHERE DESTROY_NO =
+			  (
+				  SELECT CAST(DESTROY_NO AS TEXT)
+				  FROM DOCS_DESTROY_REQUEST
+				  WHERE DESTROY_REQUEST_NO = #{destroyRequestNo}
+			  )
+	</select>
+
+
+	<select id="selectFileInfo" resultType="kr.esob.fdms.controller.outside.commondestroystatus.DestroyFileVO">
+		SELECT DESTROY_NO
+			 , DESTROY_FILE_SEQ
+			 , FILE_PATH_INSIDE AS FILE_PATH
+			 , FILE_NM AS fileName
+		FROM DOCS_DESTROY_FILE
+		WHERE DESTROY_NO = #{destroyNo}
+		  AND DESTROY_FILE_SEQ = #{destroyFileSeq}
+	</select>
+
+	<update id="updateDestroyRequest">
+		UPDATE DOCS_DESTROY_REQUEST
+		SET STATUS_CD = CASE WHEN #{saveFlag} = 'A' THEN 'APPROVAL' ELSE 'REJECT' END
+		  , DESTROY_DT = CASE WHEN #{saveFlag} = 'A' THEN CURRENT_TIMESTAMP ELSE NULL END
+		  , APPROVAL_DT = CASE WHEN #{saveFlag} = 'A' THEN CURRENT_TIMESTAMP ELSE NULL END
+		WHERE DESTROY_REQUEST_NO = #{destroyRequestNo}
+	</update>
+
+	<update id="updateDestroyRequestDetail">
+		UPDATE DOCS_DESTROY_REQUEST_DETAIL
+		SET ACTION_CD = CASE WHEN #{saveFlag} = 'A' THEN 'APPROVAL' ELSE 'REJECT' END
+		  , REQUEST_DESC = CASE WHEN #{saveFlag} = 'A' THEN '' ELSE #{rejectDesc} END
+		  , ACTION_DT = CURRENT_TIMESTAMP
+		WHERE DESTROY_REQUEST_NO = #{destroyRequestNo}
+		  AND APPROVAL_STATUS_CD = 'APPROVAL'
+	</update>
+
+	<update id="updateRequestFile">
+		UPDATE DOCS_REQUEST_FILE
+		SET DESTROY_STATUS_CD = CASE WHEN #{saveFlag} = 'A' THEN '3' ELSE '4' END  /* 3:폐기승인, 4:폐기반려 */
+		WHERE (REQUEST_NO, OBJECT_ID, FILE_NO) IN
+			  (
+				  SELECT REQUEST_NO, OBJECT_ID, FILE_NO
+				  FROM DOCS_DESTROY_REQUEST_MAPPING
+				  WHERE DESTROY_REQUEST_NO = #{destroyRequestNo}
+			  )
+	</update>
+
+	<update id="updateApprovalFile">
+		UPDATE DOCS_APPROVAL_FILE
+		SET DESTROY_STATUS_CD = CASE WHEN #{saveFlag} = 'A' THEN '3' ELSE '' END   /* 3:폐기승인 */
+		  , DESTROY_DT = CASE WHEN #{saveFlag} = 'A' THEN CURRENT_TIMESTAMP ELSE NULL END
+		WHERE (REQUEST_NO, OBJECT_ID, FILE_NO) IN
+			  (
+				  SELECT REQUEST_NO, OBJECT_ID, FILE_NO
+				  FROM DOCS_DESTROY_REQUEST_MAPPING
+				  WHERE DESTROY_REQUEST_NO = #{destroyRequestNo}
+			  )
+	</update>
+</mapper>

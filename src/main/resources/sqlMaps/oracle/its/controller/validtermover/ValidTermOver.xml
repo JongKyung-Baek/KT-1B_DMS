@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+
+<!--<mapper namespace="sql.ValidTermOver">-->
+<!--	<select id="selectList" resultType="kr.esob.fdms.commonlogic.validTermOver.ValidTermOverListVO">-->
+<!--		/* 유효기간이 오늘 이전인것 */-->
+<!--		SELECT-->
+<!--		  reqFile.REQUEST_NO-->
+<!--		  , reqFile.OBJECT_ID-->
+<!--		  , reqFile.FILE_NO-->
+<!--		  , reqFile.USE_END_YMD-->
+<!--		FROM DOCS_REQUEST_FILE reqFile-->
+<!--		WHERE reqFile.DESTROY_STATUS_CD IS NULL-->
+<!--		AND reqFile.USE_END_YMD <![CDATA[<]]> TO_CHAR(SYSDATE, 'YYYYMMDD')-->
+<!--		AND EXISTS (-->
+<!--		              SELECT 'X'-->
+<!--                      FROM DOCS_REQUEST req-->
+<!--                      WHERE req.REQUEST_TYPE = 'DISTRIBUTION'-->
+<!--                      AND reqFile.REQUEST_NO = req.REQUEST_NO-->
+<!--                    )-->
+<!--	</select>-->
+
+<!--	<update id="updateValidTermOver">-->
+<!--		/* 유효기간 만료 상태값 갱신(폐기중) */-->
+<!--		UPDATE DOCS_REQUEST_FILE-->
+<!--		SET DESTROY_STATUS_CD = '1'-->
+<!--		, DESTROY_TYPE = '1'-->
+<!--		WHERE REQUEST_NO = #{requestNo}-->
+<!--		AND OBJECT_ID = #{objectId}-->
+<!--		AND FILE_NO = #{fileNo}-->
+<!--	</update>-->
+<!--	-->
+<!--	<update id="updateValidTermOverNoReg">-->
+<!--		/* 유효기간 만료 상태값 갱신(폐기완료) */-->
+<!--		UPDATE DOCS_REQUEST_FILE reqFile-->
+<!--		SET reqFile.DESTROY_STATUS_CD = '3'-->
+<!--		, reqFile.DESTROY_TYPE = '1'-->
+<!--		WHERE reqFile.DESTROY_STATUS_CD IS NULL-->
+<!--		AND reqFile.USE_END_YMD <![CDATA[<]]> TO_CHAR(SYSDATE, 'YYYYMMDD')-->
+<!--		AND EXISTS (-->
+<!--		              SELECT 'X'-->
+<!--                      FROM DOCS_REQUEST req-->
+<!--                      WHERE req.REQUEST_TYPE = 'NO-REG'-->
+<!--                      AND reqFile.REQUEST_NO = req.REQUEST_NO-->
+<!--                    )-->
+<!--	</update>-->
+<!--	-->
+<!--	<update id="updateValidTermOverOldHistory">-->
+<!--		/* 유효기간이 오늘 이전인것 만료 상태값 갱신 */-->
+<!--	    UPDATE DISTRIBUTION_HISTORY-->
+<!--              SET TASK_STATE = 'DESTROY'-->
+<!--                  , TASK_STATE_NAME = '폐기'-->
+<!--         WHERE TASK_STATE != 'DESTROY'-->
+<!--              AND USE_END_DATE IS NOT NULL-->
+<!--              AND USE_END_DATE <![CDATA[<]]> TO_CHAR(SYSDATE, 'YYYY-MM-DD')-->
+<!--	</update>-->
+<!--	-->
+<!--</mapper>-->
+
+
+
+
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+
+
+
+<mapper namespace="sql.ValidTermOver">
+<select id="selectList" resultType="kr.esob.fdms.commonlogic.validTermOver.ValidTermOverListVO">
+	/* 유효기간이 오늘 이전인것 */
+	SELECT
+	reqFile.REQUEST_NO,
+	reqFile.OBJECT_ID,
+	reqFile.FILE_NO,
+	reqFile.USE_END_YMD
+	FROM DOCS_REQUEST_FILE reqFile
+	WHERE reqFile.DESTROY_STATUS_CD IS NULL
+	AND reqFile.USE_END_YMD <![CDATA[ <= ]]> TO_CHAR(CURRENT_DATE, 'YYYYMMDD')
+	AND EXISTS (
+	SELECT 1
+	FROM DOCS_REQUEST req
+	WHERE req.REQUEST_TYPE = 'DISTRIBUTION'
+	AND reqFile.REQUEST_NO = req.REQUEST_NO
+	)
+</select>
+
+<update id="updateValidTermOver">
+	/* 유효기간 만료 상태값 갱신(폐기중) */
+	UPDATE DOCS_REQUEST_FILE
+	SET DESTROY_STATUS_CD = '1',
+		DESTROY_TYPE = '1'
+	WHERE REQUEST_NO = #{requestNo}
+	  AND OBJECT_ID = #{objectId}
+	  AND FILE_NO = #{fileNo}
+</update>
+
+<update id="updateValidTermOverNoReg">
+	/* 유효기간 만료 상태값 갱신(폐기완료) */
+	UPDATE DOCS_REQUEST_FILE reqFile
+	SET reqFile.DESTROY_STATUS_CD = '3',
+	reqFile.DESTROY_TYPE = '1'
+	WHERE reqFile.DESTROY_STATUS_CD IS NULL
+	AND reqFile.USE_END_YMD <![CDATA[ <= ]]> TO_CHAR(CURRENT_DATE, 'YYYYMMDD')
+	AND EXISTS (
+	SELECT 1
+	FROM DOCS_REQUEST req
+	WHERE req.REQUEST_TYPE = 'NO-REG'
+	AND reqFile.REQUEST_NO = req.REQUEST_NO
+	)
+</update>
+
+<update id="updateValidTermOverOldHistory">
+	/* 유효기간이 오늘 이전인것 만료 상태값 갱신 */
+	UPDATE DISTRIBUTION_HISTORY
+	SET TASK_STATE = 'DESTROY',
+	TASK_STATE_NAME = '폐기'
+	WHERE TASK_STATE != 'DESTROY'
+	AND USE_END_DATE IS NOT NULL
+	AND USE_END_DATE <![CDATA[ <= ]]> TO_CHAR(CURRENT_DATE, 'YYYY-MM-DD')
+</update>
+</mapper>

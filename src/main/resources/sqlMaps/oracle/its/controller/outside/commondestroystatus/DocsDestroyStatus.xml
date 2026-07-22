@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--<mapper namespace="sql.DocsDestroyStatus">-->
+<!--	<select id="selectDestroyStatus" resultType="kr.esob.fdms.controller.outside.commondestroystatus.DestroyStatusInfoVO">-->
+<!--		SELECT-->
+<!--			destroyRequest.DESTROY_TYPE-->
+<!--			, requestDetail.REQUEST_DESC-->
+<!--			, destroyRequest.DESTROY_NO-->
+<!--		FROM DOCS_DESTROY_REQUEST destroyRequest-->
+<!--		INNER JOIN DOCS_DESTROY_REQUEST_DETAIL requestDetail-->
+<!--		ON destroyRequest.DESTROY_REQUEST_NO = requestDetail.DESTROY_REQUEST_NO-->
+<!--		WHERE destroyRequest.DESTROY_REQUEST_NO = #{lastDestroyRequestNo}-->
+<!--		AND requestDetail.APPROVAL_STATUS_CD = 'REQUEST'-->
+<!--	</select>-->
+
+<!--	<select id="selectDestroyFileList" resultType="kr.esob.fdms.controller.outside.commondestroystatus.DestroyFileVO">-->
+<!--		SELECT-->
+<!--			DESTROY_NO-->
+<!--			, DESTROY_FILE_SEQ-->
+<!--			, SUBSTR(FILE_PATH, INSTR(FILE_PATH, '\', -1, 1) + 1) AS fileName-->
+<!--		FROM DOCS_DESTROY_FILE-->
+<!--		WHERE DESTROY_NO = #{destroyNo}-->
+<!--	</select>-->
+
+<!--	<select id="selectFilePath" resultType="kr.esob.fdms.controller.outside.commondestroystatus.DestroyFileVO">-->
+<!--		SELECT *-->
+<!--		FROM DOCS_DESTROY_FILE-->
+<!--		WHERE DESTROY_NO = #{destroyNo}-->
+<!--		AND DESTROY_FILE_SEQ = #{destroyFileSeq}-->
+
+<!--	</select>-->
+<!--</mapper>-->
+
+
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+
+
+
+
+
+<mapper namespace="sql.DocsDestroyStatus">
+<select id="selectDestroyStatus" resultType="kr.esob.fdms.controller.outside.commondestroystatus.DestroyStatusInfoVO">
+	SELECT
+		destroyRequest.DESTROY_TYPE,
+		requestDetail.REQUEST_DESC,
+		destroyRequest.DESTROY_NO
+	FROM DOCS_DESTROY_REQUEST destroyRequest
+			 INNER JOIN DOCS_DESTROY_REQUEST_DETAIL requestDetail
+						ON destroyRequest.DESTROY_REQUEST_NO = requestDetail.DESTROY_REQUEST_NO
+	WHERE destroyRequest.DESTROY_REQUEST_NO = #{lastDestroyRequestNo}
+	  AND requestDetail.APPROVAL_STATUS_CD = 'REQUEST'
+</select>
+
+<select id="selectDestroyFileList" resultType="kr.esob.fdms.controller.outside.commondestroystatus.DestroyFileVO">
+	SELECT
+		DESTROY_NO,
+		DESTROY_FILE_SEQ,
+		SUBSTRING(FILE_PATH FROM '.*/([^/]*)$') AS fileName
+	FROM DOCS_DESTROY_FILE
+	WHERE DESTROY_NO = #{destroyNo}
+</select>
+
+<select id="selectFilePath" resultType="kr.esob.fdms.controller.outside.commondestroystatus.DestroyFileVO">
+	SELECT *
+	FROM DOCS_DESTROY_FILE
+	WHERE DESTROY_NO = #{destroyNo}
+	  AND DESTROY_FILE_SEQ = #{destroyFileSeq}
+</select>
+</mapper>

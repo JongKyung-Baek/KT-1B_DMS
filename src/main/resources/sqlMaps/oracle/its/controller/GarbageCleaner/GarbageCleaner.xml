@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--<mapper namespace="sql.garbageCleaner">-->
+
+<!--	<select id="selectConfig" resultType="HashMap">-->
+<!--		SELECT SYSTEM_CONFIG_CD, SYSTEM_CONFIG_VALUE FROM DOCS_SYSTEM_CONFIG WHERE SYSTEM_CONFIG_GROUP = 'DB_ADAP_CONFIG'-->
+<!--	</select>-->
+
+<!--</mapper>-->
+
+
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+
+
+
+
+<mapper namespace="sql.garbageCleaner">
+
+<select id="selectConfig" resultType="HashMap">
+	SELECT SYSTEM_CONFIG_CD, SYSTEM_CONFIG_VALUE FROM DOCS_SYSTEM_CONFIG WHERE SYSTEM_CONFIG_GROUP = 'DB_ADAP_CONFIG'
+</select>
+
+</mapper>

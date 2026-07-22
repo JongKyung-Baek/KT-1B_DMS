@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="sql.qna">
+
+	<select id="selectMainList" resultType="kr.esob.fdms.controller.bbs.qna.BbsQnaListVO">
+		/* 메인화면용 QNA list*/
+		SELECT
+			A1.*
+		FROM (
+				 SELECT
+					 QNA_CD 			AS qnaCd,
+					 PARENT_QNA_CD 	AS parentQnaCd,
+					 TITLE			AS title
+				 FROM DOCS_QNA
+				 WHERE PARENT_QNA_CD IS NULL
+				   AND INSERT_USER_CD = #{sessionUser.userCd}
+				 ORDER BY QNA_CD DESC
+					 LIMIT 10
+			 ) A1
+	</select>
+
+	<select id="selectMainReplyList" resultType="kr.esob.fdms.controller.bbs.qna.BbsQnaListVO">
+		/* 메인화면용 QNA 댓글 list*/
+		SELECT
+			A1.*
+		FROM (
+				 SELECT
+					 QNA_CD 				AS qnaCd,
+					 PARENT_QNA_CD 	AS parentQnaCd,
+					 TITLE				AS title
+				 FROM DOCS_QNA
+				 WHERE PARENT_QNA_CD = #{qnaCd}
+				 ORDER BY QNA_CD ASC
+					 LIMIT 10
+			 ) A1
+	</select>
+
+	<select id="selectList" resultType="kr.esob.fdms.controller.bbs.qna.BbsQnaListVO">
+		WITH RECURSIVE QNA_CTE AS (
+		SELECT
+		QNA_CD,
+		PARENT_QNA_CD,
+		TITLE,
+		CONTENTS,
+		HIT_COUNT,
+		DEL_YN,
+		INSERT_USER_CD,
+		INSERT_DT,
+		QNA_CD AS ordering
+		FROM DOCS_QNA
+		WHERE PARENT_QNA_CD IS NULL
+		AND DEL_YN = 'N'
+		UNION ALL
+		SELECT
+		Q.QNA_CD,
+		Q.PARENT_QNA_CD,
+		Q.TITLE,
+		Q.CONTENTS,
+		Q.HIT_COUNT,
+		Q.DEL_YN,
+		Q.INSERT_USER_CD,
+		Q.INSERT_DT,
+		QNA_CTE.ordering
+		FROM DOCS_QNA Q
+		INNER JOIN QNA_CTE ON Q.PARENT_QNA_CD = QNA_CTE.QNA_CD
+		WHERE Q.DEL_YN = 'N'
+		)
+		SELECT *
+		FROM (
+		SELECT
+		QNA_CTE.*,
+		ROW_NUMBER() OVER (ORDER BY ordering) AS PAGEINDEX
+		FROM QNA_CTE
+		WHERE 1=1
+		<if test='title != null and !title.equals("")'>
+			AND TITLE LIKE '%' || #{title} || '%'
+		</if>
+		<if test='insertStartDt != null and !insertStartDt.equals("")'>
+			AND INSERT_DT BETWEEN #{insertStartDt}::date AND #{insertEndDt}::date + INTERVAL '1 DAY'
+		</if>
+		<if test='insertUserNm != null and !insertUserNm.equals("")'>
+			AND INSERT_USER_CD = #{insertUserNm}
+		</if>
+		) AS subquery
+		WHERE 1=1
+		<if test='start != null and !start.equals("")'>
+			AND PAGEINDEX >= #{start}
+		</if>
+		<if test='end != null and !end.equals("")'>
+			LIMIT #{end}
+		</if>
+	</select>
+
+	<select id="selectListCount" resultType="Integer">
+		SELECT COUNT(*) AS TOTAL_COUNT
+		FROM (
+		SELECT
+		QNA_CD,
+		PARENT_QNA_CD,
+		TITLE,
+		CONTENTS,
+		HIT_COUNT,
+		DEL_YN,
+		INSERT_USER_CD,
+		INSERT_DT,
+		ROW_NUMBER() OVER () AS PAGEINDEX
+		FROM DOCS_QNA
+		WHERE DEL_YN = 'N'
+		<if test='insertStartDt != null and !insertStartDt.equals("")'>
+			AND INSERT_DT BETWEEN #{insertStartDt}::date AND #{insertEndDt}::date + INTERVAL '1 DAY'
+		</if>
+		<if test='insertUserNm != null and !insertUserNm.equals("")'>
+			AND INSERT_USER_CD = #{insertUserNm}
+		</if>
+		<if test='title != null and !title.equals("")'>
+			AND TITLE LIKE '%' || #{title} || '%'
+		</if>
+		) AS subquery
+	</select>
+
+	<select id="getRequestInfo" resultType="kr.esob.fdms.controller.bbs.qna.BbsQnaPopupVO" parameterType="kr.esob.fdms.controller.bbs.qna.BbsQnaPopupParam">
+		SELECT req.QNA_CD 		AS qnaCd,
+			   req.PARENT_QNA_CD			AS parentQnaCd,
+			   req.TITLE 					AS title,
+			   req.CONTENTS 					AS contents,
+			   (
+				   SELECT USER_NM
+				   FROM
+					   DOCS_USER tmp
+				   WHERE tmp.USER_CD = req.INSERT_USER_CD
+			   ) 							AS insertUserNm
+		FROM DOCS_QNA req
+		WHERE req.QNA_CD = #{qnaCd}
+		  AND DEL_YN = 'N'
+	</select>
+
+	<update id="updateHitCount" parameterType="kr.esob.fdms.controller.bbs.qna.BbsQnaPopupParam">
+		UPDATE DOCS_QNA
+		SET HIT_COUNT = COALESCE(HIT_COUNT, 0) + 1
+		WHERE QNA_CD = #{qnaCd}
+	</update>
+
+	<insert id="insertQnaInfo" parameterType="kr.esob.fdms.controller.bbs.qna.BbsQnaAddParam">
+		<selectKey keyProperty="qnaCd" resultType="kr.esob.fdms.controller.bbs.qna.BbsQnaAddParam" order="BEFORE">
+			SELECT COALESCE(MAX(CAST(QNA_CD AS INTEGER)), 0) + 1 AS qnaCd
+			FROM DOCS_QNA
+		</selectKey>
+		INSERT INTO DOCS_QNA
+		(
+		QNA_CD,
+		TITLE,
+		INSERT_USER_CD,
+		CONTENTS,
+		INSERT_DT,
+		DEL_YN
+		)
+		VALUES
+		(
+		#{qnaCd},
+		#{qnaTitle},
+		#{sessionUser.userCd},
+		#{contents},
+		NOW(),
+		'N'
+		)
+	</insert>
+
+	<insert id="replyQnaInfo" parameterType="kr.esob.fdms.controller.bbs.qna.BbsQnaReplyParam">
+		<selectKey keyProperty="qnaCd" resultType="kr.esob.fdms.controller.bbs.qna.BbsQnaReplyParam" order="BEFORE">
+			SELECT COALESCE(MAX(CAST(QNA_CD AS INTEGER)), 0) + 1 AS qnaCd
+			FROM DOCS_QNA
+		</selectKey>
+		INSERT INTO DOCS_QNA
+		(
+		QNA_CD,
+		TITLE,
+		INSERT_USER_CD,
+		CONTENTS,
+		INSERT_DT,
+		PARENT_QNA_CD,
+		DEL_YN
+		)
+		VALUES
+		(
+		#{qnaCd},
+		#{qnaTitle},
+		#{sessionUser.userCd},
+		#{contents},
+		NOW(),
+		#{parentQnaCd},
+		'N'
+		)
+	</insert>
+
+	<select id="selectQnaInfo" resultType="kr.esob.fdms.controller.bbs.qna.BbsQnaPopupParam">
+		SELECT req.QNA_CD		AS qnaCd,
+			   req.TITLE                AS title,
+			   req.INSERT_USER_CD		AS insertUserNm
+		FROM DOCS_QNA req
+		WHERE req.QNA_CD = #{qnaCd}
+	</select>
+
+	<update id="deleteQna" parameterType="kr.esob.fdms.controller.bbs.qna.BbsQnaPopupParam">
+		UPDATE DOCS_QNA
+		SET DEL_YN = 'Y'
+		WHERE QNA_CD = #{qnaCd}
+	</update>
+
+	<select id="getUser"
+			resultType="kr.esob.fdms.controller.login.UserVO"
+			parameterType="string">
+		SELECT
+			docsUser.*,
+			company.COMPANY_NM,
+			company.BIZ_NO,
+			company.DIST_PURCHASER_USER_CD AS purchaserUid,
+			dept.TEAM_LEADER_USER_CD AS teamLeaderUid,
+			'N' AS passUseYn
+		FROM DOCS_USER docsUser
+				 LEFT JOIN DOCS_COMPANY company ON docsUser.COMPANY_CD = company.COMPANY_CD
+				 LEFT JOIN DOCS_DEPT dept ON docsUser.DEPT_CD = dept.DEPT_CD
+		WHERE docsUser.USER_ID = #{userId}
+	</select>
+
+	<select id="getRoleCodeList"
+			resultType="kr.esob.fdms.controller.login.RoleVO">
+		SELECT rel.ROLE_CODE AS roleCd,
+			   menu.MENU_TYPE
+		FROM ITS_REL_ROLE_GROUP rel
+				 JOIN DOCS_MENU menu ON rel.ROLE_CODE = menu.ROLE_CD
+		WHERE GROUP_CODE = #{roleGroup}
+	</select>
+
+</mapper>

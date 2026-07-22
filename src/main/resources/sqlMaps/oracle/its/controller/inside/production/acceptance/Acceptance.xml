@@ -1,0 +1,704 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+
+<!--<mapper namespace="sql.ProductionAcceptance">-->
+
+<!--	&lt;!&ndash; 생산기술자료 현장관리자 접수 리스트 [2019.10.21(최금영)] &ndash;&gt;-->
+<!--	<select id="selectList" resultType="kr.esob.fdms.controller.inside.production.acceptance.AcceptanceListVO">-->
+<!--		/* 생산기술자료 현장관리자 접수 리스트 */-->
+<!--		SELECT-->
+<!--			B1.*-->
+<!--		FROM-->
+<!--		(-->
+<!--			SELECT-->
+<!--				requestNo-->
+<!--				, requestType-->
+<!--				, objectType-->
+<!--				, objectTypeNm-->
+<!--				, requestPurpose-->
+<!--				, requestPurposeNm-->
+<!--				, productNm-->
+<!--				, productNo-->
+<!--				, applyHogiNo-->
+<!--				, objectNo-->
+<!--				, rev-->
+<!--				, objectNm-->
+<!--				, deployCount-->
+<!--				, copy-->
+<!--				, destroyCount-->
+<!--				, requestUserNm-->
+<!--				, requestUserCd-->
+<!--				, TO_CHAR(TO_DATE(deployDt, 'YYYYMMDD'), 'YYYY-MM-DD') AS deployDt-->
+<!--				, TO_CHAR(requestDt, 'YYYY-MM-DD') AS requestDt-->
+<!--				, objectId-->
+<!--				, statusCd-->
+<!--				, ROWNUM AS PAGEINDEX-->
+<!--			FROM-->
+<!--			(-->
+<!--				    SELECT-->
+<!--				    	req.REQUEST_NO													AS requestNo      		/* 요청번호 */-->
+<!--				      , req.REQUEST_TYPE												AS requestType-->
+<!--					  , req.OBJECT_TYPE         										AS objectType			/* 자료유형코드 */-->
+<!--					  , FN_GET_CD_NM('objectType', req.OBJECT_TYPE, #{sessionLang})		AS objectTypeNm			/* 자료유형 */-->
+<!--					  , req.REQUEST_PURPOSE												AS requestPurpose 	    /* 배포유형코드 */-->
+<!--					  , FN_GET_CD_NM('deployType', req.REQUEST_PURPOSE, #{sessionLang})	AS requestPurposeNm		/* 배포유형 */-->
+<!--					  ,(-->
+<!--                        SELECT CN_CD || ' ' || CN_CD_DESC-->
+<!--                        FROM (SELECT DISTINCT PRODUCT_CD AS CN_CD, PRODUCT_CD AS CN_CD_DESC FROM DOCS_REQUEST_MAPPING WHERE PRODUCT_CD IS NOT NULL) prod-->
+<!--                        WHERE prod.CN_CD = requestMapping.PRODUCT_CD-->
+<!--						) 																AS productNm 			/* 기종 */-->
+<!--					  , requestMapping.PRODUCT_CD         								AS productNo			/* 기종 */-->
+<!--					  , requestMapping.APPLY_HOGI_NO									AS applyHogiNo			/* 호기 */-->
+<!--					  , requestMapping.OBJECT_NO										AS objectNo				/* 자료번호 */-->
+<!--					  , requestMapping.REV_NO											AS rev					/* rev */-->
+<!--					  , requestMapping.OBJECT_NM										AS objectNm				/* 자료명 */-->
+<!--					  , (-->
+<!--					  	SELECT SUM(DEPLOY_COUNT)-->
+<!--					  	FROM DOCS_DEPLOY_INFO t-->
+<!--					  	WHERE t.REQUEST_NO = req.REQUEST_NO-->
+<!--					  	AND t.deploy_user_cd = deploy.DEPLOY_USER_CD-->
+<!--					  ) 																AS deployCount			/* 배포매수 */-->
+<!--					  , (-->
+<!--					  	SELECT MAX(COPY)-->
+<!--					  	FROM DOCS_DEPLOY_INFO t-->
+<!--					  	WHERE t.REQUEST_NO = req.REQUEST_NO-->
+<!--					  	AND t.deploy_user_cd = deploy.DEPLOY_USER_CD-->
+<!--					  ) 																AS copy					/* 부수 */-->
+<!--					  , (-->
+<!--					  	SELECT SUM(DESTROY_COUNT)-->
+<!--					  	FROM DOCS_DEPLOY_INFO t-->
+<!--					  	WHERE t.REQUEST_NO = req.REQUEST_NO-->
+<!--					  	AND t.deploy_user_cd = deploy.DEPLOY_USER_CD-->
+<!--					  ) 																AS destroyCount			/* 폐기매수 */-->
+<!--					  , (-->
+<!--						SELECT USER_NM-->
+<!--						FROM DOCS_USER tempUser-->
+<!--						WHERE tempUser.USER_CD = def.ACTUAL_USER_CD-->
+<!--						)																AS requestUserNm		/* 배포자 */-->
+<!--					  , def.ACTUAL_USER_CD												AS requestUserCd		/* 배포자코드 */-->
+<!--					  , USE_START_YMD													AS deployDt				/* 배포일 */-->
+<!--					  , req.INSERT_DT													AS requestDt			/* 요청일 */-->
+<!--					  , requestMapping.OBJECT_ID										AS objectId-->
+<!--					  , req.STATUS_CD													AS statusCd-->
+<!--					FROM DOCS_REQUEST req-->
+<!--						INNER JOIN (-->
+<!--                          SELECT tempMapping.REQUEST_NO, MAX(tempMapping.OBJECT_ID) AS OBJECT_ID-->
+<!--                          FROM DOCS_REQUEST_MAPPING tempMapping-->
+<!--                          WHERE 1=1-->
+<!--                          GROUP BY REQUEST_NO-->
+<!--                        ) tempMapping ON tempMapping.REQUEST_NO = req.REQUEST_NO-->
+<!--                        INNER JOIN DOCS_REQUEST_MAPPING requestMapping-->
+<!--                            ON requestMapping.REQUEST_NO = tempMapping.REQUEST_NO-->
+<!--                            AND requestMapping.OBJECT_ID = tempMapping.OBJECT_ID-->
+<!--						JOIN DOCS_REQUEST_DEPLOY deploy-->
+<!--							ON req.REQUEST_NO = deploy.REQUEST_NO-->
+<!--						JOIN DOCS_REQUEST_DETAIL def-->
+<!--							ON req.REQUEST_NO = def.REQUEST_NO AND def.APPROVAL_STATUS_CD = 'REQUEST'-->
+<!--					WHERE deploy.DEPLOY_USER_CD = #{sessionUser.userCd}-->
+<!--					AND req.STATUS_CD = 'APPROVAL'-->
+<!--					AND (deploy.ACCEPT_YN = 'N' OR deploy.ACCEPT_YN IS NULL)-->
+<!--					<if test='deployStartDt != null and !deployStartDt.equals("")'>-->
+<!--					AND TO_DATE(req.USE_START_YMD, 'YYYY-MM-DD') BETWEEN TO_DATE(#{deployStartDt}, 'YYYY-MM-DD')-->
+<!--	            	             AND TO_DATE(#{deployEndDt}, 'YYYY-MM-DD')-->
+<!--					</if>-->
+<!--					<if test='sortColumn == null or "".equals(sortColumn)'>-->
+<!--			          	ORDER BY deployDt desc-->
+<!--					</if>-->
+<!--			       	<if test='sortColumn != null and !"".equals(sortColumn)'>-->
+<!--			       		ORDER BY ${sortColumn} ${order}-->
+<!--	       			</if>-->
+<!--			) A1-->
+<!--			WHERE requestType = 'PRODUCT'							/* 생산기술자료 */-->
+<!--			<if test='objectType != null and !objectType.equals("")'>-->
+<!--			AND objectType = #{objectType}-->
+<!--			</if>-->
+<!--			<if test='requestNo != null and !requestNo.equals("")'>-->
+<!--			AND requestNo = #{requestNo}-->
+<!--			</if>-->
+<!--			<if test='requestUserCd != null and !requestUserCd.equals("")'>-->
+<!--			AND requestUserCd = #{requestUserCd}-->
+<!--			</if>-->
+<!--	       	<if test='end != null and !end.equals("")'>-->
+<!--				AND ROWNUM <![CDATA[ <= ]]> #{end}-->
+<!--			</if>-->
+<!--		) B1-->
+<!--		<if test='start != null and !start.equals("")'>-->
+<!--		WHERE PAGEINDEX <![CDATA[ >= ]]>#{start}-->
+<!--		</if>-->
+<!--	</select>-->
+
+
+
+
+<!--	&lt;!&ndash; 생산기술자료 현장관리자 접수 리스트 갯수[2019.10.21(최금영)] &ndash;&gt;-->
+<!--	<select id="selectListCount" resultType="Integer">-->
+<!--		/* 생산기술자료 현장관리자 접수 리스트 갯수 */-->
+<!--		SELECT COUNT(*) AS TOTAL_COUNT-->
+<!--			FROM-->
+<!--			(-->
+<!--				SELECT-->
+<!--					A1.*-->
+<!--				FROM-->
+<!--				(-->
+<!--					    SELECT-->
+<!--					    	req.REQUEST_NO													AS requestNo      		/* 요청번호 */-->
+<!--					      , req.REQUEST_TYPE												AS requestType-->
+<!--						  , req.OBJECT_TYPE         										AS objectType			/* 자료유형코드 */-->
+<!--						  , FN_GET_CD_NM('objectType', req.OBJECT_TYPE, #{sessionLang})		AS objectTypeNm			/* 자료유형 */-->
+<!--						  , req.REQUEST_PURPOSE												AS requestPurpose 	    /* 배포유형코드 */-->
+<!--						  , FN_GET_CD_NM('deployType', req.REQUEST_PURPOSE, #{sessionLang})	AS requestPurposeNm		/* 배포유형 */-->
+<!--						  ,(-->
+<!--	                        SELECT CN_CD || ' ' || CN_CD_DESC-->
+<!--	                        FROM (SELECT DISTINCT PRODUCT_CD AS CN_CD, PRODUCT_CD AS CN_CD_DESC FROM DOCS_REQUEST_MAPPING WHERE PRODUCT_CD IS NOT NULL) prod-->
+<!--	                        WHERE prod.CN_CD = requestMapping.PRODUCT_CD-->
+<!--							) 																AS productNm 			/* 기종 */-->
+<!--						  , requestMapping.PRODUCT_CD         								AS productNo			/* 기종 */-->
+<!--						  , requestMapping.APPLY_HOGI_NO									AS applyHogiNo			/* 호기 */-->
+<!--						  , requestMapping.OBJECT_NO										AS objectNo				/* 자료번호 */-->
+<!--						  , requestMapping.REV_NO											AS rev					/* rev */-->
+<!--						  , requestMapping.OBJECT_NM										AS objectNm				/* 자료명 */-->
+<!--						  , (-->
+<!--						  	SELECT SUM(DEPLOY_COUNT)-->
+<!--						  	FROM DOCS_DEPLOY_INFO t-->
+<!--						  	WHERE t.REQUEST_NO = req.REQUEST_NO-->
+<!--						  	AND t.deploy_user_cd = deploy.DEPLOY_USER_CD-->
+<!--						  ) 																AS deployCount			/* 배포매수 */-->
+<!--						  , (-->
+<!--						  	SELECT MAX(COPY)-->
+<!--						  	FROM DOCS_DEPLOY_INFO t-->
+<!--						  	WHERE t.REQUEST_NO = req.REQUEST_NO-->
+<!--						  	AND t.deploy_user_cd = deploy.DEPLOY_USER_CD-->
+<!--						  ) 																AS copy					/* 부수 */-->
+<!--						  , (-->
+<!--						  	SELECT SUM(DESTROY_COUNT)-->
+<!--						  	FROM DOCS_DEPLOY_INFO t-->
+<!--						  	WHERE t.REQUEST_NO = req.REQUEST_NO-->
+<!--						  	AND t.deploy_user_cd = deploy.DEPLOY_USER_CD-->
+<!--						  ) 																AS destroyCount			/* 폐기매수 */-->
+<!--						  , (-->
+<!--							SELECT USER_NM-->
+<!--							FROM DOCS_USER tempUser-->
+<!--							WHERE tempUser.USER_CD = def.ACTUAL_USER_CD-->
+<!--							)																AS requestUserNm		/* 배포자 */-->
+<!--						  , def.ACTUAL_USER_CD												AS requestUserCd		/* 배포자코드 */-->
+<!--						  , USE_START_YMD													AS deployDt				/* 배포일 */-->
+<!--						  , req.INSERT_DT													AS requestDt			/* 요청일 */-->
+<!--						  , requestMapping.OBJECT_ID										AS objectId-->
+<!--						  , req.STATUS_CD													AS statusCd-->
+<!--						FROM DOCS_REQUEST req-->
+<!--							INNER JOIN (-->
+<!--	                          SELECT tempMapping.REQUEST_NO, MAX(tempMapping.OBJECT_ID) AS OBJECT_ID-->
+<!--	                          FROM DOCS_REQUEST_MAPPING tempMapping-->
+<!--	                          WHERE 1=1-->
+<!--	                          GROUP BY REQUEST_NO-->
+<!--	                        ) tempMapping ON tempMapping.REQUEST_NO = req.REQUEST_NO-->
+<!--	                        INNER JOIN DOCS_REQUEST_MAPPING requestMapping-->
+<!--	                            ON requestMapping.REQUEST_NO = tempMapping.REQUEST_NO-->
+<!--	                            AND requestMapping.OBJECT_ID = tempMapping.OBJECT_ID-->
+<!--							JOIN DOCS_REQUEST_DEPLOY deploy-->
+<!--								ON req.REQUEST_NO = deploy.REQUEST_NO-->
+<!--							JOIN DOCS_REQUEST_DETAIL def-->
+<!--								ON req.REQUEST_NO = def.REQUEST_NO AND def.APPROVAL_STATUS_CD = 'REQUEST'-->
+<!--						WHERE deploy.DEPLOY_USER_CD = #{sessionUser.userCd}-->
+<!--						AND req.STATUS_CD = 'APPROVAL'-->
+<!--						AND (deploy.ACCEPT_YN = 'N' OR deploy.ACCEPT_YN IS NULL)-->
+<!--						<if test='deployStartDt != null and !deployStartDt.equals("")'>-->
+<!--						AND TO_DATE(req.USE_START_YMD, 'YYYY-MM-DD') BETWEEN TO_DATE(#{deployStartDt}, 'YYYY-MM-DD')-->
+<!--	            	             AND TO_DATE(#{deployEndDt}, 'YYYY-MM-DD')-->
+<!--						</if>-->
+<!--				) A1-->
+<!--				WHERE requestType = 'PRODUCT'							/* 생산기술자료 */-->
+<!--				<if test='objectType != null and !objectType.equals("")'>-->
+<!--				AND objectType = #{objectType}-->
+<!--				</if>-->
+<!--				<if test='requestNo != null and !requestNo.equals("")'>-->
+<!--				AND requestNo = #{requestNo}-->
+<!--				</if>-->
+<!--				<if test='requestUserCd != null and !requestUserCd.equals("")'>-->
+<!--				AND requestUserCd = #{requestUserCd}-->
+<!--				</if>-->
+<!--			) B1-->
+<!--	</select>-->
+
+
+<!--	&lt;!&ndash; 접수할 아이템 리스트 조회 [2019.10.21(최금영)]&ndash;&gt;-->
+<!--	<select id="selectPopupList" resultType="kr.esob.fdms.controller.inside.production.acceptance.AcceptancePopupVO" parameterType="kr.esob.fdms.controller.inside.production.acceptance.AcceptancePopupParam">-->
+<!--		/* 접수할 아이템 리스트 조회 */-->
+<!--		SELECT-->
+<!--			B1.*-->
+<!--		FROM-->
+<!--		(-->
+<!--			SELECT-->
+<!--				A1.*-->
+<!--				, ROWNUM AS PAGEINDEX-->
+<!--			FROM-->
+<!--			(-->
+<!--				    SELECT req.REQUEST_NO						AS requestNo      		/* 요청번호 */-->
+<!--				      , req.REQUEST_TYPE						AS requestType-->
+<!--					  , req.OBJECT_TYPE         				AS objectType			/* 자료유형 */-->
+<!--					  , FN_GET_CD_NM('objectType', req.OBJECT_TYPE, #{sessionLang})		AS objectTypeNm	/* 자료유형 */-->
+<!--					  , req.REQUEST_PURPOSE						AS requestPurpose 	    /* 배포유형 */-->
+<!--					  , requestMapping.PRODUCT_CD         		AS productNo			/* 기종 */-->
+<!--					  , requestMapping.OBJECT_NO				AS objectNo				/* 자료번호 */-->
+<!--					  , requestMapping.REV_NO					AS rev					/* rev */-->
+<!--					  , requestMapping.OBJECT_NM				AS objectNm				/* 자료명 */-->
+<!--					  , depInfo.DEPLOY_COUNT					AS deployCount			/* 접수 매수 */-->
+<!--					  , depInfo.DESTROY_COUNT					AS destroyCount			/* 폐기 매수 */-->
+<!--					  , def.ACTUAL_USER_CD						AS approvalUserCd-->
+<!--					  , deploy.DEPLOY_USER_CD					AS deployUserCd-->
+<!--					  , TO_CHAR(req.INSERT_DT, 'YYYY-MM-DD') 	AS requestDt-->
+<!--					  , requestMapping.OBJECT_ID				AS objectId-->
+<!--					  , depInfo.COPY							AS copy					/* 부수  */-->
+<!--					  , (depInfo.DEPLOY_COUNT * depInfo.COPY) 	AS holdingCount-->
+<!--					  <if test="'SW'.equals(objectType)">-->
+<!--					  , (SELECT COUNT(*) FROM DOCS_PRODUCT_SW_FILE WHERE OBJECT_ID = mapping.OBJECT_ID ) AS itemCount-->
+<!--					  </if>-->
+<!--					  <if test="'DOC'.equals(objectType)">-->
+<!--					  , product.TOTAL_PAGE_CNT AS itemCount-->
+<!--					  </if>-->
+<!--&lt;!&ndash; 					  , (deploy.requestMapping - deploy.DESTROY_COUNT) AS holdingCount &ndash;&gt;-->
+<!--					FROM DOCS_REQUEST req-->
+<!--					JOIN DOCS_REQUEST_MAPPING requestMapping-->
+<!--					ON req.REQUEST_NO = requestMapping.REQUEST_NO-->
+<!--					JOIN DOCS_REQUEST_DEPLOY deploy-->
+<!--					ON req.REQUEST_NO = deploy.REQUEST_NO-->
+<!--					JOIN DOCS_REQUEST_DETAIL def-->
+<!--					ON req.REQUEST_NO = def.REQUEST_NO AND def.APPROVAL_STATUS_CD = 'REQUEST'-->
+<!--					JOIN DOCS_DEPLOY_INFO depInfo-->
+<!--					ON req.REQUEST_NO = depInfo.REQUEST_NO-->
+<!--					AND deploy.DEPLOY_USER_CD = depInfo.DEPLOY_USER_CD-->
+<!--					AND requestMapping.OBJECT_ID = depInfo.OBJECT_ID-->
+<!--					<if test="'DOC'.equals(objectType)">-->
+<!--					INNER JOIN DOCS_PRODUCT_DOCUMENT product-->
+<!--					</if>-->
+<!--					<if test="'SW'.equals(objectType)">-->
+<!--					INNER JOIN DOCS_PRODUCT_SW product-->
+<!--					</if>-->
+<!--					ON product.OBJECT_ID = requestMapping.OBJECT_ID-->
+<!--					<if test='sortColumn == null or "".equals(sortColumn)'>-->
+<!--			          	ORDER BY requestDt desc-->
+<!--					</if>-->
+<!--			       	<if test='sortColumn != null and !"".equals(sortColumn)'>-->
+<!--			       		ORDER BY ${sortColumn} ${order}-->
+<!--	       			</if>-->
+<!--			) A1-->
+<!--			WHERE 1=1-->
+<!--			AND requestNo = #{requestNo}-->
+<!--			AND deployUserCd = #{sessionUser.userCd}-->
+<!--&lt;!&ndash; 			<foreach collection="list" open="AND (" close=")" separator="OR" item="item"> &ndash;&gt;-->
+<!--&lt;!&ndash; 			(requestNo = #{item.requestNo} AND objectId= #{item.objectId}) &ndash;&gt;-->
+<!--&lt;!&ndash; 			</foreach> &ndash;&gt;-->
+<!--		) B1-->
+<!--	</select>-->
+
+<!--	&lt;!&ndash; 접수할 아이템 리스트 조회 갯수 [2019.10.22(최금영)]&ndash;&gt;-->
+<!--	<select id="selectPopupListCount" resultType="Integer" parameterType="kr.esob.fdms.controller.inside.production.acceptance.AcceptancePopupParam">-->
+<!--		/* 접수할 아이템 리스트 조회 갯수 */-->
+<!--		SELECT-->
+<!--			COUNT(*) AS TOTAL_COUNT-->
+<!--		FROM-->
+<!--		(-->
+<!--			SELECT-->
+<!--				A1.*-->
+<!--				, ROWNUM AS PAGEINDEX-->
+<!--			FROM-->
+<!--			(-->
+<!--				    SELECT req.REQUEST_NO						AS requestNo      		/* 요청번호 */-->
+<!--				      , req.REQUEST_TYPE						AS requestType-->
+<!--					  , req.OBJECT_TYPE         				AS objectType			/* 자료유형 */-->
+<!--					  , req.REQUEST_PURPOSE						AS requestPurpose 	    /* 배포유형 */-->
+<!--					  , info.PRODUCT_CD         				AS productNo			/* 기종 */-->
+<!--					  , info.OBJECT_NO							AS objectNo				/* 자료번호 */-->
+<!--					  , info.REV_NO								AS rev					/* rev */-->
+<!--					  , info.OBJECT_NM							AS objectNm				/* 자료명 */-->
+<!--					  , info.DEPLOY_COUNT						AS deployCount			/* 접수 매수 */-->
+<!--					  , deploy.DESTROY_COUNT					AS destroyCount			/* 폐기 매수 */-->
+<!--					  , def.ACTUAL_USER_CD						AS approvalUserCd-->
+<!--					  , deploy.DEPLOY_USER_CD					AS deployUserCd-->
+<!--					  , TO_CHAR(req.INSERT_DT, 'YYYY-MM-DD') 	AS requestDt-->
+<!--					  , info.OBJECT_ID							AS objectId-->
+<!--					FROM DOCS_REQUEST req-->
+<!--					JOIN DOCS_REQUEST_MAPPING info-->
+<!--					ON req.REQUEST_NO = info.REQUEST_NO-->
+<!--					JOIN DOCS_REQUEST_DEPLOY deploy-->
+<!--					ON req.REQUEST_NO = deploy.REQUEST_NO-->
+<!--					JOIN DOCS_REQUEST_DETAIL def-->
+<!--					ON req.REQUEST_NO = def.REQUEST_NO AND def.APPROVAL_STATUS_CD = 'REQUEST'-->
+<!--			) A1-->
+<!--			WHERE 1=1-->
+<!--			<foreach collection="list" open="AND (" close=")" separator="OR" item="item">-->
+<!--			 (requestNo = #{item.requestNo} AND objectId= #{item.objectId})-->
+<!--			</foreach>-->
+<!--		) B1-->
+<!--	</select>-->
+
+<!--	&lt;!&ndash; 접수 시 배포 내용 수정 [2019.10.23(최금영)] &ndash;&gt;-->
+<!--	<update id="updateAcceptance" parameterType="kr.esob.fdms.controller.inside.production.acceptance.AcceptancePopupParam">-->
+<!--		UPDATE DOCS_REQUEST_DEPLOY-->
+<!--		SET ACCEPT_YN = 'Y'-->
+<!--			, DEPLOY_DESC = #{deployDesc}-->
+<!--			, DEPLOY_DT = SYSDATE-->
+<!--			, DEPLOY_TARGET = #{deployTarget}-->
+<!--			, DEPLOY_RESULT = #{deployResult}-->
+<!--			, DESTROY_INFO = #{destroyInfo}-->
+<!--			, ACCEPT_DT = SYSDATE-->
+<!--		WHERE 1=1-->
+<!--		<foreach collection="list" open="AND (" close=")" separator="OR" item="item">-->
+<!--			 (REQUEST_NO = #{item.requestNo} AND DEPLOY_USER_CD= #{item.deployUserCd})-->
+<!--		</foreach>-->
+<!--	</update>-->
+
+<!--</mapper>-->
+
+
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+
+
+
+
+<mapper namespace="sql.ProductionAcceptance">
+
+<!-- 생산기술자료 현장관리자 접수 리스트 [2019.10.21(최금영)] -->
+<select id="selectList" resultType="kr.esob.fdms.controller.inside.production.acceptance.AcceptanceListVO">
+	/* 생산기술자료 현장관리자 접수 리스트 */
+	SELECT
+	B1.*
+	FROM
+	(
+	SELECT
+	requestNo
+	, requestType
+	, objectType
+	, objectTypeNm
+	, requestPurpose
+	, requestPurposeNm
+	, productNm
+	, productNo
+	, applyHogiNo
+	, objectNo
+	, rev
+	, objectNm
+	, deployCount
+	, copy
+	, destroyCount
+	, requestUserNm
+	, requestUserCd
+	, TO_CHAR(TO_DATE(deployDt, 'YYYYMMDD'), 'YYYY-MM-DD') AS deployDt
+	, TO_CHAR(requestDt, 'YYYY-MM-DD') AS requestDt
+	, objectId
+	, statusCd
+	, ROW_NUMBER() OVER(ORDER BY requestDt DESC) AS PAGEINDEX
+	FROM
+	(
+	SELECT
+	req.REQUEST_NO													AS requestNo      		/* 요청번호 */
+	, req.REQUEST_TYPE												AS requestType
+	, req.OBJECT_TYPE         										AS objectType			/* 자료유형코드 */
+	, FN_GET_CD_NM('objectType', req.OBJECT_TYPE, #{sessionLang})		AS objectTypeNm			/* 자료유형 */
+	, req.REQUEST_PURPOSE												AS requestPurpose 	    /* 배포유형코드 */
+	, FN_GET_CD_NM('deployType', req.REQUEST_PURPOSE, #{sessionLang})	AS requestPurposeNm		/* 배포유형 */
+	,COALESCE(requestMapping.PRODUCT_CD, '') 																AS productNm 			/* 기종 */
+	, requestMapping.PRODUCT_CD         								AS productNo			/* 기종 */
+	, requestMapping.APPLY_HOGI_NO									AS applyHogiNo			/* 호기 */
+	, requestMapping.OBJECT_NO										AS objectNo				/* 자료번호 */
+	, requestMapping.REV_NO											AS rev					/* rev */
+	, requestMapping.OBJECT_NM										AS objectNm				/* 자료명 */
+	, (
+	SELECT SUM(DEPLOY_COUNT)
+	FROM DOCS_DEPLOY_INFO t
+	WHERE t.REQUEST_NO = req.REQUEST_NO
+	AND t.deploy_user_cd = deploy.DEPLOY_USER_CD
+	) 																AS deployCount			/* 배포매수 */
+	, (
+	SELECT MAX(COPY)
+	FROM DOCS_DEPLOY_INFO t
+	WHERE t.REQUEST_NO = req.REQUEST_NO
+	AND t.deploy_user_cd = deploy.DEPLOY_USER_CD
+	) 																AS copy					/* 부수 */
+	, (
+	SELECT SUM(DESTROY_COUNT)
+	FROM DOCS_DEPLOY_INFO t
+	WHERE t.REQUEST_NO = req.REQUEST_NO
+	AND t.deploy_user_cd = deploy.DEPLOY_USER_CD
+	) 																AS destroyCount			/* 폐기매수 */
+	, (
+	SELECT USER_NM
+	FROM DOCS_USER tempUser
+	WHERE tempUser.USER_CD = def.ACTUAL_USER_CD
+	)																AS requestUserNm		/* 배포자 */
+	, def.ACTUAL_USER_CD												AS requestUserCd		/* 배포자코드 */
+	, USE_START_YMD													AS deployDt				/* 배포일 */
+	, req.INSERT_DT													AS requestDt			/* 요청일 */
+	, requestMapping.OBJECT_ID										AS objectId
+	, req.STATUS_CD													AS statusCd
+	FROM DOCS_REQUEST req
+	INNER JOIN (
+	SELECT tempMapping.REQUEST_NO, MAX(tempMapping.OBJECT_ID) AS OBJECT_ID
+	FROM DOCS_REQUEST_MAPPING tempMapping
+	WHERE 1=1
+	GROUP BY REQUEST_NO
+	) tempMapping ON tempMapping.REQUEST_NO = req.REQUEST_NO
+	INNER JOIN DOCS_REQUEST_MAPPING requestMapping
+	ON requestMapping.REQUEST_NO = tempMapping.REQUEST_NO
+	AND requestMapping.OBJECT_ID = tempMapping.OBJECT_ID
+	JOIN DOCS_REQUEST_DEPLOY deploy
+	ON req.REQUEST_NO = deploy.REQUEST_NO
+	JOIN DOCS_REQUEST_DETAIL def
+	ON req.REQUEST_NO = def.REQUEST_NO AND def.APPROVAL_STATUS_CD = 'REQUEST'
+	WHERE deploy.DEPLOY_USER_CD = #{sessionUser.userCd}
+	AND req.STATUS_CD = 'APPROVAL'
+	AND (deploy.ACCEPT_YN = 'N' OR deploy.ACCEPT_YN IS NULL)
+	<if test='deployStartDt != null and !deployStartDt.equals("")'>
+		AND req.USE_START_YMD BETWEEN #{deployStartDt}
+		AND #{deployEndDt}
+	</if>
+	<if test='sortColumn == null or "".equals(sortColumn)'>
+		ORDER BY deployDt desc
+	</if>
+	<if test='sortColumn != null and !"".equals(sortColumn)'>
+		ORDER BY ${sortColumn} ${order}
+	</if>
+	) A1
+	WHERE requestType = 'PRODUCT'							/* 생산기술자료 */
+	<if test='objectType != null and !objectType.equals("")'>
+		AND objectType = #{objectType}
+	</if>
+	<if test='requestNo != null and !requestNo.equals("")'>
+		AND requestNo = #{requestNo}
+	</if>
+	<if test='requestUserCd != null and !requestUserCd.equals("")'>
+		AND requestUserCd = #{requestUserCd}
+	</if>
+	<if test='end != null and !end.equals("")'>
+		AND PAGEINDEX <![CDATA[ <= ]]> #{end}
+	</if>
+	) B1
+	<if test='start != null and !start.equals("")'>
+		WHERE PAGEINDEX >= #{start}
+	</if>
+</select>
+
+<!-- 생산기술자료 현장관리자 접수 리스트 갯수[2019.10.21(최금영)] -->
+<select id="selectListCount" resultType="Integer">
+	/* 생산기술자료 현장관리자 접수 리스트 갯수 */
+	SELECT COUNT(*) AS TOTAL_COUNT
+	FROM
+	(
+	SELECT
+	A1.*
+	FROM
+	(
+	SELECT
+	req.REQUEST_NO													AS requestNo      		/* 요청번호 */
+	, req.REQUEST_TYPE												AS requestType
+	, req.OBJECT_TYPE         										AS objectType			/* 자료유형코드 */
+	, FN_GET_CD_NM('objectType', req.OBJECT_TYPE, #{sessionLang})		AS objectTypeNm			/* 자료유형 */
+	, req.REQUEST_PURPOSE												AS requestPurpose 	    /* 배포유형코드 */
+	, FN_GET_CD_NM('deployType', req.REQUEST_PURPOSE, #{sessionLang})	AS requestPurposeNm		/* 배포유형 */
+	,COALESCE(requestMapping.PRODUCT_CD, '') 																AS productNm 			/* 기종 */
+	, requestMapping.PRODUCT_CD         								AS productNo			/* 기종 */
+	, requestMapping.APPLY_HOGI_NO									AS applyHogiNo			/* 호기 */
+	, requestMapping.OBJECT_NO										AS objectNo				/* 자료번호 */
+	, requestMapping.REV_NO											AS rev					/* rev */
+	, requestMapping.OBJECT_NM										AS objectNm				/* 자료명 */
+	, (
+	SELECT SUM(DEPLOY_COUNT)
+	FROM DOCS_DEPLOY_INFO t
+	WHERE t.REQUEST_NO = req.REQUEST_NO
+	AND t.deploy_user_cd = deploy.DEPLOY_USER_CD
+	) 																AS deployCount			/* 배포매수 */
+	, (
+	SELECT MAX(COPY)
+	FROM DOCS_DEPLOY_INFO t
+	WHERE t.REQUEST_NO = req.REQUEST_NO
+	AND t.deploy_user_cd = deploy.DEPLOY_USER_CD
+	) 																AS copy					/* 부수 */
+	, (
+	SELECT SUM(DESTROY_COUNT)
+	FROM DOCS_DEPLOY_INFO t
+	WHERE t.REQUEST_NO = req.REQUEST_NO
+	AND t.deploy_user_cd = deploy.DEPLOY_USER_CD
+	) 																AS destroyCount			/* 폐기매수 */
+	, (
+	SELECT USER_NM
+	FROM DOCS_USER tempUser
+	WHERE tempUser.USER_CD = def.ACTUAL_USER_CD
+	)																AS requestUserNm		/* 배포자 */
+	, def.ACTUAL_USER_CD												AS requestUserCd		/* 배포자코드 */
+	, USE_START_YMD													AS deployDt				/* 배포일 */
+	, req.INSERT_DT													AS requestDt			/* 요청일 */
+	, requestMapping.OBJECT_ID										AS objectId
+	, req.STATUS_CD													AS statusCd
+	FROM DOCS_REQUEST req
+	INNER JOIN (
+	SELECT tempMapping.REQUEST_NO, MAX(tempMapping.OBJECT_ID) AS OBJECT_ID
+	FROM DOCS_REQUEST_MAPPING tempMapping
+	WHERE 1=1
+	GROUP BY REQUEST_NO
+	) tempMapping ON tempMapping.REQUEST_NO = req.REQUEST_NO
+	INNER JOIN DOCS_REQUEST_MAPPING requestMapping
+	ON requestMapping.REQUEST_NO = tempMapping.REQUEST_NO
+	AND requestMapping.OBJECT_ID = tempMapping.OBJECT_ID
+	JOIN DOCS_REQUEST_DEPLOY deploy
+	ON req.REQUEST_NO = deploy.REQUEST_NO
+	JOIN DOCS_REQUEST_DETAIL def
+	ON req.REQUEST_NO = def.REQUEST_NO AND def.APPROVAL_STATUS_CD = 'REQUEST'
+	WHERE deploy.DEPLOY_USER_CD = #{sessionUser.userCd}
+	AND req.STATUS_CD = 'APPROVAL'
+	AND (deploy.ACCEPT_YN = 'N' OR deploy.ACCEPT_YN IS NULL)
+	<if test='deployStartDt != null and !deployStartDt.equals("")'>
+		AND req.USE_START_YMD BETWEEN #{deployStartDt}
+		AND #{deployEndDt}
+	</if>
+	) A1
+	WHERE requestType = 'PRODUCT'							/* 생산기술자료 */
+	<if test='objectType != null and !objectType.equals("")'>
+		AND objectType = #{objectType}
+	</if>
+	<if test='requestNo != null and !requestNo.equals("")'>
+		AND requestNo = #{requestNo}
+	</if>
+	<if test='requestUserCd != null and !requestUserCd.equals("")'>
+		AND requestUserCd = #{requestUserCd}
+	</if>
+	) B1
+</select>
+
+<!-- 접수할 아이템 리스트 조회 [2019.10.21(최금영)]-->
+<select id="selectPopupList" resultType="kr.esob.fdms.controller.inside.production.acceptance.AcceptancePopupVO" parameterType="kr.esob.fdms.controller.inside.production.acceptance.AcceptancePopupParam">
+	/* 접수할 아이템 리스트 조회 */
+	SELECT
+	B1.*
+	FROM
+	(
+	SELECT
+	A1.*
+	, ROW_NUMBER() OVER(ORDER BY requestDt DESC) AS PAGEINDEX
+	FROM
+	(
+	SELECT req.REQUEST_NO						AS requestNo      		/* 요청번호 */
+	, req.REQUEST_TYPE						AS requestType
+	, req.OBJECT_TYPE         				AS objectType			/* 자료유형 */
+	, FN_GET_CD_NM('objectType', req.OBJECT_TYPE, #{sessionLang})		AS objectTypeNm	/* 자료유형 */
+	, req.REQUEST_PURPOSE						AS requestPurpose 	    /* 배포유형 */
+	, requestMapping.PRODUCT_CD         		AS productNo			/* 기종 */
+	, requestMapping.OBJECT_NO				AS objectNo				/* 자료번호 */
+	, requestMapping.REV_NO					AS rev					/* rev */
+	, requestMapping.OBJECT_NM				AS objectNm				/* 자료명 */
+	, depInfo.DEPLOY_COUNT					AS deployCount			/* 접수 매수 */
+	, depInfo.DESTROY_COUNT					AS destroyCount			/* 폐기 매수 */
+	, def.ACTUAL_USER_CD						AS approvalUserCd
+	, deploy.DEPLOY_USER_CD					AS deployUserCd
+	, TO_CHAR(req.INSERT_DT, 'YYYY-MM-DD') 	AS requestDt
+	, requestMapping.OBJECT_ID				AS objectId
+	, depInfo.COPY							AS copy					/* 부수  */
+	, (depInfo.DEPLOY_COUNT * depInfo.COPY) 	AS holdingCount
+	<if test="'SW'.equals(objectType)">
+		, (SELECT COUNT(*) FROM DOCS_PRODUCT_SW_FILE WHERE OBJECT_ID = requestMapping.OBJECT_ID ) AS itemCount
+	</if>
+	<if test="'DOC'.equals(objectType)">
+		, product.TOTAL_PAGE_CNT AS itemCount
+	</if>
+	<!-- 					  , (deploy.requestMapping - deploy.DESTROY_COUNT) AS holdingCount -->
+	FROM DOCS_REQUEST req
+	JOIN DOCS_REQUEST_MAPPING requestMapping
+	ON req.REQUEST_NO = requestMapping.REQUEST_NO
+	JOIN DOCS_REQUEST_DEPLOY deploy
+	ON req.REQUEST_NO = deploy.REQUEST_NO
+	JOIN DOCS_REQUEST_DETAIL def
+	ON req.REQUEST_NO = def.REQUEST_NO AND def.APPROVAL_STATUS_CD = 'REQUEST'
+	JOIN DOCS_DEPLOY_INFO depInfo
+	ON req.REQUEST_NO = depInfo.REQUEST_NO
+	AND deploy.DEPLOY_USER_CD = depInfo.DEPLOY_USER_CD
+	AND requestMapping.OBJECT_ID = depInfo.OBJECT_ID
+	<if test="'DOC'.equals(objectType)">
+		INNER JOIN DOCS_PRODUCT_DOCUMENT product
+		ON product.OBJECT_ID = requestMapping.OBJECT_ID
+	</if>
+	<if test="'SW'.equals(objectType)">
+		INNER JOIN DOCS_PRODUCT_SW product
+		ON product.OBJECT_ID = requestMapping.OBJECT_ID
+	</if>
+	<if test='sortColumn == null or "".equals(sortColumn)'>
+		ORDER BY requestDt desc
+	</if>
+	<if test='sortColumn != null and !"".equals(sortColumn)'>
+		ORDER BY ${sortColumn} ${order}
+	</if>
+	) A1
+	WHERE 1=1
+	AND requestNo = #{requestNo}
+	AND deployUserCd = #{sessionUser.userCd}
+	<!-- 			<foreach collection="list" open="AND (" close=")" separator="OR" item="item"> -->
+	<!-- 			(requestNo = #{item.requestNo} AND objectId= #{item.objectId}) -->
+	<!-- 			</foreach> -->
+	) B1
+</select>
+
+<!-- 접수할 아이템 리스트 조회 갯수 [2019.10.22(최금영)]-->
+<select id="selectPopupListCount" resultType="Integer" parameterType="kr.esob.fdms.controller.inside.production.acceptance.AcceptancePopupParam">
+	/* 접수할 아이템 리스트 조회 갯수 */
+	SELECT
+	COUNT(*) AS TOTAL_COUNT
+	FROM
+	(
+	SELECT
+	A1.*
+	, ROW_NUMBER() OVER(ORDER BY requestDt DESC) AS PAGEINDEX
+	FROM
+	(
+	SELECT req.REQUEST_NO						AS requestNo      		/* 요청번호 */
+	, req.REQUEST_TYPE						AS requestType
+	, req.OBJECT_TYPE         				AS objectType			/* 자료유형 */
+	, req.REQUEST_PURPOSE						AS requestPurpose 	    /* 배포유형 */
+	, info.PRODUCT_CD         				AS productNo			/* 기종 */
+	, info.OBJECT_NO							AS objectNo				/* 자료번호 */
+	, info.REV_NO								AS rev					/* rev */
+	, info.OBJECT_NM							AS objectNm				/* 자료명 */
+	, info.DEPLOY_COUNT						AS deployCount			/* 접수 매수 */
+	, deploy.DESTROY_COUNT					AS destroyCount			/* 폐기 매수 */
+	, def.ACTUAL_USER_CD						AS approvalUserCd
+	, deploy.DEPLOY_USER_CD					AS deployUserCd
+	, TO_CHAR(req.INSERT_DT, 'YYYY-MM-DD') 	AS requestDt
+	, info.OBJECT_ID							AS objectId
+	FROM DOCS_REQUEST req
+	JOIN DOCS_REQUEST_MAPPING info
+	ON req.REQUEST_NO = info.REQUEST_NO
+	JOIN DOCS_REQUEST_DEPLOY deploy
+	ON req.REQUEST_NO = deploy.REQUEST_NO
+	JOIN DOCS_REQUEST_DETAIL def
+	ON req.REQUEST_NO = def.REQUEST_NO AND def.APPROVAL_STATUS_CD = 'REQUEST'
+	) A1
+	WHERE 1=1
+	<foreach collection="list" open="AND (" close=")" separator="OR" item="item">
+		(requestNo = #{item.requestNo} AND objectId= #{item.objectId})
+	</foreach>
+	) B1
+</select>
+
+<!-- 접수 시 배포 내용 수정 [2019.10.23(최금영)] -->
+<update id="updateAcceptance" parameterType="kr.esob.fdms.controller.inside.production.acceptance.AcceptancePopupParam">
+	UPDATE DOCS_REQUEST_DEPLOY
+	SET ACCEPT_YN = 'Y'
+	, DEPLOY_DESC = #{deployDesc}
+	, DEPLOY_DT = CURRENT_TIMESTAMP
+	, DEPLOY_TARGET = #{deployTarget}
+	, DEPLOY_RESULT = #{deployResult}
+	, DESTROY_INFO = #{destroyInfo}
+	, ACCEPT_DT = CURRENT_TIMESTAMP
+	WHERE 1=1
+	<foreach collection="list" open="AND (" close=")" separator="OR" item="item">
+		(REQUEST_NO = #{item.requestNo} AND DEPLOY_USER_CD= #{item.deployUserCd})
+	</foreach>
+</update>
+
+</mapper>

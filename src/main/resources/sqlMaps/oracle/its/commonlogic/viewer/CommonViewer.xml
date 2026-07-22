@@ -1,0 +1,324 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="sql.CommonViewer">
+
+<!-- 배포된 아이템 파일 정보 조회 [2019.11.13(최금영)] -->
+<select id="selectFileInfo" parameterType="kr.esob.fdms.commonlogic.viewer.CommonViewerParam" resultType="kr.esob.fdms.commonlogic.viewer.CommonViewerVO">
+	/* 배포된 아이템 파일 정보 조회 */
+	SELECT fileInfo.FILE_PATH_NM														                                AS filePath
+		 , fileInfo.FILE_NM          													                                        AS fileNm
+		 , fileInfo.ORG_FILE_NM      												                    	                AS fileOrgNm
+		 , fileInfo.USE_END_YMD 																                            AS endDate
+		 , TO_CHAR(req.APPROVAL_DT, 'YYYY-MM-DD')										                    AS purchaserAppDate
+		 , FN_GET_CD_NM('businessTypeCd', reqMap.BUSINESS_TYPE_CD, #{sessionLang})   	    AS businessTypeNm
+		 , FN_GET_CD_NM('distributeTypeCd', reqMap.DISTRIBUTE_TYPE_CD, #{sessionLang})	    AS distributeTypeNm
+		 , (SELECT USER_NM FROM DOCS_USER WHERE USER_CD = reqDtl.ACTUAL_USER_CD)   AS requestUserNm
+		 , FN_GET_CD_NM('requestPurpose', req.REQUEST_PURPOSE, #{sessionLang})			    AS requestPurpose
+		 , fileInfo.PRINT_COUNT															                                    AS printCount
+		 , fileInfo.DESTROY_TYPE                                             AS destroyType         /* 폐기구분 */
+		 , COALESCE(fileInfo.DESTROY_STATUS_CD, '0')                              AS destroyStatusCd		/* 폐기상태 */
+	FROM DOCS_REQUEST_FILE fileInfo
+			 JOIN DOCS_REQUEST_MAPPING reqMap
+				  ON fileInfo.REQUEST_NO = reqMap.REQUEST_NO
+					  AND fileInfo.OBJECT_ID = reqMap.OBJECT_ID
+			 JOIN DOCS_REQUEST req
+				  ON req.REQUEST_NO = reqMap.REQUEST_NO
+			 LEFT JOIN DOCS_REQUEST_DETAIL reqDtl
+					   ON reqDtl.REQUEST_NO = req.REQUEST_NO
+						   AND reqDtl.APPROVAL_STATUS_CD = 'REQUEST'
+	WHERE req.REQUEST_NO =  #{requestNo}
+	  AND fileInfo.OBJECT_ID = #{objectId}
+	  AND fileInfo.FILE_NO = #{fileNo}
+</select>
+
+<!-- 아이템(도면,문서,SW) 파일 정보 조회 [2019.11.14(최금영)] -->
+<select id="selectObjectFileInfo" parameterType="kr.esob.fdms.commonlogic.viewer.CommonViewerParam" resultType="kr.esob.fdms.commonlogic.viewer.CommonViewerVO">
+	/* 아이템(도면,문서,SW) 파일 정보 조회 */
+	SELECT FILE_PATH_NM 	AS filePath
+	, FILE_NM			AS fileNm
+	, ORG_FILE_NM		AS fileOrgNm
+	<if test="'DOC'.equals(objectType)">
+		FROM DOCS_DOCUMENT_FILE
+	</if>
+	<if test="'SW'.equals(objectType)">
+		FROM DOCS_SW_FILE
+	</if>
+	<if test="'DRAWING'.equals(objectType)">
+		FROM DOCS_DRAWING
+	</if>
+	WHERE OBJECT_ID = #{objectId}
+	<if test="'DOC'.equals(objectType) or 'SW'.equals(objectType)">
+		AND FILE_NO = #{fileNo}
+	</if>
+</select>
+
+<!-- 미등록자료 파일 정보 조회 [2019.11.14(최금영)] -->
+<select id="selectUnregFileInfo" parameterType="kr.esob.fdms.commonlogic.viewer.CommonViewerParam" resultType="kr.esob.fdms.commonlogic.viewer.CommonViewerVO">
+	SELECT FILE_PATH AS filePath
+		 , FILE_UPLOAD_NM AS fileNm
+		 , FILE_NM AS fileOrgNm
+	FROM DOCS_FILE
+	WHERE FILE_CD = #{objectId}
+	  AND FILE_NO = #{fileNo}
+</select>
+
+<!-- 생산기술자료 파일 정보 조회 [2019.11.14(최금영)] -->
+<select id="selectProductFileInfo" parameterType="kr.esob.fdms.commonlogic.viewer.CommonViewerParam" resultType="kr.esob.fdms.commonlogic.viewer.CommonViewerVO">
+	SELECT FILE_PATH_NM AS filePath
+	, FILE_NM AS fileNm
+	, ORG_FILE_NM AS fileOrgNm
+	<if test="'DOC'.equals(objectType)">
+		FROM DOCS_PRODUCT_DOCUMENT_FILE
+	</if>
+	<if test="'SW'.equals(objectType)">
+		FROM DOCS_PRODUCT_SW_FILE
+	</if>
+	WHERE OBJECT_ID = #{objectId}
+	AND FILE_NO = #{fileNo}
+</select>
+
+<!-- 도면,문서,SW 파일 정보 조회 [2019.11.19(최금영)] -->
+<select id="getObjectFileInfo" parameterType="kr.esob.fdms.commonlogic.viewer.CommonViewerParam" resultType="kr.esob.fdms.commonlogic.viewer.CommonViewerVO">
+	/* 아이템(도면,문서,SW) 파일 정보 조회 */
+	SELECT fileInfo.FILE_PATH_NM 	AS filePath
+	, fileInfo.FILE_NM			AS fileNm
+	, fileInfo.ORG_FILE_NM		AS fileOrgNm
+	<if test="'DOC'.equals(objectType)">
+		, info.PROTECT_YN			AS protectYn
+		FROM DOCS_DOCUMENT_FILE fileInfo
+		JOIN DOCS_DOCUMENT info
+		ON fileInfo.OBJECT_ID = info.OBJECT_ID
+	</if>
+	<if test="'SW'.equals(objectType)">
+		, info.PROTECT_YN			AS protectYn
+		FROM (
+			SELECT OBJECT_ID,
+			       OBJECT_ID AS PARENT_OBJECT_ID,
+			       FILE_NO,
+			       FILE_PATH_NM,
+			       FILE_NM,
+			       ORG_FILE_NM
+			FROM DOCS_SW_FILE
+			UNION ALL
+			SELECT OBJECT_ID,
+			       PARENT_OBJECT_ID,
+			       FILE_NO,
+			       FILE_PATH_NM,
+			       ORG_FILE_NM AS FILE_NM,
+			       ORG_FILE_NM
+			FROM DOCS_SW_SUB_FILE
+			WHERE COALESCE(USE_YN, 'Y') = 'Y'
+		) fileInfo
+		JOIN DOCS_SW info
+		ON fileInfo.PARENT_OBJECT_ID = info.OBJECT_ID
+	</if>
+	<if test="'DRAWING'.equals(objectType)">
+		, fileInfo.PROTECT_YN		AS protectYn
+		FROM DOCS_DRAWING fileInfo
+	</if>
+	WHERE fileInfo.OBJECT_ID = #{objectId}
+	<if test='fileNo != null and !fileNo.equals("")'>
+		AND fileInfo.FILE_NO = #{fileNo}
+	</if>
+</select>
+
+<!-- 미등록자료 파일 정보 조회 [2019.11.19(최금영)] -->
+<select id="getUnregFileInfo" parameterType="kr.esob.fdms.commonlogic.viewer.CommonViewerParam" resultType="kr.esob.fdms.commonlogic.viewer.CommonViewerVO">
+	/* 미등록자료 파일 정보 조회  */
+	SELECT FILE_PATH AS filePath
+		 , FILE_NM AS fileNm
+		 , FILE_UPLOAD_NM AS fileOrgNm
+	FROM DOCS_FILE
+	WHERE FILE_CD = #{objectId}
+	  AND FILE_NO = #{fileNo}
+</select>
+
+<!-- 생산기술자료 파일 정보 조회 [2019.11.19(최금영)] -->
+<select id="getProductFileInfo" parameterType="kr.esob.fdms.commonlogic.viewer.CommonViewerParam" resultType="kr.esob.fdms.commonlogic.viewer.CommonViewerVO">
+	/* 생산기술자료 파일 정보 조회 */
+	SELECT FILE_PATH_NM AS filePath
+	, FILE_NM AS fileNm
+	, ORG_FILE_NM AS fileOrgNm
+	<if test="'DOC'.equals(objectType)">
+		FROM DOCS_PRODUCT_DOCUMENT_FILE
+	</if>
+	<if test="'SW'.equals(objectType)">
+		FROM DOCS_PRODUCT_SW_FILE
+	</if>
+	WHERE OBJECT_ID = #{objectId}
+	AND FILE_NO = #{fileNo}
+</select>
+
+<!--  배포된 아이템 파일 정보 조회 [2019.11.19(최금영)] -->
+<select id="getFileInfo" parameterType="kr.esob.fdms.commonlogic.viewer.CommonViewerParam" resultType="kr.esob.fdms.commonlogic.viewer.CommonViewerVO">
+	SELECT fileInfo.FILE_PATH_NM														AS filePath
+		 , fileInfo.FILE_NM																AS fileNm
+		 , fileInfo.ORG_FILE_NM															AS fileOrgNm
+		 , CASE
+			   WHEN fileInfo.USE_START_YMD IS NULL THEN req.USE_START_YMD
+			   ELSE fileInfo.USE_START_YMD
+		END																			AS deployDt
+		 , CASE
+			   WHEN fileInfo.USE_END_YMD IS NULL THEN req.USE_START_YMD
+			   ELSE fileInfo.USE_END_YMD
+		END																			AS endDate
+		 , TO_CHAR(req.APPROVAL_DT, 'YYYY-MM-DD')										AS purchaserAppDate
+		 , FN_GET_CD_NM('businessTypeCd', reqMap.BUSINESS_TYPE_CD, #{sessionLang})		AS businessTypeNm
+		 , FN_GET_CD_NM('distributeTypeCd', reqMap.DISTRIBUTE_TYPE_CD, #{sessionLang})	AS distributeTypeNm
+		 , (SELECT USER_NM FROM DOCS_USER WHERE USER_CD = reqDtl.ACTUAL_USER_CD)			AS requestUserNm
+		 , FN_GET_CD_NM('requestPurpose', req.REQUEST_PURPOSE, #{sessionLang})			AS requestPurpose
+		 , fileInfo.PRINT_COUNT															AS printCount
+		 , fileInfo.DESTROY_TYPE															AS destroyType         /* 폐기구분 */
+		 , COALESCE(fileInfo.DESTROY_STATUS_CD, '0')											AS destroyStatusCd		/* 폐기상태 */
+		 , req.PROTECT_YN																AS protectYn
+	FROM DOCS_REQUEST_FILE fileInfo
+			 JOIN DOCS_REQUEST_MAPPING reqMap
+				  ON fileInfo.REQUEST_NO = reqMap.REQUEST_NO
+					  AND fileInfo.OBJECT_ID = reqMap.OBJECT_ID
+			 JOIN DOCS_REQUEST req
+				  ON req.REQUEST_NO = reqMap.REQUEST_NO
+			 LEFT JOIN DOCS_REQUEST_DETAIL reqDtl
+					   ON reqDtl.REQUEST_NO = req.REQUEST_NO
+						   AND reqDtl.APPROVAL_STATUS_CD = 'REQUEST'
+	WHERE req.REQUEST_NO =  #{requestNo}
+	  AND fileInfo.OBJECT_ID = #{objectId}
+	  AND fileInfo.FILE_NO = #{fileNo}
+</select>
+
+<!--23.07.06 (yskim) 폐기 상태 조회 쿼리-->
+<select id="getFileInfoForDestroyStatus" parameterType="kr.esob.fdms.commonlogic.viewer.CommonViewerParam" resultType="kr.esob.fdms.commonlogic.viewer.CommonViewerVO">
+	SELECT fileInfo.FILE_PATH_NM														AS filePath
+		 , fileInfo.FILE_NM																AS fileNm
+		 , fileInfo.ORG_FILE_NM															AS fileOrgNm
+		 , CASE
+			   WHEN fileInfo.USE_START_YMD IS NULL THEN req.USE_START_YMD
+			   ELSE fileInfo.USE_START_YMD
+		END																			AS deployDt
+		 , CASE
+			   WHEN fileInfo.USE_END_YMD IS NULL THEN req.USE_START_YMD
+			   ELSE fileInfo.USE_END_YMD
+		END																			AS endDate
+		 , TO_CHAR(req.APPROVAL_DT, 'YYYY-MM-DD')										AS purchaserAppDate
+		 , FN_GET_CD_NM('businessTypeCd', reqMap.BUSINESS_TYPE_CD, #{sessionLang})		AS businessTypeNm
+		 , FN_GET_CD_NM('distributeTypeCd', reqMap.DISTRIBUTE_TYPE_CD, #{sessionLang})	AS distributeTypeNm
+		 , (SELECT USER_NM FROM DOCS_USER WHERE USER_CD = reqDtl.ACTUAL_USER_CD)			AS requestUserNm
+		 , FN_GET_CD_NM('requestPurpose', req.REQUEST_PURPOSE, #{sessionLang})			AS requestPurpose
+		 , fileInfo.PRINT_COUNT															AS printCount
+		 , fileInfo.DESTROY_TYPE															AS destroyType         /* 폐기구분 */
+		 , COALESCE(fileInfo.DESTROY_STATUS_CD, '0')											AS destroyStatusCd		/* 폐기상태 */
+		 , req.PROTECT_YN																AS protectYn
+	FROM DOCS_REQUEST_FILE fileInfo
+			 JOIN DOCS_REQUEST_MAPPING reqMap
+				  ON fileInfo.REQUEST_NO = reqMap.REQUEST_NO
+					  AND fileInfo.OBJECT_ID = reqMap.OBJECT_ID
+			 JOIN DOCS_REQUEST req
+				  ON req.REQUEST_NO = reqMap.REQUEST_NO
+			 LEFT JOIN DOCS_REQUEST_DETAIL reqDtl
+					   ON reqDtl.REQUEST_NO = req.REQUEST_NO
+						   AND reqDtl.APPROVAL_STATUS_CD = 'REQUEST'
+	WHERE req.REQUEST_NO =  #{requestNo}
+	  AND fileInfo.OBJECT_ID = #{objectId}
+</select>
+
+<!-- 23.09.08 (기범) 출력이력 폐기 확인  -->
+<select id="getFileInfoForDestroyStatus_printHistory" resultType="String">
+	SELECT
+		(
+			SELECT USER_NM
+			FROM DOCS_USER tmp
+			WHERE tmp.USER_CD = destroyReq.INSERT_USER_CD
+		) AS destroyRequestUserNm
+	FROM DOCS_REQUEST_MAPPING mapping
+			 LEFT JOIN DOCS_DESTROY_REQUEST_MAPPING destroyMapping
+					   ON destroyMapping.REQUEST_NO = mapping.REQUEST_NO
+						   AND destroyMapping.OBJECT_ID = mapping.OBJECT_ID
+			 LEFT JOIN DOCS_DESTROY_REQUEST destroyReq
+					   ON destroyReq.DESTROY_REQUEST_NO = destroyMapping.DESTROY_REQUEST_NO
+	WHERE mapping.REQUEST_NO = #{requestNo} AND mapping.OBJECT_ID = #{objectId}
+	ORDER BY mapping.REQUEST_NO DESC
+</select>
+
+<!-- 워터 마크 정보 조회 [2019.11.28(최금영)] -->
+<select id="selectWatermarkInfo" resultType="kr.esob.fdms.commonlogic.viewer.WatermarkVO">
+	SELECT ITEM_CD 				AS itemCd
+		 , ITEM_NAME				AS itemNm
+		 , ITEM_DESC				AS itemDesc
+		 , ITEM_TYPE				AS itemType
+		 , ITEM_INFO				AS itemInfo
+		 , ITEM_H_ALIGN			AS itemHAlign
+		 , ITEM_V_ALIGN			As itemVAlign
+		 , ITEM_SIZE				AS itemSize
+		 , ITEM_TRANSPARENCY		AS itemTransparency
+		 , ITEM_FONT				AS itemFont
+		 , ITEM_COLOR 			AS itemColor
+		 , ITEM_FONT_STYLE       AS itemFontStyle
+	FROM DOCS_WATERMARK_ITEM
+	WHERE ITEM_CD IN (
+		SELECT ITEM_CD
+		FROM DOCS_WATERMARK_MAPPING
+		WHERE WATERMARK_CD = (SELECT WATERMARK_CD
+							  FROM DOCS_WATERMARK_INFO
+							  WHERE USER_TYPE = #{userType}
+								AND WATERMARK_TYPE = #{watermarkType})
+	)
+</select>
+
+<select id="getMessageDesc" resultType="String" parameterType="kr.esob.fdms.commonlogic.viewer.CommonViewerParam">
+	SELECT LANG_DESC
+	FROM DOCS_LANG
+	WHERE LANG_CD = #{msgCode}
+	  AND LANG_TYPE = #{sessionLang}
+</select>
+
+<select id="selectFileList" parameterType="kr.esob.fdms.commonlogic.viewer.CommonViewerParam" resultType="kr.esob.fdms.commonlogic.viewer.CommonViewerVO">
+	/* 배포된 아이템 파일 정보 조회 */
+	SELECT fileInfo.FILE_NM          					AS fileNm
+	, fileInfo.ORG_FILE_NM      					AS fileOrgNm
+	, fileInfo.FILE_NO								AS fileNo
+	, fileInfo.OBJECT_ID							AS objectId
+	, fileInfo.REQUEST_NO							AS requestNo
+	, objectInfo.SECURITY_TYPE_CD					AS securityTypeCd
+	, request.INSERT_USER_CD						AS requestUserCd
+	, request.REQUEST_TYPE							AS requestType
+	, request.OBJECT_TYPE							AS objectType
+	, COALESCE(request.PROTECT_YN, 'N')				AS protectYn
+	FROM DOCS_REQUEST_FILE fileInfo
+	JOIN DOCS_REQUEST_MAPPING reqMap
+	ON fileInfo.REQUEST_NO = reqMap.REQUEST_NO
+	AND fileInfo.OBJECT_ID = reqMap.OBJECT_ID
+	<if test="'DOC'.equals(objectType)">
+		JOIN DOCS_PRODUCT_DOCUMENT objectInfo
+		ON fileInfo.OBJECT_ID = objectInfo.OBJECT_ID
+	</if>
+	<if test="'SW'.equals(objectType)">
+		JOIN DOCS_PRODUCT_SW objectInfo
+		ON fileInfo.OBJECT_ID = objectInfo.OBJECT_ID
+	</if>
+	JOIN DOCS_REQUEST request
+	ON request.REQUEST_NO = fileInfo.REQUEST_NO
+	WHERE fileInfo.REQUEST_NO = #{requestNo}
+	AND fileInfo.OBJECT_ID = #{objectId}
+</select>
+
+<update id="updatePrintCnt" parameterType="kr.esob.fdms.commonlogic.viewer.CommonViewerParam">
+	UPDATE DOCS_REQUEST_FILE
+	SET PRINT_COUNT = (SELECT CAST(PRINT_COUNT AS INTEGER) + 1
+					   FROM DOCS_REQUEST_FILE
+					   WHERE REQUEST_NO = #{requestNo}
+						 AND OBJECT_ID = #{objectId}
+						 AND FILE_NO = #{fileNo} )
+	WHERE REQUEST_NO = #{requestNo}
+	  AND OBJECT_ID = #{objectId}
+	  AND FILE_NO = #{fileNo}
+</update>
+
+<update id="updateMergePrintCnt4" parameterType="hashMap">
+	UPDATE DOCS_REQUEST_FILE
+	SET PRINT_COUNT = PRINT_COUNT + 1
+	WHERE REQUEST_NO = #{requestNo}
+	  AND OBJECT_ID IN (${objectId})
+</update>
+</mapper>

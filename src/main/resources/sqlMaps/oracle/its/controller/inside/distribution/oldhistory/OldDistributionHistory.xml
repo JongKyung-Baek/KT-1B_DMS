@@ -1,0 +1,367 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+
+<!--<mapper namespace="sql.OldDistributionHistory">-->
+
+<!--	<select id="selectList" resultType="kr.esob.fdms.controller.inside.distribution.oldhistory.HistoryListVO">-->
+<!--		SELECT-->
+<!--			B1.*-->
+<!--		FROM-->
+<!--		(-->
+<!--			SELECT-->
+<!--				A1.*-->
+<!--				, ROWNUM AS PAGEINDEX-->
+<!--			FROM-->
+<!--			(-->
+<!--				SELECT-->
+<!--					APPROVAL_NO					AS approvalNo-->
+<!--					,REQUEST_PURPOSE_NAME		AS requestPurposeName-->
+<!--					,REQUEST_TYPE				AS requestType-->
+<!--					,REQUEST_TYPE_NAME			AS requestTypeName-->
+<!--					,FILE_CODE_1				AS fileCode1-->
+<!--					,FILE_NAME					AS fileName-->
+<!--					,PROJECT					AS project-->
+<!--					,REVISION					AS revision-->
+<!--					,CHK_REV					AS chkRev-->
+<!--					,FILE_VERSION				AS fileVersion-->
+<!--					,CN_U_REVISION_NUMBER		AS cnRevisionNumber-->
+<!--					,TDM_COMPONENT_NAME			AS tdmComponentName-->
+<!--					,DWG_SIZE					AS dwgSize-->
+<!--					,CUR_PAGE					AS curPage-->
+<!--					,TOT_PAGE					AS totPage-->
+<!--					,ACCEPT_USER_NAME			AS acceptUserName-->
+<!--					,REQUEST_DATE				AS requestDate-->
+<!--					,DEPLOY_TYPE				AS deployType-->
+<!--					,ECN_NO						AS ecnNo-->
+<!--					,APPROVAL_USER_NAME			AS approvalUserName-->
+<!--					,APPROVAL_DATE				AS approvalDate-->
+<!--					,COMPANY_CODE				AS companyCode-->
+<!--					,COMPANY_NAME				AS companyName-->
+<!--					,USE_END_DATE				AS useEndDate-->
+<!--					,REQUEST_PURPOSE_OUT		AS requestPurposeOut-->
+<!--					,TASK_STATE					AS taskState-->
+<!--					,TASK_STATE_NAME			AS taskStateName-->
+<!--					,REQUEST_USER				AS requestUser-->
+<!--					,REQUEST_MANAGER			AS requestManager-->
+<!--					,ROWID                             AS rowDataId-->
+<!--				FROM DISTRIBUTION_HISTORY-->
+<!--				<if test='sortColumn == null or "".equals(sortColumn)'>-->
+<!--	           		ORDER BY REQUEST_DATE DESC-->
+<!--				</if>-->
+<!--	         	<if test='sortColumn != null and !"".equals(sortColumn)'>-->
+<!--	         		ORDER BY ${sortColumn} ${order}-->
+<!--	         	</if>-->
+<!--			) A1-->
+<!--			WHERE 1=1-->
+<!--			<if test='requestType != null and !requestType.equals("")'>-->
+<!--			AND requestType = #{requestType}-->
+<!--			</if>-->
+<!--			<if test='fileCode1 != null and !fileCode1.equals("")'>-->
+<!--			AND fileCode1 LIKE '%' || UPPER(TRIM(#{fileCode1})) || '%'-->
+<!--			</if>-->
+<!--			<if test='useEndDate != null and !useEndDate.equals("")'>-->
+<!--			AND useEndDate <![CDATA[ < ]]> #{useEndDate}-->
+<!--			</if>-->
+<!--			<if test='approvalNo != null and !approvalNo.equals("")'>-->
+<!--			AND approvalNo LIKE '%' || UPPER(TRIM(#{approvalNo})) || '%'-->
+<!--			</if>-->
+<!--			<if test='companyCode != null and !companyCode.equals("")'>-->
+<!--			AND companyCode = #{companyCode}-->
+<!--			</if>-->
+<!--			<if test='taskState != null and !taskState.equals("")'>-->
+<!--			AND taskState = #{taskState}-->
+<!--			</if>-->
+<!--			<if test='userName != null and !userName.equals("")'>-->
+<!--			AND acceptUserName LIKE '%' || #{userName} || '%'-->
+<!--			</if>-->
+<!--			<if test='project != null and !project.equals("")'>-->
+<!--			AND project = #{project}-->
+<!--			</if>-->
+<!--			<if test='startApprovalDate != null and !startApprovalDate.equals("")'>-->
+<!--				AND requestDate BETWEEN TO_DATE(#{startApprovalDate}, 'YYYY-MM-DD')-->
+<!--	            AND TO_DATE(#{closeApprovalDate}, 'YYYY-MM-DD')+1-->
+<!--			</if>-->
+<!--			<if test='useEndDateYn != null and useEndDateYn.equals("Y")'>-->
+<!--			AND useEndDate <![CDATA[ < ]]> TO_CHAR(SYSDATE, 'YYYY-MM-DD')-->
+<!--			</if>-->
+<!--			<if test='end != null and !end.equals("")'>-->
+<!--			AND ROWNUM <![CDATA[ <= ]]> #{end}-->
+<!--			</if>-->
+<!--		) B1-->
+<!--		<if test='start != null and !start.equals("")'>-->
+<!--		WHERE PAGEINDEX <![CDATA[ >= ]]>#{start}-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	<select id="selectListCount" resultType="Integer">-->
+<!--		SELECT COUNT(*) AS TOTAL_COUNT-->
+<!--		FROM-->
+<!--			(-->
+<!--			SELECT-->
+<!--				A1.*-->
+<!--			FROM-->
+<!--			(-->
+<!--				SELECT-->
+<!--					APPROVAL_NO					AS approvalNo-->
+<!--					,REQUEST_PURPOSE_NAME		AS requestPurposeName-->
+<!--					,REQUEST_TYPE				AS requestType-->
+<!--					,REQUEST_TYPE_NAME			AS requestTypeName-->
+<!--					,FILE_CODE_1				AS fileCode1-->
+<!--					,FILE_NAME					AS fileName-->
+<!--					,PROJECT					AS project-->
+<!--					,REVISION					AS revision-->
+<!--					,CHK_REV					AS chkRev-->
+<!--					,FILE_VERSION				AS fileVersion-->
+<!--					,CN_U_REVISION_NUMBER		AS cnRevisionNumber-->
+<!--					,TDM_COMPONENT_NAME			AS tdmComponentName-->
+<!--					,DWG_SIZE					AS dwgSize-->
+<!--					,CUR_PAGE					AS curPage-->
+<!--					,TOT_PAGE					AS totPage-->
+<!--					,ACCEPT_USER_NAME			AS acceptUserName-->
+<!--					,REQUEST_DATE				AS requestDate-->
+<!--					,DEPLOY_TYPE				AS deployType-->
+<!--					,ECN_NO						AS ecnNo-->
+<!--					,APPROVAL_USER_NAME			AS approvalUserName-->
+<!--					,APPROVAL_DATE				AS approvalDate-->
+<!--					,COMPANY_CODE				AS companyCode-->
+<!--					,COMPANY_NAME				AS companyName-->
+<!--					,USE_END_DATE				AS useEndDate-->
+<!--					,REQUEST_PURPOSE_OUT		AS requestPurposeOut-->
+<!--					,TASK_STATE					AS taskState-->
+<!--					,TASK_STATE_NAME			AS taskStateName-->
+<!--					,REQUEST_USER				AS requestUser-->
+<!--					,REQUEST_MANAGER			AS requestManager-->
+<!--					,ROWID                             AS rowDataId-->
+<!--				FROM DISTRIBUTION_HISTORY-->
+<!--			) A1-->
+<!--			WHERE 1=1-->
+<!--			<if test='requestType != null and !requestType.equals("")'>-->
+<!--			AND requestType = #{requestType}-->
+<!--			</if>-->
+<!--			<if test='fileCode1 != null and !fileCode1.equals("")'>-->
+<!--			AND fileCode1 LIKE '%' || UPPER(TRIM(#{fileCode1})) || '%'-->
+<!--			</if>-->
+<!--			<if test='useEndDate != null and !useEndDate.equals("")'>-->
+<!--			AND useEndDate <![CDATA[ < ]]> #{useEndDate}-->
+<!--			</if>-->
+<!--			<if test='approvalNo != null and !approvalNo.equals("")'>-->
+<!--			AND approvalNo LIKE '%' || UPPER(TRIM(#{approvalNo})) || '%'-->
+<!--			</if>-->
+<!--			<if test='companyCode != null and !companyCode.equals("")'>-->
+<!--			AND companyCode = #{companyCode}-->
+<!--			</if>-->
+<!--			<if test='taskState != null and !taskState.equals("")'>-->
+<!--			AND taskState = #{taskState}-->
+<!--			</if>-->
+<!--			<if test='userName != null and !userName.equals("")'>-->
+<!--			AND acceptUserName LIKE '%' || #{userName} || '%'-->
+<!--			</if>-->
+<!--			<if test='project != null and !project.equals("")'>-->
+<!--			AND project = #{project}-->
+<!--			</if>-->
+<!--			<if test='startApprovalDate != null and !startApprovalDate.equals("")'>-->
+<!--				AND requestDate BETWEEN TO_DATE(#{startApprovalDate}, 'YYYY-MM-DD')-->
+<!--	            AND TO_DATE(#{closeApprovalDate}, 'YYYY-MM-DD')+1-->
+<!--			</if>-->
+<!--			<if test='useEndDateYn != null and useEndDateYn.equals("Y")'>-->
+<!--			AND useEndDate <![CDATA[ < ]]> TO_CHAR(SYSDATE, 'YYYY-MM-DD')-->
+<!--			</if>-->
+<!--			) B1-->
+<!--	</select>-->
+
+<!--	<update id="updateOldHistory">-->
+<!--		UPDATE DISTRIBUTION_HISTORY-->
+<!--		SET TASK_STATE = 'DESTROY'-->
+<!--			, TASK_STATE_NAME = '폐기'-->
+<!--		WHERE ROWID = #{rowDataId}-->
+<!--	</update>-->
+<!--</mapper>-->
+
+
+
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+
+
+
+
+<mapper namespace="sql.OldDistributionHistory">
+
+<select id="selectList" resultType="kr.esob.fdms.controller.inside.distribution.oldhistory.HistoryListVO">
+	SELECT
+	B1.*
+	FROM
+	(
+	SELECT
+	A1.*
+	, ROW_NUMBER() OVER (ORDER BY A1.requestDate DESC) AS PAGEINDEX
+	FROM
+	(
+	SELECT
+	APPROVAL_NO                 AS approvalNo
+	, REQUEST_PURPOSE_NAME      AS requestPurposeName
+	, REQUEST_TYPE              AS requestType
+	, REQUEST_TYPE_NAME         AS requestTypeName
+	, FILE_CODE_1               AS fileCode1
+	, FILE_NAME                 AS fileName
+	, PROJECT                   AS project
+	, REVISION                  AS revision
+	, CHK_REV                   AS chkRev
+	, FILE_VERSION              AS fileVersion
+	, CN_U_REVISION_NUMBER      AS cnRevisionNumber
+	, TDM_COMPONENT_NAME        AS tdmComponentName
+	, DWG_SIZE                  AS dwgSize
+	, CUR_PAGE                  AS curPage
+	, TOT_PAGE                  AS totPage
+	, ACCEPT_USER_NAME          AS acceptUserName
+	, REQUEST_DATE              AS requestDate
+	, DEPLOY_TYPE               AS deployType
+	, ECN_NO                    AS ecnNo
+	, APPROVAL_USER_NAME        AS approvalUserName
+	, APPROVAL_DATE             AS approvalDate
+	, COMPANY_CODE              AS companyCode
+	, COMPANY_NAME              AS companyName
+	, USE_END_DATE              AS useEndDate
+	, REQUEST_PURPOSE_OUT       AS requestPurposeOut
+	, TASK_STATE                AS taskState
+	, TASK_STATE_NAME           AS taskStateName
+	, REQUEST_USER              AS requestUser
+	, REQUEST_MANAGER           AS requestManager
+	, CTID                      AS rowDataId
+	FROM DISTRIBUTION_HISTORY
+	<if test='sortColumn == null or "".equals(sortColumn)'>
+		ORDER BY REQUEST_DATE DESC
+	</if>
+	<if test='sortColumn != null and !"".equals(sortColumn)'>
+		ORDER BY ${sortColumn} ${order}
+	</if>
+	) A1
+	WHERE 1=1
+	<if test='requestType != null and !requestType.equals("")'>
+		AND requestType = #{requestType}
+	</if>
+	<if test='fileCode1 != null and !fileCode1.equals("")'>
+		AND fileCode1 LIKE '%' || UPPER(TRIM(#{fileCode1})) || '%'
+	</if>
+	<if test='useEndDate != null and !useEndDate.equals("")'>
+		AND useEndDate &lt; #{useEndDate}
+	</if>
+	<if test='approvalNo != null and !approvalNo.equals("")'>
+		AND approvalNo LIKE '%' || UPPER(TRIM(#{approvalNo})) || '%'
+	</if>
+	<if test='companyCode != null and !companyCode.equals("")'>
+		AND companyCode = #{companyCode}
+	</if>
+	<if test='taskState != null and !taskState.equals("")'>
+		AND taskState = #{taskState}
+	</if>
+	<if test='userName != null and !userName.equals("")'>
+		AND acceptUserName LIKE '%' || #{userName} || '%'
+	</if>
+	<if test='project != null and !project.equals("")'>
+		AND project = #{project}
+	</if>
+	<if test='startApprovalDate != null and !startApprovalDate.equals("")'>
+		AND requestDate BETWEEN TO_DATE(#{startApprovalDate}, 'YYYY-MM-DD') AND TO_DATE(#{closeApprovalDate}, 'YYYY-MM-DD') + INTERVAL '1 DAY'
+	</if>
+	<if test='useEndDateYn != null and useEndDateYn.equals("Y")'>
+		AND useEndDate &lt; CURRENT_DATE
+	</if>
+	<if test='end != null and !end.equals("")'>
+		LIMIT #{end}
+	</if>
+	) B1
+	<if test='start != null and !start.equals("")'>
+		WHERE PAGEINDEX &gt;= #{start}
+	</if>
+</select>
+
+<select id="selectListCount" resultType="Integer">
+	SELECT COUNT(*) AS TOTAL_COUNT
+	FROM (
+	SELECT
+	A1.*
+	FROM
+	(
+	SELECT
+	APPROVAL_NO                 AS approvalNo
+	, REQUEST_PURPOSE_NAME      AS requestPurposeName
+	, REQUEST_TYPE              AS requestType
+	, REQUEST_TYPE_NAME         AS requestTypeName
+	, FILE_CODE_1               AS fileCode1
+	, FILE_NAME                 AS fileName
+	, PROJECT                   AS project
+	, REVISION                  AS revision
+	, CHK_REV                   AS chkRev
+	, FILE_VERSION              AS fileVersion
+	, CN_U_REVISION_NUMBER      AS cnRevisionNumber
+	, TDM_COMPONENT_NAME        AS tdmComponentName
+	, DWG_SIZE                  AS dwgSize
+	, CUR_PAGE                  AS curPage
+	, TOT_PAGE                  AS totPage
+	, ACCEPT_USER_NAME          AS acceptUserName
+	, REQUEST_DATE              AS requestDate
+	, DEPLOY_TYPE               AS deployType
+	, ECN_NO                    AS ecnNo
+	, APPROVAL_USER_NAME        AS approvalUserName
+	, APPROVAL_DATE             AS approvalDate
+	, COMPANY_CODE              AS companyCode
+	, COMPANY_NAME              AS companyName
+	, USE_END_DATE              AS useEndDate
+	, REQUEST_PURPOSE_OUT       AS requestPurposeOut
+	, TASK_STATE                AS taskState
+	, TASK_STATE_NAME           AS taskStateName
+	, REQUEST_USER              AS requestUser
+	, REQUEST_MANAGER           AS requestManager
+	, CTID                      AS rowDataId
+	FROM DISTRIBUTION_HISTORY
+	) A1
+	WHERE 1=1
+	<if test='requestType != null and !requestType.equals("")'>
+		AND requestType = #{requestType}
+	</if>
+	<if test='fileCode1 != null and !fileCode1.equals("")'>
+		AND fileCode1 LIKE '%' || UPPER(TRIM(#{fileCode1})) || '%'
+	</if>
+	<if test='useEndDate != null and !useEndDate.equals("")'>
+		AND useEndDate &lt; #{useEndDate}
+	</if>
+	<if test='approvalNo != null and !approvalNo.equals("")'>
+		AND approvalNo LIKE '%' || UPPER(TRIM(#{approvalNo})) || '%'
+	</if>
+	<if test='companyCode != null and !companyCode.equals("")'>
+		AND companyCode = #{companyCode}
+	</if>
+	<if test='taskState != null and !taskState.equals("")'>
+		AND taskState = #{taskState}
+	</if>
+	<if test='userName != null and !userName.equals("")'>
+		AND acceptUserName LIKE '%' || #{userName} || '%'
+	</if>
+	<if test='project != null and !project.equals("")'>
+		AND project = #{project}
+	</if>
+	<if test='startApprovalDate != null and !startApprovalDate.equals("")'>
+		AND requestDate BETWEEN TO_DATE(#{startApprovalDate}, 'YYYY-MM-DD') AND TO_DATE(#{closeApprovalDate}, 'YYYY-MM-DD') + INTERVAL '1 DAY'
+	</if>
+	<if test='useEndDateYn != null and useEndDateYn.equals("Y")'>
+		AND useEndDate &lt; CURRENT_DATE
+	</if>
+	) B1
+</select>
+
+<update id="updateOldHistory">
+	UPDATE DISTRIBUTION_HISTORY
+	SET TASK_STATE = 'DESTROY',
+		TASK_STATE_NAME = '폐기'
+	WHERE CTID = #{rowDataId}
+</update>
+</mapper>

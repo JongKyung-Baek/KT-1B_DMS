@@ -1,0 +1,1628 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--<mapper namespace="sql.CommonRequestOutside">-->
+<!--	<insert id="insertDocsRequest">-->
+<!--	<selectKey resultType="string" keyProperty="requestNo" order="BEFORE">-->
+<!--		SELECT TO_CHAR(SYSDATE,'YYYYMMDD')||'-'||#{objectTypeCode}||LPAD(NVL(SUBSTR(MAX(REQUEST_NO),11),0)+1,4,0) AS REQUEST_NO-->
+<!--        FROM DOCS_REQUEST-->
+<!--        WHERE SUBSTR(REQUEST_NO,1,10) = TO_CHAR(SYSDATE,'YYYYMMDD')||'-'||#{objectTypeCode}-->
+<!--	</selectKey>-->
+<!--		INSERT INTO DOCS_REQUEST-->
+<!--			(-->
+<!--			REQUEST_NO-->
+<!--			, REQUEST_TYPE-->
+<!--			, REQUEST_PURPOSE-->
+<!--			, APPROVAL_LINE_ID-->
+<!--			, CURRENT_PROCESS_SEQ_NO-->
+<!--			, DEPLOY_COMPANY_CD-->
+<!--			, PRINT_YN-->
+<!--        	, DEPLOY_NORMAL_YN-->
+<!--        	, DEPLOY_SPECIAL_YN-->
+<!--			, INSERT_USER_CD-->
+<!--			, INSERT_DT-->
+<!--			, UPDATE_USER_CD-->
+<!--			, UPDATE_DT-->
+<!--			, STATUS_CD-->
+<!--			, OBJECT_TYPE-->
+<!--			, BUSINESS_AREA_CD-->
+<!--			, PROTECT_YN-->
+<!--			)-->
+<!--		VALUES-->
+<!--			(-->
+<!--			#{requestNo}-->
+<!--			, #{requestType}-->
+<!--			, #{requestPurpose}-->
+<!--			, #{approvalLineId}-->
+<!--			, '2'-->
+<!--			, #{sessionUser.companyCd}-->
+<!--			, #{printYn}-->
+<!--            , #{distributionNormalYn}-->
+<!--            , #{distributionSpecialYn}-->
+<!--			, #{sessionUser.userCd}-->
+<!--			, SYSDATE-->
+<!--			, #{sessionUser.userCd}-->
+<!--			, SYSDATE-->
+<!--			<if test="approvalLineId.equals(7)">-->
+<!--			, 'WAITING'-->
+<!--			</if>-->
+<!--			<if test="!approvalLineId.equals(7)">-->
+<!--			, 'REQUEST'-->
+<!--			</if>-->
+<!--			, #{objectType}-->
+<!--			, #{businessAreaCd}-->
+<!--			, #{protectYn}-->
+<!--			)-->
+<!--	</insert>-->
+<!--	<insert id="insertDocsRequestMapping">-->
+<!--		INSERT ALL-->
+<!--		<foreach collection="list" item="mappingParam">-->
+<!--		INTO DOCS_REQUEST_MAPPING-->
+<!--		(REQUEST_NO-->
+<!--		, USE_YN-->
+<!--		, OBJECT_ID-->
+<!--		, OBJECT_NO-->
+<!--		, OBJECT_NM-->
+<!--		, BUSINESS_AREA_CD-->
+<!--		, BUSINESS_TYPE_CD-->
+<!--		, SW_VERSION_NO-->
+<!--		, DOC_VERSION_NO-->
+<!--		, REV_NO-->
+<!--		, CURRENT_PAGE_NO-->
+<!--		, TOTAL_PAGE_NO-->
+<!--		, ECN_NO-->
+<!--		, STD_GAPP_DT-->
+<!--		, CHANGE_GAPP_DT-->
+<!--		, PROTECT_YN-->
+<!--		, PRODUCT_CD-->
+<!--		, DISTRIBUTE_TYPE_CD-->
+<!--		, FILE_NM-->
+<!--		, APPLY_HOGI_NO-->
+<!--		, OBJECT_CLASS_NM2-->
+<!--		, OBJECT_CLASS_CD2-->
+<!--		)-->
+<!--		VALUES(-->
+<!--			#{requestNo}-->
+<!--			, 'Y'-->
+<!--			, #{mappingParam.objectId}-->
+<!--			, #{mappingParam.objectNo}-->
+<!--			, #{mappingParam.objectNm}-->
+<!--			, #{mappingParam.businessAreaCd}-->
+<!--			, #{mappingParam.businessTypeCd}-->
+<!--			, #{mappingParam.swVersionNo}-->
+<!--			, #{mappingParam.docVersionNo}-->
+<!--			, #{mappingParam.revNo}-->
+<!--			, #{mappingParam.currentPageNo}-->
+<!--			, #{mappingParam.totalPageNo}-->
+<!--			, #{mappingParam.ecnNo}-->
+<!--			, #{mappingParam.stdGappDt}-->
+<!--			, #{mappingParam.changeGappDt}-->
+<!--			, #{mappingParam.protectYn}-->
+<!--			, #{mappingParam.productCd}-->
+<!--			, #{mappingParam.distributeTypeCd}-->
+<!--			, #{mappingParam.fileNm}-->
+<!--			, #{mappingParam.applyHogiNo}-->
+<!--			, #{mappingParam.objectClassNm2}-->
+<!--			, #{mappingParam.objectClassCd2}-->
+<!--			)-->
+<!--		</foreach>-->
+<!--		SELECT *-->
+<!--		FROM DUAL-->
+<!--	</insert>-->
+<!--	<insert id="insertDocsRequestDetail" parameterType="kr.esob.fdms.controller.outside.drawing.request.DrawingInfoVO">-->
+<!--		INSERT INTO DOCS_REQUEST_DETAIL-->
+<!--			(-->
+<!--			REQUEST_NO-->
+<!--			, PROCESS_SEQ-->
+<!--			, APPROVAL_STATUS_CD-->
+<!--			, ORIGINAL_USER_CD-->
+<!--			, ACTUAL_USER_CD-->
+<!--			, REQUEST_DESC-->
+<!--			, ACTION_DT-->
+<!--			, ACTION_CD-->
+<!--			, APPROVAL_GRADE_CD-->
+<!--			)-->
+<!--		SELECT #{requestNo} AS REQUEST_NO-->
+<!--			, PROCESS_SEQ_NO AS PROCESS_SEQ-->
+<!--			, APPROVAL_STATUS_CD-->
+<!--			, CASE WHEN APPROVAL_STATUS_CD = 'REQUEST'-->
+<!--				THEN #{sessionUser.userCd}-->
+<!--				WHEN APPROVAL_STATUS_CD = 'ACCEPT'-->
+<!--				THEN #{acceptanceUserCd}-->
+<!--				WHEN APPROVAL_STATUS_CD = 'WAITING'-->
+<!--				THEN #{outApprovalTeamLeaderCd}-->
+<!--				ELSE ''-->
+<!--				END AS ORIGINAL_USER_CD-->
+<!--			, CASE WHEN APPROVAL_STATUS_CD = 'REQUEST'-->
+<!--				THEN #{deployUserCd}-->
+<!--				WHEN APPROVAL_STATUS_CD = 'ACCEPT'-->
+<!--				THEN #{acceptanceUserCd}-->
+<!--				WHEN APPROVAL_STATUS_CD = 'WAITING'-->
+<!--				THEN #{outApprovalTeamLeaderCd}-->
+<!--				ELSE ''-->
+<!--				END AS ACTUAL_USER_CD-->
+<!--			, CASE WHEN APPROVAL_STATUS_CD = 'REQUEST'-->
+<!--				THEN #{requestDesc}-->
+<!--				ELSE NULL-->
+<!--				END AS REQUEST_DESC-->
+<!--&lt;!&ndash; 			, #{requestDesc} AS REQUEST_DESC &ndash;&gt;-->
+<!--			, CASE WHEN APPROVAL_STATUS_CD = 'REQUEST'-->
+<!--				THEN SYSDATE-->
+<!--				ELSE NULL-->
+<!--				END AS ACTION_DT-->
+<!--&lt;!&ndash; 			, SYSDATE AS ACTION_DT &ndash;&gt;-->
+<!--			, 'REQUEST' AS ACTION_CD-->
+<!--			, CASE WHEN APPROVAL_LINE_ID = 1 AND PROCESS_SEQ_NO = 3-->
+<!--				THEN 'TL'-->
+<!--				WHEN APPROVAL_LINE_ID = 1 AND PROCESS_SEQ_NO = 4-->
+<!--				THEN 'DEF'-->
+<!--				WHEN APPROVAL_LINE_ID = 2 AND PROCESS_SEQ_NO = 3-->
+<!--				THEN 'TL'-->
+<!--				ELSE ''-->
+<!--				END AS APPROVAL_GRADE_CD-->
+<!--		FROM DOCS_APPROVAL_LINE_DETAIL-->
+<!--		WHERE APPROVAL_LINE_ID = #{approvalLineId}-->
+<!--	</insert>-->
+<!--	<insert id="insertDocsRequestDeploy">-->
+<!--		INSERT INTO DOCS_REQUEST_DEPLOY-->
+<!--		(-->
+<!--			REQUEST_NO-->
+<!--			, DEPLOY_USER_CD-->
+<!--			, DEPLOY_USER_EMAIL-->
+<!--		)-->
+<!--		VALUES-->
+<!--		(-->
+<!--			#{requestNo}-->
+<!--			, #{deployUserCd}-->
+<!--			, #{deployUserEmail}-->
+<!--		)-->
+<!--	</insert>-->
+
+<!--	<insert id="insertDocsRequestFile">-->
+<!--		INSERT ALL-->
+<!--		<foreach collection="fileList" item="fileInfo">-->
+<!--		INTO DOCS_REQUEST_FILE-->
+<!--		(-->
+<!--			REQUEST_NO-->
+<!--			, OBJECT_ID-->
+<!--			, FILE_PATH_NM-->
+<!--			, ORG_FILE_NM-->
+<!--			, FILE_NM-->
+<!--			, FILE_SIZE-->
+<!--			, CHECK_SUM-->
+<!--			, FILE_NO-->
+<!--			, USE_START_YMD-->
+<!--			, USE_END_YMD-->
+<!--		)-->
+<!--		VALUES-->
+<!--		(-->
+<!--			#{requestNo}-->
+<!--			, #{fileInfo.objectId}-->
+<!--			, #{fileInfo.filePathNm}-->
+<!--			, #{fileInfo.orgFileNm}-->
+<!--			, #{fileInfo.fileNm}-->
+<!--			, #{fileInfo.fileSize}-->
+<!--			, #{fileInfo.checkSum}-->
+<!--			, #{fileInfo.fileNo}-->
+<!--			, #{fileInfo.useStartYmd}-->
+<!--			, #{fileInfo.useEndYmd}-->
+<!--		)-->
+<!--		</foreach>-->
+<!--		SELECT *-->
+<!--		FROM DUAL-->
+<!--	</insert>-->
+
+<!--	<select id="selectUserInfo" resultType="userVo">-->
+<!--		SELECT EMAIL-->
+<!--		FROM DOCS_USER-->
+<!--		WHERE USER_CD = #{userCd}-->
+<!--	</select>-->
+
+<!--	<select id="selectUserEmail" resultType="userVo">-->
+<!--		SELECT EMAIL-->
+<!--		FROM DOCS_USER-->
+<!--		WHERE USER_ID = #{userId}-->
+<!--	</select>-->
+
+<!--	<select id="selectUserInfoById" resultType="userVo">-->
+<!--		SELECT USER_CD-->
+<!--		FROM DOCS_USER-->
+<!--		WHERE USER_ID = #{userId}-->
+<!--	</select>-->
+
+<!--	<select id="selectRequestStatus" resultType="commonRequestStatusVO">-->
+<!--		SELECT request.REQUEST_NO-->
+<!--			, request.BUSINESS_AREA_CD-->
+<!--			, requestDetail.ACTUAL_USER_CD AS purchaserUid-->
+<!--			, (SELECT USER_NM FROM DOCS_USER WHERE USER_CD = requestDetail.ACTUAL_USER_CD) AS purchaserNm-->
+<!--			, request.REQUEST_PURPOSE-->
+<!--			, deploy.DEPLOY_USER_CD-->
+<!--			, (SELECT USER_NM FROM DOCS_USER WHERE USER_CD = deploy.DEPLOY_USER_CD) AS deployUserNm-->
+<!--			, deploy.DEPLOY_USER_EMAIL-->
+<!--			, requestDetail.REQUEST_DESC-->
+<!--			, request.OBJECT_TYPE-->
+<!--		FROM DOCS_REQUEST request-->
+<!--		LEFT JOIN DOCS_REQUEST_DETAIL requestDetail-->
+<!--		ON request.REQUEST_NO = requestDetail.REQUEST_NO-->
+<!--		AND requestDetail.APPROVAL_STATUS_CD = 'REQUEST'-->
+<!--		LEFT JOIN DOCS_REQUEST_DEPLOY deploy-->
+<!--		ON request.REQUEST_NO = deploy.REQUEST_NO-->
+<!--		WHERE request.REQUEST_NO = #{requestNo}-->
+<!--	</select>-->
+
+<!--	<select id="selectFileList" resultType="requestFileParam">-->
+<!--		SELECT fileInfo.OBJECT_ID AS objectId-->
+<!--			, fileInfo.FILE_PATH_NM AS filePathNm-->
+<!--			, fileInfo.ORG_FILE_NM AS orgFileNm-->
+<!--			, fileInfo.FILE_NM AS fileNm-->
+<!--			, fileInfo.FILE_SIZE AS fileSize-->
+<!--&lt;!&ndash; 			, fileInfo.CHECK_SUM AS checkSum  &ndash;&gt;-->
+<!--		<if test="'DRAWING'.equals(objectType)">-->
+<!--			, 1 AS fileNo-->
+<!--		</if>-->
+<!--		<if test="!'DRAWING'.equals(objectType)">-->
+<!--			, fileInfo.FILE_NO AS fileNo-->
+<!--		</if>-->
+<!--		<if test="'DRAWING'.equals(objectType)">-->
+<!--		FROM DOCS_DRAWING fileInfo-->
+<!--		</if>-->
+<!--		<if test="'DOC'.equals(objectType)">-->
+<!--		FROM DOCS_DOCUMENT_FILE fileInfo-->
+<!--		</if>-->
+<!--		<if test="'SW'.equals(objectType)">-->
+<!--		FROM DOCS_SW_FILE fileInfo-->
+<!--		</if>-->
+<!--		<if test="'PRODUCT_DOC'.equals(objectType)">-->
+<!--		FROM DOCS_PRODUCT_DOCUMENT_FILE fileInfo-->
+<!--		</if>-->
+<!--		<if test="'PRODUCT_SW'.equals(objectType)">-->
+<!--		FROM DOCS_PRODUCT_SW_FILE fileInfo-->
+<!--		</if>-->
+<!--		WHERE 1=1-->
+<!--		AND OBJECT_ID IN (-->
+<!--		<foreach collection="requestMappingParamList" item="mappingParam" separator=",">-->
+<!--		#{mappingParam.objectId}-->
+<!--		</foreach>-->
+<!--		)-->
+<!--		<if test="!'DRAWING'.equals(objectType)">-->
+<!--			AND FILE_NO IN (-->
+<!--			<foreach collection="requestMappingParamList" item="mappingParam" separator=",">-->
+<!--			#{mappingParam.fileNo}-->
+<!--			</foreach>-->
+<!--			)-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	<select id="selectDocInspectionInfo" resultType="objectInfoVO">-->
+<!--		SELECT OBJECT_ID-->
+<!--			, BUSINESS_AREA_CD-->
+<!--			, BUSINESS_TYPE_CD-->
+<!--			, DOC_CLASS_CD1 AS objectClassCd1-->
+<!--			, DOC_CLASS_CD2 AS objectClassCd2-->
+<!--			, PRODUCT_CD-->
+<!--			, ECN_NO-->
+<!--			, ECN_INSERT_UID-->
+<!--			, DOCUMENT_NO AS objectNo-->
+<!--			, REV_NO-->
+<!--			, DOCUMENT_NM AS objectNm-->
+<!--			, ACCOUNT_NM-->
+<!--			, STATUS_CD-->
+<!--			, TOTAL_SHEET-->
+<!--			, PROJECT_CD-->
+<!--			, PROJECT_NM-->
+<!--			, distributeTypeCd-->
+<!--			, STD_GAPP_DT AS stdGappDt-->
+<!--			, CHANGE_GAPP_DT AS changeGappDt-->
+<!--			, SECURITY_TYPE_CD-->
+<!--			, PROTECT_YN-->
+<!--			, DESCRIPTION-->
+<!--			, INSERT_DEPT_NM-->
+<!--			, INSERT_UID-->
+<!--			, INSERT_DT-->
+<!--			, UPDATE_DEPT_NM-->
+<!--			, UPDATE_UID-->
+<!--			, UPDATE_DT-->
+<!--			, INTERFACE_DT AS interfaceDt-->
+<!--			, FILE_NO-->
+<!--            , fileViewNm-->
+<!--            , ORG_FILE_NM-->
+<!--            , FILE_NM-->
+<!--            , FILE_PATH_NM-->
+<!--            , fileSize-->
+<!--            , 'Y' AS inspectionYn-->
+<!--		FROM-->
+<!--		(-->
+<!--			SELECT info.*-->
+<!--				, DENSE_RANK() OVER (PARTITION BY info.DOCUMENT_NO ORDER BY info.DOCUMENT_NO, DECODE(LENGTH(info.REV_NO),1,info.REV_NO||'Z',REPLACE(SUBSTR(info.REV_NO,0,1),'R','0')) DESC) AS PAGE_RANK-->
+<!--	            , DENSE_RANK() OVER (PARTITION BY info.DOCUMENT_NO, info.REV_NO ORDER BY info.DOCUMENT_NO, DECODE(LENGTH(info.REV_NO),1,info.REV_NO||'Z',info.REV_NO) DESC, combo.SEQ DESC, info.INTERFACE_DT DESC) AS SEQ_RANK-->
+<!--			FROM-->
+<!--			(-->
+<!--				SELECT document.*-->
+<!--					, fileInfo.FILE_NO-->
+<!--					, fileInfo.ORG_FILE_NM AS fileViewNm-->
+<!--					, fileInfo.ORG_FILE_NM-->
+<!--					, fileInfo.FILE_NM-->
+<!--					, fileInfo.FILE_PATH_NM-->
+<!--					, NVL(fileInfo.FILE_SIZE, 0) AS fileSize-->
+<!--					, fileInfo.DISTRIBUTE_TYPE_CD AS distributeTypeCd-->
+<!--				FROM DOCS_DOCUMENT document-->
+<!--					, DOCS_DOCUMENT_FILE fileInfo-->
+<!--				WHERE 1=1-->
+<!--				AND document.OBJECT_ID = fileInfo.OBJECT_ID-->
+<!--				AND DOCUMENT_NO IN (-->
+<!--				<foreach collection="list" item="info" separator=",">-->
+<!--				#{info.objectNo}-->
+<!--				</foreach>-->
+<!--				)-->
+<!--				&lt;!&ndash; AND ( BUSINESS_AREA_CD = #{businessAreaCd} OR BUSINESS_AREA_CD IS NULL ) &ndash;&gt;-->
+<!--				AND  NVL(VALID_TYPE,'Y') != 'N'-->
+<!--			) info-->
+<!--			, DOCS_COMBO combo-->
+<!--			WHERE info.distributeTypeCd = combo.VALUE-->
+<!--            AND combo.COMBO_CD = 'distributeTypeCd'-->
+
+<!--&lt;!&ndash; 			WHERE ROWNUM <![CDATA[<=]]> 1 &ndash;&gt;-->
+<!--		)-->
+<!--		WHERE PAGE_RANK = 1-->
+<!--		AND SEQ_RANK = 1-->
+<!--        ORDER BY DOCUMENT_NO, REV_NO DESC, FILE_NO-->
+<!--	</select>-->
+
+<!--	<select id="selectDrawingInspectionInfo" resultType="objectInfoVO">-->
+<!--		SELECT OBJECT_ID-->
+<!--			, BUSINESS_AREA_CD-->
+<!--			, BUSINESS_TYPE_CD-->
+<!--			, ECN_NO-->
+<!--			, ECN_INSERT_UID-->
+<!--			, DRAWING_TYPE-->
+<!--			, DRAWING_NO AS objectNo-->
+<!--			, DRAWING_REV-->
+<!--			, REV_NO-->
+<!--			, DRAWING_NM AS objectNm-->
+<!--			, DISTRIBUTE_TYPE_CD-->
+<!--			, STATUS_CD-->
+<!--			, CURRENT_PAGE_NO-->
+<!--			, TOTAL_PAGE_NO-->
+<!--			, EFFECTIVE_DT-->
+<!--			, FILE_PATH_NM-->
+<!--			, ORG_FILE_NM AS fileViewNm-->
+<!--			, ORG_FILE_NM-->
+<!--			, FILE_NM-->
+<!--			, FILE_SIZE-->
+<!--			, 1 AS fileNo-->
+<!--			, '' AS checkSum-->
+<!--			, STD_GAPP_DT AS stdGappDt-->
+<!--			, CHANGE_GAPP_DT AS changeGappDt-->
+<!--			, PURCHASER_UID-->
+<!--			, VENDOR_CD-->
+<!--			, DESCRIPTION-->
+<!--			, SECURITY_TYPE_CD-->
+<!--			, PROTECT_YN-->
+<!--			, INSERT_DEPT_NM-->
+<!--			, INSERT_UID-->
+<!--			, INSERT_DT-->
+<!--			, UPDATE_DEPT_NM-->
+<!--			, UPDATE_UID-->
+<!--			, UPDATE_DT-->
+<!--			, INTERFACE_DT AS interfaceDt-->
+<!--			, PRODUCT_CD-->
+<!--			, PLANT_CD-->
+<!--			, 'Y' AS inspectionYn-->
+<!--		FROM-->
+<!--		(-->
+<!--			SELECT drawing.*-->
+<!--			          , DENSE_RANK() OVER (PARTITION BY drawing.DRAWING_NO, drawing.CURRENT_PAGE_NO ORDER BY drawing.DRAWING_NO, DECODE(REGEXP_INSTR(drawing.REV_NO,'[^0-9]'), 0, drawing.REV_NO, DECODE(LENGTH(drawing.REV_NO),1,drawing.REV_NO||'Z',drawing.REV_NO)) DESC, drawing.CURRENT_PAGE_NO) AS PAGE_RANK-->
+<!--                      , DENSE_RANK() OVER (PARTITION BY drawing.DRAWING_NO, drawing.DRAWING_REV, drawing.CURRENT_PAGE_NO ORDER BY drawing.DRAWING_NO, DECODE(REGEXP_INSTR(drawing.REV_NO,'[^0-9]'), 0, drawing.REV_NO, DECODE(LENGTH(drawing.REV_NO),1,drawing.REV_NO||'Z',drawing.REV_NO)) DESC, drawing.CURRENT_PAGE_NO, combo.SEQ DESC, drawing.INTERFACE_DT DESC) AS SEQ_RANK-->
+<!--              FROM DOCS_DRAWING drawing-->
+<!--                     , DOCS_COMBO combo-->
+<!--            WHERE drawing.DISTRIBUTE_TYPE_CD = combo.VALUE-->
+<!--                 AND combo.COMBO_CD = 'distributeTypeCd'-->
+<!--                 AND drawing.DRAWING_NO IN (-->
+<!--					   <foreach collection="list" item="info" separator=",">-->
+<!--						#{info.objectNo}-->
+<!--					   </foreach>-->
+<!--						)-->
+<!--                &lt;!&ndash; AND drawing.BUSINESS_AREA_CD LIKE '%' || #{businessAreaCd} || '%' &ndash;&gt;-->
+<!--                AND NVL(drawing.VALID_TYPE,'Y') != 'N'-->
+<!--		)-->
+<!--	   WHERE PAGE_RANK = 1-->
+<!--            AND SEQ_RANK = 1-->
+<!--        ORDER BY DRAWING_NO, CURRENT_PAGE_NO-->
+<!--	</select>-->
+
+<!--	<select id="selectSwInspectionInfo" resultType="objectInfoVO">-->
+<!--		SELECT OBJECT_ID-->
+<!--			, BUSINESS_AREA_CD-->
+<!--			, BUSINESS_TYPE_CD-->
+<!--			, SW_CLASS_CD1 AS objectClassCd1-->
+<!--			, SW_CLASS_CD2 AS objectClassCd2-->
+<!--			, SW_TYPE_CD-->
+<!--			, PRODUCT_CD-->
+<!--			, ECN_NO-->
+<!--			, ECN_INSERT_UID-->
+<!--			, SW_NO AS objectNo-->
+<!--			, DISTRIBUTE_TYPE_CD-->
+<!--			, REV_NO-->
+<!--			, SW_NM AS objectNm-->
+<!--			, STATUS_CD-->
+<!--			, SW_VERSION_NO-->
+<!--			, DOC_VERSION_NO-->
+<!--			, PROJECT_CD-->
+<!--			, PROJECT_NM-->
+<!--			, STD_GAPP_DT AS stdGappDt-->
+<!--			, CHANGE_GAPP_DT AS changeGappDt-->
+<!--			, DESCRIPTION-->
+<!--			, SECURITY_TYPE_CD-->
+<!--			, PROTECT_YN-->
+<!--			, INSERT_DEPT_NM-->
+<!--			, INSERT_UID-->
+<!--			, INSERT_DT-->
+<!--			, UPDATE_DEPT_NM-->
+<!--			, UPDATE_UID-->
+<!--			, UPDATE_DT-->
+<!--			, INTERFACE_DT AS interfaceDt-->
+<!--			, FILE_NO-->
+<!--            , fileViewNm-->
+<!--            , ORG_FILE_NM-->
+<!--            , FILE_NM-->
+<!--            , FILE_PATH_NM-->
+<!--            , CHECK_SUM-->
+<!--            , distributeTypeCd-->
+<!--            , fileSize-->
+<!--            , 'Y' AS inspectionYn-->
+<!--		FROM-->
+<!--		(-->
+<!--			SELECT info.*-->
+<!--				, DENSE_RANK() OVER (PARTITION BY info.SW_NO ORDER BY info.SW_NO, DECODE(LENGTH(info.REV_NO),1,info.REV_NO||'Z',info.REV_NO) DESC) AS PAGE_RANK-->
+<!--            	, DENSE_RANK() OVER (PARTITION BY info.SW_NO, info.REV_NO ORDER BY info.SW_NO, DECODE(LENGTH(info.REV_NO),1,info.REV_NO||'Z',info.REV_NO) DESC, combo.SEQ DESC, info.INTERFACE_DT DESC) AS SEQ_RANK-->
+<!--			FROM-->
+<!--			(-->
+<!--				SELECT sw.*-->
+<!--					, fileInfo.FILE_NO-->
+<!--					, fileInfo.ORG_FILE_NM AS fileViewNm-->
+<!--					, fileInfo.ORG_FILE_NM-->
+<!--					, fileInfo.FILE_NM-->
+<!--					, fileInfo.FILE_PATH_NM-->
+<!--					, fileInfo.CHECK_SUM-->
+<!--					, fileInfo.DISTRIBUTE_TYPE_CD AS distributeTypeCd-->
+<!--					, NVL(fileInfo.FILE_SIZE, 0) AS fileSize-->
+<!--				FROM DOCS_SW sw-->
+<!--					, DOCS_SW_FILE fileInfo-->
+<!--				WHERE 1=1-->
+<!--				AND sw.OBJECT_ID = fileInfo.OBJECT_ID-->
+<!--				AND SW_NO IN (-->
+<!--				<foreach collection="list" item="info" separator=",">-->
+<!--				#{info.objectNo}-->
+<!--				</foreach>-->
+<!--				)-->
+<!--				&lt;!&ndash;AND BUSINESS_AREA_CD = #{businessAreaCd} &ndash;&gt;-->
+<!--				AND NVL(VALID_TYPE,'Y') != 'N'-->
+<!--			) info-->
+<!--			, DOCS_COMBO combo-->
+<!--			WHERE info.distributeTypeCd = combo.VALUE-->
+<!--            AND combo.COMBO_CD = 'distributeTypeCd'-->
+<!--		)-->
+<!--		WHERE PAGE_RANK = 1-->
+<!--		AND SEQ_RANK = 1-->
+<!--		ORDER BY SW_NO, REV_NO DESC, FILE_NO-->
+<!--	</select>-->
+
+<!--	<select id="selectProductDocInspectionInfo" resultType="objectInfoVO">-->
+<!--		SELECT info.*-->
+<!--			, fileInfo.ORG_FILE_NM AS fileViewNm-->
+<!--			, fileInfo.ORG_FILE_NM-->
+<!--			, fileInfo.FILE_NM-->
+<!--			, fileInfo.FILE_SIZE-->
+<!--			, fileInfo.FILE_PATH_NM-->
+<!--			, fileInfo.FILE_NO AS fileNo-->
+<!--		FROM-->
+<!--		(-->
+<!--			SELECT info.*-->
+<!--			FROM-->
+<!--			(-->
+<!--				SELECT 'Y' AS inspectionYn-->
+<!--					, product.OBJECT_ID-->
+<!--					, product.BUSINESS_AREA_CD-->
+<!--					, product.BUSINESS_TYPE_CD-->
+<!--					, product.DOC_CLASS_CD1 AS objectClassCd1-->
+<!--					, product.DOC_CLASS_NM1 AS objectClassNm1-->
+<!--					, product.DOC_CLASS_CD2 AS objectClassCd2-->
+<!--					, product.DOC_CLASS_NM2 AS objectClassNm2-->
+<!--					, product.DOCUMENT_NO AS objectNo-->
+<!--					, product.REV_NO-->
+<!--					, product.DOCUMENT_NM AS objectNm-->
+<!--					, product.STATUS_CD-->
+<!--					, product.TOTAL_PAGE_CNT-->
+<!--					, product.SECURITY_TYPE_CD-->
+<!--					, product.APPLY_PRODUCT_NO-->
+<!--					, product.APPLY_HOGI_NO-->
+<!--					, product.CALL_ID-->
+<!--					, product.ECN_NO-->
+<!--					, product.PROCESS_TYPE_CD-->
+<!--					, product.DESCRIPTION-->
+<!--					, product.INSERT_DEPT_NM-->
+<!--					, product.INSERT_UID-->
+<!--					, product.INSERT_DT-->
+<!--					, product.UPDATE_DEPT_NM-->
+<!--					, product.UPDATE_UID-->
+<!--					, product.UPDATE_DT-->
+<!--					, product.INTERFACE_DT AS interfaceDt-->
+<!--				FROM DOCS_PRODUCT_DOCUMENT product-->
+<!--				WHERE 1=1-->
+<!--				AND DOCUMENT_NO IN (-->
+<!--				<foreach collection="list" item="info" separator=",">-->
+<!--				#{info.objectNo}-->
+<!--				</foreach>-->
+<!--				)-->
+<!--				AND BUSINESS_AREA_CD = #{businessAreaCd}-->
+<!--				ORDER BY REV_NO DESC-->
+<!--			) info-->
+<!--&lt;!&ndash; 			WHERE ROWNUM <![CDATA[<=]]> 1 &ndash;&gt;-->
+<!--		) info-->
+<!--		INNER JOIN DOCS_PRODUCT_DOCUMENT_FILE fileInfo-->
+<!--		ON info.OBJECT_ID = fileInfo.OBJECT_ID-->
+<!--	</select>-->
+
+<!--	<select id="selectProductSwInspectionInfo" resultType="objectInfoVO">-->
+<!--		SELECT info.*-->
+<!--			, fileInfo.ORG_FILE_NM AS fileViewNm-->
+<!--			, fileInfo.ORG_FILE_NM-->
+<!--			, fileInfo.FILE_NM-->
+<!--			, fileInfo.FILE_SIZE-->
+<!--			, fileInfo.FILE_PATH_NM-->
+<!--			, fileInfo.FILE_NO AS fileNo-->
+<!--		FROM-->
+<!--		(-->
+<!--			SELECT info.*-->
+<!--			FROM-->
+<!--			(-->
+<!--				SELECT 'Y' AS inspectionYn-->
+<!--					, product.OBJECT_ID-->
+<!--					, product.BUSINESS_AREA_CD-->
+<!--					, product.BUSINESS_TYPE_CD-->
+<!--					, product.ECN_NO-->
+<!--					, product.PRODUCT_NO-->
+<!--					, product.SW_CLASS_CD1 AS objectClassCd1-->
+<!--					, product.SW_CLASS_NM1 AS objectClassNm1-->
+<!--					, product.SW_CLASS_CD2 AS objectClassCd2-->
+<!--					, product.SW_CLASS_NM2 AS objectClassNm2-->
+<!--					, product.SW_NO AS objectNo-->
+<!--					, product.SW_VERSION_NO-->
+<!--					, product.SW_NM AS objectNm-->
+<!--					, product.REV_NO-->
+<!--					, product.STATUS_CD-->
+<!--					, product.DESCRIPTION-->
+<!--					, product.SECURITY_TYPE_CD-->
+<!--					, product.INSERT_DEPT_NM-->
+<!--					, product.INSERT_UID-->
+<!--					, product.INSERT_DT-->
+<!--					, product.UPDATE_DEPT_NM-->
+<!--					, product.UPDATE_UID-->
+<!--					, product.UPDATE_DT-->
+<!--					, fileInfo.ORG_FILE_NM AS fileNm-->
+<!--					, fileInfo.FILE_NO-->
+<!--					, product.INTERFACE_DT AS interfaceDt-->
+<!--				FROM DOCS_PRODUCT_SW product-->
+<!--				INNER JOIN DOCS_PRODUCT_SW_FILE fileInfo-->
+<!--				ON product.OBJECT_ID = fileInfo.OBJECT_ID-->
+<!--				WHERE 1=1-->
+<!--				AND SW_NO IN (-->
+<!--				<foreach collection="list" item="info" separator=",">-->
+<!--				#{info.objectNo}-->
+<!--				</foreach>-->
+<!--				)-->
+<!--				AND BUSINESS_AREA_CD = #{businessAreaCd}-->
+<!--				ORDER BY REV_NO DESC-->
+<!--			) info-->
+<!--&lt;!&ndash; 			WHERE ROWNUM <![CDATA[<=]]> 1 &ndash;&gt;-->
+<!--		) info-->
+<!--		INNER JOIN DOCS_PRODUCT_SW_FILE fileInfo-->
+<!--		ON info.OBJECT_ID = fileInfo.OBJECT_ID-->
+<!--	</select>-->
+<!--	-->
+<!--	<update id="updateVendorAccept">-->
+<!--		 UPDATE DOCS_REQUEST-->
+<!--			SET VENDOR_ACCEPT_YN = 'Y'-->
+<!--			  , VENDOR_ACCEPT_USER_CD = #{sessionUser.userCd}-->
+<!--			  , VENDOR_ACCEPT_DT = SYSDATE-->
+<!--		  WHERE REQUEST_NO = #{requestNo}-->
+<!--	</update>-->
+
+<!--	<insert id="insertDocsRequestFileUsingMap">-->
+<!--		INSERT INTO DOCS_REQUEST_FILE-->
+<!--		(-->
+<!--			REQUEST_NO-->
+<!--		, OBJECT_ID-->
+<!--		, FILE_PATH_NM-->
+<!--		, ORG_FILE_NM-->
+<!--		, FILE_NM-->
+<!--		, FILE_SIZE-->
+<!--		, CHECK_SUM-->
+<!--		, FILE_NO-->
+<!--		, USE_START_YMD-->
+<!--		, USE_END_YMD-->
+<!--		, DEPLOY_TERM-->
+<!--		)-->
+<!--		VALUES-->
+<!--			(-->
+<!--				#{requestNo}-->
+<!--			, #{objectId}-->
+<!--			, #{filePath}-->
+<!--			, #{orgFileNm}-->
+<!--			, #{fileNm}-->
+<!--			, #{fileSize}-->
+<!--			, #{checkSum}-->
+<!--			, #{fileNo}-->
+<!--			, #{useStartYmd}-->
+<!--			, #{useEndYmd}-->
+<!--			, #{deployTerm}-->
+<!--			)-->
+<!--	</insert>-->
+
+<!--	<select id="selectDocsRequestFileUsingMap">-->
+<!--		SELECT-->
+<!--	</select>-->
+<!--</mapper>-->
+
+
+
+
+<!-- 이하 PostgreSQL용 쿼리문 -->
+<!-- 이하 PostgreSQL용 쿼리문 -->
+<!-- 이하 PostgreSQL용 쿼리문 -->
+<!-- 이하 PostgreSQL용 쿼리문 -->
+<!-- 이하 PostgreSQL용 쿼리문 -->
+<!-- 이하 PostgreSQL용 쿼리문 -->
+
+
+
+
+
+<mapper namespace="sql.CommonRequestOutside">
+	<insert id="insertDocsRequest">
+		<selectKey resultType="string" keyProperty="requestNo" order="BEFORE">
+			SELECT TO_CHAR(CURRENT_DATE,'YYYYMMDD')||'-'||'D'||
+			LPAD((COALESCE(SUBSTRING(MAX(REQUEST_NO),11)::INTEGER,0)+1)::text, 4, '0') AS REQUEST_NO
+			FROM DOCS_REQUEST
+			WHERE SUBSTRING(REQUEST_NO,1,10) = TO_CHAR(CURRENT_DATE,'YYYYMMDD')||'-'||'D'
+		</selectKey>
+		INSERT INTO DOCS_REQUEST
+		(
+		REQUEST_NO
+		, REQUEST_TYPE
+		, REQUEST_PURPOSE
+		, APPROVAL_LINE_ID
+		, CURRENT_PROCESS_SEQ_NO
+		, DEPLOY_COMPANY_CD
+		, PRINT_YN
+		, DEPLOY_NORMAL_YN
+		, DEPLOY_SPECIAL_YN
+		, INSERT_USER_CD
+		, INSERT_DT
+		, UPDATE_USER_CD
+		, UPDATE_DT
+		, STATUS_CD
+		, OBJECT_TYPE
+		, BUSINESS_AREA_CD
+		, PROTECT_YN
+		)
+		VALUES
+		(
+		#{requestNo}
+		, #{requestType}
+		, #{requestPurpose}
+		, #{approvalLineId}
+		, '2'
+		, #{sessionUser.companyCd}
+		, #{printYn}
+		, #{distributionNormalYn}
+		, #{distributionSpecialYn}
+		, #{sessionUser.userCd}
+		, CURRENT_TIMESTAMP
+		, #{sessionUser.userCd}
+		, CURRENT_TIMESTAMP
+		<if test="approvalLineId == 7">
+			, 'WAITING'
+		</if>
+		<if test="approvalLineId != 7">
+			, 'REQUEST'
+		</if>
+		, #{objectType}
+		, #{businessAreaCd}
+		, #{protectYn}
+		)
+	</insert>
+	<insert id="insertDocsRequestMapping">
+		<foreach collection="list" item="mappingParam"
+				 open="INSERT INTO DOCS_REQUEST_MAPPING
+             (REQUEST_NO, USE_YN, OBJECT_ID, OBJECT_NO, OBJECT_NM, BUSINESS_AREA_CD, BUSINESS_TYPE_CD,
+              SW_VERSION_NO, DOC_VERSION_NO, REV_NO, CURRENT_PAGE_NO, TOTAL_PAGE_NO, ECN_NO, STD_GAPP_DT,
+              CHANGE_GAPP_DT, PROTECT_YN, PRODUCT_CD, DISTRIBUTE_TYPE_CD, FILE_NM, APPLY_HOGI_NO, OBJECT_CLASS_NM2, OBJECT_CLASS_CD2) VALUES " separator=", ">
+			(
+			#{requestNo}
+			, 'Y'
+			, #{mappingParam.objectId}
+			, #{mappingParam.objectNo}
+			, #{mappingParam.objectNm}
+			, #{mappingParam.businessAreaCd}
+			, #{mappingParam.businessTypeCd}
+			, <if test="mappingParam.swVersionNo != null and mappingParam.swVersionNo != ''">
+			#{mappingParam.swVersionNo}
+		</if>
+			<if test="mappingParam.swVersionNo == null or mappingParam.swVersionNo == ''">
+				NULL
+			</if>
+			, <if test="mappingParam.docVersionNo != null and mappingParam.docVersionNo != ''">
+			#{mappingParam.docVersionNo}
+		</if>
+			<if test="mappingParam.docVersionNo == null or mappingParam.docVersionNo == ''">
+				NULL
+			</if>
+			, #{mappingParam.revNo}
+			, #{mappingParam.currentPageNo}
+			, #{mappingParam.totalPageNo}
+			, #{mappingParam.ecnNo}
+			, <if test="mappingParam.stdGappDt != null and mappingParam.stdGappDt != ''">
+			#{mappingParam.stdGappDt, jdbcType=TIMESTAMP}
+		</if>
+			<if test="mappingParam.stdGappDt == null or mappingParam.stdGappDt == ''">
+				NULL
+			</if>
+			, <if test="mappingParam.changeGappDt != null and mappingParam.changeGappDt != ''">
+			#{mappingParam.changeGappDt, jdbcType=TIMESTAMP}
+		</if>
+			<if test="mappingParam.changeGappDt == null or mappingParam.changeGappDt == ''">
+				NULL
+			</if>
+			, #{mappingParam.protectYn}
+			, #{mappingParam.productCd}
+			, #{mappingParam.distributeTypeCd}
+			, #{mappingParam.fileNm}
+			, #{mappingParam.applyHogiNo}
+			, #{mappingParam.objectClassNm2}
+			, #{mappingParam.objectClassCd2}
+			)
+		</foreach>
+	</insert>
+
+	<insert id="insertDocsRequestDetail" parameterType="kr.esob.fdms.controller.outside.drawing.request.DrawingInfoVO">
+		INSERT INTO DOCS_REQUEST_DETAIL
+		(
+		  REQUEST_NO
+		, PROCESS_SEQ
+		, APPROVAL_STATUS_CD
+		, ORIGINAL_USER_CD
+		, ACTUAL_USER_CD
+		, REQUEST_DESC
+		, ACTION_DT
+		, ACTION_CD
+		, APPROVAL_GRADE_CD
+		)
+		SELECT #{requestNo} AS REQUEST_NO
+			 , PROCESS_SEQ_NO AS PROCESS_SEQ
+			 , APPROVAL_STATUS_CD
+			 , CASE WHEN APPROVAL_STATUS_CD = 'REQUEST'
+						THEN #{sessionUser.userCd}
+					WHEN APPROVAL_STATUS_CD = 'ACCEPT'
+						THEN #{acceptanceUserCd}
+					WHEN APPROVAL_STATUS_CD = 'WAITING'
+						THEN #{outApprovalTeamLeaderCd}
+					ELSE ''
+			END AS ORIGINAL_USER_CD
+			 , CASE WHEN APPROVAL_STATUS_CD = 'REQUEST'
+						THEN #{deployUserCd}
+					WHEN APPROVAL_STATUS_CD = 'ACCEPT'
+						THEN #{acceptanceUserCd}
+					WHEN APPROVAL_STATUS_CD = 'WAITING'
+						THEN #{outApprovalTeamLeaderCd}
+					ELSE ''
+			END AS ACTUAL_USER_CD
+			 , CASE WHEN APPROVAL_STATUS_CD = 'REQUEST'
+						THEN #{requestDesc}
+					ELSE NULL
+			END AS REQUEST_DESC
+			 , CASE WHEN APPROVAL_STATUS_CD = 'REQUEST'
+						THEN CURRENT_TIMESTAMP
+					ELSE NULL
+			END AS ACTION_DT
+			 , 'REQUEST' AS ACTION_CD
+			 , CASE WHEN APPROVAL_LINE_ID = 1 AND PROCESS_SEQ_NO = 3
+						THEN 'TL'
+					WHEN APPROVAL_LINE_ID = 1 AND PROCESS_SEQ_NO = 4
+						THEN 'DEF'
+					WHEN APPROVAL_LINE_ID = 2 AND PROCESS_SEQ_NO = 3
+						THEN 'TL'
+					ELSE ''
+			END AS APPROVAL_GRADE_CD
+		FROM DOCS_APPROVAL_LINE_DETAIL
+		WHERE APPROVAL_LINE_ID = #{approvalLineId}
+	</insert>
+	<insert id="insertDocsRequestDeploy">
+		INSERT INTO DOCS_REQUEST_DEPLOY
+		(
+		  REQUEST_NO
+		, DEPLOY_USER_CD
+		, DEPLOY_USER_EMAIL
+		)
+		VALUES
+			(
+			  #{requestNo}
+			, #{deployUserCd}
+			, #{deployUserEmail}
+			)
+	</insert>
+
+	<insert id="insertDocsRequestFile">
+		<foreach collection="fileList" item="fileInfo" open="INSERT INTO DOCS_REQUEST_FILE (REQUEST_NO, OBJECT_ID, FILE_PATH_NM, ORG_FILE_NM, FILE_NM, FILE_SIZE, CHECK_SUM, FILE_NO, USE_START_YMD, USE_END_YMD) VALUES " separator=", ">
+			(
+			#{requestNo}
+			, #{fileInfo.objectId}
+			, #{fileInfo.filePathNm}
+			, #{fileInfo.orgFileNm}
+			, #{fileInfo.fileNm}
+			, #{fileInfo.fileSize}
+			, #{fileInfo.checkSum}
+			, #{fileInfo.fileNo}
+			, #{fileInfo.useStartYmd}
+			, #{fileInfo.useEndYmd}
+			)
+		</foreach>
+	</insert>
+
+	<select id="selectUserInfo" resultType="userVo">
+		SELECT EMAIL
+		FROM DOCS_USER
+		WHERE USER_CD = #{userCd}
+	</select>
+
+	<select id="selectUserEmail" resultType="userVo">
+		SELECT EMAIL
+		FROM DOCS_USER
+		WHERE USER_ID = #{userId}
+	</select>
+
+	<select id="selectUserInfoById" resultType="userVo">
+		SELECT USER_CD
+		FROM DOCS_USER
+		WHERE USER_ID = #{userId}
+	</select>
+
+	<select id="selectRequestStatus" resultType="commonRequestStatusVO">
+		SELECT request.REQUEST_NO
+			 , request.BUSINESS_AREA_CD
+			 , requestDetail.ACTUAL_USER_CD AS purchaserUid
+			 , (SELECT USER_NM FROM DOCS_USER WHERE USER_CD = requestDetail.ACTUAL_USER_CD) AS purchaserNm
+			 , request.REQUEST_PURPOSE
+			 , deploy.DEPLOY_USER_CD
+			 , (SELECT USER_NM FROM DOCS_USER WHERE USER_CD = deploy.DEPLOY_USER_CD) AS deployUserNm
+			 , deploy.DEPLOY_USER_EMAIL
+			 , requestDetail.REQUEST_DESC
+			 , request.OBJECT_TYPE
+		FROM DOCS_REQUEST request
+				 LEFT JOIN DOCS_REQUEST_DETAIL requestDetail
+						   ON request.REQUEST_NO = requestDetail.REQUEST_NO
+							   AND requestDetail.APPROVAL_STATUS_CD = 'REQUEST'
+				 LEFT JOIN DOCS_REQUEST_DEPLOY deploy
+						   ON request.REQUEST_NO = deploy.REQUEST_NO
+		WHERE request.REQUEST_NO = #{requestNo}
+	</select>
+
+	<select id="selectFileList" resultType="requestFileParam">
+		SELECT fileInfo.OBJECT_ID AS objectId
+		, fileInfo.FILE_PATH_NM AS filePathNm
+		, fileInfo.ORG_FILE_NM AS orgFileNm
+		, fileInfo.FILE_NM AS fileNm
+		, fileInfo.FILE_SIZE AS fileSize
+		<if test="'DRAWING'.equals(objectType)">
+			, 1 AS fileNo
+		</if>
+		<if test="!'DRAWING'.equals(objectType)">
+			, fileInfo.FILE_NO AS fileNo
+		</if>
+		<if test="'DRAWING'.equals(objectType)">
+			FROM DOCS_DRAWING fileInfo
+		</if>
+		<if test="'DOC'.equals(objectType)">
+			FROM DOCS_DOCUMENT_FILE fileInfo
+		</if>
+		<if test="'SW'.equals(objectType)">
+			FROM DOCS_SW_FILE fileInfo
+		</if>
+		<if test="'PRODUCT_DOC'.equals(objectType)">
+			FROM DOCS_PRODUCT_DOCUMENT_FILE fileInfo
+		</if>
+		<if test="'PRODUCT_SW'.equals(objectType)">
+			FROM DOCS_PRODUCT_SW_FILE fileInfo
+		</if>
+		WHERE 1=1
+		AND OBJECT_ID IN (
+		<foreach collection="requestMappingParamList" item="mappingParam" separator=",">
+			#{mappingParam.objectId}
+		</foreach>
+		)
+		<if test="!'DRAWING'.equals(objectType)">
+			AND FILE_NO IN (
+			<foreach collection="requestMappingParamList" item="mappingParam" separator=",">
+				#{mappingParam.fileNo}
+			</foreach>
+			)
+		</if>
+	</select>
+
+	<select id="selectDocInspectionInfo" resultType="objectInfoVO">
+		SELECT OBJECT_ID
+		, BUSINESS_AREA_CD
+		, BUSINESS_TYPE_CD
+		, DOC_CLASS_CD1 AS objectClassCd1
+		, DOC_CLASS_CD2 AS objectClassCd2
+		, PRODUCT_CD
+		, ECN_NO
+		, ECN_INSERT_UID
+		, DOCUMENT_NO AS objectNo
+		, REV_NO
+		, DOCUMENT_NM AS objectNm
+		, ACCOUNT_NM
+		, STATUS_CD
+		, TOTAL_SHEET
+		, PROJECT_CD
+		, PROJECT_NM
+		, distributeTypeCd
+		, STD_GAPP_DT AS stdGappDt
+		, CHANGE_GAPP_DT AS changeGappDt
+		, SECURITY_TYPE_CD
+		, PROTECT_YN
+		, DESCRIPTION
+		, INSERT_DEPT_NM
+		, INSERT_UID
+		, INSERT_DT
+		, UPDATE_DEPT_NM
+		, UPDATE_UID
+		, UPDATE_DT
+		, INTERFACE_DT AS interfaceDt
+		, FILENO
+		, fileViewNm
+		, ORG_FILE_NM
+		, FILE_NM
+		, FILE_PATH_NM
+		, fileSize
+		, 'Y' AS inspectionYn
+		FROM
+		(
+		SELECT info.*
+		, DENSE_RANK() OVER (PARTITION BY info.DOCUMENT_NO ORDER BY info.DOCUMENT_NO, CASE WHEN LENGTH(info.REV_NO)=1 THEN info.REV_NO||'Z' ELSE REGEXP_REPLACE(SUBSTRING(info.REV_NO,0,2),'R','0') END DESC) AS PAGE_RANK
+		, DENSE_RANK() OVER (PARTITION BY info.DOCUMENT_NO, info.REV_NO ORDER BY info.DOCUMENT_NO, CASE WHEN LENGTH(info.REV_NO)=1 THEN info.REV_NO||'Z' ELSE info.REV_NO END DESC, combo.SEQ DESC, info.INTERFACE_DT DESC) AS SEQ_RANK
+		FROM
+		(
+		SELECT document.*
+		, fileInfo.FILE_NO AS FILENO
+		, fileInfo.ORG_FILE_NM AS fileViewNm
+		, fileInfo.ORG_FILE_NM
+		, fileInfo.FILE_NM
+		, fileInfo.FILE_PATH_NM
+		, COALESCE(fileInfo.FILE_SIZE, '0') AS fileSize
+		, fileInfo.DISTRIBUTE_TYPE_CD AS distributeTypeCd
+		FROM DOCS_DOCUMENT document
+		, DOCS_DOCUMENT_FILE fileInfo
+		WHERE 1=1
+		AND document.OBJECT_ID = fileInfo.OBJECT_ID
+		AND DOCUMENT_NO IN (
+		<foreach collection="list" item="info" separator=",">
+			#{info.objectNo}
+		</foreach>
+		)
+		AND COALESCE(VALID_TYPE,'Y') != 'N'
+		) info
+		, DOCS_COMBO combo
+		WHERE info.distributeTypeCd = combo.VALUE
+		AND combo.COMBO_CD = 'distributeTypeCd'
+		)
+		WHERE PAGE_RANK = 1
+		AND SEQ_RANK = 1
+		ORDER BY DOCUMENT_NO, REV_NO DESC, FILENO
+	</select>
+
+	<select id="selectSimilarDocInspectionInfo" resultType="objectInfoVO">
+		SELECT OBJECT_ID
+		, BUSINESS_AREA_CD
+		, BUSINESS_TYPE_CD
+		, DOC_CLASS_CD1 AS objectClassCd1
+		, DOC_CLASS_CD2 AS objectClassCd2
+		, PRODUCT_CD
+		, ECN_NO
+		, ECN_INSERT_UID
+		, DOCUMENT_NO AS objectNo
+		, REV_NO
+		, DOCUMENT_NM AS objectNm
+		, ACCOUNT_NM
+		, STATUS_CD
+		, TOTAL_SHEET
+		, PROJECT_CD
+		, PROJECT_NM
+		, distributeTypeCd
+		, STD_GAPP_DT AS stdGappDt
+		, CHANGE_GAPP_DT AS changeGappDt
+		, SECURITY_TYPE_CD
+		, PROTECT_YN
+		, DESCRIPTION
+		, INSERT_DEPT_NM
+		, INSERT_UID
+		, INSERT_DT
+		, UPDATE_DEPT_NM
+		, UPDATE_UID
+		, UPDATE_DT
+		, INTERFACE_DT AS interfaceDt
+		, FILENO
+		, fileViewNm
+		, ORG_FILE_NM
+		, FILE_NM
+		, FILE_PATH_NM
+		, fileSize
+		, 'Y' AS inspectionYn
+		FROM
+		(
+		SELECT info.*
+		, DENSE_RANK() OVER (PARTITION BY info.DOCUMENT_NO ORDER BY info.DOCUMENT_NO, CASE WHEN LENGTH(info.REV_NO)=1 THEN info.REV_NO||'Z' ELSE REGEXP_REPLACE(SUBSTRING(info.REV_NO,0,2),'R','0') END DESC) AS PAGE_RANK
+		, DENSE_RANK() OVER (PARTITION BY info.DOCUMENT_NO, info.REV_NO ORDER BY info.DOCUMENT_NO, CASE WHEN LENGTH(info.REV_NO)=1 THEN info.REV_NO||'Z' ELSE info.REV_NO END DESC, combo.SEQ DESC, info.INTERFACE_DT DESC) AS SEQ_RANK
+		FROM
+		(
+		SELECT document.*
+		, fileInfo.FILE_NO AS FILENO
+		, fileInfo.ORG_FILE_NM AS fileViewNm
+		, fileInfo.ORG_FILE_NM
+		, fileInfo.FILE_NM
+		, fileInfo.FILE_PATH_NM
+		, COALESCE(fileInfo.FILE_SIZE, '0') AS fileSize
+		, fileInfo.DISTRIBUTE_TYPE_CD AS distributeTypeCd
+		FROM DOCS_DOCUMENT document
+		, DOCS_DOCUMENT_FILE fileInfo
+		WHERE 1=1
+		AND document.OBJECT_ID = fileInfo.OBJECT_ID
+		AND (
+		<foreach collection="list" item="info" separator=" OR ">
+			DOCUMENT_NO LIKE '%' || #{info.objectNo} || '%'
+		</foreach>
+		)
+		AND COALESCE(VALID_TYPE,'Y') != 'N'
+		) info
+		, DOCS_COMBO combo
+		WHERE info.distributeTypeCd = combo.VALUE
+		AND combo.COMBO_CD = 'distributeTypeCd'
+		)
+		WHERE PAGE_RANK = 1
+		AND SEQ_RANK = 1
+		ORDER BY DOCUMENT_NO, REV_NO DESC, FILENO
+	</select>
+
+	<select id="selectDrawingInspectionInfo" resultType="objectInfoVO">
+		SELECT OBJECT_ID
+		, BUSINESS_AREA_CD
+		, BUSINESS_TYPE_CD
+		, ECN_NO
+		, ECN_INSERT_UID
+		, DRAWING_TYPE
+		, DRAWING_NO AS objectNo
+		, DRAWING_REV
+		, REV_NO
+		, DRAWING_NM AS objectNm
+		, DISTRIBUTE_TYPE_CD
+		, STATUS_CD
+		, CURRENT_PAGE_NO
+		, TOTAL_PAGE_NO
+		, EFFECTIVE_DT
+		, FILE_PATH_NM
+		, ORG_FILE_NM AS fileViewNm
+		, ORG_FILE_NM
+		, FILE_NM
+		, FILE_SIZE
+		, 1 AS fileNo
+		, '' AS checkSum
+		, STD_GAPP_DT AS stdGappDt
+		, CHANGE_GAPP_DT AS changeGappDt
+		, PURCHASER_UID
+		, VENDOR_CD
+		, DESCRIPTION
+		, SECURITY_TYPE_CD
+		, PROTECT_YN
+		, INSERT_DEPT_NM
+		, INSERT_UID
+		, INSERT_DT
+		, UPDATE_DEPT_NM
+		, UPDATE_UID
+		, UPDATE_DT
+		, INTERFACE_DT AS interfaceDt
+		, PRODUCT_CD
+		, PLANT_CD
+		, 'Y' AS inspectionYn
+		FROM
+		(
+		SELECT drawing.*
+		, DENSE_RANK() OVER (PARTITION BY drawing.DRAWING_NO, drawing.CURRENT_PAGE_NO ORDER BY drawing.DRAWING_NO, CASE WHEN REGEXP_INSTR(drawing.REV_NO,'[^0-9]') = 0 THEN drawing.REV_NO ELSE CASE WHEN LENGTH(drawing.REV_NO)=1 THEN drawing.REV_NO||'Z' ELSE drawing.REV_NO END END DESC, drawing.CURRENT_PAGE_NO) AS PAGE_RANK
+		, DENSE_RANK() OVER (PARTITION BY drawing.DRAWING_NO, drawing.DRAWING_REV, drawing.CURRENT_PAGE_NO ORDER BY drawing.DRAWING_NO, CASE WHEN REGEXP_INSTR(drawing.REV_NO,'[^0-9]') = 0 THEN drawing.REV_NO ELSE CASE WHEN LENGTH(drawing.REV_NO)=1 THEN drawing.REV_NO||'Z' ELSE drawing.REV_NO END END DESC, drawing.CURRENT_PAGE_NO, combo.SEQ DESC, drawing.INTERFACE_DT DESC) AS SEQ_RANK
+		FROM DOCS_DRAWING drawing
+		, DOCS_COMBO combo
+		WHERE combo.COMBO_CD = 'distributeTypeCd'
+		AND drawing.DRAWING_NO IN (
+		<foreach collection="list" item="info" separator=",">
+			#{info.objectNo}
+		</foreach>
+		)
+		AND COALESCE(drawing.VALID_TYPE,'Y') != 'N'
+		)
+		WHERE PAGE_RANK = 1
+		AND SEQ_RANK = 1
+		ORDER BY DRAWING_NO, CURRENT_PAGE_NO
+	</select>
+
+
+	<select id="selectSimilarDrawingInspectionInfo" resultType="objectInfoVO">
+		SELECT OBJECT_ID
+		, BUSINESS_AREA_CD
+		, BUSINESS_TYPE_CD
+		, ECN_NO
+		, ECN_INSERT_UID
+		, DRAWING_TYPE
+		, DRAWING_NO AS objectNo
+		, DRAWING_REV
+		, REV_NO
+		, DRAWING_NM AS objectNm
+		, DISTRIBUTE_TYPE_CD
+		, STATUS_CD
+		, CURRENT_PAGE_NO
+		, TOTAL_PAGE_NO
+		, EFFECTIVE_DT
+		, FILE_PATH_NM
+		, ORG_FILE_NM AS fileViewNm
+		, ORG_FILE_NM
+		, FILE_NM
+		, FILE_SIZE
+		, 1 AS fileNo
+		, '' AS checkSum
+		, STD_GAPP_DT AS stdGappDt
+		, CHANGE_GAPP_DT AS changeGappDt
+		, PURCHASER_UID
+		, VENDOR_CD
+		, DESCRIPTION
+		, SECURITY_TYPE_CD
+		, PROTECT_YN
+		, INSERT_DEPT_NM
+		, INSERT_UID
+		, INSERT_DT
+		, UPDATE_DEPT_NM
+		, UPDATE_UID
+		, UPDATE_DT
+		, INTERFACE_DT AS interfaceDt
+		, PRODUCT_CD
+		, PLANT_CD
+		, 'Y' AS inspectionYn
+		FROM
+		(
+		SELECT drawing.*
+		, DENSE_RANK() OVER (PARTITION BY drawing.DRAWING_NO, drawing.CURRENT_PAGE_NO ORDER BY drawing.DRAWING_NO, CASE WHEN REGEXP_INSTR(drawing.REV_NO,'[^0-9]') = 0 THEN drawing.REV_NO ELSE CASE WHEN LENGTH(drawing.REV_NO)=1 THEN drawing.REV_NO||'Z' ELSE drawing.REV_NO END END DESC, drawing.CURRENT_PAGE_NO) AS PAGE_RANK
+		, DENSE_RANK() OVER (PARTITION BY drawing.DRAWING_NO, drawing.DRAWING_REV, drawing.CURRENT_PAGE_NO ORDER BY drawing.DRAWING_NO, CASE WHEN REGEXP_INSTR(drawing.REV_NO,'[^0-9]') = 0 THEN drawing.REV_NO ELSE CASE WHEN LENGTH(drawing.REV_NO)=1 THEN drawing.REV_NO||'Z' ELSE drawing.REV_NO END END DESC, drawing.CURRENT_PAGE_NO, combo.SEQ DESC, drawing.INTERFACE_DT DESC) AS SEQ_RANK
+		FROM DOCS_DRAWING drawing
+		, DOCS_COMBO combo
+		WHERE combo.COMBO_CD = 'distributeTypeCd'
+		AND (
+		<foreach collection="list" item="info" separator=" OR ">
+			drawing.DRAWING_NO LIKE '%' || #{info.objectNo} || '%'
+		</foreach>
+		)
+		AND COALESCE(drawing.VALID_TYPE,'Y') != 'N'
+		)
+		WHERE PAGE_RANK = 1
+		AND SEQ_RANK = 1
+		ORDER BY DRAWING_NO, CURRENT_PAGE_NO
+	</select>
+
+	<select id="selectSwInspectionInfo" resultType="objectInfoVO">
+		SELECT OBJECT_ID
+		, BUSINESS_AREA_CD
+		, BUSINESS_TYPE_CD
+		, SW_CLASS_CD1 AS objectClassCd1
+		, SW_CLASS_CD2 AS objectClassCd2
+		, SW_TYPE_CD
+		, PRODUCT_CD
+		, ECN_NO
+		, ECN_INSERT_UID
+		, SW_NO AS objectNo
+		, DISTRIBUTE_TYPE_CD
+		, REV_NO
+		, SW_NM AS objectNm
+		, STATUS_CD
+		, SW_VERSION_NO
+		, DOC_VERSION_NO
+		, PROJECT_CD
+		, PROJECT_NM
+		, STD_GAPP_DT AS stdGappDt
+		, CHANGE_GAPP_DT AS changeGappDt
+		, DESCRIPTION
+		, SECURITY_TYPE_CD
+		, PROTECT_YN
+		, INSERT_DEPT_NM
+		, INSERT_UID
+		, INSERT_DT
+		, UPDATE_DEPT_NM
+		, UPDATE_UID
+		, UPDATE_DT
+		, INTERFACE_DT AS interfaceDt
+		, FILE_NO
+		, fileViewNm
+		, ORG_FILE_NM
+		, FILE_NM
+		, FILE_PATH_NM
+		, CHECK_SUM
+		, distributeTypeCd
+		, fileSize
+		, 'Y' AS inspectionYn
+		FROM
+		(
+		SELECT info.*
+		, DENSE_RANK() OVER (PARTITION BY info.SW_NO ORDER BY info.SW_NO, CASE WHEN LENGTH(info.REV_NO)=1 THEN info.REV_NO||'Z' ELSE info.REV_NO END DESC) AS PAGE_RANK
+		, DENSE_RANK() OVER (PARTITION BY info.SW_NO, info.REV_NO ORDER BY info.SW_NO, CASE WHEN LENGTH(info.REV_NO)=1 THEN info.REV_NO||'Z' ELSE info.REV_NO END DESC, combo.SEQ DESC, info.INTERFACE_DT DESC) AS SEQ_RANK
+		FROM
+		(
+		SELECT sw.*
+		, fileInfo.FILE_NO
+		, fileInfo.ORG_FILE_NM AS fileViewNm
+		, fileInfo.ORG_FILE_NM
+		, fileInfo.FILE_NM
+		, fileInfo.FILE_PATH_NM
+		, fileInfo.CHECK_SUM
+		, fileInfo.DISTRIBUTE_TYPE_CD AS distributeTypeCd
+		, COALESCE(fileInfo.FILE_SIZE, '0') AS fileSize
+		FROM DOCS_SW sw
+		, DOCS_SW_FILE fileInfo
+		WHERE 1=1
+		AND sw.OBJECT_ID = fileInfo.OBJECT_ID
+		AND SW_NO IN (
+		<foreach collection="list" item="info" separator=",">
+			#{info.objectNo}
+		</foreach>
+		)
+		AND COALESCE(VALID_TYPE,'Y') != 'N'
+		) info
+		, DOCS_COMBO combo
+		WHERE info.distributeTypeCd = combo.VALUE
+		AND combo.COMBO_CD = 'distributeTypeCd'
+		)
+		WHERE PAGE_RANK = 1
+		AND SEQ_RANK = 1
+		ORDER BY SW_NO, REV_NO DESC, FILE_NO
+	</select>
+
+	<select id="selectSimilarSwInspectionInfo" resultType="objectInfoVO">
+		SELECT OBJECT_ID
+		, BUSINESS_AREA_CD
+		, BUSINESS_TYPE_CD
+		, SW_CLASS_CD1 AS objectClassCd1
+		, SW_CLASS_CD2 AS objectClassCd2
+		, SW_TYPE_CD
+		, PRODUCT_CD
+		, ECN_NO
+		, ECN_INSERT_UID
+		, SW_NO AS objectNo
+		, DISTRIBUTE_TYPE_CD
+		, REV_NO
+		, SW_NM AS objectNm
+		, STATUS_CD
+		, SW_VERSION_NO
+		, DOC_VERSION_NO
+		, PROJECT_CD
+		, PROJECT_NM
+		, STD_GAPP_DT AS stdGappDt
+		, CHANGE_GAPP_DT AS changeGappDt
+		, DESCRIPTION
+		, SECURITY_TYPE_CD
+		, PROTECT_YN
+		, INSERT_DEPT_NM
+		, INSERT_UID
+		, INSERT_DT
+		, UPDATE_DEPT_NM
+		, UPDATE_UID
+		, UPDATE_DT
+		, INTERFACE_DT AS interfaceDt
+		, FILE_NO
+		, fileViewNm
+		, ORG_FILE_NM
+		, FILE_NM
+		, FILE_PATH_NM
+		, CHECK_SUM
+		, distributeTypeCd
+		, fileSize
+		, 'Y' AS inspectionYn
+		FROM
+		(
+		SELECT info.*
+		, DENSE_RANK() OVER (PARTITION BY info.SW_NO ORDER BY info.SW_NO, CASE WHEN LENGTH(info.REV_NO)=1 THEN info.REV_NO||'Z' ELSE info.REV_NO END DESC) AS PAGE_RANK
+		, DENSE_RANK() OVER (PARTITION BY info.SW_NO, info.REV_NO ORDER BY info.SW_NO, CASE WHEN LENGTH(info.REV_NO)=1 THEN info.REV_NO||'Z' ELSE info.REV_NO END DESC, combo.SEQ DESC, info.INTERFACE_DT DESC) AS SEQ_RANK
+		FROM
+		(
+		SELECT sw.*
+		, fileInfo.FILE_NO
+		, fileInfo.ORG_FILE_NM AS fileViewNm
+		, fileInfo.ORG_FILE_NM
+		, fileInfo.FILE_NM
+		, fileInfo.FILE_PATH_NM
+		, fileInfo.CHECK_SUM
+		, fileInfo.DISTRIBUTE_TYPE_CD AS distributeTypeCd
+		, COALESCE(fileInfo.FILE_SIZE, '0') AS fileSize
+		FROM DOCS_SW sw
+		, DOCS_SW_FILE fileInfo
+		WHERE 1=1
+		AND sw.OBJECT_ID = fileInfo.OBJECT_ID
+		AND (
+		<foreach collection="list" item="info" separator=" OR ">
+			sw.SW_NO LIKE '%' || #{info.objectNo} || '%'
+		</foreach>
+		)
+		AND COALESCE(VALID_TYPE,'Y') != 'N'
+		) info
+		, DOCS_COMBO combo
+		WHERE info.distributeTypeCd = combo.VALUE
+		AND combo.COMBO_CD = 'distributeTypeCd'
+		)
+		WHERE PAGE_RANK = 1
+		AND SEQ_RANK = 1
+		ORDER BY SW_NO, REV_NO DESC, FILE_NO
+	</select>
+
+	<select id="selectProductDocInspectionInfo" resultType="objectInfoVO">
+		SELECT info.*
+		, fileInfo.ORG_FILE_NM AS fileViewNm
+		, fileInfo.ORG_FILE_NM
+		, fileInfo.FILE_NM
+		, fileInfo.FILE_SIZE
+		, fileInfo.FILE_PATH_NM
+		, fileInfo.FILE_NO AS fileNo
+		FROM
+		(
+		SELECT info.*
+		FROM
+		(
+		SELECT 'Y' AS inspectionYn
+		, product.OBJECT_ID
+		, product.BUSINESS_AREA_CD
+		, product.BUSINESS_TYPE_CD
+		, product.DOC_CLASS_CD1 AS objectClassCd1
+		, product.DOC_CLASS_NM1 AS objectClassNm1
+		, product.DOC_CLASS_CD2 AS objectClassCd2
+		, product.DOC_CLASS_NM2 AS objectClassNm2
+		, product.DRAWING_NO AS objectNo
+		, product.REV_NO
+		, product.DOCUMENT_NM AS objectNm
+		, product.STATUS_CD
+		, product.TOTAL_PAGE_CNT
+		, product.SECURITY_TYPE_CD
+		, product.APPLY_PRODUCT_NO
+		, product.APPLY_HOGI_NO
+		, product.CALL_ID
+		, product.ECN_NO
+		, product.PROCESS_TYPE_CD
+		, product.DESCRIPTION
+		, product.INSERT_DEPT_NM
+		, product.INSERT_UID
+		, product.INSERT_DT
+		, product.UPDATE_DEPT_NM
+		, product.UPDATE_UID
+		, product.UPDATE_DT
+		, product.INTERFACE_DT AS interfaceDt
+		FROM DOCS_PRODUCT_DOCUMENT product
+		WHERE 1=1
+		AND DRAWING_NO IN (
+		<foreach collection="list" item="info" separator=",">
+			#{info.objectNo}
+		</foreach>
+		)
+		ORDER BY REV_NO DESC
+		) info
+		) info
+		INNER JOIN DOCS_PRODUCT_DOCUMENT_FILE fileInfo
+		ON info.OBJECT_ID = fileInfo.OBJECT_ID
+	</select>
+
+	<select id="selectSimilarProductDocInspectionInfo" resultType="objectInfoVO">
+		SELECT info.*
+		, fileInfo.ORG_FILE_NM AS fileViewNm
+		, fileInfo.ORG_FILE_NM
+		, fileInfo.FILE_NM
+		, fileInfo.FILE_SIZE
+		, fileInfo.FILE_PATH_NM
+		, CAST(fileInfo.FILE_NO AS INTEGER) AS fileNo
+		FROM
+		(
+		SELECT info.*
+		FROM
+		(
+		SELECT 'Y' AS inspectionYn
+		, product.OBJECT_ID
+		, product.BUSINESS_AREA_CD
+		, product.BUSINESS_TYPE_CD
+		, product.DOC_CLASS_CD1 AS objectClassCd1
+		, product.DOC_CLASS_NM1 AS objectClassNm1
+		, product.DOC_CLASS_CD2 AS objectClassCd2
+		, product.DOC_CLASS_NM2 AS objectClassNm2
+		, product.DRAWING_NO AS objectNo
+		, product.REV_NO
+		, product.DOCUMENT_NM AS objectNm
+		, product.STATUS_CD
+		, product.TOTAL_PAGE_CNT
+		, product.SECURITY_TYPE_CD
+		, product.APPLY_PRODUCT_NO
+		, product.APPLY_HOGI_NO
+		, product.CALL_ID
+		, product.ECN_NO
+		, product.PROCESS_TYPE_CD
+		, product.DESCRIPTION
+		, product.INSERT_DEPT_NM
+		, product.INSERT_UID
+		, product.INSERT_DT
+		, product.UPDATE_DEPT_NM
+		, product.UPDATE_UID
+		, product.UPDATE_DT
+		, product.INTERFACE_DT AS interfaceDt
+		FROM DOCS_PRODUCT_DOCUMENT product
+		WHERE 1=1
+		AND (
+		<foreach collection="list" item="info" separator=" OR ">
+			product.DRAWING_NO LIKE '%' || #{info.objectNo} || '%'
+		</foreach>
+		)
+		ORDER BY REV_NO DESC
+		) info
+		) info
+		INNER JOIN DOCS_PRODUCT_DOCUMENT_FILE fileInfo
+		ON info.OBJECT_ID = fileInfo.OBJECT_ID
+	</select>
+
+	<select id="selectProductSwInspectionInfo" resultType="objectInfoVO">
+		SELECT info.*
+		, fileInfo.ORG_FILE_NM AS fileViewNm
+		, fileInfo.ORG_FILE_NM
+		, fileInfo.FILE_NM
+		, fileInfo.FILE_SIZE
+		, fileInfo.FILE_PATH_NM
+		, fileInfo.FILE_NO AS fileNo
+		FROM
+		(
+		SELECT info.*
+		FROM
+		(
+		SELECT 'Y' AS inspectionYn
+		, product.OBJECT_ID
+		, product.BUSINESS_AREA_CD
+		, product.BUSINESS_TYPE_CD
+		, product.ECN_NO
+		, product.PRODUCT_NO
+		, product.SW_CLASS_CD1 AS objectClassCd1
+		, product.SW_CLASS_NM1 AS objectClassNm1
+		, product.SW_CLASS_CD2 AS objectClassCd2
+		, product.SW_CLASS_NM2 AS objectClassNm2
+		, product.SW_NO AS objectNo
+		, product.SW_VERSION_NO
+		, product.SW_NM AS objectNm
+		, product.REV_NO
+		, product.STATUS_CD
+		, product.DESCRIPTION
+		, product.SECURITY_TYPE_CD
+		, product.INSERT_DEPT_NM
+		, product.INSERT_UID
+		, product.INSERT_DT
+		, product.UPDATE_DEPT_NM
+		, product.UPDATE_UID
+		, product.UPDATE_DT
+		, fileInfo.ORG_FILE_NM AS fileNm
+		, fileInfo.FILE_NO
+		, product.INTERFACE_DT AS interfaceDt
+		FROM DOCS_PRODUCT_SW product
+		INNER JOIN DOCS_PRODUCT_SW_FILE fileInfo
+		ON product.OBJECT_ID = fileInfo.OBJECT_ID
+		WHERE 1=1
+		AND SW_NO IN (
+		<foreach collection="list" item="info" separator=",">
+			#{info.objectNo}
+		</foreach>
+		)
+		ORDER BY REV_NO DESC
+		) info
+		) info
+		INNER JOIN DOCS_PRODUCT_SW_FILE fileInfo
+		ON info.OBJECT_ID = fileInfo.OBJECT_ID
+	</select>
+
+	<select id="selectSimilarProductSwInspectionInfo" resultType="objectInfoVO">
+		SELECT info.*
+		, fileInfo.ORG_FILE_NM AS fileViewNm
+		, fileInfo.ORG_FILE_NM
+		, fileInfo.FILE_NM
+		, fileInfo.FILE_SIZE
+		, fileInfo.FILE_PATH_NM
+		, fileInfo.FILE_NO AS fileNo
+		FROM
+		(
+		SELECT info.*
+		FROM
+		(
+		SELECT 'Y' AS inspectionYn
+		, product.OBJECT_ID
+		, product.BUSINESS_AREA_CD
+		, product.BUSINESS_TYPE_CD
+		, product.ECN_NO
+		, product.PRODUCT_NO
+		, product.SW_CLASS_CD1 AS objectClassCd1
+		, product.SW_CLASS_NM1 AS objectClassNm1
+		, product.SW_CLASS_CD2 AS objectClassCd2
+		, product.SW_CLASS_NM2 AS objectClassNm2
+		, product.SW_NO AS objectNo
+		, product.SW_VERSION_NO
+		, product.SW_NM AS objectNm
+		, product.REV_NO
+		, product.STATUS_CD
+		, product.DESCRIPTION
+		, product.SECURITY_TYPE_CD
+		, product.INSERT_DEPT_NM
+		, product.INSERT_UID
+		, product.INSERT_DT
+		, product.UPDATE_DEPT_NM
+		, product.UPDATE_UID
+		, product.UPDATE_DT
+		, fileInfo.ORG_FILE_NM AS fileNm
+		, fileInfo.FILE_NO
+		, product.INTERFACE_DT AS interfaceDt
+		FROM DOCS_PRODUCT_SW product
+		INNER JOIN DOCS_PRODUCT_SW_FILE fileInfo
+		ON product.OBJECT_ID = fileInfo.OBJECT_ID
+		WHERE 1=1
+		AND (
+		<foreach collection="list" item="info" separator=" OR ">
+			product.SW_NO LIKE '%' || #{info.objectNo} || '%'
+		</foreach>
+		)
+		ORDER BY REV_NO DESC
+		) info
+		) info
+		INNER JOIN DOCS_PRODUCT_SW_FILE fileInfo
+		ON info.OBJECT_ID = fileInfo.OBJECT_ID
+	</select>
+
+	<update id="updateVendorAccept">
+		UPDATE DOCS_REQUEST
+		SET VENDOR_ACCEPT_YN = 'Y'
+		  , VENDOR_ACCEPT_USER_CD = #{sessionUser.userCd}
+		  , VENDOR_ACCEPT_DT = CURRENT_TIMESTAMP
+		WHERE REQUEST_NO = #{requestNo}
+	</update>
+
+	<insert id="insertDocsRequestFileUsingMap">
+		INSERT INTO DOCS_REQUEST_FILE
+		(
+		  REQUEST_NO
+		, OBJECT_ID
+		, FILE_PATH_NM
+		, ORG_FILE_NM
+		, FILE_NM
+		, FILE_SIZE
+		, CHECK_SUM
+		, FILE_NO
+		, USE_START_YMD
+		, USE_END_YMD
+		, DEPLOY_TERM
+		)
+		VALUES
+			(
+			  #{requestNo}
+			, #{objectId}
+			, #{filePath}
+			, #{orgFileNm}
+			, #{fileNm}
+			, #{fileSize}
+			, #{checkSum}
+			, #{fileNo}
+			, #{useStartYmd}
+			, #{useEndYmd}
+			, #{deployTerm}
+			)
+	</insert>
+
+</mapper>

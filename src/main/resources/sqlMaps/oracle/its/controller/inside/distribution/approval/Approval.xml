@@ -1,0 +1,358 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+
+<!--<mapper namespace="sql.distributionApproval">-->
+
+<!--	<select id="selectList" resultType="kr.esob.fdms.controller.inside.distribution.approval.ApprovalListVO" parameterType="kr.esob.fdms.controller.inside.distribution.approval.ApprovalListParam">-->
+<!--		SELECT-->
+<!--			B1.*-->
+<!--		FROM-->
+<!--		(-->
+<!--			SELECT-->
+<!--				A1.*-->
+<!--				, ROWNUM AS PAGEINDEX-->
+<!--			FROM-->
+<!--			(-->
+<!--				SELECT-->
+<!--					request.OBJECT_TYPE 														AS objectType			/* 자료유형 */-->
+<!--					, FN_GET_CD_NM('objectTypeWithP', request.OBJECT_TYPE, #{sessionLang}) 			AS objectTypeNm-->
+<!--					, request.APPROVAL_LINE_ID													AS approvalLineId		/* 결재라인 ID */-->
+<!--					, request.CURRENT_PROCESS_SEQ_NO											AS currentProcessSeqNo	/* 현재 결재 라인 순서 */-->
+<!--					, request.REQUEST_NO														AS requestNo			/* 요청번호 */-->
+<!--					, (-->
+<!--						SELECT COMPANY_NM-->
+<!--						FROM DOCS_COMPANY company-->
+<!--						WHERE company.COMPANY_CD = request.DEPLOY_COMPANY_CD-->
+<!--					) 																			AS deployCompanyNm 	/* 배포업체 */-->
+<!--					, request.DEPLOY_COMPANY_CD													AS deployCompanyCd	/* 배포업체 */-->
+<!--					, CASE-->
+<!--						WHEN DEPLOY_NORMAL_YN = 'Y'-->
+<!--							THEN (SELECT LANG_DESC FROM DOCS_LANG lang WHERE lang.LANG_CD = 'combo.deployType.normalArea' AND lang.LANG_TYPE = #{sessionLang})-->
+<!--								WHEN DEPLOY_SPECIAL_YN = 'Y'-->
+<!--							THEN (SELECT LANG_DESC FROM DOCS_LANG lang WHERE lang.LANG_CD = 'combo.deployType.specialArea' AND lang.LANG_TYPE = #{sessionLang})-->
+<!--							ELSE (SELECT LANG_DESC FROM DOCS_LANG lang WHERE lang.LANG_CD = 'combo.deployType.viewing' AND lang.LANG_TYPE = #{sessionLang})-->
+<!--					END 																		AS deployTypeNm 	/* 배포방식 */-->
+<!--					, request.REQUEST_PURPOSE													AS requestPurpose	/* 용도 */-->
+<!--					, FN_GET_CD_NM('requestPurpose', request.REQUEST_PURPOSE, #{sessionLang}) 	AS requestPurposeNm-->
+<!--					, reqUser.USER_NM															AS requestUserNm	/* 요청자 */-->
+<!--					, request.INSERT_DT															AS requestDt		/* 요청일 */-->
+<!--					, (SELECT MAX(TO_CHAR(TO_DATE(fileInfo.USE_END_YMD, 'YYYYMMDD'), 'YYYY-MM-DD'))-->
+<!--					     FROM DOCS_REQUEST_FILE fileInfo-->
+<!--					   WHERE fileInfo.REQUEST_NO = request.REQUEST_NO-->
+<!--					  )                                                                         AS useEndYmd/* 유효기간 */-->
+<!--					, CASE line.OUTSIDE_YN-->
+<!--						WHEN 'Y' THEN accUser.USER_NM-->
+<!--						ELSE reqUser.USER_NM-->
+<!--					END 																		AS purchaserUserNm	/* 구매담당자 */-->
+<!--					, CASE line.OUTSIDE_YN-->
+<!--						WHEN 'Y' THEN accUser.USER_CD-->
+<!--						ELSE reqUser.USER_CD-->
+<!--					END 																		AS purchaserUserCd	/* 구매담당자 */-->
+<!--					, request.BUSINESS_AREA_CD													AS businessAreaCd	/* 사업장 */-->
+<!--					, FN_GET_CD_NM('businessAreaCd', request.BUSINESS_AREA_CD, #{sessionLang}) 	AS businessAreaNm-->
+<!--					, request.PROTECT_YN														AS protectYn-->
+<!--				FROM DOCS_REQUEST request-->
+<!--					INNER JOIN DOCS_REQUEST_DETAIL detail ON detail.REQUEST_NO = request.REQUEST_NO AND detail.PROCESS_SEQ = request.CURRENT_PROCESS_SEQ_NO-->
+<!--                    INNER JOIN DOCS_REQUEST_DETAIL reqDetail ON reqDetail.REQUEST_NO = request.REQUEST_NO AND reqDetail.APPROVAL_STATUS_CD = 'REQUEST'-->
+<!--                    INNER JOIN DOCS_USER reqUser ON reqUser.USER_CD = reqDetail.ACTUAL_USER_CD-->
+<!--                    INNER JOIN DOCS_APPROVAL_LINE line ON line.APPROVAL_LINE_ID = request.APPROVAL_LINE_ID-->
+<!--                      LEFT JOIN DOCS_REQUEST_DETAIL acc ON acc.REQUEST_NO = request.REQUEST_NO AND acc.APPROVAL_STATUS_CD = 'ACCEPT'-->
+<!--                      LEFT JOIN DOCS_USER accUser ON accUser.USER_CD = acc.ORIGINAL_USER_CD-->
+<!--                WHERE detail.APPROVAL_STATUS_CD = 'APPROVAL'-->
+<!--                AND detail.ACTUAL_USER_CD = #{sessionUser.userCd} /* 내가 승인해야 할 목록이 나와야 함 */-->
+<!--                AND request.STATUS_CD NOT IN ('APPROVAL', 'REJECT')		/* 최종승인 아닌데이터만*/-->
+<!--                AND REQUEST_TYPE = 'DISTRIBUTION'-->
+<!--                <if test='requestStartDt != null and !requestStartDt.equals("")'>-->
+<!--				AND request.INSERT_DT BETWEEN TO_DATE(#{requestStartDt}, 'YYYY-MM-DD')-->
+<!--		                         		  AND TO_DATE(#{requestEndDt}, 'YYYY-MM-DD')+1-->
+<!--				</if>-->
+<!--                <if test='sortColumn == null or "".equals(sortColumn)'>-->
+<!--	           		ORDER BY requestDt desc, requestNo desc-->
+<!--				</if>-->
+<!--	         	<if test='sortColumn != null and !"".equals(sortColumn)'>-->
+<!--	         		ORDER BY ${sortColumn} ${order}-->
+<!--	         		<if test='"requestDt".equals(sortColumn)'>-->
+<!--	         		, requestNo desc-->
+<!--	         		</if>-->
+<!--	         	</if>-->
+<!--			) A1-->
+<!--			WHERE 1=1-->
+<!--			<if test='objectType != null and !objectType.equals("")'>-->
+<!--			AND objectType = #{objectType}-->
+<!--			</if>-->
+<!--			<if test='deployCompanyCd != null and !deployCompanyCd.equals("")'>-->
+<!--			AND deployCompanyCd = #{deployCompanyCd}-->
+<!--			</if>-->
+<!--			<if test='purchaserUserCd != null and !purchaserUserCd.equals("")'>-->
+<!--			AND purchaserUserCd = #{purchaserUserCd}-->
+<!--			</if>-->
+<!--			<if test='businessAreaCd != null and !businessAreaCd.equals("")'>-->
+<!--			AND businessAreaCd = #{businessAreaCd}-->
+<!--			</if>-->
+<!--			<if test='end != null and !end.equals("")'>-->
+<!--			AND ROWNUM <![CDATA[ <= ]]> #{end}-->
+<!--			</if>-->
+<!--		) B1-->
+<!--		<if test='start != null and !start.equals("")'>-->
+<!--		WHERE PAGEINDEX <![CDATA[ >= ]]>#{start}-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	<select id="selectListCount" resultType="Integer">-->
+<!--		SELECT COUNT(*) AS TOTAL_COUNT-->
+<!--		FROM-->
+<!--			(-->
+<!--				SELECT-->
+<!--					A1.*-->
+<!--				FROM-->
+<!--				(-->
+<!--					SELECT-->
+<!--						request.OBJECT_TYPE 									AS objectType		/* 자료유형 */-->
+<!--						, request.REQUEST_PURPOSE								AS requestPurpose	/* 용도 */-->
+<!--						, request.REQUEST_NO									AS requestNo		/* 요청번호 */-->
+<!--						, (-->
+<!--							SELECT COMPANY_NM-->
+<!--							FROM DOCS_COMPANY company-->
+<!--							WHERE company.COMPANY_CD = request.DEPLOY_COMPANY_CD-->
+<!--						) 														AS deployCompanyNm 	/* 배포업체 */-->
+<!--						, request.DEPLOY_COMPANY_CD								AS deployCompanyCd	/* 배포업체 */-->
+<!--						, CASE-->
+<!--							WHEN DEPLOY_NORMAL_YN = 'Y'-->
+<!--								THEN (SELECT LANG_DESC FROM DOCS_LANG lang WHERE lang.LANG_CD = 'combo.deployType.normalArea' AND lang.LANG_TYPE = #{sessionLang})-->
+<!--									WHEN DEPLOY_SPECIAL_YN = 'Y'-->
+<!--								THEN (SELECT LANG_DESC FROM DOCS_LANG lang WHERE lang.LANG_CD = 'combo.deployType.specialArea' AND lang.LANG_TYPE = #{sessionLang})-->
+<!--								ELSE (SELECT LANG_DESC FROM DOCS_LANG lang WHERE lang.LANG_CD = 'combo.deployType.viewing' AND lang.LANG_TYPE = #{sessionLang})-->
+<!--						END 													AS deployTypeNm 	/* 배포방식 */-->
+<!--						, reqUser.USER_NM										AS userNm			/* 요청자 */-->
+<!--						, TO_CHAR(request.INSERT_DT, 'YYYY-MM-DD')				AS requestDt		/* 요청일 */-->
+<!--						, (SELECT MAX(TO_CHAR(TO_DATE(fileInfo.USE_END_YMD, 'YYYYMMDD'), 'YYYY-MM-DD'))-->
+<!--						     FROM DOCS_REQUEST_FILE fileInfo-->
+<!--						   WHERE fileInfo.REQUEST_NO = request.REQUEST_NO-->
+<!--						  )                                                                         AS useEndYmd/* 유효기간 */-->
+<!--						, CASE line.OUTSIDE_YN-->
+<!--							WHEN 'Y' THEN accUser.USER_NM-->
+<!--							ELSE reqUser.USER_NM-->
+<!--						END 													AS purchaserUserNm	/* 구매담당자 */-->
+<!--						, CASE line.OUTSIDE_YN-->
+<!--							WHEN 'Y' THEN accUser.USER_CD-->
+<!--							ELSE reqUser.USER_CD-->
+<!--						END 													AS purchaserUserCd	/* 구매담당자 */-->
+<!--						, request.BUSINESS_AREA_CD								AS businessAreaCd	/* 사업장 */-->
+<!--						, request.PROTECT_YN									AS protectYn-->
+<!--					FROM DOCS_REQUEST request-->
+<!--						INNER JOIN DOCS_REQUEST_DETAIL detail ON detail.REQUEST_NO = request.REQUEST_NO AND detail.PROCESS_SEQ = request.CURRENT_PROCESS_SEQ_NO-->
+<!--	                    INNER JOIN DOCS_REQUEST_DETAIL reqDetail ON reqDetail.REQUEST_NO = request.REQUEST_NO AND reqDetail.APPROVAL_STATUS_CD = 'REQUEST'-->
+<!--	                    INNER JOIN DOCS_USER reqUser ON reqUser.USER_CD = reqDetail.ACTUAL_USER_CD-->
+<!--	                    INNER JOIN DOCS_APPROVAL_LINE line ON line.APPROVAL_LINE_ID = request.APPROVAL_LINE_ID-->
+<!--	                      LEFT JOIN DOCS_REQUEST_DETAIL acc ON acc.REQUEST_NO = request.REQUEST_NO AND acc.APPROVAL_STATUS_CD = 'ACCEPT'-->
+<!--	                      LEFT JOIN DOCS_USER accUser ON accUser.USER_CD = acc.ORIGINAL_USER_CD-->
+<!--	                WHERE detail.APPROVAL_STATUS_CD = 'APPROVAL'-->
+<!--	                AND detail.ACTUAL_USER_CD = #{sessionUser.userCd} /* 내가 승인해야 할 목록이 나와야 함 */-->
+<!--	                AND request.STATUS_CD NOT IN ('APPROVAL', 'REJECT')		/* 최종승인 아닌데이터만*/-->
+<!--	                AND REQUEST_TYPE = 'DISTRIBUTION'-->
+<!--	                <if test='requestStartDt != null and !requestStartDt.equals("")'>-->
+<!--					AND request.INSERT_DT BETWEEN TO_DATE(#{requestStartDt}, 'YYYY-MM-DD')-->
+<!--			                       		      AND TO_DATE(#{requestEndDt}, 'YYYY-MM-DD')+1-->
+<!--					</if>-->
+<!--				) A1-->
+<!--				WHERE 1=1-->
+<!--				<if test='objectType != null and !objectType.equals("")'>-->
+<!--				AND objectType = #{objectType}-->
+<!--				</if>-->
+<!--				<if test='deployCompanyCd != null and !deployCompanyCd.equals("")'>-->
+<!--				AND deployCompanyCd = #{deployCompanyCd}-->
+<!--				</if>-->
+<!--				<if test='purchaserUserCd != null and !purchaserUserCd.equals("")'>-->
+<!--				AND purchaserUserCd = #{purchaserUserCd}-->
+<!--				</if>-->
+<!--				<if test='businessAreaCd != null and !businessAreaCd.equals("")'>-->
+<!--				AND businessAreaCd = #{businessAreaCd}-->
+<!--				</if>-->
+<!--			) B1-->
+<!--	</select>-->
+
+<!--</mapper>-->
+
+
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+
+
+
+<mapper namespace="sql.distributionApproval">
+	<select id="selectList" resultType="kr.esob.fdms.controller.inside.distribution.approval.ApprovalListVO" parameterType="kr.esob.fdms.controller.inside.distribution.approval.ApprovalListParam">
+		SELECT
+		B1.*
+		FROM
+		(
+		SELECT
+		A1.*,
+		ROW_NUMBER() OVER () AS PAGEINDEX
+		FROM
+		(
+		SELECT
+		request.OBJECT_TYPE AS objectType, /* 자료유형 */
+		FN_GET_CD_NM('objectTypeWithP', request.OBJECT_TYPE, #{sessionLang}) AS objectTypeNm,
+		request.APPROVAL_LINE_ID AS approvalLineId, /* 결재라인 ID */
+		request.CURRENT_PROCESS_SEQ_NO AS currentProcessSeqNo, /* 현재 결재 라인 순서 */
+		request.REQUEST_NO AS requestNo, /* 요청번호 */
+		(
+		SELECT COMPANY_NM
+		FROM DOCS_COMPANY company
+		WHERE company.COMPANY_CD = request.DEPLOY_COMPANY_CD
+		) AS deployCompanyNm, /* 배포업체 */
+		request.DEPLOY_COMPANY_CD AS deployCompanyCd, /* 배포업체 */
+		CASE
+		WHEN DEPLOY_NORMAL_YN = 'Y'
+		THEN (SELECT LANG_DESC FROM DOCS_LANG lang WHERE lang.LANG_CD = 'combo.deployType.normalArea' AND lang.LANG_TYPE = #{sessionLang})
+		WHEN DEPLOY_SPECIAL_YN = 'Y'
+		THEN (SELECT LANG_DESC FROM DOCS_LANG lang WHERE lang.LANG_CD = 'combo.deployType.specialArea' AND lang.LANG_TYPE = #{sessionLang})
+		ELSE (SELECT LANG_DESC FROM DOCS_LANG lang WHERE lang.LANG_CD = 'combo.deployType.viewing' AND lang.LANG_TYPE = #{sessionLang})
+		END AS deployTypeNm, /* 배포방식 */
+		request.REQUEST_PURPOSE AS requestPurpose, /* 용도 */
+		FN_GET_CD_NM('requestPurpose', request.REQUEST_PURPOSE, #{sessionLang}) AS requestPurposeNm,
+		reqUser.USER_NM AS requestUserNm, /* 요청자 */
+		request.INSERT_DT AS requestDt, /* 요청일 */
+		(
+		SELECT MAX(TO_CHAR(fileInfo.USE_END_YMD::DATE, 'YYYY-MM-DD'))
+		FROM DOCS_REQUEST_FILE fileInfo
+		WHERE fileInfo.REQUEST_NO = request.REQUEST_NO
+		) AS useEndYmd, /* 유효기간 */
+		CASE line.OUTSIDE_YN
+		WHEN 'Y' THEN accUser.USER_NM
+		ELSE reqUser.USER_NM
+		END AS purchaserUserNm, /* 구매담당자 */
+		CASE line.OUTSIDE_YN
+		WHEN 'Y' THEN accUser.USER_CD
+		ELSE reqUser.USER_CD
+		END AS purchaserUserCd, /* 구매담당자 */
+		request.BUSINESS_AREA_CD AS businessAreaCd, /* 사업장 */
+		FN_GET_CD_NM('businessAreaCd', request.BUSINESS_AREA_CD, #{sessionLang}) AS businessAreaNm,
+		request.PROTECT_YN AS protectYn
+		FROM DOCS_REQUEST request
+		INNER JOIN DOCS_REQUEST_DETAIL detail ON detail.REQUEST_NO = request.REQUEST_NO AND detail.PROCESS_SEQ = request.CURRENT_PROCESS_SEQ_NO
+		INNER JOIN DOCS_REQUEST_DETAIL reqDetail ON reqDetail.REQUEST_NO = request.REQUEST_NO AND reqDetail.APPROVAL_STATUS_CD = 'REQUEST'
+		INNER JOIN DOCS_USER reqUser ON reqUser.USER_CD = reqDetail.ACTUAL_USER_CD
+		INNER JOIN DOCS_APPROVAL_LINE line ON line.APPROVAL_LINE_ID = request.APPROVAL_LINE_ID
+		LEFT JOIN DOCS_REQUEST_DETAIL acc ON acc.REQUEST_NO = request.REQUEST_NO AND acc.APPROVAL_STATUS_CD = 'ACCEPT'
+		LEFT JOIN DOCS_USER accUser ON accUser.USER_CD = acc.ORIGINAL_USER_CD
+		WHERE detail.APPROVAL_STATUS_CD = 'APPROVAL'
+		AND detail.ACTUAL_USER_CD = #{sessionUser.userCd} /* 내가 승인해야 할 목록이 나와야 함 */
+		AND request.STATUS_CD NOT IN ('APPROVAL', 'REJECT') /* 최종승인 아닌데이터만 */
+		AND REQUEST_TYPE = 'DISTRIBUTION'
+		<if test='requestStartDt != null and !requestStartDt.equals("")'>
+			AND request.INSERT_DT BETWEEN TO_DATE(#{requestStartDt}, 'YYYY-MM-DD')
+			AND TO_DATE(#{requestEndDt}, 'YYYY-MM-DD') + INTERVAL '1 DAY'
+		</if>
+		<if test='sortColumn == null or "".equals(sortColumn)'>
+			ORDER BY requestDt DESC, requestNo DESC
+		</if>
+		<if test='sortColumn != null and !"".equals(sortColumn)'>
+			ORDER BY ${sortColumn} ${order}
+			<if test='"requestDt".equals(sortColumn)'>
+				, requestNo DESC
+			</if>
+		</if>
+		) A1
+		WHERE 1=1
+		<if test='objectType != null and !objectType.equals("")'>
+			AND objectType = #{objectType}
+		</if>
+		<if test='deployCompanyCd != null and !deployCompanyCd.equals("")'>
+			AND deployCompanyCd = #{deployCompanyCd}
+		</if>
+		<if test='purchaserUserCd != null and !purchaserUserCd.equals("")'>
+			AND purchaserUserCd = #{purchaserUserCd}
+		</if>
+		<if test='businessAreaCd != null and !businessAreaCd.equals("")'>
+			AND businessAreaCd = #{businessAreaCd}
+		</if>
+		<if test='end != null and !end.equals("")'>
+			LIMIT #{end}
+		</if>
+		) B1
+		<if test='start != null and !start.equals("")'>
+			WHERE PAGEINDEX >= #{start}
+		</if>
+	</select>
+
+	<select id="selectListCount" resultType="Integer">
+		SELECT COUNT(*) AS TOTAL_COUNT
+		FROM
+		(
+		SELECT
+		request.OBJECT_TYPE AS objectType, /* 자료유형 */
+		request.REQUEST_PURPOSE AS requestPurpose, /* 용도 */
+		request.REQUEST_NO AS requestNo, /* 요청번호 */
+		(
+		SELECT COMPANY_NM
+		FROM DOCS_COMPANY company
+		WHERE company.COMPANY_CD = request.DEPLOY_COMPANY_CD
+		) AS deployCompanyNm, /* 배포업체 */
+		request.DEPLOY_COMPANY_CD AS deployCompanyCd, /* 배포업체 */
+		CASE
+		WHEN DEPLOY_NORMAL_YN = 'Y'
+		THEN (SELECT LANG_DESC FROM DOCS_LANG lang WHERE lang.LANG_CD = 'combo.deployType.normalArea' AND lang.LANG_TYPE = #{sessionLang})
+		WHEN DEPLOY_SPECIAL_YN = 'Y'
+		THEN (SELECT LANG_DESC FROM DOCS_LANG lang WHERE lang.LANG_CD = 'combo.deployType.specialArea' AND lang.LANG_TYPE = #{sessionLang})
+		ELSE (SELECT LANG_DESC FROM DOCS_LANG lang WHERE lang.LANG_CD = 'combo.deployType.viewing' AND lang.LANG_TYPE = #{sessionLang})
+		END AS deployTypeNm, /* 배포방식 */
+		reqUser.USER_NM AS userNm, /* 요청자 */
+		TO_CHAR(request.INSERT_DT, 'YYYY-MM-DD') AS requestDt, /* 요청일 */
+		(
+		SELECT MAX(TO_CHAR(fileInfo.USE_END_YMD::DATE, 'YYYY-MM-DD'))
+		FROM DOCS_REQUEST_FILE fileInfo
+		WHERE fileInfo.REQUEST_NO = request.REQUEST_NO
+		) AS useEndYmd, /* 유효기간 */
+		CASE line.OUTSIDE_YN
+		WHEN 'Y' THEN accUser.USER_NM
+		ELSE reqUser.USER_NM
+		END AS purchaserUserNm, /* 구매담당자 */
+		CASE line.OUTSIDE_YN
+		WHEN 'Y' THEN accUser.USER_CD
+		ELSE reqUser.USER_CD
+		END AS purchaserUserCd, /* 구매담당자 */
+		request.BUSINESS_AREA_CD AS businessAreaCd, /* 사업장 */
+		request.PROTECT_YN AS protectYn
+		FROM DOCS_REQUEST request
+		INNER JOIN DOCS_REQUEST_DETAIL detail ON detail.REQUEST_NO = request.REQUEST_NO AND detail.PROCESS_SEQ = request.CURRENT_PROCESS_SEQ_NO
+		INNER JOIN DOCS_REQUEST_DETAIL reqDetail ON reqDetail.REQUEST_NO = request.REQUEST_NO AND reqDetail.APPROVAL_STATUS_CD = 'REQUEST'
+		INNER JOIN DOCS_USER reqUser ON reqUser.USER_CD = reqDetail.ACTUAL_USER_CD
+		INNER JOIN DOCS_APPROVAL_LINE line ON line.APPROVAL_LINE_ID = request.APPROVAL_LINE_ID
+		LEFT JOIN DOCS_REQUEST_DETAIL acc ON acc.REQUEST_NO = request.REQUEST_NO AND acc.APPROVAL_STATUS_CD = 'ACCEPT'
+		LEFT JOIN DOCS_USER accUser ON accUser.USER_CD = acc.ORIGINAL_USER_CD
+		WHERE detail.APPROVAL_STATUS_CD = 'APPROVAL'
+		AND detail.ACTUAL_USER_CD = #{sessionUser.userCd} /* 내가 승인해야 할 목록이 나와야 함 */
+		AND request.STATUS_CD NOT IN ('APPROVAL', 'REJECT') /* 최종승인 아닌데이터만 */
+		AND REQUEST_TYPE = 'DISTRIBUTION'
+		<if test='requestStartDt != null and !requestStartDt.equals("")'>
+			AND request.INSERT_DT BETWEEN TO_DATE(#{requestStartDt}, 'YYYY-MM-DD')
+			AND TO_DATE(#{requestEndDt}, 'YYYY-MM-DD') + INTERVAL '1 DAY'
+		</if>
+		) A1
+		WHERE 1=1
+		<if test='objectType != null and !objectType.equals("")'>
+			AND objectType = #{objectType}
+		</if>
+		<if test='deployCompanyCd != null and !deployCompanyCd.equals("")'>
+			AND deployCompanyCd = #{deployCompanyCd}
+		</if>
+		<if test='purchaserUserCd != null and !purchaserUserCd.equals("")'>
+			AND purchaserUserCd = #{purchaserUserCd}
+		</if>
+		<if test='businessAreaCd != null and !businessAreaCd.equals("")'>
+			AND businessAreaCd = #{businessAreaCd}
+		</if>
+	</select>
+
+
+</mapper>
+

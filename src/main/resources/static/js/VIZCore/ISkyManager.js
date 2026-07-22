@@ -1,0 +1,1 @@
+class Sky{constructor(a,b){let c=this;this['Main']=a,this['Enable']=function(d){c['Main']['Mode']['SkyBox'](d);};}}export default Sky;

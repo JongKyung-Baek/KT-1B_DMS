@@ -1,0 +1,252 @@
+.roleassign-page {
+  min-height: calc(100vh - 220px);
+  margin: 0;
+  text-align: left;
+}
+
+.contentArea.sideList > .roleassign-page:first-child {
+  margin-right: 0 !important;
+}
+
+.roleassign-page > [class*='col-'] {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.roleassign-page > [class*='col-'] + [class*='col-'] {
+  padding-left: 1.5rem;
+}
+
+.roleassign-card {
+  border: 0;
+  border-radius: 1rem;
+  box-shadow: 0 0.25rem 1rem rgba(47, 43, 61, 0.08);
+  text-align: left;
+}
+
+.roleassign-card .card-header {
+  padding: 1.25rem 1.25rem 1rem;
+}
+
+.roleassign-card .card-body {
+  padding: 1.25rem;
+}
+
+.roleassign-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 1.25rem 1.25rem 1rem !important;
+  text-align: left;
+}
+
+.role-group-list {
+  max-height: 680px;
+  overflow-y: auto;
+}
+
+.role-group-list li {
+  border: 0;
+  border-bottom: 1px solid rgba(47, 43, 61, 0.08);
+  list-style: none;
+}
+
+.role-group-list .listName {
+  display: block;
+  padding: 1rem 1.25rem;
+  color: var(--bs-body-color);
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.role-group-list .listName span {
+  display: block;
+  overflow: hidden;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.role-group-list li:hover .listName {
+  background-color: rgba(var(--bs-primary-rgb), 0.06);
+  color: var(--bs-primary);
+}
+
+.role-group-list li.current .listName {
+  background-color: rgba(var(--bs-primary-rgb), 0.14);
+  color: var(--bs-primary);
+}
+
+.role-group-list li.current .listName span {
+  font-weight: 600;
+}
+
+.roleassign-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 0;
+  margin: 0;
+}
+
+.roleassign-toolbar .left,
+.roleassign-toolbar .right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: auto !important;
+}
+
+.roleassign-toolbar .right {
+  margin-left: auto;
+}
+
+.roleassign-toolbar .ui-button {
+  min-width: 5rem;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--bs-primary);
+  border-radius: var(--bs-border-radius);
+  background: transparent;
+  color: var(--bs-primary);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.2;
+  box-shadow: none;
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.16s ease;
+}
+
+.roleassign-toolbar .ui-button:hover,
+.roleassign-toolbar .ui-button:focus {
+  border-color: var(--bs-primary);
+  background: rgba(var(--bs-primary-rgb), 0.08);
+  color: var(--bs-primary);
+  box-shadow: none;
+  transform: translateY(-1px);
+}
+
+.roleassign-toolbar:empty {
+  display: none;
+}
+
+.role-menu-tree {
+  min-height: 640px;
+  max-height: 680px;
+  padding: 0.5rem 0;
+  overflow: auto;
+  text-align: left;
+}
+
+.roleassign-page .jstree-default .jstree-container-ul {
+  min-width: 100%;
+  text-align: left;
+}
+
+.roleassign-page .jstree-default .jstree-node {
+  position: relative;
+  margin-left: 1.5rem;
+  min-height: 2.25rem;
+  line-height: 2.25rem;
+}
+
+.roleassign-page .jstree-default .jstree-anchor {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.25rem;
+  padding: 0 0.75rem 0 0.25rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.4;
+  transition: background-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.roleassign-page .jstree-default .jstree-clicked,
+.roleassign-page .jstree-default .jstree-hovered {
+  background: rgba(var(--bs-primary-rgb), 0.12);
+  box-shadow: none;
+  color: var(--bs-primary);
+}
+
+.roleassign-page .jstree-default .jstree-icon,
+.roleassign-page .jstree-default .jstree-icon:empty {
+  width: 2rem;
+  height: 2.25rem;
+  line-height: 2.25rem;
+}
+
+.roleassign-page .jstree-default .jstree-wholerow {
+  height: 2.25rem;
+  border-radius: 0.75rem;
+  background: transparent !important;
+  box-shadow: none !important;
+  border: 0 !important;
+}
+
+.roleassign-page .jstree-default .jstree-wholerow-hovered,
+.roleassign-page .jstree-default .jstree-wholerow-clicked {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: 0 !important;
+}
+
+.roleassign-page .tree-checkbox {
+  display: inline-flex;
+  flex: 0 0 auto;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0 0.5rem 0 0;
+  border: 1.5px solid var(--bs-border-color);
+  border-radius: 0.375rem;
+  background: var(--bs-body-bg);
+  background-image: none !important;
+  vertical-align: middle;
+  position: relative;
+  top: 0;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.roleassign-page .tree-checkbox:hover {
+  border-color: rgba(var(--bs-primary-rgb), 0.5);
+  background: rgba(var(--bs-primary-rgb), 0.04);
+  background-image: none !important;
+}
+
+.roleassign-page .tree-checkbox.tree-checkbox-on {
+  border-color: var(--bs-primary);
+  background: var(--bs-primary);
+  background-image: none !important;
+  box-shadow: 0 0.125rem 0.375rem rgba(var(--bs-primary-rgb), 0.3);
+}
+
+.roleassign-page .tree-checkbox.tree-checkbox-on::after {
+  content: '';
+  position: absolute;
+  left: 0.38rem;
+  top: 0.1rem;
+  width: 0.28rem;
+  height: 0.62rem;
+  border: solid #fff;
+  border-width: 0 0.125rem 0.125rem 0;
+  transform: rotate(45deg);
+}
+
+.roleassign-page .tree-checkbox.tree-checkbox-on:hover {
+  background: rgba(var(--bs-primary-rgb), 0.92);
+}
+
+@media (max-width: 991.98px) {
+  .roleassign-page {
+    min-height: auto;
+  }
+
+  .role-group-list,
+  .role-menu-tree {
+    max-height: none;
+    min-height: 360px;
+  }
+}

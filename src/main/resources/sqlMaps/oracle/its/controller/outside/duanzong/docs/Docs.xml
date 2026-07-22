@@ -1,0 +1,299 @@
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+    
+<!--<mapper namespace="sql.DuanzongDocs">-->
+
+<!--	<select id="selectList"-->
+<!--		resultType="kr.esob.fdms.controller.outside.duanzong.docs.DocsListVO">-->
+<!--		SELECT-->
+<!--			B1.*-->
+<!--		FROM-->
+<!--			(-->
+<!--			SELECT-->
+<!--				A1.*-->
+<!--				, ROWNUM AS PAGEINDEX-->
+<!--			FROM (-->
+<!--				SELECT-->
+<!--				request.MANAGEMENT_NO AS managementNo,					/* 관리번호 */-->
+<!--				(SELECT lang_desc FROM docs_lang WHERE lang_cd = CONCAT('combo.businessAreaCd.', request.BUSINESS_AREA_CD)) AS businessAreaCd,				/* 사업장 */-->
+<!--				request.VENDOR_NM AS vendorNm,							/* 업체명 */-->
+<!--				request.VENDOR_USERNM AS vendorUsernm,					/* 업체담당자 */-->
+<!--				request.CREATE_DATE AS createDate,						/* 등록일자 */-->
+<!--				request.DEFENSE_PUR_NM AS defensePurNm,					/* 디펜스 구매기획팀 담당자 */-->
+<!--				request.DEFENSE_PUR_ACCEPT_YN AS defensePurAcceptYn, 	/* 구매기획팀 접수여부*/-->
+<!--				request.DUANZONG_DT AS duanzongDt						/* 단종시스템반영일자 */-->
+<!--				FROM docs_duanzong_info request-->
+<!--	    WHERE 1 = 1-->
+<!--		<if test='business_area_cd != null and !business_area_cd.equals("")'>-->
+<!--		AND BUSINESS_AREA_CD = #{business_area_cd}-->
+<!--		</if>-->
+<!--		<if test='vendor_usernm != null and !vendor_usernm.equals("")'>-->
+<!--		AND VENDOR_USERID = #{vendor_usernm}-->
+<!--		</if>-->
+<!--		<if test='management_no != null and !management_no.equals("")'>-->
+<!--		AND MANAGEMENT_NO = #{management_no}-->
+<!--		</if>-->
+<!--		<if test='insertStartDt != null and !insertStartDt.equals("")'>-->
+<!--		AND CREATE_DATE BETWEEN TO_DATE(#{insertStartDt}, 'YY/MM/DD')-->
+<!--                        AND TO_DATE(#{insertEndDt}, 'YY/MM/DD')+1-->
+<!--		</if>-->
+<!--       	<if test='sortColumn != null and !"".equals(sortColumn)'>-->
+<!--       		ORDER BY ${sortColumn} ${order}-->
+<!--       	</if>-->
+<!--		) A1-->
+<!--			WHERE 1=1-->
+<!--			<if test='end != null and !end.equals("")'>-->
+<!--			AND ROWNUM <![CDATA[ <= ]]> #{end}-->
+<!--			</if>-->
+<!--		) B1-->
+<!--		<if test='start != null and !start.equals("")'>-->
+<!--		WHERE PAGEINDEX <![CDATA[ >= ]]>#{start}-->
+<!--		</if>-->
+<!--	</select>-->
+<!--	-->
+<!--	<select id="selectListCount" resultType="Integer">-->
+<!--		SELECT-->
+<!--		COUNT(*) AS-->
+<!--		TOTAL_COUNT-->
+<!--		FROM docs_duanzong_info request-->
+<!--		WHERE 1 = 1-->
+<!--		<if test='business_area_cd != null and !business_area_cd.equals("")'>-->
+<!--		AND BUSINESS_AREA_CD = #{business_area_cd}-->
+<!--		</if>-->
+<!--		<if test='vendor_usernm != null and !vendor_usernm.equals("")'>-->
+<!--		AND VENDOR_USERID = #{vendor_usernm}-->
+<!--		</if>-->
+<!--		<if test='management_no != null and !management_no.equals("")'>-->
+<!--		AND MANAGEMENT_NO = #{management_no}-->
+<!--		</if>-->
+<!--		<if test='insertStartDt != null and !insertStartDt.equals("")'>-->
+<!--		AND CREATE_DATE BETWEEN TO_DATE(#{insertStartDt}, 'YY/MM/DD')-->
+<!--                        AND TO_DATE(#{insertEndDt}, 'YY/MM/DD')+1-->
+<!--		</if>-->
+<!--		<if test='sortColumn != null and !"".equals(sortColumn)'>-->
+<!--       		ORDER BY ${sortColumn} ${order}-->
+<!--       	</if>-->
+<!--	</select>-->
+<!--	-->
+<!--	<select id="getDuanzongDocs" parameterType="String"-->
+<!--	resultType="kr.esob.fdms.controller.outside.duanzong.docs.DocsStatusPopupVO">-->
+<!--		SELECT-->
+<!--			(SELECT lang_desc FROM docs_lang WHERE lang_cd = CONCAT('combo.businessAreaCd.', BUSINESS_AREA_CD)) AS businessAreaCd,				/* 사업장 */-->
+<!--			VENDOR_NM AS vendorNm,						/* 업체명 */-->
+<!--			VENDOR_USERNM AS vendorUsernm,				/* 업체담당자 */-->
+<!--			DEFENSE_PUR_NM AS defensePurNm,				/* 디펜스 구매기획팀 담당자 */-->
+<!--			MANAGEMENT_NO AS managementNo,				/* 관리번호 */-->
+<!--			FILE_NM AS fileNm,							/* 파일 이름*/-->
+<!--			FILE_PATH AS filePath,						/* 내부 파일  경로*/-->
+<!--			FILE_PATH_E AS filePathE					/* 외부 파일  경로*/-->
+<!--		FROM docs_duanzong_info WHERE MANAGEMENT_NO = #{management_no}-->
+<!--	</select>-->
+<!--				-->
+<!--	<select id="managementNoMax" resultType="Integer">-->
+<!--		SELECT NVL(MAX(TO_NUMBER(SUBSTR(SUBSTR(MANAGEMENT_NO, INSTR(MANAGEMENT_NO, '_', -1)), 2))), 0)+1 FROM DOCS_DUANZONG_INFO-->
+<!--	</select>-->
+<!--	-->
+<!--	<select id="getDefensePurs" resultType="kr.esob.fdms.controller.outside.duanzong.docs.DocsDefensePursVO">-->
+<!--		select-->
+<!--			users.user_cd AS comboVal,-->
+<!--			users.user_nm AS comboLabel,-->
+<!--			'' AS combocd,-->
+<!--			'' AS combotooltip-->
+<!--		from docs_user users LEFT JOIN docs_dept dept USING(dept_cd) WHERE dept.purchase_plan_team_yn = 'Y'-->
+<!--	</select>-->
+<!--	-->
+<!--	<select id="getDefensePursUser" resultType="kr.esob.fdms.controller.outside.duanzong.docs.DocsDefensePursUserVO">-->
+<!--		select -->
+<!--			user_id as userId,-->
+<!--			user_nm as userNm-->
+<!--		from docs_user WHERE user_cd = #{user_cd}-->
+<!--	</select>-->
+<!--	-->
+<!--	<insert id="insertDocsDuanzong" parameterType="kr.esob.fdms.controller.outside.duanzong.docs.DocsAddParam">-->
+<!--		INSERT INTO DOCS_DUANZONG_INFO-->
+<!--		(-->
+<!--			MANAGEMENT_NO,-->
+<!--			BUSINESS_AREA_CD,-->
+<!--			VENDOR_CD,-->
+<!--			VENDOR_NM,-->
+<!--			VENDOR_USERID,-->
+<!--			VENDOR_USERNM,-->
+<!--			DEFENSE_PUR_ID,-->
+<!--			DEFENSE_PUR_NM,-->
+<!--			FILE_NM,-->
+<!--			FILE_PATH,-->
+<!--			FILE_PATH_E,-->
+<!--			CREATE_DATE-->
+<!--		)-->
+<!--		VALUES -->
+<!--		(-->
+<!--			#{managementNo},-->
+<!--			#{businessAreaCd},-->
+<!--			#{sessionUser.companyCd},-->
+<!--			#{sessionUser.companyNm},-->
+<!--			#{sessionUser.userCd},-->
+<!--			#{sessionUser.userNm},-->
+<!--			#{defensePurId},-->
+<!--			#{defensePurNm},-->
+<!--			#{fileNm},-->
+<!--			#{filePath},-->
+<!--			#{filePathE},-->
+<!--			SYSDATE-->
+<!--		)-->
+<!--	</insert>-->
+
+<!--</mapper>-->
+
+
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+
+
+
+
+<mapper namespace="sql.DuanzongDocs">
+
+<select id="selectList"
+		resultType="kr.esob.fdms.controller.outside.duanzong.docs.DocsListVO">
+	SELECT
+	B1.*
+	FROM
+	(
+	SELECT
+	A1.*
+	, ROW_NUMBER() OVER () AS PAGEINDEX
+	FROM (
+	SELECT
+	request.MANAGEMENT_NO AS managementNo,                    /* 관리번호 */
+	(SELECT lang_desc FROM docs_lang WHERE lang_cd = CONCAT('combo.businessAreaCd.', request.BUSINESS_AREA_CD)) AS businessAreaCd,                /* 사업장 */
+	request.VENDOR_NM AS vendorNm,                            /* 업체명 */
+	request.VENDOR_USERNM AS vendorUsernm,                    /* 업체담당자 */
+	request.CREATE_DATE AS createDate,                        /* 등록일자 */
+	request.DEFENSE_PUR_NM AS defensePurNm,                    /* 디펜스 구매기획팀 담당자 */
+	request.DEFENSE_PUR_ACCEPT_YN AS defensePurAcceptYn,     /* 구매기획팀 접수여부*/
+	request.DUANZONG_DT AS duanzongDt                        /* 단종시스템반영일자 */
+	FROM docs_duanzong_info request
+	WHERE 1 = 1
+	<if test='business_area_cd != null and !business_area_cd.equals("")'>
+		AND BUSINESS_AREA_CD = #{business_area_cd}
+	</if>
+	<if test='vendor_usernm != null and !vendor_usernm.equals("")'>
+		AND VENDOR_USERID = #{vendor_usernm}
+	</if>
+	<if test='management_no != null and !management_no.equals("")'>
+		AND MANAGEMENT_NO = #{management_no}
+	</if>
+	<if test='insertStartDt != null and !insertStartDt.equals("")'>
+		AND CREATE_DATE BETWEEN TO_DATE(#{insertStartDt}, 'YY/MM/DD')
+		AND TO_DATE(#{insertEndDt}, 'YY/MM/DD') + INTERVAL '1 day'
+	</if>
+	<if test='sortColumn != null and !"".equals(sortColumn)'>
+		ORDER BY ${sortColumn} ${order}
+	</if>
+	) A1
+	WHERE 1=1
+	<if test='end != null and !end.equals("")'>
+		AND PAGEINDEX <![CDATA[ <= ]]> #{end}
+	</if>
+	) B1
+	<if test='start != null and !start.equals("")'>
+		WHERE PAGEINDEX >= #{start}
+	</if>
+</select>
+
+<select id="selectListCount" resultType="Integer">
+	SELECT
+	COUNT(*) AS TOTAL_COUNT
+	FROM docs_duanzong_info request
+	WHERE 1 = 1
+	<if test='business_area_cd != null and !business_area_cd.equals("")'>
+		AND BUSINESS_AREA_CD = #{business_area_cd}
+	</if>
+	<if test='vendor_usernm != null and !vendor_usernm.equals("")'>
+		AND VENDOR_USERID = #{vendor_usernm}
+	</if>
+	<if test='management_no != null and !management_no.equals("")'>
+		AND MANAGEMENT_NO = #{management_no}
+	</if>
+	<if test='insertStartDt != null and !insertStartDt.equals("")'>
+		AND CREATE_DATE BETWEEN TO_DATE(#{insertStartDt}, 'YY/MM/DD')
+		AND TO_DATE(#{insertEndDt}, 'YY/MM/DD') + INTERVAL '1 day'
+	</if>
+	<if test='sortColumn != null and !"".equals(sortColumn)'>
+		ORDER BY ${sortColumn} ${order}
+	</if>
+</select>
+
+<select id="getDuanzongDocs" parameterType="String"
+		resultType="kr.esob.fdms.controller.outside.duanzong.docs.DocsStatusPopupVO">
+	SELECT
+		(SELECT lang_desc FROM docs_lang WHERE lang_cd = CONCAT('combo.businessAreaCd.', BUSINESS_AREA_CD)) AS businessAreaCd,                /* 사업장 */
+		VENDOR_NM AS vendorNm,                        /* 업체명 */
+		VENDOR_USERNM AS vendorUsernm,                /* 업체담당자 */
+		DEFENSE_PUR_NM AS defensePurNm,                /* 디펜스 구매기획팀 담당자 */
+		MANAGEMENT_NO AS managementNo,                /* 관리번호 */
+		FILE_NM AS fileNm,                            /* 파일 이름*/
+		FILE_PATH AS filePath,                        /* 내부 파일  경로*/
+		FILE_PATH_E AS filePathE                    /* 외부 파일  경로*/
+	FROM docs_duanzong_info WHERE MANAGEMENT_NO = #{management_no}
+</select>
+
+<select id="managementNoMax" resultType="Integer">
+	SELECT COALESCE(MAX(CAST(SUBSTRING(MANAGEMENT_NO FROM POSITION('_' IN MANAGEMENT_NO) + 1) AS INTEGER)), 0) + 1 FROM DOCS_DUANZONG_INFO
+</select>
+
+<select id="getDefensePurs" resultType="kr.esob.fdms.controller.outside.duanzong.docs.DocsDefensePursVO">
+	SELECT
+		users.user_cd AS comboVal,
+		users.user_nm AS comboLabel,
+		'' AS combocd,
+		'' AS combotooltip
+	FROM docs_user users LEFT JOIN docs_dept dept USING(dept_cd) WHERE dept.purchase_plan_team_yn = 'Y'
+</select>
+
+<select id="getDefensePursUser" resultType="kr.esob.fdms.controller.outside.duanzong.docs.DocsDefensePursUserVO">
+	SELECT
+		user_id as userId,
+		user_nm as userNm
+	FROM docs_user WHERE user_cd = #{user_cd}
+</select>
+
+<insert id="insertDocsDuanzong" parameterType="kr.esob.fdms.controller.outside.duanzong.docs.DocsAddParam">
+	INSERT INTO DOCS_DUANZONG_INFO
+	(
+		MANAGEMENT_NO,
+		BUSINESS_AREA_CD,
+		VENDOR_CD,
+		VENDOR_NM,
+		VENDOR_USERID,
+		VENDOR_USERNM,
+		DEFENSE_PUR_ID,
+		DEFENSE_PUR_NM,
+		FILE_NM,
+		FILE_PATH,
+		FILE_PATH_E,
+		CREATE_DATE
+	)
+	VALUES
+		(
+			#{managementNo},
+			#{businessAreaCd},
+			#{sessionUser.companyCd},
+			#{sessionUser.companyNm},
+			#{sessionUser.userCd},
+			#{sessionUser.userNm},
+			#{defensePurId},
+			#{defensePurNm},
+			#{fileNm},
+			#{filePath},
+			#{filePathE},
+			NOW()
+		)
+</insert>
+
+</mapper>

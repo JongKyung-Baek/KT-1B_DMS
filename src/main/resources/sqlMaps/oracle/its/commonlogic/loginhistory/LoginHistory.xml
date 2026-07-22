@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="sql.loginHistory">
+
+<insert id="insertHistory">
+	INSERT INTO DOCS_LOGIN_HISTORY (
+		HISTORY_SEQ,
+		USER_CD,
+		ACCESS_IP,
+		LOGIN_TYPE,
+		INSERT_DT,
+		USER_NM,
+		USER_ID,
+		BIZ_NO,
+		DEPT_CD,
+		DEPT_NM,
+		EMAIL,
+		COMPANY_NM,
+		COMPANY_CD
+	)
+	VALUES(
+			  #{historySeq},
+			  #{sessionUser.userCd},
+			  #{accessIp},
+			  #{loginType},
+			  CURRENT_TIMESTAMP,
+			  #{sessionUser.userNm},
+			  #{sessionUser.userId},
+			  #{sessionUser.bizNo},
+			  #{sessionUser.deptCd},
+			  #{sessionUser.deptNm},
+			  #{sessionUser.email},
+			  #{sessionUser.companyNm},
+			  #{sessionUser.companyCd}
+		  )
+</insert>
+
+</mapper>

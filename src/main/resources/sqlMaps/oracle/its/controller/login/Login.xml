@@ -1,0 +1,411 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+
+<!--<mapper namespace="sql.Login">-->
+
+<!--	<select id="getInUser" resultType="kr.esob.fdms.controller.login.UserVO" parameterType="string">-->
+<!--		SELECT-->
+<!--			A1.*-->
+<!--			, CASE WHEN userRoleGroup IS NOT NULL THEN userRoleGroup-->
+<!--					WHEN deptRoleGroup IS NOT NULL THEN deptRoleGroup-->
+<!--					ELSE N'RG_009'-->
+<!--			END AS roleGroup		/* 2020.03.27 younjh 沅뚰븳 泥댄겕 濡쒖쭅 蹂寃? ?대??ъ슜?먯쓽 寃쎌슦 ?좊떦???덈릺???덉쑝硫?rg_009*/-->
+<!--		FROM (-->
+<!--	        SELECT-->
+<!--	        	docsUser.*-->
+<!--	        	, company.COMPANY_NM-->
+<!--	        	, company.BIZ_NO-->
+<!--	        	, dept.TEAM_LEADER_USER_CD AS teamLeaderUid-->
+<!--	        	, dept.DEPT_NM AS deptNm-->
+<!--	        	, CASE WHEN protectUser.BUSINESS_TYPE_CD = 'Development' THEN 'Y'-->
+<!--	                ELSE 'N'-->
+<!--	            END AS passUseYn-->
+<!--	            , dept.PURCHASE_YN AS purchaseYn-->
+<!--	            , dept.ILS_TEAM_YN AS ilsTeamYn-->
+<!--	            , dept.PRODUCT_TEAM_YN AS productTeamYn-->
+<!--	            , dept.PURCHASE_TEAM_YN AS purchaseTeamYn-->
+<!--	            , dept.PURCHASE_PLAN_TEAM_YN AS purchasePlanTeamYn-->
+<!--	            , dept.DEPT_TYPE AS deptType-->
+<!--	            , CASE-->
+<!--			      WHEN dept.TEAM_LEADER_USER_CD = docsUser.USER_CD THEN 'Y'                                                          /* ???*/-->
+<!--			      WHEN (SELECT COUNT(*) FROM DOCS_INSTEAD_USER tmp WHERE tmp.INSTEAD_USER_CD = docsUser.USER_CD) > 0 THEN 'Y'        /* ?寃곗옄 */-->
+<!--			      WHEN (SELECT COUNT(*) FROM DOCS_DEF_INSTEAD_USER tmp WHERE tmp.INSTEAD_USER_CD = docsUser.USER_CD) > 0 THEN 'Y'    /* 諛⑹궛 ?寃곗옄 */-->
+<!--			      WHEN (SELECT COUNT(*) FROM DOCS_PROTECT_USER tmp WHERE tmp.USER_CD = docsUser.USER_CD) > 0 THEN 'Y'                /* 諛⑹궛 寃곗옱??/-->
+<!--			      ELSE 'N'-->
+<!--			    END approverYn-->
+<!--		    	, CASE WHEN docsUser.USER_CD = company.APPROVAL_USER_CD THEN 'Y'-->
+<!--		   			ELSE 'N'-->
+<!--	   				END approvalYn-->
+<!--	   			, company.APPROVAL_USER_CD 	AS companyApprovalUser-->
+<!--	   			, docsUser.PROTECT_YN		AS protectYn			/* 諛⑹궛湲곗닠?먮즺 沅뚰븳 ?щ?(?몃??ъ슂???꾩슜) */-->
+<!--	   			/*, company.DEL_YN			AS companyDelYn			 ?낆껜 ?ъ슜?щ? */-->
+<!--	   			/* Viewer ?대┃??companyDelYn ??null 濡??섏뼱???嫄곕옒以묐떒 ?낆껜硫붿떆吏 異쒕젰???쒗솕?뷀렂???ъ슜?먮뒗 臾댁“猿 N ?쇰줈 蹂寃?2020.01.04 yongjulee*/-->
+<!--	   			, DECODE(docsUser.company_cd, 'COMP_0000000999', 'N', company.DEL_YN) AS companyDelYn-->
+<!--	   			, (SELECT GROUP_CODE FROM DOCS_ROLE_GROUP_MEMBER T1 WHERE T1.MEMBER_CD = docsUser.USER_CD AND GROUP_TYPE = 'USER' AND ROWNUM = 1) userRoleGroup-->
+<!--	   			, (SELECT GROUP_CODE FROM DOCS_ROLE_GROUP_MEMBER T2 WHERE T2.MEMBER_CD = docsUser.DEPT_CD AND GROUP_TYPE = 'DEPT' AND ROWNUM = 1) deptRoleGroup-->
+<!--	        FROM DOCS_USER docsUser-->
+<!--	        LEFT JOIN DOCS_COMPANY company-->
+<!--	        ON docsUser.COMPANY_CD = company.COMPANY_CD-->
+<!--	        LEFT JOIN DOCS_DEPT dept-->
+<!--	        ON docsUser.DEPT_CD = dept.DEPT_CD-->
+<!--	        LEFT JOIN DOCS_PROTECT_USER protectUser-->
+<!--	        ON protectUser.USER_CD = docsUser.USER_CD-->
+<!--	        WHERE docsUser.USER_ID = #{userId}-->
+<!--	     ) A1-->
+<!--	</select>-->
+
+<!--	<select id="getOutUser" resultType="kr.esob.fdms.controller.login.UserVO">-->
+<!--        SELECT-->
+<!--        	docsUser.*-->
+<!--        	, 'RG_006' roleGroup	/* ?몃??낆껜??臾댁“嫄?006*/-->
+<!--        	, company.COMPANY_NM-->
+<!--        	, company.BIZ_NO-->
+<!--        	, dept.TEAM_LEADER_USER_CD AS teamLeaderUid-->
+<!--        	, CASE WHEN protectUser.BUSINESS_TYPE_CD = 'Development' THEN 'Y'-->
+<!--                ELSE 'N'-->
+<!--            END AS passUseYn-->
+<!--            , dept.PURCHASE_YN AS purchaseYn-->
+<!--            , dept.ILS_TEAM_YN AS ilsTeamYn-->
+<!--            , dept.PRODUCT_TEAM_YN AS productTeamYn-->
+<!--            , dept.PURCHASE_TEAM_YN AS purchaseTeamYn-->
+<!--            , dept.PURCHASE_PLAN_TEAM_YN AS purchasePlanTeamYn-->
+<!--            , dept.DEPT_TYPE AS deptType-->
+<!--            , CASE-->
+<!--		      WHEN dept.TEAM_LEADER_USER_CD = docsUser.USER_CD THEN 'Y'                                                          /* ???*/-->
+<!--		      WHEN (SELECT COUNT(*) FROM DOCS_INSTEAD_USER tmp WHERE tmp.INSTEAD_USER_CD = docsUser.USER_CD) > 0 THEN 'Y'        /* ?寃곗옄 */-->
+<!--		      WHEN (SELECT COUNT(*) FROM DOCS_DEF_INSTEAD_USER tmp WHERE tmp.INSTEAD_USER_CD = docsUser.USER_CD) > 0 THEN 'Y'    /* 諛⑹궛 ?寃곗옄 */-->
+<!--		      WHEN (SELECT COUNT(*) FROM DOCS_PROTECT_USER tmp WHERE tmp.USER_CD = docsUser.USER_CD) > 0 THEN 'Y'                /* 諛⑹궛 寃곗옱??/-->
+<!--		      ELSE 'N'-->
+<!--		    END approverYn-->
+<!--	    	, CASE WHEN docsUser.USER_CD = company.APPROVAL_USER_CD THEN 'Y'-->
+<!--	   			ELSE 'N'-->
+<!--   				END approvalYn-->
+<!--   			, company.APPROVAL_USER_CD 	AS companyApprovalUser-->
+<!--   			, docsUser.PROTECT_YN		AS protectYn			/* 諛⑹궛湲곗닠?먮즺 沅뚰븳 ?щ?(?몃??ъ슂???꾩슜) */-->
+<!--        FROM DOCS_USER docsUser-->
+<!--        LEFT JOIN DOCS_COMPANY company-->
+<!--        ON docsUser.COMPANY_CD = company.COMPANY_CD-->
+<!--        LEFT JOIN DOCS_DEPT dept-->
+<!--        ON docsUser.DEPT_CD = dept.DEPT_CD-->
+<!--        LEFT JOIN DOCS_PROTECT_USER protectUser-->
+<!--        ON protectUser.USER_CD = docsUser.USER_CD-->
+<!--        WHERE docsUser.USER_NM = #{userNm}-->
+<!--        AND company.BIZ_NO = #{bizNo}-->
+<!--	</select>-->
+
+<!--	<select id="getRoleCodeList" resultType="kr.esob.fdms.controller.login.RoleVO">-->
+<!--		SELECT rel.ROLE_CD AS roleCd-->
+<!--			, menu.MENU_TYPE-->
+<!--		FROM DOCS_REL_ROLE_GROUP rel-->
+<!--		JOIN DOCS_MENU menu-->
+<!--		ON rel.ROLE_CD = menu.ROLE_CD-->
+<!--		WHERE GROUP_CD = #{roleGroup}-->
+<!--		AND menu.DEL_YN = 'N'-->
+<!--	</select>-->
+
+<!--	<update id="updateLoginFailure">-->
+<!--		UPDATE DOCS_USER-->
+<!--		SET LOGIN_COUNT = NVL(LOGIN_COUNT, 0) + 1-->
+<!--		WHERE USER_ID = #{userId}-->
+<!--	</update>-->
+
+<!--	<update id="resetLoginCount">-->
+<!--		UPDATE DOCS_USER-->
+<!--		SET LOGIN_COUNT = 0-->
+<!--		WHERE USER_ID = #{userId}-->
+<!--	</update>-->
+
+<!--	<select id="checkFailedCount" resultType="Integer">-->
+<!--		SELECT NVL(LOGIN_COUNT, 0) AS cnt-->
+<!--		FROM DOCS_USER-->
+<!--		WHERE USER_ID = #{userId}-->
+<!--	</select>-->
+
+<!--	<update id="updateLock">-->
+<!--		UPDATE DOCS_USER-->
+<!--		SET LOCK_YN = 'Y'-->
+<!--		WHERE USER_ID = #{userId}-->
+<!--	</update>-->
+
+<!--	<update id="updateLastLoginDt">-->
+<!--		UPDATE DOCS_USER-->
+<!--		SET LAST_LOGIN_DT = SYSDATE-->
+<!--		  , LAST_LOGIN_IP = #{clientIp}-->
+<!--		WHERE USER_ID = #{userId}-->
+<!--	</update>-->
+
+<!--	<update id="updateUnlock">-->
+<!--		UPDATE DOCS_USER-->
+<!--		SET LAST_LOGIN_DT = SYSDATE-->
+<!--			, LOCK_YN = 'N'-->
+<!--		WHERE USER_CD = #{userCd}-->
+<!--	</update>-->
+
+<!--	<select id="selectList" resultType="kr.esob.fdms.controller.login.UserChangePopupVO">-->
+<!--		SELECT B1.*-->
+<!--		FROM-->
+<!--		(-->
+<!--			SELECT-->
+<!--				A1.*-->
+<!--				, ROWNUM AS PAGEINDEX-->
+<!--			FROM-->
+<!--			(-->
+<!--				SELECT docsUser.USER_NM			AS userNm-->
+<!--					, position.POSITION_NM		AS positionNm-->
+<!--					, dept.DEPT_NM				AS deptNm-->
+<!--					, docsUser.USER_ID			AS userId-->
+<!--				FROM DOCS_USER docsUser-->
+<!--				JOIN DOCS_POSITION position ON docsUser.POSITION_CD = position.POSITION_CD-->
+<!--				JOIN DOCS_DEPT dept ON docsUser.DEPT_CD = dept.DEPT_CD-->
+<!--				WHERE docsUser.USER_NM LIKE '%' || #{userNm} || '%'-->
+<!--				<if test='sortColumn == null or "".equals(sortColumn)'>-->
+<!--		        	ORDER BY userNm asc-->
+<!--				</if>-->
+<!--		       	<if test='sortColumn != null and !"".equals(sortColumn)'>-->
+<!--		       		ORDER BY ${sortColumn} ${order}-->
+<!--		       	</if>-->
+<!--			)A1-->
+<!--			<if test='end != null and !end.equals("")'>-->
+<!--				 WHERE ROWNUM <![CDATA[ <= ]]> #{end}-->
+<!--			</if>-->
+<!--       	)B1-->
+<!--		<if test='start != null and !start.equals("")'>-->
+<!--		WHERE PAGEINDEX <![CDATA[ >= ]]>#{start}-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	<select id="selectListCount" resultType="Integer">-->
+<!--		SELECT-->
+<!--			COUNT(*) AS TOTAL_COUNT-->
+<!--		FROM-->
+<!--		(-->
+<!--			SELECT docsUser.USER_NM			AS userNm-->
+<!--				, position.POSITION_NM		AS positionNm-->
+<!--				, dept.DEPT_NM				AS deptNm-->
+<!--				, docsUser.USER_ID			AS userId-->
+<!--			FROM DOCS_USER docsUser-->
+<!--			JOIN DOCS_POSITION position ON docsUser.POSITION_CD = position.POSITION_CD-->
+<!--			JOIN DOCS_DEPT dept ON docsUser.DEPT_CD = dept.DEPT_CD-->
+<!--			WHERE docsUser.USER_NM LIKE '%' || #{userNm} || '%'-->
+<!--		)A1-->
+<!--	</select>-->
+
+<!--	<select id="selectUserId" resultType="String">-->
+<!--		SELECT USER_ID AS userId-->
+<!--		FROM DOCS_USER docsUser-->
+<!--		JOIN DOCS_COMPANY company-->
+<!--		ON docsUser.COMPANY_CD = company.COMPANY_CD-->
+<!--		WHERE docsUser.USER_NM = #{userNm}-->
+<!--		AND company.BIZ_NO = #{bizNo}-->
+<!--	</select>-->
+
+<!--	<select id="selectLastLoginIp" resultType="String">-->
+<!--		SELECT LAST_LOGIN_IP-->
+<!--		FROM DOCS_USER-->
+<!--		WHERE USER_CD = #{userCd}-->
+<!--	</select>-->
+<!--</mapper>-->
+
+
+
+		<!-- ?댄븯 PostgreSQL??荑쇰━臾?-->
+		<!-- ?댄븯 PostgreSQL??荑쇰━臾?-->
+		<!-- ?댄븯 PostgreSQL??荑쇰━臾?-->
+		<!-- ?댄븯 PostgreSQL??荑쇰━臾?-->
+		<!-- ?댄븯 PostgreSQL??荑쇰━臾?-->
+		<!-- ?댄븯 PostgreSQL??荑쇰━臾?-->
+
+
+
+<mapper namespace="sql.Login">
+
+<select id="getInUser" resultType="kr.esob.fdms.controller.login.UserVO" parameterType="string">
+	SELECT
+		A1.*,
+		CASE WHEN userRoleGroup IS NOT NULL THEN userRoleGroup
+			 WHEN deptRoleGroup IS NOT NULL THEN deptRoleGroup
+			 ELSE 'RG_009'
+			END AS roleGroup /* 2020.03.27 younjh 沅뚰븳 泥댄겕 濡쒖쭅 蹂寃? ?대??ъ슜?먯쓽 寃쎌슦 ?좊떦???덈릺???덉쑝硫?rg_009 */
+	FROM (
+			 SELECT
+				 docsUser.*,
+                 position.POSITION_NM AS positionNm,
+				 '' AS COMPANY_NM,
+				 '' AS BIZ_NO,
+				 dept.TEAM_LEADER_USER_CD AS teamLeaderUid,
+				 dept.DEPT_NM AS deptNm,
+				 'N' AS passUseYn,
+				 dept.PURCHASE_YN AS purchaseYn,
+				 dept.ILS_TEAM_YN AS ilsTeamYn,
+				 dept.PRODUCT_TEAM_YN AS productTeamYn,
+				 dept.PURCHASE_TEAM_YN AS purchaseTeamYn,
+				 dept.PURCHASE_PLAN_TEAM_YN AS purchasePlanTeamYn,
+				 dept.DEPT_TYPE AS deptType,
+				 CASE
+					 WHEN dept.TEAM_LEADER_USER_CD = docsUser.USER_CD THEN 'Y' /* ???*/
+					 ELSE 'N'
+					 END approverYn,
+				 'N' AS approvalYn,
+				 '' AS companyApprovalUser,
+				 docsUser.PROTECT_YN AS protectYn, /* 諛⑹궛湲곗닠?먮즺 沅뚰븳 ?щ?(?몃??ъ슜???꾩슜) */
+				 'N' AS companyDelYn,
+				 (SELECT GROUP_CODE FROM DOCS_ROLE_GROUP_MEMBER T1 WHERE T1.MEMBER_CD = docsUser.USER_CD AND GROUP_TYPE = 'USER' LIMIT 1) AS userRoleGroup,
+				 (SELECT GROUP_CODE FROM DOCS_ROLE_GROUP_MEMBER T2 WHERE T2.MEMBER_CD = docsUser.DEPT_CD AND GROUP_TYPE = 'DEPT' LIMIT 1) AS deptRoleGroup
+			 FROM DOCS_USER docsUser
+					  LEFT JOIN DOCS_DEPT dept ON docsUser.DEPT_CD = dept.DEPT_CD
+                      LEFT JOIN DOCS_POSITION position ON docsUser.POSITION_CD = position.POSITION_CD
+			 WHERE docsUser.USER_ID = #{userId}
+		 ) A1
+</select>
+
+<select id="getOutUser" resultType="kr.esob.fdms.controller.login.UserVO">
+	SELECT
+		docsUser.*,
+        position.POSITION_NM AS positionNm,
+		'RG_006' AS roleGroup, /* ?몃??낆껜??臾댁“嫄?006 */
+		'' AS COMPANY_NM,
+		'' AS BIZ_NO,
+		dept.TEAM_LEADER_USER_CD AS teamLeaderUid,
+		'N' AS passUseYn,
+		dept.PURCHASE_YN AS purchaseYn,
+		dept.ILS_TEAM_YN AS ilsTeamYn,
+		dept.PRODUCT_TEAM_YN AS productTeamYn,
+		dept.PURCHASE_TEAM_YN AS purchaseTeamYn,
+		dept.PURCHASE_PLAN_TEAM_YN AS purchasePlanTeamYn,
+		dept.DEPT_TYPE AS deptType,
+		CASE
+			WHEN dept.TEAM_LEADER_USER_CD = docsUser.USER_CD THEN 'Y' /* ???*/
+			ELSE 'N'
+			END approverYn,
+		'N' AS approvalYn,
+		'' AS companyApprovalUser,
+		docsUser.PROTECT_YN AS protectYn /* 諛⑹궛湲곗닠?먮즺 沅뚰븳 ?щ?(?몃??ъ슂???꾩슜) */
+	FROM DOCS_USER docsUser
+			 LEFT JOIN DOCS_DEPT dept ON docsUser.DEPT_CD = dept.DEPT_CD
+             LEFT JOIN DOCS_POSITION position ON docsUser.POSITION_CD = position.POSITION_CD
+	WHERE docsUser.USER_NM = #{userNm}
+</select>
+
+<select id="getRoleCodeList" resultType="kr.esob.fdms.controller.login.RoleVO">
+	SELECT rel.ROLE_CD AS roleCd,
+		   menu.MENU_TYPE
+	FROM DOCS_REL_ROLE_GROUP rel
+			 JOIN DOCS_MENU menu ON rel.ROLE_CD = menu.ROLE_CD
+	WHERE GROUP_CD = #{roleGroup}
+	  AND menu.DEL_YN = 'N'
+</select>
+
+<update id="updateLoginFailure">
+	UPDATE DOCS_USER
+	SET LOGIN_COUNT = COALESCE(LOGIN_COUNT, 0) + 1
+	WHERE USER_ID = #{userId}
+</update>
+
+<update id="resetLoginCount">
+	UPDATE DOCS_USER
+	SET LOGIN_COUNT = 0
+	WHERE USER_ID = #{userId}
+</update>
+
+<select id="checkFailedCount" resultType="Integer">
+	SELECT COALESCE(LOGIN_COUNT, 0) AS cnt
+	FROM DOCS_USER
+	WHERE USER_ID = #{userId}
+</select>
+
+<update id="updateLock">
+	UPDATE DOCS_USER
+	SET LOCK_YN = 'Y'
+	WHERE USER_ID = #{userId}
+</update>
+
+<update id="updateLastLoginDt">
+	UPDATE DOCS_USER
+	SET LAST_LOGIN_DT = CURRENT_TIMESTAMP,
+		LAST_LOGIN_IP = #{clientIp}
+	WHERE USER_ID = #{userId}
+</update>
+
+<update id="updateUnlock">
+	UPDATE DOCS_USER
+	SET LAST_LOGIN_DT = CURRENT_TIMESTAMP,
+		LOCK_YN = 'N'
+	WHERE USER_CD = #{userCd}
+</update>
+
+<update id="resetPwd">
+	UPDATE DOCS_USER
+	SET USER_PWD = #{userPwd}
+	WHERE USER_CD = #{userCd}
+</update>
+
+<select id="selectList" resultType="kr.esob.fdms.controller.login.UserChangePopupVO">
+	SELECT B1.*
+	FROM
+	(
+	SELECT
+	A1.*,
+	ROW_NUMBER() OVER() AS PAGEINDEX
+	FROM
+	(
+	SELECT docsUser.USER_NM AS userNm,
+	position.POSITION_NM AS positionNm,
+	dept.DEPT_NM AS deptNm,
+	docsUser.USER_ID AS userId
+	FROM DOCS_USER docsUser
+	JOIN DOCS_POSITION position ON docsUser.POSITION_CD = position.POSITION_CD
+	JOIN DOCS_DEPT dept ON docsUser.DEPT_CD = dept.DEPT_CD
+	WHERE docsUser.USER_NM LIKE '%' || #{userNm} || '%'
+	<if test='sortColumn == null or "".equals(sortColumn)'>
+		ORDER BY userNm ASC
+	</if>
+	<if test='sortColumn != null and !"".equals(sortColumn)'>
+		ORDER BY ${sortColumn} ${order}
+	</if>
+	) A1
+	<if test='end != null and !end.equals("")'>
+		LIMIT #{end}
+	</if>
+	) B1
+	<if test='start != null and !start.equals("")'>
+		WHERE PAGEINDEX >= #{start}
+	</if>
+</select>
+
+<select id="selectListCount" resultType="Integer">
+	SELECT COUNT(*) AS TOTAL_COUNT
+	FROM (
+			 SELECT docsUser.USER_NM AS userNm,
+					position.POSITION_NM AS positionNm,
+					dept.DEPT_NM AS deptNm,
+					docsUser.USER_ID AS userId
+			 FROM DOCS_USER docsUser
+					  JOIN DOCS_POSITION position ON docsUser.POSITION_CD = position.POSITION_CD
+					  JOIN DOCS_DEPT dept ON docsUser.DEPT_CD = dept.DEPT_CD
+			 WHERE docsUser.USER_NM LIKE '%' || #{userNm} || '%'
+		 ) A1
+</select>
+
+<select id="selectUserId" resultType="String">
+	SELECT USER_ID AS userId
+	FROM DOCS_USER docsUser
+	WHERE docsUser.USER_NM = #{userNm}
+</select>
+
+<select id="selectLastLoginIp" resultType="String">
+	SELECT LAST_LOGIN_IP
+	FROM DOCS_USER
+	WHERE USER_CD = #{userCd}
+</select>
+
+<select id="selectDeployUser" resultType="kr.esob.fdms.controller.login.UserVO" parameterType="string">
+	SELECT *
+	FROM DOCS_USER
+	WHERE USER_NM = #{userNm}
+</select>
+
+</mapper>

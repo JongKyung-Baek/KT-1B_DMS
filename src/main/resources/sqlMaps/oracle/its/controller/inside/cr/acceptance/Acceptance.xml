@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="sql.crAcceptance">
+
+	<select id="selectList" resultType="kr.esob.fdms.controller.inside.cr.acceptance.AcceptanceListVO" parameterType="kr.esob.fdms.controller.inside.cr.acceptance.AcceptanceListParam">
+		SELECT
+		cr.CR_NO AS crNo,  /* 제의번호 */
+		cr.DRAWING_NO AS drawingNo,  /* 도번 */
+		cr.REV_NO AS revNo,  /* REV */
+		cr.CR_TITLE_NM AS crTitleNm,  /* 제목 */
+		cr.CR_TYPE_CD AS crTypeCd,  /* 제의사유 */
+		FN_GET_CD_NM('crTypeCd', cr.CR_TYPE_CD, #{sessionLang}) AS crTypeDesc,
+		cr.PURCHASER_UID AS purchaserUid,  /* 구매담당자 */
+		purchaser.USER_NM AS purchaserUserNm,  /* 구매담당자 */
+		req.INSERT_DT AS requestDt,  /* 요청일 */
+		req.APPROVAL_DT AS approvalDt,  /* 결재일 */
+		req.STATUS_CD AS statusCd,  /* 진행상태 */
+		cr.STATUS_CD AS crStatusCd,  /* cr 상태 */
+		FN_GET_CD_NM('crRequestStatusCd', req.STATUS_CD, #{sessionLang}) AS statusNm,
+		FN_GET_CD_NM('crStatusCd', cr.STATUS_CD, #{sessionLang}) AS crStatusNm,
+		cr.BUSINESS_AREA_CD AS businessAreaCd,  /* 사업장 */
+		FN_GET_CD_NM('businessAreaCd', cr.BUSINESS_AREA_CD, #{sessionLang}) AS businessAreaNm,
+		COALESCE(cr.PRODUCT_NO, '') AS productNm,  /* 기종 */
+		cr.PRODUCT_NO AS productNo,  /* 기종 */
+		(SELECT COMPANY_NM FROM DOCS_COMPANY tmp WHERE tmp.BIZ_NO = cr.VENDOR_NO) AS vendorNm,  /* 업체코드 */
+		cr.VENDOR_NO AS vendorNo,  /* 업체(사업자번호) */
+		(SELECT USER_NM FROM DOCS_USER tmp WHERE tmp.USER_ID = cr.VENDOR_UID) AS vendorUserNm,  /* 업체요청자 */
+		cr.VENDOR_UID AS vendorUid  /* 업체요청자 */
+		FROM ITN_CR cr
+		INNER JOIN DOCS_REQUEST_MAPPING reqMapping ON cr.CR_NO = reqMapping.OBJECT_ID
+		INNER JOIN DOCS_REQUEST req ON req.REQUEST_NO = reqMapping.REQUEST_NO
+		INNER JOIN DOCS_USER purchaser ON purchaser.USER_ID = cr.PURCHASER_UID
+		INNER JOIN DOCS_REQUEST_DETAIL currDetail ON currDetail.REQUEST_NO = req.REQUEST_NO AND currDetail.PROCESS_SEQ = req.CURRENT_PROCESS_SEQ_NO
+		WHERE currDetail.APPROVAL_STATUS_CD = 'ACCEPT'
+		<if test='requestStartDt != null and !requestStartDt.equals("")'>
+			AND req.INSERT_DT BETWEEN #{requestStartDt}::DATE
+			AND (#{requestEndDt}::DATE + INTERVAL '1 DAY')
+		</if>
+		<if test='vendorNo != null and !vendorNo.equals("")'>
+			AND cr.VENDOR_NO = #{vendorNo}
+		</if>
+		<if test='purchaserUid != null and !purchaserUid.equals("")'>
+			AND cr.PURCHASER_UID = #{purchaserUid}
+		</if>
+		<if test='crStatusCd != null and !crStatusCd.equals("")'>
+			AND cr.STATUS_CD = #{crStatusCd}
+		</if>
+		<if test='businessAreaCd != null and !businessAreaCd.equals("")'>
+			AND cr.BUSINESS_AREA_CD = #{businessAreaCd}
+		</if>
+		<if test='sortColumn == null or "".equals(sortColumn)'>
+			ORDER BY req.INSERT_DT DESC, cr.CR_NO DESC
+		</if>
+		<if test='sortColumn != null and !"".equals(sortColumn)'>
+			ORDER BY ${sortColumn} ${order}, cr.CR_NO ${order}
+		</if>
+		<if test='start != null and !start.equals("") and end != null and !end.equals("")'>
+			LIMIT #{end} OFFSET #{start}
+		</if>
+	</select>
+
+<select id="selectListCount" resultType="Integer">
+	SELECT
+	COUNT(*) AS TOTAL_COUNT
+	FROM
+	(
+	SELECT
+	A1.*
+	FROM
+	(
+	SELECT
+	cr.CR_NO                                                                    AS crNo                    /* 제의번호 */
+	, cr.DRAWING_NO                                                          AS drawingNo                /* 도번 */
+	, cr.REV_NO                                                              AS revNo                    /* REV */
+	, cr.CR_TITLE_NM                                                         AS crTitleNm                /* 제목 */
+	, cr.CR_TYPE_CD                                                          AS crTypeCd                /* 제의사유 */
+	, FN_GET_CD_NM('crTypeCd', cr.CR_TYPE_CD, #{sessionLang})  AS crTypeDesc
+	, cr.PURCHASER_UID                                                       AS purchaserUid           /* 구매담당자 */
+	, purchaser.USER_NM                                                      AS purchaserUserNm       /* 구매담당자 */
+	, req.INSERT_DT                                                          AS requestDt               /* 요청일 */
+	, req.APPROVAL_DT                                                        AS approvalDt               /* 결재일 */
+	, req.STATUS_CD                                                          AS statusCd                /* 진행상태 */
+	, cr.STATUS_CD                                                           AS crStatusCd                /* cr 상태 */
+	, FN_GET_CD_NM('crRequestStatusCd', req.STATUS_CD, #{sessionLang}) AS statusNm
+	, FN_GET_CD_NM('crStatusCd', cr.STATUS_CD, #{sessionLang}) AS crStatusNm
+	, cr.BUSINESS_AREA_CD                                                    AS businessAreaCd  /* 사업장 */
+	, FN_GET_CD_NM('businessAreaCd', cr.BUSINESS_AREA_CD, #{sessionLang})    AS businessAreaNm
+	, COALESCE(cr.PRODUCT_NO, '')        AS productNm            /* 기종 */
+	, cr.PRODUCT_NO                                                          AS productNo               /* 기종 */
+	, (
+	SELECT COMPANY_NM
+	FROM DOCS_COMPANY tmp
+	WHERE tmp.BIZ_NO = cr.VENDOR_NO
+	)                                                                         AS vendorNm                /* 업체코드 */
+	, cr.VENDOR_NO                                                             AS vendorNo                /* 업체(사업자번호)*/
+	, (
+	SELECT USER_NM
+	FROM DOCS_USER tmp
+	WHERE tmp.USER_ID = cr.VENDOR_UID
+	)                                                                         AS vendorUserNm        /* 업체요청자*/
+	, cr.VENDOR_UID                                                             AS vendorUid                /* 업체요청자 */
+	FROM ITN_CR cr
+	INNER JOIN DOCS_REQUEST_MAPPING reqMapping ON cr.CR_NO = reqMapping.OBJECT_ID
+	INNER JOIN DOCS_REQUEST req ON req.REQUEST_NO = reqMapping.REQUEST_NO
+	INNER JOIN DOCS_USER purchaser ON purchaser.USER_ID = cr.PURCHASER_UID
+	INNER JOIN DOCS_REQUEST_DETAIL currDetail ON currDetail.REQUEST_NO = req.REQUEST_NO AND currDetail.PROCESS_SEQ = req.CURRENT_PROCESS_SEQ_NO
+	WHERE currDetail.APPROVAL_STATUS_CD = 'ACCEPT'
+	<!-- AND currDetail.ACTUAL_USER_CD = #{sessionUser.userCd} /* 내가 접수해야 할 목록 */   -->
+	<if test='requestStartDt != null and !requestStartDt.equals("")'>
+		AND req.INSERT_DT BETWEEN #{requestStartDt}::DATE
+		AND (#{requestEndDt}::DATE + INTERVAL '1 DAY')
+	</if>
+	) A1
+	WHERE 1=1
+	<if test='vendorNo != null and !vendorNo.equals("")'>
+		AND vendorNo = #{vendorNo}
+	</if>
+	<if test='purchaserUid != null and !purchaserUid.equals("")'>
+		AND purchaserUid = #{purchaserUid}
+	</if>
+	<if test='crStatusCd != null and !crStatusCd.equals("")'>
+		AND crStatusCd = #{crStatusCd}
+	</if>
+	<if test='businessAreaCd != null and !businessAreaCd.equals("")'>
+		AND businessAreaCd = #{businessAreaCd}
+	</if>
+	) B1
+</select>
+
+<select id="selectAcceptanceInfo" resultType="crInfoVO">
+	SELECT *
+	FROM ITN_CR
+	WHERE CR_NO = #{crNo}
+</select>
+
+<update id="updateAcceptance">
+	UPDATE DOCS_REQUEST_DETAIL
+	SET ACTION_DT = CURRENT_TIMESTAMP
+	  , REQUEST_DESC = #{requestDesc}
+	  , ACTION_CD = #{actionCd}
+	WHERE REQUEST_NO = (SELECT REQUEST_NO FROM DOCS_REQUEST_MAPPING WHERE OBJECT_ID = #{crNo} LIMIT 1)
+	  AND APPROVAL_STATUS_CD = 'ACCEPT'
+</update>
+
+<update id="updateAproval">
+	UPDATE DOCS_REQUEST_DETAIL
+	SET ACTION_DT = CURRENT_TIMESTAMP
+	  , ORIGINAL_USER_CD = #{sessionUser.teamLeaderUid}
+	  , ACTUAL_USER_CD = #{approvalUser}
+	  , APPROVAL_GRADE_CD = #{approvalGradeCd}
+	WHERE REQUEST_NO = (SELECT REQUEST_NO FROM DOCS_REQUEST_MAPPING WHERE OBJECT_ID = #{crNo} LIMIT 1)
+	  AND APPROVAL_STATUS_CD = 'APPROVAL'
+</update>
+
+<update id="updateRequest">
+	UPDATE DOCS_REQUEST
+	SET STATUS_CD = #{actionCd}
+	<if test='currentProcessSeqNo != null and !"".equals(currentProcessSeqNo)'>
+		, CURRENT_PROCESS_SEQ_NO = #{currentProcessSeqNo}
+	</if>
+	, UPDATE_DT = CURRENT_TIMESTAMP
+	, UPDATE_USER_CD = #{sessionUser.userCd}
+	WHERE REQUEST_NO = (SELECT REQUEST_NO FROM DOCS_REQUEST_MAPPING WHERE OBJECT_ID = #{crNo} LIMIT 1)
+</update>
+
+<update id="updateCr">
+	UPDATE ITN_CR
+	SET REVIEW_RESULT = #{reviewResult}
+	, REJECT_REASON = #{rejectReason}
+	, PRODUCT_NO = #{productNo}
+	, STATUS_CD = #{statusCd}
+	<if test='materialNo != null and !"".equals(materialNo)'>
+		, MATERIAL_NO = #{materialNo}
+	</if>
+	WHERE CR_NO = #{crNo}
+</update>
+</mapper>

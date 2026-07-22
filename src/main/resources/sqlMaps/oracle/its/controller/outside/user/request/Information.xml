@@ -1,0 +1,336 @@
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+
+<!--<mapper namespace="sql.OutsideUserInformation">-->
+
+<!--	<select id="selectList" resultType="kr.esob.fdms.controller.outside.user.information.InformationListParam">-->
+<!--	select-->
+<!--		B1.*-->
+<!--	from-->
+<!--	(-->
+<!--		select-->
+<!--			A1.*-->
+<!--			, ROWNUM AS PAGEINDEX-->
+<!--		from-->
+<!--		(-->
+<!--			select-->
+<!--				a.user_cd  			as userCd-->
+<!--				, a.user_nm  		as userNm-->
+<!--				, a.last_Login_Dt 	as lastLoginDt-->
+<!--				, a.pwd_Update_Dt	as pwdUpdateDt-->
+<!--				, CASE WHEN a.protect_Yn IS NULL THEN 'N'-->
+<!--					ELSE a.protect_Yn-->
+<!--					END		as protectYn-->
+<!--				, a.lock_Yn 		as lockYn-->
+<!--				, a.login_Count		as loginCount-->
+<!--				, CASE WHEN b.approval_user_cd IS NULL THEN 'N'-->
+<!--					ELSE 'Y'-->
+<!--					END		AS crYn-->
+<!--			from docs_user a-->
+<!--					left join docs_company b on a.user_cd = b.approval_user_cd-->
+<!--			where-->
+<!--				a.use_yn='Y'-->
+<!--				and a.del_yn='N'-->
+<!--				and a.company_cd = #{sessionUser.companyCd}-->
+<!--			<if test='userNm != null and !userNm.equals("")'>-->
+<!--				AND a.user_Nm LIKE '%' || #{userNm} || '%'-->
+<!--			</if>-->
+
+<!--			<if test='sortColumn == null or "".equals(sortColumn)'>-->
+<!--           		ORDER BY user_nm-->
+<!--			</if>-->
+<!--         	<if test='sortColumn != null and !"".equals(sortColumn)'>-->
+<!--         		ORDER BY ${sortColumn} ${order}-->
+<!--         	</if>-->
+<!--		) A1-->
+<!--		where 1=1-->
+<!--			<if test='end != null and !end.equals("")'>-->
+<!--			AND ROWNUM <![CDATA[ <= ]]> #{end}-->
+<!--			</if>	) B1-->
+<!--	where 1=1-->
+<!--		<if test='start != null and !start.equals("")'>-->
+<!--		AND PAGEINDEX <![CDATA[ >= ]]>#{start}-->
+<!--		</if>-->
+<!--  </select>-->
+
+<!--  <select id="selectListCount" resultType="Integer">-->
+<!--    select-->
+<!--    COUNT(*) AS TOTAL_COUNT-->
+<!--	from docs_user a-->
+<!--			left join docs_company b on a.user_cd = b.approval_user_cd-->
+<!--	where-->
+<!--		a.use_yn='Y'-->
+<!--		and a.del_yn='N'-->
+<!--		and a.company_cd = #{sessionUser.companyCd}-->
+<!--	<if test='userNm != null and !userNm.equals("")'>-->
+<!--		AND a.user_Nm LIKE '%' || #{userNm} || '%'-->
+<!--	</if>-->
+<!--  </select>-->
+
+<!--  <select id="selectInformationDetail" resultType="kr.esob.fdms.controller.outside.user.information.InformationListParam">-->
+<!--	   select-->
+<!--	    a.user_nm  			as userNm-->
+<!--	    , a.user_cd  			as userCd-->
+<!--	    , a.email  			as email-->
+<!--		, a.protect_Yn		as protectYn-->
+<!--	    , CASE WHEN b.approval_user_cd IS NULL THEN 'N'-->
+<!--	              	ELSE 'Y'-->
+<!--	             END		AS crYn-->
+<!--	from docs_user a-->
+<!--	left join docs_company b on a.user_cd = b.approval_user_cd-->
+<!--    where a.company_cd = #{sessionUser.companyCd}-->
+<!--    and a.user_cd = #{userCd}-->
+<!--  </select>-->
+
+
+<!--  <select id="selectProtectCount" resultType="Integer">-->
+<!--		select-->
+<!--		COUNT(*) AS TOTAL_COUNT-->
+<!--		from docs_user-->
+<!--		where use_yn='Y' and del_yn='N'-->
+<!--		and protect_yn='Y'-->
+<!--		and company_cd = #{sessionUser.companyCd}-->
+
+
+<!--  </select>-->
+
+<!--  <select id="selectCrCount" resultType="Integer">-->
+<!--		select-->
+<!--		COUNT(*) AS TOTAL_COUNT-->
+<!--		from Docs_company-->
+<!--		where company_cd = #{sessionUser.companyCd}-->
+<!--		and approval_user_cd is not null-->
+<!--  </select>-->
+
+<!--  <insert id="insertInfo">-->
+<!--    <selectKey keyProperty="requestNo" resultType="String" order="BEFORE">-->
+<!--      SELECT TO_CHAR(SYSDATE,'YYYYMMDD')||'-U'||LPAD(NVL(SUBSTR(MAX(REQUEST_NO),11),0)+1,4,0) AS REQUEST_NO-->
+<!--      FROM DOCS_USER_REQUEST-->
+<!--      WHERE SUBSTR(REQUEST_NO,1,10) = TO_CHAR(SYSDATE,'YYYYMMDD')||'-U'-->
+<!--    </selectKey>-->
+<!--    INSERT INTO DOCS_USER_REQUEST-->
+<!--    (-->
+<!--    REQUEST_NO-->
+<!--    , REQUEST_TYPE-->
+<!--    , TARGET_USER_CD-->
+<!--    , USER_NM-->
+<!--    , USER_PWD-->
+<!--    , EMAIL-->
+<!--    , PROTECT_YN-->
+<!--    , CR_YN-->
+<!--    , REQUEST_REASON-->
+<!--    , INSERT_USER_CD-->
+<!--    , COMPANY_CD-->
+<!--    , APPROVAL_USER_CD-->
+<!--    , INSERT_DT-->
+<!--    , STATUS_CD-->
+<!--    )-->
+<!--    VALUES-->
+<!--    (-->
+<!--    #{requestNo}-->
+<!--    , #{requestType}-->
+<!--    , #{userCd}-->
+<!--    , #{userNm}-->
+<!--    , #{userPwd}-->
+<!--    , #{email}-->
+<!--    , #{protectYn}-->
+<!--    , #{crYn}-->
+<!--    , #{requestReason}-->
+<!--    , #{sessionUser.userCd}-->
+<!--    , #{sessionUser.companyCd}-->
+<!--&lt;!&ndash;     , #{approvalUserCd} &ndash;&gt;-->
+<!--	, (SELECT USER_CD FROM DOCS_USER WHERE USER_ID = 'i0155285')-->
+<!--    , SYSDATE-->
+<!--    , 'REQUEST'-->
+<!--    )-->
+<!--  </insert>-->
+
+<!--  <select id="checkPwd" resultType="Integer">-->
+<!--    select-->
+<!--    COUNT(*) AS TOTAL_COUNT-->
+<!--    FROM DOCS_USER-->
+<!--    where user_cd = #{userCd} and user_pwd = #{userPwd}-->
+<!--  </select>-->
+
+<!--  <update id="updateUser">-->
+<!--    update DOCS_USER set-->
+<!--    	email =  #{email}-->
+<!--    	<if test='userNewPwd != null and !userNewPwd.equals("")'>-->
+<!--		, user_pwd = #{userNewPwd}-->
+<!--		, pwd_update_dt = sysdate-->
+<!--		</if>-->
+<!--    where user_cd = #{userCd}-->
+<!--  </update>-->
+
+
+<!--</mapper>-->
+
+
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+
+
+
+<mapper namespace="sql.OutsideUserInformation">
+
+<select id="selectList" resultType="kr.esob.fdms.controller.outside.user.information.InformationListParam">
+	SELECT
+	B1.*
+	FROM (
+	SELECT
+	A1.*
+	, ROW_NUMBER() OVER () AS PAGEINDEX
+	FROM (
+	SELECT
+	a.user_cd AS userCd
+	, a.user_nm AS userNm
+	, a.last_Login_Dt AS lastLoginDt
+	, a.pwd_Update_Dt AS pwdUpdateDt
+	, CASE WHEN a.protect_Yn IS NULL THEN 'N'
+	ELSE a.protect_Yn
+	END AS protectYn
+	, a.lock_Yn AS lockYn
+	, a.login_Count AS loginCount
+	, CASE WHEN b.approval_user_cd IS NULL THEN 'N'
+	ELSE 'Y'
+	END AS crYn
+	FROM docs_user a
+	LEFT JOIN docs_company b ON a.user_cd = b.approval_user_cd
+	WHERE
+	a.use_yn = 'Y'
+	AND a.del_yn = 'N'
+	AND a.company_cd = #{sessionUser.companyCd}
+	<if test="userNm != null and !userNm.equals('')">
+		AND a.user_Nm LIKE '%' || #{userNm} || '%'
+	</if>
+	<if test='sortColumn == null or "".equals(sortColumn)'>
+		ORDER BY userNm
+	</if>
+	<if test='sortColumn != null and !"".equals(sortColumn)'>
+		ORDER BY ${sortColumn} ${order}
+	</if>
+	) A1
+	) B1
+	WHERE 1=1
+	<if test="end != null and !end.equals('')">
+		<![CDATA[ AND B1.PAGEINDEX <= #{end} ]]>
+	</if>
+	<if test="start != null and !start.equals('')">
+		AND B1.PAGEINDEX >= #{start}
+	</if>
+</select>
+
+<select id="selectListCount" resultType="Integer">
+	select
+	COUNT(*) AS TOTAL_COUNT
+	from docs_user a
+	left join docs_company b on a.user_cd = b.approval_user_cd
+	where
+	a.use_yn='Y'
+	and a.del_yn='N'
+	and a.company_cd = #{sessionUser.companyCd}
+	<if test='userNm != null and !userNm.equals("")'>
+		AND a.user_Nm LIKE '%' || #{userNm} || '%'
+	</if>
+</select>
+
+<select id="selectInformationDetail" resultType="kr.esob.fdms.controller.outside.user.information.InformationListParam">
+	select
+		a.user_nm  			as userNm
+		 , a.user_cd  			as userCd
+		 , a.email  			as email
+		 , a.protect_Yn		as protectYn
+		 , CASE WHEN b.approval_user_cd IS NULL THEN 'N'
+				ELSE 'Y'
+		END		AS crYn
+	from docs_user a
+			 left join docs_company b on a.user_cd = b.approval_user_cd
+	where a.company_cd = #{sessionUser.companyCd}
+	  and a.user_cd = #{userCd}
+</select>
+
+<select id="selectProtectCount" resultType="Integer">
+	select
+		COUNT(*) AS TOTAL_COUNT
+	from docs_user
+	where use_yn='Y' and del_yn='N'
+	  and protect_yn='Y'
+	  and company_cd = #{sessionUser.companyCd}
+</select>
+
+<select id="selectCrCount" resultType="Integer">
+	select
+		COUNT(*) AS TOTAL_COUNT
+	from Docs_company
+	where company_cd = #{sessionUser.companyCd}
+	  and approval_user_cd is not null
+</select>
+
+<insert id="insertInfo">
+	<selectKey keyProperty="requestNo" resultType="String" order="BEFORE">
+		SELECT TO_CHAR(CURRENT_TIMESTAMP,'YYYYMMDD')||'-U'||LPAD(COALESCE(SUBSTR(MAX(REQUEST_NO),11)::INTEGER,0)+1,4,'0') AS REQUEST_NO
+		FROM DOCS_USER_REQUEST
+		WHERE SUBSTR(REQUEST_NO,1,10) = TO_CHAR(CURRENT_TIMESTAMP,'YYYYMMDD')||'-U'
+	</selectKey>
+	INSERT INTO DOCS_USER_REQUEST
+	(
+	REQUEST_NO
+	, REQUEST_TYPE
+	, TARGET_USER_CD
+	, USER_NM
+	, USER_PWD
+	, EMAIL
+	, PROTECT_YN
+	, CR_YN
+	, REQUEST_REASON
+	, INSERT_USER_CD
+	, COMPANY_CD
+	, APPROVAL_USER_CD
+	, INSERT_DT
+	, STATUS_CD
+	)
+	VALUES
+	(
+	#{requestNo}
+	, #{requestType}
+	, #{userCd}
+	, #{userNm}
+	, #{userPwd}
+	, #{email}
+	, #{protectYn}
+	, #{crYn}
+	, #{requestReason}
+	, #{sessionUser.userCd}
+	, #{sessionUser.companyCd}
+	<!--     , #{approvalUserCd} -->
+	, (SELECT USER_CD FROM DOCS_USER WHERE USER_ID = 'i0155285')
+	, CURRENT_TIMESTAMP
+	, 'REQUEST'
+	)
+</insert>
+
+<select id="checkPwd" resultType="Integer">
+	select
+		COUNT(*) AS TOTAL_COUNT
+	FROM DOCS_USER
+	where user_cd = #{userCd} and user_pwd = #{userPwd}
+</select>
+
+<update id="updateUser">
+	update DOCS_USER set
+	email =  #{email}
+	<if test='userNewPwd != null and !userNewPwd.equals("")'>
+		, user_pwd = #{userNewPwd}
+		, pwd_update_dt = CURRENT_TIMESTAMP
+	</if>
+	where user_cd = #{userCd}
+</update>
+
+</mapper>

@@ -1,0 +1,1241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+
+<!--<mapper namespace="sql.ProductionStatus">-->
+
+<!--	<select id="selectList" resultType="kr.esob.fdms.controller.inside.production.productionstatus.ProductionStatusListVO">-->
+<!--	SELECT-->
+<!--		B1.*-->
+<!--	FROM-->
+<!--	(-->
+<!--		SELECT-->
+<!--			businessAreaCd-->
+<!--			, businessTypeCd-->
+<!--			, objectNo-->
+<!--			, objectNo AS hiddenObjectNo-->
+<!--			, objectId-->
+<!--			, revNo-->
+<!--			, objectNm-->
+<!--			, objectType-->
+<!--			, objectClassCd2-->
+<!--			, objectClassNm2-->
+<!--			, insertUid-->
+<!--			, updateUid-->
+<!--			, (-->
+<!--				SELECT USER_NM-->
+<!--				FROM DOCS_USER tmp-->
+<!--				WHERE tmp.USER_ID = insertUid-->
+<!--		  	)																AS insertUserNm			/* 등록자 */-->
+<!--		  	, (-->
+<!--				SELECT USER_NM-->
+<!--				FROM DOCS_USER tmp-->
+<!--				WHERE tmp.USER_ID = updateUid-->
+<!--			)																AS updateUserNm         /* 수정자 */-->
+<!--			, TO_CHAR(statusUpdateDt, 'YYYY-MM-DD')        AS statusUpdateDt				/* 수정일 */-->
+<!--			, TO_CHAR(insertDt, 'YYYY-MM-DD')        		AS insertDt				/* 등록일 */-->
+<!--			, totalPageCnt-->
+<!--			, productNm-->
+<!--			, productNo-->
+<!--			, callId-->
+<!--			, applyHogiNo-->
+<!--			, securityTypeCd-->
+<!--			, securityTypeNm-->
+<!--			, lastRequestNo-->
+<!--			, currentCount-->
+<!--			, deptCd-->
+<!--			, deptNm-->
+<!--			, acceptUserCd-->
+<!--            , acceptUserNm-->
+<!--			, lastDeployRevNo-->
+<!--			, ROWNUM AS PAGEINDEX-->
+<!--		FROM-->
+<!--		(-->
+<!--			<choose>-->
+<!--				<when test='objectType.equals("DOC")'>-->
+<!--			    SELECT-->
+<!--			      info.BUSINESS_AREA_CD												AS businessAreaCd		/* 사업장 구분 */-->
+<!--				  , info.BUSINESS_TYPE_CD											AS businessTypeCd      	/* 사업 구분 */-->
+<!--				  , info.DOCUMENT_NO         										AS objectNo				/* 자료번호 */-->
+<!--				  , info.OBJECT_ID													AS objectId				/* objectId */-->
+<!--				  , info.REV_NO														AS revNo 	            /* REV */-->
+<!--				  , info.DOCUMENT_NM         										AS objectNm				/* 자료명 */-->
+<!--				  , 'DOC' 															AS objectType			/* 자료유형 */-->
+<!--				  , DOC_CLASS_CD2													AS objectClassCd2		/* 자료분류 */-->
+<!--				  , FN_GET_CD_NM('objectClassCd2', DOC_CLASS_CD2, #{sessionLang}) 	AS objectClassNm2-->
+<!--				  , INSERT_UID														AS insertUid            /* 등록자 */-->
+<!--				  , INSERT_DT														AS insertDt-->
+<!--				  , UPDATE_UID														AS updateUid			/* 수정자 */-->
+<!--				  , TOTAL_PAGE_CNT              									AS totalPageCnt			/* 총매수 */-->
+<!--                  , (-->
+<!--						SELECT-->
+<!--							CN_CD || ' ' || CN_CD_DESC-->
+<!--						FROM (SELECT DISTINCT PRODUCT_CD AS CN_CD, PRODUCT_CD AS CN_CD_DESC FROM DOCS_REQUEST_MAPPING WHERE PRODUCT_CD IS NOT NULL) prod-->
+<!--						WHERE prod.CN_CD = info.APPLY_PRODUCT_NO-->
+<!--				  )																	AS productNm-->
+<!--				  , info.APPLY_PRODUCT_NO    										AS productNo			/* 기종 */-->
+<!--				  , CALL_ID															AS callId               /* CALL_ID */-->
+<!--				  , info.APPLY_HOGI_NO												AS applyHogiNo       	/* 호기 */-->
+<!--				  , info.SECURITY_TYPE_CD    										AS securityTypeCd		/* 보안등급 */-->
+<!--				  , FN_GET_CD_NM('securityTypeCd', info.SECURITY_TYPE_CD, #{sessionLang}) AS securityTypeNm		/* 보안등급 */-->
+<!--				  , info.LAST_REQUEST_NO											AS lastRequestNo-->
+<!--				  , info.statusUpdateDt-->
+<!--				  , info.currentCount-->
+<!--				  , info.deptCd-->
+<!--				  , info.deptNm           								      	    AS deptNm-->
+<!--				  , info.acceptUserCd-->
+<!--                  , info.acceptUserNm-->
+<!--				  , info.lastDeployRevNo											AS lastDeployRevNo-->
+<!--				FROM (-->
+<!--					SELECT info.*-->
+<!--						, status.LAST_REQUEST_NO-->
+<!--						, status.UPDATE_DT statusUpdateDt-->
+<!--						, status.CURRENT_COUNT currentCount-->
+<!--						, status.DEPT_CD deptCd-->
+<!--						, (-->
+<!--						  	SELECT DEPT_NM-->
+<!--						  	FROM DOCS_DEPT-->
+<!--						  	WHERE DEPT_CD = status.DEPT_CD-->
+<!--						  )	AS deptNm-->
+<!--					    , status.USER_CD AS acceptUserCd-->
+<!--                        , (-->
+<!--                            SELECT USER_NM-->
+<!--                            FROM DOCS_USER-->
+<!--                            WHERE USER_CD = status.USER_CD-->
+<!--                          ) AS acceptUserNm-->
+<!--						, status.LAST_DEPLOY_REV_NO lastDeployRevNo-->
+<!--					FROM DOCS_PRODUCT_DOCUMENT info-->
+<!--				INNER JOIN-->
+<!--	            (-->
+<!--	              SELECT DOCUMENT_NO-->
+<!--	              , MAX(REV_NO) AS REV_NO-->
+<!--	              FROM DOCS_PRODUCT_DOCUMENT-->
+<!--	              GROUP BY DOCUMENT_NO-->
+<!--	            ) grouped-->
+<!--	            ON info.DOCUMENT_NO = grouped.DOCUMENT_NO-->
+<!--	            AND info.REV_NO = grouped.REV_NO-->
+<!--				INNER JOIN-->
+<!--				(-->
+<!--					SELECT OBJECT_NO-->
+<!--						, DEPT_CD-->
+<!--						, USER_CD-->
+<!--						, SUM(CURRENT_COUNT) CURRENT_COUNT-->
+<!--						, MAX(INSERT_DT) INSERT_DT-->
+<!--						, MAX(UPDATE_DT) UPDATE_DT-->
+<!--						, MAX(LAST_REQUEST_NO) LAST_REQUEST_NO-->
+<!--						, MAX(OBJECT_TYPE) OBJECT_TYPE-->
+<!--						, MAX(LAST_DEPLOY_REV_NO) LAST_DEPLOY_REV_NO-->
+<!--					FROM DOCS_PRODUCT_STATUS-->
+<!--					WHERE 1=1-->
+<!--					GROUP BY OBJECT_NO, DEPT_CD, USER_CD-->
+<!--				)-->
+<!--				status-->
+<!--				ON status.OBJECT_NO = info.DOCUMENT_NO-->
+<!--				WHERE 1=1-->
+<!--				<if test='objectNo != null and !objectNo.equals("")'>-->
+<!--				AND info.DOCUMENT_NO LIKE '%' || UPPER(TRIM(#{objectNo})) || '%'-->
+<!--				</if>-->
+<!--				<if test='objectNm != null and !objectNm.equals("")'>-->
+<!--				AND info.DOCUMENT_NM LIKE '%' || #{objectNm} || '%'-->
+<!--				</if>-->
+<!--				<if test='businessAreaCd != null and !businessAreaCd.equals("")'>-->
+<!--				AND info.BUSINESS_AREA_CD = #{businessAreaCd}-->
+<!--				</if>-->
+<!--				<if test='insertUid != null and !insertUid.equals("")'>-->
+<!--				AND info.INSERT_UID = #{insertUid}-->
+<!--				</if>-->
+<!--				<if test='insertDeptNm != null and !insertDeptNm.equals("")'>-->
+<!--				AND info.INSERT_DEPT_NM like #{insertDeptNm}-->
+<!--				</if>-->
+<!--				<if test='objectClassCd2 != null and !objectClassCd2.equals("")'>-->
+<!--				AND info.DOC_CLASS_CD2 like #{objectClassCd2}-->
+<!--				</if>-->
+<!--				<if test='updateStartDt != null and !updateStartDt.equals("")'>-->
+<!--				AND status.UPDATE_DT BETWEEN TO_DATE(#{updateStartDt}, 'YYYY-MM-DD')-->
+<!--		                         AND TO_DATE(#{updateEndDt}, 'YYYY-MM-DD')+1-->
+<!--				</if>-->
+<!--				</when>-->
+<!--				<otherwise>-->
+<!--				SELECT-->
+<!--				  info.BUSINESS_AREA_CD						AS businessAreaCd	/* 사업장 구분 */-->
+<!--				  , info.BUSINESS_TYPE_CD      				AS businessTypeCd	/* 사업장 구분 */-->
+<!--				  , info.SW_NO								AS objectNo         /* 자료번호 */-->
+<!--				  , info.OBJECT_ID							AS objectId				/* objectId */-->
+<!--				  , info.REV_NO 							AS revNo            /* REV */-->
+<!--				  , info.SW_NM								AS objectNm         /* 자료명 */-->
+<!--				  , 'SW' 									AS objectType       /* 자료유형 */-->
+<!--				  , SW_CLASS_CD2							AS objectClassCd2	/* 자료분류 */-->
+<!--				  , FN_GET_CD_NM('objectClassCd2', SW_CLASS_NM2, #{sessionLang}) 	AS objectClassNm2   /* 자료유형 */-->
+<!--				  , INSERT_UID								AS insertUid        /* 등록자 */-->
+<!--				  , INSERT_DT								AS insertDt-->
+<!--				  , UPDATE_UID								AS updateUid        /* 수정자 */-->
+<!--				  , UPDATE_DT						        AS updateDt         /* 수정일 */-->
+<!--				  , 0 										AS totalPageCnt     /* 총매수 */-->
+<!--                  , (-->
+<!--						SELECT-->
+<!--							CN_CD || ' ' || CN_CD_DESC-->
+<!--						FROM (SELECT DISTINCT PRODUCT_CD AS CN_CD, PRODUCT_CD AS CN_CD_DESC FROM DOCS_REQUEST_MAPPING WHERE PRODUCT_CD IS NOT NULL) prod-->
+<!--						WHERE prod.CN_CD = info.PRODUCT_NO-->
+<!--				  )											AS productNm-->
+<!--				  , info.PRODUCT_NO							AS productNo    	/* 기종 */-->
+<!--				  , TO_NCHAR('') 							AS callId           /* CALL_ID */-->
+<!--				  , TO_NCHAR('') 							AS applyHogiNo      /* 호기 */-->
+<!--				  , info.SECURITY_TYPE_CD					AS securityTypeCd-->
+<!--				  , FN_GET_CD_NM('securityTypeCd', info.SECURITY_TYPE_CD, #{sessionLang}) AS securityTypeNm		/* 보안등급 */-->
+<!--				  , info.LAST_REQUEST_NO											AS lastRequestNo-->
+<!--				  , info.statusUpdateDt-->
+<!--				  , info.currentCount-->
+<!--				  , info.deptCd-->
+<!--				  , info.deptNm           								      	    AS deptNm-->
+<!--				  , info.acceptUserCd-->
+<!--                  , info.acceptUserNm-->
+<!--				  , info.lastDeployRevNo											AS lastDeployRevNo-->
+<!--				FROM (-->
+<!--					SELECT info.*-->
+<!--						, status.LAST_REQUEST_NO-->
+<!--						, status.UPDATE_DT statusUpdateDt-->
+<!--						, status.CURRENT_COUNT currentCount-->
+<!--						, status.DEPT_CD deptCd-->
+<!--						, (-->
+<!--						  	SELECT DEPT_NM-->
+<!--						  	FROM DOCS_DEPT-->
+<!--						  	WHERE DEPT_CD = status.DEPT_CD-->
+<!--						  )	AS deptNm-->
+<!--						, status.USER_CD AS acceptUserCd-->
+<!--                        , (-->
+<!--                            SELECT USER_NM-->
+<!--                            FROM DOCS_USER-->
+<!--                            WHERE USER_CD = status.USER_CD-->
+<!--                          ) AS acceptUserNm-->
+<!--						, status.LAST_DEPLOY_REV_NO lastDeployRevNo-->
+<!--					FROM DOCS_PRODUCT_SW info-->
+<!--				INNER JOIN-->
+<!--	            (-->
+<!--	              SELECT SW_NO-->
+<!--	              , MAX(REV_NO) AS REV_NO-->
+<!--	              FROM DOCS_PRODUCT_SW-->
+<!--	              GROUP BY SW_NO-->
+<!--	            ) grouped-->
+<!--	            ON info.SW_NO = grouped.SW_NO-->
+<!--	            AND info.REV_NO = grouped.REV_NO-->
+<!--				INNER JOIN-->
+<!--				(-->
+<!--					SELECT OBJECT_NO-->
+<!--						, DEPT_CD-->
+<!--						, USER_CD-->
+<!--						, SUM(CURRENT_COUNT) CURRENT_COUNT-->
+<!--						, MAX(INSERT_DT) INSERT_DT-->
+<!--						, MAX(UPDATE_DT) UPDATE_DT-->
+<!--						, MAX(LAST_REQUEST_NO) LAST_REQUEST_NO-->
+<!--						, MAX(OBJECT_TYPE) OBJECT_TYPE-->
+<!--						, MAX(LAST_DEPLOY_REV_NO) LAST_DEPLOY_REV_NO-->
+<!--					FROM DOCS_PRODUCT_STATUS-->
+<!--					WHERE 1=1-->
+<!--					GROUP BY OBJECT_NO, DEPT_CD, USER_CD-->
+<!--				)  status-->
+<!--				ON status.OBJECT_NO = info.SW_NO-->
+<!--				WHERE 1=1-->
+<!--				<if test='objectNo != null and !objectNo.equals("")'>-->
+<!--				AND info.SW_NO LIKE '%' || UPPER(TRIM(#{objectNo})) || '%'-->
+<!--				</if>-->
+<!--				<if test='objectNm != null and !objectNm.equals("")'>-->
+<!--				AND info.SW_NM LIKE '%' || #{objectNm} || '%'-->
+<!--				</if>-->
+<!--				<if test='businessAreaCd != null and !businessAreaCd.equals("")'>-->
+<!--				AND info.BUSINESS_AREA_CD = #{businessAreaCd}-->
+<!--				</if>-->
+<!--				<if test='insertUid != null and !insertUid.equals("")'>-->
+<!--				AND info.INSERT_UID = #{insertUid}-->
+<!--				</if>-->
+<!--				<if test='insertDeptNm != null and !insertDeptNm.equals("")'>-->
+<!--				AND info.INSERT_DEPT_NM like #{insertDeptNm}-->
+<!--				</if>-->
+<!--				<if test='objectClassCd2 != null and !objectClassCd2.equals("")'>-->
+<!--				AND info.SW_CLASS_CD2 like #{objectClassCd2}-->
+<!--				</if>-->
+<!--				<if test='updateStartDt != null and !updateStartDt.equals("")'>-->
+<!--				AND status.UPDATE_DT BETWEEN TO_DATE(#{updateStartDt}, 'YYYY-MM-DD')-->
+<!--		                         AND TO_DATE(#{updateEndDt}, 'YYYY-MM-DD')+1-->
+<!--				</if>-->
+<!--				</otherwise>-->
+<!--			</choose>-->
+<!--         	) info-->
+<!--         	WHERE 1=1-->
+<!--         	<if test='deptNm != null and !deptNm.equals("")'>-->
+<!--				AND info.deptNm LIKE '%' || #{deptNm} || '%'-->
+<!--			</if>-->
+<!--			<if test='sortColumn == null or "".equals(sortColumn)'>-->
+<!--           		ORDER BY statusUpdateDt desc, objectNo desc-->
+<!--			</if>-->
+<!--         	<if test='sortColumn != null and !"".equals(sortColumn)'>-->
+<!--         		ORDER BY ${sortColumn} ${order}, objectNo ${order}-->
+<!--         	</if>-->
+<!--		) A1-->
+<!--		WHERE 1=1-->
+<!--		<if test='end != null and !end.equals("")'>-->
+<!--		AND ROWNUM <![CDATA[ <= ]]> #{end}-->
+<!--		</if>-->
+<!--	) B1-->
+<!--	<if test='start != null and !start.equals("")'>-->
+<!--	WHERE PAGEINDEX <![CDATA[ >= ]]>#{start}-->
+<!--	</if>-->
+<!--	</select>-->
+
+<!--	<select id="selectListCount" resultType="Integer">-->
+<!--		SELECT-->
+<!--			COUNT(*) AS TOTAL_COUNT-->
+<!--		FROM-->
+<!--		(-->
+<!--			SELECT-->
+<!--				A1.*-->
+<!--				, ROWNUM AS PAGEINDEX-->
+<!--				, (-->
+<!--					SELECT USER_NM-->
+<!--					FROM DOCS_USER tmp-->
+<!--					WHERE tmp.USER_ID = insertUid-->
+<!--			  	)												AS insertUserNm			/* 등록자 */-->
+<!--			  	, (-->
+<!--					SELECT USER_NM-->
+<!--					FROM DOCS_USER tmp-->
+<!--					WHERE tmp.USER_ID = updateUid-->
+<!--				)												AS updateUserNm         /* 수정자 */-->
+<!--			FROM-->
+<!--			(-->
+<!--			<choose>-->
+<!--				<when test='objectType.equals("DOC")'>-->
+<!--			    SELECT-->
+<!--			      info.BUSINESS_AREA_CD												AS businessAreaCd		/* 사업장 구분 */-->
+<!--				  , info.BUSINESS_TYPE_CD											AS businessTypeCd      	/* 사업 구분 */-->
+<!--				  , info.DOCUMENT_NO         										AS objectNo				/* 자료번호 */-->
+<!--				  , info.OBJECT_ID													AS objectId				/* objectId */-->
+<!--				  , info.REV_NO														AS revNo 	            /* REV */-->
+<!--				  , info.DOCUMENT_NM         										AS objectNm				/* 자료명 */-->
+<!--				  , 'DOC' 															AS objectType			/* 자료유형 */-->
+<!--				  , DOC_CLASS_CD2													AS objectClassCd2		/* 자료분류 */-->
+<!--				  , FN_GET_CD_NM('objectClassCd2', DOC_CLASS_CD2, #{sessionLang}) 	AS objectClassNm2-->
+<!--				  , INSERT_UID														AS insertUid            /* 등록자 */-->
+<!--				  , INSERT_DT														AS insertDt-->
+<!--				  , UPDATE_UID														AS updateUid			/* 수정자 */-->
+<!--				  , TOTAL_PAGE_CNT              									AS totalPageCnt			/* 총매수 */-->
+<!--                  , (-->
+<!--						SELECT-->
+<!--							CN_CD || ' ' || CN_CD_DESC-->
+<!--						FROM (SELECT DISTINCT PRODUCT_CD AS CN_CD, PRODUCT_CD AS CN_CD_DESC FROM DOCS_REQUEST_MAPPING WHERE PRODUCT_CD IS NOT NULL) prod-->
+<!--						WHERE prod.CN_CD = info.APPLY_PRODUCT_NO-->
+<!--				  )																	AS productNm-->
+<!--				  , info.APPLY_PRODUCT_NO    										AS productNo			/* 기종 */-->
+<!--				  , CALL_ID															AS callId               /* CALL_ID */-->
+<!--				  , info.APPLY_HOGI_NO												AS applyHogiNo       	/* 호기 */-->
+<!--				  , info.SECURITY_TYPE_CD    										AS securityTypeCd		/* 보안등급 */-->
+<!--				  , FN_GET_CD_NM('securityTypeCd', info.SECURITY_TYPE_CD, #{sessionLang}) AS securityTypeNm		/* 보안등급 */-->
+<!--				  , info.LAST_REQUEST_NO											AS lastRequestNo-->
+<!--				  , info.statusUpdateDt-->
+<!--				  , info.currentCount-->
+<!--				  , info.deptCd-->
+<!--				  , info.deptNm           								      	    AS deptNm-->
+<!--				  , info.acceptUserCd-->
+<!--                  , info.acceptUserNm-->
+<!--				  , info.lastDeployRevNo											AS lastDeployRevNo-->
+<!--				FROM (-->
+<!--					SELECT info.*-->
+<!--						, status.LAST_REQUEST_NO-->
+<!--						, status.UPDATE_DT statusUpdateDt-->
+<!--						, status.CURRENT_COUNT currentCount-->
+<!--						, status.DEPT_CD deptCd-->
+<!--						, (-->
+<!--						  	SELECT DEPT_NM-->
+<!--						  	FROM DOCS_DEPT-->
+<!--						  	WHERE DEPT_CD = status.DEPT_CD-->
+<!--						  )	AS deptNm-->
+<!--						, status.USER_CD AS acceptUserCd-->
+<!--                        , (-->
+<!--                            SELECT USER_NM-->
+<!--                            FROM DOCS_USER-->
+<!--                            WHERE USER_CD = status.USER_CD-->
+<!--                          ) AS acceptUserNm-->
+<!--						, status.LAST_DEPLOY_REV_NO lastDeployRevNo-->
+<!--					FROM DOCS_PRODUCT_DOCUMENT info-->
+<!--				INNER JOIN-->
+<!--	            (-->
+<!--	              SELECT DOCUMENT_NO-->
+<!--	              , MAX(REV_NO) AS REV_NO-->
+<!--	              FROM DOCS_PRODUCT_DOCUMENT-->
+<!--	              GROUP BY DOCUMENT_NO-->
+<!--	            ) grouped-->
+<!--	            ON info.DOCUMENT_NO = grouped.DOCUMENT_NO-->
+<!--	            AND info.REV_NO = grouped.REV_NO-->
+<!--				INNER JOIN-->
+<!--				(-->
+<!--					SELECT OBJECT_NO-->
+<!--						, DEPT_CD-->
+<!--						, USER_CD-->
+<!--						, SUM(CURRENT_COUNT) CURRENT_COUNT-->
+<!--						, MAX(INSERT_DT) INSERT_DT-->
+<!--						, MAX(UPDATE_DT) UPDATE_DT-->
+<!--						, MAX(LAST_REQUEST_NO) LAST_REQUEST_NO-->
+<!--						, MAX(OBJECT_TYPE) OBJECT_TYPE-->
+<!--						, MAX(LAST_DEPLOY_REV_NO) LAST_DEPLOY_REV_NO-->
+<!--					FROM DOCS_PRODUCT_STATUS-->
+<!--					WHERE 1=1-->
+<!--					GROUP BY OBJECT_NO, DEPT_CD, USER_CD-->
+<!--				)-->
+<!--				status-->
+<!--				ON status.OBJECT_NO = info.DOCUMENT_NO-->
+<!--				WHERE 1=1-->
+<!--				<if test='objectNo != null and !objectNo.equals("")'>-->
+<!--				AND info.DOCUMENT_NO LIKE '%' || UPPER(TRIM(#{objectNo})) || '%'-->
+<!--				</if>-->
+<!--				<if test='objectNm != null and !objectNm.equals("")'>-->
+<!--				AND info.DOCUMENT_NM LIKE '%' || #{objectNm} || '%'-->
+<!--				</if>-->
+<!--				<if test='businessAreaCd != null and !businessAreaCd.equals("")'>-->
+<!--				AND info.BUSINESS_AREA_CD = #{businessAreaCd}-->
+<!--				</if>-->
+<!--				<if test='insertUid != null and !insertUid.equals("")'>-->
+<!--				AND info.INSERT_UID = #{insertUid}-->
+<!--				</if>-->
+<!--				<if test='insertDeptNm != null and !insertDeptNm.equals("")'>-->
+<!--				AND info.INSERT_DEPT_NM like #{insertDeptNm}-->
+<!--				</if>-->
+<!--				<if test='objectClassCd2 != null and !objectClassCd2.equals("")'>-->
+<!--				AND info.DOC_CLASS_CD2 like #{objectClassCd2}-->
+<!--				</if>-->
+<!--				<if test='updateStartDt != null and !updateStartDt.equals("")'>-->
+<!--				AND status.UPDATE_DT BETWEEN TO_DATE(#{updateStartDt}, 'YYYY-MM-DD')-->
+<!--		                         AND TO_DATE(#{updateEndDt}, 'YYYY-MM-DD')+1-->
+<!--				</if>-->
+<!--				</when>-->
+<!--				<otherwise>-->
+<!--				SELECT-->
+<!--				  info.BUSINESS_AREA_CD						AS businessAreaCd	/* 사업장 구분 */-->
+<!--				  , info.BUSINESS_TYPE_CD      				AS businessTypeCd	/* 사업장 구분 */-->
+<!--				  , info.SW_NO								AS objectNo         /* 자료번호 */-->
+<!--				  , info.OBJECT_ID							AS objectId				/* objectId */-->
+<!--				  , info.REV_NO 							AS revNo            /* REV */-->
+<!--				  , info.SW_NM								AS objectNm         /* 자료명 */-->
+<!--				  , 'SW' 									AS objectType       /* 자료유형 */-->
+<!--				  , SW_CLASS_CD2							AS objectClassCd2	/* 자료분류 */-->
+<!--				  , FN_GET_CD_NM('objectClassCd2', SW_CLASS_NM2, #{sessionLang}) 	AS objectClassNm2   /* 자료유형 */-->
+<!--				  , INSERT_UID								AS insertUid        /* 등록자 */-->
+<!--				  , INSERT_DT								AS insertDt-->
+<!--				  , UPDATE_UID								AS updateUid        /* 수정자 */-->
+<!--				  , UPDATE_DT						        AS updateDt         /* 수정일 */-->
+<!--				  , 0 										AS totalPageCnt     /* 총매수 */-->
+<!--                  , (-->
+<!--						SELECT-->
+<!--							CN_CD || ' ' || CN_CD_DESC-->
+<!--						FROM (SELECT DISTINCT PRODUCT_CD AS CN_CD, PRODUCT_CD AS CN_CD_DESC FROM DOCS_REQUEST_MAPPING WHERE PRODUCT_CD IS NOT NULL) prod-->
+<!--						WHERE prod.CN_CD = info.PRODUCT_NO-->
+<!--				  )											AS productNm-->
+<!--				  , info.PRODUCT_NO							AS productNo    	/* 기종 */-->
+<!--				  , TO_NCHAR('') 							AS callId           /* CALL_ID */-->
+<!--				  , TO_NCHAR('') 							AS applyHogiNo      /* 호기 */-->
+<!--				  , info.SECURITY_TYPE_CD					AS securityTypeCd-->
+<!--				  , FN_GET_CD_NM('securityTypeCd', info.SECURITY_TYPE_CD, #{sessionLang}) AS securityTypeNm		/* 보안등급 */-->
+<!--				  , info.LAST_REQUEST_NO											AS lastRequestNo-->
+<!--				  , info.statusUpdateDt-->
+<!--				  , info.currentCount-->
+<!--				  , info.deptCd-->
+<!--				  , info.deptNm           								      	    AS deptNm-->
+<!--				  , info.lastDeployRevNo											AS lastDeployRevNo-->
+<!--				FROM (-->
+<!--					SELECT info.*-->
+<!--						, status.LAST_REQUEST_NO-->
+<!--						, status.UPDATE_DT statusUpdateDt-->
+<!--						, status.CURRENT_COUNT currentCount-->
+<!--						, status.DEPT_CD deptCd-->
+<!--						, (-->
+<!--						  	SELECT DEPT_NM-->
+<!--						  	FROM DOCS_DEPT-->
+<!--						  	WHERE DEPT_CD = status.DEPT_CD-->
+<!--						  )	AS deptNm-->
+<!--						, status.USER_CD AS acceptUserCd-->
+<!--                        , (-->
+<!--                            SELECT USER_NM-->
+<!--                            FROM DOCS_USER-->
+<!--                            WHERE USER_CD = status.USER_CD-->
+<!--                          ) AS acceptUserNm-->
+<!--						, status.LAST_DEPLOY_REV_NO lastDeployRevNo-->
+<!--					FROM DOCS_PRODUCT_SW info-->
+<!--				INNER JOIN-->
+<!--	            (-->
+<!--	              SELECT SW_NO-->
+<!--	              , MAX(REV_NO) AS REV_NO-->
+<!--	              FROM DOCS_PRODUCT_SW-->
+<!--	              GROUP BY SW_NO-->
+<!--	            ) grouped-->
+<!--	            ON info.SW_NO = grouped.SW_NO-->
+<!--	            AND info.REV_NO = grouped.REV_NO-->
+<!--				INNER JOIN-->
+<!--				(-->
+<!--					SELECT OBJECT_NO-->
+<!--						, DEPT_CD-->
+<!--						, USER_CD-->
+<!--						, SUM(CURRENT_COUNT) CURRENT_COUNT-->
+<!--						, MAX(INSERT_DT) INSERT_DT-->
+<!--						, MAX(UPDATE_DT) UPDATE_DT-->
+<!--						, MAX(LAST_REQUEST_NO) LAST_REQUEST_NO-->
+<!--						, MAX(OBJECT_TYPE) OBJECT_TYPE-->
+<!--						, MAX(LAST_DEPLOY_REV_NO) LAST_DEPLOY_REV_NO-->
+<!--					FROM DOCS_PRODUCT_STATUS-->
+<!--					WHERE 1=1-->
+<!--					GROUP BY OBJECT_NO, DEPT_CD, USER_CD-->
+<!--				)  status-->
+<!--				ON status.OBJECT_NO = info.SW_NO-->
+<!--				WHERE 1=1-->
+<!--				<if test='objectNo != null and !objectNo.equals("")'>-->
+<!--				AND info.SW_NO LIKE '%' || UPPER(TRIM(#{objectNo})) || '%'-->
+<!--				</if>-->
+<!--				<if test='objectNm != null and !objectNm.equals("")'>-->
+<!--				AND info.SW_NM LIKE '%' || #{objectNm} || '%'-->
+<!--				</if>-->
+<!--				<if test='businessAreaCd != null and !businessAreaCd.equals("")'>-->
+<!--				AND info.BUSINESS_AREA_CD = #{businessAreaCd}-->
+<!--				</if>-->
+<!--				<if test='insertUid != null and !insertUid.equals("")'>-->
+<!--				AND info.INSERT_UID = #{insertUid}-->
+<!--				</if>-->
+<!--				<if test='insertDeptNm != null and !insertDeptNm.equals("")'>-->
+<!--				AND info.INSERT_DEPT_NM like #{insertDeptNm}-->
+<!--				</if>-->
+<!--				<if test='objectClassCd2 != null and !objectClassCd2.equals("")'>-->
+<!--				AND info.SW_CLASS_CD2 like #{objectClassCd2}-->
+<!--				</if>-->
+<!--				<if test='updateStartDt != null and !updateStartDt.equals("")'>-->
+<!--				AND status.UPDATE_DT BETWEEN TO_DATE(#{updateStartDt}, 'YYYY-MM-DD')-->
+<!--		                         AND TO_DATE(#{updateEndDt}, 'YYYY-MM-DD')+1-->
+<!--				</if>-->
+<!--				</otherwise>-->
+<!--			</choose>-->
+<!--         	) info-->
+<!--         	WHERE 1=1-->
+<!--         	<if test='deptNm != null and !deptNm.equals("")'>-->
+<!--				AND info.deptNm LIKE '%' || #{deptNm} || '%'-->
+<!--			</if>-->
+<!--		) A1-->
+<!--		WHERE 1=1-->
+<!--		) B1-->
+<!--	</select>-->
+
+<!--	<select id="selectProductionReplace" resultType="kr.esob.fdms.controller.inside.production.productionstatus.ProductionReplaceRequestVO">-->
+<!--		SELECT *-->
+<!--		FROM(-->
+<!--			SELECT-->
+<!--			<if test="'DOC'.equals(objectType)">-->
+<!--				product.DOCUMENT_NO objectNo-->
+<!--			  , product.DOCUMENT_NM objectNm-->
+<!--			  , FN_GET_CD_NM('objectClassCd2', DOC_CLASS_CD2, #{sessionLang}) 	AS objectClassNm2-->
+<!--			</if>-->
+<!--			<if test="'SW'.equals(objectType)">-->
+<!--				product.SW_NO objectNo-->
+<!--			  , product.SW_NM objectNm-->
+<!--			  , FN_GET_CD_NM('objectClassCd2', SW_CLASS_CD2, #{sessionLang}) 	AS objectClassNm2-->
+<!--			</if>-->
+<!--			  , mapping.REV_NO oldRevNo-->
+<!--			  , product.REV_NO revNo-->
+<!--&lt;!&ndash; 			  , product.TOTAL_PAGE_CNT &ndash;&gt;-->
+<!--&lt;!&ndash; 			  , product.DETAIL_PRODUCT_NO productNo &ndash;&gt;-->
+<!--			  , product.APPLY_HOGI_NO-->
+<!--			  , product.CALL_ID-->
+<!--			  , product.ECN_NO-->
+<!--			  , product.PROCESS_TYPE_CD-->
+<!--			  , product.DESCRIPTION-->
+<!--			  , product.OBJECT_ID-->
+<!--&lt;!&ndash; 			  , COALESCE(product.DETAIL_PRODUCT_NO, '') 		AS productNm &ndash;&gt;-->
+<!--			  , status.USER_CD userCd-->
+<!--			  , (SELECT USER_NM FROM DOCS_USER WHERE USER_CD = status.USER_CD) userNm-->
+<!--			  , status.DEPT_CD deptCd-->
+<!--			  , (SELECT DEPT_NM FROM DOCS_DEPT WHERE DEPT_CD = status.DEPT_CD) deptNm-->
+<!--			  , status.CURRENT_COUNT-->
+<!--			  , #{objectType} objectType-->
+<!--			  , product.total_page_cnt  AS totalPageCnt-->
+<!--			  , depInfo.DEPLOY_ACCEPT_YN AS deployAcceptYn-->
+<!--			<if test="'DOC'.equals(objectType)">-->
+<!--			FROM DOCS_PRODUCT_DOCUMENT product-->
+<!--			JOIN-->
+<!--            (-->
+<!--              SELECT DOCUMENT_NO-->
+<!--              , MAX(REV_NO) AS REV_NO-->
+<!--              FROM DOCS_PRODUCT_DOCUMENT-->
+<!--              GROUP BY DOCUMENT_NO-->
+<!--            ) grouped-->
+<!--            ON product.DOCUMENT_NO = grouped.DOCUMENT_NO-->
+<!--            AND product.REV_NO = grouped.REV_NO-->
+<!--			</if>-->
+<!--			<if test="'SW'.equals(objectType)">-->
+<!--			FROM DOCS_PRODUCT_SW product-->
+<!--			JOIN-->
+<!--            (-->
+<!--              SELECT SW_NO-->
+<!--              , MAX(REV_NO) AS REV_NO-->
+<!--              FROM DOCS_PRODUCT_SW-->
+<!--              GROUP BY SW_NO-->
+<!--            ) grouped-->
+<!--            ON product.SW_NO = grouped.SW_NO-->
+<!--            AND product.REV_NO = grouped.REV_NO-->
+<!--			</if>-->
+<!--			INNER JOIN-->
+<!--			(-->
+<!--				SELECT MAX(REQUEST_NO) as REQUEST_NO-->
+<!--            		, MAX(OBJECT_ID) AS OBJECT_ID-->
+<!--            		, OBJECT_NO-->
+<!--            		, DEPLOY_USER_CD-->
+<!--            		, DEPLOY_DEPT_CD-->
+<!--            		, MIN(DEPLOY_ACCEPT_YN) as DEPLOY_ACCEPT_YN-->
+<!--            	FROM DOCS_DEPLOY_INFO-->
+<!--            	WHERE DESTROY_STATUS_CD != 'ALL_DESTROY'-->
+<!--            	GROUP BY OBJECT_NO, DEPLOY_USER_CD, DEPLOY_DEPT_CD-->
+<!--            ) depInfo-->
+<!--            <if test="'DOC'.equals(objectType)">-->
+<!--			ON product.DOCUMENT_NO = depInfo.OBJECT_NO-->
+<!--			</if>-->
+<!--            <if test="'SW'.equals(objectType)">-->
+<!--			ON product.SW_NO = depInfo.OBJECT_NO-->
+<!--			</if>-->
+<!--			INNER JOIN DOCS_REQUEST_MAPPING mapping-->
+<!--			ON depInfo.REQUEST_NO = mapping.REQUEST_NO-->
+<!--			AND depInfo.OBJECT_NO = mapping.OBJECT_NO-->
+<!--			INNER JOIN DOCS_PRODUCT_STATUS status-->
+<!--			ON product.DOCUMENT_NO = status.OBJECT_NO-->
+<!--			AND depInfo.DEPLOY_DEPT_CD = status.DEPT_CD-->
+<!--			AND depInfo.DEPLOY_USER_CD = status.USER_CD-->
+<!--			INNER JOIN-->
+<!--			<if test="'DOC'.equals(objectType)">-->
+<!--			(-->
+<!--				SELECT OBJECT_ID-->
+<!--					, MAX(FILE_NO) AS fileNo-->
+<!--				FROM DOCS_PRODUCT_DOCUMENT_FILE-->
+<!--				GROUP BY OBJECT_ID-->
+<!--			)-->
+<!--			</if>-->
+<!--			<if test="'SW'.equals(objectType)">-->
+<!--			(-->
+<!--				SELECT OBJECT_ID-->
+<!--					, MAX(FILE_NO) AS fileNo-->
+<!--				FROM DOCS_PRODUCT_SW_FILE-->
+<!--				GROUP BY OBJECT_ID-->
+<!--			)-->
+<!--			</if>-->
+<!--			fileInfo-->
+<!--			ON product.OBJECT_ID = fileInfo.OBJECT_ID-->
+<!--		)-->
+
+<!--		WHERE 1=1-->
+<!--		AND-->
+<!--		<foreach collection="list" item="param" separator="OR">-->
+<!--		(deptCd = #{param.deptCd} AND objectNo = #{param.objectNo})-->
+<!--		</foreach>-->
+
+<!--	</select>-->
+
+<!--	<select id="selectDeployInfoList" resultType="kr.esob.fdms.controller.inside.production.productionstatus.DistributionHistoryVO">-->
+<!--		SELECT depInfo.OBJECT_NO-->
+<!--			, depInfo.DEPLOY_USER_CD-->
+<!--			, (SELECT USER_NM FROM DOCS_USER WHERE USER_CD = depInfo.DEPLOY_USER_CD) AS deployUserNm-->
+<!--			, FN_GET_USER_FULL_NM(depInfo.DEPLOY_USER_CD) AS deployUserFullNm-->
+<!--			, #{objectType} AS objectType-->
+<!--		FROM DOCS_DEPLOY_INFO depInfo-->
+<!--		INNER JOIN DOCS_REQUEST_DETAIL requestDetail-->
+<!--        ON depInfo.REQUEST_NO = requestDetail.REQUEST_NO-->
+<!--        AND requestDetail.APPROVAL_STATUS_CD = 'APPROVAL'-->
+<!--        and requestDetail.ACTION_CD = 'APPROVAL'-->
+<!--		WHERE OBJECT_NO = #{objectNo}-->
+<!--		GROUP BY OBJECT_NO, DEPLOY_USER_CD-->
+<!--	</select>-->
+
+<!--	<select id="selectHistoryDetailList" resultType="kr.esob.fdms.controller.inside.production.productionstatus.HistoryDetailVO">-->
+<!--		SELECT requestDetail.REQUEST_NO-->
+<!--			, product.OBJECT_ID-->
+<!--			, product.REV_NO-->
+<!--			, depInfo.DEPLOY_COUNT-->
+<!--			, depInfo.COPY-->
+<!--			, depInfo.DESTROY_COUNT-->
+<!--			, request.INSERT_USER_CD requestUserCd-->
+<!--			, (SELECT USER_NM FROM DOCS_USER WHERE USER_CD = request.INSERT_USER_CD) AS requestUserNm-->
+<!--			, requestDetail.ACTUAL_USER_CD approvalUserCd-->
+<!--			, (SELECT USER_NM FROM DOCS_USER WHERE USER_CD = requestDetail.ACTUAL_USER_CD) AS approvalUserNm-->
+<!--			, request.INSERT_DT requestDt-->
+<!--			, requestDetail.ACTION_DT deployDt-->
+<!--		FROM DOCS_PRODUCT_DOCUMENT product-->
+<!--		INNER JOIN DOCS_DEPLOY_INFO depInfo-->
+<!--		ON product.OBJECT_ID = depInfo.OBJECT_ID-->
+<!--		INNER JOIN DOCS_REQUEST_DETAIL requestDetail-->
+<!--		ON depInfo.REQUEST_NO = requestDetail.REQUEST_NO-->
+<!--		AND requestDetail.APPROVAL_STATUS_CD = 'APPROVAL'-->
+<!--		AND requestDetail.ACTION_CD = 'APPROVAL'-->
+<!--		INNER JOIN DOCS_REQUEST request-->
+<!--		ON requestDetail.REQUEST_NO = request.REQUEST_NO-->
+<!--		WHERE product.DOCUMENT_NO = #{objectNo}-->
+<!--		AND depInfo.DEPLOY_USER_CD = #{deployUserCd}-->
+<!--		ORDER BY requestDetail.REQUEST_NO DESC, product.REV_NO DESC-->
+<!--	</select>-->
+
+<!--	<select id="selectDisposalRequestObject" resultType="kr.esob.fdms.controller.inside.production.productionstatus.DistributionHistoryVO">-->
+<!--		SELECT OBJECT_NO-->
+<!--			, USER_CD AS deployUserCd-->
+<!--			, (SELECT USER_NM FROM DOCS_USER WHERE USER_CD = status.USER_CD) AS deployUserNm-->
+<!--		FROM DOCS_PRODUCT_STATUS status-->
+<!--		WHERE-->
+<!--		(OBJECT_NO, USER_CD)-->
+<!--		IN-->
+<!--		(-->
+<!--		<foreach collection="deployInfoList" item="info" open="(" separator="),(" close=")">-->
+<!--		#{info.objectNo}, #{info.deployUserCd}-->
+<!--		</foreach>-->
+<!--		)-->
+<!--		AND	DISPOSAL_REQUEST_YN = 'Y'-->
+<!--	</select>-->
+
+
+<!--</mapper>-->
+
+
+
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+
+
+
+
+
+
+<mapper namespace="sql.ProductionStatus">
+
+<select id="selectList" resultType="kr.esob.fdms.controller.inside.production.productionstatus.ProductionStatusListVO">
+	SELECT
+	B1.*
+	FROM (
+	SELECT
+	businessAreaCd,
+	businessTypeCd,
+	objectNo,
+	objectNo AS hiddenObjectNo,
+	objectId,
+	revNo,
+	objectNm,
+	objectType,
+	objectClassCd2,
+	objectClassNm2,
+	insertUid,
+	updateUid,
+	(SELECT USER_NM FROM DOCS_USER tmp WHERE tmp.USER_ID = insertUid) AS insertUserNm, /* 등록자 */
+	(SELECT USER_NM FROM DOCS_USER tmp WHERE tmp.USER_ID = updateUid) AS updateUserNm, /* 수정자 */
+	TO_CHAR(statusUpdateDt, 'YYYY-MM-DD') AS statusUpdateDt, /* 수정일 */
+	TO_CHAR(insertDt, 'YYYY-MM-DD') AS insertDt, /* 등록일 */
+	totalPageCnt,
+	productNm,
+	productNo,
+	callId,
+	applyHogiNo,
+	securityTypeCd,
+	securityTypeNm,
+	lastRequestNo,
+	currentCount,
+	deptCd,
+	deptNm,
+	acceptUserCd,
+	acceptUserNm,
+	lastDeployRevNo,
+	ROW_NUMBER() OVER (ORDER BY statusUpdateDt DESC, objectNo DESC) AS PAGEINDEX
+	FROM (
+	<choose>
+		<when test='objectType.equals("DOC")'>
+			SELECT
+			info.BUSINESS_AREA_CD AS businessAreaCd, /* 사업장 구분 */
+			info.BUSINESS_TYPE_CD AS businessTypeCd, /* 사업 구분 */
+			info.DOCUMENT_NO AS objectNo, /* 자료번호 */
+			info.OBJECT_ID AS objectId, /* objectId */
+			info.REV_NO AS revNo, /* REV */
+			info.DOCUMENT_NM AS objectNm, /* 자료명 */
+			'DOC' AS objectType, /* 자료유형 */
+			DOC_CLASS_CD2 AS objectClassCd2, /* 자료분류 */
+			FN_GET_CD_NM('objectClassCd2', DOC_CLASS_CD2, #{sessionLang}) AS objectClassNm2,
+			INSERT_UID AS insertUid, /* 등록자 */
+			INSERT_DT AS insertDt,
+			UPDATE_UID AS updateUid, /* 수정자 */
+			TOTAL_PAGE_CNT AS totalPageCnt, /* 총매수 */
+			COALESCE(info.APPLY_PRODUCT_NO, '') AS productNm,
+			info.APPLY_PRODUCT_NO AS productNo, /* 기종 */
+			CALL_ID AS callId, /* CALL_ID */
+			info.APPLY_HOGI_NO AS applyHogiNo, /* 호기 */
+			info.SECURITY_TYPE_CD AS securityTypeCd, /* 보안등급 */
+			FN_GET_CD_NM('securityTypeCd', info.SECURITY_TYPE_CD, #{sessionLang}) AS securityTypeNm, /* 보안등급 */
+			info.LAST_REQUEST_NO AS lastRequestNo,
+			info.statusUpdateDt,
+			info.currentCount,
+			info.deptCd,
+			info.deptNm AS deptNm,
+			info.acceptUserCd,
+			info.acceptUserNm,
+			info.lastDeployRevNo AS lastDeployRevNo
+			FROM (
+			SELECT info.*,
+			status.LAST_REQUEST_NO,
+			status.UPDATE_DT statusUpdateDt,
+			status.CURRENT_COUNT currentCount,
+			status.DEPT_CD deptCd,
+			(SELECT DEPT_NM FROM DOCS_DEPT WHERE DEPT_CD = status.DEPT_CD) AS deptNm,
+			status.USER_CD AS acceptUserCd,
+			(SELECT USER_NM FROM DOCS_USER WHERE USER_CD = status.USER_CD) AS acceptUserNm,
+			status.LAST_DEPLOY_REV_NO lastDeployRevNo
+			FROM DOCS_PRODUCT_DOCUMENT info
+			INNER JOIN (
+			SELECT DOCUMENT_NO, MAX(REV_NO) AS REV_NO
+			FROM DOCS_PRODUCT_DOCUMENT
+			GROUP BY DOCUMENT_NO
+			) grouped ON info.DOCUMENT_NO = grouped.DOCUMENT_NO
+			AND info.REV_NO = grouped.REV_NO
+			INNER JOIN (
+			SELECT OBJECT_NO, DEPT_CD, USER_CD, SUM(CURRENT_COUNT) CURRENT_COUNT, MAX(INSERT_DT) INSERT_DT, MAX(UPDATE_DT) UPDATE_DT, MAX(LAST_REQUEST_NO) LAST_REQUEST_NO, MAX(OBJECT_TYPE) OBJECT_TYPE, MAX(LAST_DEPLOY_REV_NO) LAST_DEPLOY_REV_NO
+			FROM DOCS_PRODUCT_STATUS
+			WHERE 1=1
+			GROUP BY OBJECT_NO, DEPT_CD, USER_CD
+			) status ON status.OBJECT_NO = info.DOCUMENT_NO
+			WHERE 1=1
+			<if test='objectNo != null and !objectNo.equals("")'>
+				AND info.DOCUMENT_NO LIKE '%' || UPPER(TRIM(#{objectNo})) || '%'
+			</if>
+			<if test='objectNm != null and !objectNm.equals("")'>
+				AND info.DOCUMENT_NM LIKE '%' || #{objectNm} || '%'
+			</if>
+			<if test='businessAreaCd != null and !businessAreaCd.equals("")'>
+				AND info.BUSINESS_AREA_CD = #{businessAreaCd}
+			</if>
+			<if test='insertUid != null and !insertUid.equals("")'>
+				AND info.INSERT_UID = #{insertUid}
+			</if>
+			<if test='insertDeptNm != null and !insertDeptNm.equals("")'>
+				AND info.INSERT_DEPT_NM LIKE #{insertDeptNm}
+			</if>
+			<if test='objectClassCd2 != null and !objectClassCd2.equals("")'>
+				AND info.DOC_CLASS_CD2 LIKE #{objectClassCd2}
+			</if>
+			<if test='updateStartDt != null and !updateStartDt.equals("")'>
+				AND status.UPDATE_DT BETWEEN TO_DATE(#{updateStartDt}, 'YYYY-MM-DD') AND TO_DATE(#{updateEndDt}, 'YYYY-MM-DD') + INTERVAL '1 DAY'
+			</if>
+			) info
+		</when>
+		<otherwise>
+			SELECT
+			info.BUSINESS_AREA_CD AS businessAreaCd, /* 사업장 구분 */
+			info.BUSINESS_TYPE_CD AS businessTypeCd, /* 사업장 구분 */
+			info.SW_NO AS objectNo, /* 자료번호 */
+			info.OBJECT_ID AS objectId, /* objectId */
+			info.REV_NO AS revNo, /* REV */
+			info.SW_NM AS objectNm, /* 자료명 */
+			'SW' AS objectType, /* 자료유형 */
+			SW_CLASS_CD2 AS objectClassCd2, /* 자료분류 */
+			FN_GET_CD_NM('objectClassCd2', SW_CLASS_NM2, #{sessionLang}) AS objectClassNm2, /* 자료유형 */
+			INSERT_UID AS insertUid, /* 등록자 */
+			INSERT_DT AS insertDt,
+			UPDATE_UID AS updateUid, /* 수정자 */
+			UPDATE_DT AS updateDt, /* 수정일 */
+			0 AS totalPageCnt, /* 총매수 */
+			COALESCE(info.PRODUCT_NO, '') AS productNm,
+			info.PRODUCT_NO AS productNo, /* 기종 */
+			'' AS callId, /* CALL_ID */
+			'' AS applyHogiNo, /* 호기 */
+			info.SECURITY_TYPE_CD AS securityTypeCd,
+			FN_GET_CD_NM('securityTypeCd', info.SECURITY_TYPE_CD, #{sessionLang}) AS securityTypeNm, /* 보안등급 */
+			info.LAST_REQUEST_NO AS lastRequestNo,
+			info.statusUpdateDt,
+			info.currentCount,
+			info.deptCd,
+			info.deptNm AS deptNm,
+			info.acceptUserCd,
+			info.acceptUserNm,
+			info.lastDeployRevNo AS lastDeployRevNo
+			FROM (
+			SELECT info.*,
+			status.LAST_REQUEST_NO,
+			status.UPDATE_DT statusUpdateDt,
+			status.CURRENT_COUNT currentCount,
+			status.DEPT_CD deptCd,
+			(SELECT DEPT_NM FROM DOCS_DEPT WHERE DEPT_CD = status.DEPT_CD) AS deptNm,
+			status.USER_CD AS acceptUserCd,
+			(SELECT USER_NM FROM DOCS_USER WHERE USER_CD = status.USER_CD) AS acceptUserNm,
+			status.LAST_DEPLOY_REV_NO lastDeployRevNo
+			FROM DOCS_PRODUCT_SW info
+			INNER JOIN (
+			SELECT SW_NO, MAX(REV_NO) AS REV_NO
+			FROM DOCS_PRODUCT_SW
+			GROUP BY SW_NO
+			) grouped ON info.SW_NO = grouped.SW_NO
+			AND info.REV_NO = grouped.REV_NO
+			INNER JOIN (
+			SELECT OBJECT_NO, DEPT_CD, USER_CD, SUM(CURRENT_COUNT) CURRENT_COUNT, MAX(INSERT_DT) INSERT_DT, MAX(UPDATE_DT) UPDATE_DT, MAX(LAST_REQUEST_NO) LAST_REQUEST_NO, MAX(OBJECT_TYPE) OBJECT_TYPE, MAX(LAST_DEPLOY_REV_NO) LAST_DEPLOY_REV_NO
+			FROM DOCS_PRODUCT_STATUS
+			WHERE 1=1
+			GROUP BY OBJECT_NO, DEPT_CD, USER_CD
+			) status ON status.OBJECT_NO = info.SW_NO
+			WHERE 1=1
+			<if test='objectNo != null and !objectNo.equals("")'>
+				AND info.SW_NO LIKE '%' || UPPER(TRIM(#{objectNo})) || '%'
+			</if>
+			<if test='objectNm != null and !objectNm.equals("")'>
+				AND info.SW_NM LIKE '%' || #{objectNm} || '%'
+			</if>
+			<if test='businessAreaCd != null and !businessAreaCd.equals("")'>
+				AND info.BUSINESS_AREA_CD = #{businessAreaCd}
+			</if>
+			<if test='insertUid != null and !insertUid.equals("")'>
+				AND info.INSERT_UID = #{insertUid}
+			</if>
+			<if test='insertDeptNm != null and !insertDeptNm.equals("")'>
+				AND info.INSERT_DEPT_NM LIKE #{insertDeptNm}
+			</if>
+			<if test='objectClassCd2 != null and !objectClassCd2.equals("")'>
+				AND info.SW_CLASS_CD2 LIKE #{objectClassCd2}
+			</if>
+			<if test='updateStartDt != null and !updateStartDt.equals("")'>
+				AND status.UPDATE_DT BETWEEN TO_DATE(#{updateStartDt}, 'YYYY-MM-DD') AND TO_DATE(#{updateEndDt}, 'YYYY-MM-DD') + INTERVAL '1 DAY'
+			</if>
+			) info
+		</otherwise>
+	</choose>
+	) info
+	WHERE 1=1
+	<if test='deptNm != null and !deptNm.equals("")'>
+		AND info.deptNm LIKE '%' || #{deptNm} || '%'
+	</if>
+	<if test='sortColumn == null or "".equals(sortColumn)'>
+		ORDER BY statusUpdateDt DESC, objectNo DESC
+	</if>
+	<if test='sortColumn != null and !"".equals(sortColumn)'>
+		ORDER BY ${sortColumn} ${order}, objectNo ${order}
+	</if>
+	) A1
+	WHERE 1=1
+	<if test='end != null and !end.equals("")'>
+		AND PAGEINDEX <![CDATA[ <= ]]> #{end}
+	</if>
+	) B1
+	<if test='start != null and !start.equals("")'>
+		WHERE PAGEINDEX >= #{start}
+	</if>
+</select>
+
+<select id="selectListCount" resultType="Integer">
+	SELECT
+	COUNT(*) AS TOTAL_COUNT
+	FROM (
+	SELECT
+	A1.*,
+	ROW_NUMBER() OVER (ORDER BY statusUpdateDt DESC, objectNo DESC) AS PAGEINDEX,
+	(SELECT USER_NM FROM DOCS_USER tmp WHERE tmp.USER_ID = insertUid) AS insertUserNm, /* 등록자 */
+	(SELECT USER_NM FROM DOCS_USER tmp WHERE tmp.USER_ID = updateUid) AS updateUserNm /* 수정자 */
+	FROM (
+	<choose>
+		<when test='objectType.equals("DOC")'>
+			SELECT
+			info.BUSINESS_AREA_CD AS businessAreaCd, /* 사업장 구분 */
+			info.BUSINESS_TYPE_CD AS businessTypeCd, /* 사업 구분 */
+			info.DOCUMENT_NO AS objectNo, /* 자료번호 */
+			info.OBJECT_ID AS objectId, /* objectId */
+			info.REV_NO AS revNo, /* REV */
+			info.DOCUMENT_NM AS objectNm, /* 자료명 */
+			'DOC' AS objectType, /* 자료유형 */
+			DOC_CLASS_CD2 AS objectClassCd2, /* 자료분류 */
+			FN_GET_CD_NM('objectClassCd2', DOC_CLASS_CD2, #{sessionLang}) AS objectClassNm2,
+			INSERT_UID AS insertUid, /* 등록자 */
+			INSERT_DT AS insertDt,
+			UPDATE_UID AS updateUid, /* 수정자 */
+			TOTAL_PAGE_CNT AS totalPageCnt, /* 총매수 */
+			COALESCE(info.APPLY_PRODUCT_NO, '') AS productNm,
+			info.APPLY_PRODUCT_NO AS productNo, /* 기종 */
+			CALL_ID AS callId, /* CALL_ID */
+			info.APPLY_HOGI_NO AS applyHogiNo, /* 호기 */
+			info.SECURITY_TYPE_CD AS securityTypeCd, /* 보안등급 */
+			FN_GET_CD_NM('securityTypeCd', info.SECURITY_TYPE_CD, #{sessionLang}) AS securityTypeNm, /* 보안등급 */
+			info.LAST_REQUEST_NO AS lastRequestNo,
+			info.statusUpdateDt,
+			info.currentCount,
+			info.deptCd,
+			info.deptNm AS deptNm,
+			info.acceptUserCd,
+			info.acceptUserNm,
+			info.lastDeployRevNo AS lastDeployRevNo
+			FROM (
+			SELECT info.*,
+			status.LAST_REQUEST_NO,
+			status.UPDATE_DT statusUpdateDt,
+			status.CURRENT_COUNT currentCount,
+			status.DEPT_CD deptCd,
+			(SELECT DEPT_NM FROM DOCS_DEPT WHERE DEPT_CD = status.DEPT_CD) AS deptNm,
+			status.USER_CD AS acceptUserCd,
+			(SELECT USER_NM FROM DOCS_USER WHERE USER_CD = status.USER_CD) AS acceptUserNm,
+			status.LAST_DEPLOY_REV_NO lastDeployRevNo
+			FROM DOCS_PRODUCT_DOCUMENT info
+			INNER JOIN (
+			SELECT DOCUMENT_NO, MAX(REV_NO) AS REV_NO
+			FROM DOCS_PRODUCT_DOCUMENT
+			GROUP BY DOCUMENT_NO
+			) grouped ON info.DOCUMENT_NO = grouped.DOCUMENT_NO
+			AND info.REV_NO = grouped.REV_NO
+			INNER JOIN (
+			SELECT OBJECT_NO, DEPT_CD, USER_CD, SUM(CURRENT_COUNT) CURRENT_COUNT, MAX(INSERT_DT) INSERT_DT, MAX(UPDATE_DT) UPDATE_DT, MAX(LAST_REQUEST_NO) LAST_REQUEST_NO, MAX(OBJECT_TYPE) OBJECT_TYPE, MAX(LAST_DEPLOY_REV_NO) LAST_DEPLOY_REV_NO
+			FROM DOCS_PRODUCT_STATUS
+			WHERE 1=1
+			GROUP BY OBJECT_NO, DEPT_CD, USER_CD
+			) status ON status.OBJECT_NO = info.DOCUMENT_NO
+			WHERE 1=1
+			<if test='objectNo != null and !objectNo.equals("")'>
+				AND info.DOCUMENT_NO LIKE '%' || UPPER(TRIM(#{objectNo})) || '%'
+			</if>
+			<if test='objectNm != null and !objectNm.equals("")'>
+				AND info.DOCUMENT_NM LIKE '%' || #{objectNm} || '%'
+			</if>
+			<if test='businessAreaCd != null and !businessAreaCd.equals("")'>
+				AND info.BUSINESS_AREA_CD = #{businessAreaCd}
+			</if>
+			<if test='insertUid != null and !insertUid.equals("")'>
+				AND info.INSERT_UID = #{insertUid}
+			</if>
+			<if test='insertDeptNm != null and !insertDeptNm.equals("")'>
+				AND info.INSERT_DEPT_NM LIKE #{insertDeptNm}
+			</if>
+			<if test='objectClassCd2 != null and !objectClassCd2.equals("")'>
+				AND info.DOC_CLASS_CD2 LIKE #{objectClassCd2}
+			</if>
+			<if test='updateStartDt != null and !updateStartDt.equals("")'>
+				AND status.UPDATE_DT BETWEEN TO_DATE(#{updateStartDt}, 'YYYY-MM-DD') AND TO_DATE(#{updateEndDt}, 'YYYY-MM-DD') + INTERVAL '1 DAY'
+			</if>
+			) info
+		</when>
+		<otherwise>
+			SELECT
+			info.BUSINESS_AREA_CD AS businessAreaCd, /* 사업장 구분 */
+			info.BUSINESS_TYPE_CD AS businessTypeCd, /* 사업장 구분 */
+			info.SW_NO AS objectNo, /* 자료번호 */
+			info.OBJECT_ID AS objectId, /* objectId */
+			info.REV_NO AS revNo, /* REV */
+			info.SW_NM AS objectNm, /* 자료명 */
+			'SW' AS objectType, /* 자료유형 */
+			SW_CLASS_CD2 AS objectClassCd2, /* 자료분류 */
+			FN_GET_CD_NM('objectClassCd2', SW_CLASS_NM2, #{sessionLang}) AS objectClassNm2, /* 자료유형 */
+			INSERT_UID AS insertUid, /* 등록자 */
+			INSERT_DT AS insertDt,
+			UPDATE_UID AS updateUid, /* 수정자 */
+			UPDATE_DT AS updateDt, /* 수정일 */
+			0 AS totalPageCnt, /* 총매수 */
+			COALESCE(info.PRODUCT_NO, '') AS productNm,
+			info.PRODUCT_NO AS productNo, /* 기종 */
+			'' AS callId, /* CALL_ID */
+			'' AS applyHogiNo, /* 호기 */
+			info.SECURITY_TYPE_CD AS securityTypeCd,
+			FN_GET_CD_NM('securityTypeCd', info.SECURITY_TYPE_CD, #{sessionLang}) AS securityTypeNm, /* 보안등급 */
+			info.LAST_REQUEST_NO AS lastRequestNo,
+			info.statusUpdateDt,
+			info.currentCount,
+			info.deptCd,
+			info.deptNm AS deptNm,
+			info.acceptUserCd,
+			info.acceptUserNm,
+			info.lastDeployRevNo AS lastDeployRevNo
+			FROM (
+			SELECT info.*,
+			status.LAST_REQUEST_NO,
+			status.UPDATE_DT statusUpdateDt,
+			status.CURRENT_COUNT currentCount,
+			status.DEPT_CD deptCd,
+			(SELECT DEPT_NM FROM DOCS_DEPT WHERE DEPT_CD = status.DEPT_CD) AS deptNm,
+			status.USER_CD AS acceptUserCd,
+			(SELECT USER_NM FROM DOCS_USER WHERE USER_CD = status.USER_CD) AS acceptUserNm,
+			status.LAST_DEPLOY_REV_NO lastDeployRevNo
+			FROM DOCS_PRODUCT_SW info
+			INNER JOIN (
+			SELECT SW_NO, MAX(REV_NO) AS REV_NO
+			FROM DOCS_PRODUCT_SW
+			GROUP BY SW_NO
+			) grouped ON info.SW_NO = grouped.SW_NO
+			AND info.REV_NO = grouped.REV_NO
+			INNER JOIN (
+			SELECT OBJECT_NO, DEPT_CD, USER_CD, SUM(CURRENT_COUNT) CURRENT_COUNT, MAX(INSERT_DT) INSERT_DT, MAX(UPDATE_DT) UPDATE_DT, MAX(LAST_REQUEST_NO) LAST_REQUEST_NO, MAX(OBJECT_TYPE) OBJECT_TYPE, MAX(LAST_DEPLOY_REV_NO) LAST_DEPLOY_REV_NO
+			FROM DOCS_PRODUCT_STATUS
+			WHERE 1=1
+			GROUP BY OBJECT_NO, DEPT_CD, USER_CD
+			) status ON status.OBJECT_NO = info.SW_NO
+			WHERE 1=1
+			<if test='objectNo != null and !objectNo.equals("")'>
+				AND info.SW_NO LIKE '%' || UPPER(TRIM(#{objectNo})) || '%'
+			</if>
+			<if test='objectNm != null and !objectNm.equals("")'>
+				AND info.SW_NM LIKE '%' || #{objectNm} || '%'
+			</if>
+			<if test='businessAreaCd != null and !businessAreaCd.equals("")'>
+				AND info.BUSINESS_AREA_CD = #{businessAreaCd}
+			</if>
+			<if test='insertUid != null and !insertUid.equals("")'>
+				AND info.INSERT_UID = #{insertUid}
+			</if>
+			<if test='insertDeptNm != null and !insertDeptNm.equals("")'>
+				AND info.INSERT_DEPT_NM LIKE #{insertDeptNm}
+			</if>
+			<if test='objectClassCd2 != null and !objectClassCd2.equals("")'>
+				AND info.SW_CLASS_CD2 LIKE #{objectClassCd2}
+			</if>
+			<if test='updateStartDt != null and !updateStartDt.equals("")'>
+				AND status.UPDATE_DT BETWEEN TO_DATE(#{updateStartDt}, 'YYYY-MM-DD') AND TO_DATE(#{updateEndDt}, 'YYYY-MM-DD') + INTERVAL '1 DAY'
+			</if>
+			) info
+		</otherwise>
+	</choose>
+	) A1
+	WHERE 1=1
+	<if test='deptNm != null and !deptNm.equals("")'>
+		AND info.deptNm LIKE '%' || #{deptNm} || '%'
+	</if>
+	) B1
+</select>
+
+<select id="selectProductionReplace" resultType="kr.esob.fdms.controller.inside.production.productionstatus.ProductionReplaceRequestVO">
+	SELECT *
+	FROM (
+	SELECT
+	<if test="'DOC'.equals(objectType)">
+		product.DOCUMENT_NO objectNo,
+		product.DOCUMENT_NM objectNm,
+		FN_GET_CD_NM('objectClassCd2', DOC_CLASS_CD2, #{sessionLang}) AS objectClassNm2
+	</if>
+	<if test="'SW'.equals(objectType)">
+		product.SW_NO objectNo,
+		product.SW_NM objectNm,
+		FN_GET_CD_NM('objectClassCd2', SW_CLASS_CD2, #{sessionLang}) AS objectClassNm2
+	</if>
+	, mapping.REV_NO oldRevNo
+	, product.REV_NO revNo
+	, product.APPLY_HOGI_NO
+	, product.CALL_ID
+	, product.ECN_NO
+	, product.PROCESS_TYPE_CD
+	, product.DESCRIPTION
+	, product.OBJECT_ID
+	, status.USER_CD userCd
+	, (SELECT USER_NM FROM DOCS_USER WHERE USER_CD = status.USER_CD) userNm
+	, status.DEPT_CD deptCd
+	, (SELECT DEPT_NM FROM DOCS_DEPT WHERE DEPT_CD = status.DEPT_CD) deptNm
+	, status.CURRENT_COUNT
+	, #{objectType} objectType
+	, product.total_page_cnt AS totalPageCnt
+	, depInfo.DEPLOY_ACCEPT_YN AS deployAcceptYn
+	<if test="'DOC'.equals(objectType)">
+		FROM DOCS_PRODUCT_DOCUMENT product
+		JOIN (
+		SELECT DOCUMENT_NO, MAX(REV_NO) AS REV_NO
+		FROM DOCS_PRODUCT_DOCUMENT
+		GROUP BY DOCUMENT_NO
+		) grouped ON product.DOCUMENT_NO = grouped.DOCUMENT_NO
+		AND product.REV_NO = grouped.REV_NO
+	</if>
+	<if test="'SW'.equals(objectType)">
+		FROM DOCS_PRODUCT_SW product
+		JOIN (
+		SELECT SW_NO, MAX(REV_NO) AS REV_NO
+		FROM DOCS_PRODUCT_SW
+		GROUP BY SW_NO
+		) grouped ON product.SW_NO = grouped.SW_NO
+		AND product.REV_NO = grouped.REV_NO
+	</if>
+	INNER JOIN (
+	SELECT MAX(REQUEST_NO) as REQUEST_NO, MAX(OBJECT_ID) AS OBJECT_ID, OBJECT_NO, DEPLOY_USER_CD, DEPLOY_DEPT_CD, MIN(DEPLOY_ACCEPT_YN) as DEPLOY_ACCEPT_YN
+	FROM DOCS_DEPLOY_INFO
+	WHERE DESTROY_STATUS_CD != 'ALL_DESTROY'
+	GROUP BY OBJECT_NO, DEPLOY_USER_CD, DEPLOY_DEPT_CD
+	) depInfo
+	<if test="'DOC'.equals(objectType)">
+		ON product.DOCUMENT_NO = depInfo.OBJECT_NO
+	</if>
+	<if test="'SW'.equals(objectType)">
+		ON product.SW_NO = depInfo.OBJECT_NO
+	</if>
+	INNER JOIN DOCS_REQUEST_MAPPING mapping
+	ON depInfo.REQUEST_NO = mapping.REQUEST_NO
+	AND depInfo.OBJECT_NO = mapping.OBJECT_NO
+	INNER JOIN DOCS_PRODUCT_STATUS status
+	ON product.DOCUMENT_NO = status.OBJECT_NO
+	AND depInfo.DEPLOY_DEPT_CD = status.DEPT_CD
+	AND depInfo.DEPLOY_USER_CD = status.USER_CD
+	INNER JOIN (
+	<if test="'DOC'.equals(objectType)">
+		SELECT OBJECT_ID, MAX(FILE_NO) AS fileNo
+		FROM DOCS_PRODUCT_DOCUMENT_FILE
+		GROUP BY OBJECT_ID
+	</if>
+	<if test="'SW'.equals(objectType)">
+		SELECT OBJECT_ID, MAX(FILE_NO) AS fileNo
+		FROM DOCS_PRODUCT_SW_FILE
+		GROUP BY OBJECT_ID
+	</if>
+	) fileInfo ON product.OBJECT_ID = fileInfo.OBJECT_ID
+	)
+	WHERE 1=1
+	AND (
+	<foreach collection="list" item="param" separator="OR">
+		(deptCd = #{param.deptCd} AND objectNo = #{param.objectNo})
+	</foreach>
+	)
+</select>
+
+<select id="selectDeployInfoList" resultType="kr.esob.fdms.controller.inside.production.productionstatus.DistributionHistoryVO">
+	SELECT depInfo.OBJECT_NO,
+		   depInfo.DEPLOY_USER_CD,
+		   (SELECT USER_NM FROM DOCS_USER WHERE USER_CD = depInfo.DEPLOY_USER_CD) AS deployUserNm,
+		   FN_GET_USER_FULL_NM(depInfo.DEPLOY_USER_CD) AS deployUserFullNm,
+		   #{objectType} AS objectType
+	FROM DOCS_DEPLOY_INFO depInfo
+			 INNER JOIN DOCS_REQUEST_DETAIL requestDetail
+						ON depInfo.REQUEST_NO = requestDetail.REQUEST_NO
+							AND requestDetail.APPROVAL_STATUS_CD = 'APPROVAL'
+							AND requestDetail.ACTION_CD = 'APPROVAL'
+	WHERE OBJECT_NO = #{objectNo}
+	GROUP BY OBJECT_NO, DEPLOY_USER_CD
+</select>
+
+<select id="selectHistoryDetailList" resultType="kr.esob.fdms.controller.inside.production.productionstatus.HistoryDetailVO">
+	SELECT requestDetail.REQUEST_NO,
+		   product.OBJECT_ID,
+		   product.REV_NO,
+		   depInfo.DEPLOY_COUNT,
+		   depInfo.COPY,
+		   depInfo.DESTROY_COUNT,
+		   request.INSERT_USER_CD requestUserCd,
+		   (SELECT USER_NM FROM DOCS_USER WHERE USER_CD = request.INSERT_USER_CD) AS requestUserNm,
+		   requestDetail.ACTUAL_USER_CD approvalUserCd,
+		   (SELECT USER_NM FROM DOCS_USER WHERE USER_CD = requestDetail.ACTUAL_USER_CD) AS approvalUserNm,
+		   request.INSERT_DT requestDt,
+		   requestDetail.ACTION_DT deployDt
+	FROM DOCS_PRODUCT_DOCUMENT product
+			 INNER JOIN DOCS_DEPLOY_INFO depInfo
+						ON product.OBJECT_ID = depInfo.OBJECT_ID
+			 INNER JOIN DOCS_REQUEST_DETAIL requestDetail
+						ON depInfo.REQUEST_NO = requestDetail.REQUEST_NO
+							AND requestDetail.APPROVAL_STATUS_CD = 'APPROVAL'
+							AND requestDetail.ACTION_CD = 'APPROVAL'
+			 INNER JOIN DOCS_REQUEST request
+						ON requestDetail.REQUEST_NO = request.REQUEST_NO
+	WHERE product.DOCUMENT_NO = #{objectNo}
+	  AND depInfo.DEPLOY_USER_CD = #{deployUserCd}
+	ORDER BY requestDetail.REQUEST_NO DESC, product.REV_NO DESC
+</select>
+
+<select id="selectDisposalRequestObject" resultType="kr.esob.fdms.controller.inside.production.productionstatus.DistributionHistoryVO">
+	SELECT OBJECT_NO,
+	USER_CD AS deployUserCd,
+	(SELECT USER_NM FROM DOCS_USER WHERE USER_CD = status.USER_CD) AS deployUserNm
+	FROM DOCS_PRODUCT_STATUS status
+	WHERE (OBJECT_NO, USER_CD) IN (
+	<foreach collection="deployInfoList" item="info" open="(" separator="),(" close=")">
+		#{info.objectNo}, #{info.deployUserCd}
+	</foreach>
+	)
+	AND DISPOSAL_REQUEST_YN = 'Y'
+</select>
+
+</mapper>

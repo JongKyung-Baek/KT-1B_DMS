@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="sql.CommonDown">
+
+<select id="getUpdownConfig" resultType="java.util.Map">
+    SELECT
+        MAX(CASE WHEN SYSTEM_CONFIG_CD = 'UPDOWN_CAB_URL' THEN SYSTEM_CONFIG_VALUE END) AS "updownCabUrl",
+        MAX(CASE WHEN SYSTEM_CONFIG_CD = 'UPDOWN_CAB_URL_OUT' THEN SYSTEM_CONFIG_VALUE END) AS "updownCabUrlOut",
+        MAX(CASE WHEN SYSTEM_CONFIG_CD = 'UPDOWN_SERVER_IP' THEN SYSTEM_CONFIG_VALUE END) AS "updownServerIp",
+        MAX(CASE WHEN SYSTEM_CONFIG_CD = 'UPDOWN_SERVER_IP_OUT' THEN SYSTEM_CONFIG_VALUE END) AS "updownOutServerIp",
+        MAX(CASE WHEN SYSTEM_CONFIG_CD = 'UPDOWN_SERVER_PORT' THEN SYSTEM_CONFIG_VALUE END) AS "updownServerPort",
+        MAX(CASE WHEN SYSTEM_CONFIG_CD = 'UPDOWN_LANG_CODE' THEN SYSTEM_CONFIG_VALUE END) AS "updownLangCode",
+        MAX(CASE WHEN SYSTEM_CONFIG_CD = 'UPDOWN_SECRET_KEY' THEN SYSTEM_CONFIG_VALUE END) AS "updownSecretKey",
+        MAX(CASE WHEN SYSTEM_CONFIG_CD = 'UPDOWN_IS_SECURITY' THEN SYSTEM_CONFIG_VALUE END) AS "updownIsSecurity",
+        MAX(CASE WHEN SYSTEM_CONFIG_CD = 'UPDOWN_USER_AUTH' THEN SYSTEM_CONFIG_VALUE END) AS "updownUserAuth"
+    FROM DOCS_SYSTEM_CONFIG
+    WHERE SYSTEM_CONFIG_CD LIKE 'UPDOWN%'
+</select>
+
+<select id="selectList" parameterType="kr.esob.fdms.commonlogic.down.CommonDownParam" resultType="kr.esob.fdms.commonlogic.down.CommonDownFileVO">
+    SELECT
+    FILE_PATH_NM AS filePathNm,
+    ORG_FILE_NM AS orgFileNm,
+    ORG_FILE_NM AS fileNm,
+    FILE_SIZE AS fileSize
+    FROM DOCS_PRODUCT_DOCUMENT_FILE
+    <foreach collection="list" open="WHERE 1=1 AND (" close=")" separator="OR" item="list">
+        (OBJECT_ID = #{list.objectId} AND FILE_NO = #{list.fileNo})
+    </foreach>
+</select>
+
+</mapper>

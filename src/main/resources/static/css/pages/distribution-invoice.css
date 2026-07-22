@@ -1,0 +1,896 @@
+.layout-wrapper.bodyWrap .content-wrapper > .container.distribution-invoice-container {
+  width: calc(100% - 48px) !important;
+  max-width: none !important;
+  margin-inline: 24px !important;
+  padding: 10px 0 !important;
+}
+
+.layout-wrapper.bodyWrap .content-wrapper > .container.distribution-invoice-container > .nav {
+  border-bottom: 0 !important;
+}
+
+@media (max-width: 575.98px) {
+  .layout-wrapper.bodyWrap .content-wrapper > .container.distribution-invoice-container {
+    width: calc(100% - 32px) !important;
+    margin-inline: 16px !important;
+  }
+}
+
+.distribution-invoice-page .distribution-invoice-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  margin: 0;
+}
+
+.distribution-invoice-page {
+  display: flex;
+  flex-direction: column;
+  height: calc(100dvh - 160px);
+  min-height: 620px;
+  --tree-toggle-collapsed-icon: url("/resources/images/folder.png");
+  --tree-toggle-expanded-icon: url("/resources/images/depth1.png");
+  --tree-toggle-leaf-icon: url("/resources/images/depth0.png");
+  --tree-toggle-drawing-leaf-icon: url("/resources/images/depth3.png");
+  --tree-toggle-doc-leaf-icon: url("/resources/images/depth3.png");
+  --tree-toggle-boardno-icon: url("/resources/images/depth3.png");
+}
+
+.distribution-invoice-page .distribution-filter-card .card-body {
+  padding: 1rem 1.25rem;
+}
+
+.distribution-invoice-page .distribution-filter-card {
+  border: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+.distribution-invoice-page .distribution-grid-card .card-datatable {
+  padding: 0;
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+
+.distribution-invoice-page .distribution-content-row {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+}
+
+.distribution-invoice-page .distribution-content-row.has-side-tree {
+  gap: 1rem;
+  align-items: stretch;
+}
+
+.distribution-invoice-page .distribution-tree-card {
+  width: 280px;
+  min-width: 280px;
+  height: 100%;
+  border: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+.distribution-invoice-page .distribution-tree-card .card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  height: 100%;
+  min-height: 0;
+  padding: 1rem;
+}
+
+.distribution-invoice-page .distribution-tree-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.distribution-invoice-page .distribution-tree-header strong {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--bs-heading-color);
+}
+
+.distribution-invoice-page .distribution-tree-selection {
+  max-width: 55%;
+  color: var(--bs-secondary-color);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.distribution-invoice-page .distribution-tree-body {
+  flex: 1;
+  min-height: 0;
+  border: 1px solid var(--bs-border-color);
+  border-radius: 0.875rem;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(249, 250, 252, 0.98) 100%);
+  padding: 0.75rem;
+  overflow: auto;
+}
+
+.distribution-invoice-page .distribution-tree-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 220px;
+  border: 1px dashed rgba(var(--bs-primary-rgb), 0.24);
+  border-radius: 0.75rem;
+  color: var(--bs-secondary-color);
+  font-size: 0.875rem;
+  font-weight: 500;
+  background: rgba(var(--bs-primary-rgb), 0.03);
+}
+
+.distribution-invoice-page .distribution-tree-body .jstree {
+  min-width: 100%;
+  font-size: 0.875rem;
+}
+
+.distribution-invoice-page .distribution-tree-body .jstree-default .jstree-node {
+  min-height: 2rem;
+  line-height: 2rem;
+}
+
+.distribution-invoice-page .distribution-tree-body .jstree-default .jstree-anchor {
+  height: 2rem;
+  line-height: 2rem;
+  border-radius: 0.625rem;
+  color: var(--bs-body-color);
+  font-weight: 500;
+  display: inline-block;
+  max-width: calc(100% - 2rem);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+.distribution-invoice-page .distribution-tree-body .jstree-default .jstree-clicked,
+.distribution-invoice-page .distribution-tree-body .jstree-default .jstree-wholerow-clicked,
+.distribution-invoice-page .distribution-tree-body .jstree-default .jstree-hovered,
+.distribution-invoice-page .distribution-tree-body .jstree-default .jstree-wholerow-hovered {
+  background: rgba(var(--bs-primary-rgb), 0.12);
+  color: var(--bs-primary);
+  box-shadow: none;
+}
+
+.distribution-invoice-page .distribution-tree-body .jstree-default .jstree-wholerow {
+  height: 2rem;
+  border-radius: 0.625rem;
+}
+
+.distribution-invoice-page .distribution-tree-body .drawing-tree-root,
+.distribution-invoice-page .distribution-tree-body .drawing-tree-children {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.distribution-invoice-page .distribution-tree-body .drawing-tree-children {
+  display: none;
+  padding-left: 1.125rem;
+}
+
+.distribution-invoice-page .distribution-tree-body .drawing-tree-item.is-open > .drawing-tree-children {
+  display: block;
+}
+
+.distribution-invoice-page .distribution-tree-body .drawing-tree-row {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: 2rem;
+  min-width: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
+.distribution-invoice-page .distribution-tree-body .drawing-tree-toggle {
+  display: inline-block;
+  width: 2.125rem;
+  height: 1.125rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  background-image: var(--tree-toggle-collapsed-icon);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 1rem 1rem;
+  cursor: pointer;
+  transition: opacity 0.16s ease;
+  vertical-align: middle;
+}
+
+.distribution-invoice-page .distribution-tree-body .drawing-tree-toggle:hover {
+  opacity: 0.85;
+}
+
+.distribution-invoice-page .distribution-tree-body .drawing-tree-item.is-open > .drawing-tree-row > .drawing-tree-toggle {
+  background-image: var(--tree-toggle-expanded-icon);
+}
+
+.distribution-invoice-page .distribution-tree-body .drawing-tree-item.is-leaf > .drawing-tree-row > .drawing-tree-toggle {
+  background-image: var(--tree-toggle-leaf-icon);
+  cursor: default;
+}
+
+.distribution-invoice-page #drawingRequestExplorerTree .drawing-tree-item.is-doc-type-node-drawing > .drawing-tree-row > .drawing-tree-toggle {
+  background-image: var(--tree-toggle-drawing-leaf-icon);
+}
+
+.distribution-invoice-page #docRequestExplorerTree .drawing-tree-item.is-doc-type-node-doc > .drawing-tree-row > .drawing-tree-toggle {
+  background-image: var(--tree-toggle-doc-leaf-icon);
+}
+
+.distribution-invoice-page #swRequestExplorerTree .drawing-tree-item.is-board-no-node-sw > .drawing-tree-row > .drawing-tree-toggle,
+.distribution-invoice-page #productionRequestExplorerTree .drawing-tree-item.is-board-no-node-production > .drawing-tree-row > .drawing-tree-toggle,
+.distribution-invoice-page #dxfRequestExplorerTree .drawing-tree-item.is-board-no-node-dxf > .drawing-tree-row > .drawing-tree-toggle {
+  background-image: var(--tree-toggle-boardno-icon);
+}
+
+.distribution-invoice-page .distribution-tree-body .drawing-tree-label {
+  display: block;
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  min-height: 2rem;
+  line-height: 2rem;
+  padding: 0;
+  text-align: left;
+  border-radius: 0.625rem;
+  color: var(--bs-body-color);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background-color 0.16s ease, color 0.16s ease;
+}
+
+.distribution-invoice-page .distribution-tree-body .drawing-tree-label:hover,
+.distribution-invoice-page .distribution-tree-body .drawing-tree-label.is-selected {
+  background: rgba(var(--bs-primary-rgb), 0.12);
+  color: var(--bs-primary);
+}
+
+.distribution-invoice-page .distribution-content-row.has-side-tree .distribution-grid-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+.distribution-invoice-page .sbr {
+  background: transparent;
+  border-bottom: 0;
+  padding: 0;
+}
+
+.distribution-invoice-page .btnArea {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.distribution-invoice-page .btnArea.is-empty {
+  display: none;
+}
+
+.distribution-invoice-page .btnArea:not(.is-empty) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.distribution-invoice-page .btnArea:not(.is-empty) .left,
+.distribution-invoice-page .btnArea:not(.is-empty) .right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: auto !important;
+}
+
+.distribution-invoice-page .btnArea:not(.is-empty) .right {
+  margin-left: auto;
+  justify-content: flex-end;
+}
+
+.distribution-invoice-page .btnArea:not(.is-empty) .right .tree-toolbar-navigator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-left: 0.75rem;
+  min-width: 0;
+  max-width: 46vw;
+  padding: 0 0.15rem;
+}
+
+.distribution-invoice-page .btnArea:not(.is-empty) .right .tree-toolbar-navigator-label {
+  color: var(--bs-secondary-color);
+  font-size: 0.76rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.distribution-invoice-page .btnArea:not(.is-empty) .right .tree-toolbar-navigator-path {
+  min-width: 0;
+  color: var(--bs-body-color);
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 2 !important;
+}
+
+.distribution-invoice-page .btnArea:not(.is-empty) .ui-button {
+  min-width: 5rem;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--bs-primary);
+  border-radius: var(--bs-border-radius);
+  background: transparent;
+  color: var(--bs-primary);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.2;
+  box-shadow: none;
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.16s ease;
+}
+
+.distribution-invoice-page .btnArea:not(.is-empty) .ui-button:hover,
+.distribution-invoice-page .btnArea:not(.is-empty) .ui-button:focus {
+  border-color: var(--bs-primary);
+  background: rgba(var(--bs-primary-rgb), 0.08);
+  color: var(--bs-primary);
+  box-shadow: none;
+  transform: translateY(-1px);
+}
+
+.distribution-invoice-page .formAcceptance {
+  width: 100%;
+}
+
+.distribution-invoice-page .formAcceptance .formAcceptanceFields {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem 1.25rem;
+  width: 100%;
+}
+
+.distribution-invoice-page .formAcceptance .formAcceptanceItem {
+  min-width: 0;
+  padding: 0;
+  align-content: end;
+}
+
+.has-pretty-child {
+    margin: 0px 5px 0px 0px !important; 
+
+}
+
+.has-pretty-child label {
+  font-size: 15px;
+}
+
+.has-pretty-child a {
+  height: 18px;
+  width: 18px;
+}
+
+.distribution-invoice-page .formAcceptance .formAcceptanceActions.formAcceptanceItem {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  width: 100% !important;
+  max-width: none !important;
+  grid-column: -2 / -1;
+  margin-top: 0;
+  text-align: right;
+}
+
+.distribution-invoice-page .formAcceptance .formAcceptanceItem.is-date-range {
+  grid-column: span 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  column-gap: 0.5rem;
+  row-gap: 0.5rem;
+  align-items: center;
+}
+
+.distribution-invoice-page .formAcceptance .formAcceptanceItem > .form-label {
+  display: block;
+  margin: 0 0 0.5rem;
+  padding: 0;
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: left;
+  color: var(--bs-heading-color);
+}
+
+.distribution-invoice-page .formAcceptance .formAcceptanceItem.is-date-range > .form-label {
+  grid-column: 1 / -1;
+  margin-bottom: 0;
+}
+
+.distribution-invoice-page .formAcceptance .form-control,
+.distribution-invoice-page .formAcceptance .form-select,
+.distribution-invoice-page .formAcceptance .formAcceptanceItem .select2,
+.distribution-invoice-page .formAcceptance .formAcceptanceItem .select2-container {
+  width: 100% !important;
+}
+
+.distribution-invoice-page .formAcceptance input.form-control,
+.distribution-invoice-page .formAcceptance select.form-select {
+  height: 29px !important;
+  min-height: 29px !important;
+  max-height: 29px !important;
+  padding: 3px 10px !important;
+  border: 1px solid var(--bs-border-color);
+  border-radius: var(--bs-border-radius);
+  background-color: var(--bs-body-bg);
+  color: var(--bs-body-color);
+  font-size: 13px;
+  line-height: 21px !important;
+  box-sizing: border-box !important;
+}
+
+.distribution-invoice-page .formAcceptance select.select2-hidden-accessible {
+  display: none !important;
+}
+
+.distribution-invoice-page .formAcceptance .input-append.date {
+  display: inline-flex;
+  width: calc(50% - 1rem);
+  vertical-align: middle;
+}
+
+.distribution-invoice-page .formAcceptance .formAcceptanceItem.is-date-range .input-append.date {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+}
+
+.distribution-invoice-page .formAcceptance .input-append.date .add-on,
+.distribution-invoice-page .formAcceptance .ui-datepicker-trigger {
+  display: none;
+}
+
+.distribution-invoice-page .formAcceptance .fromTo,
+.distribution-invoice-page .formAcceptance .formAcceptanceDateSeparator {
+  display: inline-flex;
+  width: 2rem;
+  justify-content: center;
+  align-items: center;
+  padding: 0.25rem 0;
+  color: var(--bs-secondary-color);
+  font-size: 13px;
+  vertical-align: middle;
+}
+
+.distribution-invoice-page .formAcceptance .formAcceptanceItem.is-date-range {
+  white-space: nowrap;
+}
+
+.distribution-invoice-page .formAcceptance .formAcceptanceItem.is-date-range .fromTo,
+.distribution-invoice-page .formAcceptance .formAcceptanceItem.is-date-range .formAcceptanceDateSeparator {
+  width: auto;
+  padding: 0;
+}
+
+.distribution-invoice-page .formAcceptance .formAcceptanceItem.is-date-range input.form-control {
+  padding-inline: 10px;
+}
+
+.distribution-invoice-page .formAcceptance .select2-container .select2-selection--single,
+.distribution-invoice-page .formAcceptance .select2-container .select2-selection--multiple {
+  height: 29px !important;
+  min-height: 29px !important;
+  max-height: 29px !important;
+  border: 1px solid var(--bs-border-color);
+  border-radius: var(--bs-border-radius);
+  background: var(--bs-body-bg);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.16s ease;
+  box-sizing: border-box !important;
+}
+
+.distribution-invoice-page .formAcceptance .select2-container--default .select2-selection--single .select2-selection__rendered {
+  line-height: 27px !important;
+  color: var(--bs-body-color);
+  font-size: 13px;
+  padding-left: 10px !important;
+  padding-right: 30px !important;
+}
+
+.distribution-invoice-page .formAcceptance .select2-container--default .select2-selection--single .select2-selection__arrow {
+  height: 27px !important;
+}
+
+.distribution-invoice-page .formAcceptance .select2-container--open .select2-selection--single,
+.distribution-invoice-page .formAcceptance .select2-container--open .select2-selection--multiple {
+  border-color: rgba(var(--bs-primary-rgb), 0.6);
+  box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.16);
+  transform: translateY(-1px);
+}
+
+body .formAcceptanceDropdown {
+  overflow: hidden;
+  border: 1px solid rgba(var(--bs-primary-rgb), 0.16);
+  border-radius: 0.75rem;
+  background: #fff;
+  box-shadow: 0 0.375rem 1.25rem rgba(34, 48, 62, 0.14);
+  animation: formAcceptanceDropdownIn 0.16s ease;
+}
+
+body .formAcceptanceDropdown .select2-search--dropdown {
+  padding: 0.625rem;
+}
+
+body .formAcceptanceDropdown .select2-search--dropdown .select2-search__field {
+  min-height: 2.375rem;
+  border: 1px solid var(--bs-border-color);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+}
+
+body .formAcceptanceDropdown .select2-results__options {
+  padding: 0.375rem;
+}
+
+body .formAcceptanceDropdown .select2-results__option {
+  border-radius: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  color: var(--bs-body-color);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+body .formAcceptanceDropdown .select2-results__option--highlighted[aria-selected="false"],
+body .formAcceptanceDropdown .select2-results__option--highlighted {
+  background: rgba(var(--bs-primary-rgb), 0.12);
+  color: var(--bs-primary);
+}
+
+body .formAcceptanceDropdown .select2-results__option[aria-selected="true"] {
+  background: rgba(var(--bs-primary-rgb), 0.08);
+  color: var(--bs-heading-color);
+  font-weight: 600;
+}
+
+.distribution-invoice-page .formAcceptance .formAcceptanceActions .searchBtn.btn.btn-primary {
+  width: 75px;
+  min-width: 0;
+  max-width: none;
+  margin: 0;
+  height: 29px !important;
+  min-height: 29px !important;
+  max-height: 29px !important;
+  padding: 3px 16px !important;
+  border: 1px solid var(--bs-primary);
+  border-radius: var(--bs-border-radius);
+  background: var(--bs-primary);
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 21px !important;
+  box-shadow: none;
+  box-sizing: border-box !important;
+}
+
+.distribution-invoice-page .formAcceptance .formAcceptanceActions .searchBtn.btn.btn-primary:before {
+  display: none;
+}
+
+.distribution-invoice-page .formAcceptance .formAcceptanceActions .searchBtn.btn.btn-primary:hover,
+.distribution-invoice-page .formAcceptance .formAcceptanceActions .searchBtn.btn.btn-primary:focus {
+  border-color: var(--bs-primary);
+  background: var(--bs-primary);
+  color: #fff;
+}
+
+@media (max-width: 991.98px) {
+  .distribution-invoice-page {
+    height: auto;
+    min-height: 0;
+  }
+
+  .distribution-invoice-page .formAcceptance .formAcceptanceFields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .distribution-invoice-page .distribution-content-row.has-side-tree {
+    flex-direction: column;
+  }
+
+  .distribution-invoice-page .distribution-tree-card {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .distribution-invoice-page .distribution-tree-card .card-body {
+    min-height: 280px;
+  }
+
+  .distribution-invoice-page .distribution-content-row {
+    flex: initial;
+  }
+}
+
+@keyframes formAcceptanceDropdownIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.distribution-invoice-page .gridArea {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  height: 100%;
+  min-height: 0;
+  padding-top: 0;
+}
+
+.distribution-invoice-page .gridContainer {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  background: transparent;
+  height: 100%;
+  min-height: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.distribution-invoice-page .distribution-grid-card .card-datatable.table-responsive {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+}
+
+.distribution-invoice-page .ui-jqgrid .ui-jqgrid-htable th div {
+  font-size: 15px;
+}
+
+.distribution-invoice-page .ui-jqgrid .ui-jqgrid-btable td {
+  font-size: 13px;
+}
+
+.distribution-invoice-page .gridArea .gridContainer .ui-jqgrid {
+  width: auto !important;
+  min-width: 100%;
+  height: 100% !important;
+  min-height: 0;
+  border: 0;
+}
+
+.distribution-invoice-page .gridContainer > .ui-jqgrid,
+.distribution-invoice-page [id^="gbox_"] {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  height: 100% !important;
+  border: 0;
+  border-radius: 0.5rem;
+  overflow: visible;
+}
+
+.distribution-invoice-page [id^="gview_"] {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  border: 0;
+  background: #fff;
+  min-height: 0;
+  min-width: 100%;
+}
+
+.distribution-invoice-page [id^="gview_"] .ui-jqgrid-hdiv {
+  border-bottom: 1px solid var(--bs-border-color);
+  overflow-x: hidden;
+}
+
+.distribution-invoice-page [id^="gview_"] .ui-jqgrid-htable,
+.distribution-invoice-page [id^="gview_"] .ui-jqgrid-btable {
+  table-layout: fixed;
+}
+
+.distribution-invoice-page div[id^="gview_"] .ui-jqgrid-htable th.ui-th-column div:not(.clearfix),
+.distribution-invoice-page div[id^="gview_"] .ui-jqgrid-htable th.ui-th-column-header div:not(.clearfix),
+.distribution-invoice-page [id^="gview_"] .ui-jqgrid-btable td {
+  white-space: nowrap !important;
+}
+
+.distribution-invoice-page div[id^="gview_"] .ui-jqgrid-htable th[id$="_cb"] {
+  height: auto;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  overflow: visible;
+}
+
+.distribution-invoice-page div[id^="gview_"] .ui-jqgrid-htable th[id$="_cb"] div,
+.distribution-invoice-page div[id^="gview_"] .ui-jqgrid-htable th[id$="_cb"] .prettycheckbox,
+.distribution-invoice-page div[id^="gview_"] .ui-jqgrid-htable th[id$="_cb"] .prettycheckbox > a {
+  overflow: visible;
+}
+
+.distribution-invoice-page .ui-jqgrid .ui-jqgrid-view {
+  width: auto !important;
+  min-width: 100%;
+  height: auto !important;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.distribution-invoice-page .ui-jqgrid .ui-jqgrid-bdiv {
+  flex: 1 1 auto;
+  height: auto !important;
+  min-height: 0;
+  max-height: none;
+  overflow-x: hidden;
+  overflow-y: auto;
+  position: relative;
+}
+
+.distribution-invoice-page .ui-jqgrid .ui-jqgrid-pager {
+  width: auto !important;
+  min-width: 100% !important;
+  margin-top: auto;
+  border-top: 1px solid var(--bs-border-color);
+}
+
+.distribution-invoice-page .ui-jqgrid-bdiv .noData {
+  left: 0;
+  right: 0;
+}
+
+/* viewPrintHistory header text clipping fix (only this grid) */
+.distribution-invoice-page #gview_gridViewPrintHistoryList .ui-jqgrid-hdiv {
+  overflow: visible !important;
+}
+
+.distribution-invoice-page #gview_gridViewPrintHistoryList .ui-jqgrid-htable th,
+.distribution-invoice-page #gview_gridViewPrintHistoryList .ui-jqgrid-htable th.ui-th-column,
+.distribution-invoice-page #gview_gridViewPrintHistoryList .ui-jqgrid-htable th.ui-th-column-header {
+  height: auto !important;
+  min-height: 40px !important;
+  padding: 8px 4px !important;
+  vertical-align: middle !important;
+}
+
+.distribution-invoice-page #gview_gridViewPrintHistoryList .ui-jqgrid-htable th > div,
+.distribution-invoice-page #gview_gridViewPrintHistoryList .ui-jqgrid-htable th > div.ui-jqgrid-sortable,
+.distribution-invoice-page #gview_gridViewPrintHistoryList .ui-jqgrid-htable th div:not(.clearfix) {
+  height: auto !important;
+  min-height: 20px !important;
+  line-height: 1.35 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: visible !important;
+  white-space: nowrap !important;
+}
+
+/* auditlog header text clipping fix (only this grid) */
+.distribution-invoice-page #gview_gridInsideAuditLogList .ui-jqgrid-hdiv {
+  overflow: visible !important;
+}
+
+.distribution-invoice-page #gview_gridInsideAuditLogList .ui-jqgrid-htable th,
+.distribution-invoice-page #gview_gridInsideAuditLogList .ui-jqgrid-htable th.ui-th-column,
+.distribution-invoice-page #gview_gridInsideAuditLogList .ui-jqgrid-htable th.ui-th-column-header {
+  height: auto !important;
+  min-height: 40px !important;
+  padding: 8px 4px !important;
+  vertical-align: middle !important;
+}
+
+.distribution-invoice-page #gview_gridInsideAuditLogList .ui-jqgrid-htable th > div,
+.distribution-invoice-page #gview_gridInsideAuditLogList .ui-jqgrid-htable th > div.ui-jqgrid-sortable,
+.distribution-invoice-page #gview_gridInsideAuditLogList .ui-jqgrid-htable th div:not(.clearfix) {
+  height: auto !important;
+  min-height: 20px !important;
+  line-height: 1.35 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: visible !important;
+  white-space: nowrap !important;
+}
+
+/* drawing/doc header text clipping fix (deploy font-rendering safe) */
+.distribution-invoice-page #gview_gridDrawingRequestList .ui-jqgrid-hdiv,
+.distribution-invoice-page #gview_gridDocRequestList .ui-jqgrid-hdiv,
+.distribution-invoice-page #gview_gridSwRequestList .ui-jqgrid-hdiv,
+.distribution-invoice-page #gview_gridDistributionProductionRequestList .ui-jqgrid-hdiv,
+.distribution-invoice-page #gview_gridDxfRequestList .ui-jqgrid-hdiv,
+.distribution-invoice-page #gview_gridPeerReviewRequestList .ui-jqgrid-hdiv {
+  overflow: visible !important;
+}
+
+.distribution-invoice-page #gview_gridDrawingRequestList .ui-jqgrid-htable th,
+.distribution-invoice-page #gview_gridDrawingRequestList .ui-jqgrid-htable th.ui-th-column,
+.distribution-invoice-page #gview_gridDrawingRequestList .ui-jqgrid-htable th.ui-th-column-header,
+.distribution-invoice-page #gview_gridDocRequestList .ui-jqgrid-htable th,
+.distribution-invoice-page #gview_gridDocRequestList .ui-jqgrid-htable th.ui-th-column,
+.distribution-invoice-page #gview_gridDocRequestList .ui-jqgrid-htable th.ui-th-column-header,
+.distribution-invoice-page #gview_gridSwRequestList .ui-jqgrid-htable th,
+.distribution-invoice-page #gview_gridSwRequestList .ui-jqgrid-htable th.ui-th-column,
+.distribution-invoice-page #gview_gridSwRequestList .ui-jqgrid-htable th.ui-th-column-header,
+.distribution-invoice-page #gview_gridDistributionProductionRequestList .ui-jqgrid-htable th,
+.distribution-invoice-page #gview_gridDistributionProductionRequestList .ui-jqgrid-htable th.ui-th-column,
+.distribution-invoice-page #gview_gridDistributionProductionRequestList .ui-jqgrid-htable th.ui-th-column-header,
+.distribution-invoice-page #gview_gridDxfRequestList .ui-jqgrid-htable th,
+.distribution-invoice-page #gview_gridDxfRequestList .ui-jqgrid-htable th.ui-th-column,
+.distribution-invoice-page #gview_gridDxfRequestList .ui-jqgrid-htable th.ui-th-column-header,
+.distribution-invoice-page #gview_gridPeerReviewRequestList .ui-jqgrid-htable th,
+.distribution-invoice-page #gview_gridPeerReviewRequestList .ui-jqgrid-htable th.ui-th-column,
+.distribution-invoice-page #gview_gridPeerReviewRequestList .ui-jqgrid-htable th.ui-th-column-header {
+  height: auto !important;
+  min-height: 40px !important;
+  padding: 8px 4px !important;
+  vertical-align: middle !important;
+}
+
+.distribution-invoice-page #gview_gridDrawingRequestList .ui-jqgrid-htable th > div,
+.distribution-invoice-page #gview_gridDrawingRequestList .ui-jqgrid-htable th > div.ui-jqgrid-sortable,
+.distribution-invoice-page #gview_gridDrawingRequestList .ui-jqgrid-htable th div:not(.clearfix),
+.distribution-invoice-page #gview_gridDocRequestList .ui-jqgrid-htable th > div,
+.distribution-invoice-page #gview_gridDocRequestList .ui-jqgrid-htable th > div.ui-jqgrid-sortable,
+.distribution-invoice-page #gview_gridDocRequestList .ui-jqgrid-htable th div:not(.clearfix),
+.distribution-invoice-page #gview_gridSwRequestList .ui-jqgrid-htable th > div,
+.distribution-invoice-page #gview_gridSwRequestList .ui-jqgrid-htable th > div.ui-jqgrid-sortable,
+.distribution-invoice-page #gview_gridSwRequestList .ui-jqgrid-htable th div:not(.clearfix),
+.distribution-invoice-page #gview_gridDistributionProductionRequestList .ui-jqgrid-htable th > div,
+.distribution-invoice-page #gview_gridDistributionProductionRequestList .ui-jqgrid-htable th > div.ui-jqgrid-sortable,
+.distribution-invoice-page #gview_gridDistributionProductionRequestList .ui-jqgrid-htable th div:not(.clearfix),
+.distribution-invoice-page #gview_gridDxfRequestList .ui-jqgrid-htable th > div,
+.distribution-invoice-page #gview_gridDxfRequestList .ui-jqgrid-htable th > div.ui-jqgrid-sortable,
+.distribution-invoice-page #gview_gridDxfRequestList .ui-jqgrid-htable th div:not(.clearfix),
+.distribution-invoice-page #gview_gridPeerReviewRequestList .ui-jqgrid-htable th > div,
+.distribution-invoice-page #gview_gridPeerReviewRequestList .ui-jqgrid-htable th > div.ui-jqgrid-sortable,
+.distribution-invoice-page #gview_gridPeerReviewRequestList .ui-jqgrid-htable th div:not(.clearfix) {
+  height: auto !important;
+  min-height: 20px !important;
+  line-height: 1.35 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: visible !important;
+  white-space: nowrap !important;
+}
+
+.distribution-invoice-page #gbox_gridSwRequestList {
+  position: relative;
+}
+
+.distribution-invoice-page #gbox_gridSwRequestList.is-sw-refreshing {
+  overflow: hidden;
+}
+
+.distribution-invoice-page #gbox_gridSwRequestList.is-sw-refreshing .ui-jqgrid-bdiv {
+  opacity: 0.72;
+  transition: opacity 0.08s ease;
+}
+
+body.sw-request-silent-refresh .ui-widget-overlay.pageLoader {
+  display: none !important;
+}

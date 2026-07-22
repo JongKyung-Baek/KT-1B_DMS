@@ -1,0 +1,520 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+
+<!--<mapper namespace="sql.docPdfLinkRequest">-->
+
+<!--	<select id="selectConfig" resultType="HashMap">-->
+<!--		SELECT SYSTEM_CONFIG_CD, SYSTEM_CONFIG_VALUE FROM DOCS_SYSTEM_CONFIG WHERE SYSTEM_CONFIG_GROUP = 'DB_ADAP_CONFIG'-->
+<!--	</select>-->
+
+
+<!--	<select id="selectFilePathNmDrawing" resultType="String">-->
+<!--		SELECT FILE_PATH_NM FROM DOCS_DRAWING-->
+<!--		WHERE OBJECT_ID = #{OBJECT_ID}-->
+<!--	</select>-->
+
+
+<!--	<select id="selectFilePathNmVideo" resultType="String">-->
+<!--		SELECT FILE_PATH_NM FROM DOCS_VIDEO-->
+<!--		WHERE OBJECT_ID = #{OBJECT_ID}-->
+<!--	</select>-->
+
+
+<!--	<select id="selectFilePathNmDoc" resultType="String">-->
+<!--		SELECT FILE_PATH_NM FROM DOCS_DOCUMENT_FILE-->
+<!--		WHERE OBJECT_ID = #{OBJECT_ID}-->
+<!--	</select>-->
+
+<!--	<select id="selectTotalPageNoDrawing" resultType="String">-->
+<!--		SELECT TOTAL_PAGE_NO FROM DOCS_DRAWING-->
+<!--		WHERE OBJECT_ID = #{OBJECT_ID}-->
+<!--	</select>-->
+
+
+<!--	<select id="selectTotalPageNoDoc" resultType="String">-->
+<!--		SELECT FILE_NO FROM DOCS_DOCUMENT_FILE-->
+<!--		WHERE OBJECT_ID = #{OBJECT_ID}-->
+<!--	</select>-->
+
+<!--	<select id="selectSwFile" resultType="String">-->
+<!--		SELECT FILE_PATH_NM FROM DOCS_SW_FILE-->
+<!--		WHERE OBJECT_ID = #{OBJECT_ID}-->
+<!--	</select>-->
+
+<!--	<select id="selectProduction" resultType="String">-->
+<!--		SELECT FILE_PATH_NM FROM DOCS_PRODUCT_DOCUMENT_FILE-->
+<!--		WHERE OBJECT_ID = #{OBJECT_ID}-->
+<!--	</select>-->
+
+
+<!--	<select id="selectGuid" resultType="String">-->
+<!--		SELECT SYS_GUID() AS OBJECT_ID FROM DUAL-->
+<!--	</select>-->
+
+<!--&lt;!&ndash;	2023.06.29 (yskim) about unregistry data distribution&ndash;&gt;-->
+<!--	<select id="selectFilePathNmUnreg" resultType="String">-->
+<!--		SELECT FILE_PATH FROM DOCS_FILE-->
+<!--		WHERE FILE_CD = #{FILE_CD}-->
+<!--		AND FILE_NO = #{FILE_NO}-->
+<!--	</select>-->
+
+<!--&lt;!&ndash;	2023.09.22 기범. DOCS_VIEWER_KEY 테이블에 인서트&ndash;&gt;-->
+<!--	<insert id="insertKey">-->
+<!--		INSERT INTO DOCS_VIEWER_KEY-->
+<!--		(DISPOSABLE_KEY-->
+<!--		 ,OBJECT_ID-->
+<!--		 ,DELETE_AT)-->
+
+<!--		VALUES-->
+<!--			(#{disposableKey}-->
+<!--			 ,#{objectId}-->
+<!--			 ,#{now} + INTERVAL '6'HOUR )-->
+
+<!--	</insert>-->
+
+
+<!--&lt;!&ndash;	2023.09.22 기범. DOCS_VIEWER_LOG 테이블에 인서트&ndash;&gt;-->
+<!--	<insert id="insertViewerData">-->
+<!--		INSERT INTO DOCS_VIEWER_LOG-->
+<!--		(OBJECT_ID-->
+<!--		,USER_NM-->
+<!--		,VIEW_DATE)-->
+
+<!--		VALUES-->
+<!--		(#{objectId}-->
+<!--		,#{userNm}-->
+<!--		,#{date})-->
+
+<!--	</insert>-->
+
+<!--	<delete id="deleteKey">-->
+<!--		DELETE FROM DOCS_VIEWER_KEY WHERE DELETE_AT &lt; #{now}-->
+<!--	</delete>-->
+
+
+
+<!--</mapper>-->
+
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+
+
+<mapper namespace="sql.docPdfLinkRequest">
+
+<select id="selectConfig" resultType="HashMap">
+	SELECT SYSTEM_CONFIG_CD, SYSTEM_CONFIG_VALUE FROM DOCS_SYSTEM_CONFIG WHERE SYSTEM_CONFIG_GROUP = 'DB_ADAP_CONFIG'
+</select>
+
+<select id="selectFilePathNmDrawing" resultType="String">
+	SELECT t.FILE_PATH_NM
+	FROM (
+		SELECT FILE_PATH_NM, 1 AS ORD
+		FROM DOCS_DRAWING
+		WHERE OBJECT_ID = #{OBJECT_ID}
+		UNION ALL
+		SELECT FILE_PATH_NM, 2 AS ORD
+		FROM DOCS_DRAWING_SUB_FILE
+		WHERE OBJECT_ID = #{OBJECT_ID}
+	) t
+	ORDER BY t.ORD
+	LIMIT 1
+</select>
+
+<select id="selectFilePathNmVideo" resultType="String">
+	SELECT FILE_PATH_NM FROM DOCS_VIDEO
+	WHERE OBJECT_ID = #{OBJECT_ID}
+</select>
+
+<select id="selectFilePathNmDoc" resultType="String">
+	SELECT t.FILE_PATH_NM
+	FROM (
+		SELECT FILE_PATH_NM, 1 AS ORD
+		FROM DOCS_DOCUMENT_FILE
+		WHERE OBJECT_ID = #{OBJECT_ID}
+		UNION ALL
+		SELECT FILE_PATH_NM, 2 AS ORD
+		FROM DOCS_DOCUMENT_SUB_FILE
+		WHERE OBJECT_ID = #{OBJECT_ID}
+	) t
+	ORDER BY t.ORD
+	LIMIT 1
+</select>
+
+<select id="selectTotalPageNoDrawing" resultType="String">
+	SELECT TOTAL_PAGE_NO FROM DOCS_DRAWING
+	WHERE OBJECT_ID = #{OBJECT_ID}
+</select>
+
+	<select id="selectInsertDt" resultType="String">
+		<choose>
+			<when test="table == 'docs_document'">
+				SELECT TO_CHAR(insert_dt, 'YYYY-MM-DD HH24:MI:SS') AS insertDtStr
+				FROM docs_document
+				WHERE OBJECT_ID = #{object_id}
+			</when>
+			<when test="table == 'docs_drawing'">
+				SELECT TO_CHAR(insert_dt, 'YYYY-MM-DD HH24:MI:SS') AS insertDtStr
+				FROM docs_drawing
+				WHERE OBJECT_ID = #{object_id}
+			</when>
+			<when test="table == 'docs_product_document'">
+				SELECT TO_CHAR(insert_dt, 'YYYY-MM-DD HH24:MI:SS') AS insertDtStr
+				FROM docs_product_document
+				WHERE OBJECT_ID = #{object_id}
+			</when>
+			<when test="table == 'docs_dxf_document'">
+				SELECT TO_CHAR(insert_dt, 'YYYY-MM-DD HH24:MI:SS') AS insertDtStr
+				FROM docs_dxf_document
+				WHERE OBJECT_ID = #{object_id}
+			</when>
+			<when test="table == 'docs_peerreview'">
+				SELECT TO_CHAR(insert_dt, 'YYYY-MM-DD HH24:MI:SS') AS insertDtStr
+				FROM docs_peerreview
+				WHERE OBJECT_ID = #{object_id}
+			</when>
+		</choose>
+	</select>
+
+<select id="selectTotalPageNoDoc" resultType="String">
+	SELECT FILE_NO FROM DOCS_DOCUMENT_FILE
+	WHERE OBJECT_ID = #{OBJECT_ID}
+</select>
+
+<select id="selectSwFile" resultType="String">
+	SELECT t.FILE_PATH_NM
+	FROM (
+		SELECT f.FILE_PATH_NM, 1 AS ORD
+		FROM DOCS_SW_FILE f
+		WHERE f.OBJECT_ID = #{OBJECT_ID}
+		UNION ALL
+		SELECT s.FILE_PATH_NM, 2 AS ORD
+		FROM DOCS_SW_SUB_FILE s
+		WHERE s.OBJECT_ID = #{OBJECT_ID}
+	) t
+	ORDER BY t.ORD
+	LIMIT 1
+</select>
+
+<select id="selectProduction" resultType="String">
+	SELECT t.FILE_PATH_NM
+	FROM (
+		SELECT f.FILE_PATH_NM, 1 AS ORD
+		FROM DOCS_PRODUCT_DOCUMENT_FILE f
+		WHERE f.OBJECT_ID = #{OBJECT_ID}
+		UNION ALL
+		SELECT s.FILE_PATH_NM, 2 AS ORD
+		FROM DOCS_PRODUCTION_SUB_FILE s
+		WHERE s.OBJECT_ID = #{OBJECT_ID}
+	) t
+	ORDER BY t.ORD
+	LIMIT 1
+</select>
+
+	<select id="selectDxf" resultType="String">
+		SELECT t.FILE_PATH_NM
+		FROM (
+			SELECT f.FILE_PATH_NM, 1 AS ORD
+			FROM DOCS_DXF_DOCUMENT_FILE f
+			WHERE f.OBJECT_ID = #{OBJECT_ID}
+			UNION ALL
+			SELECT s.FILE_PATH_NM, 2 AS ORD
+			FROM DOCS_DXF_SUB_FILE s
+			WHERE s.OBJECT_ID = #{OBJECT_ID}
+		) t
+		ORDER BY t.ORD
+		LIMIT 1
+	</select>
+
+	<select id="selectPeerReview" resultType="String">
+		SELECT FILE_PATH_NM
+		FROM DOCS_PEERREVIEW
+		WHERE OBJECT_ID = #{OBJECT_ID}
+	</select>
+
+	<select id="selectPeerReviewAuthorityInfo" resultType="hashmap">
+		SELECT
+			COALESCE(INSERT_USER_NM, '') AS INSERT_USER_NM,
+			COALESCE(APPROVER, '') AS APPROVER
+		FROM DOCS_PEERREVIEW
+		WHERE OBJECT_ID = #{OBJECT_ID}
+		LIMIT 1
+	</select>
+
+<!-- Postgres에는 SYS_GUID() 함수가 없으므로 uuid_generate_v4() 함수를 사용합니다 -->
+<select id="selectGuid" resultType="String">
+	SELECT uuid_generate_v4() AS OBJECT_ID
+</select>
+
+<!-- 2023.06.29 (yskim) about unregistry data distribution -->
+<select id="selectFilePathNmUnreg" resultType="String">
+	SELECT FILE_PATH_NM FROM DOCS_DXF_DOCUMENT_FILE
+	WHERE OBJECT_ID = #{FILE_CD}
+</select>
+
+<select id="selectDrawingNoDrawing" resultType="String">
+	SELECT t.DRAWING_NO
+	FROM (
+		SELECT d.DRAWING_NO, 1 AS ORD
+		FROM DOCS_DRAWING d
+		WHERE d.OBJECT_ID = #{OBJECT_ID}
+		UNION ALL
+		SELECT p.DRAWING_NO, 2 AS ORD
+		FROM DOCS_DRAWING_SUB_FILE s
+		JOIN DOCS_DRAWING p ON p.OBJECT_ID = s.PARENT_OBJECT_ID
+		WHERE s.OBJECT_ID = #{OBJECT_ID}
+	) t
+	ORDER BY t.ORD
+	LIMIT 1
+</select>
+
+<select id="selectDocumentNoDoc" resultType="String">
+	SELECT t.DOCUMENT_NO
+	FROM (
+		SELECT d.DOCUMENT_NO, 1 AS ORD
+		FROM DOCS_DOCUMENT d
+		WHERE d.OBJECT_ID = #{OBJECT_ID}
+		UNION ALL
+		SELECT p.DOCUMENT_NO, 2 AS ORD
+		FROM DOCS_DOCUMENT_SUB_FILE s
+		JOIN DOCS_DOCUMENT p ON p.OBJECT_ID = s.PARENT_OBJECT_ID
+		WHERE s.OBJECT_ID = #{OBJECT_ID}
+	) t
+	ORDER BY t.ORD
+	LIMIT 1
+</select>
+
+<select id="selectDrawingNoCP" resultType="String">
+	SELECT t.DRAWING_NO
+	FROM (
+		SELECT d.DRAWING_NO, 1 AS ORD
+		FROM DOCS_PRODUCT_DOCUMENT d
+		WHERE d.OBJECT_ID = #{OBJECT_ID}
+		UNION ALL
+		SELECT p.DRAWING_NO, 2 AS ORD
+		FROM DOCS_PRODUCTION_SUB_FILE s
+		JOIN DOCS_PRODUCT_DOCUMENT p ON p.OBJECT_ID = s.PARENT_OBJECT_ID
+		WHERE s.OBJECT_ID = #{OBJECT_ID}
+	) t
+	ORDER BY t.ORD
+	LIMIT 1
+</select>
+
+<select id="selectDrawingNoDXF" resultType="String">
+	SELECT t.DRAWING_NO
+	FROM (
+		SELECT d.DRAWING_NO, 1 AS ORD
+		FROM DOCS_DXF_DOCUMENT d
+		WHERE d.OBJECT_ID = #{OBJECT_ID}
+		UNION ALL
+		SELECT p.DRAWING_NO, 2 AS ORD
+		FROM DOCS_DXF_SUB_FILE s
+		JOIN DOCS_DXF_DOCUMENT p ON p.OBJECT_ID = s.PARENT_OBJECT_ID
+		WHERE s.OBJECT_ID = #{OBJECT_ID}
+	) t
+	ORDER BY t.ORD
+	LIMIT 1
+</select>
+
+<select id="selectRevisionDrawing" resultType="String">
+	SELECT t.REV_NO
+	FROM (
+		SELECT d.REV_NO, 1 AS ORD
+		FROM DOCS_DRAWING d
+		WHERE d.OBJECT_ID = #{OBJECT_ID}
+		UNION ALL
+		SELECT p.REV_NO, 2 AS ORD
+		FROM DOCS_DRAWING_SUB_FILE s
+		JOIN DOCS_DRAWING p ON p.OBJECT_ID = s.PARENT_OBJECT_ID
+		WHERE s.OBJECT_ID = #{OBJECT_ID}
+	) t
+	ORDER BY t.ORD
+	LIMIT 1
+</select>
+
+<select id="selectRevisionCP" resultType="String">
+	SELECT t.REV_NO
+	FROM (
+		SELECT d.REV_NO, 1 AS ORD
+		FROM DOCS_PRODUCT_DOCUMENT d
+		WHERE d.OBJECT_ID = #{OBJECT_ID}
+		UNION ALL
+		SELECT p.REV_NO, 2 AS ORD
+		FROM DOCS_PRODUCTION_SUB_FILE s
+		JOIN DOCS_PRODUCT_DOCUMENT p ON p.OBJECT_ID = s.PARENT_OBJECT_ID
+		WHERE s.OBJECT_ID = #{OBJECT_ID}
+	) t
+	ORDER BY t.ORD
+	LIMIT 1
+</select>
+
+<select id="selectRevisionDXF" resultType="String">
+	SELECT t.REV_NO
+	FROM (
+		SELECT d.REV_NO, 1 AS ORD
+		FROM DOCS_DXF_DOCUMENT d
+		WHERE d.OBJECT_ID = #{OBJECT_ID}
+		UNION ALL
+		SELECT p.REV_NO, 2 AS ORD
+		FROM DOCS_DXF_SUB_FILE s
+		JOIN DOCS_DXF_DOCUMENT p ON p.OBJECT_ID = s.PARENT_OBJECT_ID
+		WHERE s.OBJECT_ID = #{OBJECT_ID}
+	) t
+	ORDER BY t.ORD
+	LIMIT 1
+</select>
+
+<select id="selectFileNmDoc" resultType="String">
+	SELECT t.ORG_FILE_NM
+	FROM (
+		SELECT f.ORG_FILE_NM, 1 AS ORD
+		FROM DOCS_DOCUMENT_FILE f
+		WHERE f.OBJECT_ID = #{OBJECT_ID}
+		UNION ALL
+		SELECT s.ORG_FILE_NM, 2 AS ORD
+		FROM DOCS_DOCUMENT_SUB_FILE s
+		WHERE s.OBJECT_ID = #{OBJECT_ID}
+	) t
+	ORDER BY t.ORD
+	LIMIT 1
+</select>
+
+<select id="selectFileNmDrawing" resultType="String">
+	SELECT t.ORG_FILE_NM
+	FROM (
+		SELECT d.ORG_FILE_NM, 1 AS ORD
+		FROM DOCS_DRAWING d
+		WHERE d.OBJECT_ID = #{OBJECT_ID}
+		UNION ALL
+		SELECT s.ORG_FILE_NM, 2 AS ORD
+		FROM DOCS_DRAWING_SUB_FILE s
+		WHERE s.OBJECT_ID = #{OBJECT_ID}
+	) t
+	ORDER BY t.ORD
+	LIMIT 1
+</select>
+
+<select id="selectFileNmCP" resultType="String">
+	SELECT t.ORG_FILE_NM
+	FROM (
+		SELECT f.ORG_FILE_NM, 1 AS ORD
+		FROM DOCS_PRODUCT_DOCUMENT_FILE f
+		WHERE f.OBJECT_ID = #{OBJECT_ID}
+		UNION ALL
+		SELECT s.ORG_FILE_NM, 2 AS ORD
+		FROM DOCS_PRODUCTION_SUB_FILE s
+		WHERE s.OBJECT_ID = #{OBJECT_ID}
+	) t
+	ORDER BY t.ORD
+	LIMIT 1
+</select>
+
+<select id="selectFileNmDXF" resultType="String">
+	SELECT t.ORG_FILE_NM
+	FROM (
+		SELECT f.ORG_FILE_NM, 1 AS ORD
+		FROM DOCS_DXF_DOCUMENT_FILE f
+		WHERE f.OBJECT_ID = #{OBJECT_ID}
+		UNION ALL
+		SELECT s.ORG_FILE_NM, 2 AS ORD
+		FROM DOCS_DXF_SUB_FILE s
+		WHERE s.OBJECT_ID = #{OBJECT_ID}
+	) t
+	ORDER BY t.ORD
+	LIMIT 1
+</select>
+
+<select id="selectSwNo" resultType="String">
+	SELECT t.SW_NO
+	FROM (
+		SELECT d.SW_NO, 1 AS ORD
+		FROM DOCS_SW d
+		WHERE d.OBJECT_ID = #{OBJECT_ID}
+		UNION ALL
+		SELECT p.SW_NO, 2 AS ORD
+		FROM DOCS_SW_SUB_FILE s
+		JOIN DOCS_SW p ON p.OBJECT_ID = s.PARENT_OBJECT_ID
+		WHERE s.OBJECT_ID = #{OBJECT_ID}
+	) t
+	ORDER BY t.ORD
+	LIMIT 1
+</select>
+
+<select id="selectRevisionSW" resultType="String">
+	SELECT t.REV_NO
+	FROM (
+		SELECT d.REV_NO, 1 AS ORD
+		FROM DOCS_SW d
+		WHERE d.OBJECT_ID = #{OBJECT_ID}
+		UNION ALL
+		SELECT p.REV_NO, 2 AS ORD
+		FROM DOCS_SW_SUB_FILE s
+		JOIN DOCS_SW p ON p.OBJECT_ID = s.PARENT_OBJECT_ID
+		WHERE s.OBJECT_ID = #{OBJECT_ID}
+	) t
+	ORDER BY t.ORD
+	LIMIT 1
+</select>
+
+	<select id="selectFileNmSW" resultType="String">
+		SELECT t.ORG_FILE_NM
+		FROM (
+			SELECT f.ORG_FILE_NM, 1 AS ORD
+			FROM DOCS_SW_FILE f
+			WHERE f.OBJECT_ID = #{OBJECT_ID}
+			UNION ALL
+			SELECT s.ORG_FILE_NM, 2 AS ORD
+			FROM DOCS_SW_SUB_FILE s
+			WHERE s.OBJECT_ID = #{OBJECT_ID}
+		) t
+		ORDER BY t.ORD
+		LIMIT 1
+	</select>
+
+	<select id="selectPeerReviewNo" resultType="String">
+		SELECT PEERREVIEW_NO
+		FROM DOCS_PEERREVIEW
+		WHERE OBJECT_ID = #{OBJECT_ID}
+	</select>
+
+	<select id="selectFileNmPeerReview" resultType="String">
+		SELECT ORG_FILE_NM
+		FROM DOCS_PEERREVIEW
+		WHERE OBJECT_ID = #{OBJECT_ID}
+	</select>
+
+<!-- 2023.09.22 기범. DOCS_VIEWER_KEY 테이블에 인서트 -->
+<insert id="insertKey">
+	INSERT INTO DOCS_VIEWER_KEY
+		(DISPOSABLE_KEY, OBJECT_ID, DELETE_AT)
+	VALUES
+		(#{disposableKey}, #{objectId}, current_timestamp + INTERVAL '6 HOURS')
+</insert>
+
+<!-- 2023.09.22 기범. DOCS_VIEWER_LOG 테이블에 인서트 -->
+<insert id="insertViewerData">
+	INSERT INTO DOCS_VIEWER_LOG
+		(OBJECT_ID, USER_NM, VIEW_DATE)
+	VALUES
+		(#{objectId}, #{userNm}, #{date})
+</insert>
+
+<insert id="insertViewPrintHistory">
+	INSERT INTO DOCS_HISTORY
+		(DISTRIBUTION_TYPE, DRAWING_NO, OBJECT_ID, ORG_FILE_NM, REVISION, USER_ID, INSERT_DATE, USER_NM, LOG_TYPE)
+	VALUES
+		(#{distributionType}, #{drawingNo}, #{objectId}, #{orgFileNm}, #{revision}, #{userId}, #{insertDate}, #{userNm}, #{logType})
+</insert>
+
+<delete id="deleteKey">
+	DELETE FROM DOCS_VIEWER_KEY WHERE DELETE_AT <![CDATA[ < ]]> #{now}
+</delete>
+
+</mapper>

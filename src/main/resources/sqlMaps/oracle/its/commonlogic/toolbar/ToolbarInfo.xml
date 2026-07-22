@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="sql.ToolbarInfo">
+
+<select id="selectList" resultType="kr.esob.fdms.commonlogic.toolbar.ToolbarInfoVO">
+    SELECT
+        TOOLBAR.TOOLBAR_ID as toolbarId,
+        TOOLBAR.BUTTON_ID as buttonId,
+        TOOLBAR.BUTTON_SEQ as buttonSort,
+        COALESCE(TOOLBAR.BUTTON_ALIGN, 'left') as buttonAlign,
+        COALESCE(LANG.LANG_DESC, TOOLBAR.BUTTON_LABEL) AS buttonLabel,
+        TOOLBAR.BUTTON_IMG as buttonImg,
+        TOOLBAR.CALL_FUNC as callFunc,
+        COALESCE(TOOLBAR.BUTTON_TYPE, '') AS buttonType,
+        COALESCE(TOOLBAR.SYSTEM_CLASS_GROUP, '') AS systemClassGroup
+    FROM DOCS_TOOLBAR_INFO TOOLBAR
+    LEFT JOIN DOCS_LANG LANG ON LANG.LANG_CD = TOOLBAR.LANG_CD AND LANG.LANG_TYPE = #{sessionLang}
+    WHERE TOOLBAR.TOOLBAR_ID = #{toolbarId}
+    AND TOOLBAR.USE_YN = 'Y'
+    AND (
+        TOOLBAR.ROLE_CD IS NULL
+        <if test="roleCdList != null and roleCdList.size() > 0">
+            OR TOOLBAR.ROLE_CD IN
+            <foreach collection="roleCdList" item="roleCd" open="(" separator="," close=")">
+                #{roleCd}
+            </foreach>
+        </if>
+    )
+    ORDER BY TOOLBAR.BUTTON_SEQ ASC
+</select>
+
+</mapper>
+

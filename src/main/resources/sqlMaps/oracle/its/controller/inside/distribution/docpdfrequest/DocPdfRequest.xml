@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<!--<mapper namespace="sql.docPdfRequest">-->
+
+<!--	<select id="selectList" resultType="kr.esob.fdms.controller.inside.distribution.docpdfrequest.DocPdfRequestVO">-->
+<!--		SELECT-->
+<!--			B1.*-->
+<!--		FROM-->
+<!--		(-->
+<!--			SELECT-->
+<!--				A1.*-->
+<!--				, ROWNUM AS PAGEINDEX-->
+<!--			FROM-->
+<!--			(						-->
+<!--					SELECT-->
+<!--					 fileInfo.SEQ_NO																		AS seqNo-->
+<!--					, fileInfo.OBJECT_ID																		AS objectId-->
+<!--					, fileInfo.FILE_NO																		AS fileNo-->
+<!--					, fileInfo.ORG_FILE_NM																	AS fileViewNm-->
+<!--					, fileInfo.FILE_NM																		AS fileNm-->
+<!--					, fileInfo.FILE_SIZE																	AS fileSize-->
+<!--					, fileInfo.CVRT_FILE_NM																	AS cvrtFileNm-->
+<!--					, fileInfo.ORG_FILE_NM																	AS orgFileNm-->
+<!--					, fileInfo.FILE_PATH_NM																	AS filePath-->
+<!--					, '변환'																AS btnConvert-->
+<!--					, '뷰어'																	AS btnViewer-->
+<!--					, '변환후뷰어'																	AS btnConvertViewer-->
+<!--					FROM DOCS_PDF_DOCUMENT_FILE 	fileinfo	-->
+<!--					ORDER BY fileInfo.SEQ_NO-->
+<!--				-->
+<!--			) A1-->
+<!--			WHERE 1=1-->
+<!--			<if test='end != null and !end.equals("")'>-->
+<!--			AND ROWNUM <![CDATA[ <= ]]> #{end}-->
+<!--			</if>-->
+<!--		) B1-->
+<!--		<if test='start != null and !start.equals("")'>-->
+<!--		WHERE PAGEINDEX <![CDATA[ >= ]]>#{start}-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	<select id="selectListCount" resultType="Integer">-->
+<!--		SELECT COUNT(*) AS TOTAL_COUNT-->
+<!--		FROM-->
+<!--			(-->
+<!--				SELECT-->
+<!--					A1.*-->
+<!--				FROM-->
+<!--				(								-->
+<!--					SELECT-->
+<!--					 fileInfo.SEQ_NO																		AS seqNo-->
+<!--					, fileInfo.OBJECT_ID																		AS objectId-->
+<!--					, fileInfo.FILE_NO																		AS fileNo-->
+<!--					, fileInfo.ORG_FILE_NM																	AS fileViewNm-->
+<!--					, fileInfo.FILE_NM																		AS fileNm-->
+<!--					, fileInfo.FILE_SIZE																	AS fileSize-->
+<!--					, fileInfo.CVRT_FILE_NM																	AS cvrtFileNm-->
+<!--					, fileInfo.ORG_FILE_NM																	AS orgFileNm-->
+<!--					, fileInfo.FILE_PATH_NM																	AS filePath-->
+<!--					, '변환'																AS btnConvert-->
+<!--					, '뷰어'																	AS btnViewer-->
+<!--					, '변환후뷰어'																	AS btnConvertViewer-->
+<!--					FROM DOCS_PDF_DOCUMENT_FILE 	fileinfo			-->
+<!--				-->
+<!--				) A1-->
+<!--			) B1-->
+<!--	</select>-->
+<!--</mapper>-->
+
+
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+
+
+
+<mapper namespace="sql.docPdfRequest">
+
+<select id="selectList" resultType="kr.esob.fdms.controller.inside.distribution.docpdfrequest.DocPdfRequestVO">
+	SELECT
+	B1.*
+	FROM
+	(
+	SELECT
+	A1.*
+	, ROW_NUMBER() OVER (ORDER BY fileInfo.SEQ_NO) AS PAGEINDEX
+	FROM
+	(
+	SELECT
+	fileInfo.SEQ_NO																		AS seqNo
+	, fileInfo.OBJECT_ID																		AS objectId
+	, fileInfo.FILE_NO																		AS fileNo
+	, fileInfo.ORG_FILE_NM																	AS fileViewNm
+	, fileInfo.FILE_NM																		AS fileNm
+	, fileInfo.FILE_SIZE																	AS fileSize
+	, fileInfo.CVRT_FILE_NM																	AS cvrtFileNm
+	, fileInfo.ORG_FILE_NM																	AS orgFileNm
+	, fileInfo.FILE_PATH_NM																	AS filePath
+	, '변환'																AS btnConvert
+	, '뷰어'																	AS btnViewer
+	, '변환후뷰어'																	AS btnConvertViewer
+	FROM DOCS_PDF_DOCUMENT_FILE fileinfo
+	ORDER BY fileInfo.SEQ_NO
+	) A1
+	WHERE 1=1
+	<if test='end != null and !end.equals("")'>
+		AND ROW_NUMBER() OVER (ORDER BY fileInfo.SEQ_NO) <![CDATA[ <= ]]> #{end}
+	</if>
+	) B1
+	<if test='start != null and !start.equals("")'>
+		WHERE PAGEINDEX <![CDATA[ >= ]]> #{start}
+	</if>
+</select>
+
+<select id="selectListCount" resultType="Integer">
+	SELECT COUNT(*) AS TOTAL_COUNT
+	FROM DOCS_PDF_DOCUMENT_FILE
+</select>
+
+</mapper>
+

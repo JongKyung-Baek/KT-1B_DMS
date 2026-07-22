@@ -1,0 +1,803 @@
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+
+<!--<mapper namespace="sql.OutregistedRequest">-->
+
+<!--	<select id="selectList" resultType="kr.esob.fdms.controller.outside.outregisted.request.RequestListVO">-->
+<!--		SELECT-->
+<!--			B1.*-->
+<!--		FROM-->
+<!--		(-->
+<!--			SELECT-->
+<!--				A1.*-->
+<!--				, ROWNUM AS PAGEINDEX-->
+<!--			FROM-->
+<!--			(-->
+<!--			    SELECT-->
+<!--				    OBJECT_NO   					AS objectNo		/* 자료번호 */-->
+<!--				  , OBJECT_TYPE					AS objectType	    /* 자료유형 */-->
+<!--				  , OBJECT_NM 				   	    AS objectNm		/* 자료명 */-->
+<!--				  , docsFile.FILE_NM 			    AS fileNm		    /* 파일명 */-->
+<!--				  , docsFile.FILE_NM 			    AS fileViewNm		/* 파일명 */-->
+<!--				   , insertUser.USER_CD 	        AS userCd		    /* 등록자 */-->
+<!--				  , insertUser.USER_NM 			AS insertUserNm	/* 등록자 */-->
+<!--				  , TO_CHAR(unreg.INSERT_DT, 'YYYY-MM-DD')	AS insertDt	/* 등록일 */-->
+<!--				  &#45;&#45;, purchaserUser.USER_NM /* 구매담당자 */-->
+<!--				  &#45;&#45;, unreg.BUSINESS_AREA_CD /* 사업장 */-->
+<!--				  , unreg.BUSINESS_AREA_CD   AS businessAreaCd	/* 사업장 코드 */-->
+<!--				  , docsFile.FILE_CD			        AS objectId-->
+<!--				  , docsFile.FILE_PATH			    AS filePath-->
+<!--				  , docsFile.FILE_SIZE		        AS fileSize-->
+<!--				  , docsFile.FILE_NO			        AS fileNo-->
+<!--				FROM DOCS_OUTREG_INFO unreg-->
+<!--				INNER JOIN DOCS_OUTREG_FILE docsFile ON docsFile.FILE_CD = unreg.FILE_CD-->
+<!--				INNER JOIN DOCS_USER insertUser ON insertUser.USER_CD = unreg.INSERT_USER_CD-->
+<!--				&#45;&#45;INNER JOIN DOCS_USER purchaserUser ON purchaserUser.USER_CD = unreg.PURCHASER_USER_CD-->
+<!--				<if test='sortColumn == null or "".equals(sortColumn)'>-->
+<!--	           		ORDER BY insertDt desc, objectNo desc-->
+<!--				</if>-->
+<!--	         	<if test='sortColumn != null and !"".equals(sortColumn)'>-->
+<!--	         		ORDER BY ${sortColumn} ${order}, objectNo ${order}-->
+<!--	         	</if>-->
+<!--			) A1-->
+<!--			WHERE userCd = #{sessionUser.userCd}-->
+<!--			<if test='objectNo != null and !objectNo.equals("")'>-->
+<!--			AND objectNo LIKE '%' || UPPER(TRIM(#{objectNo})) || '%'-->
+<!--			</if>-->
+<!--			<if test='objectType != null and !objectType.equals("")'>-->
+<!--			AND objectType = #{objectType}-->
+<!--			</if>-->
+<!--			<if test='objectNm != null and !objectNm.equals("")'>-->
+<!--			AND objectNm LIKE '%' || #{objectNm} || '%'-->
+<!--			</if>-->
+<!--			<if test='insertStartDt != null and !insertStartDt.equals("")'>-->
+<!--			AND insertDt BETWEEN TO_DATE(#{insertStartDt}, 'YYYY-MM-DD')-->
+<!--	                         AND TO_DATE(#{insertEndDt}, 'YYYY-MM-DD')+1-->
+<!--			</if>-->
+<!--			<if test='end != null and !end.equals("")'>-->
+<!--			AND ROWNUM <![CDATA[ <= ]]> #{end}-->
+<!--			</if>-->
+<!--		) B1-->
+<!--		<if test='start != null and !start.equals("")'>-->
+<!--		WHERE PAGEINDEX <![CDATA[ >= ]]>#{start}-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	<select id="selectListCount" resultType="Integer">-->
+<!--		SELECT COUNT(*) AS TOTAL_COUNT-->
+<!--		FROM (-->
+<!--			SELECT-->
+<!--				B1.*-->
+<!--			FROM-->
+<!--			(-->
+<!--			SELECT-->
+<!--				A1.*-->
+<!--			FROM-->
+<!--			(-->
+<!--				SELECT-->
+<!--				    OBJECT_NO   			    AS objectNo		/* 자료번호 */-->
+<!--				  , OBJECT_TYPE			    AS objectType	    /* 자료유형 */-->
+<!--				  , OBJECT_NM 					AS objectNm		/* 자료명 */-->
+<!--				  , docsFile.FILE_NM 			AS fileNm		    /* 파일명 */-->
+<!--				  , docsFile.FILE_NM 			AS fileViewNm		/* 파일명 */-->
+<!--				  , insertUser.USER_CD 	    AS userCd		    /* 등록자 */-->
+<!--				  , insertUser.USER_NM 	    AS userNm		    /* 등록자 */-->
+<!--				  , unreg.INSERT_DT 			AS insertDt		    /* 등록일 */-->
+<!--				  , docsFile.FILE_CD			    AS objectId-->
+<!--				  , docsFile.FILE_PATH			AS filePath-->
+<!--				  , docsFile.FILE_SIZE			AS fileSize-->
+<!--				  , docsFile.FILE_NO			    AS fileNo-->
+<!--				  &#45;&#45;, purchaserUser.USER_NM /* 구매담당자 */-->
+<!--				  &#45;&#45;, unreg.BUSINESS_AREA_CD /* 사업장 */-->
+<!--				FROM DOCS_OUTREG_INFO unreg-->
+<!--				INNER JOIN DOCS_OUTREG_FILE docsFile ON docsFile.FILE_CD = unreg.FILE_CD-->
+<!--				INNER JOIN DOCS_USER insertUser ON insertUser.USER_CD = unreg.INSERT_USER_CD-->
+<!--				&#45;&#45;INNER JOIN DOCS_USER purchaserUser ON purchaserUser.USER_CD = unreg.PURCHASER_USER_CD-->
+<!--			) A1-->
+<!--			WHERE userCd = #{sessionUser.userCd}-->
+<!--			<if test='objectNo != null and !objectNo.equals("")'>-->
+<!--			AND objectNo LIKE '%' || UPPER(TRIM(#{objectNo})) || '%'-->
+<!--			</if>-->
+<!--			<if test='objectNm != null and !objectNm.equals("")'>-->
+<!--			AND objectNm LIKE '%' || #{objectNm} || '%'-->
+<!--			</if>-->
+<!--			<if test='objectType != null and !objectType.equals("")'>-->
+<!--			AND objectType = #{objectType}-->
+<!--			</if>-->
+<!--			<if test='insertStartDt != null and !insertStartDt.equals("")'>-->
+<!--			AND insertDt BETWEEN TO_DATE(#{insertStartDt}, 'YYYY-MM-DD')-->
+<!--	                         AND TO_DATE(#{insertEndDt}, 'YYYY-MM-DD')+1-->
+<!--			</if>-->
+<!--			) B1-->
+<!--		) C1-->
+<!--	</select>-->
+
+
+<!--	&lt;!&ndash; 미등록자료 추가 [2019.10.14(최금영)] &ndash;&gt;-->
+<!--	<insert id="insertUnregisterInfo" parameterType="kr.esob.fdms.controller.outside.outregisted.request.UnregisterPopupParam">-->
+<!--		<selectKey keyProperty="objectNo,fileCd,objectId" resultType="kr.esob.fdms.controller.outside.outregisted.request.UnregisterPopupParam" order="BEFORE">-->
+<!--			/* 미등록 자료 CODE 조회 */-->
+<!--			SELECT 'OUTREG-'||LPAD(NVL(SUBSTR(MAX(OBJECT_NO),9),0)+1,7,0) AS objectNo-->
+<!--				, NVL(MAX(to_number(FILE_CD)),1)+1 AS fileCd-->
+<!--				, NVL(MAX(to_number(OBJECT_ID)),1)+1 AS objectId-->
+<!--			FROM DOCS_OUTREG_INFO-->
+<!--		</selectKey>-->
+<!--		/*자료등록 */-->
+<!--		INSERT INTO DOCS_OUTREG_INFO-->
+<!--			( OBJECT_ID-->
+<!--			, OBJECT_NO-->
+<!--			, OBJECT_NM-->
+<!--			, INSERT_USER_CD-->
+<!--			, INSERT_DT-->
+<!--			, FILE_CD-->
+<!--&lt;!&ndash; 			, OBJECT_TYPE &ndash;&gt;-->
+<!--			, BUSINESS_AREA_CD-->
+<!--			)-->
+<!--		VALUES-->
+<!--			( #{objectId}-->
+<!--			, #{objectNo}-->
+<!--			, #{dataName}-->
+<!--			, #{sessionUser.userCd}-->
+<!--			, SYSDATE-->
+<!--			, #{fileCd}-->
+<!--&lt;!&ndash; 			, #{objectType} &ndash;&gt;-->
+<!--			, NULL-->
+<!--			)-->
+<!--	</insert>-->
+
+<!--	&lt;!&ndash;  자료등록 파일 정보 추가 [2020.03.20(LWG)] &ndash;&gt;-->
+<!--	<insert id="insertUnregisterFile" parameterType="kr.esob.fdms.controller.outside.outregisted.request.UnregisterPopupParam">-->
+<!--		/* 자료등록 파일 정보 추가 */-->
+<!--		INSERT INTO DOCS_OUTREG_FILE-->
+<!--			( FILE_CD-->
+<!--			, FILE_NM-->
+<!--			, FILE_UPLOAD_NM-->
+<!--			, FILE_PATH-->
+<!--			, FILE_SIZE-->
+<!--			, UPLOAD_USER_CD-->
+<!--			, UPLOAD_DT-->
+<!--			, DEL_YN-->
+<!--			, INSERT_USER_CD-->
+<!--			, INSERT_DT-->
+<!--			, UPDATE_USER_CD-->
+<!--			, UPDATE_DT-->
+<!--			)-->
+<!--		VALUES-->
+<!--			( #{fileCd}-->
+<!--			, #{fileNm}-->
+<!--			, #{fileNm}-->
+<!--			, #{filePath}-->
+<!--			, #{fileSize}-->
+<!--			, #{sessionUser.userCd}-->
+<!--			, SYSDATE-->
+<!--			, 'N'-->
+<!--			, #{sessionUser.userCd}-->
+<!--			, SYSDATE-->
+<!--			, #{sessionUser.userCd}-->
+<!--			, SYSDATE-->
+<!--			)-->
+<!--	</insert>-->
+
+<!--	<insert id="insertUnregisterFileX" parameterType="kr.esob.fdms.controller.outside.outregisted.request.UnregisterPopupParam">-->
+<!--		<selectKey keyProperty="fileNo" resultType="String" order="BEFORE">-->
+<!--			/* 요청 번호 구하기 */-->
+<!--            SELECT NVL(MAX(TO_NUMBER(FILE_NO)),0)+1 as file_NO-->
+<!--            FROM DOCS_OUTREG_FILE-->
+<!--            where file_Cd = #{fileCd}-->
+<!--        </selectKey>-->
+<!--		INSERT INTO DOCS_OUTREG_FILE-->
+<!--			( FILE_CD-->
+<!--			, FILE_NO-->
+<!--			, FILE_NM-->
+<!--			, FILE_UPLOAD_NM-->
+<!--			, FILE_PATH-->
+<!--			, FILE_SIZE-->
+<!--			, UPLOAD_USER_CD-->
+<!--			, UPLOAD_DT-->
+<!--			, DEL_YN-->
+<!--			, INSERT_USER_CD-->
+<!--			, INSERT_DT-->
+<!--			, UPDATE_USER_CD-->
+<!--			, UPDATE_DT-->
+<!--			)-->
+<!--		VALUES-->
+<!--			( #{fileCd}-->
+<!--			, #{fileNo}-->
+<!--			, #{fileNm}-->
+<!--			, #{fileNm}-->
+<!--			, #{filePath}-->
+<!--			, #{fileSize}-->
+<!--			, #{sessionUser.userCd}-->
+<!--			, SYSDATE-->
+<!--			, 'N'-->
+<!--			, #{sessionUser.userCd}-->
+<!--			, SYSDATE-->
+<!--			, #{sessionUser.userCd}-->
+<!--			, SYSDATE-->
+<!--			)-->
+<!--	</insert>-->
+
+
+<!--	&lt;!&ndash; 배포 요청 추가 [2019.10.15(최금영)] &ndash;&gt;-->
+<!--	<insert id="insertRequest" parameterType="kr.esob.fdms.controller.outside.outregisted.request.DistributionRequestPopupParam">-->
+<!--		<selectKey keyProperty="requestNo" resultType="String" order="BEFORE">-->
+<!--			/* 요청 번호 구하기 */-->
+<!--            SELECT TO_CHAR(SYSDATE,'YYYYMMDD')||'-T'||LPAD(NVL(SUBSTR(MAX(REQUEST_NO),11),0)+1,4,0) AS REQUEST_NO-->
+<!--            FROM DOCS_REQUEST-->
+<!--            WHERE SUBSTR(REQUEST_NO,1,10) = TO_CHAR(SYSDATE,'YYYYMMDD')||'-T'-->
+<!--        </selectKey>-->
+<!--        /* 배포 요청 추가 */-->
+<!--        INSERT INTO DOCS_REQUEST-->
+<!--        	( REQUEST_NO-->
+<!--        	, REQUEST_TYPE-->
+<!--        	, REQUEST_PURPOSE-->
+<!--        	, APPROVAL_LINE_ID-->
+<!--        	, CURRENT_PROCESS_SEQ_NO-->
+<!--        	, DEPLOY_TERM-->
+<!--        	, USE_START_YMD-->
+<!--        	, USE_END_YMD-->
+<!--        	, PRINT_YN-->
+<!--        	, DEPLOY_NORMAL_YN-->
+<!--        	, DEPLOY_SPECIAL_YN-->
+<!--        	, INSERT_USER_CD-->
+<!--        	, INSERT_DT-->
+<!--        	, UPDATE_USER_CD-->
+<!--        	, UPDATE_DT-->
+<!--        	, STATUS_CD-->
+<!--        	, OBJECT_TYPE-->
+<!--        	, DEPLOY_COMPANY_CD-->
+<!--        	, PROTECT_YN-->
+<!--        	, BUSINESS_AREA_CD-->
+<!--        	)-->
+<!--       VALUES-->
+<!--            ( #{requestNo}-->
+<!--            , 'OUT-REG'-->
+<!--            , #{requestPurpose}-->
+<!--            , #{approvalLineId}-->
+<!--            , #{currentProcessSeqNo}-->
+<!--            , #{deployTerm}-->
+<!--            , #{useStartYmd}-->
+<!--            , #{useEndYmd}-->
+<!--            , 'N'-->
+<!--            , 'Y'-->
+<!--            , 'N'-->
+<!--            , #{sessionUser.userCd}-->
+<!--            , SYSDATE-->
+<!--            , #{sessionUser.userCd}-->
+<!--            , SYSDATE-->
+<!--            , 'ACCEPT'-->
+<!--            , NULL-->
+<!--            , #{sessionUser.companyCd}-->
+<!--            , 'N'-->
+<!--            , NULL-->
+<!--       )-->
+<!--	</insert>-->
+
+<!--	&lt;!&ndash; 배포 정보 추가 [2019.10.15(최금영)] &ndash;&gt;-->
+<!--	<insert id="insertRequestDeploy" parameterType="kr.esob.fdms.controller.outside.outregisted.request.DistributionRequestPopupParam">-->
+<!--		/* 배포 정보 추가 */-->
+<!--		INSERT INTO DOCS_REQUEST_DEPLOY-->
+<!--        	( REQUEST_NO-->
+<!--        	, DEPLOY_USER_CD-->
+<!--        	, DEPLOY_USER_EMAIL-->
+<!--        	)-->
+<!--       	VALUES-->
+<!--            ( #{requestNo}-->
+<!--            , #{deployUserCd}-->
+<!--            , #{deployUserEmail}-->
+<!--       		)-->
+<!--	</insert>-->
+
+
+<!--	&lt;!&ndash;결재 라인 상세정보 [2019.09.18(최금영)]  &ndash;&gt;-->
+<!--	<select id="getDocsApprovalLineDetail" resultType="kr.esob.fdms.controller.inside.distribution.commonrequest.ApprovalLineDetailVO">-->
+<!--		/* 결재 라인 상세정보 */-->
+<!--		SELECT APPROVAL_STATUS_CD 		AS approvalStatusCd-->
+<!--			 , APPROVAL_GRADE_CD		AS approvalGradeCd-->
+<!--		  FROM DOCS_APPROVAL_LINE_DETAIL-->
+<!--		 WHERE APPROVAL_LINE_ID = #{approvalLineId}-->
+<!--		ORDER BY PROCESS_SEQ_NO-->
+<!--	</select>-->
+
+
+<!--	&lt;!&ndash; 요청 상세 추가 [2019.10.15(최금영)] &ndash;&gt;-->
+<!--	<insert id="insertDocsRequestDetail" parameterType="kr.esob.fdms.controller.outside.outregisted.request.DistributionRequestPopupParam">-->
+<!--		/* 요청 상세 추가 */-->
+<!--		INSERT INTO DOCS_REQUEST_DETAIL-->
+<!--		     ( REQUEST_NO-->
+<!--		     , PROCESS_SEQ-->
+<!--		     , APPROVAL_STATUS_CD-->
+<!--		     , APPROVAL_GRADE_CD-->
+<!--		     , ORIGINAL_USER_CD-->
+<!--		     , ACTUAL_USER_CD-->
+<!--		     <if test='"REQUEST".equals(approvalStatusCd)'>	&lt;!&ndash; 요청 내용 입력 &ndash;&gt;-->
+<!--		     , REQUEST_DESC-->
+<!--		     </if>-->
+<!--		     <if test='!"APPROVAL".equals(approvalStatusCd)'> &lt;!&ndash; 결재 아닐 경우  &ndash;&gt;-->
+<!--		     , ACTION_DT-->
+<!--		     , ACTION_CD-->
+<!--		     </if>-->
+<!--		     )-->
+<!--		VALUES-->
+<!--		     ( #{requestNo}-->
+<!--		     , #{processSeq}-->
+<!--		     , #{approvalStatusCd}-->
+<!--		     , #{approvalGradeCd}-->
+<!--		     <if test='"REQUEST".equals(approvalStatusCd)'>					&lt;!&ndash; 요청자 &ndash;&gt;-->
+<!--		     , #{sessionUser.userCd}										&lt;!&ndash; 로그인된 사용자 &ndash;&gt;-->
+<!--		     , #{sessionUser.userCd}										&lt;!&ndash; 로그인된 사용자 &ndash;&gt;-->
+<!--		     </if>-->
+<!--			 <if test='"ACCEPT".equals(approvalStatusCd)'>					&lt;!&ndash; 수신자 &ndash;&gt;-->
+<!--			 , #{receiveUserCd}												&lt;!&ndash;  실제 선택된 수신자 &ndash;&gt;-->
+<!--		     , #{receiveUserCd}												&lt;!&ndash;  현재 선택된 수신자 &ndash;&gt;-->
+<!--			 </if>-->
+<!--			  <if test='"REQUEST".equals(approvalStatusCd)'>				&lt;!&ndash;  요청 내용 입력 &ndash;&gt;-->
+<!--			 , #{transDesc}-->
+<!--			 </if>-->
+<!--			 , SYSDATE-->
+<!--			 <if test='"REQUEST".equals(approvalStatusCd)'>-->
+<!--			 , 'REQUEST'-->
+<!--			 </if>-->
+<!--			 <if test='"ACCEPT".equals(approvalStatusCd)'>-->
+<!--			 , 'ACCEPT'-->
+<!--			 </if>-->
+<!--			 )-->
+<!--	</insert>-->
+
+
+<!--	&lt;!&ndash; 배포 요청과 아이템 맵핑 내용 추가 [2019.10.15(최금영)] &ndash;&gt;-->
+<!--	<insert id="insertDocsRequestMapping" parameterType="kr.esob.fdms.controller.outside.outregisted.request.DistributionRequestPopupParam">-->
+<!--		/* 배포 요청과 아이템 맵핑 내용 추가 */-->
+<!--		INSERT INTO DOCS_REQUEST_MAPPING-->
+<!--		     ( REQUEST_NO-->
+<!--		     , USE_YN-->
+<!--		     , OBJECT_ID-->
+<!--		     , OBJECT_NO-->
+<!--		     , OBJECT_NM-->
+<!--		     , PROTECT_YN-->
+<!--		     , BUSINESS_AREA_CD-->
+<!--		     )-->
+<!--		SELECT #{requestNo} AS requestNo-->
+<!--		     , 'Y'-->
+<!--		     , OBJECT_ID-->
+<!--			 , OBJECT_NO-->
+<!--			 , OBJECT_NM-->
+<!--			 , 'N' AS protectYn-->
+<!--			 , NULL-->
+<!--		FROM DOCS_OUTREG_INFO-->
+<!--		WHERE OBJECT_NO = #{objectNo}-->
+<!--	</insert>-->
+
+<!--	<insert id="insertDocsRequestFile">-->
+<!--		INSERT INTO DOCS_REQUEST_FILE-->
+<!--		(-->
+<!--			REQUEST_NO-->
+<!--			, OBJECT_ID-->
+<!--			, FILE_PATH_NM-->
+<!--			, ORG_FILE_NM-->
+<!--			, FILE_NM-->
+<!--			, FILE_SIZE-->
+<!--			, FILE_NO-->
+<!--			, USE_START_YMD-->
+<!--			, USE_END_YMD-->
+<!--		)-->
+<!--		VALUES-->
+<!--		(-->
+<!--			#{requestNo}-->
+<!--			, #{objectId}-->
+<!--			, #{filePath}-->
+<!--			, #{orgFileNm}-->
+<!--			, #{fileNm}-->
+<!--			, #{fileSize}-->
+<!--			, #{fileNo}-->
+<!--			, #{useStartYmd}-->
+<!--			, #{useEndYmd}-->
+<!--		)-->
+<!--	</insert>-->
+
+<!--	<select id="selectRequestMappingDuplicate" resultType="kr.esob.fdms.controller.outside.outregisted.request.DistributionRequestPopupParam">-->
+<!--		SELECT OBJECT_ID-->
+<!--		FROM DOCS_REQUEST_MAPPING-->
+<!--		WHERE REQUEST_NO = #{requestNo}-->
+<!--		AND OBJECT_ID = #{objectId}-->
+<!--	</select>-->
+
+<!--</mapper>-->
+
+
+
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+
+
+
+
+<mapper namespace="sql.OutregistedRequest">
+
+<select id="selectList" resultType="kr.esob.fdms.controller.outside.outregisted.request.RequestListVO">
+	SELECT
+	B1.*
+	FROM
+	(
+	SELECT
+	A1.*
+	, ROW_NUMBER() OVER () AS PAGEINDEX
+	FROM
+	(
+	SELECT
+	OBJECT_NO                    AS objectNo       /* 자료번호 */
+	, OBJECT_TYPE                AS objectType      /* 자료유형 */
+	, OBJECT_NM                  AS objectNm        /* 자료명 */
+	, docsFile.FILE_NM           AS fileNm          /* 파일명 */
+	, docsFile.FILE_NM           AS fileViewNm      /* 파일명 */
+	, insertUser.USER_CD         AS userCd          /* 등록자 */
+	, insertUser.USER_NM         AS insertUserNm    /* 등록자 */
+	, TO_CHAR(unreg.INSERT_DT, 'YYYY-MM-DD') AS insertDt /* 등록일 */
+	, unreg.BUSINESS_AREA_CD     AS businessAreaCd  /* 사업장 코드 */
+	, docsFile.FILE_CD           AS objectId
+	, docsFile.FILE_PATH         AS filePath
+	, docsFile.FILE_SIZE         AS fileSize
+	, docsFile.FILE_NO           AS fileNo
+	FROM DOCS_OUTREG_INFO unreg
+	INNER JOIN DOCS_OUTREG_FILE docsFile ON docsFile.FILE_CD = unreg.FILE_CD
+	INNER JOIN DOCS_USER insertUser ON insertUser.USER_CD = unreg.INSERT_USER_CD
+	<if test='sortColumn == null or "".equals(sortColumn)'>
+		ORDER BY insertDt desc, objectNo desc
+	</if>
+	<if test='sortColumn != null and !"".equals(sortColumn)'>
+		ORDER BY ${sortColumn} ${order}, objectNo ${order}
+	</if>
+	) A1
+	WHERE userCd = #{sessionUser.userCd}
+	<if test='objectNo != null and !objectNo.equals("")'>
+		AND objectNo LIKE '%' || UPPER(TRIM(#{objectNo})) || '%'
+	</if>
+	<if test='objectType != null and !objectType.equals("")'>
+		AND objectType = #{objectType}
+	</if>
+	<if test='objectNm != null and !objectNm.equals("")'>
+		AND objectNm LIKE '%' || #{objectNm} || '%'
+	</if>
+	<if test='insertStartDt != null and !insertStartDt.equals("")'>
+		AND insertDt BETWEEN TO_DATE(#{insertStartDt}, 'YYYY-MM-DD')
+		AND TO_DATE(#{insertEndDt}, 'YYYY-MM-DD') + INTERVAL '1 day'
+	</if>
+	<if test='end != null and !end.equals("")'>
+		AND ROW_NUMBER() OVER () <![CDATA[ <= ]]> #{end}
+	</if>
+	) B1
+	<if test='start != null and !start.equals("")'>
+		WHERE PAGEINDEX >= #{start}
+	</if>
+</select>
+
+<select id="selectListCount" resultType="Integer">
+	SELECT COUNT(*) AS TOTAL_COUNT
+	FROM (
+	SELECT
+	B1.*
+	FROM
+	(
+	SELECT
+	A1.*
+	FROM
+	(
+	SELECT
+	OBJECT_NO                    AS objectNo       /* 자료번호 */
+	, OBJECT_TYPE                AS objectType      /* 자료유형 */
+	, OBJECT_NM                  AS objectNm        /* 자료명 */
+	, docsFile.FILE_NM           AS fileNm          /* 파일명 */
+	, docsFile.FILE_NM           AS fileViewNm      /* 파일명 */
+	, insertUser.USER_CD         AS userCd          /* 등록자 */
+	, insertUser.USER_NM         AS userNm          /* 등록자 */
+	, unreg.INSERT_DT            AS insertDt        /* 등록일 */
+	, docsFile.FILE_CD           AS objectId
+	, docsFile.FILE_PATH         AS filePath
+	, docsFile.FILE_SIZE         AS fileSize
+	, docsFile.FILE_NO           AS fileNo
+	FROM DOCS_OUTREG_INFO unreg
+	INNER JOIN DOCS_OUTREG_FILE docsFile ON docsFile.FILE_CD = unreg.FILE_CD
+	INNER JOIN DOCS_USER insertUser ON insertUser.USER_CD = unreg.INSERT_USER_CD
+	) A1
+	WHERE userCd = #{sessionUser.userCd}
+	<if test='objectNo != null and !objectNo.equals("")'>
+		AND objectNo LIKE '%' || UPPER(TRIM(#{objectNo})) || '%'
+	</if>
+	<if test='objectNm != null and !objectNm.equals("")'>
+		AND objectNm LIKE '%' || #{objectNm} || '%'
+	</if>
+	<if test='objectType != null and !objectType.equals("")'>
+		AND objectType = #{objectType}
+	</if>
+	<if test='insertStartDt != null and !insertStartDt.equals("")'>
+		AND insertDt BETWEEN TO_DATE(#{insertStartDt}, 'YYYY-MM-DD')
+		AND TO_DATE(#{insertEndDt}, 'YYYY-MM-DD') + INTERVAL '1 day'
+	</if>
+	) B1
+	) C1
+</select>
+
+<insert id="insertUnregisterInfo" parameterType="kr.esob.fdms.controller.outside.outregisted.request.UnregisterPopupParam">
+	<selectKey keyProperty="objectNo,fileCd,objectId" resultType="kr.esob.fdms.controller.outside.outregisted.request.UnregisterPopupParam" order="BEFORE">
+		/* 미등록 자료 CODE 조회 */
+		SELECT 'OUTREG-'||LPAD(COALESCE(SUBSTRING(MAX(OBJECT_NO), 9)::INTEGER, 0) + 1, 7, '0') AS objectNo
+		, COALESCE(MAX(FILE_CD::INTEGER), 0) + 1 AS fileCd
+		, COALESCE(MAX(OBJECT_ID::INTEGER), 0) + 1 AS objectId
+		FROM DOCS_OUTREG_INFO
+	</selectKey>
+	/*자료등록 */
+	INSERT INTO DOCS_OUTREG_INFO
+	( OBJECT_ID
+	, OBJECT_NO
+	, OBJECT_NM
+	, INSERT_USER_CD
+	, INSERT_DT
+	, FILE_CD
+	, BUSINESS_AREA_CD
+	)
+	VALUES
+	( #{objectId}
+	, #{objectNo}
+	, #{dataName}
+	, #{sessionUser.userCd}
+	, CURRENT_DATE
+	, #{fileCd}
+	, NULL
+	)
+</insert>
+
+<insert id="insertUnregisterFile" parameterType="kr.esob.fdms.controller.outside.outregisted.request.UnregisterPopupParam">
+	/* 자료등록 파일 정보 추가 */
+	INSERT INTO DOCS_OUTREG_FILE
+	( FILE_CD
+	, FILE_NM
+	, FILE_UPLOAD_NM
+	, FILE_PATH
+	, FILE_SIZE
+	, UPLOAD_USER_CD
+	, UPLOAD_DT
+	, DEL_YN
+	, INSERT_USER_CD
+	, INSERT_DT
+	, UPDATE_USER_CD
+	, UPDATE_DT
+	)
+	VALUES
+		( #{fileCd}
+		, #{fileNm}
+		, #{fileNm}
+		, #{filePath}
+		, #{fileSize}
+		, #{sessionUser.userCd}
+		, CURRENT_DATE
+		, 'N'
+		, #{sessionUser.userCd}
+		, CURRENT_DATE
+		, #{sessionUser.userCd}
+		, CURRENT_DATE
+		)
+</insert>
+
+<insert id="insertUnregisterFileX" parameterType="kr.esob.fdms.controller.outside.outregisted.request.UnregisterPopupParam">
+	<selectKey keyProperty="fileNo" resultType="String" order="BEFORE">
+		/* 요청 번호 구하기 */
+		SELECT COALESCE(MAX(FILE_NO::INTEGER), 0) + 1 as file_NO
+		FROM DOCS_OUTREG_FILE
+		WHERE file_Cd = #{fileCd}
+	</selectKey>
+	INSERT INTO DOCS_OUTREG_FILE
+	( FILE_CD
+	, FILE_NO
+	, FILE_NM
+	, FILE_UPLOAD_NM
+	, FILE_PATH
+	, FILE_SIZE
+	, UPLOAD_USER_CD
+	, UPLOAD_DT
+	, DEL_YN
+	, INSERT_USER_CD
+	, INSERT_DT
+	, UPDATE_USER_CD
+	, UPDATE_DT
+	)
+	VALUES
+	( #{fileCd}
+	, #{fileNo}
+	, #{fileNm}
+	, #{fileNm}
+	, #{filePath}
+	, #{fileSize}
+	, #{sessionUser.userCd}
+	, CURRENT_DATE
+	, 'N'
+	, #{sessionUser.userCd}
+	, CURRENT_DATE
+	, #{sessionUser.userCd}
+	, CURRENT_DATE
+	)
+</insert>
+
+<insert id="insertRequest" parameterType="kr.esob.fdms.controller.outside.outregisted.request.DistributionRequestPopupParam">
+	<selectKey keyProperty="requestNo" resultType="String" order="BEFORE">
+		/* 요청 번호 구하기 */
+		SELECT TO_CHAR(CURRENT_DATE, 'YYYYMMDD')||'-T'||LPAD(COALESCE(SUBSTRING(MAX(REQUEST_NO), 11)::INTEGER, 0) + 1, 4, '0') AS REQUEST_NO
+		FROM DOCS_REQUEST
+		WHERE SUBSTRING(REQUEST_NO, 1, 10) = TO_CHAR(CURRENT_DATE, 'YYYYMMDD')||'-T'
+	</selectKey>
+	/* 배포 요청 추가 */
+	INSERT INTO DOCS_REQUEST
+	( REQUEST_NO
+	, REQUEST_TYPE
+	, REQUEST_PURPOSE
+	, APPROVAL_LINE_ID
+	, CURRENT_PROCESS_SEQ_NO
+	, DEPLOY_TERM
+	, USE_START_YMD
+	, USE_END_YMD
+	, PRINT_YN
+	, DEPLOY_NORMAL_YN
+	, DEPLOY_SPECIAL_YN
+	, INSERT_USER_CD
+	, INSERT_DT
+	, UPDATE_USER_CD
+	, UPDATE_DT
+	, STATUS_CD
+	, OBJECT_TYPE
+	, DEPLOY_COMPANY_CD
+	, PROTECT_YN
+	, BUSINESS_AREA_CD
+	)
+	VALUES
+	( #{requestNo}
+	, 'OUT-REG'
+	, #{requestPurpose}
+	, #{approvalLineId}
+	, #{currentProcessSeqNo}
+	, #{deployTerm}
+	, #{useStartYmd}
+	, #{useEndYmd}
+	, 'N'
+	, 'Y'
+	, 'N'
+	, #{sessionUser.userCd}
+	, CURRENT_DATE
+	, #{sessionUser.userCd}
+	, CURRENT_DATE
+	, 'ACCEPT'
+	, NULL
+	, #{sessionUser.companyCd}
+	, 'N'
+	, NULL
+	)
+</insert>
+
+<insert id="insertRequestDeploy" parameterType="kr.esob.fdms.controller.outside.outregisted.request.DistributionRequestPopupParam">
+	/* 배포 정보 추가 */
+	INSERT INTO DOCS_REQUEST_DEPLOY
+	( REQUEST_NO
+	, DEPLOY_USER_CD
+	, DEPLOY_USER_EMAIL
+	)
+	VALUES
+		( #{requestNo}
+		, #{deployUserCd}
+		, #{deployUserEmail}
+		)
+</insert>
+
+<select id="getDocsApprovalLineDetail" resultType="kr.esob.fdms.controller.inside.distribution.commonrequest.ApprovalLineDetailVO">
+	/* 결재 라인 상세정보 */
+	SELECT APPROVAL_STATUS_CD         AS approvalStatusCd
+		 , APPROVAL_GRADE_CD        AS approvalGradeCd
+	FROM DOCS_APPROVAL_LINE_DETAIL
+	WHERE APPROVAL_LINE_ID = #{approvalLineId}
+	ORDER BY PROCESS_SEQ_NO
+</select>
+
+<insert id="insertDocsRequestDetail" parameterType="kr.esob.fdms.controller.outside.outregisted.request.DistributionRequestPopupParam">
+	/* 요청 상세 추가 */
+	INSERT INTO DOCS_REQUEST_DETAIL
+	( REQUEST_NO
+	, PROCESS_SEQ
+	, APPROVAL_STATUS_CD
+	, APPROVAL_GRADE_CD
+	, ORIGINAL_USER_CD
+	, ACTUAL_USER_CD
+	<if test='"REQUEST".equals(approvalStatusCd)'>    <!-- 요청 내용 입력 -->
+		, REQUEST_DESC
+	</if>
+	<if test='!"APPROVAL".equals(approvalStatusCd)'> <!-- 결재 아닐 경우  -->
+		, ACTION_DT
+		, ACTION_CD
+	</if>
+	)
+	VALUES
+	( #{requestNo}
+	, #{processSeq}
+	, #{approvalStatusCd}
+	, #{approvalGradeCd}
+	<if test='"REQUEST".equals(approvalStatusCd)'>                    <!-- 요청자 -->
+		, #{sessionUser.userCd}                                        <!-- 로그인된 사용자 -->
+		, #{sessionUser.userCd}                                        <!-- 로그인된 사용자 -->
+	</if>
+	<if test='"ACCEPT".equals(approvalStatusCd)'>                    <!-- 수신자 -->
+		, #{receiveUserCd}                                                <!--  실제 선택된 수신자 -->
+		, #{receiveUserCd}                                                <!--  현재 선택된 수신자 -->
+	</if>
+	<if test='"REQUEST".equals(approvalStatusCd)'>                <!--  요청 내용 입력 -->
+		, #{transDesc}
+	</if>
+	, CURRENT_DATE
+	<if test='"REQUEST".equals(approvalStatusCd)'>
+		, 'REQUEST'
+	</if>
+	<if test='"ACCEPT".equals(approvalStatusCd)'>
+		, 'ACCEPT'
+	</if>
+	)
+</insert>
+
+<insert id="insertDocsRequestMapping" parameterType="kr.esob.fdms.controller.outside.outregisted.request.DistributionRequestPopupParam">
+	/* 배포 요청과 아이템 맵핑 내용 추가 */
+	INSERT INTO DOCS_REQUEST_MAPPING
+	( REQUEST_NO
+	, USE_YN
+	, OBJECT_ID
+	, OBJECT_NO
+	, OBJECT_NM
+	, PROTECT_YN
+	, BUSINESS_AREA_CD
+	)
+	SELECT #{requestNo} AS requestNo
+		 , 'Y'
+		 , OBJECT_ID
+		 , OBJECT_NO
+		 , OBJECT_NM
+		 , 'N' AS protectYn
+		 , NULL
+	FROM DOCS_OUTREG_INFO
+	WHERE OBJECT_NO = #{objectNo}
+</insert>
+
+<insert id="insertDocsRequestFile">
+	INSERT INTO DOCS_REQUEST_FILE
+	(
+		REQUEST_NO
+	, OBJECT_ID
+	, FILE_PATH_NM
+	, ORG_FILE_NM
+	, FILE_NM
+	, FILE_SIZE
+	, FILE_NO
+	, USE_START_YMD
+	, USE_END_YMD
+	)
+	VALUES
+		(
+			#{requestNo}
+		, #{objectId}
+		, #{filePath}
+		, #{orgFileNm}
+		, #{fileNm}
+		, #{fileSize}
+		, #{fileNo}
+		, #{useStartYmd}
+		, #{useEndYmd}
+		)
+</insert>
+
+<select id="selectRequestMappingDuplicate" resultType="kr.esob.fdms.controller.outside.outregisted.request.DistributionRequestPopupParam">
+	SELECT OBJECT_ID
+	FROM DOCS_REQUEST_MAPPING
+	WHERE REQUEST_NO = #{requestNo}
+	  AND OBJECT_ID = #{objectId}
+</select>
+
+</mapper>

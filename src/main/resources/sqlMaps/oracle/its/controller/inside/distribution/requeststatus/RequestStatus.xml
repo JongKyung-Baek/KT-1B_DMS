@@ -1,0 +1,685 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+
+<!--<mapper namespace="sql.RequestStatus">-->
+
+<!--	<select id="selectList" resultType="kr.esob.fdms.controller.inside.distribution.requeststatus.RequestStatusListVO">-->
+<!--		SELECT-->
+<!--			B1.*-->
+<!--		FROM-->
+<!--		(-->
+<!--			SELECT-->
+<!--				A1.*-->
+<!--				, ROWNUM AS PAGEINDEX-->
+<!--				FROM-->
+<!--				(-->
+<!--					SELECT-->
+<!--						req.OBJECT_TYPE 														AS objectType			/* 자료유형 */-->
+<!--						, FN_GET_CD_NM('objectTypeWithP', req.OBJECT_TYPE, #{sessionLang}) 		AS objectTypeNm-->
+<!--						, req.REQUEST_TYPE														AS requestType-->
+<!--						, FN_GET_CD_NM('requestType', req.REQUEST_TYPE, #{sessionLang})			AS requestTypeNm-->
+<!--						, req.REQUEST_NO 														AS requestNo			/* 요청번호 */-->
+<!--						, req.REQUEST_NO 														AS requestOrgNo			/* 요청번호 */-->
+<!--						, (-->
+<!--							SELECT COMPANY_NM-->
+<!--							FROM DOCS_COMPANY tmp-->
+<!--							WHERE tmp.COMPANY_CD = req.DEPLOY_COMPANY_CD-->
+<!--						) 																		AS deployCompanyNm 	 	/* 배포업체명 */-->
+<!--						, req.DEPLOY_COMPANY_CD 												AS deployCompanyCd		/* 배포업체 */-->
+<!--						, CASE-->
+<!--							WHEN req.DEPLOY_NORMAL_YN = 'Y' THEN 'general'-->
+<!--							WHEN req.DEPLOY_SPECIAL_YN = 'Y' THEN 'security'-->
+<!--							WHEN req.PRINT_YN = 'Y' THEN 'viewPrint'-->
+<!--							ELSE ''-->
+<!--						END 																	AS distributeMethodCd 	/* 배포방식 */-->
+<!--						, FN_GET_CD_NM('distributeMethodCd', (CASE-->
+<!--							WHEN req.DEPLOY_NORMAL_YN = 'Y' THEN 'general'-->
+<!--							WHEN req.DEPLOY_SPECIAL_YN = 'Y' THEN 'security'-->
+<!--							WHEN req.PRINT_YN = 'Y' THEN 'viewPrint'-->
+<!--							ELSE ''-->
+<!--						END), #{sessionLang}) 													AS distributeMethodNm-->
+<!--						, req.REQUEST_PURPOSE 													AS requestPurpose		/* 용도 */-->
+<!--						, req.STATUS_CD															AS statusCd				/* 진행상태 */-->
+<!--						, FN_GET_CD_NM('requestStatusCd', req.STATUS_CD, #{sessionLang})		AS statusNm-->
+<!--						, FN_GET_CD_NM('requestPurpose', req.REQUEST_PURPOSE, #{sessionLang}) 	AS requestPurposeNm-->
+<!--						, req.INSERT_DT															AS requestDt			/* 요청일 */-->
+<!--						, (SELECT MAX(TO_CHAR(TO_DATE(fileInfo.USE_END_YMD, 'YYYYMMDD'), 'YYYY-MM-DD'))-->
+<!--						     FROM DOCS_REQUEST_FILE fileInfo-->
+<!--						   WHERE fileInfo.REQUEST_NO = req.REQUEST_NO-->
+<!--						  )                                                                     AS useEndYmd            /* 유효기간 */-->
+<!--						, accUser.USER_NM													   	AS purchaserUserNm    	/* 구매담당자 */-->
+<!--						, accUser.USER_CD  														AS purchaserUserCd		/* 구매담당자 */-->
+<!--						, req.BUSINESS_AREA_CD 													AS businessAreaCd		/* 사업장 */-->
+<!--						, FN_GET_CD_NM('businessAreaCd', req.BUSINESS_AREA_CD, #{sessionLang})	AS businessAreaNm-->
+<!--						, FN_GET_CD_NM('requestStatusCd', (-->
+<!--						  SELECT detail.ACTION_CD-->
+<!--						  FROM DOCS_REQUEST_DETAIL detail-->
+<!--						  WHERE detail.REQUEST_NO = req.REQUEST_NO-->
+<!--						  AND detail.APPROVAL_STATUS_CD = 'APPROVAL'-->
+<!--						  AND detail.APPROVAL_GRADE_CD = 'TL'-->
+<!--						), #{sessionLang}) 														AS tlApprovalNm 		/* 팀장승인 */-->
+<!--						, FN_GET_CD_NM('requestStatusCd', (-->
+<!--						  SELECT detail.ACTION_CD-->
+<!--						  FROM DOCS_REQUEST_DETAIL detail-->
+<!--						  WHERE detail.REQUEST_NO = req.REQUEST_NO-->
+<!--						  AND detail.APPROVAL_STATUS_CD = 'APPROVAL'-->
+<!--						  AND detail.APPROVAL_GRADE_CD = 'DEF'-->
+<!--						), #{sessionLang}) 														AS defApprovalNm 		/* 방산기술승인 */-->
+<!--						, req.PROTECT_YN 														AS protectYn 			/* 방산기술여부 */-->
+<!--						, req.INSERT_USER_CD                                               	 	AS requestUserCd 		/* 요청자 */-->
+<!--						, (-->
+<!--		           			SELECT USER_NM-->
+<!--		           			FROM DOCS_USER WHERE USER_CD = deploy.DEPLOY_USER_CD-->
+<!--		           		)																		AS companyUserNm		/* 업체담당자 */-->
+<!--				    	, (-->
+<!--						    SELECT USER_NM-->
+<!--						    FROM DOCS_REQUEST_DETAIL requestDetail-->
+<!--						      INNER JOIN DOCS_USER docsUser ON docsUser.USER_CD = requestDetail.ACTUAL_USER_CD-->
+<!--						    WHERE requestDetail.REQUEST_NO = req.REQUEST_NO-->
+<!--						    AND requestDetail.APPROVAL_STATUS_CD = 'ACCEPT'-->
+<!--						) 																		AS deployUserNm   		/* 배포자 */-->
+<!--						, req.VENDOR_ACCEPT_YN                         							AS vendorAcceptYn       /* 업체접수여부 */-->
+<!--                    	, FN_GET_CD_NM('vendorAcceptYn', req.VENDOR_ACCEPT_YN, 'ko')  			AS vendorAcceptNm    	/* 업체접수여부 */-->
+<!--					FROM DOCS_REQUEST req-->
+<!--						INNER JOIN DOCS_REQUEST_DEPLOY deploy ON req.REQUEST_NO = deploy.REQUEST_NO-->
+<!--		    			LEFT JOIN DOCS_REQUEST_DETAIL accDetail ON accDetail.REQUEST_NO = req.REQUEST_NO AND accDetail.APPROVAL_STATUS_CD = 'ACCEPT'-->
+<!--                        LEFT JOIN DOCS_USER accUser ON accUser.USER_CD = accDetail.ORIGINAL_USER_CD-->
+<!--                    WHERE &lt;!&ndash; req.INSERT_USER_CD = #{sessionUser.userCd}	/* 내가 요청한 내역 */ &ndash;&gt;-->
+<!--                    req.REQUEST_TYPE IN ('DISTRIBUTION', 'PRINT')-->
+<!--					<if test='requestStartDt != null and !requestStartDt.equals("")'>-->
+<!--					AND req.INSERT_DT BETWEEN TO_DATE(#{requestStartDt}, 'YYYY-MM-DD')-->
+<!--			                         AND TO_DATE(#{requestEndDt}, 'YYYY-MM-DD')+1-->
+<!--					</if>-->
+<!--                    <if test='sortColumn == null or "".equals(sortColumn)'>-->
+<!--		           		ORDER BY requestDt desc, requestNo desc-->
+<!--					</if>-->
+<!--		         	<if test='sortColumn != null and !"".equals(sortColumn)'>-->
+<!--		         		ORDER BY ${sortColumn} ${order}-->
+<!--		         		<if test='"requestDt".equals(sortColumn)'>-->
+<!--		         		, requestNo desc-->
+<!--		         		</if>-->
+<!--		         	</if>-->
+<!--		    	) A1-->
+<!--		    	WHERE 1=1-->
+<!--				<if test='objectType != null and !objectType.equals("")'>-->
+<!--				AND objectType = #{objectType}-->
+<!--				</if>-->
+<!--				<if test='deployCompanyCd != null and !deployCompanyCd.equals("")'>-->
+<!--				AND deployCompanyCd = #{deployCompanyCd}-->
+<!--				</if>-->
+<!--				<if test='purchaserUserCd != null and !purchaserUserCd.equals("")'>-->
+<!--				AND purchaserUserCd = #{purchaserUserCd}-->
+<!--				</if>-->
+<!--				<if test='businessAreaCd != null and !businessAreaCd.equals("")'>-->
+<!--				AND businessAreaCd = #{businessAreaCd}-->
+<!--				</if>-->
+<!--				<if test='statusCd != null and !statusCd.equals("")'>-->
+<!--				AND statusCd = #{statusCd}-->
+<!--				</if>-->
+<!--				<if test='requestType != null and !requestType.equals("")'>-->
+<!--				AND requestType = #{requestType}-->
+<!--				</if>-->
+<!--				<if test='end != null and !end.equals("")'>-->
+<!--				AND ROWNUM <![CDATA[ <= ]]> #{end}-->
+<!--				</if>-->
+<!--		) B1-->
+<!--		<if test='start != null and !start.equals("")'>-->
+<!--		WHERE PAGEINDEX <![CDATA[ >= ]]>#{start}-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	<select id="selectListCount" resultType="Integer">-->
+<!--		SELECT COUNT(*) AS TOTAL_COUNT-->
+<!--		FROM (-->
+<!--			SELECT-->
+<!--				 B1.*-->
+<!--			FROM-->
+<!--			(-->
+<!--				SELECT-->
+<!--						req.OBJECT_TYPE 														AS objectType			/* 자료유형 */-->
+<!--						, FN_GET_CD_NM('objectTypeWithP', req.OBJECT_TYPE, #{sessionLang}) 		AS objectTypeNm-->
+<!--						, req.REQUEST_TYPE														AS requestType-->
+<!--						, FN_GET_CD_NM('requestType', req.REQUEST_TYPE, #{sessionLang})			AS requestTypeNm-->
+<!--						, req.REQUEST_NO 														AS requestNo			/* 요청번호 */-->
+<!--						, req.REQUEST_NO 														AS requestOrgNo			/* 요청번호 */-->
+<!--						, (-->
+<!--							SELECT COMPANY_NM-->
+<!--							FROM DOCS_COMPANY tmp-->
+<!--							WHERE tmp.COMPANY_CD = req.DEPLOY_COMPANY_CD-->
+<!--						) 																		AS deployCompanyNm 	 	/* 배포업체명 */-->
+<!--						, req.DEPLOY_COMPANY_CD 												AS deployCompanyCd		/* 배포업체 */-->
+<!--						, CASE-->
+<!--							WHEN req.DEPLOY_NORMAL_YN = 'Y' THEN 'general'-->
+<!--							WHEN req.DEPLOY_SPECIAL_YN = 'Y' THEN 'security'-->
+<!--							WHEN req.PRINT_YN = 'Y' THEN 'viewPrint'-->
+<!--							ELSE ''-->
+<!--						END 																	AS distributeMethodCd 	/* 배포방식 */-->
+<!--						, FN_GET_CD_NM('distributeMethodCd', (CASE-->
+<!--							WHEN req.DEPLOY_NORMAL_YN = 'Y' THEN 'general'-->
+<!--							WHEN req.DEPLOY_SPECIAL_YN = 'Y' THEN 'security'-->
+<!--							WHEN req.PRINT_YN = 'Y' THEN 'viewPrint'-->
+<!--							ELSE ''-->
+<!--						END), #{sessionLang}) 													AS distributeMethodNm-->
+<!--						, req.REQUEST_PURPOSE 													AS requestPurpose		/* 용도 */-->
+<!--						, req.STATUS_CD															AS statusCd				/* 진행상태 */-->
+<!--						, FN_GET_CD_NM('requestStatusCd', req.STATUS_CD, #{sessionLang})		AS statusNm-->
+<!--						, FN_GET_CD_NM('requestPurpose', req.REQUEST_PURPOSE, #{sessionLang}) 	AS requestPurposeNm-->
+<!--						, req.INSERT_DT															AS requestDt			/* 요청일 */-->
+<!--						, (SELECT MAX(TO_CHAR(TO_DATE(fileInfo.USE_END_YMD, 'YYYYMMDD'), 'YYYY-MM-DD'))-->
+<!--						     FROM DOCS_REQUEST_FILE fileInfo-->
+<!--						   WHERE fileInfo.REQUEST_NO = req.REQUEST_NO-->
+<!--						  )                                                                     AS useEndYmd            /* 유효기간 */-->
+<!--						, accUser.USER_NM													   	AS purchaserUserNm    	/* 구매담당자 */-->
+<!--						, accUser.USER_CD  														AS purchaserUserCd		/* 구매담당자 */-->
+<!--						, req.BUSINESS_AREA_CD 													AS businessAreaCd		/* 사업장 */-->
+<!--						, FN_GET_CD_NM('businessAreaCd', req.BUSINESS_AREA_CD, #{sessionLang})	AS businessAreaNm-->
+<!--						, FN_GET_CD_NM('requestStatusCd', (-->
+<!--						  SELECT detail.ACTION_CD-->
+<!--						  FROM DOCS_REQUEST_DETAIL detail-->
+<!--						  WHERE detail.REQUEST_NO = req.REQUEST_NO-->
+<!--						  AND detail.APPROVAL_STATUS_CD = 'APPROVAL'-->
+<!--						  AND detail.APPROVAL_GRADE_CD = 'TL'-->
+<!--						), #{sessionLang}) 														AS tlApprovalNm 		/* 팀장승인 */-->
+<!--						, FN_GET_CD_NM('requestStatusCd', (-->
+<!--						  SELECT detail.ACTION_CD-->
+<!--						  FROM DOCS_REQUEST_DETAIL detail-->
+<!--						  WHERE detail.REQUEST_NO = req.REQUEST_NO-->
+<!--						  AND detail.APPROVAL_STATUS_CD = 'APPROVAL'-->
+<!--						  AND detail.APPROVAL_GRADE_CD = 'DEF'-->
+<!--						), #{sessionLang}) 														AS defApprovalNm 		/* 방산기술승인 */-->
+<!--						, req.PROTECT_YN 														AS protectYn 			/* 방산기술여부 */-->
+<!--						, req.INSERT_USER_CD                                               	 	AS requestUserCd 		/* 요청자 */-->
+<!--						, (-->
+<!--		           			SELECT USER_NM-->
+<!--		           			FROM DOCS_USER WHERE USER_CD = deploy.DEPLOY_USER_CD-->
+<!--		           		)																		AS companyUserNm		/* 업체담당자 */-->
+<!--				    	, (-->
+<!--						    SELECT USER_NM-->
+<!--						    FROM DOCS_REQUEST_DETAIL requestDetail-->
+<!--						      INNER JOIN DOCS_USER docsUser ON docsUser.USER_CD = requestDetail.ACTUAL_USER_CD-->
+<!--						    WHERE requestDetail.REQUEST_NO = req.REQUEST_NO-->
+<!--						    AND requestDetail.APPROVAL_STATUS_CD = 'ACCEPT'-->
+<!--						) 																		AS deployUserNm   		/* 배포자 */-->
+<!--						, req.VENDOR_ACCEPT_YN                         							AS vendorAcceptYn       /* 업체접수여부 */-->
+<!--                    	, FN_GET_CD_NM('vendorAcceptYn', req.VENDOR_ACCEPT_YN, 'ko')  			AS vendorAcceptNm    	/* 업체접수여부 */-->
+<!--					FROM DOCS_REQUEST req-->
+<!--						INNER JOIN DOCS_REQUEST_DEPLOY deploy ON req.REQUEST_NO = deploy.REQUEST_NO-->
+<!--		    			LEFT JOIN DOCS_REQUEST_DETAIL accDetail ON accDetail.REQUEST_NO = req.REQUEST_NO AND accDetail.APPROVAL_STATUS_CD = 'ACCEPT'-->
+<!--                        LEFT JOIN DOCS_USER accUser ON accUser.USER_CD = accDetail.ORIGINAL_USER_CD-->
+<!--                    WHERE &lt;!&ndash; req.INSERT_USER_CD = #{sessionUser.userCd}	/* 내가 요청한 내역 */ &ndash;&gt;-->
+<!--                    req.REQUEST_TYPE IN ('DISTRIBUTION', 'PRINT')-->
+<!--                <if test='requestStartDt != null and !requestStartDt.equals("")'>-->
+<!--				AND req.INSERT_DT BETWEEN TO_DATE(#{requestStartDt}, 'YYYY-MM-DD')-->
+<!--		                         AND TO_DATE(#{requestEndDt}, 'YYYY-MM-DD')+1-->
+<!--				</if>-->
+<!--			) B1-->
+<!--			WHERE 1=1-->
+<!--			<if test='objectType != null and !objectType.equals("")'>-->
+<!--			AND objectType = #{objectType}-->
+<!--			</if>-->
+<!--			<if test='deployCompanyCd != null and !deployCompanyCd.equals("")'>-->
+<!--			AND deployCompanyCd = #{deployCompanyCd}-->
+<!--			</if>-->
+
+<!--			<if test='purchaserUserCd != null and !purchaserUserCd.equals("")'>-->
+<!--			AND purchaserUserCd = #{purchaserUserCd}-->
+<!--			</if>-->
+<!--			<if test='statusCd != null and !statusCd.equals("")'>-->
+<!--			AND statusCd = #{statusCd}-->
+<!--			</if>-->
+<!--			<if test='businessAreaCd != null and !businessAreaCd.equals("")'>-->
+<!--			AND businessAreaCd = #{businessAreaCd}-->
+<!--			</if>-->
+<!--			<if test='requestType != null and !requestType.equals("")'>-->
+<!--				AND requestType = #{requestType}-->
+<!--			</if>-->
+<!--		) C1-->
+<!--	</select>-->
+
+
+<!--	<select id="selectPopupListCount" resultType="Integer" parameterType="kr.esob.fdms.controller.inside.distribution.requeststatus.RequestStatusPopupParam">-->
+<!--		/* 승인 요청 아이템 갯수 */-->
+<!--		SELECT COUNT(*) AS totalCount-->
+<!--		FROM DOCS_REQUEST_MAPPING REQ_MAP-->
+<!--		WHERE REQ_MAP.REQUEST_NO = #{requestNo}-->
+<!--	</select>-->
+
+
+<!--	&lt;!&ndash; 배포 요청 상세 정보 조회 [2019.10.10(최금영)] &ndash;&gt;-->
+<!--	<select id="getApprovalRequestStatus" resultType="kr.esob.fdms.controller.inside.distribution.requeststatus.RequestStatusPopupVO" parameterType="kr.esob.fdms.controller.inside.distribution.requeststatus.RequestStatusPopupParam">-->
+<!--		/* 배포 요청 상세 정보 조회 */-->
+<!--		SELECT DTL.REQUEST_DESC 											AS requestDesc-->
+<!--			, DTL.REQUEST_NO												AS requestNo-->
+<!--  			, (	SELECT REQUEST_DESC-->
+<!--  				FROM DOCS_REQUEST_DETAIL-->
+<!--  				WHERE REQUEST_NO = #{requestNo} AND ACTION_CD = 'REJECT') 	AS rejectDesc-->
+<!--  			, REQ.REQUEST_TYPE												AS requestType-->
+<!--  			, REQ.STATUS_CD														AS statusCd-->
+<!--  			, FN_GET_CD_NM('requestStatusCd', REQ.STATUS_CD, #{sessionLang})	AS statusNm-->
+<!--		FROM DOCS_REQUEST_DETAIL DTL-->
+<!--		JOIN DOCS_REQUEST REQ-->
+<!--		ON DTL.REQUEST_NO = REQ.REQUEST_NO-->
+<!--		WHERE DTL.REQUEST_NO = #{requestNo}-->
+<!--		AND DTL.APPROVAL_STATUS_CD = 'REQUEST'-->
+<!--	</select>-->
+
+<!--	&lt;!&ndash; 배포 요청 아이템 리스트 조회 [2019.10.10(최금영)] &ndash;&gt;-->
+<!--	<select id="requestStatusPopupList" resultType="kr.esob.fdms.controller.inside.distribution.requeststatus.RequestStatusPopupVO" parameterType="kr.esob.fdms.controller.inside.distribution.requeststatus.RequestStatusPopupParam">-->
+<!--		/* 배포 요청 아이템 리스트 조회 */-->
+<!--		SELECT A.*-->
+<!--			<if test='sortColumn == null or "".equals(sortColumn)'>-->
+<!--		    , ROW_NUMBER() OVER(ORDER BY name asc) AS PAGEINDEX-->
+<!--		    </if>-->
+<!--		    <if test='sortColumn != null and !"".equals(sortColumn)'>-->
+<!--		    , ROW_NUMBER() OVER(ORDER BY ${sortColumn} ${order}) AS PAGEINDEX-->
+<!--		    </if>-->
+<!--		  FROM (-->
+<!--		  		SELECT-->
+<!--		  			FN_GET_CD_NM('distributeTypeCd', REQ_MAP.DISTRIBUTE_TYPE_CD, #{sessionLang}) AS distributeType-->
+<!--		  			, FN_GET_CD_NM('distributeMethodCd', CASE WHEN 'Y' = REQ.PRINT_YN THEN 'viewPrint'-->
+<!--		  				   WHEN 'Y' = REQ.DEPLOY_NORMAL_YN THEN 'general'-->
+<!--		  				   WHEN 'Y' = REQ.DEPLOY_SPECIAL_YN THEN 'security'-->
+<!--		  				   ELSE NULL END, #{sessionLang})  AS distributeMethodCd-->
+<!--					, REQ_MAP.OBJECT_NO AS dataNo-->
+<!--					, REQ_MAP.OBJECT_NM AS name-->
+<!--					, REQ_MAP.CURRENT_PAGE_NO AS page-->
+<!--					, REQ_MAP.TOTAL_PAGE_NO AS totalPage-->
+<!--					, REQ_MAP.REV_NO AS rev-->
+<!--					, REQ_MAP.STD_GAPP_DT AS stdGappDt-->
+<!--					, REQ_MAP.CHANGE_GAPP_DT AS changeGappDt-->
+<!--					, REQ_MAP.PROTECT_YN AS protectYn-->
+<!--					, FN_GET_CD_NM('businessAreaCd', REQ_MAP.BUSINESS_TYPE_CD, #{sessionLang}) AS businessAreaCd-->
+<!--					, FN_GET_CD_NM('businessTypeCd', REQ_MAP.BUSINESS_TYPE_CD, #{sessionLang}) AS businessTypeCd-->
+<!--					, FN_GET_CD_NM('objectTypeWithP', REQ.OBJECT_TYPE, #{sessionLang}) AS objectType-->
+<!--					, REQ_MAP.PRODUCT_CD AS productCd-->
+<!--					, COALESCE(REQ_MAP.PRODUCT_CD, '') AS productNm-->
+<!--					, REQ_MAP.OBJECT_ID AS objectId-->
+<!--					, REQ.REQUEST_NO AS requestNo-->
+<!--					, FILE_INFO.FILE_NO AS fileNo-->
+<!--					, FILE_INFO.ORG_FILE_NM AS orgFileNm-->
+<!--					, OBJECT_INFO.SECURITY_TYPE_CD AS securityTypeCd-->
+<!--					, REQ.INSERT_USER_CD AS requestUserCd-->
+<!--				 FROM DOCS_REQUEST_FILE FILE_INFO-->
+<!--				 JOIN DOCS_REQUEST_MAPPING REQ_MAP-->
+<!--				 ON FILE_INFO.REQUEST_NO = REQ_MAP.REQUEST_NO AND FILE_INFO.OBJECT_ID = REQ_MAP.OBJECT_ID-->
+<!--				 JOIN DOCS_REQUEST REQ-->
+<!--				 ON REQ_MAP.REQUEST_NO = REQ.REQUEST_NO-->
+<!--				 <if test="'DOC'.equals(objectType)">-->
+<!--				 JOIN DOCS_DOCUMENT OBJECT_INFO-->
+<!--				 </if>-->
+<!--				 <if test="'PRODUCT_DOC'.equals(objectType)">-->
+<!--				 JOIN DOCS_PRODUCT_DOCUMENT OBJECT_INFO-->
+<!--				 </if>-->
+<!--				 <if test="'PRODUCT_SW'.equals(objectType)">-->
+<!--				 JOIN DOCS_PRODUCT_SW OBJECT_INFO-->
+<!--				 </if>-->
+<!--				 <if test="'DRAWING'.equals(objectType)">-->
+<!--				 JOIN DOCS_DRAWING OBJECT_INFO-->
+<!--				 </if>-->
+<!--				 <if test="'SW'.equals(objectType)">-->
+<!--				 JOIN DOCS_SW OBJECT_INFO-->
+<!--				 </if>-->
+<!--                 ON OBJECT_INFO.OBJECT_ID = FILE_INFO.OBJECT_ID-->
+<!--				 WHERE REQ_MAP.REQUEST_NO = #{requestNo}-->
+<!--				 ) A-->
+<!--	</select>-->
+
+<!--	<delete id="deleteRequest">-->
+<!--		DELETE FROM DOCS_REQUEST WHERE REQUEST_NO = #{requestNo}-->
+<!--	</delete>-->
+
+<!--	<delete id="deleteRequestMapping">-->
+<!--		DELETE FROM DOCS_REQUEST_MAPPING WHERE REQUEST_NO = #{requestNo}-->
+<!--	</delete>-->
+
+<!--	<delete id="deleteRequestDetail">-->
+<!--		DELETE FROM DOCS_REQUEST_DETAIL WHERE REQUEST_NO = #{requestNo}-->
+<!--	</delete>-->
+
+<!--	<delete id="deleteRequestFile">-->
+<!--		DELETE FROM DOCS_REQUEST_FILE WHERE REQUEST_NO = #{requestNo}-->
+<!--	</delete>-->
+
+<!--	<delete id="deleteRequestDeploy">-->
+<!--		DELETE FROM DOCS_REQUEST_DEPLOY WHERE REQUEST_NO = #{requestNo}-->
+<!--	</delete>-->
+
+<!--</mapper>-->
+
+
+
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+
+
+
+<mapper namespace="sql.RequestStatus">
+
+	<select id="selectList" resultType="kr.esob.fdms.controller.inside.distribution.requeststatus.RequestStatusListVO">
+		SELECT
+		B1.*
+		FROM (
+		SELECT
+		A1.*,
+		ROW_NUMBER() OVER(
+		ORDER BY
+		<if test='sortColumn == null or "".equals(sortColumn)'>
+			requestDt DESC, requestNo DESC
+		</if>
+		<if test='sortColumn != null and !"".equals(sortColumn)'>
+			<choose>
+				<when test="sortColumn == 'currentPageNo' or sortColumn == 'totalPageNo'">
+					CAST(A1.${sortColumn} AS INTEGER) ${order}
+				</when>
+				<otherwise>
+					A1.${sortColumn} ${order}
+				</otherwise>
+			</choose>
+		</if>
+		) AS PAGEINDEX
+		FROM (
+		SELECT
+		req.OBJECT_TYPE AS objectType,
+		FN_GET_CD_NM('objectTypeWithP', req.OBJECT_TYPE, #{sessionLang}) AS objectTypeNm,
+		req.REQUEST_TYPE AS requestType,
+		FN_GET_CD_NM('requestType', req.REQUEST_TYPE, #{sessionLang}) AS requestTypeNm,
+		req.REQUEST_NO AS requestNo,
+		req.REQUEST_NO AS requestOrgNo,
+		(SELECT COMPANY_NM FROM DOCS_COMPANY tmp WHERE tmp.COMPANY_CD = req.DEPLOY_COMPANY_CD) AS deployCompanyNm,
+		req.DEPLOY_COMPANY_CD AS deployCompanyCd,
+		CASE
+		WHEN req.DEPLOY_NORMAL_YN = 'Y' THEN 'general'
+		WHEN req.DEPLOY_SPECIAL_YN = 'Y' THEN 'security'
+		WHEN req.PRINT_YN = 'Y' THEN 'viewPrint'
+		ELSE ''
+		END AS distributeMethodCd,
+		FN_GET_CD_NM('distributeMethodCd', (
+		CASE
+		WHEN req.DEPLOY_NORMAL_YN = 'Y' THEN 'general'
+		WHEN req.DEPLOY_SPECIAL_YN = 'Y' THEN 'security'
+		WHEN req.PRINT_YN = 'Y' THEN 'viewPrint'
+		ELSE ''
+		END
+		), #{sessionLang}) AS distributeMethodNm,
+		req.REQUEST_PURPOSE AS requestPurpose,
+		req.STATUS_CD AS statusCd,
+		FN_GET_CD_NM('requestStatusCd', req.STATUS_CD, #{sessionLang}) AS statusNm,
+		FN_GET_CD_NM('requestPurpose', req.REQUEST_PURPOSE, #{sessionLang}) AS requestPurposeNm,
+		req.INSERT_DT AS requestDt,
+		(SELECT MAX(fileInfo.USE_END_YMD::date)
+		FROM DOCS_REQUEST_FILE fileInfo
+		WHERE fileInfo.REQUEST_NO = req.REQUEST_NO) AS useEndYmd,
+		accUser.USER_NM AS purchaserUserNm,
+		accUser.USER_CD AS purchaserUserCd,
+		req.BUSINESS_AREA_CD AS businessAreaCd,
+		FN_GET_CD_NM('businessAreaCd', req.BUSINESS_AREA_CD, #{sessionLang}) AS businessAreaNm,
+		FN_GET_CD_NM('requestStatusCd', (
+		SELECT detail.ACTION_CD
+		FROM DOCS_REQUEST_DETAIL detail
+		WHERE detail.REQUEST_NO = req.REQUEST_NO
+		AND detail.APPROVAL_STATUS_CD = 'APPROVAL'
+		AND detail.APPROVAL_GRADE_CD = 'TL'
+		), #{sessionLang}) AS tlApprovalNm,
+		FN_GET_CD_NM('requestStatusCd', (
+		SELECT detail.ACTION_CD
+		FROM DOCS_REQUEST_DETAIL detail
+		WHERE detail.REQUEST_NO = req.REQUEST_NO
+		AND detail.APPROVAL_STATUS_CD = 'APPROVAL'
+		AND detail.APPROVAL_GRADE_CD = 'DEF'
+		), #{sessionLang}) AS defApprovalNm,
+		req.PROTECT_YN AS protectYn,
+		req.INSERT_USER_CD AS requestUserCd,
+		(SELECT USER_NM FROM DOCS_USER WHERE USER_CD = deploy.DEPLOY_USER_CD) AS companyUserNm,
+		(SELECT USER_NM FROM DOCS_REQUEST_DETAIL requestDetail
+		INNER JOIN DOCS_USER docsUser ON docsUser.USER_CD = requestDetail.ACTUAL_USER_CD
+		WHERE requestDetail.REQUEST_NO = req.REQUEST_NO
+		AND requestDetail.APPROVAL_STATUS_CD = 'ACCEPT') AS deployUserNm,
+		req.VENDOR_ACCEPT_YN AS vendorAcceptYn,
+		FN_GET_CD_NM('vendorAcceptYn', req.VENDOR_ACCEPT_YN, 'ko') AS vendorAcceptNm
+		FROM DOCS_REQUEST req
+		INNER JOIN DOCS_REQUEST_DEPLOY deploy ON req.REQUEST_NO = deploy.REQUEST_NO
+		LEFT JOIN DOCS_REQUEST_DETAIL accDetail ON accDetail.REQUEST_NO = req.REQUEST_NO AND accDetail.APPROVAL_STATUS_CD = 'ACCEPT'
+		LEFT JOIN DOCS_USER accUser ON accUser.USER_CD = accDetail.ORIGINAL_USER_CD
+		WHERE
+		req.REQUEST_TYPE IN ('DISTRIBUTION', 'PRINT')
+		<if test='requestStartDt != null and !requestStartDt.equals("")'>
+			AND req.INSERT_DT BETWEEN TO_DATE(#{requestStartDt}, 'YYYY-MM-DD')
+			AND TO_DATE(#{requestEndDt}, 'YYYY-MM-DD') + INTERVAL '1 DAY'
+		</if>
+		<if test='sortColumn == null or "".equals(sortColumn)'>
+			ORDER BY requestDt DESC, requestNo DESC
+		</if>
+		<if test='sortColumn != null and !"".equals(sortColumn)'>
+			ORDER BY ${sortColumn} ${order}
+			<if test='"requestDt".equals(sortColumn)'>
+				, requestNo DESC
+			</if>
+		</if>
+		) A1
+		WHERE 1=1
+		<if test='objectType != null and !objectType.equals("")'>
+			AND objectType = #{objectType}
+		</if>
+		<if test='deployCompanyCd != null and !deployCompanyCd.equals("")'>
+			AND deployCompanyCd = #{deployCompanyCd}
+		</if>
+		<if test='purchaserUserCd != null and !purchaserUserCd.equals("")'>
+			AND purchaserUserCd = #{purchaserUserCd}
+		</if>
+		<if test='businessAreaCd != null and !businessAreaCd.equals("")'>
+			AND businessAreaCd = #{businessAreaCd}
+		</if>
+		<if test='statusCd != null and !statusCd.equals("")'>
+			AND statusCd = #{statusCd}
+		</if>
+		<if test='requestType != null and !requestType.equals("")'>
+			AND requestType = #{requestType}
+		</if>
+		) B1
+
+	</select>
+
+	<select id="selectListCount" resultType="Integer">
+		SELECT COUNT(*) AS TOTAL_COUNT
+		FROM (
+		SELECT
+		req.OBJECT_TYPE AS objectType,
+		FN_GET_CD_NM('objectTypeWithP', req.OBJECT_TYPE, #{sessionLang}) AS objectTypeNm,
+		req.REQUEST_TYPE AS requestType,
+		FN_GET_CD_NM('requestType', req.REQUEST_TYPE, #{sessionLang}) AS requestTypeNm,
+		req.REQUEST_NO AS requestNo,
+		req.REQUEST_NO AS requestOrgNo,
+		(SELECT COMPANY_NM FROM DOCS_COMPANY tmp WHERE tmp.COMPANY_CD = req.DEPLOY_COMPANY_CD) AS deployCompanyNm,
+		req.DEPLOY_COMPANY_CD AS deployCompanyCd,
+		CASE
+		WHEN req.DEPLOY_NORMAL_YN = 'Y' THEN 'general'
+		WHEN req.DEPLOY_SPECIAL_YN = 'Y' THEN 'security'
+		WHEN req.PRINT_YN = 'Y' THEN 'viewPrint'
+		ELSE ''
+		END AS distributeMethodCd,
+		FN_GET_CD_NM('distributeMethodCd', (
+		CASE
+		WHEN req.DEPLOY_NORMAL_YN = 'Y' THEN 'general'
+		WHEN req.DEPLOY_SPECIAL_YN = 'Y' THEN 'security'
+		WHEN req.PRINT_YN = 'Y' THEN 'viewPrint'
+		ELSE ''
+		END
+		), #{sessionLang}) AS distributeMethodNm,
+		req.REQUEST_PURPOSE AS requestPurpose,
+		req.STATUS_CD AS statusCd,
+		FN_GET_CD_NM('requestStatusCd', req.STATUS_CD, #{sessionLang}) AS statusNm,
+		FN_GET_CD_NM('requestPurpose', req.REQUEST_PURPOSE, #{sessionLang}) AS requestPurposeNm,
+		req.INSERT_DT AS requestDt,
+		(SELECT MAX(fileInfo.USE_END_YMD::date)
+		FROM DOCS_REQUEST_FILE fileInfo
+		WHERE fileInfo.REQUEST_NO = req.REQUEST_NO) AS useEndYmd,
+		accUser.USER_NM AS purchaserUserNm,
+		accUser.USER_CD AS purchaserUserCd,
+		req.BUSINESS_AREA_CD AS businessAreaCd,
+		FN_GET_CD_NM('businessAreaCd', req.BUSINESS_AREA_CD, #{sessionLang}) AS businessAreaNm,
+		FN_GET_CD_NM('requestStatusCd', (
+		SELECT detail.ACTION_CD
+		FROM DOCS_REQUEST_DETAIL detail
+		WHERE detail.REQUEST_NO = req.REQUEST_NO
+		AND detail.APPROVAL_STATUS_CD = 'APPROVAL'
+		AND detail.APPROVAL_GRADE_CD = 'TL'
+		), #{sessionLang}) AS tlApprovalNm,
+		FN_GET_CD_NM('requestStatusCd', (
+		SELECT detail.ACTION_CD
+		FROM DOCS_REQUEST_DETAIL detail
+		WHERE detail.REQUEST_NO = req.REQUEST_NO
+		AND detail.APPROVAL_STATUS_CD = 'APPROVAL'
+		AND detail.APPROVAL_GRADE_CD = 'DEF'
+		), #{sessionLang}) AS defApprovalNm,
+		req.PROTECT_YN AS protectYn,
+		req.INSERT_USER_CD AS requestUserCd,
+		(SELECT USER_NM FROM DOCS_USER WHERE USER_CD = deploy.DEPLOY_USER_CD) AS companyUserNm,
+		(SELECT USER_NM FROM DOCS_REQUEST_DETAIL requestDetail
+		INNER JOIN DOCS_USER docsUser ON docsUser.USER_CD = requestDetail.ACTUAL_USER_CD
+		WHERE requestDetail.REQUEST_NO = req.REQUEST_NO
+		AND requestDetail.APPROVAL_STATUS_CD = 'ACCEPT') AS deployUserNm,
+		req.VENDOR_ACCEPT_YN AS vendorAcceptYn,
+		FN_GET_CD_NM('vendorAcceptYn', req.VENDOR_ACCEPT_YN, 'ko') AS vendorAcceptNm
+		FROM DOCS_REQUEST req
+		INNER JOIN DOCS_REQUEST_DEPLOY deploy ON req.REQUEST_NO = deploy.REQUEST_NO
+		LEFT JOIN DOCS_REQUEST_DETAIL accDetail ON accDetail.REQUEST_NO = req.REQUEST_NO AND accDetail.APPROVAL_STATUS_CD = 'ACCEPT'
+		LEFT JOIN DOCS_USER accUser ON accUser.USER_CD = accDetail.ORIGINAL_USER_CD
+		WHERE
+		req.REQUEST_TYPE IN ('DISTRIBUTION', 'PRINT')
+		<if test='requestStartDt != null and !requestStartDt.equals("")'>
+			AND req.INSERT_DT BETWEEN TO_DATE(#{requestStartDt}, 'YYYY-MM-DD')
+			AND TO_DATE(#{requestEndDt}, 'YYYY-MM-DD') + INTERVAL '1 DAY'
+		</if>
+		) B1
+		WHERE 1=1
+		<if test='objectType != null and !objectType.equals("")'>
+			AND objectType = #{objectType}
+		</if>
+		<if test='deployCompanyCd != null and !deployCompanyCd.equals("")'>
+			AND deployCompanyCd = #{deployCompanyCd}
+		</if>
+		<if test='purchaserUserCd != null and !purchaserUserCd.equals("")'>
+			AND purchaserUserCd = #{purchaserUserCd}
+		</if>
+		<if test='statusCd != null and !statusCd.equals("")'>
+			AND statusCd = #{statusCd}
+		</if>
+		<if test='businessAreaCd != null and !businessAreaCd.equals("")'>
+			AND businessAreaCd = #{businessAreaCd}
+		</if>
+		<if test='requestType != null and !requestType.equals("")'>
+			AND requestType = #{requestType}
+		</if>
+	</select>
+
+	<select id="selectPopupListCount" resultType="Integer" parameterType="kr.esob.fdms.controller.inside.distribution.requeststatus.RequestStatusPopupParam">
+		SELECT COUNT(*) AS totalCount
+		FROM DOCS_REQUEST_MAPPING REQ_MAP
+		WHERE REQ_MAP.REQUEST_NO = #{requestNo}
+	</select>
+
+	<select id="getApprovalRequestStatus" resultType="kr.esob.fdms.controller.inside.distribution.requeststatus.RequestStatusPopupVO" parameterType="kr.esob.fdms.controller.inside.distribution.requeststatus.RequestStatusPopupParam">
+		SELECT DTL.REQUEST_DESC AS requestDesc,
+			   DTL.REQUEST_NO AS requestNo,
+			   (SELECT REQUEST_DESC
+				FROM DOCS_REQUEST_DETAIL
+				WHERE REQUEST_NO = #{requestNo} AND ACTION_CD = 'REJECT') AS rejectDesc,
+			   REQ.REQUEST_TYPE AS requestType,
+			   REQ.STATUS_CD AS statusCd,
+			   FN_GET_CD_NM('requestStatusCd', REQ.STATUS_CD, #{sessionLang}) AS statusNm
+		FROM DOCS_REQUEST_DETAIL DTL
+				 JOIN DOCS_REQUEST REQ ON DTL.REQUEST_NO = REQ.REQUEST_NO
+		WHERE DTL.REQUEST_NO = #{requestNo}
+		  AND DTL.APPROVAL_STATUS_CD = 'REQUEST'
+	</select>
+
+	<select id="requestStatusPopupList" resultType="kr.esob.fdms.controller.inside.distribution.requeststatus.RequestStatusPopupVO" parameterType="kr.esob.fdms.controller.inside.distribution.requeststatus.RequestStatusPopupParam">
+		SELECT A.*,
+		ROW_NUMBER() OVER(
+		<choose>
+			<when test='sortColumn != null and !"".equals(sortColumn)'>
+				ORDER BY ${sortColumn} ${order}
+			</when>
+			<otherwise>
+				ORDER BY name ASC
+			</otherwise>
+		</choose>
+		) AS PAGEINDEX
+		FROM (
+		SELECT
+		FN_GET_CD_NM('distributeTypeCd', REQ_MAP.DISTRIBUTE_TYPE_CD, #{sessionLang}) AS distributeType,
+		FN_GET_CD_NM('distributeMethodCd', CASE WHEN 'Y' = REQ.PRINT_YN THEN 'viewPrint'
+		WHEN 'Y' = REQ.DEPLOY_NORMAL_YN THEN 'general'
+		WHEN 'Y' = REQ.DEPLOY_SPECIAL_YN THEN 'security'
+		ELSE NULL END, #{sessionLang}) AS distributeMethodCd,
+		REQ_MAP.OBJECT_NO AS dataNo,
+		REQ_MAP.OBJECT_NM AS name,
+		REQ_MAP.CURRENT_PAGE_NO AS page,
+		REQ_MAP.TOTAL_PAGE_NO AS totalPage,
+		REQ_MAP.REV_NO AS rev,
+		REQ_MAP.STD_GAPP_DT AS stdGappDt,
+		REQ_MAP.CHANGE_GAPP_DT AS changeGappDt,
+		REQ_MAP.PROTECT_YN AS protectYn,
+		FN_GET_CD_NM('businessAreaCd', REQ_MAP.BUSINESS_TYPE_CD, #{sessionLang}) AS businessAreaCd,
+		FN_GET_CD_NM('businessTypeCd', REQ_MAP.BUSINESS_TYPE_CD, #{sessionLang}) AS businessTypeCd,
+		FN_GET_CD_NM('objectTypeWithP', REQ.OBJECT_TYPE, #{sessionLang}) AS objectType,
+		REQ_MAP.PRODUCT_CD AS productCd,
+		COALESCE(REQ_MAP.PRODUCT_CD, '') AS productNm,
+		REQ_MAP.OBJECT_ID AS objectId,
+		REQ.REQUEST_NO AS requestNo,
+		FILE_INFO.FILE_NO AS fileNo,
+		FILE_INFO.ORG_FILE_NM AS orgFileNm,
+		OBJECT_INFO.SECURITY_TYPE_CD AS securityTypeCd,
+		REQ.INSERT_USER_CD AS requestUserCd
+		FROM DOCS_REQUEST_FILE FILE_INFO
+		JOIN DOCS_REQUEST_MAPPING REQ_MAP ON FILE_INFO.REQUEST_NO = REQ_MAP.REQUEST_NO AND FILE_INFO.OBJECT_ID = REQ_MAP.OBJECT_ID
+		JOIN DOCS_REQUEST REQ ON REQ_MAP.REQUEST_NO = REQ.REQUEST_NO
+		<if test="'DOC'.equals(objectType)">
+			JOIN DOCS_DOCUMENT OBJECT_INFO
+		</if>
+		<if test="'PRODUCT_DOC'.equals(objectType)">
+			JOIN DOCS_PRODUCT_DOCUMENT OBJECT_INFO
+		</if>
+		<if test="'PRODUCT_SW'.equals(objectType)">
+			JOIN DOCS_PRODUCT_SW OBJECT_INFO
+		</if>
+		<if test="'DRAWING'.equals(objectType)">
+			JOIN DOCS_DRAWING OBJECT_INFO
+		</if>
+		<if test="'SW'.equals(objectType)">
+			JOIN DOCS_SW OBJECT_INFO
+		</if>
+		ON OBJECT_INFO.OBJECT_ID = FILE_INFO.OBJECT_ID
+		WHERE REQ_MAP.REQUEST_NO = #{requestNo}
+		) A
+	</select>
+
+	<delete id="deleteRequest">
+		DELETE FROM DOCS_REQUEST WHERE REQUEST_NO = #{requestNo}
+	</delete>
+
+	<delete id="deleteRequestMapping">
+		DELETE FROM DOCS_REQUEST_MAPPING WHERE REQUEST_NO = #{requestNo}
+	</delete>
+
+	<delete id="deleteRequestDetail">
+		DELETE FROM DOCS_REQUEST_DETAIL WHERE REQUEST_NO = #{requestNo}
+	</delete>
+
+	<delete id="deleteRequestFile">
+		DELETE FROM DOCS_REQUEST_FILE WHERE REQUEST_NO = #{requestNo}
+	</delete>
+
+	<delete id="deleteRequestDeploy">
+		DELETE FROM DOCS_REQUEST_DEPLOY WHERE REQUEST_NO = #{requestNo}
+	</delete>
+
+</mapper>

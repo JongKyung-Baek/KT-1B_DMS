@@ -1,0 +1,6217 @@
+create sequence DOCS_DESTROY_SEQ
+/
+
+create sequence ITEM_USE_INFO_SEQ
+/
+
+create sequence MYSIMPLE_BBS_SEQ
+/
+
+create sequence TEST_SEQ
+/
+
+create sequence CN_SERIAL_SEQ
+    maxvalue 99999999
+    nocache
+/
+
+create sequence IDX_SEQ
+    maxvalue 99999999
+    nocache
+/
+
+create sequence CONVERT_LOG_SEQUENCE
+    nocache
+/
+
+create sequence VIEW_ANNOTATIONS_IDX
+/
+
+create sequence VIEW_ANNOTATIONS_LOG_IDX
+/
+
+create table DISTRIBUTION_HISTORY
+(
+    REQUEST_NO           VARCHAR2(100),
+    REQUEST_TYPE         VARCHAR2(12),
+    REQUEST_TYPE_NAME    VARCHAR2(20),
+    REQUEST_PURPOSE      VARCHAR2(100),
+    REQUEST_PURPOSE_NAME VARCHAR2(20),
+    COMPANY_CODE         VARCHAR2(20),
+    COMPANY_NAME         VARCHAR2(512),
+    REQUEST_USER         VARCHAR2(20),
+    REQUEST_MANAGER      VARCHAR2(20),
+    ACCEPT_USER_NAME     VARCHAR2(256),
+    REQUEST_DATE         VARCHAR2(10),
+    ACCEPT_DATE          VARCHAR2(10),
+    TASK_STATE           VARCHAR2(100),
+    TASK_STATE_NAME      VARCHAR2(20),
+    REQUEST_PURPOSE_OUT  VARCHAR2(1000),
+    ACCEPT_COMMENT       VARCHAR2(1000),
+    FILE_CODE            VARCHAR2(255) not null,
+    DEPLOY_TERM          VARCHAR2(10),
+    DEPLOY_NORMAL_YN     VARCHAR2(1),
+    DEPLOY_SPECIAL_YN    VARCHAR2(1),
+    EDIT_YN              VARCHAR2(1),
+    SAVE_YN              VARCHAR2(1),
+    PRINT_YN             VARCHAR2(1),
+    WATERMARK_YN         VARCHAR2(1),
+    CAPTURE_YN           VARCHAR2(1),
+    CLASS_NAME           VARCHAR2(50),
+    FILE_CODE_1          VARCHAR2(100),
+    FILE_CODE_2          VARCHAR2(100),
+    FILE_CODE_3          VARCHAR2(100),
+    FILE_CODE_4          VARCHAR2(100),
+    FILE_CODE_5          VARCHAR2(100),
+    FILE_NAME            VARCHAR2(2000),
+    FILE_UPLOAD_NAME     VARCHAR2(2000),
+    FILE_SYSTEM_NAME     VARCHAR2(2000),
+    FILE_PATH            VARCHAR2(1000),
+    FILE_AUTH            NUMBER,
+    PROJECT              VARCHAR2(12),
+    REVISION             VARCHAR2(30),
+    DWG_SIZE             VARCHAR2(6),
+    CUR_PAGE             NUMBER(3),
+    TOT_PAGE             NUMBER(3),
+    ECN_NO               VARCHAR2(150),
+    APPROVAL_USER        VARCHAR2(20),
+    APPROVAL_USER_NAME   VARCHAR2(256),
+    APPROVAL_NO          VARCHAR2(255),
+    DESTROY_YN           VARCHAR2(1),
+    DEPLOY_COMPANY       VARCHAR2(20),
+    APPROVAL_CODE        VARCHAR2(255),
+    APPROVAL_TYPE        VARCHAR2(100),
+    APPROVAL_DATE        VARCHAR2(10),
+    USE_END_DATE         VARCHAR2(10),
+    DEPLOY_TYPE          VARCHAR2(12),
+    FILE_VERSION         VARCHAR2(30),
+    CN_U_REVISION_NUMBER VARCHAR2(30),
+    TDM_COMPONENT_NAME   VARCHAR2(765),
+    CHK_REV              VARCHAR2(100)
+)
+/
+
+create table DOCS_APPROVAL_FILE
+(
+    REQUEST_NO              NVARCHAR2(100) not null,
+    FILE_CD                 NVARCHAR2(255),
+    META_CD                 NUMBER,
+    DESTROY_TYPE            CHAR,
+    DESTROY_STATUS_CD       CHAR,
+    DESTROY_DT              DATE,
+    INSERT_USER_CD          NVARCHAR2(20),
+    INSERT_DT               DATE,
+    UPDATE_USER_CD          NVARCHAR2(20),
+    UPDATE_DT               DATE,
+    OBJECT_ID               NVARCHAR2(50)  not null,
+    DESTROY_NO              NUMBER,
+    LAST_DESTROY_REQUEST_NO NVARCHAR2(14),
+    DEPLOY_USER_CD          VARCHAR2(20)   not null,
+    FILE_NO                 NUMBER         not null,
+    constraint DOCS_APPROVAL_FILE_PK
+        primary key (REQUEST_NO, OBJECT_ID, DEPLOY_USER_CD, FILE_NO)
+)
+/
+
+comment on table DOCS_APPROVAL_FILE is '결제파일매핑'
+/
+
+comment on column DOCS_APPROVAL_FILE.REQUEST_NO is '요청번호'
+/
+
+comment on column DOCS_APPROVAL_FILE.FILE_CD is '파일코드'
+/
+
+comment on column DOCS_APPROVAL_FILE.META_CD is '메타코드'
+/
+
+comment on column DOCS_APPROVAL_FILE.DESTROY_TYPE is '1:유효기간만료,2:이전버전,3:계약만료'
+/
+
+comment on column DOCS_APPROVAL_FILE.DESTROY_STATUS_CD is '폐기상태(destroyStatusCd)'
+/
+
+comment on column DOCS_APPROVAL_FILE.DESTROY_DT is '폐기일시'
+/
+
+comment on column DOCS_APPROVAL_FILE.INSERT_USER_CD is '등록사용자'
+/
+
+comment on column DOCS_APPROVAL_FILE.INSERT_DT is '등록일시'
+/
+
+comment on column DOCS_APPROVAL_FILE.UPDATE_USER_CD is '수정사용자'
+/
+
+comment on column DOCS_APPROVAL_FILE.UPDATE_DT is '수정일시'
+/
+
+comment on column DOCS_APPROVAL_FILE.DESTROY_NO is '폐기번호'
+/
+
+comment on column DOCS_APPROVAL_FILE.LAST_DESTROY_REQUEST_NO is '마지막폐기요처DQJSGH'
+/
+
+comment on column DOCS_APPROVAL_FILE.DEPLOY_USER_CD is '배포 수신자'
+/
+
+create table DOCS_APPROVAL_LINE
+(
+    APPROVAL_LINE_ID   NUMBER not null
+        constraint PK_DOCS_APPROVAL_LINE
+            primary key,
+    APPROVAL_LINE_DESC NVARCHAR2(80),
+    OUTSIDE_YN         CHAR,
+    PROTECT_YN         CHAR
+)
+/
+
+comment on table DOCS_APPROVAL_LINE is '결재라인'
+/
+
+comment on column DOCS_APPROVAL_LINE.APPROVAL_LINE_ID is '결재라인ID'
+/
+
+comment on column DOCS_APPROVAL_LINE.APPROVAL_LINE_DESC is '설명'
+/
+
+comment on column DOCS_APPROVAL_LINE.OUTSIDE_YN is '외부사용자요청여부'
+/
+
+comment on column DOCS_APPROVAL_LINE.PROTECT_YN is '방산여부'
+/
+
+create table DOCS_APPROVAL_LINE_DETAIL
+(
+    APPROVAL_LINE_ID   NUMBER not null,
+    PROCESS_SEQ_NO     NUMBER not null,
+    APPROVAL_STATUS_CD NVARCHAR2(16),
+    APPROVAL_GRADE_CD  NVARCHAR2(10),
+    constraint PK_DOCS_APPROVAL_LINE_DETAIL
+        primary key (APPROVAL_LINE_ID, PROCESS_SEQ_NO)
+)
+/
+
+comment on table DOCS_APPROVAL_LINE_DETAIL is '결재라인상세'
+/
+
+comment on column DOCS_APPROVAL_LINE_DETAIL.APPROVAL_LINE_ID is '결재라인ID'
+/
+
+comment on column DOCS_APPROVAL_LINE_DETAIL.PROCESS_SEQ_NO is '프로세스순번'
+/
+
+comment on column DOCS_APPROVAL_LINE_DETAIL.APPROVAL_STATUS_CD is '요청:REQUEST,접수:ACCEPT,결재:APPROVAL'
+/
+
+comment on column DOCS_APPROVAL_LINE_DETAIL.APPROVAL_GRADE_CD is '팀장:TL, 방산팀장:DEF'
+/
+
+create table DOCS_BBS
+(
+    BBS_CD      NUMBER        not null
+        constraint PK_DOCS_BBS
+            primary key,
+    BBS_TYPE_CD NVARCHAR2(20) not null,
+    TITLE       NVARCHAR2(200),
+    CONTENTS    NVARCHAR2(1000),
+    HIT_COUNT   NUMBER default 0,
+    INSERT_UID  NVARCHAR2(20),
+    INSERT_DT   DATE,
+    UPDATE_UID  NVARCHAR2(20),
+    UPDATE_DT   DATE
+)
+/
+
+comment on table DOCS_BBS is '게시판'
+/
+
+comment on column DOCS_BBS.BBS_CD is '글번호'
+/
+
+comment on column DOCS_BBS.BBS_TYPE_CD is '게시판유형코드'
+/
+
+comment on column DOCS_BBS.TITLE is '제목'
+/
+
+comment on column DOCS_BBS.CONTENTS is '내용'
+/
+
+comment on column DOCS_BBS.HIT_COUNT is '조회수'
+/
+
+comment on column DOCS_BBS.INSERT_UID is '등록사용자'
+/
+
+comment on column DOCS_BBS.INSERT_DT is '등록일시'
+/
+
+comment on column DOCS_BBS.UPDATE_UID is '수정사용자'
+/
+
+comment on column DOCS_BBS.UPDATE_DT is '수정일시'
+/
+
+create table DOCS_COMBO
+(
+    COMBO_CD NVARCHAR2(40) not null,
+    SEQ      NUMBER        not null,
+    VALUE    NVARCHAR2(48) not null,
+    LANG_CD  NVARCHAR2(64),
+    TEXT     NVARCHAR2(80),
+    TOOLTIP  NVARCHAR2(80),
+    USE_YN   CHAR,
+    constraint DOCS_COMBO_PK
+        primary key (COMBO_CD, VALUE)
+)
+/
+
+comment on table DOCS_COMBO is '콤보'
+/
+
+comment on column DOCS_COMBO.COMBO_CD is '시스템 그룹'
+/
+
+comment on column DOCS_COMBO.SEQ is '순번'
+/
+
+comment on column DOCS_COMBO.VALUE is '값'
+/
+
+comment on column DOCS_COMBO.LANG_CD is '언어코드'
+/
+
+comment on column DOCS_COMBO.TEXT is 'LANG_CD가 없을 때 보여줄 값'
+/
+
+comment on column DOCS_COMBO.TOOLTIP is '툴팁'
+/
+
+comment on column DOCS_COMBO.USE_YN is '사용여부'
+/
+
+create table DOCS_COMPANY
+(
+    COMPANY_CD        NVARCHAR2(20) not null
+        constraint PK_DOCS_COMPANY
+            primary key,
+    COMPANY_NM        NVARCHAR2(512),
+    COMPANY_TYPE      CHAR,
+    BIZ_NO            NVARCHAR2(10),
+    CORP_NO           NVARCHAR2(13),
+    VENDOR_UID        NVARCHAR2(20),
+    USE_START_DT      NVARCHAR2(8) default '19000101',
+    USE_END_DT        NVARCHAR2(8) default '99991231',
+    USE_YN            NVARCHAR2(1) default 'Y',
+    DEL_YN            NVARCHAR2(1) default 'Y',
+    INSERT_USER_CD    NVARCHAR2(20),
+    INSERT_DT         DATE,
+    UPDATE_USER_CD    NVARCHAR2(20),
+    UPDATE_DT         DATE,
+    COMPANY_CD_CUSTOM NVARCHAR2(20),
+    BUSINESS_AREA_CD  NVARCHAR2(20),
+    APPROVAL_USER_CD  NVARCHAR2(20)
+)
+/
+
+comment on table DOCS_COMPANY is '회사정보'
+/
+
+comment on column DOCS_COMPANY.COMPANY_CD is '회사코드'
+/
+
+comment on column DOCS_COMPANY.COMPANY_NM is '회사명'
+/
+
+comment on column DOCS_COMPANY.COMPANY_TYPE is 'I:내부,E:외부'
+/
+
+comment on column DOCS_COMPANY.BIZ_NO is '사업자등록번호'
+/
+
+comment on column DOCS_COMPANY.CORP_NO is '법인번호'
+/
+
+comment on column DOCS_COMPANY.VENDOR_UID is '업체담당자'
+/
+
+comment on column DOCS_COMPANY.USE_START_DT is '사용시작일'
+/
+
+comment on column DOCS_COMPANY.USE_END_DT is '사용종료일'
+/
+
+comment on column DOCS_COMPANY.USE_YN is '사용여부'
+/
+
+comment on column DOCS_COMPANY.DEL_YN is '삭제여부'
+/
+
+comment on column DOCS_COMPANY.INSERT_USER_CD is '등록자'
+/
+
+comment on column DOCS_COMPANY.INSERT_DT is '등록일'
+/
+
+comment on column DOCS_COMPANY.UPDATE_USER_CD is '수정자'
+/
+
+comment on column DOCS_COMPANY.UPDATE_DT is '수정일'
+/
+
+comment on column DOCS_COMPANY.COMPANY_CD_CUSTOM is '회사코드(사용자)'
+/
+
+comment on column DOCS_COMPANY.APPROVAL_USER_CD is 'CR결재자 USER_CD'
+/
+
+create unique index INDEX2
+    on DOCS_COMPANY (BIZ_NO)
+/
+
+create table DOCS_COMPANY_PURCHASER
+(
+    COMPANY_CD             NVARCHAR2(20) not null,
+    COMPANY_NM             NVARCHAR2(512),
+    BIZ_NO                 NVARCHAR2(10),
+    DIST_PURCHASER_USER_CD NVARCHAR2(50),
+    CR_PURCHASER_USER_CD   NVARCHAR2(20),
+    BUSINESS_AREA_CD       NVARCHAR2(20) not null,
+    constraint DOCS_COMPANY_PURCHASER_PK
+        primary key (COMPANY_CD, BUSINESS_AREA_CD)
+)
+/
+
+create table DOCS_CONF_NOTICE
+(
+    NOTICE_CD      NUMBER not null
+        constraint PK_DOCS_CONF_NOTICE
+            primary key,
+    TITLE          NVARCHAR2(150),
+    CONTENTS       NVARCHAR2(2000),
+    NOTICE_TYPE    NVARCHAR2(1),
+    NOTICE_HIT     NUMBER,
+    INSERT_USER_CD NVARCHAR2(20),
+    INSERT_DT      DATE
+)
+/
+
+comment on table DOCS_CONF_NOTICE is '형상관리공지'
+/
+
+comment on column DOCS_CONF_NOTICE.NOTICE_CD is '공지코드'
+/
+
+comment on column DOCS_CONF_NOTICE.TITLE is '제목'
+/
+
+comment on column DOCS_CONF_NOTICE.CONTENTS is '본문'
+/
+
+comment on column DOCS_CONF_NOTICE.NOTICE_TYPE is '1:규정/지침,2:최신 정보,3: 기타'
+/
+
+comment on column DOCS_CONF_NOTICE.NOTICE_HIT is '공지조회수'
+/
+
+comment on column DOCS_CONF_NOTICE.INSERT_USER_CD is '등록사용자'
+/
+
+comment on column DOCS_CONF_NOTICE.INSERT_DT is '등록일시'
+/
+
+create table DOCS_CONF_NOTICE_FILE
+(
+    FILE_NO     NUMBER not null
+        constraint PK_DOCS_CONF_NOTICE_FILE
+            primary key,
+    NOTICE_CD   NUMBER
+        constraint FK_CONF_NOTICE_TO_FILE2
+            references DOCS_CONF_NOTICE,
+    FILE_PATH   NVARCHAR2(512),
+    FILE_NM     NVARCHAR2(64),
+    ORG_FILE_NM NVARCHAR2(256)
+)
+/
+
+comment on table DOCS_CONF_NOTICE_FILE is '형상관리공지파일'
+/
+
+comment on column DOCS_CONF_NOTICE_FILE.FILE_NO is '파일번호'
+/
+
+comment on column DOCS_CONF_NOTICE_FILE.NOTICE_CD is '공지코드'
+/
+
+comment on column DOCS_CONF_NOTICE_FILE.FILE_PATH is '파일경로'
+/
+
+comment on column DOCS_CONF_NOTICE_FILE.FILE_NM is '파일명칭'
+/
+
+comment on column DOCS_CONF_NOTICE_FILE.ORG_FILE_NM is '원래파일명칭'
+/
+
+create table DOCS_CONF_QNA
+(
+    QNA_CD         NUMBER not null
+        constraint PK_DOCS_CONF_QNA
+            primary key,
+    TITLE          NVARCHAR2(150),
+    CONTENTS       NVARCHAR2(2000),
+    ANSWER         NVARCHAR2(2000),
+    QNA_TYPE       NVARCHAR2(1),
+    STATUS         NVARCHAR2(1),
+    COMPANY_CD     NVARCHAR2(20),
+    VENDOR_CD      NVARCHAR2(10),
+    INSERT_USER_CD NVARCHAR2(20),
+    INSERT_DT      DATE,
+    ANSWER_USER_CD NVARCHAR2(20),
+    ANSWER_DT      DATE
+)
+/
+
+comment on table DOCS_CONF_QNA is '형상관리질의및답변'
+/
+
+comment on column DOCS_CONF_QNA.QNA_CD is 'QNA코드'
+/
+
+comment on column DOCS_CONF_QNA.TITLE is '제목'
+/
+
+comment on column DOCS_CONF_QNA.CONTENTS is '본문'
+/
+
+comment on column DOCS_CONF_QNA.ANSWER is '답변'
+/
+
+comment on column DOCS_CONF_QNA.QNA_TYPE is '1:규정/지침,2:최신 정보,3: 기타'
+/
+
+comment on column DOCS_CONF_QNA.STATUS is 'Q:질문/A:답변'
+/
+
+comment on column DOCS_CONF_QNA.COMPANY_CD is '회사코드'
+/
+
+comment on column DOCS_CONF_QNA.VENDOR_CD is '업체코드'
+/
+
+comment on column DOCS_CONF_QNA.INSERT_USER_CD is '등록사용자'
+/
+
+comment on column DOCS_CONF_QNA.INSERT_DT is '등록일시'
+/
+
+comment on column DOCS_CONF_QNA.ANSWER_USER_CD is '답변사용자코드'
+/
+
+comment on column DOCS_CONF_QNA.ANSWER_DT is '답변일시'
+/
+
+create table DOCS_CONF_QNA_FILE
+(
+    FILE_NO     NUMBER not null
+        constraint PK_DOCS_CONF_QNA_FILE
+            primary key,
+    QNA_CD      NUMBER
+        constraint FK_DOCS_CONF_QNA_TO_FILE
+            references DOCS_CONF_QNA,
+    FILE_PATH   NVARCHAR2(512),
+    FILE_NM     NVARCHAR2(64),
+    ORG_FILE_NM NVARCHAR2(256)
+)
+/
+
+comment on table DOCS_CONF_QNA_FILE is '형상관리질의및답변파일'
+/
+
+comment on column DOCS_CONF_QNA_FILE.FILE_NO is '파일번호'
+/
+
+comment on column DOCS_CONF_QNA_FILE.QNA_CD is 'QNA코드'
+/
+
+comment on column DOCS_CONF_QNA_FILE.FILE_PATH is '파일경로'
+/
+
+comment on column DOCS_CONF_QNA_FILE.FILE_NM is '파일명칭'
+/
+
+comment on column DOCS_CONF_QNA_FILE.ORG_FILE_NM is '원래파일명칭'
+/
+
+create table DOCS_DEF_INSTEAD_USER
+(
+    USER_CD         NVARCHAR2(20) not null,
+    INSTEAD_USER_CD NVARCHAR2(20) not null,
+    constraint PK_DOCS_DEF_INSTEAD_USER
+        primary key (USER_CD, INSTEAD_USER_CD)
+)
+/
+
+comment on table DOCS_DEF_INSTEAD_USER is '방산대결자'
+/
+
+comment on column DOCS_DEF_INSTEAD_USER.USER_CD is 'USER코드'
+/
+
+comment on column DOCS_DEF_INSTEAD_USER.INSTEAD_USER_CD is '대결자'
+/
+
+create table DOCS_DEPLOY_INFO
+(
+    REQUEST_NO        NVARCHAR2(14) not null,
+    OBJECT_ID         NVARCHAR2(50) not null,
+    DEPLOY_USER_CD    NVARCHAR2(15) not null,
+    DEPLOY_COUNT      NUMBER,
+    COPY              NUMBER,
+    DESTROY_COUNT     NUMBER,
+    DESTROY_STATUS_CD NVARCHAR2(11),
+    DEPLOY_DEPT_CD    NVARCHAR2(20),
+    OBJECT_NO         NVARCHAR2(50),
+    DEPLOY_ACCEPT_YN  VARCHAR2(20),
+    constraint DOCS_DEPLOY_INFO_PK
+        primary key (REQUEST_NO, OBJECT_ID, DEPLOY_USER_CD)
+)
+/
+
+comment on column DOCS_DEPLOY_INFO.REQUEST_NO is '요청번호'
+/
+
+comment on column DOCS_DEPLOY_INFO.DEPLOY_USER_CD is '배포사용자'
+/
+
+comment on column DOCS_DEPLOY_INFO.DEPLOY_COUNT is '배포매수'
+/
+
+comment on column DOCS_DEPLOY_INFO.COPY is '배포부수(1부,2부)'
+/
+
+comment on column DOCS_DEPLOY_INFO.DESTROY_COUNT is '폐기매수'
+/
+
+comment on column DOCS_DEPLOY_INFO.DESTROY_STATUS_CD is '폐기상태코드(ALL_DESTROY/DESTROY)'
+/
+
+create table DOCS_DEPT
+(
+    DEPT_CD               NVARCHAR2(20) not null
+        constraint DOCS_DEPT_PK
+            primary key,
+    DEPT_CD_CUSTOM        NVARCHAR2(20),
+    PARENT_DEPT_CD        NVARCHAR2(20),
+    DEPT_NM               NVARCHAR2(512),
+    DEPT_ENG_NM           NVARCHAR2(512),
+    COMPANY_CD            NVARCHAR2(20),
+    USE_YN                NVARCHAR2(1) default 'Y',
+    DEL_YN                NVARCHAR2(1) default 'N',
+    SORT_SEQ              NVARCHAR2(255),
+    INSERT_UID            NVARCHAR2(20),
+    INSERT_DT             DATE,
+    UPDATE_UID            NVARCHAR2(20),
+    UPDATE_DT             DATE,
+    TEAM_LEADER_USER_CD   NVARCHAR2(20),
+    PURCHASE_TEAM_YN      CHAR,
+    ILS_TEAM_YN           CHAR,
+    DEPT_SHORT_PATH       NVARCHAR2(255),
+    DEPT_LONG_PATH        NVARCHAR2(255),
+    LVL                   NUMBER,
+    DEPT_TYPE             VARCHAR2(50),
+    START_DATE            DATE,
+    END_DATE              DATE,
+    PRODUCT_TEAM_YN       CHAR,
+    PURCHASE_YN           CHAR,
+    PURCHASE_PLAN_TEAM_YN CHAR
+)
+/
+
+comment on table DOCS_DEPT is '부서정보'
+/
+
+comment on column DOCS_DEPT.DEPT_CD is '부서코드'
+/
+
+comment on column DOCS_DEPT.DEPT_CD_CUSTOM is '부서코드(사용자)'
+/
+
+comment on column DOCS_DEPT.PARENT_DEPT_CD is '부모 부서코드'
+/
+
+comment on column DOCS_DEPT.DEPT_NM is '부서명'
+/
+
+comment on column DOCS_DEPT.DEPT_ENG_NM is '부서영문명'
+/
+
+comment on column DOCS_DEPT.COMPANY_CD is '회사코드'
+/
+
+comment on column DOCS_DEPT.USE_YN is '사용여부'
+/
+
+comment on column DOCS_DEPT.DEL_YN is '삭제여부'
+/
+
+comment on column DOCS_DEPT.SORT_SEQ is '정렬순서'
+/
+
+comment on column DOCS_DEPT.INSERT_UID is '등록자'
+/
+
+comment on column DOCS_DEPT.INSERT_DT is '등록일'
+/
+
+comment on column DOCS_DEPT.UPDATE_UID is '수정자'
+/
+
+comment on column DOCS_DEPT.UPDATE_DT is '수정일'
+/
+
+comment on column DOCS_DEPT.TEAM_LEADER_USER_CD is '팀장사용자코드'
+/
+
+comment on column DOCS_DEPT.PURCHASE_TEAM_YN is '구매팀여부'
+/
+
+comment on column DOCS_DEPT.ILS_TEAM_YN is 'ILS팀 여부'
+/
+
+comment on column DOCS_DEPT.PRODUCT_TEAM_YN is '생산기술팀여부'
+/
+
+comment on column DOCS_DEPT.PURCHASE_YN is '구매가능여부'
+/
+
+comment on column DOCS_DEPT.PURCHASE_PLAN_TEAM_YN is '구매기획팀여부'
+/
+
+create table DOCS_DESTROY
+(
+    DESTROY_NO NUMBER not null
+        constraint DOCS_DESTROY_PK
+            primary key
+)
+/
+
+comment on column DOCS_DESTROY.DESTROY_NO is '폐기번호'
+/
+
+create table DOCS_DESTROY_FILE
+(
+    DESTROY_NO       NVARCHAR2(100) not null,
+    DESTROY_FILE_SEQ NUMBER         not null,
+    FILE_PATH        NVARCHAR2(100),
+    FILE_NM          NVARCHAR2(100),
+    constraint PK_DOCS_DISPOSAL_FILE
+        primary key (DESTROY_NO, DESTROY_FILE_SEQ)
+)
+/
+
+comment on table DOCS_DESTROY_FILE is '폐기파일'
+/
+
+comment on column DOCS_DESTROY_FILE.DESTROY_NO is '폐기번호'
+/
+
+comment on column DOCS_DESTROY_FILE.DESTROY_FILE_SEQ is '폐기파일순번'
+/
+
+comment on column DOCS_DESTROY_FILE.FILE_PATH is '파일저장경로'
+/
+
+create table DOCS_DESTROY_REQUEST
+(
+    DESTROY_REQUEST_NO     NVARCHAR2(14) not null
+        constraint DOCS_DESTROY_REQUEST_PK
+            primary key,
+    APPROVAL_LINE_ID       NUMBER,
+    CURRENT_PROCESS_SEQ_NO NUMBER,
+    STATUS_CD              NVARCHAR2(10),
+    INSERT_USER_CD         NVARCHAR2(20),
+    INSERT_DT              DATE,
+    APPROVAL_DT            DATE,
+    BUSINESS_AREA_CD       NVARCHAR2(30),
+    DESTROY_TYPE           CHAR,
+    DESTROY_STATUS_CD      CHAR,
+    DESTROY_DT             DATE,
+    DESTROY_NO             NUMBER,
+    REQUEST_TYPE           NVARCHAR2(16),
+    APPROVAL_DESTROY_NO    NUMBER,
+    COMPANY_CD             NVARCHAR2(20)
+)
+/
+
+comment on column DOCS_DESTROY_REQUEST.DESTROY_REQUEST_NO is '폐기요청번호'
+/
+
+comment on column DOCS_DESTROY_REQUEST.APPROVAL_LINE_ID is '결재라인ID'
+/
+
+comment on column DOCS_DESTROY_REQUEST.CURRENT_PROCESS_SEQ_NO is '현재순번'
+/
+
+comment on column DOCS_DESTROY_REQUEST.STATUS_CD is '상태코드'
+/
+
+comment on column DOCS_DESTROY_REQUEST.INSERT_USER_CD is '등록사용자'
+/
+
+comment on column DOCS_DESTROY_REQUEST.INSERT_DT is '등록일시'
+/
+
+comment on column DOCS_DESTROY_REQUEST.APPROVAL_DT is '최종결재일시'
+/
+
+comment on column DOCS_DESTROY_REQUEST.BUSINESS_AREA_CD is '사업장구분'
+/
+
+comment on column DOCS_DESTROY_REQUEST.REQUEST_TYPE is '요청유형(requestType)'
+/
+
+create table DOCS_DESTROY_REQUEST_DETAIL
+(
+    DESTROY_REQUEST_NO NVARCHAR2(14) not null,
+    PROCESS_SEQ        NUMBER        not null,
+    APPROVAL_STATUS_CD NVARCHAR2(10),
+    APPROVAL_GRADE_CD  NVARCHAR2(10),
+    ACTION_CD          NVARCHAR2(10),
+    ORIGINAL_USER_CD   NVARCHAR2(20),
+    ACTUAL_USER_CD     NVARCHAR2(20),
+    REQUEST_DESC       NVARCHAR2(300),
+    ACTION_DT          DATE,
+    constraint DOCS_DESTROY_REQUEST_DETAI_PK
+        primary key (DESTROY_REQUEST_NO, PROCESS_SEQ)
+)
+/
+
+comment on column DOCS_DESTROY_REQUEST_DETAIL.DESTROY_REQUEST_NO is '폐기요청코드'
+/
+
+comment on column DOCS_DESTROY_REQUEST_DETAIL.PROCESS_SEQ is '프로세스순번'
+/
+
+comment on column DOCS_DESTROY_REQUEST_DETAIL.APPROVAL_STATUS_CD is '결재상태코드(approvalStatusCd)'
+/
+
+comment on column DOCS_DESTROY_REQUEST_DETAIL.APPROVAL_GRADE_CD is '결재등급코드(approvalGradeCd)'
+/
+
+comment on column DOCS_DESTROY_REQUEST_DETAIL.ACTION_CD is '사용자가한행동'
+/
+
+comment on column DOCS_DESTROY_REQUEST_DETAIL.ORIGINAL_USER_CD is '원래사용자코드'
+/
+
+comment on column DOCS_DESTROY_REQUEST_DETAIL.ACTUAL_USER_CD is '실제ACTION사용자'
+/
+
+comment on column DOCS_DESTROY_REQUEST_DETAIL.REQUEST_DESC is '요청내용'
+/
+
+comment on column DOCS_DESTROY_REQUEST_DETAIL.ACTION_DT is '행동일시'
+/
+
+create table DOCS_DESTROY_REQUEST_MAPPING
+(
+    REQUEST_NO         VARCHAR2(20) not null,
+    OBJECT_ID          VARCHAR2(50) not null,
+    DESTROY_REQUEST_NO VARCHAR2(20) not null,
+    DEPLOY_USER_CD     VARCHAR2(20) not null,
+    FILE_NO            NUMBER,
+    BUSINESS_AREA_CD   VARCHAR2(20),
+    OBJECT_NO          NVARCHAR2(20),
+    constraint DOCS_DESTROY_REQUEST_MAPPI_PK
+        primary key (REQUEST_NO, OBJECT_ID, DESTROY_REQUEST_NO, DEPLOY_USER_CD)
+)
+/
+
+comment on column DOCS_DESTROY_REQUEST_MAPPING.REQUEST_NO is '요청번호'
+/
+
+comment on column DOCS_DESTROY_REQUEST_MAPPING.OBJECT_ID is 'OBJECT_ID'
+/
+
+comment on column DOCS_DESTROY_REQUEST_MAPPING.DESTROY_REQUEST_NO is '폐기요청번호'
+/
+
+comment on column DOCS_DESTROY_REQUEST_MAPPING.DEPLOY_USER_CD is '생산기술자료(배포받을사용자-현장접수자)'
+/
+
+comment on column DOCS_DESTROY_REQUEST_MAPPING.FILE_NO is '파일순서'
+/
+
+create table DOCS_DOCUMENT
+(
+    CN_SERIAL          NUMBER        not null,
+    OBJECT_ID          NVARCHAR2(50) not null
+        constraint PK_DOCS_DOCUMENT
+            primary key,
+    BUSINESS_AREA_CD   NVARCHAR2(30),
+    BUSINESS_TYPE_CD   NVARCHAR2(30),
+    DOC_CLASS_CD1      NVARCHAR2(30),
+    DOC_CLASS_NM1      NVARCHAR2(50),
+    DOC_CLASS_CD2      NVARCHAR2(30),
+    DOC_CLASS_NM2      NVARCHAR2(50),
+    PRODUCT_CD         NVARCHAR2(30),
+    ECN_NO             NVARCHAR2(50),
+    ECN_INSERT_UID     NVARCHAR2(50),
+    DOCUMENT_NO        NVARCHAR2(50),
+    REV_NO             NVARCHAR2(10),
+    DOCUMENT_NM        NVARCHAR2(255),
+    DOCUMENT_ENNM      NVARCHAR2(255),
+    ACCOUNT_NM         NVARCHAR2(100),
+    STATUS_CD          NVARCHAR2(30),
+    TOTAL_SHEET        NUMBER,
+    PROJECT_CD         NVARCHAR2(31),
+    PROJECT_NM         NVARCHAR2(100),
+    DISTRIBUTE_TYPE_CD NVARCHAR2(30),
+    STD_GAPP_DT        DATE,
+    CHANGE_GAPP_DT     DATE,
+    SECURITY_TYPE_CD   NVARCHAR2(30),
+    PROTECT_YN         NVARCHAR2(1),
+    DESCRIPTION        NVARCHAR2(255),
+    INSERT_DEPT_NM     NVARCHAR2(100),
+    INSERT_UID         NVARCHAR2(50),
+    INSERT_DT          DATE,
+    UPDATE_DEPT_NM     NVARCHAR2(100),
+    UPDATE_UID         NVARCHAR2(50),
+    UPDATE_DT          DATE,
+    INTERFACE_DT       DATE,
+    VALID_TYPE         VARCHAR2(20),
+    INSERT_USER_NM     VARCHAR2(20),
+    REGISTER_USER      VARCHAR2(20)
+)
+/
+
+comment on table DOCS_DOCUMENT is '문서정보'
+/
+
+comment on column DOCS_DOCUMENT.OBJECT_ID is 'OBJECT_ID'
+/
+
+comment on column DOCS_DOCUMENT.BUSINESS_AREA_CD is '1/2사업장'
+/
+
+comment on column DOCS_DOCUMENT.BUSINESS_TYPE_CD is '개발/양산'
+/
+
+comment on column DOCS_DOCUMENT.DOC_CLASS_CD1 is '과제산출물/일반자료/양산TDP/생산기술자료 '
+/
+
+comment on column DOCS_DOCUMENT.DOC_CLASS_NM1 is '대분류명'
+/
+
+comment on column DOCS_DOCUMENT.DOC_CLASS_CD2 is '엑셀참조'
+/
+
+comment on column DOCS_DOCUMENT.DOC_CLASS_NM2 is '중분류명'
+/
+
+comment on column DOCS_DOCUMENT.PRODUCT_CD is '기종'
+/
+
+comment on column DOCS_DOCUMENT.ECN_NO is 'ECN NO'
+/
+
+comment on column DOCS_DOCUMENT.ECN_INSERT_UID is 'ECN 작성자'
+/
+
+comment on column DOCS_DOCUMENT.DOCUMENT_NO is '사용자 식별 가능 번호(검색활용)'
+/
+
+comment on column DOCS_DOCUMENT.REV_NO is 'REV'
+/
+
+comment on column DOCS_DOCUMENT.DOCUMENT_NM is '문서명'
+/
+
+comment on column DOCS_DOCUMENT.ACCOUNT_NM is '설명'
+/
+
+comment on column DOCS_DOCUMENT.STATUS_CD is '상태 : release'
+/
+
+comment on column DOCS_DOCUMENT.TOTAL_SHEET is '총매수'
+/
+
+comment on column DOCS_DOCUMENT.PROJECT_CD is '프로젝트코드'
+/
+
+comment on column DOCS_DOCUMENT.PROJECT_NM is '프로젝트명'
+/
+
+comment on column DOCS_DOCUMENT.STD_GAPP_DT is '규격화 정부승인일'
+/
+
+comment on column DOCS_DOCUMENT.CHANGE_GAPP_DT is '기술변경 정부승인일'
+/
+
+comment on column DOCS_DOCUMENT.SECURITY_TYPE_CD is '보안등급'
+/
+
+comment on column DOCS_DOCUMENT.PROTECT_YN is '방산기술보호 대상'
+/
+
+comment on column DOCS_DOCUMENT.DESCRIPTION is '설명'
+/
+
+comment on column DOCS_DOCUMENT.INSERT_DEPT_NM is '작성자 부서명'
+/
+
+comment on column DOCS_DOCUMENT.INSERT_UID is '작성자'
+/
+
+comment on column DOCS_DOCUMENT.INSERT_DT is '작성일자'
+/
+
+comment on column DOCS_DOCUMENT.UPDATE_DEPT_NM is '수정자 부서명'
+/
+
+comment on column DOCS_DOCUMENT.UPDATE_UID is '수정자'
+/
+
+comment on column DOCS_DOCUMENT.UPDATE_DT is '수정일자'
+/
+
+comment on column DOCS_DOCUMENT.INTERFACE_DT is '인터페이스된 날짜'
+/
+
+create table DOCS_DOCUMENT_FILE
+(
+    CN_SERIAL          NUMBER        not null,
+    OBJECT_ID          NVARCHAR2(50) not null,
+    FILE_NO            NUMBER        not null,
+    FILE_PATH_NM       NVARCHAR2(150),
+    ORG_FILE_NM        NVARCHAR2(255),
+    FILE_NM            NVARCHAR2(150),
+    DISTRIBUTE_TYPE_CD NVARCHAR2(30),
+    FILE_SIZE          NVARCHAR2(10),
+    INTERFACE_DT       DATE,
+    INSERT_USER_NM     VARCHAR2(20),
+    REGISTER_USER      VARCHAR2(20),
+    constraint DOCS_DOCUMENT_FILE_PK
+        primary key (OBJECT_ID, FILE_NO),
+    constraint "DOCS_DOCUMENT_FILE_pk"
+        unique (FILE_PATH_NM, ORG_FILE_NM, FILE_NM, FILE_SIZE)
+)
+/
+
+comment on column DOCS_DOCUMENT_FILE.FILE_NO is '파일번호'
+/
+
+comment on column DOCS_DOCUMENT_FILE.FILE_PATH_NM is '파일경로'
+/
+
+comment on column DOCS_DOCUMENT_FILE.ORG_FILE_NM is '원본파일명'
+/
+
+comment on column DOCS_DOCUMENT_FILE.FILE_NM is '파일명칭'
+/
+
+comment on column DOCS_DOCUMENT_FILE.DISTRIBUTE_TYPE_CD is '배포유형(원도(개발/양산), 승인요청도, 승인도, 긴급도 Origin/App Request/Approved)'
+/
+
+comment on column DOCS_DOCUMENT_FILE.FILE_SIZE is '파일크기
+'
+/
+
+create table DOCS_DOCUMENT_MEMBER
+(
+    CN_SERIAL    NUMBER        not null,
+    OBJECT_ID    NVARCHAR2(50) not null,
+    ACCESS_UID   NVARCHAR2(50) not null,
+    INTERFACE_DT DATE,
+    constraint DOCS_DOCUMENT_MEMBER_PK
+        primary key (ACCESS_UID, OBJECT_ID)
+)
+/
+
+comment on column DOCS_DOCUMENT_MEMBER.ACCESS_UID is '접근자 AD 계정'
+/
+
+create table DOCS_DRAWING
+(
+    CN_SERIAL          NUMBER         not null,
+    OBJECT_ID          NVARCHAR2(60)  not null
+        constraint DOCS_DRAWING_PK
+            primary key,
+    BUSINESS_AREA_CD   NVARCHAR2(30),
+    BUSINESS_TYPE_CD   NVARCHAR2(30)  not null,
+    ECN_NO             NVARCHAR2(1000),
+    ECN_INSERT_UID     NVARCHAR2(50),
+    DRAWING_TYPE       NVARCHAR2(50),
+    DRAWING_NO         NVARCHAR2(100) not null,
+    DRAWING_REV        NVARCHAR2(50),
+    REV_NO             NVARCHAR2(50)  not null,
+    DRAWING_NM         NVARCHAR2(255),
+    DISTRIBUTE_TYPE_CD NVARCHAR2(30)  not null,
+    STATUS_CD          NVARCHAR2(30),
+    CURRENT_PAGE_NO    NUMBER         not null,
+    TOTAL_PAGE_NO      NUMBER         not null,
+    EFFECTIVE_DT       DATE,
+    FILE_PATH_NM       NVARCHAR2(150),
+    ORG_FILE_NM        NVARCHAR2(255),
+    FILE_NM            NVARCHAR2(100),
+    FILE_SIZE          NVARCHAR2(10),
+    STD_GAPP_DT        DATE,
+    CHANGE_GAPP_DT     DATE,
+    PURCHASER_UID      NVARCHAR2(50),
+    VENDOR_CD          NVARCHAR2(30),
+    DESCRIPTION        NVARCHAR2(255),
+    SECURITY_TYPE_CD   NVARCHAR2(30),
+    PROTECT_YN         NVARCHAR2(1),
+    INSERT_DEPT_NM     NVARCHAR2(100),
+    INSERT_UID         NVARCHAR2(50),
+    INSERT_DT          DATE,
+    UPDATE_DEPT_NM     NVARCHAR2(100),
+    UPDATE_UID         NVARCHAR2(50),
+    UPDATE_DT          DATE,
+    INTERFACE_DT       DATE,
+    PRODUCT_CD         NVARCHAR2(30),
+    PLANT_CD           NVARCHAR2(10),
+    ECN_VENDOR_USER    NVARCHAR2(20),
+    ECN_TITLE          NVARCHAR2(20),
+    VALID_TYPE         VARCHAR2(20),
+    VENDOR_ACCEPT_DT   DATE,
+    DISTRIBUTION_YN    NVARCHAR2(1),
+    INSERT_USER_NM     NVARCHAR2(100),
+    PART_REV           NVARCHAR2(20),
+    PDM_PART_NO        NVARCHAR2(20),
+    constraint "DOCS_DRAWING_pk"
+        unique (FILE_NM, ORG_FILE_NM, FILE_SIZE, FILE_PATH_NM)
+)
+/
+
+comment on column DOCS_DRAWING.CN_SERIAL is '일련번호'
+/
+
+comment on column DOCS_DRAWING.OBJECT_ID is 'OBJECT ID'
+/
+
+comment on column DOCS_DRAWING.BUSINESS_AREA_CD is '사업장'
+/
+
+comment on column DOCS_DRAWING.BUSINESS_TYPE_CD is '개발/양산'
+/
+
+comment on column DOCS_DRAWING.ECN_NO is 'ECN_NO'
+/
+
+comment on column DOCS_DRAWING.ECN_INSERT_UID is 'ECN 작성자'
+/
+
+comment on column DOCS_DRAWING.DRAWING_TYPE is '도면타입'
+/
+
+comment on column DOCS_DRAWING.DRAWING_NO is '도면번호'
+/
+
+comment on column DOCS_DRAWING.DRAWING_REV is '도번리비전'
+/
+
+comment on column DOCS_DRAWING.REV_NO is '시트리비전'
+/
+
+comment on column DOCS_DRAWING.DRAWING_NM is '도면명'
+/
+
+comment on column DOCS_DRAWING.DISTRIBUTE_TYPE_CD is '원도(개발/양산),승인요청도,승인도,긴급도'
+/
+
+comment on column DOCS_DRAWING.STATUS_CD is '상태CD'
+/
+
+comment on column DOCS_DRAWING.CURRENT_PAGE_NO is '현재페이지'
+/
+
+comment on column DOCS_DRAWING.TOTAL_PAGE_NO is '총 페이지'
+/
+
+comment on column DOCS_DRAWING.EFFECTIVE_DT is '유효일자(도면유효일자)'
+/
+
+comment on column DOCS_DRAWING.FILE_PATH_NM is '파일경로'
+/
+
+comment on column DOCS_DRAWING.ORG_FILE_NM is '원본파일명'
+/
+
+comment on column DOCS_DRAWING.FILE_NM is '파일명'
+/
+
+comment on column DOCS_DRAWING.FILE_SIZE is '파일크기'
+/
+
+comment on column DOCS_DRAWING.STD_GAPP_DT is '규격화 정부승인일'
+/
+
+comment on column DOCS_DRAWING.CHANGE_GAPP_DT is '기술변경 정부승인일'
+/
+
+comment on column DOCS_DRAWING.PURCHASER_UID is '구매담당자(AD계정)'
+/
+
+comment on column DOCS_DRAWING.VENDOR_CD is '일반 : ERP PO 연계, 긴급 : PDM 입력 '
+/
+
+comment on column DOCS_DRAWING.SECURITY_TYPE_CD is '사외비/비닉'
+/
+
+comment on column DOCS_DRAWING.PROTECT_YN is '방산기술자료 대상 여부'
+/
+
+comment on column DOCS_DRAWING.INSERT_DEPT_NM is '등록자 부서명'
+/
+
+comment on column DOCS_DRAWING.INSERT_UID is '등록자'
+/
+
+comment on column DOCS_DRAWING.INSERT_DT is '등록일'
+/
+
+comment on column DOCS_DRAWING.UPDATE_DEPT_NM is '수정자부서명'
+/
+
+comment on column DOCS_DRAWING.UPDATE_UID is '수정자'
+/
+
+comment on column DOCS_DRAWING.UPDATE_DT is '수정일'
+/
+
+comment on column DOCS_DRAWING.INTERFACE_DT is 'Interface 일자'
+/
+
+comment on column DOCS_DRAWING.PRODUCT_CD is '기종'
+/
+
+comment on column DOCS_DRAWING.PLANT_CD is '사업장'
+/
+
+comment on column DOCS_DRAWING.DISTRIBUTION_YN is '긴급배포여부'
+/
+
+create table DOCS_DRAWING_MEMBER
+(
+    CN_SERIAL    NUMBER        not null,
+    OBJECT_ID    NVARCHAR2(50) not null,
+    ACCESS_UID   NVARCHAR2(50) not null,
+    INTERFACE_DT DATE,
+    constraint PK_DOCS_DRAWING_ACCESS_USER
+        primary key (ACCESS_UID, OBJECT_ID)
+)
+/
+
+comment on table DOCS_DRAWING_MEMBER is '도면정보-방산보호자료접근자'
+/
+
+comment on column DOCS_DRAWING_MEMBER.ACCESS_UID is '접근자 AD 계정'
+/
+
+create table DOCS_DUANZONG_INFO
+(
+    MANAGEMENT_NO         NVARCHAR2(100) not null
+        constraint PK_DOCS_DUANZONG_INFO
+            primary key,
+    BUSINESS_AREA_CD      NVARCHAR2(10),
+    VENDOR_CD             NVARCHAR2(100),
+    VENDOR_NM             NVARCHAR2(100),
+    VENDOR_USERID         NVARCHAR2(50),
+    VENDOR_USERNM         NVARCHAR2(100),
+    DEFENSE_PUR_ID        NVARCHAR2(50),
+    DEFENSE_PUR_NM        NVARCHAR2(100),
+    DEFENSE_PUR_ACCEPT_YN NVARCHAR2(10),
+    DUANZONG_DT           DATE,
+    DUANZONG_USERID       NVARCHAR2(50),
+    DUANZONG_USERNM       NVARCHAR2(100),
+    FILE_PATH             NVARCHAR2(200),
+    FILE_NM               NVARCHAR2(200),
+    CREATE_DATE           DATE,
+    DUANZONG_INSERT_DT    DATE,
+    FILE_PATH_E           NVARCHAR2(200)
+)
+/
+
+comment on table DOCS_DUANZONG_INFO is '협력사단종품관리'
+/
+
+comment on column DOCS_DUANZONG_INFO.MANAGEMENT_NO is '관리번호(자동채번(DOCS_YYYY_0000)'
+/
+
+comment on column DOCS_DUANZONG_INFO.BUSINESS_AREA_CD is '사업장구분 '
+/
+
+comment on column DOCS_DUANZONG_INFO.VENDOR_CD is '업체코드'
+/
+
+comment on column DOCS_DUANZONG_INFO.VENDOR_NM is '업체명'
+/
+
+comment on column DOCS_DUANZONG_INFO.VENDOR_USERID is '업체담당자_ID'
+/
+
+comment on column DOCS_DUANZONG_INFO.VENDOR_USERNM is '업체담당자'
+/
+
+comment on column DOCS_DUANZONG_INFO.DEFENSE_PUR_ID is '디펜스 구매기획팀 담당자 ID(PDM 에서 입력)'
+/
+
+comment on column DOCS_DUANZONG_INFO.DEFENSE_PUR_NM is '디펜스 구매기획팀 담당자 명(PDM 에서 입력)'
+/
+
+comment on column DOCS_DUANZONG_INFO.DEFENSE_PUR_ACCEPT_YN is '디펜스 구매기획팀 접수 여부(PDM 에서 입력)'
+/
+
+comment on column DOCS_DUANZONG_INFO.DUANZONG_DT is '단종반영일자(PDM 에서 입력)'
+/
+
+comment on column DOCS_DUANZONG_INFO.DUANZONG_USERID is '단종반영 담당자 ID(PDM 에서 입력)'
+/
+
+comment on column DOCS_DUANZONG_INFO.DUANZONG_USERNM is '단종반영 담당자(PDM 에서 입력)'
+/
+
+comment on column DOCS_DUANZONG_INFO.FILE_PATH is '파일경로'
+/
+
+comment on column DOCS_DUANZONG_INFO.FILE_NM is '파일명'
+/
+
+comment on column DOCS_DUANZONG_INFO.CREATE_DATE is '등록일자'
+/
+
+comment on column DOCS_DUANZONG_INFO.DUANZONG_INSERT_DT is '단종입력일자(PDM 에서 입력)'
+/
+
+create table DOCS_ECO_HISTORY
+(
+    CN_SERIAL             NUMBER not null
+        constraint PK_DOCS_ECO_HISTORY
+            primary key,
+    BUSINESS_AREA_CD      NVARCHAR2(30),
+    BUSINESS_TYPE_CD      NVARCHAR2(30),
+    ECN_NO                NVARCHAR2(50),
+    UPPER_PART_NO         NVARCHAR2(50),
+    UPPER_PART_REV_NO     NVARCHAR2(50),
+    UPPER_DRAWING_NO      NVARCHAR2(50),
+    UPPER_DRAWING_REV_NO  NVARCHAR2(50),
+    BEFORE_PART_NO        NVARCHAR2(50),
+    BEFORE_PART_REV_NO    NVARCHAR2(50),
+    BEFORE_DRAWING_NO     NVARCHAR2(50),
+    BEFORE_DRAWING_REV_NO NVARCHAR2(50),
+    AFTER_PART_NO         NVARCHAR2(50),
+    AFTER_PART_REV_NO     NVARCHAR2(30),
+    AFTER_DRAWING_NO      NVARCHAR2(50),
+    AFTER_DRAWING_REV_NO  NVARCHAR2(50),
+    USE_TYPE_CD           NVARCHAR2(30),
+    ECN_INSERT_UID        NVARCHAR2(50),
+    ECN_APPROVAL_DT       DATE,
+    INTERFACE_DT          DATE,
+    SEQ_NO                NVARCHAR2(10)
+)
+/
+
+create table DOCS_FILE_META
+(
+    META_CD   NUMBER not null
+        constraint PK_DOCS_FILE_META
+            primary key,
+    META_NM   NVARCHAR2(100),
+    META_TYPE NVARCHAR2(10)
+)
+/
+
+comment on table DOCS_FILE_META is '파일메타정보'
+/
+
+comment on column DOCS_FILE_META.META_CD is '메타코드'
+/
+
+comment on column DOCS_FILE_META.META_NM is '자료명'
+/
+
+comment on column DOCS_FILE_META.META_TYPE is 'DOC:문서,PLAN:도면,SW:SW,TDP:TDP,PROD:생산기술,CR:CR'
+/
+
+create table DOCS_FILE
+(
+    FILE_CD        NVARCHAR2(256) not null,
+    META_CD        NUMBER
+        constraint FK_DOCS_FILE_META_TO_DOCS_FILE
+            references DOCS_FILE_META,
+    FILE_NM        NVARCHAR2(256),
+    FILE_UPLOAD_NM NVARCHAR2(256),
+    FTP_FILE_PATH  NVARCHAR2(1000),
+    FILE_PATH      NVARCHAR2(1000),
+    FILE_SIZE      NUMBER,
+    UPLOAD_USER_CD NVARCHAR2(20),
+    UPLOAD_DT      DATE,
+    DEL_YN         NVARCHAR2(1) default 'N',
+    INSERT_USER_CD NVARCHAR2(20),
+    INSERT_DT      DATE,
+    UPDATE_USER_CD NVARCHAR2(20),
+    UPDATE_DT      DATE,
+    MIG_FILE_CODE  VARCHAR2(36),
+    FILE_NO        NUMBER         not null,
+    constraint DOCS_FILE_PK
+        primary key (FILE_CD, FILE_NO)
+)
+/
+
+comment on table DOCS_FILE is '파일정보'
+/
+
+comment on column DOCS_FILE.FILE_CD is '파일코드'
+/
+
+comment on column DOCS_FILE.META_CD is '메타코드'
+/
+
+comment on column DOCS_FILE.FILE_NM is '파일명칭'
+/
+
+comment on column DOCS_FILE.FILE_UPLOAD_NM is '파일업로드명칭'
+/
+
+comment on column DOCS_FILE.FTP_FILE_PATH is '파일서버경로'
+/
+
+comment on column DOCS_FILE.FILE_PATH is '파일경로'
+/
+
+comment on column DOCS_FILE.FILE_SIZE is '파일 크기'
+/
+
+comment on column DOCS_FILE.UPLOAD_USER_CD is '업로드사용자'
+/
+
+comment on column DOCS_FILE.UPLOAD_DT is '업로드일시'
+/
+
+comment on column DOCS_FILE.DEL_YN is '삭제여부'
+/
+
+comment on column DOCS_FILE.INSERT_USER_CD is '등록사용자'
+/
+
+comment on column DOCS_FILE.INSERT_DT is '등록일시'
+/
+
+comment on column DOCS_FILE.UPDATE_USER_CD is '수정사용자'
+/
+
+comment on column DOCS_FILE.UPDATE_DT is '수정일시'
+/
+
+comment on column DOCS_FILE.MIG_FILE_CODE is '마이그레이션 파일코드'
+/
+
+create table DOCS_FORM_INFO
+(
+    FORM_ID            VARCHAR2(80) not null,
+    COLUMN_ID          VARCHAR2(80) not null,
+    COLUMN_TYPE        VARCHAR2(16),
+    COLUMN_NM          VARCHAR2(80),
+    COLUMN_SEQ         NUMBER       not null,
+    COLUMN_SIZE        VARCHAR2(16),
+    COLUMN_ALIGN       VARCHAR2(8),
+    SYSTEM_CLASS_GROUP VARCHAR2(48),
+    USE_YN             VARCHAR2(1),
+    LANG_CD            VARCHAR2(255),
+    MAX_LENGTH         NUMBER,
+    CALL_FUNC          VARCHAR2(80),
+    DEFAULT_TEXT       VARCHAR2(80),
+    MIN_DATE           VARCHAR2(16),
+    MAX_DATE           VARCHAR2(16),
+    DEFAULT_VALUE      VARCHAR2(16),
+    FORMATTER          VARCHAR2(255),
+    DETAIL_YN          VARCHAR2(1),
+    QUERY_ID           VARCHAR2(80),
+    SEARCH_URL         VARCHAR2(120),
+    COLUMN_HIDDEN      VARCHAR2(1),
+    constraint PK_FORM_INFO
+        primary key (FORM_ID, COLUMN_ID)
+)
+/
+
+create table DOCS_GRID_INFO
+(
+    GRID_ID                VARCHAR2(255)                 not null,
+    COLUMN_ID              VARCHAR2(255)                 not null,
+    COLUMN_NM              VARCHAR2(255),
+    COLUMN_SEQ             NUMBER                        not null,
+    COLUMN_SIZE            NUMBER,
+    COLUMN_TYPE            VARCHAR2(20) default 'ro'     not null,
+    COLUMN_ALIGN           VARCHAR2(20) default 'center' not null,
+    COLUMN_FORMAT          VARCHAR2(20) default 'str'    not null,
+    COLUMN_HIDDEN          VARCHAR2(1)  default 'N'      not null,
+    SORT_YN                VARCHAR2(1)  default 'N',
+    FORMATTER              VARCHAR2(80),
+    COLUMN_EDITABLE        VARCHAR2(1)  default 'N',
+    MAX_LENGTH             NUMBER(2),
+    LANG_CD                VARCHAR2(30),
+    COLUMN_EDITABLE_OPTION VARCHAR2(256),
+    SORT_COLUMN_NM         VARCHAR2(255)
+)
+/
+
+create table DOCS_INSA_DEPT_CD
+(
+    COLUMN_NM   VARCHAR2(32) not null,
+    DEPT_CD     VARCHAR2(7)  not null,
+    DESCRIPTION VARCHAR2(100),
+    constraint DOCS_INSA_DEPT_CD_PK
+        primary key (COLUMN_NM, DEPT_CD)
+)
+/
+
+comment on column DOCS_INSA_DEPT_CD.COLUMN_NM is '컬럼명'
+/
+
+comment on column DOCS_INSA_DEPT_CD.DEPT_CD is '부서코드'
+/
+
+comment on column DOCS_INSA_DEPT_CD.DESCRIPTION is '설명'
+/
+
+create table DOCS_INSTEAD_USER
+(
+    USER_CD         NVARCHAR2(20) not null,
+    INSTEAD_USER_CD NVARCHAR2(20) not null,
+    constraint PK_DOCS_INSTEAD_USER
+        primary key (USER_CD, INSTEAD_USER_CD)
+)
+/
+
+comment on table DOCS_INSTEAD_USER is '대결자'
+/
+
+comment on column DOCS_INSTEAD_USER.USER_CD is 'USER코드'
+/
+
+comment on column DOCS_INSTEAD_USER.INSTEAD_USER_CD is '대결자'
+/
+
+create table DOCS_ITEM
+(
+    SERIAL           NUMBER,
+    ITYPE            NVARCHAR2(1),
+    MATNR            NVARCHAR2(18),
+    CODE             NVARCHAR2(8),
+    WERKS            NVARCHAR2(4)  not null,
+    C0001            NVARCHAR2(30),
+    C0002_1          NVARCHAR2(30),
+    C0002_2          NVARCHAR2(30),
+    C0003            NVARCHAR2(50),
+    C0004            NVARCHAR2(2),
+    C0005_1          NVARCHAR2(30),
+    C0005_2          NVARCHAR2(30),
+    C0006            NVARCHAR2(15),
+    C0007_1          NVARCHAR2(30),
+    C0007_2          NVARCHAR2(30),
+    C0007_3          NVARCHAR2(30),
+    C0008_1          NVARCHAR2(30),
+    C0008_2          NVARCHAR2(30),
+    C0008_3          NVARCHAR2(30),
+    C0009            NVARCHAR2(2),
+    C0010            NVARCHAR2(30),
+    C0011_1          NVARCHAR2(30),
+    C0011_2          NVARCHAR2(30),
+    C0013            NVARCHAR2(1),
+    C0014            NVARCHAR2(2),
+    C0017            NVARCHAR2(30),
+    C0018            NVARCHAR2(30),
+    C0019            NVARCHAR2(1),
+    C0020            NVARCHAR2(20),
+    C0021            NUMBER(12, 3),
+    C0022            NUMBER(12, 3),
+    C0023            NUMBER(12, 3),
+    C0027            NVARCHAR2(2),
+    C0028            NUMBER(9, 3),
+    C0030            NVARCHAR2(2),
+    C0032            NVARCHAR2(13),
+    C0034            NVARCHAR2(1),
+    C0037            DATE,
+    REQID            NVARCHAR2(20),
+    CN_ERP_TYPE      NVARCHAR2(20),
+    CN_PREV_MAT_CODE NVARCHAR2(18),
+    OBJECT_ID        NVARCHAR2(35),
+    CN_RESULT        NVARCHAR2(1),
+    CN_MESSAGE       NVARCHAR2(220),
+    E_RETURN         NVARCHAR2(1),
+    C0038            DATE,
+    INTERFACE_DT     DATE,
+    CN_PART_REV      VARCHAR2(5)   not null,
+    CN_PDM_PART_NO   VARCHAR2(200) not null,
+    CN_JOB_NO        NUMBER        not null
+)
+/
+
+create table DOCS_LANG
+(
+    LANG_TYPE VARCHAR2(3)  not null,
+    LANG_CD   VARCHAR2(50) not null,
+    LANG_DESC VARCHAR2(1024)
+)
+/
+
+create unique index TABLE1_PK2
+    on DOCS_LANG (LANG_TYPE, LANG_CD)
+/
+
+create table DOCS_LANG_TEMP
+(
+    LANG_TYPE VARCHAR2(3)  not null,
+    LANG_CD   VARCHAR2(50) not null,
+    LANG_DESC VARCHAR2(1024)
+)
+/
+
+create table DOCS_LOGIN_HISTORY
+(
+    HISTORY_SEQ NUMBER not null
+        constraint DOCS_LOGIN_HISTORY_PK
+            primary key,
+    USER_CD     NVARCHAR2(15),
+    ACCESS_IP   NVARCHAR2(20),
+    LOGIN_TYPE  CHAR,
+    INSERT_DT   DATE,
+    USER_NM     NVARCHAR2(256),
+    USER_ID     NVARCHAR2(20),
+    BIZ_NO      NVARCHAR2(10),
+    DEPT_CD     NVARCHAR2(10),
+    EMAIL       NVARCHAR2(256),
+    COMPANY_NM  NVARCHAR2(15),
+    COMPANY_CD  NVARCHAR2(256),
+    DEPT_NM     NVARCHAR2(256)
+)
+/
+
+comment on column DOCS_LOGIN_HISTORY.LOGIN_TYPE is 'I:IN,O:OUT'
+/
+
+create table DOCS_MAIL
+(
+    MAIL_ID   NUMBER not null
+        constraint DOCS_MAIL_PK
+            primary key,
+    TO_MAIL   NVARCHAR2(256),
+    FROM_MAIL NVARCHAR2(256),
+    TITLE     NVARCHAR2(256),
+    CONTENT   NVARCHAR2(1024),
+    RESULT    NVARCHAR2(1),
+    DETAIL    NVARCHAR2(1024),
+    INSERT_DT DATE,
+    UPDATE_DT DATE
+)
+/
+
+create table DOCS_MENU
+(
+    MENU_CD        VARCHAR2(64) not null
+        constraint DOCS_MENU_PK
+            primary key,
+    PARENT_MENU_CD VARCHAR2(64),
+    MENU_NM        VARCHAR2(64),
+    MESSAGE_CD     VARCHAR2(128),
+    MENU_LEVEL     VARCHAR2(2),
+    MENU_TYPE      CHAR,
+    MENU_URL       VARCHAR2(256),
+    SORT_SEQ       NUMBER,
+    TREE_TYPE      VARCHAR2(10),
+    DEL_YN         CHAR,
+    USE_YN         CHAR,
+    TOOLTIP        VARCHAR2(256),
+    MENU_DESC      VARCHAR2(256),
+    ROLE_CD        VARCHAR2(20),
+    AUTH_SITE      CHAR,
+    MENU_ICON      VARCHAR2(50)
+)
+/
+
+comment on column DOCS_MENU.MENU_CD is '메뉴코드'
+/
+
+comment on column DOCS_MENU.PARENT_MENU_CD is '부모메뉴코드'
+/
+
+comment on column DOCS_MENU.MESSAGE_CD is '다국어메시지코드'
+/
+
+comment on column DOCS_MENU.MENU_LEVEL is '메뉴단계'
+/
+
+comment on column DOCS_MENU.MENU_TYPE is '메뉴유형(M,P)'
+/
+
+comment on column DOCS_MENU.SORT_SEQ is '메뉴순서'
+/
+
+comment on column DOCS_MENU.AUTH_SITE is 'I:내부,E:외부,B:내/외부'
+/
+
+comment on column DOCS_MENU.MENU_ICON is '메뉴 아이콘 클래스명'
+/
+
+create table DOCS_NOTICE
+(
+    NOTICE_CD  NUMBER not null,
+    OPEN_SCOPE NUMBER,
+    TITLE      VARCHAR2(1000),
+    CONTENTS   VARCHAR2(4000),
+    HIT_COUNT  NUMBER,
+    DEL_YN     VARCHAR2(20),
+    INSERT_UID VARCHAR2(20),
+    INSERT_DT  DATE,
+    UPDATE_UID VARCHAR2(20),
+    UPDATE_DT  DATE,
+    START_DT   CHAR(8),
+    END_DT     CHAR(8)
+)
+/
+
+comment on table DOCS_NOTICE is '공지사항'
+/
+
+comment on column DOCS_NOTICE.NOTICE_CD is '글번호'
+/
+
+comment on column DOCS_NOTICE.OPEN_SCOPE is '1:외부,2:내부,4:외부+내부'
+/
+
+comment on column DOCS_NOTICE.TITLE is '제목'
+/
+
+comment on column DOCS_NOTICE.CONTENTS is '내용'
+/
+
+comment on column DOCS_NOTICE.HIT_COUNT is '조회수'
+/
+
+comment on column DOCS_NOTICE.DEL_YN is '삭제여부'
+/
+
+comment on column DOCS_NOTICE.INSERT_UID is '등록사용자'
+/
+
+comment on column DOCS_NOTICE.INSERT_DT is '등록일시'
+/
+
+comment on column DOCS_NOTICE.UPDATE_UID is '수정사용자'
+/
+
+comment on column DOCS_NOTICE.UPDATE_DT is '수정일시'
+/
+
+comment on column DOCS_NOTICE.START_DT is '시작일'
+/
+
+comment on column DOCS_NOTICE.END_DT is '종료일'
+/
+
+create unique index PK_DOCS_NOTICE
+    on DOCS_NOTICE (NOTICE_CD)
+/
+
+create table DOCS_NOTICE_FILE
+(
+    NOTICE_CD         NUMBER not null,
+    FILE_NO           NUMBER not null,
+    FILE_NM           NVARCHAR2(256),
+    FILE_PATH         NVARCHAR2(1000),
+    FILE_SIZE         NUMBER,
+    UPLOAD_USER_CD    NVARCHAR2(20),
+    UPLOAD_DT         DATE,
+    DEL_YN            CHAR,
+    UPLOAD_FILE_NM    NVARCHAR2(256),
+    FILE_PATH_OUTSIDE NVARCHAR2(1000),
+    constraint DOCS_NOTICE_FILE_PK
+        primary key (NOTICE_CD, FILE_NO)
+)
+/
+
+comment on column DOCS_NOTICE_FILE.NOTICE_CD is '글번호'
+/
+
+comment on column DOCS_NOTICE_FILE.FILE_NO is '파일순서'
+/
+
+comment on column DOCS_NOTICE_FILE.FILE_NM is '파일명(UPLOAD_FILE_NM과 동일)'
+/
+
+comment on column DOCS_NOTICE_FILE.FILE_PATH is '파일경로'
+/
+
+comment on column DOCS_NOTICE_FILE.FILE_SIZE is '파일SIZE'
+/
+
+comment on column DOCS_NOTICE_FILE.UPLOAD_USER_CD is '업로드한 사용자 CD'
+/
+
+comment on column DOCS_NOTICE_FILE.UPLOAD_DT is '업로드 일자'
+/
+
+comment on column DOCS_NOTICE_FILE.DEL_YN is '삭제여부'
+/
+
+comment on column DOCS_NOTICE_FILE.UPLOAD_FILE_NM is '업로드 파일명'
+/
+
+comment on column DOCS_NOTICE_FILE.FILE_PATH_OUTSIDE is '외부 사용자 파일경로'
+/
+
+create table DOCS_PDF_DOCUMENT_FILE
+(
+    SEQ_NO             NUMBER,
+    CN_SERIAL          NUMBER,
+    OBJECT_ID          NVARCHAR2(50),
+    FILE_NO            NUMBER,
+    FILE_PATH_NM       NVARCHAR2(100),
+    ORG_FILE_NM        NVARCHAR2(255),
+    CVRT_FILE_NM       NVARCHAR2(255),
+    FILE_NM            NVARCHAR2(100),
+    DISTRIBUTE_TYPE_CD NVARCHAR2(30),
+    FILE_SIZE          NVARCHAR2(10),
+    INTERFACE_DT       DATE
+)
+/
+
+create table DOCS_POSITION
+(
+    POSITION_CD        NVARCHAR2(20) not null
+        constraint DOCS_POSITION_PK
+            primary key,
+    POSITION_CD_CUSTOM NVARCHAR2(20),
+    POSITION_NM        NVARCHAR2(512),
+    POSITION_ENG_NM    NVARCHAR2(512),
+    USE_YN             NVARCHAR2(1),
+    DEL_YN             NVARCHAR2(1)
+)
+/
+
+comment on table DOCS_POSITION is '직급 정보'
+/
+
+comment on column DOCS_POSITION.POSITION_CD is '직급코드'
+/
+
+comment on column DOCS_POSITION.POSITION_CD_CUSTOM is '직급코드(사용자)'
+/
+
+comment on column DOCS_POSITION.POSITION_NM is '직급명'
+/
+
+comment on column DOCS_POSITION.POSITION_ENG_NM is '직급영문명'
+/
+
+comment on column DOCS_POSITION.USE_YN is '사용여부'
+/
+
+comment on column DOCS_POSITION.DEL_YN is '삭제여부'
+/
+
+create table DOCS_PROD
+(
+    CN_ATTRIBUTE         NVARCHAR2(50) not null,
+    CN_CD                NVARCHAR2(30) not null,
+    CN_ATTRIBUTE_DESC    NVARCHAR2(50),
+    CN_ATTRIBUTE_IN_TYPE NVARCHAR2(1),
+    CN_CD_DESC           NVARCHAR2(100),
+    CN_ATTR_TYPE1        NVARCHAR2(1),
+    CN_ATTR_TYPE2        NVARCHAR2(2),
+    INTERFACE_DT         DATE,
+    constraint PK_DOCS_PROD
+        primary key (CN_ATTRIBUTE, CN_CD)
+)
+/
+
+comment on table DOCS_PROD is '기종정보'
+/
+
+comment on column DOCS_PROD.CN_ATTRIBUTE is '대표기종코드'
+/
+
+comment on column DOCS_PROD.CN_CD is '기종코드'
+/
+
+comment on column DOCS_PROD.CN_ATTRIBUTE_DESC is '대표기종'
+/
+
+comment on column DOCS_PROD.CN_ATTRIBUTE_IN_TYPE is 'K : Key In, C : Choice'
+/
+
+comment on column DOCS_PROD.CN_CD_DESC is '기종명'
+/
+
+comment on column DOCS_PROD.CN_ATTR_TYPE1 is 'X:1사업장, 나머지:2사업장'
+/
+
+comment on column DOCS_PROD.CN_ATTR_TYPE2 is 'XX:1사업장(국판), XE:1사업장(수출),나머지: 2사업장 중분류'
+/
+
+create table DOCS_PRODUCT_DOCUMENT
+(
+    CN_SERIAL          NUMBER        not null,
+    OBJECT_ID          NVARCHAR2(50) not null
+        constraint PK_DOCS_PRODUCT_DOCUMENT
+            primary key,
+    BUSINESS_AREA_CD   NVARCHAR2(30),
+    BUSINESS_TYPE_CD   NVARCHAR2(30),
+    DOC_CLASS_CD1      NVARCHAR2(30),
+    DOC_CLASS_NM1      NVARCHAR2(50),
+    DOC_CLASS_CD2      NVARCHAR2(30),
+    DOC_CLASS_NM2      NVARCHAR2(50),
+    DOCUMENT_NO        NVARCHAR2(50),
+    REV_NO             NVARCHAR2(50),
+    DOCUMENT_NM        NVARCHAR2(255),
+    STATUS_CD          NVARCHAR2(30),
+    TOTAL_PAGE_CNT     NUMBER,
+    SECURITY_TYPE_CD   NVARCHAR2(30),
+    APPLY_PRODUCT_NO   NVARCHAR2(50),
+    DISTRIBUTE_TYPE_CD NVARCHAR2(50),
+    APPLY_HOGI_NO      NVARCHAR2(50),
+    CALL_ID            NVARCHAR2(50),
+    ECN_NO             NVARCHAR2(50),
+    PROCESS_TYPE_CD    NVARCHAR2(30),
+    DESCRIPTION        NVARCHAR2(100),
+    INSERT_DEPT_NM     NVARCHAR2(100),
+    INSERT_UID         NVARCHAR2(50),
+    INSERT_DT          DATE,
+    UPDATE_DEPT_NM     NVARCHAR2(100),
+    UPDATE_UID         NVARCHAR2(50),
+    UPDATE_DT          DATE,
+    INTERFACE_DT       DATE,
+    REGISTER_USER      VARCHAR2(20)
+)
+/
+
+comment on table DOCS_PRODUCT_DOCUMENT is '생산기술 일반자료'
+/
+
+comment on column DOCS_PRODUCT_DOCUMENT.CN_SERIAL is '일련번호'
+/
+
+comment on column DOCS_PRODUCT_DOCUMENT.OBJECT_ID is 'OBJECT_ID'
+/
+
+comment on column DOCS_PRODUCT_DOCUMENT.BUSINESS_AREA_CD is '사업장구분'
+/
+
+comment on column DOCS_PRODUCT_DOCUMENT.BUSINESS_TYPE_CD is '사업구분(개발/양산)'
+/
+
+comment on column DOCS_PRODUCT_DOCUMENT.DOC_CLASS_CD1 is '대분류'
+/
+
+comment on column DOCS_PRODUCT_DOCUMENT.DOC_CLASS_NM1 is '대분류명'
+/
+
+comment on column DOCS_PRODUCT_DOCUMENT.DOC_CLASS_CD2 is '중분류'
+/
+
+comment on column DOCS_PRODUCT_DOCUMENT.DOC_CLASS_NM2 is '중분류명'
+/
+
+comment on column DOCS_PRODUCT_DOCUMENT.DOCUMENT_NO is '문서번호'
+/
+
+comment on column DOCS_PRODUCT_DOCUMENT.REV_NO is '리비전'
+/
+
+comment on column DOCS_PRODUCT_DOCUMENT.DOCUMENT_NM is '문서명'
+/
+
+comment on column DOCS_PRODUCT_DOCUMENT.STATUS_CD is '상태CD'
+/
+
+comment on column DOCS_PRODUCT_DOCUMENT.TOTAL_PAGE_CNT is '총매수'
+/
+
+comment on column DOCS_PRODUCT_DOCUMENT.SECURITY_TYPE_CD is '보안등급'
+/
+
+comment on column DOCS_PRODUCT_DOCUMENT.APPLY_PRODUCT_NO is '적용'
+/
+
+comment on column DOCS_PRODUCT_DOCUMENT.APPLY_HOGI_NO is '적용호기'
+/
+
+comment on column DOCS_PRODUCT_DOCUMENT.CALL_ID is 'Call ID'
+/
+
+comment on column DOCS_PRODUCT_DOCUMENT.ECN_NO is '변경번호'
+/
+
+comment on column DOCS_PRODUCT_DOCUMENT.PROCESS_TYPE_CD is '공정유형'
+/
+
+comment on column DOCS_PRODUCT_DOCUMENT.DESCRIPTION is '설명'
+/
+
+comment on column DOCS_PRODUCT_DOCUMENT.INSERT_DEPT_NM is '등록자 부서명'
+/
+
+comment on column DOCS_PRODUCT_DOCUMENT.INSERT_UID is '등록자'
+/
+
+comment on column DOCS_PRODUCT_DOCUMENT.INSERT_DT is '등록일자'
+/
+
+comment on column DOCS_PRODUCT_DOCUMENT.UPDATE_DEPT_NM is '수정자 부서명'
+/
+
+comment on column DOCS_PRODUCT_DOCUMENT.UPDATE_UID is '수정자'
+/
+
+comment on column DOCS_PRODUCT_DOCUMENT.UPDATE_DT is '수정일'
+/
+
+create table DOCS_PRODUCT_DOCUMENT_FILE
+(
+    CN_SERIAL          NUMBER         not null,
+    OBJECT_ID          NVARCHAR2(50)  not null,
+    FILE_NO            NUMBER         not null,
+    FILE_PATH_NM       NVARCHAR2(100) not null,
+    ORG_FILE_NM        NVARCHAR2(255),
+    FILE_NM            NVARCHAR2(100),
+    DISTRIBUTE_TYPE_CD VARCHAR2(30),
+    FILE_SIZE          NVARCHAR2(10),
+    INTERFACE_DT       DATE,
+    REGISTER_USER      VARCHAR2(20),
+    constraint PK_DOCS_PRODUCT_DOCUMENT_FILE
+        primary key (OBJECT_ID, FILE_NO),
+    constraint "DOCS_PRODUCT_DOCUMENT_FILE_pk"
+        unique (FILE_NM, FILE_SIZE, FILE_PATH_NM, ORG_FILE_NM)
+)
+/
+
+comment on table DOCS_PRODUCT_DOCUMENT_FILE is '생산기술파일정보'
+/
+
+comment on column DOCS_PRODUCT_DOCUMENT_FILE.FILE_PATH_NM is '파일경로'
+/
+
+comment on column DOCS_PRODUCT_DOCUMENT_FILE.FILE_NM is '파일명칭'
+/
+
+comment on column DOCS_PRODUCT_DOCUMENT_FILE.FILE_SIZE is '파일크기'
+/
+
+create table DOCS_PRODUCT_STATUS
+(
+    OBJECT_NO           NVARCHAR2(50) not null,
+    DEPT_CD             NVARCHAR2(20) not null,
+    CURRENT_COUNT       NUMBER,
+    INSERT_DT           DATE,
+    UPDATE_DT           DATE,
+    LAST_REQUEST_NO     NVARCHAR2(20),
+    OBJECT_TYPE         VARCHAR2(20),
+    DISPOSAL_REQUEST_YN VARCHAR2(1),
+    USER_CD             NVARCHAR2(50) not null,
+    LAST_DEPLOY_REV_NO  VARCHAR2(20),
+    constraint DOCS_PRODUCT_STATUS_PK
+        primary key (OBJECT_NO, DEPT_CD, USER_CD)
+)
+/
+
+create table DOCS_PRODUCT_SW
+(
+    CN_SERIAL          NUMBER        not null,
+    OBJECT_ID          NVARCHAR2(50) not null
+        constraint PK_DOCS_PRODUCT_SW
+            primary key,
+    BUSINESS_AREA_CD   NVARCHAR2(30),
+    BUSINESS_TYPE_CD   NVARCHAR2(30),
+    ECN_NO             NVARCHAR2(30),
+    PRODUCT_NO         NVARCHAR2(50),
+    SW_CLASS_CD1       NVARCHAR2(30),
+    SW_CLASS_NM1       NVARCHAR2(50),
+    SW_CLASS_CD2       NVARCHAR2(30),
+    SW_CLASS_NM2       NVARCHAR2(50),
+    SW_NO              NVARCHAR2(50),
+    REV_NO             NVARCHAR2(50),
+    SW_NM              NVARCHAR2(255),
+    SW_VERSION_NO      NVARCHAR2(50),
+    STATUS_CD          NVARCHAR2(30),
+    DESCRIPTION        NVARCHAR2(255),
+    SECURITY_TYPE_CD   NVARCHAR2(30),
+    INSERT_DEPT_NM     NVARCHAR2(100),
+    INSERT_UID         NVARCHAR2(50),
+    INSERT_DT          DATE,
+    UPDATE_DEPT_NM     NVARCHAR2(100),
+    UPDATE_UID         NVARCHAR2(50),
+    UPDATE_DT          DATE,
+    INTERFACE_DT       DATE,
+    DISTRIBUTE_TYPE_CD NVARCHAR2(30)
+)
+/
+
+comment on table DOCS_PRODUCT_SW is '생산기술SW'
+/
+
+comment on column DOCS_PRODUCT_SW.OBJECT_ID is 'OBJECT_ID'
+/
+
+comment on column DOCS_PRODUCT_SW.BUSINESS_AREA_CD is '사업장구분'
+/
+
+comment on column DOCS_PRODUCT_SW.BUSINESS_TYPE_CD is '사업구분'
+/
+
+comment on column DOCS_PRODUCT_SW.ECN_NO is 'ECN_NO'
+/
+
+comment on column DOCS_PRODUCT_SW.PRODUCT_NO is '기종'
+/
+
+comment on column DOCS_PRODUCT_SW.SW_CLASS_CD1 is '대분류'
+/
+
+comment on column DOCS_PRODUCT_SW.SW_CLASS_NM1 is '대분류명'
+/
+
+comment on column DOCS_PRODUCT_SW.SW_CLASS_CD2 is '중분류'
+/
+
+comment on column DOCS_PRODUCT_SW.SW_CLASS_NM2 is '중분류명'
+/
+
+comment on column DOCS_PRODUCT_SW.SW_NO is 'SW번호'
+/
+
+comment on column DOCS_PRODUCT_SW.REV_NO is 'REV'
+/
+
+comment on column DOCS_PRODUCT_SW.SW_NM is 'SW명'
+/
+
+comment on column DOCS_PRODUCT_SW.SW_VERSION_NO is 'SW리비전'
+/
+
+comment on column DOCS_PRODUCT_SW.STATUS_CD is '상태CD'
+/
+
+comment on column DOCS_PRODUCT_SW.DESCRIPTION is '설명'
+/
+
+comment on column DOCS_PRODUCT_SW.SECURITY_TYPE_CD is '일반과제CS(Public) 인 경우, ''사외비''가 default, 비닉과제CS(Private)인 경우, ''비밀''이 default'
+/
+
+comment on column DOCS_PRODUCT_SW.INSERT_DEPT_NM is '등록자 부서명'
+/
+
+comment on column DOCS_PRODUCT_SW.INSERT_UID is '등록자'
+/
+
+comment on column DOCS_PRODUCT_SW.INSERT_DT is '등록일자'
+/
+
+comment on column DOCS_PRODUCT_SW.UPDATE_DEPT_NM is '수정자 부서명'
+/
+
+comment on column DOCS_PRODUCT_SW.UPDATE_UID is '수정자'
+/
+
+comment on column DOCS_PRODUCT_SW.UPDATE_DT is '수정일'
+/
+
+create table DOCS_PRODUCT_SW_FILE
+(
+    CN_SERIAL          NUMBER        not null,
+    OBJECT_ID          NVARCHAR2(50) not null,
+    FILE_NO            NUMBER        not null,
+    FILE_PATH_NM       NVARCHAR2(100),
+    ORG_FILE_NM        NVARCHAR2(255),
+    FILE_NM            NVARCHAR2(100),
+    DISTRIBUTE_TYPE_CD NVARCHAR2(30),
+    FILE_SIZE          NVARCHAR2(10),
+    CHECK_SUM          NVARCHAR2(30),
+    INTERFACE_DT       DATE,
+    constraint DOCS_PRODUCT_SW_FILE_PK
+        primary key (FILE_NO, OBJECT_ID)
+)
+/
+
+create table DOCS_PROD_PDM
+(
+    PROD_CD          NVARCHAR2(100) not null
+        constraint PK_DOCS_PROD_PDM
+            primary key,
+    BUSINESS_TYPE_CD NVARCHAR2(100)
+)
+/
+
+create table DOCS_PROTECT_USER
+(
+    USER_CD          NVARCHAR2(20) not null
+        constraint DOCS_PROTECT_USER_PK
+            primary key,
+    USER_NM          NVARCHAR2(20),
+    DEPT_NM          NVARCHAR2(50),
+    DEPT_SHORT_PATH  NVARCHAR2(255),
+    DEPT_FULL_PATH   NVARCHAR2(255),
+    BUSINESS_AREA_CD NVARCHAR2(20),
+    BUSINESS_TYPE_CD NVARCHAR2(20),
+    DEPT_CD          NVARCHAR2(20)
+)
+/
+
+create table DOCS_QNA
+(
+    QNA_CD         NUMBER not null
+        constraint PK_DOCS_QNA
+            primary key,
+    PARENT_QNA_CD  NUMBER,
+    TITLE          NVARCHAR2(500),
+    CONTENTS       NVARCHAR2(2000),
+    HIT_COUNT      NUMBER,
+    DEL_YN         VARCHAR2(1),
+    INSERT_USER_CD NVARCHAR2(20),
+    INSERT_DT      DATE,
+    UPDATE_USER_CD NVARCHAR2(20),
+    UPDATE_DT      DATE
+)
+/
+
+comment on table DOCS_QNA is 'QNA'
+/
+
+comment on column DOCS_QNA.QNA_CD is '글번호'
+/
+
+comment on column DOCS_QNA.PARENT_QNA_CD is '부모QNA코드'
+/
+
+comment on column DOCS_QNA.TITLE is '제목'
+/
+
+comment on column DOCS_QNA.CONTENTS is '내용'
+/
+
+comment on column DOCS_QNA.HIT_COUNT is '조회수'
+/
+
+comment on column DOCS_QNA.DEL_YN is '삭제여부'
+/
+
+comment on column DOCS_QNA.INSERT_USER_CD is '등록사용자'
+/
+
+comment on column DOCS_QNA.INSERT_DT is '등록일시'
+/
+
+comment on column DOCS_QNA.UPDATE_USER_CD is '수정사용자'
+/
+
+comment on column DOCS_QNA.UPDATE_DT is '수정일시'
+/
+
+create table DOCS_REL_ROLE_GROUP
+(
+    GROUP_CD       VARCHAR2(20) not null,
+    ROLE_CD        VARCHAR2(20) not null,
+    INSERT_USER_CD VARCHAR2(20),
+    UPDATE_USER_CD VARCHAR2(20),
+    INSERT_DT      DATE default sysdate,
+    UPDATE_DT      DATE default sysdate,
+    constraint DOCS_REL_ROLE_GROUP_PK
+        primary key (GROUP_CD, ROLE_CD)
+)
+/
+
+comment on table DOCS_REL_ROLE_GROUP is 'DOCS_MENU테이블에 있는 ROLE_CD와 ROLE_GROUP을 매핑하는 테이블
+ExcepUpdate_Oracle 클래스를 실행하면 DOCS_ROLE_MAPPING에 있는 데이터를 기반으로 insert한다.'
+/
+
+create table DOCS_REQUEST
+(
+    REQUEST_NO             NVARCHAR2(100) not null
+        constraint PK_DOCS_REQUEST
+            primary key,
+    REQUEST_TYPE           NVARCHAR2(16),
+    REQUEST_PURPOSE        NVARCHAR2(10),
+    APPROVAL_LINE_ID       NUMBER,
+    CURRENT_PROCESS_SEQ_NO NUMBER,
+    DEPLOY_COMPANY_CD      NVARCHAR2(20),
+    DEPLOY_TERM            NVARCHAR2(10),
+    USE_START_YMD          NVARCHAR2(8),
+    USE_END_YMD            NVARCHAR2(8),
+    PRINT_YN               CHAR,
+    DEPLOY_NORMAL_YN       CHAR,
+    DEPLOY_SPECIAL_YN      CHAR,
+    WATERMARK_YN           NVARCHAR2(1),
+    CAPTURE_YN             NVARCHAR2(1),
+    DESTROY_TODO_YMD       NVARCHAR2(8),
+    INSERT_USER_CD         NVARCHAR2(20),
+    INSERT_DT              DATE,
+    UPDATE_USER_CD         NVARCHAR2(20),
+    UPDATE_DT              DATE,
+    STATUS_CD              NVARCHAR2(20),
+    OBJECT_TYPE            NVARCHAR2(20),
+    BUSINESS_AREA_CD       NVARCHAR2(20),
+    PROTECT_YN             CHAR,
+    APPROVAL_DT            DATE,
+    WATERMARK_DEPLOY_DT_YN NVARCHAR2(1),
+    VENDOR_ACCEPT_DT       DATE,
+    VENDOR_ACCEPT_USER_CD  NVARCHAR2(20),
+    VENDOR_ACCEPT_YN       NVARCHAR2(20)
+)
+/
+
+comment on table DOCS_REQUEST is '배포요청'
+/
+
+comment on column DOCS_REQUEST.REQUEST_NO is '요청번호'
+/
+
+comment on column DOCS_REQUEST.REQUEST_TYPE is '요청유형(requestType), 배포유형(생산기술일경우:deployType)'
+/
+
+comment on column DOCS_REQUEST.REQUEST_PURPOSE is 'CHECK:검토용,ESTIMATE:견적용,MANUAL:교범용,PRODUCT:제조용,REFER:참고용'
+/
+
+comment on column DOCS_REQUEST.APPROVAL_LINE_ID is '결재라인ID'
+/
+
+comment on column DOCS_REQUEST.CURRENT_PROCESS_SEQ_NO is '진행상태'
+/
+
+comment on column DOCS_REQUEST.DEPLOY_COMPANY_CD is '배포업체코드'
+/
+
+comment on column DOCS_REQUEST.DEPLOY_TERM is '유효기간(단위:개월)'
+/
+
+comment on column DOCS_REQUEST.USE_START_YMD is '등록된날짜'
+/
+
+comment on column DOCS_REQUEST.USE_END_YMD is '등록된날짜+유효기간'
+/
+
+comment on column DOCS_REQUEST.PRINT_YN is '출력여부'
+/
+
+comment on column DOCS_REQUEST.DEPLOY_NORMAL_YN is '일반배포여부'
+/
+
+comment on column DOCS_REQUEST.DEPLOY_SPECIAL_YN is '보안배포여부'
+/
+
+comment on column DOCS_REQUEST.WATERMARK_YN is '워터마크여부'
+/
+
+comment on column DOCS_REQUEST.CAPTURE_YN is '캡쳐여부'
+/
+
+comment on column DOCS_REQUEST.DESTROY_TODO_YMD is '폐기예정일자'
+/
+
+comment on column DOCS_REQUEST.INSERT_USER_CD is '등록사용자'
+/
+
+comment on column DOCS_REQUEST.INSERT_DT is '등록일시'
+/
+
+comment on column DOCS_REQUEST.UPDATE_USER_CD is '수정사용자'
+/
+
+comment on column DOCS_REQUEST.UPDATE_DT is '수정일시'
+/
+
+comment on column DOCS_REQUEST.STATUS_CD is '상태코드'
+/
+
+comment on column DOCS_REQUEST.OBJECT_TYPE is '자료유형
+(DOC, DRAWING, SW)'
+/
+
+comment on column DOCS_REQUEST.BUSINESS_AREA_CD is '사업장코드'
+/
+
+comment on column DOCS_REQUEST.PROTECT_YN is '방산기술자료대상여부'
+/
+
+comment on column DOCS_REQUEST.APPROVAL_DT is '결재일'
+/
+
+create table DOCS_REQUEST_DEPLOY
+(
+    REQUEST_NO        NVARCHAR2(100) not null,
+    DEPLOY_USER_CD    NVARCHAR2(20)  not null,
+    DEPLOY_USER_EMAIL NVARCHAR2(100),
+    ACCEPT_YN         CHAR,
+    DESTROY_COUNT     NUMBER,
+    DEPLOY_DESC       VARCHAR2(2000),
+    DEPLOY_DT         DATE,
+    DEPLOY_TARGET     VARCHAR2(2000),
+    DEPLOY_RESULT     VARCHAR2(2000),
+    ACCEPT_DT         DATE,
+    DEPLOY_EMAIL_CC   VARCHAR2(256),
+    DESTROY_INFO      VARCHAR2(2000),
+    constraint DOCS_REQUEST_DEPLOY_PK
+        primary key (REQUEST_NO, DEPLOY_USER_CD)
+)
+/
+
+comment on table DOCS_REQUEST_DEPLOY is '배포요청수신자'
+/
+
+comment on column DOCS_REQUEST_DEPLOY.REQUEST_NO is '요청번호'
+/
+
+comment on column DOCS_REQUEST_DEPLOY.DEPLOY_USER_CD is '수신자'
+/
+
+comment on column DOCS_REQUEST_DEPLOY.ACCEPT_YN is '생산기술자료 접수여부(Y/N)'
+/
+
+comment on column DOCS_REQUEST_DEPLOY.DESTROY_COUNT is '생산기술자료 폐기매수'
+/
+
+comment on column DOCS_REQUEST_DEPLOY.DEPLOY_DESC is '생산기술자료 - 교육사유'
+/
+
+comment on column DOCS_REQUEST_DEPLOY.DEPLOY_DT is '생산기술자료 - 교육일자'
+/
+
+comment on column DOCS_REQUEST_DEPLOY.DEPLOY_TARGET is '생산기술자료 - 교육대상'
+/
+
+comment on column DOCS_REQUEST_DEPLOY.DEPLOY_RESULT is '생산기술자료 - 교육결과'
+/
+
+comment on column DOCS_REQUEST_DEPLOY.ACCEPT_DT is '생산기술자료-접수일자'
+/
+
+comment on column DOCS_REQUEST_DEPLOY.DEPLOY_EMAIL_CC is '메일 참조자'
+/
+
+create table DOCS_REQUEST_DETAIL
+(
+    REQUEST_NO         NVARCHAR2(100) not null,
+    PROCESS_SEQ        NUMBER         not null,
+    APPROVAL_STATUS_CD NVARCHAR2(16),
+    ORIGINAL_USER_CD   NVARCHAR2(20),
+    ACTUAL_USER_CD     NVARCHAR2(20),
+    REQUEST_DESC       NVARCHAR2(1000),
+    ACTION_DT          DATE,
+    ACTION_CD          NVARCHAR2(20),
+    APPROVAL_GRADE_CD  NVARCHAR2(20),
+    EMAIL_CC           NVARCHAR2(256)
+)
+/
+
+comment on table DOCS_REQUEST_DETAIL is '배포요청상세'
+/
+
+comment on column DOCS_REQUEST_DETAIL.REQUEST_NO is '요청번호'
+/
+
+comment on column DOCS_REQUEST_DETAIL.PROCESS_SEQ is '프로세스순번'
+/
+
+comment on column DOCS_REQUEST_DETAIL.APPROVAL_STATUS_CD is '결재상태코드(combo:approvalStatusCd)'
+/
+
+comment on column DOCS_REQUEST_DETAIL.ORIGINAL_USER_CD is '원래ACTION을 했어야 하는 사용자'
+/
+
+comment on column DOCS_REQUEST_DETAIL.ACTUAL_USER_CD is '실제ACTION 한 사용자'
+/
+
+comment on column DOCS_REQUEST_DETAIL.REQUEST_DESC is '내용'
+/
+
+comment on column DOCS_REQUEST_DETAIL.ACTION_DT is '행동일시'
+/
+
+comment on column DOCS_REQUEST_DETAIL.ACTION_CD is '실제사용자가 
+한 ACTION'
+/
+
+comment on column DOCS_REQUEST_DETAIL.APPROVAL_GRADE_CD is '결재등급코드(combo:approvalGradeCd)'
+/
+
+comment on column DOCS_REQUEST_DETAIL.EMAIL_CC is '메일 참조자'
+/
+
+create unique index PK_DOCS_REQUEST_DETAIL1
+    on DOCS_REQUEST_DETAIL (REQUEST_NO, PROCESS_SEQ)
+/
+
+create table DOCS_REQUEST_FILE
+(
+    REQUEST_NO        NVARCHAR2(14)    not null,
+    OBJECT_ID         NVARCHAR2(50)    not null,
+    FILE_PATH_NM      NVARCHAR2(255),
+    ORG_FILE_NM       NVARCHAR2(255),
+    FILE_NM           NVARCHAR2(255),
+    FILE_SIZE         NVARCHAR2(10),
+    CHECK_SUM         NVARCHAR2(30),
+    FILE_NO           NUMBER           not null,
+    USE_START_YMD     NVARCHAR2(8),
+    USE_END_YMD       NVARCHAR2(8),
+    PRINT_COUNT       NUMBER default 0 not null,
+    DESTROY_TYPE      CHAR,
+    DESTROY_STATUS_CD CHAR,
+    DEPLOY_TERM       NVARCHAR2(10),
+    constraint DOCS_REQUEST_FILE_PK
+        primary key (REQUEST_NO, OBJECT_ID, FILE_NO)
+)
+/
+
+comment on column DOCS_REQUEST_FILE.REQUEST_NO is '요청번호'
+/
+
+comment on column DOCS_REQUEST_FILE.FILE_PATH_NM is '파일경로'
+/
+
+comment on column DOCS_REQUEST_FILE.ORG_FILE_NM is '원본파일명'
+/
+
+comment on column DOCS_REQUEST_FILE.FILE_NM is '파일명'
+/
+
+comment on column DOCS_REQUEST_FILE.FILE_SIZE is '파일크기'
+/
+
+comment on column DOCS_REQUEST_FILE.CHECK_SUM is 'CHECK_SUM'
+/
+
+comment on column DOCS_REQUEST_FILE.PRINT_COUNT is '출력횟수'
+/
+
+comment on column DOCS_REQUEST_FILE.DESTROY_TYPE is '1: 유효기간만료 / 2: 이전버전 / 3: 계약만료'
+/
+
+comment on column DOCS_REQUEST_FILE.DESTROY_STATUS_CD is '1:폐기중 / 2:폐기요청 / 3:폐기완료'
+/
+
+comment on column DOCS_REQUEST_FILE.DEPLOY_TERM is '유효기간(개월)'
+/
+
+create table DOCS_REQUEST_MAPPING
+(
+    REQUEST_NO         NVARCHAR2(100) not null,
+    USE_YN             NVARCHAR2(1)   not null,
+    OBJECT_ID          NVARCHAR2(50)  not null,
+    OBJECT_NO          NVARCHAR2(50),
+    OBJECT_NM          NVARCHAR2(100),
+    BUSINESS_AREA_CD   NVARCHAR2(30),
+    BUSINESS_TYPE_CD   NVARCHAR2(30),
+    SW_VERSION_NO      NVARCHAR2(50),
+    DOC_VERSION_NO     NVARCHAR2(50),
+    REV_NO             NVARCHAR2(50),
+    CURRENT_PAGE_NO    NUMBER,
+    TOTAL_PAGE_NO      NUMBER,
+    ECN_NO             NVARCHAR2(30),
+    STD_GAPP_DT        DATE,
+    CHANGE_GAPP_DT     DATE,
+    PROTECT_YN         NVARCHAR2(1),
+    PURCHASER_UID      NVARCHAR2(20),
+    PRODUCT_CD         NVARCHAR2(30),
+    DISTRIBUTE_TYPE_CD VARCHAR2(30),
+    FILE_NM            NVARCHAR2(100),
+    APPLY_HOGI_NO      VARCHAR2(50),
+    OBJECT_CLASS_NM2   NVARCHAR2(50),
+    OBJECT_CLASS_CD2   NVARCHAR2(20),
+    constraint DOCS_REQUEST_MAPPING_PK
+        primary key (REQUEST_NO, OBJECT_ID)
+)
+/
+
+comment on table DOCS_REQUEST_MAPPING is '배포요청MAPPING'
+/
+
+comment on column DOCS_REQUEST_MAPPING.REQUEST_NO is '요청번호'
+/
+
+comment on column DOCS_REQUEST_MAPPING.USE_YN is '사용여부'
+/
+
+comment on column DOCS_REQUEST_MAPPING.OBJECT_NO is '자료번호'
+/
+
+comment on column DOCS_REQUEST_MAPPING.OBJECT_NM is '자료명'
+/
+
+comment on column DOCS_REQUEST_MAPPING.BUSINESS_AREA_CD is '사업장구분'
+/
+
+comment on column DOCS_REQUEST_MAPPING.BUSINESS_TYPE_CD is '사업구분'
+/
+
+comment on column DOCS_REQUEST_MAPPING.SW_VERSION_NO is 'SW버전'
+/
+
+comment on column DOCS_REQUEST_MAPPING.DOC_VERSION_NO is '명세서버전'
+/
+
+comment on column DOCS_REQUEST_MAPPING.REV_NO is '리비전'
+/
+
+comment on column DOCS_REQUEST_MAPPING.CURRENT_PAGE_NO is '현재페이지'
+/
+
+comment on column DOCS_REQUEST_MAPPING.TOTAL_PAGE_NO is '총페이지'
+/
+
+comment on column DOCS_REQUEST_MAPPING.ECN_NO is 'CO번호'
+/
+
+comment on column DOCS_REQUEST_MAPPING.STD_GAPP_DT is '규격화승인일'
+/
+
+comment on column DOCS_REQUEST_MAPPING.CHANGE_GAPP_DT is '기술변경'
+/
+
+comment on column DOCS_REQUEST_MAPPING.PROTECT_YN is '방산기술'
+/
+
+comment on column DOCS_REQUEST_MAPPING.PURCHASER_UID is '구매담당자'
+/
+
+comment on column DOCS_REQUEST_MAPPING.PRODUCT_CD is '기종'
+/
+
+comment on column DOCS_REQUEST_MAPPING.DISTRIBUTE_TYPE_CD is '배포유형'
+/
+
+comment on column DOCS_REQUEST_MAPPING.APPLY_HOGI_NO is '적용호기(생산기술자료'
+/
+
+create table DOCS_ROLE_GROUP
+(
+    GROUP_CODE     NVARCHAR2(20) not null
+        constraint DOCS_ROLE_GROUP_PK
+            primary key,
+    GROUP_NM       NVARCHAR2(20),
+    GROUP_TYPE     NVARCHAR2(10),
+    QUERY_ID       NVARCHAR2(50),
+    USE_YN         CHAR,
+    INSERT_USER_CD NVARCHAR2(20),
+    INSERT_DT      DATE,
+    UPDATE_USER_CD NVARCHAR2(20),
+    UPDATE_DT      DATE,
+    INSERT_ORDER   NUMBER
+)
+/
+
+comment on table DOCS_ROLE_GROUP is 'insa service실행 시 DOCS_USER테이블의 ROLE_GROUP을 update하기 위한 데이터가 있는 테이블
+순서는
+1. GROUP_TYPE : PREDEFINED->DEPT->USER
+2. PREDEFINED: INSERT_ORDER순서대로
+
+PREDEFINED는 QUERY_ID에 있는 쿼리를 그대로 실행하므로 내용을 변경하고 싶다면 insa.xml을 수정
+'
+/
+
+create table DOCS_ROLE_GROUP_MEMBER
+(
+    GROUP_CODE NVARCHAR2(20) not null,
+    MEMBER_CD  NVARCHAR2(20) not null,
+    GROUP_TYPE NVARCHAR2(10),
+    constraint DOCS_ROLE_GROUP_MEMBER_PK
+        primary key (GROUP_CODE, MEMBER_CD)
+)
+/
+
+comment on table DOCS_ROLE_GROUP_MEMBER is 'DOCS_ROLE_GROUP의 GROUP_TYPE이 DEPT, USER인 GROUP의 member가 있는 테이블
+
+USER_CD나 DEPT_CD를 조건으로 하여 GROUP_CODE를 update
+순서는 DEPT->USER'
+/
+
+create table DOCS_ROLE_MAPPING
+(
+    GROUP_CD  VARCHAR2(20)   not null,
+    GROUP_NM  NVARCHAR2(100),
+    MENU_NM   NVARCHAR2(100),
+    MENU_URL  NVARCHAR2(100) not null,
+    MENU_TYPE NVARCHAR2(10),
+    constraint DOCS_ROLE_MAPPING_PK
+        primary key (GROUP_CD, MENU_URL)
+)
+/
+
+comment on table DOCS_ROLE_MAPPING is 'ExcelUpdate_Oracle 클래스 실행 시 DOCS_REL_ROLE_GROUP에 데이터를 넣기 위한 기반 테이블
+
+GROUP별로 할당 할 URL을 입력.
+MENU_TYPE에 D를 넣을 경우 배포 관련 메뉴도 추가(MENU.xls에도 마찬가지로 배포관련 메뉴에는 MENU_TYPE을 D로 설정해야 함)
+
+관리자 관련 메뉴는 MENU_TYPE을 A로
+'
+/
+
+create table DOCS_SEQUENCE
+(
+    SEQ_NM   NVARCHAR2(64) not null
+        constraint DOCS_SEQUENCE_PK
+            primary key,
+    NEXT_VAL NUMBER
+)
+/
+
+create table DOCS_SEQ_TABLE
+(
+    TABLE_NM VARCHAR2(36) not null
+        constraint DOCS_SEQ_TABLE_PK
+            primary key,
+    SEQ      NUMBER
+)
+/
+
+create table DOCS_SW
+(
+    CN_SERIAL          NUMBER        not null,
+    OBJECT_ID          NVARCHAR2(50) not null,
+    BUSINESS_AREA_CD   NVARCHAR2(30) not null,
+    BUSINESS_TYPE_CD   NVARCHAR2(30) not null,
+    SW_CLASS_CD1       NVARCHAR2(30),
+    SW_CLASS_NM1       NVARCHAR2(50),
+    SW_CLASS_CD2       NVARCHAR2(30),
+    SW_CLASS_NM2       NVARCHAR2(50),
+    SW_TYPE_CD         NVARCHAR2(30),
+    PRODUCT_CD         NVARCHAR2(30),
+    ECN_NO             NVARCHAR2(30),
+    ECN_INSERT_UID     NVARCHAR2(50),
+    SW_NO              NVARCHAR2(50) not null,
+    REV_NO             NVARCHAR2(50) not null,
+    SW_NM              NVARCHAR2(255),
+    STATUS_CD          NVARCHAR2(30),
+    SW_VERSION_NO      NVARCHAR2(50) not null,
+    DOC_VERSION_NO     NVARCHAR2(50) not null,
+    PROJECT_CD         NVARCHAR2(31),
+    PROJECT_NM         NVARCHAR2(100),
+    DISTRIBUTE_TYPE_CD NVARCHAR2(30) not null,
+    STD_GAPP_DT        DATE,
+    CHANGE_GAPP_DT     DATE,
+    DESCRIPTION        NVARCHAR2(255),
+    SECURITY_TYPE_CD   NVARCHAR2(30),
+    PROTECT_YN         NVARCHAR2(1),
+    INSERT_DEPT_NM     NVARCHAR2(100),
+    INSERT_UID         NVARCHAR2(50),
+    INSERT_DT          DATE,
+    UPDATE_DEPT_NM     NVARCHAR2(100),
+    UPDATE_UID         NVARCHAR2(50),
+    UPDATE_DT          DATE,
+    INTERFACE_DT       DATE          not null,
+    VALID_TYPE         NVARCHAR2(1),
+    REGISTER_USER      VARCHAR2(20),
+    constraint PK_DOCS_SW
+        primary key (OBJECT_ID, INTERFACE_DT)
+)
+/
+
+comment on table DOCS_SW is 'SW정보'
+/
+
+comment on column DOCS_SW.OBJECT_ID is 'OBJECT_ID'
+/
+
+comment on column DOCS_SW.BUSINESS_AREA_CD is '사업장구분'
+/
+
+comment on column DOCS_SW.BUSINESS_TYPE_CD is '사업구분'
+/
+
+comment on column DOCS_SW.SW_CLASS_CD1 is '대분류'
+/
+
+comment on column DOCS_SW.SW_CLASS_NM1 is '대분류명'
+/
+
+comment on column DOCS_SW.SW_CLASS_CD2 is '중분류'
+/
+
+comment on column DOCS_SW.SW_CLASS_NM2 is '중분류명'
+/
+
+comment on column DOCS_SW.SW_TYPE_CD is 'SW종류'
+/
+
+comment on column DOCS_SW.PRODUCT_CD is '기종'
+/
+
+comment on column DOCS_SW.ECN_INSERT_UID is 'ECN작성자'
+/
+
+comment on column DOCS_SW.SW_NO is 'SW번호'
+/
+
+comment on column DOCS_SW.REV_NO is '리비전'
+/
+
+comment on column DOCS_SW.SW_NM is 'SW명(자료명)'
+/
+
+comment on column DOCS_SW.STATUS_CD is '상태CD'
+/
+
+comment on column DOCS_SW.SW_VERSION_NO is 'SW버전'
+/
+
+comment on column DOCS_SW.DOC_VERSION_NO is '명세서버전'
+/
+
+comment on column DOCS_SW.PROJECT_CD is '프로젝트코드'
+/
+
+comment on column DOCS_SW.PROJECT_NM is '프로젝트명'
+/
+
+comment on column DOCS_SW.DISTRIBUTE_TYPE_CD is '배포유형'
+/
+
+comment on column DOCS_SW.STD_GAPP_DT is '규격화 정부승인일'
+/
+
+comment on column DOCS_SW.CHANGE_GAPP_DT is '기술변경 정부승인일'
+/
+
+comment on column DOCS_SW.DESCRIPTION is '설명'
+/
+
+comment on column DOCS_SW.SECURITY_TYPE_CD is '보안등급'
+/
+
+comment on column DOCS_SW.PROTECT_YN is '방산기술보호대상'
+/
+
+comment on column DOCS_SW.INSERT_DEPT_NM is '작성자부서명'
+/
+
+comment on column DOCS_SW.INSERT_UID is '작성자'
+/
+
+comment on column DOCS_SW.INSERT_DT is '작성일자'
+/
+
+comment on column DOCS_SW.UPDATE_DEPT_NM is '수정자 부서명'
+/
+
+comment on column DOCS_SW.UPDATE_UID is '수정자'
+/
+
+comment on column DOCS_SW.UPDATE_DT is '수정일자'
+/
+
+create table DOCS_SW_FILE
+(
+    CN_SERIAL          NUMBER         not null,
+    OBJECT_ID          NVARCHAR2(50)  not null,
+    FILE_NO            NUMBER         not null,
+    FILE_PATH_NM       NVARCHAR2(100) not null,
+    ORG_FILE_NM        NVARCHAR2(255),
+    FILE_NM            NVARCHAR2(100),
+    CHECK_SUM          NVARCHAR2(30),
+    DISTRIBUTE_TYPE_CD VARCHAR2(30),
+    FILE_SIZE          NVARCHAR2(10),
+    INTERFACE_DT       DATE,
+    REGISTER_USER      VARCHAR2(20),
+    constraint PK_DOCS_SW_FILE
+        primary key (OBJECT_ID, FILE_NO),
+    constraint "DOCS_SW_FILE_pk"
+        unique (FILE_PATH_NM, FILE_NM, ORG_FILE_NM, FILE_SIZE)
+)
+/
+
+comment on table DOCS_SW_FILE is 'SW파일정보'
+/
+
+comment on column DOCS_SW_FILE.FILE_PATH_NM is '파일경로'
+/
+
+comment on column DOCS_SW_FILE.ORG_FILE_NM is '원본파일명'
+/
+
+comment on column DOCS_SW_FILE.FILE_NM is '파일명칭'
+/
+
+comment on column DOCS_SW_FILE.FILE_SIZE is '파일크기'
+/
+
+create table DOCS_SW_MEMBER
+(
+    OBJECT_ID    NVARCHAR2(50) not null,
+    ACCESS_UID   NVARCHAR2(50) not null,
+    INTERFACE_DT DATE,
+    CN_SERIAL    NUMBER,
+    constraint DOCS_SW_ACCESS_USER_PK
+        primary key (ACCESS_UID, OBJECT_ID)
+)
+/
+
+comment on table DOCS_SW_MEMBER is 'SW정보-방산보호자료접근자'
+/
+
+comment on column DOCS_SW_MEMBER.ACCESS_UID is '접근자 AD 계정'
+/
+
+create table DOCS_SYSTEM_CONFIG
+(
+    SYSTEM_CONFIG_GROUP VARCHAR2(20) not null,
+    SYSTEM_CONFIG_CD    VARCHAR2(20) not null,
+    SYSTEM_CONFIG_VALUE VARCHAR2(1024),
+    SYSTEM_CONFIG_DESC  VARCHAR2(4000),
+    constraint DOCS_SYSTEM_CONFIG_PK
+        primary key (SYSTEM_CONFIG_GROUP, SYSTEM_CONFIG_CD)
+)
+/
+
+comment on table DOCS_SYSTEM_CONFIG is '시스템 설정 정보'
+/
+
+comment on column DOCS_SYSTEM_CONFIG.SYSTEM_CONFIG_GROUP is '시스템 설정 그룹'
+/
+
+comment on column DOCS_SYSTEM_CONFIG.SYSTEM_CONFIG_CD is '시스템 설정 코드'
+/
+
+comment on column DOCS_SYSTEM_CONFIG.SYSTEM_CONFIG_VALUE is '시스템 설정 값'
+/
+
+comment on column DOCS_SYSTEM_CONFIG.SYSTEM_CONFIG_DESC is '시스템 설정 내용'
+/
+
+create table DOCS_SYSTEM_CONFIG_HAN
+(
+    SYSTEM_CONFIG_GROUP VARCHAR2(20),
+    SYSTEM_CONFIG_CD    VARCHAR2(20),
+    SYSTEM_CONFIG_VALUE VARCHAR2(1024),
+    SYSTEM_CONFIG_DESC  VARCHAR2(4000)
+)
+/
+
+comment on table DOCS_SYSTEM_CONFIG_HAN is '시스템 설정 정보'
+/
+
+comment on column DOCS_SYSTEM_CONFIG_HAN.SYSTEM_CONFIG_GROUP is '시스템 설정 그룹'
+/
+
+comment on column DOCS_SYSTEM_CONFIG_HAN.SYSTEM_CONFIG_CD is '시스템 설정 코드'
+/
+
+comment on column DOCS_SYSTEM_CONFIG_HAN.SYSTEM_CONFIG_VALUE is '시스템 설정 값'
+/
+
+comment on column DOCS_SYSTEM_CONFIG_HAN.SYSTEM_CONFIG_DESC is '시스템 설정 내용'
+/
+
+create table DOCS_TEMP_MENU
+(
+    MENU_CD        VARCHAR2(64) not null
+        constraint DOCS_TEMP_MENU_PK
+            primary key,
+    PARENT_MENU_CD VARCHAR2(64),
+    MENU_NM        VARCHAR2(64),
+    MESSAGE_CD     VARCHAR2(128),
+    MENU_LEVEL     VARCHAR2(2),
+    MENU_TYPE      CHAR,
+    MENU_URL       VARCHAR2(256),
+    SORT_SEQ       NUMBER,
+    TREE_TYPE      VARCHAR2(10),
+    DEL_YN         CHAR,
+    USE_YN         CHAR,
+    TOOLTIP        VARCHAR2(256),
+    MENU_DESC      VARCHAR2(256),
+    ROLE_CD        VARCHAR2(20)
+)
+/
+
+comment on column DOCS_TEMP_MENU.MENU_CD is '메뉴코드'
+/
+
+comment on column DOCS_TEMP_MENU.PARENT_MENU_CD is '부모메뉴코드'
+/
+
+comment on column DOCS_TEMP_MENU.MESSAGE_CD is '다국어메시지코드'
+/
+
+comment on column DOCS_TEMP_MENU.MENU_LEVEL is '메뉴단계'
+/
+
+comment on column DOCS_TEMP_MENU.MENU_TYPE is '메뉴유형(M,P)'
+/
+
+comment on column DOCS_TEMP_MENU.SORT_SEQ is '메뉴순서'
+/
+
+create table DOCS_TOOLBAR_INFO
+(
+    TOOLBAR_ID         VARCHAR2(80) not null,
+    BUTTON_ID          VARCHAR2(80) not null,
+    BUTTON_SEQ         NUMBER,
+    BUTTON_LABEL       VARCHAR2(80),
+    BUTTON_IMG         VARCHAR2(80),
+    BUTTON_ALIGN       VARCHAR2(8),
+    CALL_FUNC          VARCHAR2(320),
+    USE_YN             VARCHAR2(1),
+    LANG_CD            VARCHAR2(255),
+    BUTTON_TYPE        VARCHAR2(10),
+    SYSTEM_CLASS_GROUP VARCHAR2(80),
+    ROLE_CD            VARCHAR2(20),
+    constraint DOCS_TOOLBAR_INFO_PK
+        primary key (TOOLBAR_ID, BUTTON_ID)
+)
+/
+
+create table DOCS_UNREG_INFO
+(
+    OBJECT_ID        NVARCHAR2(50) not null
+        constraint DOCS_NO_REG_INFO_PK
+            primary key,
+    OBJECT_NO        NVARCHAR2(50),
+    OBJECT_NM        NVARCHAR2(50),
+    INSERT_USER_CD   NVARCHAR2(20),
+    INSERT_DT        DATE,
+    FILE_CD          NVARCHAR2(255),
+    OBJECT_TYPE      NVARCHAR2(32),
+    BUSINESS_AREA_CD VARCHAR2(20)
+)
+/
+
+comment on column DOCS_UNREG_INFO.OBJECT_NO is '자료번호'
+/
+
+comment on column DOCS_UNREG_INFO.OBJECT_NM is '자료명'
+/
+
+comment on column DOCS_UNREG_INFO.INSERT_USER_CD is '등록자'
+/
+
+comment on column DOCS_UNREG_INFO.INSERT_DT is '등록일시'
+/
+
+comment on column DOCS_UNREG_INFO.OBJECT_TYPE is '자료유형'
+/
+
+comment on column DOCS_UNREG_INFO.BUSINESS_AREA_CD is '사업장코드'
+/
+
+create table DOCS_USER
+(
+    USER_CD                NVARCHAR2(20) not null
+        constraint PK_DOCS_USER
+            primary key,
+    USER_ID                NVARCHAR2(20),
+    USER_NM                NVARCHAR2(256),
+    USER_PWD               NVARCHAR2(20),
+    COMPANY_CD             NVARCHAR2(20),
+    DEPT_CD                NVARCHAR2(20),
+    POSITION_CD            NVARCHAR2(20),
+    EMAIL                  NVARCHAR2(256),
+    AUTH_LEVEL             NUMBER,
+    AUTH_APPROVAL_YN       NVARCHAR2(1),
+    FIRST_LOGIN_DT         DATE,
+    LAST_LOGIN_DT          DATE,
+    LAST_LOGIN_IP          NVARCHAR2(20),
+    USE_YN                 NVARCHAR2(1) default 'N',
+    DEL_YN                 NVARCHAR2(1) default 'N',
+    INSERT_UID             NVARCHAR2(20),
+    INSERT_DT              DATE,
+    UPDATE_UID             NVARCHAR2(20),
+    UPDATE_DT              DATE,
+    PWD_UPDATE_DT          DATE,
+    AUTH_SITE              NVARCHAR2(1),
+    LOGIN_COUNT            NUMBER(2),
+    ROLE_GROUP             VARCHAR2(20),
+    BUSINESS_AREA_CD       NVARCHAR2(30),
+    PROTECT_YN             VARCHAR2(20),
+    WORK_PLACE_CD          VARCHAR2(20),
+    LOCK_YN                NVARCHAR2(1),
+    DISTRIBUTION_PERSON_YN NVARCHAR2(1)
+)
+/
+
+comment on table DOCS_USER is '사용자정보'
+/
+
+comment on column DOCS_USER.USER_CD is 'USER코드'
+/
+
+comment on column DOCS_USER.USER_ID is 'USERID'
+/
+
+comment on column DOCS_USER.USER_NM is 'USER명칭'
+/
+
+comment on column DOCS_USER.USER_PWD is '사용자비밀번호'
+/
+
+comment on column DOCS_USER.COMPANY_CD is '회사코드'
+/
+
+comment on column DOCS_USER.DEPT_CD is '부서코드'
+/
+
+comment on column DOCS_USER.POSITION_CD is '직급(직책)코드'
+/
+
+comment on column DOCS_USER.EMAIL is '이메일'
+/
+
+comment on column DOCS_USER.AUTH_LEVEL is '1:권한없음,2:외부,4:내부,32:관리자'
+/
+
+comment on column DOCS_USER.AUTH_APPROVAL_YN is '결재권여부'
+/
+
+comment on column DOCS_USER.FIRST_LOGIN_DT is '최초로그인일시'
+/
+
+comment on column DOCS_USER.LAST_LOGIN_DT is '최종로그인일시'
+/
+
+comment on column DOCS_USER.LAST_LOGIN_IP is '최종로그인IP'
+/
+
+comment on column DOCS_USER.USE_YN is '사용여부'
+/
+
+comment on column DOCS_USER.DEL_YN is '삭제여부'
+/
+
+comment on column DOCS_USER.INSERT_UID is '등록사용자'
+/
+
+comment on column DOCS_USER.INSERT_DT is '등록일시'
+/
+
+comment on column DOCS_USER.UPDATE_UID is '수정사용자'
+/
+
+comment on column DOCS_USER.UPDATE_DT is '수정일시'
+/
+
+comment on column DOCS_USER.PWD_UPDATE_DT is '비밀번호수정'
+/
+
+comment on column DOCS_USER.AUTH_SITE is 'I:내부접속,E:외부접속,B:구분없음'
+/
+
+comment on column DOCS_USER.LOGIN_COUNT is '로그인횟수'
+/
+
+comment on column DOCS_USER.BUSINESS_AREA_CD is '1/2사업장'
+/
+
+comment on column DOCS_USER.PROTECT_YN is '방산기술사용가능여부'
+/
+
+comment on column DOCS_USER.WORK_PLACE_CD is '사업장구분코드 (L0368/판교, L0329/창원)'
+/
+
+comment on column DOCS_USER.DISTRIBUTION_PERSON_YN is '긴급도 접수 가능여부'
+/
+
+create index DOCS_USER_IDX1
+    on DOCS_USER (USER_ID)
+/
+
+create table DOCS_USER_REQUEST
+(
+    REQUEST_NO       NVARCHAR2(14) not null
+        constraint DOCS_USER_REQUEST_PK
+            primary key,
+    REQUEST_TYPE     CHAR,
+    STATUS_CD        NVARCHAR2(10),
+    USER_NM          NVARCHAR2(50),
+    USER_PWD         NVARCHAR2(256),
+    EMAIL            NVARCHAR2(256),
+    PROTECT_YN       CHAR,
+    REQUEST_REASON   NVARCHAR2(1000),
+    REJECT_REASON    VARCHAR2(1000),
+    APPROVAL_DT      DATE,
+    INSERT_USER_CD   NVARCHAR2(15),
+    INSERT_DT        DATE,
+    APPROVAL_USER_CD NVARCHAR2(20),
+    TARGET_USER_CD   NVARCHAR2(20),
+    COMPANY_CD       NVARCHAR2(20),
+    CR_YN            CHAR
+)
+/
+
+comment on column DOCS_USER_REQUEST.REQUEST_NO is '요청번호'
+/
+
+comment on column DOCS_USER_REQUEST.REQUEST_TYPE is '요청유형'
+/
+
+comment on column DOCS_USER_REQUEST.STATUS_CD is '상태코드'
+/
+
+comment on column DOCS_USER_REQUEST.USER_NM is 'USER명칭'
+/
+
+comment on column DOCS_USER_REQUEST.USER_PWD is '비밀번호'
+/
+
+comment on column DOCS_USER_REQUEST.PROTECT_YN is '방산기술보호권한'
+/
+
+comment on column DOCS_USER_REQUEST.REQUEST_REASON is '요청사유'
+/
+
+comment on column DOCS_USER_REQUEST.REJECT_REASON is '반려사유'
+/
+
+comment on column DOCS_USER_REQUEST.APPROVAL_DT is '결재일시'
+/
+
+comment on column DOCS_USER_REQUEST.INSERT_USER_CD is '등록사용자'
+/
+
+comment on column DOCS_USER_REQUEST.INSERT_DT is '등록일시'
+/
+
+create table DOCS_WATERMARK_INFO
+(
+    WATERMARK_SEQ  NUMBER not null
+        constraint DOCS_WATER_INFO_PK
+            primary key,
+    USER_TYPE      VARCHAR2(3),
+    WATERMARK_TYPE VARCHAR2(30),
+    WATERMARK_CD   VARCHAR2(20)
+)
+/
+
+comment on column DOCS_WATERMARK_INFO.WATERMARK_SEQ is '워터마크 코드'
+/
+
+comment on column DOCS_WATERMARK_INFO.USER_TYPE is '사내 : IN, 외부 : OUT'
+/
+
+comment on column DOCS_WATERMARK_INFO.WATERMARK_TYPE is '일반 : GENERAL, 방산 : PROTECT, 사외비 : CLASSIFIED, 아이템 : ITEM'
+/
+
+comment on column DOCS_WATERMARK_INFO.WATERMARK_CD is '워터마크 아이템 맵핑 코드(DOCS_WATERMARK_MAPPING 참조)'
+/
+
+create table DOCS_WATERMARK_ITEM
+(
+    ITEM_CD           VARCHAR2(20) not null
+        constraint DOCS_WATERMARK_ITEM_PK
+            primary key,
+    ITEM_NAME         VARCHAR2(100),
+    ITEM_DESC         VARCHAR2(1024),
+    ITEM_TYPE         VARCHAR2(10),
+    ITEM_INFO         VARCHAR2(1024),
+    ITEM_H_ALIGN      NUMBER,
+    ITEM_V_ALIGN      NUMBER,
+    ITEM_SIZE         NUMBER,
+    ITEM_TRANSPARENCY NUMBER,
+    ITEM_FONT         VARCHAR2(20),
+    INSERT_DT         DATE,
+    INSERT_UID        VARCHAR2(20),
+    UPDATE_UID        VARCHAR2(20),
+    UPDATE_DT         DATE,
+    ITEM_COLOR        VARCHAR2(20),
+    ITEM_FONT_STYLE   VARCHAR2(20)
+)
+/
+
+comment on column DOCS_WATERMARK_ITEM.ITEM_CD is '워터마크 아이템 코드'
+/
+
+comment on column DOCS_WATERMARK_ITEM.ITEM_NAME is '워터마크 아이템 명'
+/
+
+comment on column DOCS_WATERMARK_ITEM.ITEM_DESC is '워터마크 아이템 설명'
+/
+
+comment on column DOCS_WATERMARK_ITEM.ITEM_TYPE is 'MSG: 메시지, OBJECT: 아이템, IMG : 이미지'
+/
+
+comment on column DOCS_WATERMARK_ITEM.ITEM_INFO is '아이템 상세'
+/
+
+comment on column DOCS_WATERMARK_ITEM.ITEM_H_ALIGN is '가로 위치'
+/
+
+comment on column DOCS_WATERMARK_ITEM.ITEM_V_ALIGN is '세로 위치'
+/
+
+comment on column DOCS_WATERMARK_ITEM.ITEM_SIZE is '아이템 크기'
+/
+
+comment on column DOCS_WATERMARK_ITEM.ITEM_TRANSPARENCY is '아이템 투명도'
+/
+
+comment on column DOCS_WATERMARK_ITEM.ITEM_FONT is '아이템 폰트 (텍스트일 경우 적용)'
+/
+
+comment on column DOCS_WATERMARK_ITEM.ITEM_COLOR is '아이템 색상'
+/
+
+comment on column DOCS_WATERMARK_ITEM.ITEM_FONT_STYLE is '폰트 스타일'
+/
+
+create table DOCS_WATERMARK_MAPPING
+(
+    WATERMARK_CD VARCHAR2(20) not null,
+    ITEM_CD      VARCHAR2(20) not null,
+    constraint DOCS_WATERMARK_MAPPING_PK
+        primary key (WATERMARK_CD, ITEM_CD)
+)
+/
+
+create table ECR_INFO
+(
+    OBJECT_ID             VARCHAR2(10),
+    FILES                 VARCHAR2(120),
+    FILE_PK               VARCHAR2(100),
+    CN_DRAW_NUMBER        VARCHAR2(50),
+    FILE_NAME             VARCHAR2(150),
+    CN_TITLE              VARCHAR2(255),
+    USAGES                VARCHAR2(31),
+    USAGE_VAL             VARCHAR2(10),
+    VENDER                VARCHAR2(50),
+    USERNAME              VARCHAR2(10),
+    OUTUSER_ID            VARCHAR2(10),
+    IN_USER_ID            VARCHAR2(11),
+    FIRST_NAME            VARCHAR2(20),
+    CREATION_DATE         VARCHAR2(10),
+    APPROVAL_DATE         VARCHAR2(10),
+    STATE                 VARCHAR2(12),
+    STATE2                VARCHAR2(10),
+    ECR_STATE             VARCHAR2(10),
+    REJECT_COMMENT        VARCHAR2(4000),
+    REVISION              VARCHAR2(10),
+    EMAIL                 VARCHAR2(50),
+    PROPOSAL_COMMENT      VARCHAR2(4000 char),
+    PROPOSAL_COMMENT_ASIS VARCHAR2(4000 char),
+    CN_PART_NUMBER        VARCHAR2(31),
+    CN_ERP_MAT_NO         VARCHAR2(20),
+    FIRST_DATE            DATE,
+    CN_RESULT             VARCHAR2(4000 char),
+    REQUESTDATE           DATE
+)
+/
+
+create table ITEM_SAME_PART_INFO
+(
+    GROUP_NUMBER            NVARCHAR2(12),
+    HYPERSTASIS_SRU_PART_NO NVARCHAR2(100),
+    MAKE_PART_NO            NVARCHAR2(100),
+    REPLACEMENT_PART_NO     NVARCHAR2(200),
+    REPLACEMENT_PART_NM     NVARCHAR2(1000),
+    GROUP_STATE             NVARCHAR2(200),
+    INSERT_UID              NVARCHAR2(50),
+    INSERT_NM               NVARCHAR2(100),
+    INSERT_DT               DATE,
+    OBJECT_ID               NUMBER,
+    UPDATE_UID              NVARCHAR2(50),
+    UPDATE_NM               NVARCHAR2(100),
+    UPDATE_DT               DATE
+)
+/
+
+comment on column ITEM_SAME_PART_INFO.GROUP_NUMBER is '관리번호'
+/
+
+comment on column ITEM_SAME_PART_INFO.HYPERSTASIS_SRU_PART_NO is '차상위 조립체 부품번호(SRU)'
+/
+
+comment on column ITEM_SAME_PART_INFO.MAKE_PART_NO is '원제조사 부품번호'
+/
+
+comment on column ITEM_SAME_PART_INFO.REPLACEMENT_PART_NO is '동등품제조사품번'
+/
+
+comment on column ITEM_SAME_PART_INFO.REPLACEMENT_PART_NM is '동등품제조사(국명)'
+/
+
+comment on column ITEM_SAME_PART_INFO.GROUP_STATE is '상태'
+/
+
+comment on column ITEM_SAME_PART_INFO.INSERT_UID is '등록/수정자 계정'
+/
+
+comment on column ITEM_SAME_PART_INFO.INSERT_NM is '등록/수정자'
+/
+
+comment on column ITEM_SAME_PART_INFO.INSERT_DT is '등록/수정일자'
+/
+
+comment on column ITEM_SAME_PART_INFO.OBJECT_ID is '일련번호'
+/
+
+comment on column ITEM_SAME_PART_INFO.UPDATE_UID is '등록/수정자 계정'
+/
+
+comment on column ITEM_SAME_PART_INFO.UPDATE_NM is '등록/수정자'
+/
+
+comment on column ITEM_SAME_PART_INFO.UPDATE_DT is '등록/수정일자'
+/
+
+create table ITEM_USE_CODE_LIST
+(
+    CN_PARENT_CODE VARCHAR2(50),
+    CN_CODE        VARCHAR2(50),
+    CN_CODE_DESC   VARCHAR2(100),
+    CN_CODE_ORDER  NUMBER
+)
+/
+
+comment on column ITEM_USE_CODE_LIST.CN_PARENT_CODE is '분류'
+/
+
+comment on column ITEM_USE_CODE_LIST.CN_CODE is '코드'
+/
+
+comment on column ITEM_USE_CODE_LIST.CN_CODE_DESC is '코드명'
+/
+
+comment on column ITEM_USE_CODE_LIST.CN_CODE_ORDER is '순번'
+/
+
+create table ITEM_USE_INFO
+(
+    HYPERSTASIS_SRU_PART_NO      NVARCHAR2(100) not null,
+    MAKE_PART_NO                 NVARCHAR2(100) not null,
+    PROD_CD_NM                   NVARCHAR2(100),
+    BUSINESS_AREA_CD             NVARCHAR2(10),
+    DEPT_CD                      NVARCHAR2(10),
+    DEPT_NM                      NVARCHAR2(200),
+    DELIVERY_LRU_PART_NO         NVARCHAR2(100) not null,
+    DELIVERY_VENDOR_NM           NVARCHAR2(200),
+    DELIVERY_PART_NM             NVARCHAR2(200),
+    HYPERSTASIS_PART_NM          NVARCHAR2(200),
+    MAKE_NM                      NVARCHAR2(100),
+    STANDARDIZATION_PART_NO      NVARCHAR2(100),
+    PART_NM                      NVARCHAR2(200),
+    CLASSIFICATION               NVARCHAR2(100),
+    MANAGE_DIV                   NVARCHAR2(100),
+    CONTRACT_PART_NO             NVARCHAR2(100),
+    MATCHED_MFR                  NVARCHAR2(200),
+    MATCHED_PN                   NVARCHAR2(200),
+    MATCHED_PART_DESC            NVARCHAR2(200),
+    PART_CATEGORY                NVARCHAR2(100),
+    CURRENT_PART_ST              NVARCHAR2(100),
+    PAST_PART_NO                 NVARCHAR2(100),
+    LCC_CD                       FLOAT,
+    LCS_CD                       NVARCHAR2(100),
+    ESTIMATIED_YTEOL             NVARCHAR2(50),
+    LTB_DT                       DATE,
+    LTD_DT                       DATE,
+    RECOMMED_SUBSTITUTED_VENDOR  NVARCHAR2(255),
+    RECOMMED_SUBSTITUTED_PART_NO NVARCHAR2(255),
+    ACQUIRE_DT                   DATE,
+    SKILL_CHANGE                 NVARCHAR2(100),
+    DUANZONG_SYNTHESIS_YN        NVARCHAR2(1),
+    DUANZONG_YN                  NVARCHAR2(1),
+    DUANZONG_DT                  DATE,
+    DUANZONG_REASON              NVARCHAR2(100),
+    DUANZONG_CAUSE               NVARCHAR2(100),
+    STOCK                        NUMBER,
+    PRODUCTION_ACTION_DT         DATE,
+    DAUNZONG_MEASURE             NVARCHAR2(100),
+    CONTRACT_INFOR               NVARCHAR2(200),
+    REPLACEMENT_PART_NO          NVARCHAR2(200),
+    COST_IMPACT                  NVARCHAR2(100),
+    ACQUISITION_DT               DATE,
+    INSERT_UID                   NVARCHAR2(50),
+    INSERT_NM                    NVARCHAR2(50),
+    INSERT_DT                    DATE,
+    OBJECT_ID                    NUMBER,
+    UPDATE_UID                   VARCHAR2(50),
+    UPDATE_NM                    VARCHAR2(50),
+    UPDATE_DT                    DATE,
+    constraint PK_PDM_DUANZONG_INFO
+        primary key (HYPERSTASIS_SRU_PART_NO, MAKE_PART_NO)
+)
+/
+
+comment on table ITEM_USE_INFO is '단종품관리'
+/
+
+comment on column ITEM_USE_INFO.HYPERSTASIS_SRU_PART_NO is '차상위 조립체 부품번호(SRU)'
+/
+
+comment on column ITEM_USE_INFO.MAKE_PART_NO is '원제조사 부품번호'
+/
+
+comment on column ITEM_USE_INFO.PROD_CD_NM is '기종모델번호(기종명)'
+/
+
+comment on column ITEM_USE_INFO.BUSINESS_AREA_CD is '사업장구분'
+/
+
+comment on column ITEM_USE_INFO.DEPT_CD is '부서코드'
+/
+
+comment on column ITEM_USE_INFO.DEPT_NM is '부서명'
+/
+
+comment on column ITEM_USE_INFO.DELIVERY_LRU_PART_NO is '납품 조립체 부품번호(LRU)'
+/
+
+comment on column ITEM_USE_INFO.DELIVERY_VENDOR_NM is '납품 업체명'
+/
+
+comment on column ITEM_USE_INFO.DELIVERY_PART_NM is '납품 조립체 품명'
+/
+
+comment on column ITEM_USE_INFO.HYPERSTASIS_PART_NM is '차상위 조립체 품명'
+/
+
+comment on column ITEM_USE_INFO.MAKE_NM is '원제조사(국명)'
+/
+
+comment on column ITEM_USE_INFO.STANDARDIZATION_PART_NO is '규격화 부품번호(제안된 공급품 도면)'
+/
+
+comment on column ITEM_USE_INFO.PART_NM is '품명'
+/
+
+comment on column ITEM_USE_INFO.CLASSIFICATION is '분류'
+/
+
+comment on column ITEM_USE_INFO.MANAGE_DIV is '관리구분'
+/
+
+comment on column ITEM_USE_INFO.CONTRACT_PART_NO is '원제조사 부품번호(필요시 보정)'
+/
+
+comment on column ITEM_USE_INFO.MATCHED_MFR is 'Matched Mfr'
+/
+
+comment on column ITEM_USE_INFO.MATCHED_PN is 'Matched P/N'
+/
+
+comment on column ITEM_USE_INFO.MATCHED_PART_DESC is 'Matched Part Description'
+/
+
+comment on column ITEM_USE_INFO.PART_CATEGORY is 'Part Category'
+/
+
+comment on column ITEM_USE_INFO.CURRENT_PART_ST is '현재 Part Status'
+/
+
+comment on column ITEM_USE_INFO.PAST_PART_NO is '이전 Part Status'
+/
+
+comment on column ITEM_USE_INFO.LCC_CD is 'LCC(Life Cycle Code : 수명상태 추치 값)'
+/
+
+comment on column ITEM_USE_INFO.LCS_CD is 'LCS(Life Cycle Stage : 수명 상태)'
+/
+
+comment on column ITEM_USE_INFO.ESTIMATIED_YTEOL is 'Estimated YTEOL'
+/
+
+comment on column ITEM_USE_INFO.LTB_DT is 'LTB Date(Last Time Buy (마지막 구매 가능 일자))'
+/
+
+comment on column ITEM_USE_INFO.LTD_DT is 'LTD Date(Last Time Delivery (마지막 배송 가능 일자))'
+/
+
+comment on column ITEM_USE_INFO.RECOMMED_SUBSTITUTED_VENDOR is '추천 대체품 제조사'
+/
+
+comment on column ITEM_USE_INFO.RECOMMED_SUBSTITUTED_PART_NO is '추천 대체품 부품번호'
+/
+
+comment on column ITEM_USE_INFO.ACQUIRE_DT is '획득일자'
+/
+
+comment on column ITEM_USE_INFO.SKILL_CHANGE is '기술변경'
+/
+
+comment on column ITEM_USE_INFO.DUANZONG_SYNTHESIS_YN is '단종여부 (종합결정)'
+/
+
+comment on column ITEM_USE_INFO.DUANZONG_YN is '단종여부'
+/
+
+comment on column ITEM_USE_INFO.DUANZONG_DT is '단종 예정일'
+/
+
+comment on column ITEM_USE_INFO.DUANZONG_REASON is '단종 사유'
+/
+
+comment on column ITEM_USE_INFO.DUANZONG_CAUSE is '단종 근거'
+/
+
+comment on column ITEM_USE_INFO.STOCK is '재고 (추가 조달 가능수 포함)'
+/
+
+comment on column ITEM_USE_INFO.PRODUCTION_ACTION_DT is '생산대응 가능월'
+/
+
+comment on column ITEM_USE_INFO.DAUNZONG_MEASURE is '단종대책'
+/
+
+comment on column ITEM_USE_INFO.CONTRACT_INFOR is '원제조사 연락처 (전화, 이메일)'
+/
+
+comment on column ITEM_USE_INFO.REPLACEMENT_PART_NO is '대체품 제조사 품번 (제조사명)'
+/
+
+comment on column ITEM_USE_INFO.COST_IMPACT is '원가영향성'
+/
+
+comment on column ITEM_USE_INFO.ACQUISITION_DT is '획득일자2'
+/
+
+comment on column ITEM_USE_INFO.INSERT_UID is '등록자계정'
+/
+
+comment on column ITEM_USE_INFO.INSERT_NM is '등록자'
+/
+
+comment on column ITEM_USE_INFO.INSERT_DT is '등록일자'
+/
+
+comment on column ITEM_USE_INFO.OBJECT_ID is 'SEQ'
+/
+
+comment on column ITEM_USE_INFO.UPDATE_UID is '수정자계정'
+/
+
+comment on column ITEM_USE_INFO.UPDATE_NM is '수정자'
+/
+
+comment on column ITEM_USE_INFO.UPDATE_DT is '수정일자'
+/
+
+create table ITN_CR
+(
+    CN_SERIAL              NUMBER        not null
+        constraint ITN_CR_PK
+            primary key,
+    CR_NO                  NVARCHAR2(50) not null,
+    BUSINESS_AREA_CD       NVARCHAR2(30) not null,
+    BUSINESS_TYPE_CD       NVARCHAR2(30),
+    PRODUCT_NO             NVARCHAR2(50),
+    DRAWING_NO             NVARCHAR2(50) not null,
+    REV_NO                 NVARCHAR2(50) not null,
+    DRAWING_NM             NVARCHAR2(100),
+    CR_TITLE_NM            NVARCHAR2(100),
+    MATERIAL_NO            NVARCHAR2(50),
+    PART_NO                NVARCHAR2(50),
+    PURCHASER_UID          NVARCHAR2(50),
+    PURCHASER_TL_UID       NVARCHAR2(50),
+    CR_TYPE_CD             NVARCHAR2(10),
+    DRAWING_INSERT_DT      DATE,
+    AS_IS_DESC             NVARCHAR2(1000),
+    TO_BE_DESC             NVARCHAR2(1000),
+    REVIEW_RESULT          NVARCHAR2(1500),
+    REJECT_REASON          NVARCHAR2(1000),
+    VENDOR_NO              NVARCHAR2(50),
+    VENDOR_NM              NVARCHAR2(100),
+    VENDOR_UID             NVARCHAR2(50),
+    VENDOR_EMAIL_NM        NVARCHAR2(100),
+    STATUS_CD              NVARCHAR2(30),
+    CANCEL_REASON          NVARCHAR2(20),
+    CN_CHANGE_TYPE         VARCHAR2(1),
+    RECEIPT_DT             DATE,
+    INSERT_UID             NVARCHAR2(30),
+    INSERT_DT              DATE,
+    INTERFACE_DT           DATE,
+    VENDOR_LEADERID        NVARCHAR2(50),
+    VENDOR_LEADER_EMAIL_NM NVARCHAR2(100),
+    VENDOR_REJECT_REASON   NVARCHAR2(1000),
+    DEVICE_NM              NVARCHAR2(255),
+    MOVED_TO_DOCS          NVARCHAR2(1),
+    VENDOR_UID_NM          NVARCHAR2(100)
+)
+/
+
+comment on column ITN_CR.CN_SERIAL is 'CN_SERIAL'
+/
+
+comment on column ITN_CR.CR_NO is '시스템자동부여'
+/
+
+comment on column ITN_CR.BUSINESS_AREA_CD is '사업장구분
+'
+/
+
+comment on column ITN_CR.BUSINESS_TYPE_CD is '사업구분'
+/
+
+comment on column ITN_CR.PRODUCT_NO is '기종'
+/
+
+comment on column ITN_CR.DRAWING_NO is '도번
+'
+/
+
+comment on column ITN_CR.REV_NO is 'REV'
+/
+
+comment on column ITN_CR.DRAWING_NM is '도명'
+/
+
+comment on column ITN_CR.CR_TITLE_NM is '제목'
+/
+
+comment on column ITN_CR.MATERIAL_NO is '자재코드'
+/
+
+comment on column ITN_CR.PART_NO is '품번'
+/
+
+comment on column ITN_CR.PURCHASER_UID is '구매담당자'
+/
+
+comment on column ITN_CR.PURCHASER_TL_UID is '구매팀장
+'
+/
+
+comment on column ITN_CR.CR_TYPE_CD is '제의사유코드'
+/
+
+comment on column ITN_CR.DRAWING_INSERT_DT is '도면등록일'
+/
+
+comment on column ITN_CR.AS_IS_DESC is '현상(AS-IS)'
+/
+
+comment on column ITN_CR.TO_BE_DESC is '설변요청(TO-BE)'
+/
+
+comment on column ITN_CR.REVIEW_RESULT is '검토결과'
+/
+
+comment on column ITN_CR.REJECT_REASON is '반려사유'
+/
+
+comment on column ITN_CR.VENDOR_NO is '요청업체(사업자번호)
+'
+/
+
+comment on column ITN_CR.VENDOR_NM is '업체명
+'
+/
+
+comment on column ITN_CR.VENDOR_UID is '업체요청자
+'
+/
+
+comment on column ITN_CR.VENDOR_EMAIL_NM is '업체요청자 이메일'
+/
+
+comment on column ITN_CR.STATUS_CD is 'In Process:진행, Complete:변경요청완료
+'
+/
+
+comment on column ITN_CR.CANCEL_REASON is '보류/취소 사유
+'
+/
+
+comment on column ITN_CR.RECEIPT_DT is '접수일자(구매담당자)
+'
+/
+
+comment on column ITN_CR.INSERT_UID is '등록자
+'
+/
+
+comment on column ITN_CR.INSERT_DT is '등록일'
+/
+
+create table ITN_CR_FILE
+(
+    CN_SERIAL         NUMBER,
+    CR_NO             NVARCHAR2(50) not null,
+    FILE_NO           NUMBER        not null,
+    FILE_PATH_NM      NVARCHAR2(1024),
+    ORG_FILE_NM       NVARCHAR2(100),
+    FILE_NM           NVARCHAR2(100),
+    DOCS_FILE_PATH_NM NVARCHAR2(1024),
+    FILE_SIZE         NVARCHAR2(10),
+    MOVED_TO_DOCS     NVARCHAR2(1)
+)
+/
+
+comment on column ITN_CR_FILE.CN_SERIAL is '일련번호'
+/
+
+comment on column ITN_CR_FILE.CR_NO is '시스템자동부여
+'
+/
+
+comment on column ITN_CR_FILE.FILE_NO is '파일번호
+'
+/
+
+comment on column ITN_CR_FILE.FILE_PATH_NM is '첨부파일경로'
+/
+
+comment on column ITN_CR_FILE.ORG_FILE_NM is '원래파일명'
+/
+
+comment on column ITN_CR_FILE.FILE_NM is '첨부파일명
+'
+/
+
+comment on column ITN_CR_FILE.FILE_SIZE is '파일크기
+'
+/
+
+create table ITN_DEPT
+(
+    DEPTCODE      VARCHAR2(34) not null
+        constraint PK_ITN_DEPT
+            primary key,
+    DEPTNAME      VARCHAR2(150),
+    DEPTSHORTNAME VARCHAR2(255),
+    DEPTFULLNAME  VARCHAR2(255),
+    STARTDATE     DATE,
+    ENDDATE       DATE,
+    OBJDETAILCAT  VARCHAR2(50),
+    MANAGER       VARCHAR2(20),
+    UPDEPTCODE    VARCHAR2(34),
+    COM_CD        VARCHAR2(20),
+    ORG_CD        VARCHAR2(20),
+    LVL           VARCHAR2(20),
+    COMPCODE      VARCHAR2(50),
+    COMPNAME      VARCHAR2(50),
+    SIM_ORG_NM    VARCHAR2(50),
+    UPDATEDATE    DATE,
+    UPDATESTATE   NUMBER,
+    ENG_DEPTNAME  VARCHAR2(150),
+    SEQ           VARCHAR2(255),
+    INTERFACE_DT  DATE
+)
+/
+
+comment on table ITN_DEPT is '부서 인터페이스'
+/
+
+comment on column ITN_DEPT.DEPTCODE is '회사코드+부서코드'
+/
+
+comment on column ITN_DEPT.DEPTNAME is '부서명'
+/
+
+comment on column ITN_DEPT.DEPTSHORTNAME is '부서명칭(S)'
+/
+
+comment on column ITN_DEPT.DEPTFULLNAME is '부서명칭(L)'
+/
+
+comment on column ITN_DEPT.STARTDATE is '시작일자'
+/
+
+comment on column ITN_DEPT.ENDDATE is '종료일자'
+/
+
+comment on column ITN_DEPT.OBJDETAILCAT is '부서타입'
+/
+
+comment on column ITN_DEPT.MANAGER is '관리자사번'
+/
+
+comment on column ITN_DEPT.UPDEPTCODE is '상위부서코드'
+/
+
+comment on column ITN_DEPT.COM_CD is '회사코드'
+/
+
+comment on column ITN_DEPT.ORG_CD is '부서코드'
+/
+
+comment on column ITN_DEPT.LVL is '부서레벨'
+/
+
+comment on column ITN_DEPT.COMPCODE is '회사코드+BG코드'
+/
+
+comment on column ITN_DEPT.COMPNAME is '회사명'
+/
+
+comment on column ITN_DEPT.SIM_ORG_NM is '약식회사명'
+/
+
+comment on column ITN_DEPT.UPDATEDATE is '수정일자'
+/
+
+comment on column ITN_DEPT.UPDATESTATE is '사용여부'
+/
+
+comment on column ITN_DEPT.ENG_DEPTNAME is '영문부서명'
+/
+
+comment on column ITN_DEPT.SEQ is '조직도표시순서'
+/
+
+create table ITN_DOCUMENT
+(
+    CN_SERIAL          NUMBER        not null,
+    OBJECT_ID          NVARCHAR2(50) not null,
+    BUSINESS_AREA_CD   NVARCHAR2(30),
+    BUSINESS_TYPE_CD   NVARCHAR2(30),
+    DOC_CLASS_CD1      NVARCHAR2(30),
+    DOC_CLASS_NM1      NVARCHAR2(50),
+    DOC_CLASS_CD2      NVARCHAR2(30),
+    DOC_CLASS_NM2      NVARCHAR2(50),
+    PRODUCT_CD         NVARCHAR2(30),
+    ECN_NO             NVARCHAR2(50),
+    ECN_INSERT_UID     NVARCHAR2(50),
+    DOCUMENT_NO        NVARCHAR2(50),
+    REV_NO             NVARCHAR2(10),
+    DOCUMENT_NM        NVARCHAR2(255),
+    DOCUMENT_ENNM      NVARCHAR2(255),
+    ACCOUNT_NM         NVARCHAR2(255),
+    STATUS_CD          NVARCHAR2(30),
+    TOTAL_SHEET        NUMBER,
+    PROJECT_CD         NVARCHAR2(31),
+    PROJECT_NM         NVARCHAR2(100),
+    DISTRIBUTE_TYPE_CD NVARCHAR2(30),
+    STD_GAPP_DT        DATE,
+    CHANGE_GAPP_DT     DATE,
+    SECURITY_TYPE_CD   NVARCHAR2(30),
+    PROTECT_YN         NVARCHAR2(1),
+    DESCRIPTION        NVARCHAR2(255),
+    INSERT_DEPT_NM     NVARCHAR2(100),
+    INSERT_UID         NVARCHAR2(50),
+    INSERT_DT          DATE,
+    UPDATE_DEPT_NM     NVARCHAR2(100),
+    UPDATE_UID         NVARCHAR2(50),
+    UPDATE_DT          DATE,
+    INTERFACE_DT       DATE,
+    VENDOR_CD          NVARCHAR2(20),
+    DISTRIBUTION_YN    NVARCHAR2(1),
+    MOVED_TO_DOCS      NVARCHAR2(1),
+    constraint ITN_DOCUMENT_PK
+        primary key (CN_SERIAL, OBJECT_ID)
+)
+/
+
+comment on column ITN_DOCUMENT.CN_SERIAL is '일련번호'
+/
+
+comment on column ITN_DOCUMENT.OBJECT_ID is 'OBJECT_ID'
+/
+
+comment on column ITN_DOCUMENT.BUSINESS_AREA_CD is '1/2사업장'
+/
+
+comment on column ITN_DOCUMENT.BUSINESS_TYPE_CD is '개발/양산'
+/
+
+comment on column ITN_DOCUMENT.DOC_CLASS_CD1 is '과제산출물/일반자료/양산TDP/생산기술자료 '
+/
+
+comment on column ITN_DOCUMENT.DOC_CLASS_NM1 is '대분류명
+
+'
+/
+
+comment on column ITN_DOCUMENT.DOC_CLASS_CD2 is '엑셀참조'
+/
+
+comment on column ITN_DOCUMENT.DOC_CLASS_NM2 is '중분류명
+'
+/
+
+comment on column ITN_DOCUMENT.PRODUCT_CD is '기종
+'
+/
+
+comment on column ITN_DOCUMENT.ECN_NO is 'ECN NO
+'
+/
+
+comment on column ITN_DOCUMENT.ECN_INSERT_UID is 'ECN 작성자
+'
+/
+
+comment on column ITN_DOCUMENT.DOCUMENT_NO is '사용자 식별 가능 번호(검색활용)
+'
+/
+
+comment on column ITN_DOCUMENT.REV_NO is 'REV
+'
+/
+
+comment on column ITN_DOCUMENT.DOCUMENT_NM is '문서명'
+/
+
+comment on column ITN_DOCUMENT.DOCUMENT_ENNM is '문서명(영문품명)'
+/
+
+comment on column ITN_DOCUMENT.ACCOUNT_NM is '설명
+'
+/
+
+comment on column ITN_DOCUMENT.STATUS_CD is '상태 : release
+'
+/
+
+comment on column ITN_DOCUMENT.TOTAL_SHEET is '총매수
+'
+/
+
+comment on column ITN_DOCUMENT.PROJECT_CD is '프로젝트코드
+'
+/
+
+comment on column ITN_DOCUMENT.PROJECT_NM is '프로젝트명
+'
+/
+
+comment on column ITN_DOCUMENT.DISTRIBUTE_TYPE_CD is '배포유형'
+/
+
+comment on column ITN_DOCUMENT.STD_GAPP_DT is '규격화 정부승인일
+'
+/
+
+comment on column ITN_DOCUMENT.CHANGE_GAPP_DT is '기술변경 정부승인일
+'
+/
+
+comment on column ITN_DOCUMENT.SECURITY_TYPE_CD is '보안등급
+'
+/
+
+comment on column ITN_DOCUMENT.PROTECT_YN is '방산기술보호 대상
+'
+/
+
+comment on column ITN_DOCUMENT.DESCRIPTION is '설명
+'
+/
+
+comment on column ITN_DOCUMENT.INSERT_DEPT_NM is '작성자 부서명
+'
+/
+
+comment on column ITN_DOCUMENT.INSERT_UID is '작성자'
+/
+
+comment on column ITN_DOCUMENT.INSERT_DT is '작성일자'
+/
+
+comment on column ITN_DOCUMENT.UPDATE_DEPT_NM is '수정자 부서명'
+/
+
+comment on column ITN_DOCUMENT.UPDATE_UID is '수정자'
+/
+
+comment on column ITN_DOCUMENT.UPDATE_DT is '수정일자'
+/
+
+comment on column ITN_DOCUMENT.INTERFACE_DT is 'Interface 일자
+'
+/
+
+comment on column ITN_DOCUMENT.VENDOR_CD is '배포업체'
+/
+
+comment on column ITN_DOCUMENT.DISTRIBUTION_YN is '배포여부'
+/
+
+create table ITN_DOCUMENT_FILE
+(
+    CN_SERIAL          NUMBER        not null,
+    OBJECT_ID          NVARCHAR2(50) not null,
+    FILE_NO            NUMBER        not null,
+    FILE_PATH_NM       NVARCHAR2(100),
+    ORG_FILE_NM        NVARCHAR2(255),
+    FILE_NM            NVARCHAR2(100),
+    DISTRIBUTE_TYPE_CD NVARCHAR2(30),
+    FILE_SIZE          NVARCHAR2(10),
+    INTERFACE_DT       DATE,
+    MOVED_TO_DOCS      NVARCHAR2(1),
+    DISTRIBUTION_YN    NVARCHAR2(1)
+)
+/
+
+comment on column ITN_DOCUMENT_FILE.FILE_NO is '파일번호'
+/
+
+comment on column ITN_DOCUMENT_FILE.FILE_PATH_NM is '파일경로'
+/
+
+comment on column ITN_DOCUMENT_FILE.ORG_FILE_NM is '원본파일명'
+/
+
+comment on column ITN_DOCUMENT_FILE.FILE_NM is '파일명칭'
+/
+
+comment on column ITN_DOCUMENT_FILE.DISTRIBUTE_TYPE_CD is '배포유형(원도(개발/양산), 승인요청도, 승인도, 긴급도
+Origin/App Request/Approved)'
+/
+
+comment on column ITN_DOCUMENT_FILE.FILE_SIZE is '파일크기
+'
+/
+
+comment on column ITN_DOCUMENT_FILE.DISTRIBUTION_YN is '배포여부'
+/
+
+create table ITN_DOCUMENT_MEMBER
+(
+    CN_SERIAL     NUMBER        not null,
+    OBJECT_ID     NVARCHAR2(50) not null,
+    ACCESS_UID    NVARCHAR2(50) not null,
+    FLAG          NVARCHAR2(1),
+    INTERFACE_DT  DATE,
+    MOVED_TO_DOCS NVARCHAR2(1),
+    constraint ITN_DOCUMENT_MEMBER_PK
+        primary key (CN_SERIAL, ACCESS_UID, OBJECT_ID)
+)
+/
+
+comment on column ITN_DOCUMENT_MEMBER.ACCESS_UID is '접근자 AD 계정'
+/
+
+create table ITN_DOCUMENT_TEMP
+(
+    CN_SERIAL          NUMBER        not null,
+    OBJECT_ID          NVARCHAR2(50) not null,
+    BUSINESS_AREA_CD   NVARCHAR2(30),
+    BUSINESS_TYPE_CD   NVARCHAR2(30),
+    DOC_CLASS_CD1      NVARCHAR2(30),
+    DOC_CLASS_NM1      NVARCHAR2(50),
+    DOC_CLASS_CD2      NVARCHAR2(30),
+    DOC_CLASS_NM2      NVARCHAR2(50),
+    PRODUCT_CD         NVARCHAR2(30),
+    ECN_NO             NVARCHAR2(50),
+    ECN_INSERT_UID     NVARCHAR2(50),
+    DOCUMENT_NO        NVARCHAR2(50),
+    REV_NO             NVARCHAR2(10),
+    DOCUMENT_NM        NVARCHAR2(255),
+    ACCOUNT_NM         NVARCHAR2(255),
+    STATUS_CD          NVARCHAR2(30),
+    TOTAL_SHEET        NUMBER,
+    PROJECT_CD         NVARCHAR2(31),
+    PROJECT_NM         NVARCHAR2(100),
+    DISTRIBUTE_TYPE_CD NVARCHAR2(30),
+    STD_GAPP_DT        DATE,
+    CHANGE_GAPP_DT     DATE,
+    SECURITY_TYPE_CD   NVARCHAR2(30),
+    PROTECT_YN         NVARCHAR2(1),
+    DESCRIPTION        NVARCHAR2(255),
+    INSERT_DEPT_NM     NVARCHAR2(100),
+    INSERT_UID         NVARCHAR2(50),
+    INSERT_DT          DATE,
+    UPDATE_DEPT_NM     NVARCHAR2(100),
+    UPDATE_UID         NVARCHAR2(50),
+    UPDATE_DT          DATE,
+    INTERFACE_DT       DATE,
+    DOCUMENT_ENNM      NVARCHAR2(255)
+)
+/
+
+create table ITN_DRAWING
+(
+    CN_SERIAL          NUMBER        not null,
+    OBJECT_ID          NVARCHAR2(50) not null,
+    BUSINESS_AREA_CD   NVARCHAR2(30),
+    BUSINESS_TYPE_CD   NVARCHAR2(30) not null,
+    ECN_NO             NVARCHAR2(1000),
+    ECN_INSERT_UID     NVARCHAR2(50),
+    DRAWING_TYPE       NVARCHAR2(50),
+    DRAWING_NO         NVARCHAR2(50) not null,
+    DRAWING_REV        NVARCHAR2(50),
+    REV_NO             NVARCHAR2(50) not null,
+    DRAWING_NM         NVARCHAR2(255),
+    DISTRIBUTE_TYPE_CD NVARCHAR2(30) not null,
+    STATUS_CD          NVARCHAR2(30),
+    CURRENT_PAGE_NO    NUMBER        not null,
+    TOTAL_PAGE_NO      NUMBER        not null,
+    EFFECTIVE_DT       DATE,
+    FILE_PATH_NM       NVARCHAR2(100),
+    ORG_FILE_NM        NVARCHAR2(255),
+    FILE_NM            NVARCHAR2(100),
+    FILE_SIZE          NVARCHAR2(10),
+    STD_GAPP_DT        DATE,
+    CHANGE_GAPP_DT     DATE,
+    PURCHASER_UID      NVARCHAR2(50),
+    VENDOR_CD          NVARCHAR2(30),
+    DESCRIPTION        NVARCHAR2(255),
+    SECURITY_TYPE_CD   NVARCHAR2(30),
+    PROTECT_YN         NVARCHAR2(1),
+    INSERT_DEPT_NM     NVARCHAR2(100),
+    INSERT_UID         NVARCHAR2(50),
+    INSERT_DT          DATE,
+    UPDATE_DEPT_NM     NVARCHAR2(100),
+    UPDATE_UID         NVARCHAR2(50),
+    UPDATE_DT          DATE,
+    INTERFACE_DT       DATE,
+    PRODUCT_CD         NVARCHAR2(30),
+    PLANT_CD           NVARCHAR2(10),
+    DISTRIBUTION_YN    NVARCHAR2(1),
+    MOVED_TO_DOCS      NVARCHAR2(1),
+    VALID_TYPE         NVARCHAR2(100),
+    ECN_VENDOR_USER    NVARCHAR2(100),
+    ECN_TITLE          NVARCHAR2(100),
+    INSERT_USER_NM     NVARCHAR2(100),
+    PART_REV           NVARCHAR2(100),
+    PDM_PART_NO        NVARCHAR2(100),
+    constraint ITN_DRAWING_PK
+        primary key (CN_SERIAL, OBJECT_ID)
+)
+/
+
+comment on column ITN_DRAWING.CN_SERIAL is '일련번호'
+/
+
+comment on column ITN_DRAWING.OBJECT_ID is 'OBJECT ID'
+/
+
+comment on column ITN_DRAWING.BUSINESS_AREA_CD is '사업장'
+/
+
+comment on column ITN_DRAWING.BUSINESS_TYPE_CD is '개발/양산'
+/
+
+comment on column ITN_DRAWING.ECN_NO is 'ECN_NO'
+/
+
+comment on column ITN_DRAWING.ECN_INSERT_UID is 'ECN 작성자'
+/
+
+comment on column ITN_DRAWING.DRAWING_TYPE is '도면타입
+'
+/
+
+comment on column ITN_DRAWING.DRAWING_NO is '도면번호
+'
+/
+
+comment on column ITN_DRAWING.DRAWING_REV is '도번리비전
+'
+/
+
+comment on column ITN_DRAWING.REV_NO is '시트리비전
+'
+/
+
+comment on column ITN_DRAWING.DRAWING_NM is '도면명
+'
+/
+
+comment on column ITN_DRAWING.DISTRIBUTE_TYPE_CD is '원도(개발/양산),승인요청도,승인도,긴급도
+'
+/
+
+comment on column ITN_DRAWING.STATUS_CD is '상태CD
+'
+/
+
+comment on column ITN_DRAWING.CURRENT_PAGE_NO is '현재페이지
+'
+/
+
+comment on column ITN_DRAWING.TOTAL_PAGE_NO is '총 페이지
+'
+/
+
+comment on column ITN_DRAWING.EFFECTIVE_DT is '유효일자(도면유효일자)
+'
+/
+
+comment on column ITN_DRAWING.FILE_PATH_NM is '파일경로
+'
+/
+
+comment on column ITN_DRAWING.ORG_FILE_NM is '원본파일명
+'
+/
+
+comment on column ITN_DRAWING.FILE_NM is '파일명
+'
+/
+
+comment on column ITN_DRAWING.FILE_SIZE is '파일크기
+'
+/
+
+comment on column ITN_DRAWING.STD_GAPP_DT is '규격화 정부승인일
+'
+/
+
+comment on column ITN_DRAWING.CHANGE_GAPP_DT is '기술변경 정부승인일
+'
+/
+
+comment on column ITN_DRAWING.PURCHASER_UID is '구매담당자(AD계정)
+'
+/
+
+comment on column ITN_DRAWING.VENDOR_CD is '일반 : ERP PO 연계, 긴급 : PDM 입력 
+'
+/
+
+comment on column ITN_DRAWING.SECURITY_TYPE_CD is '사외비/비닉
+'
+/
+
+comment on column ITN_DRAWING.PROTECT_YN is '방산기술자료 대상 여부
+'
+/
+
+comment on column ITN_DRAWING.INSERT_DEPT_NM is '등록자 부서명
+'
+/
+
+comment on column ITN_DRAWING.INSERT_UID is '등록자
+'
+/
+
+comment on column ITN_DRAWING.INSERT_DT is '등록일'
+/
+
+comment on column ITN_DRAWING.UPDATE_DEPT_NM is '수정자부서명'
+/
+
+comment on column ITN_DRAWING.UPDATE_UID is '수정자'
+/
+
+comment on column ITN_DRAWING.UPDATE_DT is '수정일'
+/
+
+comment on column ITN_DRAWING.INTERFACE_DT is 'Interface 일자'
+/
+
+comment on column ITN_DRAWING.PRODUCT_CD is '기종'
+/
+
+comment on column ITN_DRAWING.PLANT_CD is '사업장'
+/
+
+comment on column ITN_DRAWING.DISTRIBUTION_YN is '배포여부'
+/
+
+create table ITN_DRAWING_MEMBER
+(
+    CN_SERIAL     NUMBER        not null,
+    OBJECT_ID     NVARCHAR2(50) not null,
+    ACCESS_UID    NVARCHAR2(50) not null,
+    FLAG          NVARCHAR2(1)  not null,
+    INTERFACE_DT  DATE,
+    MOVED_TO_DOCS NVARCHAR2(1),
+    constraint ITN_DRAWING_MEMBER_PK
+        primary key (CN_SERIAL, OBJECT_ID, ACCESS_UID, FLAG)
+)
+/
+
+comment on column ITN_DRAWING_MEMBER.CN_SERIAL is '일련번호'
+/
+
+comment on column ITN_DRAWING_MEMBER.OBJECT_ID is 'OBJECT_ID'
+/
+
+comment on column ITN_DRAWING_MEMBER.ACCESS_UID is '접근자 AD 계정'
+/
+
+comment on column ITN_DRAWING_MEMBER.FLAG is '열람사용자 추가 삭제'
+/
+
+comment on column ITN_DRAWING_MEMBER.INTERFACE_DT is 'Interface 일자'
+/
+
+create table ITN_ECO_HISTORY
+(
+    CN_SERIAL             NUMBER not null
+        constraint PK_CHANGE_INFO
+            primary key,
+    BUSINESS_AREA_CD      NVARCHAR2(30),
+    BUSINESS_TYPE_CD      NVARCHAR2(30),
+    ECN_NO                NVARCHAR2(50),
+    UPPER_PART_NO         NVARCHAR2(50),
+    UPPER_PART_REV_NO     NVARCHAR2(50),
+    UPPER_DRAWING_NO      NVARCHAR2(50),
+    UPPER_DRAWING_REV_NO  NVARCHAR2(50),
+    BEFORE_PART_NO        NVARCHAR2(50),
+    BEFORE_PART_REV_NO    NVARCHAR2(50),
+    BEFORE_DRAWING_NO     NVARCHAR2(50),
+    BEFORE_DRAWING_REV_NO NVARCHAR2(50),
+    AFTER_PART_NO         NVARCHAR2(50),
+    AFTER_PART_REV_NO     NVARCHAR2(30),
+    AFTER_DRAWING_NO      NVARCHAR2(50),
+    AFTER_DRAWING_REV_NO  NVARCHAR2(50),
+    USE_TYPE_CD           NVARCHAR2(30),
+    ECN_INSERT_UID        NVARCHAR2(50),
+    ECN_APPROVAL_DT       DATE,
+    INTERFACE_DT          DATE,
+    SEQ_NO                NVARCHAR2(10),
+    MOVED_TO_DOCS         NVARCHAR2(1)
+)
+/
+
+comment on table ITN_ECO_HISTORY is '설계변경정보'
+/
+
+comment on column ITN_ECO_HISTORY.CN_SERIAL is '일련번호'
+/
+
+comment on column ITN_ECO_HISTORY.BUSINESS_AREA_CD is '사업장구분'
+/
+
+comment on column ITN_ECO_HISTORY.BUSINESS_TYPE_CD is '사업구분'
+/
+
+comment on column ITN_ECO_HISTORY.ECN_NO is 'ECN NO'
+/
+
+comment on column ITN_ECO_HISTORY.UPPER_PART_NO is '상위품번'
+/
+
+comment on column ITN_ECO_HISTORY.UPPER_PART_REV_NO is '상위품번 REV'
+/
+
+comment on column ITN_ECO_HISTORY.UPPER_DRAWING_NO is '상위도번'
+/
+
+comment on column ITN_ECO_HISTORY.UPPER_DRAWING_REV_NO is '상위도번 REV'
+/
+
+comment on column ITN_ECO_HISTORY.BEFORE_PART_NO is '하위품번(전)'
+/
+
+comment on column ITN_ECO_HISTORY.BEFORE_PART_REV_NO is '하위품번(전) REV'
+/
+
+comment on column ITN_ECO_HISTORY.BEFORE_DRAWING_NO is '하위도번(전)'
+/
+
+comment on column ITN_ECO_HISTORY.BEFORE_DRAWING_REV_NO is '하위도번(전) REV'
+/
+
+comment on column ITN_ECO_HISTORY.AFTER_PART_NO is '하위품번(후)'
+/
+
+comment on column ITN_ECO_HISTORY.AFTER_PART_REV_NO is '하위풉번(후) REV'
+/
+
+comment on column ITN_ECO_HISTORY.AFTER_DRAWING_NO is '하위도번(후)'
+/
+
+comment on column ITN_ECO_HISTORY.AFTER_DRAWING_REV_NO is '하위도번(후) REV'
+/
+
+comment on column ITN_ECO_HISTORY.USE_TYPE_CD is '용도코드'
+/
+
+comment on column ITN_ECO_HISTORY.ECN_INSERT_UID is 'ECN 작성자'
+/
+
+comment on column ITN_ECO_HISTORY.ECN_APPROVAL_DT is '승인일자'
+/
+
+comment on column ITN_ECO_HISTORY.INTERFACE_DT is 'S:Success, F:Fail'
+/
+
+create table ITN_ITEM
+(
+    SERIAL           NUMBER not null
+        constraint PK_ITN_ITEM
+            primary key,
+    ITYPE            NVARCHAR2(1),
+    MATNR            NVARCHAR2(18),
+    CODE             NVARCHAR2(8),
+    WERKS            NVARCHAR2(4),
+    C0001            NVARCHAR2(4),
+    C0002_1          NVARCHAR2(30),
+    C0002_2          NVARCHAR2(30),
+    C0003            NVARCHAR2(30),
+    C0004            NVARCHAR2(2),
+    C0005_1          NVARCHAR2(30),
+    C0005_2          NVARCHAR2(30),
+    C0006            NVARCHAR2(15),
+    C0007_1          NVARCHAR2(30),
+    C0007_2          NVARCHAR2(30),
+    C0007_3          NVARCHAR2(30),
+    C0008_1          NVARCHAR2(30),
+    C0008_2          NVARCHAR2(30),
+    C0008_3          NVARCHAR2(30),
+    C0009            NVARCHAR2(2),
+    C0010            NVARCHAR2(30),
+    C0011_1          NVARCHAR2(30),
+    C0011_2          NVARCHAR2(30),
+    C0013            NVARCHAR2(1),
+    C0014            NVARCHAR2(2),
+    C0017            NVARCHAR2(30),
+    C0018            NVARCHAR2(30),
+    C0019            NVARCHAR2(1),
+    C0020            NVARCHAR2(20),
+    C0021            NUMBER(12, 3),
+    C0022            NUMBER(12, 3),
+    C0023            NUMBER(12, 3),
+    C0027            NVARCHAR2(2),
+    C0028            NUMBER(9, 3),
+    C0030            NVARCHAR2(2),
+    C0032            NVARCHAR2(13),
+    C0034            NVARCHAR2(1),
+    C0037            DATE,
+    REQID            NVARCHAR2(20),
+    CN_ERP_TYPE      NVARCHAR2(20),
+    CN_PREV_MAT_CODE NVARCHAR2(18),
+    OBJECT_ID        NVARCHAR2(35),
+    CN_RESULT        NVARCHAR2(1),
+    CN_MESSAGE       NVARCHAR2(220),
+    E_RETURN         NVARCHAR2(1),
+    C0038            DATE,
+    INTERFACE_DT     DATE,
+    MOVED_TO_DOCS    NVARCHAR2(1),
+    CN_JOB_NO        VARCHAR2(20),
+    CN_PDM_PART_NO   VARCHAR2(20),
+    CN_PART_REV      NVARCHAR2(64)
+)
+/
+
+comment on table ITN_ITEM is '자재마스터'
+/
+
+comment on column ITN_ITEM.SERIAL is '일련번호'
+/
+
+comment on column ITN_ITEM.ITYPE is '전송타입(N:New,C:Change)'
+/
+
+comment on column ITN_ITEM.MATNR is '자재번호'
+/
+
+comment on column ITN_ITEM.CODE is '코드'
+/
+
+comment on column ITN_ITEM.WERKS is '플랜트(사업장)'
+/
+
+comment on column ITN_ITEM.C0001 is '대표기종'
+/
+
+comment on column ITN_ITEM.C0002_1 is '품번1'
+/
+
+comment on column ITN_ITEM.C0002_2 is '품번2'
+/
+
+comment on column ITN_ITEM.C0003 is '도번'
+/
+
+comment on column ITN_ITEM.C0004 is 'REV'
+/
+
+comment on column ITN_ITEM.C0005_1 is '규격1'
+/
+
+comment on column ITN_ITEM.C0005_2 is '규격2'
+/
+
+comment on column ITN_ITEM.C0006 is '규격번호'
+/
+
+comment on column ITN_ITEM.C0007_1 is '품명1(영문)'
+/
+
+comment on column ITN_ITEM.C0007_2 is '품명2(영문)'
+/
+
+comment on column ITN_ITEM.C0007_3 is '품명3(영문)'
+/
+
+comment on column ITN_ITEM.C0008_1 is '품명1(한글)'
+/
+
+comment on column ITN_ITEM.C0008_2 is '품명2(한글)'
+/
+
+comment on column ITN_ITEM.C0008_3 is '품명3(한글)'
+/
+
+comment on column ITN_ITEM.C0009 is '제작사 국명'
+/
+
+comment on column ITN_ITEM.C0010 is '제작사'
+/
+
+comment on column ITN_ITEM.C0011_1 is '제작사품번1'
+/
+
+comment on column ITN_ITEM.C0011_2 is '제작사품번2'
+/
+
+comment on column ITN_ITEM.C0013 is '구입선(추천)'
+/
+
+comment on column ITN_ITEM.C0014 is '기본단위'
+/
+
+comment on column ITN_ITEM.C0017 is '피막처리'
+/
+
+comment on column ITN_ITEM.C0018 is '재질'
+/
+
+comment on column ITN_ITEM.C0019 is '소재분류'
+/
+
+comment on column ITN_ITEM.C0020 is '소재품번'
+/
+
+comment on column ITN_ITEM.C0021 is '높이(설계)'
+/
+
+comment on column ITN_ITEM.C0022 is '세로/길이(설계)'
+/
+
+comment on column ITN_ITEM.C0023 is '가로/직경(설계)'
+/
+
+comment on column ITN_ITEM.C0027 is '치수단위'
+/
+
+comment on column ITN_ITEM.C0028 is '설계중량'
+/
+
+comment on column ITN_ITEM.C0030 is '중량단위'
+/
+
+comment on column ITN_ITEM.C0032 is '국가재고번호'
+/
+
+comment on column ITN_ITEM.C0034 is '전략물자'
+/
+
+comment on column ITN_ITEM.C0037 is '등록일자'
+/
+
+comment on column ITN_ITEM.REQID is '요청자사번'
+/
+
+comment on column ITN_ITEM.CN_ERP_TYPE is '요청종류'
+/
+
+comment on column ITN_ITEM.CN_PREV_MAT_CODE is '이전자재코드'
+/
+
+comment on column ITN_ITEM.OBJECT_ID is 'OBJECT_ID'
+/
+
+comment on column ITN_ITEM.CN_RESULT is 'CN결과'
+/
+
+comment on column ITN_ITEM.CN_MESSAGE is 'CN메시지'
+/
+
+comment on column ITN_ITEM.E_RETURN is '메시지유형'
+/
+
+comment on column ITN_ITEM.C0038 is '수정일자'
+/
+
+create table ITN_PROD
+(
+    CN_ATTRIBUTE         NVARCHAR2(50) not null,
+    CN_CD                NVARCHAR2(30) not null,
+    CN_ATTRIBUTE_DESC    NVARCHAR2(50),
+    CN_ATTRIBUTE_IN_TYPE NVARCHAR2(1),
+    CN_CD_DESC           NVARCHAR2(100),
+    CN_ATTR_TYPE1        NVARCHAR2(1),
+    CN_ATTR_TYPE2        NVARCHAR2(2),
+    INTERFACE_DT         DATE,
+    MOVED_TO_DOCS        NVARCHAR2(1),
+    constraint PK_ITN_PROD
+        primary key (CN_ATTRIBUTE, CN_CD)
+)
+/
+
+comment on table ITN_PROD is '기종정보'
+/
+
+comment on column ITN_PROD.CN_ATTRIBUTE is '대표기종코드'
+/
+
+comment on column ITN_PROD.CN_CD is '기종코드'
+/
+
+comment on column ITN_PROD.CN_ATTRIBUTE_DESC is '대표기종'
+/
+
+comment on column ITN_PROD.CN_ATTRIBUTE_IN_TYPE is 'K : Key In, C : Choice'
+/
+
+comment on column ITN_PROD.CN_CD_DESC is '기종명'
+/
+
+comment on column ITN_PROD.CN_ATTR_TYPE1 is 'X:1사업장, 나머지:2사업장'
+/
+
+comment on column ITN_PROD.CN_ATTR_TYPE2 is 'XX:1사업장(국판), XE:1사업장(수출),나머지: 2사업장 중분류'
+/
+
+create table ITN_PRODUCT_DOCUMENT
+(
+    CN_SERIAL          NUMBER        not null,
+    OBJECT_ID          NVARCHAR2(50) not null,
+    BUSINESS_AREA_CD   NVARCHAR2(30),
+    BUSINESS_TYPE_CD   NVARCHAR2(30),
+    DOC_CLASS_CD1      NVARCHAR2(30),
+    DOC_CLASS_NM1      NVARCHAR2(50),
+    DOC_CLASS_CD2      NVARCHAR2(30),
+    DOC_CLASS_NM2      NVARCHAR2(50),
+    DOCUMENT_NO        NVARCHAR2(50),
+    REV_NO             NVARCHAR2(50),
+    DOCUMENT_NM        NVARCHAR2(255),
+    STATUS_CD          NVARCHAR2(30),
+    TOTAL_PAGE_CNT     NUMBER,
+    SECURITY_TYPE_CD   NVARCHAR2(30),
+    APPLY_PRODUCT_NO   NVARCHAR2(50),
+    DISTRIBUTE_TYPE_CD NVARCHAR2(50),
+    APPLY_HOGI_NO      NVARCHAR2(50),
+    CALL_ID            NVARCHAR2(50),
+    ECN_NO             NVARCHAR2(50),
+    PROCESS_TYPE_CD    NVARCHAR2(30),
+    DESCRIPTION        NVARCHAR2(100),
+    INSERT_DEPT_NM     NVARCHAR2(100),
+    INSERT_UID         NVARCHAR2(50),
+    INSERT_DT          DATE,
+    UPDATE_DEPT_NM     NVARCHAR2(100),
+    UPDATE_UID         NVARCHAR2(50),
+    UPDATE_DT          DATE,
+    INTERFACE_DT       DATE,
+    MOVED_TO_DOCS      NVARCHAR2(1),
+    constraint ITN_PRODUCT_DOCUMENT_PK
+        primary key (CN_SERIAL, OBJECT_ID)
+)
+/
+
+comment on column ITN_PRODUCT_DOCUMENT.CN_SERIAL is '일련번호
+'
+/
+
+comment on column ITN_PRODUCT_DOCUMENT.OBJECT_ID is 'OBJECT ID'
+/
+
+comment on column ITN_PRODUCT_DOCUMENT.BUSINESS_AREA_CD is '사업장구분'
+/
+
+comment on column ITN_PRODUCT_DOCUMENT.BUSINESS_TYPE_CD is '사업구분(개발/양산)'
+/
+
+comment on column ITN_PRODUCT_DOCUMENT.DOC_CLASS_CD1 is '대분류'
+/
+
+comment on column ITN_PRODUCT_DOCUMENT.DOC_CLASS_NM1 is '대분류명
+'
+/
+
+comment on column ITN_PRODUCT_DOCUMENT.DOC_CLASS_CD2 is '중분류'
+/
+
+comment on column ITN_PRODUCT_DOCUMENT.DOC_CLASS_NM2 is '중분류명'
+/
+
+comment on column ITN_PRODUCT_DOCUMENT.DOCUMENT_NO is '문서번호
+'
+/
+
+comment on column ITN_PRODUCT_DOCUMENT.REV_NO is '리비전'
+/
+
+comment on column ITN_PRODUCT_DOCUMENT.DOCUMENT_NM is '문서명
+'
+/
+
+comment on column ITN_PRODUCT_DOCUMENT.STATUS_CD is '상태CD
+'
+/
+
+comment on column ITN_PRODUCT_DOCUMENT.TOTAL_PAGE_CNT is '총매수
+'
+/
+
+comment on column ITN_PRODUCT_DOCUMENT.SECURITY_TYPE_CD is '보안등급
+'
+/
+
+comment on column ITN_PRODUCT_DOCUMENT.APPLY_PRODUCT_NO is '적용
+'
+/
+
+comment on column ITN_PRODUCT_DOCUMENT.DISTRIBUTE_TYPE_CD is '배포유형
+'
+/
+
+comment on column ITN_PRODUCT_DOCUMENT.APPLY_HOGI_NO is '적용호기
+'
+/
+
+comment on column ITN_PRODUCT_DOCUMENT.CALL_ID is 'Call ID'
+/
+
+comment on column ITN_PRODUCT_DOCUMENT.ECN_NO is '변경번호'
+/
+
+comment on column ITN_PRODUCT_DOCUMENT.PROCESS_TYPE_CD is '공정유형
+'
+/
+
+comment on column ITN_PRODUCT_DOCUMENT.DESCRIPTION is '설명
+'
+/
+
+comment on column ITN_PRODUCT_DOCUMENT.INSERT_DEPT_NM is '등록자 부서명
+'
+/
+
+comment on column ITN_PRODUCT_DOCUMENT.INSERT_UID is '등록자'
+/
+
+comment on column ITN_PRODUCT_DOCUMENT.INSERT_DT is '등록일자'
+/
+
+comment on column ITN_PRODUCT_DOCUMENT.UPDATE_DEPT_NM is '수정자 부서명'
+/
+
+comment on column ITN_PRODUCT_DOCUMENT.UPDATE_UID is '수정자'
+/
+
+comment on column ITN_PRODUCT_DOCUMENT.UPDATE_DT is '수정일'
+/
+
+create table ITN_PRODUCT_DOCUMENT_FILE
+(
+    CN_SERIAL          NUMBER         not null,
+    OBJECT_ID          NVARCHAR2(50)  not null,
+    FILE_NO            NUMBER         not null,
+    FILE_PATH_NM       NVARCHAR2(100) not null,
+    ORG_FILE_NM        NVARCHAR2(255),
+    FILE_NM            NVARCHAR2(100),
+    DISTRIBUTE_TYPE_CD VARCHAR2(30)   not null,
+    FILE_SIZE          NVARCHAR2(10),
+    INTERFACE_DT       DATE,
+    MOVED_TO_DOCS      NVARCHAR2(1),
+    constraint ITN_PRODUCT_DOCUMENT_FILE_PK
+        primary key (CN_SERIAL, OBJECT_ID, FILE_NO, DISTRIBUTE_TYPE_CD)
+)
+/
+
+comment on column ITN_PRODUCT_DOCUMENT_FILE.FILE_PATH_NM is '파일경로'
+/
+
+comment on column ITN_PRODUCT_DOCUMENT_FILE.FILE_NM is '파일명칭'
+/
+
+comment on column ITN_PRODUCT_DOCUMENT_FILE.DISTRIBUTE_TYPE_CD is '배포유형(원도(개발/양산), 승인요청도, 승인도, 긴급도'
+/
+
+comment on column ITN_PRODUCT_DOCUMENT_FILE.FILE_SIZE is '파일크기'
+/
+
+create table ITN_PRODUCT_SW
+(
+    CN_SERIAL          NUMBER        not null,
+    OBJECT_ID          NVARCHAR2(50) not null,
+    BUSINESS_AREA_CD   NVARCHAR2(30),
+    BUSINESS_TYPE_CD   NVARCHAR2(30),
+    ECN_NO             NVARCHAR2(30),
+    PRODUCT_NO         NVARCHAR2(50),
+    SW_CLASS_CD1       NVARCHAR2(30),
+    SW_CLASS_NM1       NVARCHAR2(50),
+    SW_CLASS_CD2       NVARCHAR2(30),
+    SW_CLASS_NM2       NVARCHAR2(50),
+    SW_NO              NVARCHAR2(50),
+    REV_NO             NVARCHAR2(50),
+    SW_NM              VARCHAR2(255),
+    SW_VERSION_NO      NVARCHAR2(50),
+    STATUS_CD          NVARCHAR2(30),
+    DESCRIPTION        VARCHAR2(255),
+    SECURITY_TYPE_CD   NVARCHAR2(30),
+    INSERT_DEPT_NM     NVARCHAR2(100),
+    INSERT_UID         NVARCHAR2(50),
+    INSERT_DT          DATE,
+    UPDATE_DEPT_NM     VARCHAR2(100),
+    UPDATE_UID         NVARCHAR2(50),
+    UPDATE_DT          DATE,
+    INTERFACE_DT       DATE,
+    DISTRIBUTE_TYPE_CD NVARCHAR2(30),
+    MOVED_TO_DOCS      NVARCHAR2(1),
+    constraint ITN_PRODUCT_SW_PK
+        primary key (CN_SERIAL, OBJECT_ID)
+)
+/
+
+comment on column ITN_PRODUCT_SW.CN_SERIAL is '일련번호'
+/
+
+comment on column ITN_PRODUCT_SW.OBJECT_ID is 'OBJECT ID'
+/
+
+comment on column ITN_PRODUCT_SW.BUSINESS_AREA_CD is '사업장구분'
+/
+
+comment on column ITN_PRODUCT_SW.BUSINESS_TYPE_CD is '사업구분'
+/
+
+comment on column ITN_PRODUCT_SW.ECN_NO is 'ECN_NO'
+/
+
+comment on column ITN_PRODUCT_SW.PRODUCT_NO is '기종'
+/
+
+comment on column ITN_PRODUCT_SW.SW_CLASS_CD1 is '대분류
+'
+/
+
+comment on column ITN_PRODUCT_SW.SW_CLASS_NM1 is '대분류명 '
+/
+
+comment on column ITN_PRODUCT_SW.SW_CLASS_CD2 is '중분류'
+/
+
+comment on column ITN_PRODUCT_SW.SW_CLASS_NM2 is '중분류명'
+/
+
+comment on column ITN_PRODUCT_SW.SW_NO is 'SW번호'
+/
+
+comment on column ITN_PRODUCT_SW.REV_NO is 'REV'
+/
+
+comment on column ITN_PRODUCT_SW.SW_NM is 'SW명'
+/
+
+comment on column ITN_PRODUCT_SW.SW_VERSION_NO is 'SW리비전
+'
+/
+
+comment on column ITN_PRODUCT_SW.STATUS_CD is '상태CD
+'
+/
+
+comment on column ITN_PRODUCT_SW.DESCRIPTION is '설명
+'
+/
+
+comment on column ITN_PRODUCT_SW.SECURITY_TYPE_CD is '일반과제CS(Public) 인 경우, ''사외비''가 default, 비닉과제CS(Private)인 경우, ''비밀''이 default
+'
+/
+
+comment on column ITN_PRODUCT_SW.INSERT_DEPT_NM is '등록자 부서명
+'
+/
+
+comment on column ITN_PRODUCT_SW.INSERT_UID is '등록자'
+/
+
+comment on column ITN_PRODUCT_SW.INSERT_DT is '등록일자'
+/
+
+comment on column ITN_PRODUCT_SW.UPDATE_DEPT_NM is '수정자 부서명
+'
+/
+
+comment on column ITN_PRODUCT_SW.UPDATE_UID is '수정자'
+/
+
+comment on column ITN_PRODUCT_SW.UPDATE_DT is '수정일'
+/
+
+comment on column ITN_PRODUCT_SW.INTERFACE_DT is 'Interface 일자'
+/
+
+comment on column ITN_PRODUCT_SW.DISTRIBUTE_TYPE_CD is '배포유형
+'
+/
+
+create table ITN_PRODUCT_SW_FILE
+(
+    CN_SERIAL          NUMBER        not null,
+    OBJECT_ID          NVARCHAR2(50) not null,
+    FILE_NO            NUMBER        not null,
+    FILE_PATH_NM       NVARCHAR2(100),
+    ORG_FILE_NM        NVARCHAR2(255),
+    FILE_NM            NVARCHAR2(100),
+    DISTRIBUTE_TYPE_CD NVARCHAR2(30) not null,
+    FILE_SIZE          NVARCHAR2(10),
+    CHECK_SUM          NVARCHAR2(30),
+    INTERFACE_DT       DATE,
+    MOVED_TO_DOCS      NVARCHAR2(1),
+    constraint ITN_PRODUCT_SW_FILE_PK
+        primary key (CN_SERIAL, OBJECT_ID, FILE_NO, DISTRIBUTE_TYPE_CD)
+)
+/
+
+create table ITN_SW
+(
+    CN_SERIAL          NUMBER        not null,
+    OBJECT_ID          NVARCHAR2(50) not null,
+    BUSINESS_AREA_CD   NVARCHAR2(30) not null,
+    BUSINESS_TYPE_CD   NVARCHAR2(30) not null,
+    SW_CLASS_CD1       NVARCHAR2(30),
+    SW_CLASS_NM1       NVARCHAR2(50),
+    SW_CLASS_CD2       NVARCHAR2(30),
+    SW_CLASS_NM2       NVARCHAR2(50),
+    SW_TYPE_CD         NVARCHAR2(30),
+    PRODUCT_CD         NVARCHAR2(30),
+    ECN_NO             NVARCHAR2(30),
+    ECN_INSERT_UID     NVARCHAR2(50),
+    SW_NO              NVARCHAR2(50) not null,
+    REV_NO             NVARCHAR2(50) not null,
+    SW_NM              NVARCHAR2(255),
+    STATUS_CD          NVARCHAR2(30),
+    SW_VERSION_NO      NVARCHAR2(50) not null,
+    DOC_VERSION_NO     NVARCHAR2(50) not null,
+    PROJECT_CD         NVARCHAR2(31),
+    PROJECT_NM         NVARCHAR2(100),
+    DISTRIBUTE_TYPE_CD NVARCHAR2(30) not null,
+    STD_GAPP_DT        DATE,
+    CHANGE_GAPP_DT     DATE,
+    DESCRIPTION        NVARCHAR2(255),
+    SECURITY_TYPE_CD   NVARCHAR2(30),
+    PROTECT_YN         NVARCHAR2(1),
+    INSERT_DEPT_NM     NVARCHAR2(100),
+    INSERT_UID         NVARCHAR2(50),
+    INSERT_DT          DATE,
+    UPDATE_DEPT_NM     NVARCHAR2(100),
+    UPDATE_UID         NVARCHAR2(50),
+    UPDATE_DT          DATE,
+    INTERFACE_DT       DATE,
+    VENDOR_CD          NVARCHAR2(20),
+    DISTRIBUTION_YN    NVARCHAR2(1),
+    MOVED_TO_DOCS      NVARCHAR2(1),
+    constraint ITN_SW_PK
+        primary key (CN_SERIAL, OBJECT_ID)
+)
+/
+
+comment on column ITN_SW.CN_SERIAL is '일련번호'
+/
+
+comment on column ITN_SW.OBJECT_ID is 'OBJECT ID'
+/
+
+comment on column ITN_SW.BUSINESS_AREA_CD is '사업장구분'
+/
+
+comment on column ITN_SW.BUSINESS_TYPE_CD is '사업구분'
+/
+
+comment on column ITN_SW.SW_CLASS_CD1 is '대분류'
+/
+
+comment on column ITN_SW.SW_CLASS_NM1 is '대분류명'
+/
+
+comment on column ITN_SW.SW_CLASS_CD2 is '중분류'
+/
+
+comment on column ITN_SW.SW_CLASS_NM2 is '중분류명'
+/
+
+comment on column ITN_SW.SW_TYPE_CD is 'SW종류
+'
+/
+
+comment on column ITN_SW.PRODUCT_CD is '기종'
+/
+
+comment on column ITN_SW.ECN_INSERT_UID is 'ECN작성자
+'
+/
+
+comment on column ITN_SW.SW_NO is 'SW번호
+'
+/
+
+comment on column ITN_SW.REV_NO is '리비전
+'
+/
+
+comment on column ITN_SW.SW_NM is 'SW명(자료명)
+'
+/
+
+comment on column ITN_SW.STATUS_CD is '상태CD
+'
+/
+
+comment on column ITN_SW.SW_VERSION_NO is 'SW버전
+'
+/
+
+comment on column ITN_SW.DOC_VERSION_NO is '명세서버전
+'
+/
+
+comment on column ITN_SW.PROJECT_CD is '프로젝트코드'
+/
+
+comment on column ITN_SW.PROJECT_NM is '프로젝트명
+'
+/
+
+comment on column ITN_SW.DISTRIBUTE_TYPE_CD is '배포유형
+'
+/
+
+comment on column ITN_SW.STD_GAPP_DT is '규격화 정부승인일
+'
+/
+
+comment on column ITN_SW.CHANGE_GAPP_DT is '기술변경 정부승인일
+'
+/
+
+comment on column ITN_SW.DESCRIPTION is '설명
+'
+/
+
+comment on column ITN_SW.SECURITY_TYPE_CD is '보안등급
+'
+/
+
+comment on column ITN_SW.PROTECT_YN is '방산기술보호대상
+'
+/
+
+comment on column ITN_SW.INSERT_DEPT_NM is '작성자부서명
+'
+/
+
+comment on column ITN_SW.INSERT_UID is '작성자'
+/
+
+comment on column ITN_SW.INSERT_DT is '작성일'
+/
+
+comment on column ITN_SW.UPDATE_DEPT_NM is '수정자 부서명'
+/
+
+comment on column ITN_SW.UPDATE_UID is '수정자'
+/
+
+comment on column ITN_SW.UPDATE_DT is '수정일'
+/
+
+comment on column ITN_SW.VENDOR_CD is '사업자코드'
+/
+
+comment on column ITN_SW.DISTRIBUTION_YN is '배포여부'
+/
+
+create table ITN_SW_FILE
+(
+    CN_SERIAL          NUMBER         not null,
+    OBJECT_ID          NVARCHAR2(50)  not null,
+    FILE_NO            NUMBER         not null,
+    FILE_PATH_NM       NVARCHAR2(100) not null,
+    ORG_FILE_NM        NVARCHAR2(255),
+    FILE_NM            NVARCHAR2(100),
+    CHECK_SUM          NVARCHAR2(30),
+    DISTRIBUTE_TYPE_CD VARCHAR2(30)   not null,
+    FILE_SIZE          NVARCHAR2(10),
+    INTERFACE_DT       DATE,
+    MOVED_TO_DOCS      NVARCHAR2(1),
+    DISTRIBUTION_YN    NVARCHAR2(1),
+    constraint ITN_SW_FILE_PK
+        primary key (CN_SERIAL, OBJECT_ID, FILE_NO, DISTRIBUTE_TYPE_CD)
+)
+/
+
+comment on column ITN_SW_FILE.DISTRIBUTE_TYPE_CD is '"배포유형("원도(개발/양산), 승인요청도, 승인도, 긴급도
+Origin/App Request/Approved 
+추가(2019.10.29)"
+)
+"'
+/
+
+create table ITN_SW_MEMBER
+(
+    CN_SERIAL     NUMBER        not null,
+    OBJECT_ID     NVARCHAR2(50) not null,
+    ACCESS_UID    NVARCHAR2(50) not null,
+    FLAG          NVARCHAR2(1)  not null,
+    INTERFACE_DT  DATE,
+    MOVED_TO_DOCS NVARCHAR2(1),
+    constraint ITN_SW_MEMBER_PK
+        primary key (CN_SERIAL, OBJECT_ID, ACCESS_UID, FLAG)
+)
+/
+
+comment on column ITN_SW_MEMBER.ACCESS_UID is '접근자 AD 계정'
+/
+
+create table ITN_USER
+(
+    CURRENTUSERNUM    VARCHAR2(20) not null
+        constraint PK_ITN_USER
+            primary key,
+    USERID            VARCHAR2(20),
+    USERNUM           VARCHAR2(20),
+    DISPLAYNAME       NVARCHAR2(302),
+    NAME              NVARCHAR2(150),
+    MAIL              NVARCHAR2(2000),
+    DEPARTMENT        NVARCHAR2(150),
+    FAXNUMBER         NVARCHAR2(100),
+    HOMEPHONE         NVARCHAR2(100),
+    OFFICEPHONENUM    NVARCHAR2(100),
+    MOBILENUM         NVARCHAR2(100),
+    JUMINNUM          NVARCHAR2(100),
+    JIKUNCODE         NVARCHAR2(20),
+    JICHKCODE         NVARCHAR2(20),
+    DEPTCODE          VARCHAR2(34),
+    COMPCODE          VARCHAR2(20),
+    COM_PART          VARCHAR2(20),
+    JIKWICODE         VARCHAR2(20),
+    UPDATESTATE       NUMBER,
+    ETCUSER           VARCHAR2(1),
+    COMPANYNAME       VARCHAR2(150),
+    TITLE             VARCHAR2(100),
+    JIKCHKNAME        VARCHAR2(100),
+    ADUSERFLAG        VARCHAR2(1),
+    EXUSERFLAG        VARCHAR2(1),
+    FIRSTNAME         VARCHAR2(150),
+    LASTNAME          VARCHAR2(150),
+    CHINESNAME        VARCHAR2(150),
+    UPDATEDATE        VARCHAR2(10),
+    STARTDATE         VARCHAR2(10),
+    ENDDATE           VARCHAR2(10),
+    WORK_COMPCODE     NUMBER,
+    WORK_COM_PART     NUMBER,
+    AUTH_GROUP_TYPE   VARCHAR2(20),
+    EMP_TYPE          VARCHAR2(40),
+    WORK_PLACE_CD     VARCHAR2(10),
+    WORK_PLACE_NM     VARCHAR2(100),
+    B_ENTER_CD        VARCHAR2(10),
+    JOIN_DATE         VARCHAR2(10),
+    SEX_TYPE          VARCHAR2(1),
+    INTERFACE_DT      DATE,
+    PERSONAL_PLACE_CD VARCHAR2(10),
+    PERSONAL_PLACE_NM VARCHAR2(100)
+)
+/
+
+comment on table ITN_USER is '사용자 인터페이스'
+/
+
+comment on column ITN_USER.CURRENTUSERNUM is '사번'
+/
+
+comment on column ITN_USER.USERID is 'AD계정'
+/
+
+comment on column ITN_USER.USERNUM is '원래사번'
+/
+
+comment on column ITN_USER.DISPLAYNAME is 'Outlook표시이름'
+/
+
+comment on column ITN_USER.NAME is '이름'
+/
+
+comment on column ITN_USER.MAIL is 'EMAIL주소'
+/
+
+comment on column ITN_USER.DEPARTMENT is '부서'
+/
+
+comment on column ITN_USER.FAXNUMBER is 'FAX번호'
+/
+
+comment on column ITN_USER.HOMEPHONE is '집전화'
+/
+
+comment on column ITN_USER.OFFICEPHONENUM is '사무실전화번호'
+/
+
+comment on column ITN_USER.MOBILENUM is '휴대폰번호'
+/
+
+comment on column ITN_USER.JUMINNUM is '생년월일'
+/
+
+comment on column ITN_USER.JIKUNCODE is '직군코드'
+/
+
+comment on column ITN_USER.JICHKCODE is '직책코드'
+/
+
+comment on column ITN_USER.DEPTCODE is '회사코드+부서코드'
+/
+
+comment on column ITN_USER.COMPCODE is '회사코드+BG코드'
+/
+
+comment on column ITN_USER.COM_PART is 'BG코드'
+/
+
+comment on column ITN_USER.JIKWICODE is '직위코드'
+/
+
+comment on column ITN_USER.UPDATESTATE is '재직 상태'
+/
+
+comment on column ITN_USER.ETCUSER is '인사 예외자 여부'
+/
+
+comment on column ITN_USER.COMPANYNAME is '회사명'
+/
+
+comment on column ITN_USER.TITLE is '직위'
+/
+
+comment on column ITN_USER.JIKCHKNAME is '직책명칭'
+/
+
+comment on column ITN_USER.ADUSERFLAG is 'AD 등록 여부'
+/
+
+comment on column ITN_USER.EXUSERFLAG is 'Email 사용 여부'
+/
+
+comment on column ITN_USER.FIRSTNAME is '영문이름'
+/
+
+comment on column ITN_USER.LASTNAME is '영문 성'
+/
+
+comment on column ITN_USER.CHINESNAME is '한문이름'
+/
+
+comment on column ITN_USER.UPDATEDATE is '시스템 처리일자'
+/
+
+comment on column ITN_USER.STARTDATE is '입사일자'
+/
+
+comment on column ITN_USER.ENDDATE is '퇴사일자'
+/
+
+comment on column ITN_USER.WORK_COMPCODE is '파견 회사코드'
+/
+
+comment on column ITN_USER.WORK_COM_PART is '파견부서코드'
+/
+
+comment on column ITN_USER.AUTH_GROUP_TYPE is '기술/사무 구분'
+/
+
+comment on column ITN_USER.EMP_TYPE is '정규직/계약직구분'
+/
+
+comment on column ITN_USER.WORK_PLACE_CD is '사업장구분 코드'
+/
+
+comment on column ITN_USER.WORK_PLACE_NM is '사업장구분 지역'
+/
+
+comment on column ITN_USER.B_ENTER_CD is '사업장구분'
+/
+
+comment on column ITN_USER.JOIN_DATE is '그룹입사일'
+/
+
+comment on column ITN_USER.SEX_TYPE is '성별'
+/
+
+comment on column ITN_USER.PERSONAL_PLACE_CD is '인사사업장코드'
+/
+
+comment on column ITN_USER.PERSONAL_PLACE_NM is '인사사업장명'
+/
+
+create table ITN_VENDOR
+(
+    CN_SERIAL                NUMBER        not null
+        constraint PK_ITN_VENDOR
+            primary key,
+    CN_CHANGE_TYPE           NVARCHAR2(1),
+    BUSINESS_AREA_CD         VARCHAR2(30),
+    VENDOR_CD                NVARCHAR2(75) not null,
+    VENDOR_NM                NVARCHAR2(45),
+    VENDOR_STATUS            NVARCHAR2(20),
+    DIST_PURCHASER_UID       VARCHAR2(20),
+    DIST_PURCHASER_UID_EMAIL VARCHAR2(300),
+    CR_PURCHASER_UID         VARCHAR2(20),
+    CR_PURCHASER_UID_EMAIL   VARCHAR2(300),
+    INSERT_UID               NVARCHAR2(75),
+    INSERT_DT                DATE,
+    UPDATE_UID               NVARCHAR2(75),
+    UPDATE_DT                DATE,
+    REMARK                   VARCHAR2(1000),
+    INTERFACE_DT             DATE
+)
+/
+
+comment on table ITN_VENDOR is 'VENDER연동'
+/
+
+comment on column ITN_VENDOR.CN_SERIAL is '일련번호'
+/
+
+comment on column ITN_VENDOR.CN_CHANGE_TYPE is '변경 TYPE('' '', D)'
+/
+
+comment on column ITN_VENDOR.BUSINESS_AREA_CD is '사업장구분(1/2사업장)'
+/
+
+comment on column ITN_VENDOR.VENDOR_CD is '벤더코드'
+/
+
+comment on column ITN_VENDOR.VENDOR_NM is '벤더명칭'
+/
+
+comment on column ITN_VENDOR.VENDOR_STATUS is 'Active,Inactive'
+/
+
+comment on column ITN_VENDOR.DIST_PURCHASER_UID is '배포 전담 구매담당자'
+/
+
+comment on column ITN_VENDOR.DIST_PURCHASER_UID_EMAIL is '배포 전담 구매담담자 이메일'
+/
+
+comment on column ITN_VENDOR.CR_PURCHASER_UID is 'CR 접수 구매담당자(circle ID)'
+/
+
+comment on column ITN_VENDOR.CR_PURCHASER_UID_EMAIL is 'CR 접수 구매담당자 이메일'
+/
+
+comment on column ITN_VENDOR.INSERT_UID is '등록사용자'
+/
+
+comment on column ITN_VENDOR.INSERT_DT is '등록일시'
+/
+
+comment on column ITN_VENDOR.UPDATE_UID is '수정사용자'
+/
+
+comment on column ITN_VENDOR.UPDATE_DT is '수정일시'
+/
+
+comment on column ITN_VENDOR.REMARK is '비고'
+/
+
+create table ITS_OLD_PRODUCT
+(
+    PRODUCT      VARCHAR2(20) not null
+        constraint ITS_OLD_PRODUCT_PK
+            primary key,
+    PRODUCT_DESC VARCHAR2(200)
+)
+/
+
+create table ITS_REL_ROLE_GROUP
+(
+    GROUP_CODE  VARCHAR2(20) not null,
+    ROLE_CODE   VARCHAR2(20) not null,
+    CREATE_USER VARCHAR2(20),
+    UPDATE_USER VARCHAR2(20),
+    CREATE_DATE DATE default sysdate,
+    UPDATE_DATE DATE default sysdate,
+    constraint TABLE1_PK1
+        primary key (GROUP_CODE, ROLE_CODE)
+)
+/
+
+create table MYUSER_LIST
+(
+    NAME      VARCHAR2(20) not null
+        primary key,
+    PASSWORD  VARCHAR2(100),
+    AUTHORITY VARCHAR2(20),
+    ENABLE    NUMBER(1)
+)
+/
+
+create table NOT_COMPLETED_CN_SERIAL
+(
+    CN_SERIAL  NUMBER         not null,
+    OBJECT_ID  NVARCHAR2(100) not null,
+    TABLE_NAME VARCHAR2(50)   not null,
+    ERROR      NVARCHAR2(1024),
+    constraint NOT_COMPLETED_CN_SERIAL_PK
+        primary key (CN_SERIAL, OBJECT_ID, TABLE_NAME)
+)
+/
+
+comment on table NOT_COMPLETED_CN_SERIAL is 'Containing serial numbers which are not processed with any error. '
+/
+
+create table STARTUP_DOCUMENT
+(
+    CN_SERIAL      NUMBER,
+    OBJECT_ID      NVARCHAR2(50),
+    DOCUMENT_NM    NVARCHAR2(255),
+    FILE_PATH_NM   NVARCHAR2(100),
+    ORG_FILE_NM    NVARCHAR2(255),
+    ORG_FILE_SIZE  NVARCHAR2(10),
+    FILE_NM        NVARCHAR2(100),
+    FILE_SIZE      NVARCHAR2(10),
+    FILE_COMMENT   NVARCHAR2(255),
+    INSERT_DT      DATE,
+    UPDATE_DT      DATE,
+    DELETE_DT      DATE,
+    INSERT_USER_NM NVARCHAR2(100)
+)
+/
+
+create table TEST
+(
+    SEQ         NUMBER not null
+        constraint TEST_PK
+            primary key,
+    USER_NAME   VARCHAR2(20),
+    AGE         NUMBER,
+    CREATE_DATE DATE
+)
+/
+
+create trigger TEST_TRG
+    before insert
+    on TEST
+    for each row
+BEGIN
+  <<COLUMN_SEQUENCES>>
+  BEGIN
+    IF INSERTING AND :NEW.SEQ IS NULL THEN
+      SELECT TEST_SEQ.NEXTVAL INTO :NEW.SEQ FROM SYS.DUAL;
+    END IF;
+  END COLUMN_SEQUENCES;
+END;
+
+/
+
+create table ADAP_DRAWING
+(
+    CN_SERIAL          NUMBER         not null,
+    OBJECT_ID          NVARCHAR2(100) not null,
+    BUSINESS_AREA_CD   NVARCHAR2(30),
+    BUSINESS_TYPE_CD   NVARCHAR2(30)  not null,
+    ECN_NO             NVARCHAR2(1000),
+    ECN_INSERT_UID     NVARCHAR2(50),
+    DRAWING_TYPE       NVARCHAR2(50),
+    DRAWING_NO         NVARCHAR2(100) not null,
+    DRAWING_REV        NVARCHAR2(50),
+    REV_NO             NVARCHAR2(50)  not null,
+    DRAWING_NM         NVARCHAR2(255),
+    DISTRIBUTE_TYPE_CD NVARCHAR2(30)  not null,
+    STATUS_CD          NVARCHAR2(30),
+    CURRENT_PAGE_NO    NUMBER         not null,
+    TOTAL_PAGE_NO      NUMBER         not null,
+    EFFECTIVE_DT       DATE,
+    FILE_PATH_NM       NVARCHAR2(150),
+    ORG_FILE_NM        NVARCHAR2(255),
+    FILE_NM            NVARCHAR2(100),
+    FILE_SIZE          NVARCHAR2(10),
+    STD_GAPP_DT        DATE,
+    CHANGE_GAPP_DT     DATE,
+    PURCHASER_UID      NVARCHAR2(50),
+    VENDOR_CD          NVARCHAR2(30),
+    DESCRIPTION        NVARCHAR2(255),
+    SECURITY_TYPE_CD   NVARCHAR2(30),
+    PROTECT_YN         NVARCHAR2(1),
+    INSERT_DEPT_NM     NVARCHAR2(100),
+    INSERT_UID         NVARCHAR2(50),
+    INSERT_DT          DATE,
+    UPDATE_DEPT_NM     NVARCHAR2(100),
+    UPDATE_UID         NVARCHAR2(50),
+    UPDATE_DT          DATE,
+    INTERFACE_DT       DATE,
+    PRODUCT_CD         NVARCHAR2(30),
+    PLANT_CD           NVARCHAR2(10),
+    DISTRIBUTION_YN    NVARCHAR2(1),
+    MOVED_TO_ITN       NVARCHAR2(1),
+    VALID_TYPE         NVARCHAR2(100),
+    ECN_VENDOR_USER    NVARCHAR2(100),
+    ECN_TITLE          NVARCHAR2(100),
+    INSERT_USER_NM     NVARCHAR2(100),
+    PART_REV           NVARCHAR2(100),
+    PDM_PART_NO        NVARCHAR2(100)
+)
+/
+
+comment on column ADAP_DRAWING.CN_SERIAL is '일련번호'
+/
+
+comment on column ADAP_DRAWING.OBJECT_ID is 'OBJECT ID'
+/
+
+comment on column ADAP_DRAWING.BUSINESS_AREA_CD is '사업장'
+/
+
+comment on column ADAP_DRAWING.BUSINESS_TYPE_CD is '개발/양산'
+/
+
+comment on column ADAP_DRAWING.ECN_NO is 'ECN_NO'
+/
+
+comment on column ADAP_DRAWING.ECN_INSERT_UID is 'ECN 작성자'
+/
+
+comment on column ADAP_DRAWING.DRAWING_TYPE is '도면타입'
+/
+
+comment on column ADAP_DRAWING.DRAWING_NO is '도면번호'
+/
+
+comment on column ADAP_DRAWING.DRAWING_REV is '도번리비전'
+/
+
+comment on column ADAP_DRAWING.REV_NO is '시트리비전'
+/
+
+comment on column ADAP_DRAWING.DRAWING_NM is '도면명'
+/
+
+comment on column ADAP_DRAWING.DISTRIBUTE_TYPE_CD is '원도(개발/양산),승인요청도,승인도,긴급도'
+/
+
+comment on column ADAP_DRAWING.STATUS_CD is '상태CD'
+/
+
+comment on column ADAP_DRAWING.CURRENT_PAGE_NO is '현재페이지'
+/
+
+comment on column ADAP_DRAWING.TOTAL_PAGE_NO is '총 페이지'
+/
+
+comment on column ADAP_DRAWING.EFFECTIVE_DT is '유효일자(도면유효일자)'
+/
+
+comment on column ADAP_DRAWING.FILE_PATH_NM is '파일경로'
+/
+
+comment on column ADAP_DRAWING.ORG_FILE_NM is '원본파일명'
+/
+
+comment on column ADAP_DRAWING.FILE_NM is '파일명'
+/
+
+comment on column ADAP_DRAWING.FILE_SIZE is '파일크기'
+/
+
+comment on column ADAP_DRAWING.STD_GAPP_DT is '규격화 정부승인일'
+/
+
+comment on column ADAP_DRAWING.CHANGE_GAPP_DT is '기술변경 정부승인일'
+/
+
+comment on column ADAP_DRAWING.PURCHASER_UID is '구매담당자(AD계정)'
+/
+
+comment on column ADAP_DRAWING.VENDOR_CD is '일반 : ERP PO 연계, 긴급 : PDM 입력 '
+/
+
+comment on column ADAP_DRAWING.SECURITY_TYPE_CD is '사외비/비닉'
+/
+
+comment on column ADAP_DRAWING.PROTECT_YN is '방산기술자료 대상 여부'
+/
+
+comment on column ADAP_DRAWING.INSERT_DEPT_NM is '등록자 부서명'
+/
+
+comment on column ADAP_DRAWING.INSERT_UID is '등록자'
+/
+
+comment on column ADAP_DRAWING.INSERT_DT is '등록일'
+/
+
+comment on column ADAP_DRAWING.UPDATE_DEPT_NM is '수정자부서명'
+/
+
+comment on column ADAP_DRAWING.UPDATE_UID is '수정자'
+/
+
+comment on column ADAP_DRAWING.UPDATE_DT is '수정일'
+/
+
+comment on column ADAP_DRAWING.INTERFACE_DT is 'Interface 일자'
+/
+
+comment on column ADAP_DRAWING.PRODUCT_CD is '기종'
+/
+
+comment on column ADAP_DRAWING.PLANT_CD is '사업장'
+/
+
+comment on column ADAP_DRAWING.DISTRIBUTION_YN is '배포여부'
+/
+
+create table ADAP_DRAWING_MEMBER
+(
+    CN_SERIAL    NUMBER        not null,
+    OBJECT_ID    NVARCHAR2(50) not null,
+    ACCESS_UID   NVARCHAR2(50) not null,
+    FLAG         NVARCHAR2(1)  not null,
+    INTERFACE_DT DATE,
+    MOVED_TO_ITN NVARCHAR2(1)
+)
+/
+
+comment on column ADAP_DRAWING_MEMBER.CN_SERIAL is '일련번호'
+/
+
+comment on column ADAP_DRAWING_MEMBER.OBJECT_ID is 'OBJECT_ID'
+/
+
+comment on column ADAP_DRAWING_MEMBER.ACCESS_UID is '접근자 AD 계정'
+/
+
+comment on column ADAP_DRAWING_MEMBER.FLAG is '열람사용자 추가 삭제'
+/
+
+comment on column ADAP_DRAWING_MEMBER.INTERFACE_DT is 'Interface 일자'
+/
+
+create table ADAP_REF
+(
+    GROUP1   NVARCHAR2(50),
+    GROUP2   NVARCHAR2(50),
+    EXT_TYPE NVARCHAR2(50)
+)
+/
+
+comment on column ADAP_REF.GROUP1 is '도면/문서'
+/
+
+comment on column ADAP_REF.GROUP2 is '2D/3D'
+/
+
+comment on column ADAP_REF.EXT_TYPE is '파일확장자'
+/
+
+create table ADAP_TEMP
+(
+    FILE_PATH_NM NVARCHAR2(150) not null,
+    ORG_FILE_NM  NVARCHAR2(255) not null,
+    FILE_SIZE    NVARCHAR2(10)  not null,
+    constraint "ADAP_TEMP_pk"
+        primary key (FILE_SIZE, FILE_PATH_NM, ORG_FILE_NM)
+)
+/
+
+comment on column ADAP_TEMP.FILE_PATH_NM is '파일경로'
+/
+
+comment on column ADAP_TEMP.ORG_FILE_NM is '원본파일명'
+/
+
+comment on column ADAP_TEMP.FILE_SIZE is '파일크기'
+/
+
+create table ADAP_REPO
+(
+    CN_SERIAL    NUMBER,
+    OBJECT_ID    NVARCHAR2(50),
+    FILE_PATH_NM NVARCHAR2(150),
+    ORG_FILE_NM  NVARCHAR2(255),
+    FILE_SIZE    NVARCHAR2(10),
+    NEW_YN       NVARCHAR2(1),
+    REPO_TO_ADAP NVARCHAR2(1)
+)
+/
+
+comment on column ADAP_REPO.FILE_PATH_NM is '파일경로'
+/
+
+comment on column ADAP_REPO.ORG_FILE_NM is '원본파일명'
+/
+
+comment on column ADAP_REPO.FILE_SIZE is '파일크기'
+/
+
+create table ADAP_DOCUMENT
+(
+    CN_SERIAL          NUMBER,
+    OBJECT_ID          NVARCHAR2(50) not null
+        constraint "ADAP_DOCUMENT_pk"
+            primary key,
+    BUSINESS_AREA_CD   NVARCHAR2(30),
+    BUSINESS_TYPE_CD   NVARCHAR2(30),
+    DOC_CLASS_CD1      NVARCHAR2(30),
+    DOC_CLASS_NM1      NVARCHAR2(50),
+    DOC_CLASS_CD2      NVARCHAR2(30),
+    DOC_CLASS_NM2      NVARCHAR2(50),
+    PRODUCT_CD         NVARCHAR2(30),
+    ECN_NO             NVARCHAR2(50),
+    ECN_INSERT_UID     NVARCHAR2(50),
+    DOCUMENT_NO        NVARCHAR2(50),
+    REV_NO             NVARCHAR2(10),
+    DOCUMENT_NM        NVARCHAR2(255),
+    DOCUMENT_ENNM      NVARCHAR2(255),
+    ACCOUNT_NM         NVARCHAR2(255),
+    STATUS_CD          NVARCHAR2(30),
+    TOTAL_SHEET        NUMBER,
+    PROJECT_CD         NVARCHAR2(31),
+    PROJECT_NM         NVARCHAR2(100),
+    DISTRIBUTE_TYPE_CD NVARCHAR2(30),
+    STD_GAPP_DT        DATE,
+    CHANGE_GAPP_DT     DATE,
+    SECURITY_TYPE_CD   NVARCHAR2(30),
+    PROTECT_YN         NVARCHAR2(1),
+    DESCRIPTION        NVARCHAR2(255),
+    INSERT_DEPT_NM     NVARCHAR2(100),
+    INSERT_UID         NVARCHAR2(50),
+    INSERT_DT          DATE,
+    UPDATE_DEPT_NM     NVARCHAR2(100),
+    UPDATE_UID         NVARCHAR2(50),
+    UPDATE_DT          DATE,
+    INTERFACE_DT       DATE,
+    VENDOR_CD          NVARCHAR2(20),
+    DISTRIBUTION_YN    NVARCHAR2(1),
+    MOVED_TO_ITN       NVARCHAR2(1)
+)
+/
+
+comment on column ADAP_DOCUMENT.CN_SERIAL is '일련번호'
+/
+
+comment on column ADAP_DOCUMENT.OBJECT_ID is 'OBJECT_ID'
+/
+
+comment on column ADAP_DOCUMENT.BUSINESS_AREA_CD is '1/2사업장'
+/
+
+comment on column ADAP_DOCUMENT.BUSINESS_TYPE_CD is '개발/양산'
+/
+
+comment on column ADAP_DOCUMENT.DOC_CLASS_CD1 is '과제산출물/일반자료/양산TDP/생산기술자료 '
+/
+
+comment on column ADAP_DOCUMENT.DOC_CLASS_NM1 is '대분류명'
+/
+
+comment on column ADAP_DOCUMENT.DOC_CLASS_CD2 is '엑셀참조'
+/
+
+comment on column ADAP_DOCUMENT.DOC_CLASS_NM2 is '중분류명'
+/
+
+comment on column ADAP_DOCUMENT.PRODUCT_CD is '기종'
+/
+
+comment on column ADAP_DOCUMENT.ECN_NO is 'ECN NO'
+/
+
+comment on column ADAP_DOCUMENT.ECN_INSERT_UID is 'ECN 작성자'
+/
+
+comment on column ADAP_DOCUMENT.DOCUMENT_NO is '사용자 식별 가능 번호(검색활용)'
+/
+
+comment on column ADAP_DOCUMENT.REV_NO is 'REV'
+/
+
+comment on column ADAP_DOCUMENT.DOCUMENT_NM is '문서명'
+/
+
+comment on column ADAP_DOCUMENT.DOCUMENT_ENNM is '문서명(영문품명)'
+/
+
+comment on column ADAP_DOCUMENT.ACCOUNT_NM is '설명'
+/
+
+comment on column ADAP_DOCUMENT.STATUS_CD is '상태 : release'
+/
+
+comment on column ADAP_DOCUMENT.TOTAL_SHEET is '총매수'
+/
+
+comment on column ADAP_DOCUMENT.PROJECT_CD is '프로젝트코드'
+/
+
+comment on column ADAP_DOCUMENT.PROJECT_NM is '프로젝트명'
+/
+
+comment on column ADAP_DOCUMENT.DISTRIBUTE_TYPE_CD is '배포유형'
+/
+
+comment on column ADAP_DOCUMENT.STD_GAPP_DT is '규격화 정부승인일'
+/
+
+comment on column ADAP_DOCUMENT.CHANGE_GAPP_DT is '기술변경 정부승인일'
+/
+
+comment on column ADAP_DOCUMENT.SECURITY_TYPE_CD is '보안등급'
+/
+
+comment on column ADAP_DOCUMENT.PROTECT_YN is '방산기술보호 대상'
+/
+
+comment on column ADAP_DOCUMENT.DESCRIPTION is '설명'
+/
+
+comment on column ADAP_DOCUMENT.INSERT_DEPT_NM is '작성자 부서명'
+/
+
+comment on column ADAP_DOCUMENT.INSERT_UID is '작성자'
+/
+
+comment on column ADAP_DOCUMENT.INSERT_DT is '작성일자'
+/
+
+comment on column ADAP_DOCUMENT.UPDATE_DEPT_NM is '수정자 부서명'
+/
+
+comment on column ADAP_DOCUMENT.UPDATE_UID is '수정자'
+/
+
+comment on column ADAP_DOCUMENT.UPDATE_DT is '수정일자'
+/
+
+comment on column ADAP_DOCUMENT.INTERFACE_DT is 'Interface 일자'
+/
+
+comment on column ADAP_DOCUMENT.VENDOR_CD is '배포업체'
+/
+
+comment on column ADAP_DOCUMENT.DISTRIBUTION_YN is '배포여부'
+/
+
+create table ADAP_DOCUMENT_FILE
+(
+    CN_SERIAL          NUMBER,
+    OBJECT_ID          NVARCHAR2(50),
+    FILE_NO            NUMBER,
+    FILE_PATH_NM       NVARCHAR2(150),
+    ORG_FILE_NM        NVARCHAR2(255),
+    FILE_NM            NVARCHAR2(150),
+    DISTRIBUTE_TYPE_CD NVARCHAR2(30),
+    FILE_SIZE          NVARCHAR2(10),
+    INTERFACE_DT       DATE,
+    MOVED_TO_ITN       NVARCHAR2(1),
+    DISTRIBUTION_YN    NVARCHAR2(1)
+)
+/
+
+comment on column ADAP_DOCUMENT_FILE.FILE_NO is '파일번호'
+/
+
+comment on column ADAP_DOCUMENT_FILE.FILE_PATH_NM is '파일경로'
+/
+
+comment on column ADAP_DOCUMENT_FILE.ORG_FILE_NM is '원본파일명'
+/
+
+comment on column ADAP_DOCUMENT_FILE.FILE_NM is '파일명칭'
+/
+
+comment on column ADAP_DOCUMENT_FILE.DISTRIBUTE_TYPE_CD is '배포유형(원도(개발/양산), 승인요청도, 승인도, 긴급도Origin/App Request/Approved)'
+/
+
+comment on column ADAP_DOCUMENT_FILE.FILE_SIZE is '파일크기'
+/
+
+comment on column ADAP_DOCUMENT_FILE.DISTRIBUTION_YN is '배포여부'
+/
+
+create table ADAP_DOCUMENT_MEMBER
+(
+    CN_SERIAL    NUMBER,
+    OBJECT_ID    NVARCHAR2(50),
+    ACCESS_UID   NVARCHAR2(50),
+    FLAG         NVARCHAR2(1),
+    INTERFACE_DT DATE,
+    MOVED_TO_ITN NVARCHAR2(1)
+)
+/
+
+comment on column ADAP_DOCUMENT_MEMBER.ACCESS_UID is '접근자 AD 계정'
+/
+
+create table DOCS_CVRT_MERGE
+(
+    IDX_NO         NUMBER,
+    OBJECT_ID      NVARCHAR2(50),
+    FEED_OBJECT_ID NVARCHAR2(50)
+)
+/
+
+comment on column DOCS_CVRT_MERGE.OBJECT_ID is 'OBJECT_ID'
+/
+
+comment on column DOCS_CVRT_MERGE.FEED_OBJECT_ID is 'MERGE 대상 OBJECT_ID'
+/
+
+create table DOCS_CVRT
+(
+    IDX_NO        NUMBER,
+    OBJECT_ID     NVARCHAR2(50),
+    FILE_PATH_NM  NVARCHAR2(100),
+    ORG_FILE_NM   NVARCHAR2(255),
+    TOTAL_PAGE_NO NUMBER,
+    CVRT_TYPE     NVARCHAR2(1),
+    RTN_VAL       NUMBER,
+    INSERT_UID    NVARCHAR2(50),
+    INSERT_DT     DATE,
+    DELETE_DT     DATE,
+    OPT1          NVARCHAR2(1000),
+    OPT2          NVARCHAR2(2000),
+    OPT3          NVARCHAR2(100),
+    OPT4          NVARCHAR2(100)
+)
+/
+
+comment on column DOCS_CVRT.OBJECT_ID is 'OBJECT_ID'
+/
+
+comment on column DOCS_CVRT.FILE_PATH_NM is '파일경로'
+/
+
+comment on column DOCS_CVRT.ORG_FILE_NM is '파일명'
+/
+
+comment on column DOCS_CVRT.TOTAL_PAGE_NO is '전체 페이지 수'
+/
+
+comment on column DOCS_CVRT.CVRT_TYPE is '변환타입(변환/머지) (C/M)'
+/
+
+comment on column DOCS_CVRT.RTN_VAL is '변환 반환값'
+/
+
+comment on column DOCS_CVRT.INSERT_UID is 'USER_ID'
+/
+
+comment on column DOCS_CVRT.OPT1 is '옵션1'
+/
+
+comment on column DOCS_CVRT.OPT2 is '옵션2(워터마크)'
+/
+
+comment on column DOCS_CVRT.OPT3 is '옵션3(프린트)'
+/
+
+comment on column DOCS_CVRT.OPT4 is '비고'
+/
+
+create table CONVERT_LOG
+(
+    CONVERT_LOG_ID NUMBER        not null
+        primary key,
+    PATH_NM        VARCHAR2(255) not null,
+    ORG_FILE_NM    VARCHAR2(255) not null,
+    FILE_SIZE      NUMBER        not null,
+    CREATED_AT     DATE default SYSDATE,
+    RESULT_CODE    NUMBER        not null,
+    USER_ID        VARCHAR2(50)  not null,
+    CONVERT_TYPE   VARCHAR2(10)  not null,
+    OBJECT_ID      VARCHAR2(100)
+)
+/
+
+comment on table CONVERT_LOG is '2D 3D 이력'
+/
+
+comment on column CONVERT_LOG.PATH_NM is '파일경로'
+/
+
+create table DOCS_ANNOTATION_INFO
+(
+    USER_CODE   NVARCHAR2(50),
+    UPDATE_DATE NVARCHAR2(50),
+    CONTENTS    NVARCHAR2(50),
+    DETAILS     NVARCHAR2(100)
+)
+/
+
+comment on column DOCS_ANNOTATION_INFO.USER_CODE is '유저코드'
+/
+
+comment on column DOCS_ANNOTATION_INFO.UPDATE_DATE is '작성날짜'
+/
+
+comment on column DOCS_ANNOTATION_INFO.CONTENTS is '내용'
+/
+
+comment on column DOCS_ANNOTATION_INFO.DETAILS is '자세히'
+/
+
+create table VIEW_ANNOTATIONS
+(
+    IDX                   NUMBER       not null,
+    OBJECT_ID             VARCHAR2(50) not null,
+    DOCUMENT_NAME         VARCHAR2(260),
+    DATA                  VARCHAR2(4000),
+    LAST_ACCESS_TIME      TIMESTAMP(6),
+    LAST_ACCESS_USER_NAME VARCHAR2(60) not null
+)
+/
+
+comment on table VIEW_ANNOTATIONS is 'collabview annotation information'
+/
+
+create index IDX
+    on VIEW_ANNOTATIONS (IDX)
+/
+
+alter table VIEW_ANNOTATIONS
+    add constraint "VIEW_ANNOTATIONS_pk"
+        primary key (IDX)
+/
+
+create trigger TRG_VIEW_ANNOTAIONS
+    before insert
+    on VIEW_ANNOTATIONS
+    for each row
+BEGIN
+  SELECT VIEW_ANNOTATIONS_IDX.NEXTVAL
+  INTO :new.IDX
+  FROM dual;
+END;
+/
+
+create table VIEW_ANNOTATIONS_LOG
+(
+    IDX          NUMBER       not null
+        constraint TABLE_NAME_PK
+            primary key,
+    DOCUMENT_IDX NUMBER,
+    TIMESTAMP    TIMESTAMP(6),
+    DATA         VARCHAR2(4000),
+    USER_NAME    VARCHAR2(60) not null
+)
+/
+
+create trigger TRG_VIEW_ANNOTATIONS_LOG
+    before insert
+    on VIEW_ANNOTATIONS_LOG
+    for each row
+BEGIN
+  SELECT VIEW_ANNOTATIONS_LOG_IDX.NEXTVAL
+  INTO :new.IDX
+  FROM dual;
+END;
+/
+
+create PROCEDURE "INSA" 
+ IS
+USER_CODE VARCHAR2(50);
+USER_ID VARCHAR2(20);
+USER_NAME VARCHAR2(20);
+USER_PWD VARCHAR2(20);
+COMPANY_CODE  VARCHAR2(20);
+DEPT_CODE VARCHAR2(20);
+EMAIL VARCHAR2(50);
+AUTH_LEVEL VARCHAR2(20);
+ZIP_C0DE VARCHAR2(20);
+USER_YN VARCHAR2(20);
+CREATE_USER VARCHAR2(20);
+CREATE_DATE VARCHAR2(20);
+UPDATE_USER  VARCHAR2(20);
+UPDATE_DATE VARCHAR2(20);
+ --외부사용자 
+ CURSOR  OUT_USER_CUR  IS
+ SELECT ID USER_ID, USERNAME USER_NAME, PASSWD USER_PWD,(SELECT COMPANY_CODE FROM ITS_COMPANY WHERE COMPANY_CODE_CUSTOM =VENDERCODE) COMPANY_CODE,'' DEPT_CODE ,E_MAIL EMAIL,2 AUTH_LEVEL
+ FROM WEBVENDER@LN_TOAD_DIDST2.CORP.DOOSAN.COM
+  WHERE ID NOT IN (SELECT USER_ID from ITS_USER where auth_level=2);
+BEGIN 
+ OPEN  OUT_USER_CUR;
+   LOOP 
+    FETCH OUT_USER_CUR  INTO  USER_ID,USER_NAME ,USER_PWD,COMPANY_CODE ,DEPT_CODE , EMAIL , AUTH_LEVEL ;
+    EXIT WHEN OUT_USER_CUR%NOTFOUND;  
+      BEGIN  
+       INSERT INTO  ITS_USER (USER_CODE , USER_ID,USER_NAME ,USER_PWD,COMPANY_CODE ,DEPT_CODE , EMAIL , AUTH_LEVEL) VALUES 
+       ((SELECT 'USER_'||LPAD(NVL(SUBSTR(MAX(USER_CODE),6),0)+1,10,0) FROM ITS_USER2),USER_ID,USER_NAME ,USER_PWD,COMPANY_CODE ,DEPT_CODE , EMAIL , AUTH_LEVEL)
+       ;
+      END;  
+   END LOOP;   
+ dbms_output.put_line('정상적으로 처리가 완료 되었습니다.');
+END;
+
+/
+
+create PROCEDURE "INUSER_INSA" 
+ IS
+USER_CODE VARCHAR2(50);
+USER_ID VARCHAR2(50);
+USER_NAME VARCHAR2(20);
+USER_PWD VARCHAR2(50);
+COMPANY_CODE  VARCHAR2(50);
+DEPT_CODE VARCHAR2(50);
+EMAIL VARCHAR2(50);
+AUTH_LEVEL VARCHAR2(20);
+ZIP_CODE VARCHAR2(50);
+USE_YN VARCHAR2(20);
+CREATE_USER VARCHAR2(50);
+CREATE_DATE VARCHAR2(50);
+UPDATE_USER  VARCHAR2(50);
+UPDATE_DATE VARCHAR2(50); 
+ CURSOR IN_USER_CUR  IS
+ SELECT USER_ID FROM ITS_USER2 WHERE USER_CODE IS NULL;
+BEGIN 
+ OPEN  IN_USER_CUR;
+ LOOP 
+  FETCH IN_USER_CUR  INTO   USER_ID;
+  EXIT WHEN IN_USER_CUR%NOTFOUND;  
+  BEGIN  
+  UPDATE ITS_USER2 
+    SET USER_CODE = (SELECT 'USER_'||LPAD(NVL(SUBSTR(MAX(USER_CODE),6),0)+1,10,0) FROM ITS_USER2)
+  WHERE USER_ID =  USER_ID;
+  END;   
+ END LOOP; 
+ -- 최종 결과
+ --dbms_output.put_line('정상적으로 처리가 완료 되었습니다.');
+EXCEPTION
+  WHEN OTHERS THEN
+    --Exception 처리부분.
+ --dbms_output.put_line('ERR : ' || ERR-0001);
+    RETURN;
+END;
+
+/
+
+create FUNCTION "FN_GET_CD_NM" 
+(
+  IN_COMBO_CD IN VARCHAR2 
+, IN_VALUE IN VARCHAR2 
+, IN_LANG_TYPE IN VARCHAR2 
+) RETURN VARCHAR2 IS
+  v_code_name VARCHAR2(2000);
+BEGIN
+  /* COMBO테이블에 있는 코드의 NAME을 구한다. 2019-11-01 younjh */
+  SELECT
+    NVL(LANG_DESC, combo.TEXT) INTO v_code_name
+  FROM DOCS_COMBO combo
+    LEFT JOIN DOCS_LANG lang ON lang.LANG_CD = combo.LANG_CD AND lang.LANG_TYPE = IN_LANG_TYPE
+  WHERE combo.COMBO_CD = IN_COMBO_CD
+  AND VALUE = IN_VALUE;
+  RETURN (v_code_name);
+END FN_GET_CD_NM;
+
+/
+
+create FUNCTION "FN_GET_USER_FULL_NM" 
+(
+  IN_USER_CD IN VARCHAR2 
+) RETURN VARCHAR2 IS
+  v_user_full_nm VARCHAR2(2000);
+BEGIN  
+  SELECT
+    DEPT_NM || ' ' || USER_NM || ' ' || POSITION_NM INTO v_user_full_nm
+  FROM DOCS_USER docsUser
+  INNER JOIN DOCS_DEPT dept
+  ON docsUser.DEPT_CD = dept.DEPT_CD
+  INNER JOIN DOCS_POSITION docsPosition
+  ON docsUser.POSITION_CD = docsPosition.POSITION_CD    
+  WHERE docsUser.USER_CD = IN_USER_CD;  
+  RETURN (v_user_full_nm);
+END FN_GET_USER_FULL_NM;
+
+/
+
+create FUNCTION "GETCDNM" 
+(
+  IN_COMBO_CD IN VARCHAR2 
+, IN_VALUE IN VARCHAR2 
+, IN_LANG_TYPE IN VARCHAR2 
+) RETURN VARCHAR2 IS
+  v_code_name VARCHAR2(2000);
+BEGIN
+  SELECT
+    NVL(LANG_DESC, combo.TEXT) INTO v_code_name
+  FROM DOCS_COMBO combo
+    LEFT JOIN DOCS_LANG lang ON lang.LANG_CD = combo.LANG_CD AND lang.LANG_TYPE = IN_LANG_TYPE
+  WHERE combo.COMBO_CD = IN_COMBO_CD
+  AND VALUE = IN_VALUE;
+  RETURN (v_code_name);
+END GETCDNM;
+
+/
+

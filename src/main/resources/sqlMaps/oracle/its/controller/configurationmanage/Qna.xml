@@ -1,0 +1,430 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+
+<!--<mapper namespace="sql.configQna">-->
+
+<!--	<select id="selectList"-->
+<!--		resultType="kr.esob.fdms.controller.configurationmanage.qna.ConfigQnaListVO">-->
+<!--		SELECT-->
+<!--			B1.*-->
+<!--		FROM-->
+<!--			(-->
+<!--			SELECT-->
+<!--				A1.*-->
+<!--				, ROWNUM AS PAGEINDEX-->
+<!--			FROM (-->
+<!--			SELECT-->
+<!--				QNA_CD AS qnaCd,-->
+<!--				to_char(INSERT_DT, 'YYYY-MM-DD') AS insertDt,-->
+<!--				TITLE AS title,-->
+<!--				(SELECT COMPANY_NM FROM DOCS_COMPANY company-->
+<!--				WHERE company.COMPANY_CD = qna.COMPANY_CD) AS companyNm,-->
+<!--				(SELECT USER_NM FROM DOCS_USER-->
+<!--				WHERE USER_CD = INSERT_USER_CD) AS insertUserNm,-->
+<!--				(SELECT TEXT FROM docs_combo-->
+<!--				WHERE SEQ = QNA_TYPE AND combo_cd = 'qnaType') AS qnaType,-->
+<!--				(SELECT TEXT FROM docs_combo-->
+<!--				WHERE VALUE = STATUS AND combo_cd = 'status') AS status-->
+<!--			FROM DOCS_CONF_QNA qna WHERE 1 = 1-->
+<!--			<if test='qnaType != null and !qnaType.equals("")'>-->
+<!--			AND QNA_TYPE = #{qnaType}-->
+<!--			</if>-->
+<!--			<if test='title != null and !title.equals("")'>-->
+<!--			AND TITLE LIKE '%' || #{title} || '%'-->
+<!--			</if>-->
+<!--			<if test='companyNm != null and !companyNm.equals("")'>-->
+<!--			AND COMPANY_CD = #{companyNm}-->
+<!--			</if>-->
+<!--			<if test='insertUserNm != null and !insertUserNm.equals("")'>-->
+<!--			AND INSERT_USER_CD = #{insertUserNm}-->
+<!--			</if>-->
+<!--			<if test='insertStartDt != null and !insertStartDt.equals("")'>-->
+<!--			AND INSERT_DT BETWEEN TO_DATE(#{insertStartDt}, 'YYYY-MM-DD')-->
+<!--	                         AND TO_DATE(#{insertEndDt}, 'YYYY-MM-DD')+1-->
+<!--			</if>-->
+<!--			<if test='sortColumn == null or "".equals(sortColumn)'>-->
+<!--           		ORDER BY INSERT_DT DESC-->
+<!--			</if>-->
+<!--         	<if test='sortColumn != null and !"".equals(sortColumn)'>-->
+<!--         		ORDER BY ${sortColumn} ${order}-->
+<!--         	</if>-->
+<!--			) A1-->
+<!--			WHERE 1=1-->
+<!--			<if test='end != null and !end.equals("")'>-->
+<!--				AND ROWNUM <![CDATA[ <= ]]> #{end}-->
+<!--			</if>-->
+<!--		) B1-->
+<!--		<if test='start != null and !start.equals("")'>-->
+<!--		WHERE PAGEINDEX <![CDATA[ >= ]]>#{start}-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	<select id="selectListCount" resultType="Integer">-->
+<!--		SELECT-->
+<!--			COUNT(*) AS TOTAL_COUNT-->
+<!--		FROM-->
+<!--		(-->
+<!--			SELECT-->
+<!--				A1.*-->
+<!--				, ROWNUM AS PAGEINDEX-->
+<!--			FROM (-->
+<!--				SELECT * FROM DOCS_CONF_QNA WHERE 1 = 1-->
+<!--				<if test='qnaType != null and !qnaType.equals("")'>-->
+<!--				AND QNA_TYPE = #{qnaType}-->
+<!--				</if>-->
+<!--				<if test='title != null and !title.equals("")'>-->
+<!--				AND TITLE LIKE '%' || #{title} || '%'-->
+<!--				</if>-->
+<!--				<if test='companyNm != null and !companyNm.equals("")'>-->
+<!--				AND COMPANY_CD = #{companyNm}-->
+<!--				</if>-->
+<!--				<if test='insertUserNm != null and !insertUserNm.equals("")'>-->
+<!--				AND INSERT_USER_CD = #{insertUserNm}-->
+<!--				</if>-->
+<!--				<if test='insertStartDt != null and !insertStartDt.equals("")'>-->
+<!--				AND INSERT_DT BETWEEN TO_DATE(#{insertStartDt}, 'YYYY-MM-DD')-->
+<!--		                         AND TO_DATE(#{insertEndDt}, 'YYYY-MM-DD')+1-->
+<!--				</if>-->
+<!--			) A1-->
+<!--		) B1-->
+<!--	</select>-->
+<!--	-->
+<!--	<insert id="insertQna" parameterType="kr.esob.fdms.controller.configurationmanage.qna.ConfigQnaAddParam">-->
+<!--		<selectKey keyProperty="qnaCd" resultType="kr.esob.fdms.controller.configurationmanage.qna.ConfigQnaAddParam" order="BEFORE">-->
+<!--			SELECT NVL(MAX(to_number(QNA_CD)),0)+1 AS qnaCd-->
+<!--        	FROM DOCS_CONF_QNA-->
+<!--		</selectKey>-->
+<!--		INSERT INTO DOCS_CONF_QNA-->
+<!--		(-->
+<!--			QNA_CD,-->
+<!--			TITLE,-->
+<!--			CONTENTS,-->
+<!--			QNA_TYPE,-->
+<!--			STATUS,-->
+<!--			COMPANY_CD,-->
+<!--			VENDOR_CD,-->
+<!--			INSERT_USER_CD,-->
+<!--			INSERT_DT-->
+<!--		)-->
+<!--		VALUES-->
+<!--		(-->
+<!--			#{qnaCd},-->
+<!--			#{title},-->
+<!--			#{contents},-->
+<!--			#{qnaType},-->
+<!--			'Q',-->
+<!--			#{sessionUser.companyCd},-->
+<!--			'',-->
+<!--			#{sessionUser.userCd},-->
+<!--			SYSDATE-->
+<!--		)-->
+<!--	</insert>-->
+<!--	-->
+<!--	<insert id="insertConfigQnaFile" parameterType="kr.esob.fdms.controller.configurationmanage.qna.ConfigQnaAddParam">-->
+<!--		<selectKey keyProperty="fileNo" resultType="kr.esob.fdms.controller.configurationmanage.qna.ConfigQnaAddParam" order="BEFORE">-->
+<!--			SELECT NVL(MAX(to_number(FILE_NO)),0)+1 AS fileNo-->
+<!--	        FROM DOCS_CONF_QNA_FILE-->
+<!--		</selectKey>-->
+<!--		INSERT INTO DOCS_CONF_QNA_FILE-->
+<!--		(-->
+<!--			FILE_NO,-->
+<!--			QNA_CD,-->
+<!--			FILE_PATH,-->
+<!--			FILE_NM,-->
+<!--			ORG_FILE_NM-->
+<!--		)-->
+<!--		VALUES-->
+<!--		(-->
+<!--			#{fileNo},-->
+<!--			#{qnaCd},-->
+<!--			#{filePath},-->
+<!--			#{fileNm},-->
+<!--			#{orgFileNm}-->
+<!--		)-->
+<!--	</insert>-->
+<!--	-->
+<!--	<select id="getQnaInfo" resultType="kr.esob.fdms.controller.configurationmanage.qna.ConfigQnaPopupVO"-->
+<!--	parameterType="kr.esob.fdms.controller.configurationmanage.qna.ConfigQnaPopupVO">-->
+<!--		SELECT-->
+<!--			QNA_CD AS qnaCd,-->
+<!--			TITLE AS title,-->
+<!--			CONTENTS AS contents,-->
+<!--			ANSWER AS answer,-->
+<!--			(SELECT COMPANY_NM FROM DOCS_COMPANY company-->
+<!--			WHERE company.COMPANY_CD = qna.COMPANY_CD) AS companyNm,-->
+<!--			(SELECT USER_NM FROM DOCS_USER-->
+<!--			WHERE USER_CD = INSERT_USER_CD) AS insertUserNm,-->
+<!--			(SELECT VALUE FROM docs_combo-->
+<!--			WHERE SEQ = QNA_TYPE AND combo_cd = 'qnaType') AS qnaType,-->
+<!--			(SELECT USER_NM FROM DOCS_USER-->
+<!--			WHERE USER_CD = ANSWER_USER_CD) AS answerUserNm,-->
+<!--			status AS status-->
+<!--		FROM DOCS_CONF_QNA qna-->
+<!--		WHERE QNA_CD = #{qnaCd}-->
+<!--	</select>-->
+<!--	-->
+<!--	<select id="selectFileInfo" resultType="kr.esob.fdms.controller.configurationmanage.qna.ConfigQnaPopupVO">-->
+<!--		SELECT-->
+<!--			FILE_NO AS fileNo,-->
+<!--			QNA_CD AS qnaCd,-->
+<!--			FILE_PATH AS filePath,-->
+<!--			FILE_NM AS fileNm,-->
+<!--			ORG_FILE_NM AS orgFileNm-->
+<!--		FROM DOCS_CONF_QNA_FILE-->
+<!--		WHERE QNA_CD = #{qnaCd}-->
+<!--	</select>-->
+<!--	-->
+<!--	<select id="selectFileList" resultType="kr.esob.fdms.controller.configurationmanage.qna.ConfigQnaAddParam">-->
+<!--		SELECT-->
+<!--			FILE_NO AS fileNo,-->
+<!--			QNA_CD AS qnaCd,-->
+<!--			FILE_PATH AS filePath,-->
+<!--			FILE_NM AS fileNm,-->
+<!--			ORG_FILE_NM AS orgFileNm-->
+<!--		FROM DOCS_CONF_QNA_FILE-->
+<!--		WHERE QNA_CD = #{qnaCd}-->
+<!--	</select>-->
+<!--	-->
+<!--	<update id="updateQnaInfo">-->
+<!--		UPDATE DOCS_CONF_QNA SET-->
+<!--			TITLE = #{title},-->
+<!--			CONTENTS = #{contents},-->
+<!--			QNA_TYPE = #{qnaType}-->
+<!--		WHERE QNA_CD = #{qnaCd}-->
+<!--	</update>-->
+<!--	-->
+<!--	<delete id="deleteQna">-->
+<!--		DELETE FROM DOCS_CONF_QNA WHERE QNA_CD = #{qnaCd}-->
+<!--	</delete>-->
+<!--	-->
+<!--	<delete id="deleteQnaFile">-->
+<!--		DELETE FROM DOCS_CONF_QNA_FILE WHERE QNA_CD = #{qnaCd}-->
+<!--	</delete>-->
+<!--	-->
+<!--	<update id="insertReplyQna" parameterType="kr.esob.fdms.controller.configurationmanage.qna.ConfigQnaPopupVO">-->
+<!--		UPDATE DOCS_CONF_QNA SET-->
+<!--			ANSWER = #{answer},-->
+<!--			STATUS = 'A',-->
+<!--			ANSWER_USER_CD = #{sessionUser.userCd},-->
+<!--			ANSWER_DT = SYSDATE-->
+<!--		WHERE QNA_CD = #{qnaCd}-->
+<!--	</update>-->
+
+<!--</mapper>-->
+
+
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+
+
+
+<mapper namespace="sql.configQna">
+
+<select id="selectList" resultType="kr.esob.fdms.controller.configurationmanage.qna.ConfigQnaListVO">
+	SELECT
+	B1.*
+	FROM
+	(
+	SELECT
+	A1.*
+	, ROW_NUMBER() OVER (ORDER BY INSERT_DT DESC) AS PAGEINDEX
+	FROM (
+	SELECT
+	QNA_CD AS qnaCd,
+	to_char(INSERT_DT, 'YYYY-MM-DD') AS insertDt,
+	TITLE AS title,
+	(SELECT COMPANY_NM FROM DOCS_COMPANY company
+	WHERE company.COMPANY_CD = qna.COMPANY_CD) AS companyNm,
+	(SELECT USER_NM FROM DOCS_USER
+	WHERE USER_CD = INSERT_USER_CD) AS insertUserNm,
+	(SELECT TEXT FROM docs_combo
+	WHERE SEQ = QNA_TYPE AND combo_cd = 'qnaType') AS qnaType,
+	(SELECT TEXT FROM docs_combo
+	WHERE VALUE = STATUS AND combo_cd = 'status') AS status
+	FROM DOCS_CONF_QNA qna WHERE 1 = 1
+	<if test='qnaType != null and !qnaType.equals("")'>
+		AND QNA_TYPE = #{qnaType}
+	</if>
+	<if test='title != null and !title.equals("")'>
+		AND TITLE LIKE '%' || #{title} || '%'
+	</if>
+	<if test='companyNm != null and !companyNm.equals("")'>
+		AND COMPANY_CD = #{companyNm}
+	</if>
+	<if test='insertUserNm != null and !insertUserNm.equals("")'>
+		AND INSERT_USER_CD = #{insertUserNm}
+	</if>
+	<if test='insertStartDt != null and !insertStartDt.equals("")'>
+		AND INSERT_DT BETWEEN TO_DATE(#{insertStartDt}, 'YYYY-MM-DD')
+		AND TO_DATE(#{insertEndDt}, 'YYYY-MM-DD') + INTERVAL '1 day'
+	</if>
+	<if test='sortColumn == null or "".equals(sortColumn)'>
+		ORDER BY INSERT_DT DESC
+	</if>
+	<if test='sortColumn != null and !"".equals(sortColumn)'>
+		ORDER BY ${sortColumn} ${order}
+	</if>
+	) A1
+	WHERE 1=1
+	<if test='end != null and !end.equals("")'>
+		LIMIT #{end}
+	</if>
+	) B1
+	<if test='start != null and !start.equals("")'>
+		WHERE PAGEINDEX >= #{start}
+	</if>
+</select>
+
+<select id="selectListCount" resultType="Integer">
+	SELECT
+	COUNT(*) AS TOTAL_COUNT
+	FROM DOCS_CONF_QNA
+	WHERE 1 = 1
+	<if test='qnaType != null and !qnaType.equals("")'>
+		AND QNA_TYPE = #{qnaType}
+	</if>
+	<if test='title != null and !title.equals("")'>
+		AND TITLE LIKE '%' || #{title} || '%'
+	</if>
+	<if test='companyNm != null and !companyNm.equals("")'>
+		AND COMPANY_CD = #{companyNm}
+	</if>
+	<if test='insertUserNm != null and !insertUserNm.equals("")'>
+		AND INSERT_USER_CD = #{insertUserNm}
+	</if>
+	<if test='insertStartDt != null and !insertStartDt.equals("")'>
+		AND INSERT_DT BETWEEN TO_DATE(#{insertStartDt}, 'YYYY-MM-DD')
+		AND TO_DATE(#{insertEndDt}, 'YYYY-MM-DD') + INTERVAL '1 day'
+	</if>
+</select>
+
+<insert id="insertQna" parameterType="kr.esob.fdms.controller.configurationmanage.qna.ConfigQnaAddParam">
+	<selectKey keyProperty="qnaCd" resultType="kr.esob.fdms.controller.configurationmanage.qna.ConfigQnaAddParam" order="BEFORE">
+		SELECT COALESCE(MAX(CAST(QNA_CD AS INTEGER)),0)+1 AS qnaCd
+		FROM DOCS_CONF_QNA
+	</selectKey>
+	INSERT INTO DOCS_CONF_QNA
+	(
+	QNA_CD,
+	TITLE,
+	CONTENTS,
+	QNA_TYPE,
+	STATUS,
+	COMPANY_CD,
+	VENDOR_CD,
+	INSERT_USER_CD,
+	INSERT_DT
+	)
+	VALUES
+	(
+	#{qnaCd},
+	#{title},
+	#{contents},
+	#{qnaType},
+	'Q',
+	#{sessionUser.companyCd},
+	'',
+	#{sessionUser.userCd},
+	CURRENT_TIMESTAMP
+	)
+</insert>
+
+<insert id="insertConfigQnaFile" parameterType="kr.esob.fdms.controller.configurationmanage.qna.ConfigQnaAddParam">
+	<selectKey keyProperty="fileNo" resultType="kr.esob.fdms.controller.configurationmanage.qna.ConfigQnaAddParam" order="BEFORE">
+		SELECT COALESCE(MAX(CAST(FILE_NO AS INTEGER)),0)+1 AS fileNo
+		FROM DOCS_CONF_QNA_FILE
+	</selectKey>
+	INSERT INTO DOCS_CONF_QNA_FILE
+	(
+	FILE_NO,
+	QNA_CD,
+	FILE_PATH,
+	FILE_NM,
+	ORG_FILE_NM
+	)
+	VALUES
+	(
+	#{fileNo},
+	#{qnaCd},
+	#{filePath},
+	#{fileNm},
+	#{orgFileNm}
+	)
+</insert>
+
+<select id="getQnaInfo" resultType="kr.esob.fdms.controller.configurationmanage.qna.ConfigQnaPopupVO" parameterType="kr.esob.fdms.controller.configurationmanage.qna.ConfigQnaPopupVO">
+	SELECT
+		QNA_CD AS qnaCd,
+		TITLE AS title,
+		CONTENTS AS contents,
+		ANSWER AS answer,
+		(SELECT COMPANY_NM FROM DOCS_COMPANY company
+		 WHERE company.COMPANY_CD = qna.COMPANY_CD) AS companyNm,
+		(SELECT USER_NM FROM DOCS_USER
+		 WHERE USER_CD = INSERT_USER_CD) AS insertUserNm,
+		(SELECT VALUE FROM docs_combo
+		 WHERE SEQ = QNA_TYPE AND combo_cd = 'qnaType') AS qnaType,
+		(SELECT USER_NM FROM DOCS_USER
+		 WHERE USER_CD = ANSWER_USER_CD) AS answerUserNm,
+		status AS status
+	FROM DOCS_CONF_QNA qna
+	WHERE QNA_CD = #{qnaCd}
+</select>
+
+<select id="selectFileInfo" resultType="kr.esob.fdms.controller.configurationmanage.qna.ConfigQnaPopupVO">
+	SELECT
+		FILE_NO AS fileNo,
+		QNA_CD AS qnaCd,
+		FILE_PATH AS filePath,
+		FILE_NM AS fileNm,
+		ORG_FILE_NM AS orgFileNm
+	FROM DOCS_CONF_QNA_FILE
+	WHERE QNA_CD = #{qnaCd}
+</select>
+
+<select id="selectFileList" resultType="kr.esob.fdms.controller.configurationmanage.qna.ConfigQnaAddParam">
+	SELECT
+		FILE_NO AS fileNo,
+		QNA_CD AS qnaCd,
+		FILE_PATH AS filePath,
+		FILE_NM AS fileNm,
+		ORG_FILE_NM AS orgFileNm
+	FROM DOCS_CONF_QNA_FILE
+	WHERE QNA_CD = #{qnaCd}
+</select>
+
+<update id="updateQnaInfo">
+	UPDATE DOCS_CONF_QNA SET
+							 TITLE = #{title},
+							 CONTENTS = #{contents},
+							 QNA_TYPE = #{qnaType}
+	WHERE QNA_CD = #{qnaCd}
+</update>
+
+<delete id="deleteQna">
+	DELETE FROM DOCS_CONF_QNA WHERE QNA_CD = #{qnaCd}
+</delete>
+
+<delete id="deleteQnaFile">
+	DELETE FROM DOCS_CONF_QNA_FILE WHERE QNA_CD = #{qnaCd}
+</delete>
+
+<update id="insertReplyQna" parameterType="kr.esob.fdms.controller.configurationmanage.qna.ConfigQnaPopupVO">
+	UPDATE DOCS_CONF_QNA SET
+							 ANSWER = #{answer},
+							 STATUS = 'A',
+							 ANSWER_USER_CD = #{sessionUser.userCd},
+							 ANSWER_DT = CURRENT_TIMESTAMP
+	WHERE QNA_CD = #{qnaCd}
+</update>
+
+</mapper>
+

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0/EN" "http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+    <settings>
+        <setting name="mapUnderscoreToCamelCase" value="true" />
+        <setting name="cacheEnabled" value="false" />
+        <setting name="jdbcTypeForNull" value="NULL" />
+    </settings>
+    <typeAliases>
+    	<typeAlias alias="comboInfoVo" type="kr.esob.fdms.commonlogic.combo.ComboInfoVO"/>
+    	<typeAlias alias="searchComboInfoVo" type="kr.esob.fdms.commonlogic.combo.SearchComboInfoVO"/>
+    	<typeAlias alias="userVo" type="kr.esob.fdms.controller.login.UserVO"/>
+    	<typeAlias alias="commonRequestStatusVO" type="kr.esob.fdms.controller.outside.commonrequest.CommonRequestStatusVO"/>
+    	<typeAlias alias="drawingInfoVO" type="kr.esob.fdms.controller.outside.drawing.request.DrawingInfoVO"/>
+    	<typeAlias alias="docInfoVO" type="kr.esob.fdms.controller.outside.doc.request.DocInfoVO"/>
+    	<typeAlias alias="docPdfRequestVO" type="kr.esob.fdms.controller.inside.distribution.docpdfrequest.DocPdfRequestVO"/>
+    	<typeAlias alias="swInfoVO" type="kr.esob.fdms.controller.outside.sw.request.SwInfoVO"/>
+    	<typeAlias alias="crInfoVO" type="kr.esob.fdms.controller.inside.cr.CrInfoVO"/>
+    	<typeAlias alias="crFileVO" type="kr.esob.fdms.controller.inside.cr.CrFileVO"/>
+    	<typeAlias alias="requestFileParam" type="kr.esob.fdms.controller.outside.commonrequest.RequestFileParam"/>
+    	<typeAlias alias="objectInfoVO" type="kr.esob.fdms.controller.outside.commonrequest.ObjectInfoVO"/>
+    	<typeAlias alias="mailInfoVO" type="kr.esob.fdms.commonlogic.mail.MailInfoVO"/>
+
+    </typeAliases>
+</configuration>

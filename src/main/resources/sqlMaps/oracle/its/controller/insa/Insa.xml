@@ -1,0 +1,1002 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+
+<!--<mapper namespace="sql.insa">-->
+
+<!--	&lt;!&ndash; 구매 팀장 대결자 콤보 조회 [2019.09.10(최금영)]  &ndash;&gt;-->
+<!--	<select id="selectItnUser" resultType="HashMap">-->
+<!--		SELECT *-->
+<!--		FROM (-->
+<!--			SELECT-->
+<!--				A1.*-->
+<!--				, ROWNUM AS PAGEINDEX-->
+<!--			FROM (-->
+<!--			  SELECT-->
+<!--			    USERID AS USER_ID-->
+<!--			    , NAME AS USER_NM-->
+<!--			    , DEPTCODE AS DEPT_CD-->
+<!--			    , (SELECT POSITION_CD FROM DOCS_POSITION t WHERE t.POSITION_CD_CUSTOM = u.JIKWICODE) AS POSITION_CD-->
+<!--			    , MAIL AS EMAIL-->
+<!--			    , CASE UPDATESTATE WHEN 2 THEN 'Y' ELSE 'N' END AS USE_YN-->
+<!--			    , CASE PERSONAL_PLACE_CD-->
+<!--			    	WHEN 'J' THEN '1210'		/* 1사업장 */-->
+<!--			    	WHEN 'V' THEN '1310' 		/* 2사업장 */-->
+<!--			    	WHEN 'C' THEN '3000'		/* 판교 */-->
+<!--			    	WHEN 'A' THEN '4000'		/* 본사 */-->
+<!--			    END BUSINESS_AREA_CD-->
+<!--			    , WORK_PLACE_CD-->
+<!--			    , JICHKCODE-->
+<!--			  FROM ITN_USER u-->
+<!--			  ORDER BY NAME-->
+<!--			 ) A1-->
+<!--			 WHERE ROWNUM <![CDATA[ <= ]]> #{end}-->
+<!--		 ) B1-->
+<!--		 WHERE PAGEINDEX <![CDATA[ >= ]]>#{start}-->
+<!--	</select>-->
+
+<!--	<select id="selectItnUserCount" resultType="Integer">-->
+<!--		  SELECT-->
+<!--		    COUNT(*) AS COUNT-->
+<!--		  FROM ITN_USER u-->
+<!--	</select>-->
+
+<!--	&lt;!&ndash; <select id="selectItnUser" resultType="HashMap"> &ndash;&gt;-->
+<!--	<select id="selectDocsUser" resultType="HashMap">-->
+<!--		  SELECT-->
+<!--		   	USER_CD-->
+<!--		   	, USER_NM-->
+<!--		  FROM DOCS_USER u-->
+<!--		  WHERE USER_ID = #{USER_ID}-->
+<!--		  AND ROWNUM = 1-->
+<!--	</select>-->
+
+<!--	<select id="selectDocsUserCount" resultType="Integer">-->
+<!--		  SELECT-->
+<!--		    *-->
+<!--		  FROM DOCS_USER u-->
+<!--		  WHERE USER_ID = #{USER_ID}-->
+<!--	</select>-->
+
+<!--	<select id="selectUserCd" resultType="String">-->
+<!--		SELECT-->
+<!--			'USER_' || NVL(LPAD(TO_NUMBER(SUBSTR(MAX(USER_CD), 6)) + 1, 10, '0'), '0000000001')-->
+<!--		FROM DOCS_USER-->
+<!--	</select>-->
+
+<!--	<insert id="insertDocsUser">-->
+<!--		INSERT INTO DOCS_USER(-->
+<!--			USER_CD-->
+<!--			, USER_ID-->
+<!--			<if test='USER_NM != null and !USER_NM.equals("")'>-->
+<!--    		, USER_NM-->
+<!--    		</if>-->
+<!--    		, COMPANY_CD-->
+<!--    		<if test='DEPT_CD != null and !DEPT_CD.equals("")'>-->
+<!--    		, DEPT_CD-->
+<!--    		</if>-->
+<!--    		<if test='POSITION_CD != null and !POSITION_CD.equals("")'>-->
+<!--    		, POSITION_CD-->
+<!--    		</if>-->
+<!--    		<if test='EMAIL != null and !EMAIL.equals("")'>-->
+<!--    		, EMAIL-->
+<!--    		</if>-->
+<!--    		, USE_YN-->
+<!--    		, DEL_YN-->
+<!--    		<if test='BUSINESS_AREA_CD != null and !BUSINESS_AREA_CD.equals("")'>-->
+<!--    		, BUSINESS_AREA_CD-->
+<!--    		</if>-->
+<!--    		, PROTECT_YN-->
+<!--    		<if test='WORK_PLACE_CD != null and !WORK_PLACE_CD.equals("")'>-->
+<!--    		, WORK_PLACE_CD-->
+<!--    		</if>-->
+<!--    		, ROLE_GROUP-->
+<!--    		, AUTH_SITE-->
+<!--		)-->
+<!--		VALUES (-->
+<!--			#{USER_CD}-->
+<!--			, #{USER_ID}-->
+<!--			<if test='USER_NM != null and !USER_NM.equals("")'>-->
+<!--    		, #{USER_NM}-->
+<!--    		</if>-->
+<!--    		, 'COMP_0000000999'-->
+<!--    		<if test='DEPT_CD != null and !DEPT_CD.equals("")'>-->
+<!--    		, #{DEPT_CD}-->
+<!--    		</if>-->
+<!--    		<if test='POSITION_CD != null and !POSITION_CD.equals("")'>-->
+<!--    		, #{POSITION_CD}-->
+<!--    		</if>-->
+<!--    		<if test='EMAIL != null and !EMAIL.equals("")'>-->
+<!--    		, #{EMAIL}-->
+<!--    		</if>-->
+<!--    		, #{USE_YN}-->
+<!--    		, 'N'-->
+<!--    		<if test='BUSINESS_AREA_CD != null and !BUSINESS_AREA_CD.equals("")'>-->
+<!--    		, #{BUSINESS_AREA_CD}-->
+<!--    		</if>-->
+<!--    		, 'N'-->
+<!--    		<if test='WORK_PLACE_CD != null and !WORK_PLACE_CD.equals("")'>-->
+<!--    		, #{WORK_PLACE_CD}-->
+<!--    		</if>-->
+<!--    		, 'RG_001'-->
+<!--    		, 'I'-->
+<!--		)-->
+<!--	</insert>-->
+
+<!--	<update id="updateDocsUser">-->
+<!--		UPDATE DOCS_USER-->
+<!--		SET USER_ID = #{USER_ID}-->
+<!--			<if test='USER_NM != null and !USER_NM.equals("")'>-->
+<!--    		, USER_NM = #{USER_NM}-->
+<!--    		</if>-->
+<!--    		, COMPANY_CD = 'COMP_0000000999'-->
+<!--    		<if test='DEPT_CD != null and !DEPT_CD.equals("")'>-->
+<!--    		, DEPT_CD = #{DEPT_CD}-->
+<!--    		</if>-->
+<!--    		<if test='POSITION_CD != null and !POSITION_CD.equals("")'>-->
+<!--    		, POSITION_CD = #{POSITION_CD}-->
+<!--    		</if>-->
+<!--    		<if test='EMAIL != null and !EMAIL.equals("")'>-->
+<!--    	    , EMAIL =  CASE WHEN USER_CD IN ('USER_0000012187','USER_0000012137') THEN 'df.wanggeun.lee@hanwha-ds.com'-->
+<!--    		           ELSE #{EMAIL}-->
+<!--    		           END-->
+<!--    		</if>-->
+<!--    		, USE_YN = #{USE_YN}-->
+<!--    		, DEL_YN = 'N'-->
+<!--    		<if test='BUSINESS_AREA_CD != null and !BUSINESS_AREA_CD.equals("")'>-->
+<!--    		, BUSINESS_AREA_CD = #{BUSINESS_AREA_CD}-->
+<!--    		</if>-->
+<!--    		, PROTECT_YN = 'N'-->
+<!--    		<if test='WORK_PLACE_CD != null and !WORK_PLACE_CD.equals("")'>-->
+<!--    		, WORK_PLACE_CD = #{WORK_PLACE_CD}-->
+<!--    		</if>-->
+<!--    	WHERE USER_CD = #{USER_CD}-->
+<!--	</update>-->
+
+<!--	&lt;!&ndash; <delete id="deleteDocsUser">-->
+<!--		DELETE FROM DOCS_USER WHERE AUTH_SITE IN ('I', 'B')-->
+<!--	</delete> &ndash;&gt;-->
+
+<!--	<insert id="insertDocsAdmin">-->
+<!--		Insert into DOCS_USER (USER_CD,USER_ID,USER_NM,USER_PWD,COMPANY_CD,DEPT_CD,POSITION_CD,EMAIL,AUTH_LEVEL,AUTH_APPROVAL_YN,FIRST_LOGIN_DT,LAST_LOGIN_DT,LAST_LOGIN_IP,USE_YN,DEL_YN,INSERT_UID,INSERT_DT,UPDATE_UID,UPDATE_DT,PWD_UPDATE_DT,AUTH_SITE,LOGIN_COUNT,ROLE_GROUP,BUSINESS_AREA_CD,PROTECT_YN,WORK_PLACE_CD) values ('USER_0000000001','admin','담당자','1','COMP_0000000999','D1DJ150',null,'admin@admin.com',4,'N',null,to_date('19/08/20','RR/MM/DD'),'0:0:0:0:0:0:0:1','Y','N',null,null,null,null,to_date('19/03/13','RR/MM/DD'),'B',0,'RG_001','1210',null,'L0329')-->
+<!--	</insert>-->
+
+<!--	<insert id="insertDocsOutuser">-->
+<!--		Insert into DOCS_USER (USER_CD,USER_ID,USER_NM,USER_PWD,COMPANY_CD,DEPT_CD,POSITION_CD,EMAIL,AUTH_LEVEL,AUTH_APPROVAL_YN,FIRST_LOGIN_DT,LAST_LOGIN_DT,LAST_LOGIN_IP,USE_YN,DEL_YN,INSERT_UID,INSERT_DT,UPDATE_UID,UPDATE_DT,PWD_UPDATE_DT,AUTH_SITE,LOGIN_COUNT,ROLE_GROUP,BUSINESS_AREA_CD,PROTECT_YN,WORK_PLACE_CD) values ('USER_0000000002','outuser','와우소프트','1','COMP_0000001039','0000000003',null,'esob@esob.kr',null,null,null,to_date('19/08/20','RR/MM/DD'),null,'Y','N',null,null,null,null,to_date('19/04/19','RR/MM/DD'),'B',null,'RG_001','1210',null,null)-->
+<!--	</insert>-->
+
+<!--	<select id="selectUserCdFromUserId" resultType="String">-->
+<!--		SELECT USER_CD FROM DOCS_USER WHERE USER_ID = #{USER_ID}-->
+<!--	</select>-->
+
+<!--	<update id="updateTeamLeader">-->
+<!--		UPDATE DOCS_DEPT SET TEAM_LEADER_USER_CD = #{USER_CD} WHERE DEPT_CD = #{DEPT_CD}-->
+<!--	</update>-->
+
+<!--	<select id="selectItnVendor" resultType="HashMap">-->
+<!--		SELECT-->
+<!--		  BUSINESS_AREA_CD-->
+<!--		  , VENDOR_NM AS COMPANY_NM-->
+<!--		  , VENDOR_CD AS BIZ_NO-->
+<!--		  , 'E' AS COMPANY_TYPE-->
+<!--		  , '19000101' AS USE_START_DT-->
+<!--		  , '99991231' AS USE_END_DT-->
+<!--		  , (-->
+<!--		  	SELECT USER_CD-->
+<!--		  	FROM DOCS_USER t-->
+<!--		  	WHERE t.USER_ID = DIST_PURCHASER_UID-->
+<!--		  ) AS DIST_PURCHASER_USER_CD-->
+<!--		  , DIST_PURCHASER_UID_EMAIL AS DIST_PURCHASER_EMAIL-->
+<!--		  , (-->
+<!--		  	SELECT USER_CD-->
+<!--		  	FROM DOCS_USER t-->
+<!--		  	WHERE t.USER_ID = CR_PURCHASER_UID-->
+<!--		  ) AS CR_PURCHASER_USER_CD-->
+<!--		  , CR_PURCHASER_UID_EMAIL AS CR_PURCHASER_EMAIL-->
+<!--		  , CASE VENDOR_STATUS WHEN 'Y' THEN 'N' ELSE 'Y' END AS DEL_YN-->
+<!--		  , 'Y' AS USE_YN-->
+<!--		  , CN_SERIAL AS COMAPNY_CD_CUSTOM-->
+<!--		FROM ITN_VENDOR-->
+<!--		ORDER BY CN_SERIAL-->
+<!--	</select>-->
+
+<!--	<select id="selectCompanyCd" resultType="String">-->
+<!--		SELECT-->
+<!--			'COMP_' || NVL(LPAD(TO_NUMBER(SUBSTR(MAX(COMPANY_CD), 6)) + 1, 10, '0'), '0000000001')-->
+<!--		FROM DOCS_COMPANY-->
+<!--	</select>-->
+
+<!--	<select id="selectMigrationVendorYn" resultType="String">-->
+<!--		SELECT NVL(SYSTEM_CONFIG_VALUE, 'N') AS systemConfigValue FROM DOCS_SYSTEM_CONFIG WHERE SYSTEM_CONFIG_GROUP='MIGRATION_CONFIG' AND SYSTEM_CONFIG_CD='MIGRATION_VENDOR'-->
+<!--	</select>-->
+
+<!--	<update id="updateMigrationVendorYn">-->
+<!--		UPDATE DOCS_SYSTEM_CONFIG-->
+<!--		SET SYSTEM_CONFIG_VALUE = 'N'-->
+<!--		WHERE SYSTEM_CONFIG_GROUP='MIGRATION_CONFIG'-->
+<!--		AND SYSTEM_CONFIG_CD='MIGRATION_VENDOR'-->
+<!--	</update>-->
+
+<!--	<select id="selectDocsCompany" resultType="HashMap">-->
+<!--		SELECT *-->
+<!--		FROM DOCS_COMPANY-->
+<!--		WHERE BIZ_NO = #{BIZ_NO}-->
+<!--		AND ROWNUM = 1-->
+<!--	</select>-->
+
+<!--	<update id="updateCompany">-->
+<!--		UPDATE DOCS_COMPANY-->
+<!--		SET-->
+<!--			BUSINESS_AREA_CD = #{BUSINESS_AREA_CD}-->
+<!--			, COMPANY_TYPE = #{COMPANY_TYPE}-->
+<!--			, COMPANY_NM = #{COMPANY_NM}-->
+<!--			, USE_YN = #{USE_YN}-->
+<!--		WHERE BIZ_NO=#{BIZ_NO}-->
+<!--	</update>-->
+
+<!--	<delete id="deleteCompanyPurchaser">-->
+<!--		DELETE FROM DOCS_COMPANY_PURCHASER WHERE BIZ_NO=#{BIZ_NO}-->
+<!--	</delete>-->
+
+<!--	<insert id="insertCompanyPurchaser">-->
+<!--		INSERT INTO DOCS_COMPANY_PURCHASER(-->
+<!--			COMPANY_CD-->
+<!--			, COMPANY_NM-->
+<!--			, BIZ_NO-->
+<!--			, DIST_PURCHASER_USER_CD-->
+<!--			, CR_PURCHASER_USER_CD-->
+<!--			, BUSINESS_AREA_CD-->
+<!--		)-->
+<!--		VALUES(-->
+<!--			#{COMPANY_CD}-->
+<!--			, #{COMPANY_NM}-->
+<!--			, #{BIZ_NO}-->
+<!--			, #{DIST_PURCHASER_USER_CD}-->
+<!--			, #{CR_PURCHASER_USER_CD}-->
+<!--			, #{BUSINESS_AREA_CD}-->
+<!--		)-->
+<!--	</insert>-->
+
+<!--	<insert id="insertCompany">-->
+<!--		INSERT INTO DOCS_COMPANY (-->
+<!--			COMPANY_CD, COMPANY_NM, COMPANY_TYPE, BIZ_NO, USE_START_DT,-->
+<!--			USE_END_DT, USE_YN, DEL_YN)-->
+<!--		VALUES(-->
+<!--			#{COMPANY_CD}, #{COMPANY_NM}, #{COMPANY_TYPE}, #{BIZ_NO}, #{USE_START_DT},-->
+<!--			#{USE_END_DT}, #{USE_YN}, #{DEL_YN}-->
+<!--		)-->
+<!--	</insert>-->
+
+<!--	<select id="selectLegacyDept" resultType="HashMap">-->
+<!--		SELECT-->
+<!--			DEPTCODE AS DEPT_CD             /* 부서코드*/-->
+<!--			, UPDEPTCODE AS PARENT_DEPT_CD  /* 상위부서코드 */-->
+<!--			, DEPTNAME AS DEPT_NM        /* 부서명 */-->
+<!--			, ENG_DEPTNAME AS DEPT_ENG_NM /* 영문 부서명 */-->
+<!--			, 'COMP_0000000999' AS COMPANY_CD        /* 업체코드 */-->
+<!--			, CASE UPDATESTATE WHEN 2 THEN 'Y' ELSE 'N' END AS USE_YN-->
+<!--			, 'N' AS DEL_YN-->
+<!--			, SEQ AS SORT_SEQ /* 조직도 표시순서 */-->
+<!--			, UPDATEDATE AS UPDATE_DT /* 수정일 */-->
+<!--			, '' AS TEAM_LEADER_UID   /*팀장 */-->
+<!--			, CASE (-->
+<!--			  SELECT COUNT(*)-->
+<!--			  FROM DOCS_INSA_DEPT_CD t-->
+<!--			  WHERE t.COLUMN_NM = 'PURCHASE_YN'-->
+<!--			  AND t.DEPT_CD=DEPTCODE-->
+<!--			) WHEN 0 THEN 'N' ELSE 'Y' END PURCHASE_YN-->
+<!--			, CASE (-->
+<!--			  SELECT COUNT(*)-->
+<!--			  FROM DOCS_INSA_DEPT_CD t-->
+<!--			  WHERE t.COLUMN_NM = 'PURCHASE_TEAM_YN'-->
+<!--			  AND t.DEPT_CD=DEPTCODE-->
+<!--			) WHEN 0 THEN 'N' ELSE 'Y' END PURCHASE_TEAM_YN-->
+<!--			, CASE (-->
+<!--			  SELECT COUNT(*)-->
+<!--			  FROM DOCS_INSA_DEPT_CD t-->
+<!--			  WHERE t.COLUMN_NM = 'PURCHASE_PLAN_TEAM_YN'-->
+<!--			  AND t.DEPT_CD=DEPTCODE-->
+<!--			) WHEN 0 THEN 'N' ELSE 'Y' END PURCHASE_PLAN_TEAM_YN-->
+<!--			, CASE (-->
+<!--			  SELECT COUNT(*)-->
+<!--			  FROM DOCS_INSA_DEPT_CD t-->
+<!--			  WHERE t.COLUMN_NM = 'ILS_TEAM_YN'-->
+<!--			  AND t.DEPT_CD=DEPTCODE-->
+<!--			) WHEN 0 THEN 'N' ELSE 'Y' END AS ILS_TEAM_YN-->
+<!--			, CASE (-->
+<!--			  SELECT COUNT(*)-->
+<!--			  FROM DOCS_INSA_DEPT_CD t-->
+<!--			  WHERE t.COLUMN_NM = 'PRODUCT_TEAM_YN'-->
+<!--			  AND t.DEPT_CD=DEPTCODE-->
+<!--			) WHEN 0 THEN 'N' ELSE 'Y' END AS PRODUCT_TEAM_YN-->
+<!--			, DEPTSHORTNAME AS DEPT_SHORT_PATH-->
+<!--			, DEPTFULLNAME AS DEPT_LONG_PATH-->
+<!--			, LVL AS LVL-->
+<!--			, OBJDETAILCAT AS DEPT_TYPE-->
+<!--			, STARTDATE AS START_DATE-->
+<!--			, ENDDATE AS END_DATE-->
+<!--		FROM DOCS_DEPT-->
+<!--	</select>-->
+
+<!--	<update id="updateDocsDept">-->
+<!--		MERGE INTO DOCS_DEPT-->
+<!--			USING DUAL-->
+<!--			ON (DEPT_CD=#{DEPT_CD})-->
+<!--			WHEN MATCHED THEN-->
+<!--				UPDATE SET-->
+<!--					PARENT_DEPT_CD = #{PARENT_DEPT_CD}-->
+<!--					, DEPT_NM = #{DEPT_NM}-->
+<!--					, DEPT_ENG_NM = #{DEPT_ENG_NM}-->
+<!--					, COMPANY_CD = #{COMPANY_CD}-->
+<!--					, USE_YN = #{USE_YN}-->
+<!--					, DEL_YN = 'N'-->
+<!--					, SORT_SEQ = #{SORT_SEQ}-->
+<!--					, UPDATE_DT = #{UPDATE_DT}-->
+<!--					, PURCHASE_YN = #{PURCHASE_YN}-->
+<!--					, PURCHASE_TEAM_YN = #{PURCHASE_TEAM_YN}-->
+<!--					, PURCHASE_PLAN_TEAM_YN = #{PURCHASE_PLAN_TEAM_YN}-->
+<!--					, ILS_TEAM_YN = #{ILS_TEAM_YN}-->
+<!--					, PRODUCT_TEAM_YN = #{PRODUCT_TEAM_YN}-->
+<!--					, DEPT_SHORT_PATH = #{DEPT_SHORT_PATH}-->
+<!--					, DEPT_LONG_PATH = #{DEPT_LONG_PATH}-->
+<!--					, LVL = #{LVL}-->
+<!--					, DEPT_TYPE = #{DEPT_TYPE}-->
+<!--					, START_DATE = #{START_DATE}-->
+<!--					, END_DATE = #{END_DATE}-->
+<!--			WHEN NOT MATCHED THEN-->
+<!--				INSERT(DEPT_CD-->
+<!--				    , PARENT_DEPT_CD-->
+<!--					, DEPT_NM-->
+<!--					, DEPT_ENG_NM-->
+<!--					, COMPANY_CD-->
+<!--					, USE_YN-->
+<!--					, DEL_YN-->
+<!--					, SORT_SEQ-->
+<!--					, UPDATE_DT-->
+<!--					, PURCHASE_YN-->
+<!--					, PURCHASE_TEAM_YN-->
+<!--					, PURCHASE_PLAN_TEAM_YN-->
+<!--					, ILS_TEAM_YN-->
+<!--					, PRODUCT_TEAM_YN-->
+<!--					, DEPT_SHORT_PATH-->
+<!--					, DEPT_LONG_PATH-->
+<!--					, LVL-->
+<!--					, DEPT_TYPE-->
+<!--					, START_DATE-->
+<!--					, END_DATE)-->
+<!--				VALUES (-->
+<!--					#{DEPT_CD}-->
+<!--					, #{PARENT_DEPT_CD}-->
+<!--					, #{DEPT_NM}-->
+<!--					, #{DEPT_ENG_NM}-->
+<!--					, #{COMPANY_CD}-->
+<!--					, #{USE_YN}-->
+<!--					, 'N'-->
+<!--					, #{SORT_SEQ}-->
+<!--					, #{UPDATE_DT}-->
+<!--					, #{PURCHASE_YN}-->
+<!--					, #{PURCHASE_TEAM_YN}-->
+<!--					, #{PURCHASE_PLAN_TEAM_YN}-->
+<!--					, #{ILS_TEAM_YN}-->
+<!--					, #{PRODUCT_TEAM_YN}-->
+<!--					, #{DEPT_SHORT_PATH}-->
+<!--					, #{DEPT_LONG_PATH}-->
+<!--					, #{LVL}-->
+<!--					, #{DEPT_TYPE}-->
+<!--					, #{START_DATE}-->
+<!--					, #{END_DATE}-->
+<!--				)-->
+<!--	</update>-->
+
+<!--	<select id="selectProtectApprovalUserCount" resultType="Integer">-->
+<!--		/* 방산기술 결재자 테이블에 데이터가 몇건이나 있는지 체크 */-->
+<!--		SELECT COUNT(*) FROM DOCS_PROTECT_USER-->
+<!--	</select>-->
+
+<!--	<insert id="insertProtectApprovalUser">-->
+<!--		/* 방산기술 결재 가능자 */-->
+<!--		SELECT * FROM DOCS_PROTECT_USER;-->
+<!--		INSERT INTO DOCS_PROTECT_USER VALUE(USER_CD,-->
+<!--		  USER_NM,-->
+<!--		  DEPT_NM,-->
+<!--		  DEPT_SHORT_PATH,-->
+<!--		  DEPT_FULL_PATH,-->
+<!--		  BUSINESS_AREA_CD,-->
+<!--		  BUSINESS_TYPE_CD,-->
+<!--		  DEPT_CD-->
+<!--		)-->
+<!--		SELECT-->
+<!--		USER_CD-->
+<!--		, USER_NM-->
+<!--		, DEPT_NM-->
+<!--		, DEPT_SHORT_PATH-->
+<!--		, DEPT_LONG_PATH-->
+<!--		, BUSINESS_AREA_CD-->
+<!--		, CASE PARENT_DEPT_CD WHEN TO_NCHAR('D1DV0K0') THEN 'Development' ELSE 'Production' END BUSINESS_TYPE_CD-->
+<!--		, docsUser.DEPT_CD-->
+<!--		FROM DOCS_USER docsUser-->
+<!--		INNER JOIN DOCS_DEPT docsDept ON docsDept.DEPT_CD = docsUser.DEPT_CD-->
+<!--		WHERE USER_CD IN ('USER_0000012085','USER_0000012342','USER_0000011565','USER_0000011769')-->
+<!--        /* 염석현, 송기범, 조창선, 이상문&ndash;&gt;김형석으로 */-->
+<!--	</insert>-->
+
+<!--	<select id="selectRoleGroupSetting" resultType="kr.esob.fdms.commonlogic.insa.RoleGroupVO">-->
+<!--		SELECT GROUP_CODE-->
+<!--			, GROUP_NM-->
+<!--			, GROUP_TYPE-->
+<!--			, QUERY_ID-->
+<!--		FROM DOCS_ROLE_GROUP-->
+<!--		WHERE USE_YN = 'Y'-->
+<!--		AND GROUP_TYPE = 'PREDEFINED'-->
+<!--		ORDER BY INSERT_ORDER-->
+<!--	</select>-->
+
+<!--	<update id="updatePurchaserTeam">-->
+<!--		UPDATE DOCS_USER-->
+<!--		SET ROLE_GROUP = #{groupCode}-->
+<!--		WHERE USER_CD IN-->
+<!--		(-->
+<!--			SELECT docsUser.USER_CD-->
+<!--			FROM DOCS_INSA_DEPT_CD insa-->
+<!--			JOIN DOCS_DEPT dept ON insa.DEPT_CD = dept.DEPT_CD-->
+<!--			JOIN DOCS_USER docsUser ON dept.DEPT_CD = docsUser.DEPT_CD-->
+<!--			WHERE COLUMN_NM = 'PURCHASE_TEAM_YN'-->
+<!--		)-->
+<!--	</update>-->
+
+<!--	<update id="updateProtectUser">-->
+<!--		UPDATE DOCS_USER-->
+<!--		SET ROLE_GROUP = #{groupCode}-->
+<!--		WHERE USER_CD IN-->
+<!--		(-->
+<!--			SELECT USER_CD-->
+<!--			FROM DOCS_PROTECT_USER-->
+<!--		)-->
+<!--	</update>-->
+
+<!--	<update id="updatePurchaserPlanTeam">-->
+<!--		UPDATE DOCS_USER-->
+<!--		SET ROLE_GROUP = #{groupCode}-->
+<!--		WHERE USER_CD IN-->
+<!--		(-->
+<!--			SELECT docsUser.USER_CD-->
+<!--			FROM DOCS_INSA_DEPT_CD insa-->
+<!--			JOIN DOCS_DEPT dept ON insa.DEPT_CD = dept.DEPT_CD-->
+<!--			JOIN DOCS_USER docsUser ON dept.DEPT_CD = docsUser.DEPT_CD-->
+<!--			WHERE COLUMN_NM = 'PURCHASE_PLAN_TEAM_YN'-->
+<!--		)-->
+<!--	</update>-->
+
+<!--	<update id="updateIlsTeam">-->
+<!--		UPDATE DOCS_USER-->
+<!--		SET ROLE_GROUP = #{groupCode}-->
+<!--		WHERE USER_CD IN-->
+<!--		(-->
+<!--			SELECT docsUser.USER_CD-->
+<!--			FROM DOCS_INSA_DEPT_CD insa-->
+<!--			JOIN DOCS_DEPT dept ON insa.DEPT_CD = dept.DEPT_CD-->
+<!--			JOIN DOCS_USER docsUser ON dept.DEPT_CD = docsUser.DEPT_CD-->
+<!--			WHERE COLUMN_NM = 'ILS_TEAM_YN'-->
+<!--		)-->
+<!--	</update>-->
+
+<!--	<update id="updateVendor">-->
+<!--		UPDATE DOCS_USER-->
+<!--		SET ROLE_GROUP = #{groupCode}-->
+<!--		WHERE USER_CD IN-->
+<!--		(-->
+<!--			SELECT USER_CD-->
+<!--			FROM DOCS_USER docsUser-->
+<!--			JOIN DOCS_COMPANY company ON docsUser.COMPANY_CD = company.COMPANY_CD-->
+<!--			WHERE company.COMPANY_CD != 'COMP_0000000999'-->
+<!--		)-->
+<!--	</update>-->
+
+<!--	<update id="updateProductTeam">-->
+<!--		UPDATE DOCS_USER-->
+<!--		SET ROLE_GROUP = #{groupCode}-->
+<!--		WHERE USER_CD IN-->
+<!--		(-->
+<!--			SELECT docsUser.USER_CD-->
+<!--			FROM DOCS_INSA_DEPT_CD insa-->
+<!--			JOIN DOCS_DEPT dept ON insa.DEPT_CD = dept.DEPT_CD-->
+<!--			JOIN DOCS_USER docsUser ON dept.DEPT_CD = docsUser.DEPT_CD-->
+<!--			WHERE COLUMN_NM = 'PRODUCT_TEAM_YN'-->
+<!--		)-->
+<!--	</update>-->
+
+<!--	<update id="updateProductDept">-->
+<!--		UPDATE DOCS_USER-->
+<!--		SET ROLE_GROUP = #{groupCode}-->
+<!--		WHERE USER_CD IN-->
+<!--		(-->
+<!--			SELECT docsUser.USER_CD-->
+<!--			FROM DOCS_USER docsUser-->
+<!--			JOIN DOCS_DEPT dept ON docsUser.DEPT_CD = dept.DEPT_CD-->
+<!--			WHERE dept.DEPT_TYPE = '직'-->
+<!--		)-->
+<!--	</update>-->
+
+<!--	<update id="updateNormalUser">-->
+<!--		UPDATE DOCS_USER-->
+<!--		SET ROLE_GROUP = #{groupCode}-->
+<!--		WHERE USER_CD IN-->
+<!--		(-->
+<!--			SELECT USER_CD-->
+<!--			FROM DOCS_USER-->
+<!--			WHERE COMPANY_CD = 'COMP_0000000999'-->
+<!--		)-->
+<!--	</update>-->
+
+<!--	<update id="updateRoleGroupDept">-->
+<!--		UPDATE DOCS_USER docsUser-->
+<!--		SET docsUser.ROLE_GROUP =-->
+<!--		(-->
+<!--			SELECT groupMember.GROUP_CODE-->
+<!--			FROM DOCS_ROLE_GROUP_MEMBER groupMember-->
+<!--			WHERE groupMember.GROUP_TYPE = 'DEPT'-->
+<!--			AND groupMember.MEMBER_CD = docsUser.DEPT_CD-->
+<!--		)-->
+<!--		WHERE EXISTS-->
+<!--		(-->
+<!--			SELECT 0 FROM DOCS_ROLE_GROUP_MEMBER groupMember WHERE-->
+<!--			groupMember.GROUP_TYPE = 'DEPT'-->
+<!--			AND groupMember.MEMBER_CD = docsUser.DEPT_CD-->
+<!--		)-->
+<!--	</update>-->
+
+<!--	<update id="updateRoleGroupUser">-->
+<!--		UPDATE DOCS_USER docsUser-->
+<!--		SET docsUser.ROLE_GROUP =-->
+<!--		(-->
+<!--			SELECT groupMember.GROUP_CODE-->
+<!--			FROM DOCS_ROLE_GROUP_MEMBER groupMember-->
+<!--			WHERE groupMember.GROUP_TYPE = 'USER'-->
+<!--			AND groupMember.MEMBER_CD = docsUser.USER_CD-->
+<!--			AND ROWNUM=1-->
+<!--		)-->
+<!--		WHERE EXISTS-->
+<!--		(-->
+<!--			SELECT 0 FROM DOCS_ROLE_GROUP_MEMBER groupMember WHERE-->
+<!--			groupMember.GROUP_TYPE = 'USER'-->
+<!--			AND groupMember.MEMBER_CD = docsUser.USER_CD-->
+<!--		)-->
+<!--	</update>-->
+<!--</mapper>-->
+
+
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+
+
+
+<mapper namespace="sql.insa">
+
+<!-- 구매 팀장 대결자 콤보 조회 [2019.09.10(최금영)]  -->
+<select id="selectItnUser" resultType="HashMap">
+	SELECT *
+	FROM (
+			 SELECT
+				 A1.*
+				  , ROW_NUMBER() OVER () AS PAGEINDEX
+			 FROM (
+					  SELECT
+						  USERID AS USER_ID
+						   , NAME AS USER_NM
+						   , DEPTCODE AS DEPT_CD
+						   , (SELECT POSITION_CD FROM DOCS_POSITION t WHERE t.POSITION_CD_CUSTOM = u.JIKWICODE) AS POSITION_CD
+						   , MAIL AS EMAIL
+						   , CASE UPDATESTATE WHEN 2 THEN 'Y' ELSE 'N' END AS USE_YN
+						   , CASE PERSONAL_PLACE_CD
+								 WHEN 'J' THEN '1210'        /* 1사업장 */
+								 WHEN 'V' THEN '1310'         /* 2사업장 */
+								 WHEN 'C' THEN '3000'        /* 판교 */
+								 WHEN 'A' THEN '4000'        /* 본사 */
+						  END BUSINESS_AREA_CD
+						   , WORK_PLACE_CD
+						   , JICHKCODE
+					  FROM ITN_USER u
+					  ORDER BY NAME
+				  ) A1
+		 ) B1
+	WHERE PAGEINDEX BETWEEN #{start} AND #{end}
+</select>
+
+<select id="selectItnUserCount" resultType="Integer">
+	SELECT COUNT(*) AS COUNT
+	FROM ITN_USER u
+</select>
+
+<select id="selectDocsUser" resultType="HashMap">
+	SELECT
+		USER_CD
+		 , USER_NM
+	FROM DOCS_USER u
+	WHERE USER_ID = #{USER_ID}
+		LIMIT 1
+</select>
+
+<select id="selectDocsUserCount" resultType="Integer">
+	SELECT COUNT(*) AS COUNT
+	FROM DOCS_USER u
+	WHERE USER_ID = #{USER_ID}
+</select>
+
+<select id="selectUserCd" resultType="String">
+	SELECT 'USER_' || LPAD(CAST(COALESCE(MAX(SUBSTR(USER_CD, 6))::INTEGER, 0) + 1 AS TEXT), 10, '0')
+	FROM DOCS_USER
+</select>
+
+<insert id="insertDocsUser">
+	INSERT INTO DOCS_USER(
+	USER_CD
+	, USER_ID
+	<if test='USER_NM != null and !USER_NM.equals("")'>
+		, USER_NM
+	</if>
+	, COMPANY_CD
+	<if test='DEPT_CD != null and !DEPT_CD.equals("")'>
+		, DEPT_CD
+	</if>
+	<if test='POSITION_CD != null and !POSITION_CD.equals("")'>
+		, POSITION_CD
+	</if>
+	<if test='EMAIL != null and !EMAIL.equals("")'>
+		, EMAIL
+	</if>
+	, USE_YN
+	, DEL_YN
+	<if test='BUSINESS_AREA_CD != null and !BUSINESS_AREA_CD.equals("")'>
+		, BUSINESS_AREA_CD
+	</if>
+	, PROTECT_YN
+	<if test='WORK_PLACE_CD != null and !WORK_PLACE_CD.equals("")'>
+		, WORK_PLACE_CD
+	</if>
+	, ROLE_GROUP
+	, AUTH_SITE
+	)
+	VALUES (
+	#{USER_CD}
+	, #{USER_ID}
+	<if test='USER_NM != null and !USER_NM.equals("")'>
+		, #{USER_NM}
+	</if>
+	, 'COMP_0000000999'
+	<if test='DEPT_CD != null and !DEPT_CD.equals("")'>
+		, #{DEPT_CD}
+	</if>
+	<if test='POSITION_CD != null and !POSITION_CD.equals("")'>
+		, #{POSITION_CD}
+	</if>
+	<if test='EMAIL != null and !EMAIL.equals("")'>
+		, #{EMAIL}
+	</if>
+	, #{USE_YN}
+	, 'N'
+	<if test='BUSINESS_AREA_CD != null and !BUSINESS_AREA_CD.equals("")'>
+		, #{BUSINESS_AREA_CD}
+	</if>
+	, 'N'
+	<if test='WORK_PLACE_CD != null and !WORK_PLACE_CD.equals("")'>
+		, #{WORK_PLACE_CD}
+	</if>
+	, 'RG_001'
+	, 'I'
+	)
+</insert>
+
+<update id="updateDocsUser">
+	UPDATE DOCS_USER
+	SET USER_ID = #{USER_ID}
+	<if test='USER_NM != null and !USER_NM.equals("")'>
+		, USER_NM = #{USER_NM}
+	</if>
+	, COMPANY_CD = 'COMP_0000000999'
+	<if test='DEPT_CD != null and !DEPT_CD.equals("")'>
+		, DEPT_CD = #{DEPT_CD}
+	</if>
+	<if test='POSITION_CD != null and !POSITION_CD.equals("")'>
+		, POSITION_CD = #{POSITION_CD}
+	</if>
+	<if test='EMAIL != null and !EMAIL.equals("")'>
+		, EMAIL =  CASE WHEN USER_CD IN ('USER_0000012187','USER_0000012137') THEN 'df.wanggeun.lee@hanwha-ds.com'
+		ELSE #{EMAIL}
+		END
+	</if>
+	, USE_YN = #{USE_YN}
+	, DEL_YN = 'N'
+	<if test='BUSINESS_AREA_CD != null and !BUSINESS_AREA_CD.equals("")'>
+		, BUSINESS_AREA_CD = #{BUSINESS_AREA_CD}
+	</if>
+	, PROTECT_YN = 'N'
+	<if test='WORK_PLACE_CD != null and !WORK_PLACE_CD.equals("")'>
+		, WORK_PLACE_CD = #{WORK_PLACE_CD}
+	</if>
+	WHERE USER_CD = #{USER_CD}
+</update>
+
+<!-- <delete id="deleteDocsUser">
+    DELETE FROM DOCS_USER WHERE AUTH_SITE IN ('I', 'B')
+</delete> -->
+
+<insert id="insertDocsAdmin">
+	INSERT INTO DOCS_USER (USER_CD,USER_ID,USER_NM,USER_PWD,COMPANY_CD,DEPT_CD,POSITION_CD,EMAIL,AUTH_LEVEL,AUTH_APPROVAL_YN,FIRST_LOGIN_DT,LAST_LOGIN_DT,LAST_LOGIN_IP,USE_YN,DEL_YN,INSERT_UID,INSERT_DT,UPDATE_UID,UPDATE_DT,PWD_UPDATE_DT,AUTH_SITE,LOGIN_COUNT,ROLE_GROUP,BUSINESS_AREA_CD,PROTECT_YN,WORK_PLACE_CD)
+	VALUES ('USER_0000000001','admin','담당자','1','COMP_0000000999','D1DJ150',null,'admin@admin.com',4,'N',null,to_date('19/08/20','RR/MM/DD'),'0:0:0:0:0:0:0:1','Y','N',null,null,null,null,to_date('19/03/13','RR/MM/DD'),'B',0,'RG_001','1210',null,'L0329')
+</insert>
+
+<insert id="insertDocsOutuser">
+	INSERT INTO DOCS_USER (USER_CD,USER_ID,USER_NM,USER_PWD,COMPANY_CD,DEPT_CD,POSITION_CD,EMAIL,AUTH_LEVEL,AUTH_APPROVAL_YN,FIRST_LOGIN_DT,LAST_LOGIN_DT,LAST_LOGIN_IP,USE_YN,DEL_YN,INSERT_UID,INSERT_DT,UPDATE_UID,UPDATE_DT,PWD_UPDATE_DT,AUTH_SITE,LOGIN_COUNT,ROLE_GROUP,BUSINESS_AREA_CD,PROTECT_YN,WORK_PLACE_CD)
+	VALUES ('USER_0000000002','outuser','와우소프트','1','COMP_0000001039','0000000003',null,'esob@esob.kr',null,null,null,to_date('19/08/20','RR/MM/DD'),null,'Y','N',null,null,null,null,to_date('19/04/19','RR/MM/DD'),'B',null,'RG_001','1210',null,null)
+</insert>
+
+<select id="selectUserCdFromUserId" resultType="String">
+	SELECT USER_CD FROM DOCS_USER WHERE USER_ID = #{USER_ID}
+</select>
+
+<update id="updateTeamLeader">
+	UPDATE DOCS_DEPT SET TEAM_LEADER_USER_CD = #{USER_CD} WHERE DEPT_CD = #{DEPT_CD}
+</update>
+
+<select id="selectItnVendor" resultType="HashMap">
+	SELECT
+		BUSINESS_AREA_CD
+		 , VENDOR_NM AS COMPANY_NM
+		 , VENDOR_CD AS BIZ_NO
+		 , 'E' AS COMPANY_TYPE
+		 , '19000101' AS USE_START_DT
+		 , '99991231' AS USE_END_DT
+		 , (
+		SELECT USER_CD
+		FROM DOCS_USER t
+		WHERE t.USER_ID = DIST_PURCHASER_UID
+	) AS DIST_PURCHASER_USER_CD
+		 , DIST_PURCHASER_UID_EMAIL AS DIST_PURCHASER_EMAIL
+		 , (
+		SELECT USER_CD
+		FROM DOCS_USER t
+		WHERE t.USER_ID = CR_PURCHASER_UID
+	) AS CR_PURCHASER_USER_CD
+		 , CR_PURCHASER_UID_EMAIL AS CR_PURCHASER_EMAIL
+		 , CASE VENDOR_STATUS WHEN 'Y' THEN 'N' ELSE 'Y' END AS DEL_YN
+		 , 'Y' AS USE_YN
+		 , CN_SERIAL AS COMAPNY_CD_CUSTOM
+	FROM ITN_VENDOR
+	ORDER BY CN_SERIAL
+</select>
+
+<select id="selectCompanyCd" resultType="String">
+	SELECT 'COMP_' || LPAD(CAST(COALESCE(MAX(SUBSTR(COMPANY_CD, 6))::INTEGER, 0) + 1 AS TEXT), 10, '0')
+	FROM DOCS_COMPANY
+</select>
+
+<select id="selectMigrationVendorYn" resultType="String">
+	SELECT COALESCE(SYSTEM_CONFIG_VALUE, 'N') AS systemConfigValue FROM DOCS_SYSTEM_CONFIG WHERE SYSTEM_CONFIG_GROUP='MIGRATION_CONFIG' AND SYSTEM_CONFIG_CD='MIGRATION_VENDOR'
+</select>
+
+<update id="updateMigrationVendorYn">
+	UPDATE DOCS_SYSTEM_CONFIG
+	SET SYSTEM_CONFIG_VALUE = 'N'
+	WHERE SYSTEM_CONFIG_GROUP='MIGRATION_CONFIG'
+	  AND SYSTEM_CONFIG_CD='MIGRATION_VENDOR'
+</update>
+
+<select id="selectDocsCompany" resultType="HashMap">
+	SELECT *
+	FROM DOCS_COMPANY
+	WHERE BIZ_NO = #{BIZ_NO}
+		LIMIT 1
+</select>
+
+<update id="updateCompany">
+	UPDATE DOCS_COMPANY
+	SET
+		BUSINESS_AREA_CD = #{BUSINESS_AREA_CD}
+	  , COMPANY_TYPE = #{COMPANY_TYPE}
+	  , COMPANY_NM = #{COMPANY_NM}
+	  , USE_YN = #{USE_YN}
+	WHERE BIZ_NO=#{BIZ_NO}
+</update>
+
+<delete id="deleteCompanyPurchaser">
+	DELETE FROM DOCS_COMPANY
+	WHERE 1=0
+</delete>
+
+<insert id="insertCompanyPurchaser">
+	INSERT INTO DOCS_COMPANY(COMPANY_CD)
+	SELECT NULL
+	WHERE 1=0
+</insert>
+
+<insert id="insertCompany">
+	INSERT INTO DOCS_COMPANY (
+		COMPANY_CD, COMPANY_NM, COMPANY_TYPE, BIZ_NO, USE_START_DT,
+		USE_END_DT, USE_YN, DEL_YN)
+	VALUES(
+			  #{COMPANY_CD}, #{COMPANY_NM}, #{COMPANY_TYPE}, #{BIZ_NO}, #{USE_START_DT},
+			  #{USE_END_DT}, #{USE_YN}, #{DEL_YN}
+		  )
+</insert>
+<update id="updateDocsDept">
+	INSERT INTO DOCS_DEPT (DEPT_CD, PARENT_DEPT_CD, DEPT_NM, DEPT_ENG_NM, COMPANY_CD, USE_YN, DEL_YN, SORT_SEQ, UPDATE_DT, PURCHASE_YN, PURCHASE_TEAM_YN, PURCHASE_PLAN_TEAM_YN, ILS_TEAM_YN, PRODUCT_TEAM_YN, DEPT_SHORT_PATH, DEPT_LONG_PATH, LVL, DEPT_TYPE, START_DATE, END_DATE)
+	VALUES (#{DEPT_CD}, #{PARENT_DEPT_CD}, #{DEPT_NM}, #{DEPT_ENG_NM}, #{COMPANY_CD}, #{USE_YN}, 'N', #{SORT_SEQ}, #{UPDATE_DT}, #{PURCHASE_YN}, #{PURCHASE_TEAM_YN}, #{PURCHASE_PLAN_TEAM_YN}, #{ILS_TEAM_YN}, #{PRODUCT_TEAM_YN}, #{DEPT_SHORT_PATH}, #{DEPT_LONG_PATH}, #{LVL}, #{DEPT_TYPE}, #{START_DATE}, #{END_DATE})
+		ON CONFLICT (DEPT_CD)
+        DO UPDATE SET
+		PARENT_DEPT_CD = EXCLUDED.PARENT_DEPT_CD,
+					   DEPT_NM = EXCLUDED.DEPT_NM,
+					   DEPT_ENG_NM = EXCLUDED.DEPT_ENG_NM,
+					   COMPANY_CD = EXCLUDED.COMPANY_CD,
+					   USE_YN = EXCLUDED.USE_YN,
+					   DEL_YN = 'N',
+					   SORT_SEQ = EXCLUDED.SORT_SEQ,
+					   UPDATE_DT = EXCLUDED.UPDATE_DT,
+					   PURCHASE_YN = EXCLUDED.PURCHASE_YN,
+					   PURCHASE_TEAM_YN = EXCLUDED.PURCHASE_TEAM_YN,
+					   PURCHASE_PLAN_TEAM_YN = EXCLUDED.PURCHASE_PLAN_TEAM_YN,
+					   ILS_TEAM_YN = EXCLUDED.ILS_TEAM_YN,
+					   PRODUCT_TEAM_YN = EXCLUDED.PRODUCT_TEAM_YN,
+					   DEPT_SHORT_PATH = EXCLUDED.DEPT_SHORT_PATH,
+					   DEPT_LONG_PATH = EXCLUDED.DEPT_LONG_PATH,
+					   LVL = EXCLUDED.LVL,
+					   DEPT_TYPE = EXCLUDED.DEPT_TYPE,
+					   START_DATE = EXCLUDED.START_DATE,
+					   END_DATE = EXCLUDED.END_DATE
+</update>
+
+<select id="selectProtectApprovalUserCount" resultType="Integer">
+	/* 방산기술 결재자 테이블에 데이터가 몇건이나 있는지 체크 */
+	SELECT 0
+</select>
+
+<insert id="insertProtectApprovalUser">
+	/* 방산기술 결재 가능자 */
+	SELECT 1
+</insert>
+
+<select id="selectRoleGroupSetting" resultType="kr.esob.fdms.commonlogic.insa.RoleGroupVO">
+	SELECT GROUP_CODE
+		 , GROUP_NM
+		 , GROUP_TYPE
+		 , QUERY_ID
+	FROM DOCS_ROLE_GROUP
+	WHERE USE_YN = 'Y'
+	  AND GROUP_TYPE = 'PREDEFINED'
+	ORDER BY INSERT_ORDER
+</select>
+
+<update id="updatePurchaserTeam">
+	UPDATE DOCS_USER
+	SET ROLE_GROUP = #{groupCode}
+	WHERE USER_CD IN
+		  (
+			  SELECT docsUser.USER_CD
+			  FROM DOCS_INSA_DEPT_CD insa
+					   JOIN DOCS_DEPT dept ON insa.DEPT_CD = dept.DEPT_CD
+					   JOIN DOCS_USER docsUser ON dept.DEPT_CD = docsUser.DEPT_CD
+			  WHERE COLUMN_NM = 'PURCHASE_TEAM_YN'
+		  )
+</update>
+
+<update id="updateProtectUser">
+	UPDATE DOCS_USER
+	SET ROLE_GROUP = #{groupCode}
+	WHERE 1 = 0
+</update>
+
+<update id="updatePurchaserPlanTeam">
+	UPDATE DOCS_USER
+	SET ROLE_GROUP = #{groupCode}
+	WHERE USER_CD IN
+		  (
+			  SELECT docsUser.USER_CD
+			  FROM DOCS_INSA_DEPT_CD insa
+					   JOIN DOCS_DEPT dept ON insa.DEPT_CD = dept.DEPT_CD
+					   JOIN DOCS_USER docsUser ON dept.DEPT_CD = docsUser.DEPT_CD
+			  WHERE COLUMN_NM = 'PURCHASE_PLAN_TEAM_YN'
+		  )
+</update>
+
+<update id="updateIlsTeam">
+	UPDATE DOCS_USER
+	SET ROLE_GROUP = #{groupCode}
+	WHERE USER_CD IN
+		  (
+			  SELECT docsUser.USER_CD
+			  FROM DOCS_INSA_DEPT_CD insa
+					   JOIN DOCS_DEPT dept ON insa.DEPT_CD = dept.DEPT_CD
+					   JOIN DOCS_USER docsUser ON dept.DEPT_CD = docsUser.DEPT_CD
+			  WHERE COLUMN_NM = 'ILS_TEAM_YN'
+		  )
+</update>
+
+<update id="updateVendor">
+	UPDATE DOCS_USER
+	SET ROLE_GROUP = #{groupCode}
+	WHERE USER_CD IN
+		  (
+			  SELECT USER_CD
+			  FROM DOCS_USER docsUser
+					   JOIN DOCS_COMPANY company ON docsUser.COMPANY_CD = company.COMPANY_CD
+			  WHERE company.COMPANY_CD != 'COMP_0000000999'
+		  )
+</update>
+
+<update id="updateProductTeam">
+	UPDATE DOCS_USER
+	SET ROLE_GROUP = #{groupCode}
+	WHERE USER_CD IN
+		  (
+			  SELECT docsUser.USER_CD
+			  FROM DOCS_INSA_DEPT_CD insa
+					   JOIN DOCS_DEPT dept ON insa.DEPT_CD = dept.DEPT_CD
+					   JOIN DOCS_USER docsUser ON dept.DEPT_CD = docsUser.DEPT_CD
+			  WHERE COLUMN_NM = 'PRODUCT_TEAM_YN'
+		  )
+</update>
+
+<update id="updateProductDept">
+	UPDATE DOCS_USER
+	SET ROLE_GROUP = #{groupCode}
+	WHERE USER_CD IN
+		  (
+			  SELECT docsUser.USER_CD
+			  FROM DOCS_USER docsUser
+					   JOIN DOCS_DEPT dept ON docsUser.DEPT_CD = dept.DEPT_CD
+			  WHERE dept.DEPT_TYPE = '직'
+		  )
+</update>
+
+<update id="updateNormalUser">
+	UPDATE DOCS_USER
+	SET ROLE_GROUP = #{groupCode}
+	WHERE USER_CD IN
+		  (
+			  SELECT USER_CD
+			  FROM DOCS_USER
+			  WHERE COMPANY_CD = 'COMP_0000000999'
+		  )
+</update>
+
+<update id="updateRoleGroupDept">
+	UPDATE DOCS_USER docsUser
+	SET docsUser.ROLE_GROUP =
+			(
+				SELECT groupMember.GROUP_CODE
+				FROM DOCS_ROLE_GROUP_MEMBER groupMember
+				WHERE groupMember.GROUP_TYPE = 'DEPT'
+				  AND groupMember.MEMBER_CD = docsUser.DEPT_CD
+			)
+	WHERE EXISTS
+			  (
+				  SELECT 0 FROM DOCS_ROLE_GROUP_MEMBER groupMember WHERE
+					  groupMember.GROUP_TYPE = 'DEPT'
+																	 AND groupMember.MEMBER_CD = docsUser.DEPT_CD
+			  )
+</update>
+
+<update id="updateRoleGroupUser">
+	UPDATE DOCS_USER docsUser
+	SET docsUser.ROLE_GROUP =
+			(
+				SELECT groupMember.GROUP_CODE
+				FROM DOCS_ROLE_GROUP_MEMBER groupMember
+				WHERE groupMember.GROUP_TYPE = 'USER'
+				  AND groupMember.MEMBER_CD = docsUser.USER_CD
+					LIMIT 1
+			)
+	WHERE EXISTS
+			  (
+				  SELECT 0 FROM DOCS_ROLE_GROUP_MEMBER groupMember WHERE
+					  groupMember.GROUP_TYPE = 'USER'
+																	 AND groupMember.MEMBER_CD = docsUser.USER_CD
+			  )
+</update>
+</mapper>

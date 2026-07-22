@@ -1,0 +1,2966 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--<mapper namespace="sql.fromItnToDocs">-->
+
+<!--	<select id="selectConfig" resultType="HashMap">-->
+<!--		SELECT SYSTEM_CONFIG_CD, SYSTEM_CONFIG_VALUE FROM DOCS_SYSTEM_CONFIG WHERE SYSTEM_CONFIG_GROUP = 'DB_INTERFACE_CONFIG'-->
+<!--	</select>-->
+
+<!--	<select id="selectNewDataItn" resultType="HashMap">-->
+<!--		SELECT T2.* FROM-->
+<!--		(-->
+<!--			SELECT ROW_NUMBER() OVER(ORDER BY CN_SERIAL) AS RN, T1.*-->
+<!--	         FROM #{TABLE_NAME} T1-->
+<!--	         WHERE MOVED_TO_DOCS = 'N'-->
+<!--	         ORDER BY CN_SERIAL-->
+<!--		) T2 WHERE RN <![CDATA[ <= ]]> #{unit}-->
+<!--	</select>-->
+
+<!--	<select id="selectNewItemItn" resultType="HashMap">-->
+<!--		SELECT T2.* FROM-->
+<!--		(-->
+<!--			SELECT ROW_NUMBER() OVER(ORDER BY WERKS, CN_PART_REV, CN_PDM_PART_NO, CN_JOB_NO) AS RN, T1.*-->
+<!--	         FROM ITN_ITEM T1-->
+<!--	         WHERE MOVED_TO_DOCS = 'N'-->
+<!--	         ORDER BY WERKS, CN_PART_REV, CN_PDM_PART_NO, CN_JOB_NO-->
+<!--		) T2 WHERE RN <![CDATA[ <= ]]> #{unit}-->
+<!--	</select>-->
+
+<!--	<select id="selectNewDataTemp" resultType="HashMap">-->
+<!--		SELECT T2.* FROM-->
+<!--		(-->
+<!--			SELECT ROW_NUMBER() OVER(ORDER BY CN_SERIAL) AS RN, T1.*-->
+<!--	         FROM #{TABLE_NAME} T1-->
+<!--	         WHERE MOVED = 'N'-->
+<!--	         ORDER BY CN_SERIAL-->
+<!--		) T2 WHERE RN <![CDATA[ <= ]]> #{unit}-->
+<!--	</select>-->
+
+
+<!--	&lt;!&ndash;  삭제 할것  &ndash;&gt;-->
+<!--	<select id="selectSWFilePath" resultType="HashMap">-->
+<!--		SELECT FILE_PATH_NM FROM DOCS_SW_FILE-->
+<!--	</select>-->
+
+<!--	<update id="updateMovedData">-->
+<!--		UPDATE #{TABLE_NAME} SET-->
+<!--			MOVED_TO_DOCS = #{RESULT}-->
+<!--		WHERE-->
+<!--			CN_SERIAL = #{CN_SERIAL}-->
+<!--			<if test='OBJECT_ID != null'>-->
+<!--				AND OBJECT_ID = #{OBJECT_ID}-->
+<!--			</if>-->
+<!--			<if test='FILE_NO != null'>-->
+<!--				AND FILE_NO = #{FILE_NO}-->
+<!--			</if>-->
+<!--			<if test='ACCESS_UID != null'>-->
+<!--				AND ACCESS_UID = #{ACCESS_UID}-->
+<!--			</if>-->
+<!--	</update>-->
+
+<!--	<update id="updateMovedItem">-->
+<!--		UPDATE #{TABLE_NAME} SET-->
+<!--			MOVED_TO_DOCS = #{RESULT}-->
+<!--		WHERE-->
+<!--			WERKS = #{WERKS}-->
+<!--			AND CN_PART_REV = #{CN_PART_REV}-->
+<!--			AND CN_PDM_PART_NO = #{CN_PDM_PART_NO}-->
+<!--			AND CN_JOB_NO = #{CN_JOB_NO}-->
+<!--	</update>-->
+
+<!--	<select id="selectFileProtect" resultType="HashMap">-->
+<!--		 SELECT PROTECT_YN FROM #{TABLE_NAME} WHERE CN_SERIAL = #{CN_SERIAL} AND OBJECT_ID = #{OBJECT_ID}-->
+<!--	</select>-->
+
+<!--	<select id="selectDocsObjectCount" resultType="Integer">-->
+<!--	  SELECT-->
+<!--	    COUNT(*) AS COUNT-->
+<!--	  FROM #{TABLE_NAME}-->
+<!--	  WHERE OBJECT_ID = #{OBJECT_ID}-->
+<!--	  	<if test='FILE_NO != null'>-->
+<!--			AND FILE_NO = #{FILE_NO}-->
+<!--		</if>-->
+<!--		<if test='ACCESS_UID != null'>-->
+<!--			AND ACCESS_UID = #{ACCESS_UID}-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	<select id="selectDocsEcoCount" resultType="Integer">-->
+<!--	  SELECT-->
+<!--	    COUNT(*) AS COUNT-->
+<!--	  FROM DOCS_ECO_HISTORY-->
+<!--	  WHERE CN_SERIAL = #{CN_SERIAL}-->
+<!--	  	AND ECN_NO = #{ECN_NO}-->
+<!--		AND SEQ_NO = #{SEQ_NO}-->
+<!--	</select>-->
+
+<!--	<select id="selectDocsItemCount" resultType="Integer">-->
+<!--	  SELECT-->
+<!--	    COUNT(*) AS COUNT-->
+<!--	  FROM DOCS_ITEM-->
+<!--	  WHERE WERKS = #{WERKS}-->
+<!--		AND CN_PART_REV = #{CN_PART_REV}-->
+<!--		AND CN_PDM_PART_NO = #{CN_PDM_PART_NO}-->
+<!--		AND CN_JOB_NO = #{CN_JOB_NO}-->
+<!--	</select>-->
+
+<!--	<insert id="insertDocsSw">-->
+<!--		INSERT INTO DOCS_SW (-->
+<!--			CN_SERIAL,-->
+<!--			OBJECT_ID,-->
+<!--			BUSINESS_AREA_CD,-->
+<!--			BUSINESS_TYPE_CD,-->
+<!--			SW_CLASS_CD1,-->
+<!--			SW_CLASS_NM1,-->
+<!--			SW_CLASS_CD2,-->
+<!--			SW_CLASS_NM2,-->
+<!--			SW_TYPE_CD,-->
+<!--			PRODUCT_CD,-->
+<!--			ECN_NO,-->
+<!--			ECN_INSERT_UID,-->
+<!--			SW_NO,-->
+<!--			REV_NO,-->
+<!--			SW_NM,-->
+<!--			STATUS_CD,-->
+<!--			SW_VERSION_NO,-->
+<!--			DOC_VERSION_NO,-->
+<!--			PROJECT_CD,-->
+<!--			PROJECT_NM,-->
+<!--			DISTRIBUTE_TYPE_CD,-->
+<!--			STD_GAPP_DT,-->
+<!--			CHANGE_GAPP_DT,-->
+<!--			DESCRIPTION,-->
+<!--			SECURITY_TYPE_CD,-->
+<!--			PROTECT_YN,-->
+<!--			INSERT_DEPT_NM,-->
+<!--			INSERT_UID,-->
+<!--			INSERT_DT,-->
+<!--			UPDATE_DEPT_NM,-->
+<!--			UPDATE_UID,-->
+<!--			UPDATE_DT,-->
+<!--			INTERFACE_DT,-->
+<!--			VALID_TYPE)-->
+<!--		VALUES (-->
+<!--			#{CN_SERIAL},-->
+<!--		 	#{OBJECT_ID},-->
+<!--			#{BUSINESS_AREA_CD},-->
+<!--			#{BUSINESS_TYPE_CD},-->
+<!--			#{SW_CLASS_CD1},-->
+<!--			#{SW_CLASS_NM1},-->
+<!--			#{SW_CLASS_CD2},-->
+<!--			#{SW_CLASS_NM2},-->
+<!--			#{SW_TYPE_CD},-->
+<!--			#{PRODUCT_CD},-->
+<!--			#{ECN_NO},-->
+<!--			#{ECN_INSERT_UID},-->
+<!--			#{SW_NO},-->
+<!--			#{REV_NO},-->
+<!--			#{SW_NM},-->
+<!--			#{STATUS_CD},-->
+<!--			#{SW_VERSION_NO},-->
+<!--			#{DOC_VERSION_NO},-->
+<!--			#{PROJECT_CD},-->
+<!--			#{PROJECT_NM},-->
+<!--			#{DISTRIBUTE_TYPE_CD},-->
+<!--			#{STD_GAPP_DT},-->
+<!--			#{CHANGE_GAPP_DT},-->
+<!--			#{DESCRIPTION},-->
+<!--			#{SECURITY_TYPE_CD},-->
+<!--			#{PROTECT_YN},-->
+<!--			#{INSERT_DEPT_NM},-->
+<!--			#{INSERT_UID},-->
+<!--			#{INSERT_DT},-->
+<!--			#{UPDATE_DEPT_NM},-->
+<!--			#{UPDATE_UID},-->
+<!--			#{UPDATE_DT},-->
+<!--			#{INTERFACE_DT},-->
+<!--			#{VALID_TYPE}-->
+<!--		 )-->
+<!--	</insert>-->
+
+<!--	<insert id="insertDocsSwMember">-->
+<!--		INSERT INTO DOCS_SW_MEMBER (-->
+<!--			OBJECT_ID,-->
+<!--			ACCESS_UID-->
+<!--		)-->
+<!--		VALUES (-->
+<!--			#{OBJECT_ID},-->
+<!--			#{ACCESS_UID}-->
+<!--		)-->
+<!--	</insert>-->
+
+<!--	<insert id="insertDocsSwFile">-->
+<!--		INSERT INTO DOCS_SW_FILE (-->
+<!--			CN_SERIAL,-->
+<!--			OBJECT_ID,-->
+<!--			FILE_NO,-->
+<!--			FILE_PATH_NM,-->
+<!--			ORG_FILE_NM,-->
+<!--			FILE_NM,-->
+<!--			CHECK_SUM,-->
+<!--			DISTRIBUTE_TYPE_CD,-->
+<!--			FILE_SIZE,-->
+<!--			INTERFACE_DT-->
+<!--		)-->
+<!--		VALUES (-->
+<!--			#{CN_SERIAL},-->
+<!--			#{OBJECT_ID},-->
+<!--			#{FILE_NO},-->
+<!--			#{FILE_PATH_NM},-->
+<!--			#{ORG_FILE_NM},-->
+<!--			#{FILE_NM},-->
+<!--			#{CHECK_SUM},-->
+<!--			#{DISTRIBUTE_TYPE_CD},-->
+<!--			#{FILE_SIZE},-->
+<!--			#{INTERFACE_DT}-->
+<!--		)-->
+<!--	</insert>-->
+
+<!--	<insert id="insertDocsDrawing">-->
+<!--		INSERT INTO DOCS_DRAWING (-->
+<!--			CN_SERIAL,-->
+<!--			OBJECT_ID,-->
+<!--			BUSINESS_AREA_CD,-->
+<!--			BUSINESS_TYPE_CD,-->
+<!--			ECN_NO,-->
+<!--			ECN_INSERT_UID,-->
+<!--			DRAWING_TYPE,-->
+<!--			DRAWING_NO,-->
+<!--			DRAWING_REV,-->
+<!--			REV_NO,-->
+<!--			DRAWING_NM,-->
+<!--			DISTRIBUTE_TYPE_CD,-->
+<!--			STATUS_CD,-->
+<!--			CURRENT_PAGE_NO,-->
+<!--			TOTAL_PAGE_NO,-->
+<!--			EFFECTIVE_DT,-->
+<!--			FILE_PATH_NM,-->
+<!--			ORG_FILE_NM,-->
+<!--			FILE_NM,-->
+<!--			FILE_SIZE,-->
+<!--			STD_GAPP_DT,-->
+<!--			CHANGE_GAPP_DT,-->
+<!--			PURCHASER_UID,-->
+<!--			VENDOR_CD,-->
+<!--			DESCRIPTION,-->
+<!--			SECURITY_TYPE_CD,-->
+<!--			PROTECT_YN,-->
+<!--			INSERT_DEPT_NM,-->
+<!--			INSERT_UID,-->
+<!--			INSERT_DT,-->
+<!--			UPDATE_DEPT_NM,-->
+<!--			UPDATE_UID,-->
+<!--			UPDATE_DT,-->
+<!--			INTERFACE_DT,-->
+<!--			PRODUCT_CD,-->
+<!--			PLANT_CD,-->
+<!--			PDM_PART_NO,-->
+<!--			PART_REV,-->
+<!--			INSERT_USER_NM,-->
+<!--			ECN_TITLE,-->
+<!--			ECN_VENDOR_USER,-->
+<!--			VALID_TYPE,-->
+<!--			DISTRIBUTION_YN-->
+<!--		)-->
+<!--		VALUES (-->
+<!--			#{CN_SERIAL},-->
+<!--			#{OBJECT_ID},-->
+<!--			#{BUSINESS_AREA_CD},-->
+<!--			#{BUSINESS_TYPE_CD},-->
+<!--			#{ECN_NO},-->
+<!--			#{ECN_INSERT_UID},-->
+<!--			#{DRAWING_TYPE},-->
+<!--			#{DRAWING_NO},-->
+<!--			#{DRAWING_REV},-->
+<!--			#{REV_NO},-->
+<!--			#{DRAWING_NM},-->
+<!--			#{DISTRIBUTE_TYPE_CD},-->
+<!--			#{STATUS_CD},-->
+<!--			#{CURRENT_PAGE_NO},-->
+<!--			#{TOTAL_PAGE_NO},-->
+<!--			#{EFFECTIVE_DT},-->
+<!--			#{FILE_PATH_NM},-->
+<!--			#{ORG_FILE_NM},-->
+<!--			#{FILE_NM},-->
+<!--			#{FILE_SIZE},-->
+<!--			#{STD_GAPP_DT},-->
+<!--			#{CHANGE_GAPP_DT},-->
+<!--			#{PURCHASER_UID},-->
+<!--			#{VENDOR_CD},-->
+<!--			#{DESCRIPTION},-->
+<!--			#{SECURITY_TYPE_CD},-->
+<!--			#{PROTECT_YN},-->
+<!--			#{INSERT_DEPT_NM},-->
+<!--			#{INSERT_UID},-->
+<!--			#{INSERT_DT},-->
+<!--			#{UPDATE_DEPT_NM},-->
+<!--			#{UPDATE_UID},-->
+<!--			#{UPDATE_DT},-->
+<!--			#{INTERFACE_DT},-->
+<!--			#{PRODUCT_CD},-->
+<!--			#{PLANT_CD},-->
+<!--			#{PDM_PART_NO},-->
+<!--			#{PART_REV},-->
+<!--			#{INSERT_USER_NM},-->
+<!--			#{ECN_TITLE},-->
+<!--			#{ECN_VENDOR_USER},-->
+<!--			#{VALID_TYPE},-->
+<!--			#{DISTRIBUTION_YN}-->
+<!--		)-->
+<!--	</insert>-->
+
+<!--	<insert id="insertDocsDrawingMember">-->
+<!--		INSERT INTO DOCS_DRAWING_MEMBER (-->
+<!--			CN_SERIAL,-->
+<!--			OBJECT_ID,-->
+<!--			ACCESS_UID,-->
+<!--			INTERFACE_DT-->
+<!--		)-->
+<!--		VALUES (-->
+<!--			#{CN_SERIAL},-->
+<!--			#{OBJECT_ID},-->
+<!--			#{ACCESS_UID},-->
+<!--			#{INTERFACE_DT}-->
+<!--		)-->
+<!--	</insert>-->
+
+<!--	<insert id="insertDocsDocument">-->
+<!--		INSERT INTO DOCS_DOCUMENT (-->
+<!--			CN_SERIAL,-->
+<!--			OBJECT_ID,-->
+<!--			BUSINESS_AREA_CD,-->
+<!--			BUSINESS_TYPE_CD,-->
+<!--			DOC_CLASS_CD1,-->
+<!--			DOC_CLASS_NM1,-->
+<!--			DOC_CLASS_CD2,-->
+<!--			DOC_CLASS_NM2,-->
+<!--			PRODUCT_CD,-->
+<!--			ECN_NO,-->
+<!--			ECN_INSERT_UID,-->
+<!--			DOCUMENT_NO,-->
+<!--			REV_NO,-->
+<!--			DOCUMENT_NM,-->
+<!--			DOCUMENT_ENNM,-->
+<!--			ACCOUNT_NM,-->
+<!--			STATUS_CD,-->
+<!--			TOTAL_SHEET,-->
+<!--			PROJECT_CD,-->
+<!--			PROJECT_NM,-->
+<!--			DISTRIBUTE_TYPE_CD,-->
+<!--			STD_GAPP_DT,-->
+<!--			CHANGE_GAPP_DT,-->
+<!--			SECURITY_TYPE_CD,-->
+<!--			PROTECT_YN,-->
+<!--			DESCRIPTION,-->
+<!--			INSERT_DEPT_NM,-->
+<!--			INSERT_UID,-->
+<!--			INSERT_DT,-->
+<!--			UPDATE_DEPT_NM,-->
+<!--			UPDATE_UID,-->
+<!--			UPDATE_DT,-->
+<!--			INTERFACE_DT,-->
+<!--			VALID_TYPE-->
+<!--		)-->
+<!--		VALUES (-->
+<!--			#{CN_SERIAL},-->
+<!--			#{OBJECT_ID},-->
+<!--			#{BUSINESS_AREA_CD},-->
+<!--			#{BUSINESS_TYPE_CD},-->
+<!--			#{DOC_CLASS_CD1},-->
+<!--			#{DOC_CLASS_NM1},-->
+<!--			#{DOC_CLASS_CD2},-->
+<!--			#{DOC_CLASS_NM2},-->
+<!--			#{PRODUCT_CD},-->
+<!--			#{ECN_NO},-->
+<!--			#{ECN_INSERT_UID},-->
+<!--			#{DOCUMENT_NO},-->
+<!--			#{REV_NO},-->
+<!--			#{DOCUMENT_NM},-->
+<!--			#{DOCUMENT_ENNM},-->
+<!--			#{ACCOUNT_NM},-->
+<!--			#{STATUS_CD},-->
+<!--			#{TOTAL_SHEET},-->
+<!--			#{PROJECT_CD},-->
+<!--			#{PROJECT_NM},-->
+<!--			#{DISTRIBUTE_TYPE_CD},-->
+<!--			#{STD_GAPP_DT},-->
+<!--			#{CHANGE_GAPP_DT},-->
+<!--			#{SECURITY_TYPE_CD},-->
+<!--			#{PROTECT_YN},-->
+<!--			#{DESCRIPTION},-->
+<!--			#{INSERT_DEPT_NM},-->
+<!--			#{INSERT_UID},-->
+<!--			#{INSERT_DT},-->
+<!--			#{UPDATE_DEPT_NM},-->
+<!--			#{UPDATE_UID},-->
+<!--			#{UPDATE_DT},-->
+<!--			#{INTERFACE_DT},-->
+<!--			#{VALID_TYPE}-->
+<!--		)-->
+<!--	</insert>-->
+
+
+<!--	<insert id="insertDocsDocumentMember">-->
+<!--		INSERT INTO DOCS_DOCUMENT_MEMBER (-->
+<!--			CN_SERIAL,-->
+<!--			OBJECT_ID,-->
+<!--			ACCESS_UID,-->
+<!--			INTERFACE_DT-->
+<!--		)-->
+<!--		VALUES (-->
+<!--			#{CN_SERIAL},-->
+<!--			#{OBJECT_ID},-->
+<!--			#{ACCESS_UID},-->
+<!--			#{INTERFACE_DT}-->
+<!-- 		)-->
+<!--	</insert>-->
+
+<!--	<insert id="insertDocsDocumentFile">-->
+<!--		INSERT INTO DOCS_DOCUMENT_FILE (-->
+<!--			CN_SERIAL,-->
+<!--			OBJECT_ID,-->
+<!--			FILE_NO,-->
+<!--			FILE_PATH_NM,-->
+<!--			ORG_FILE_NM,-->
+<!--			FILE_NM,-->
+<!--			DISTRIBUTE_TYPE_CD,-->
+<!--			FILE_SIZE,-->
+<!--			INTERFACE_DT-->
+<!--		)-->
+<!--		VALUES (-->
+<!--			#{CN_SERIAL},-->
+<!--			#{OBJECT_ID},-->
+<!--			#{FILE_NO},-->
+<!--			#{FILE_PATH_NM},-->
+<!--			#{ORG_FILE_NM},-->
+<!--			#{FILE_NM},-->
+<!--			#{DISTRIBUTE_TYPE_CD},-->
+<!--			#{FILE_SIZE},-->
+<!--			#{INTERFACE_DT}-->
+<!--		)-->
+<!--	</insert>-->
+
+<!--	<insert id="insertDocsProductDocument">-->
+<!--		INSERT INTO DOCS_PRODUCT_DOCUMENT (-->
+<!--			CN_SERIAL,-->
+<!--			OBJECT_ID,-->
+<!--			BUSINESS_AREA_CD,-->
+<!--			BUSINESS_TYPE_CD,-->
+<!--			DOC_CLASS_CD1,-->
+<!--			DOC_CLASS_NM1,-->
+<!--			DOC_CLASS_CD2,-->
+<!--			DOC_CLASS_NM2,-->
+<!--			DOCUMENT_NO,-->
+<!--			REV_NO,-->
+<!--			DOCUMENT_NM,-->
+<!--			STATUS_CD,-->
+<!--			TOTAL_PAGE_CNT,-->
+<!--			SECURITY_TYPE_CD,-->
+<!--			APPLY_PRODUCT_NO,-->
+<!--			DISTRIBUTE_TYPE_CD,-->
+<!--			APPLY_HOGI_NO,-->
+<!--			CALL_ID,-->
+<!--			ECN_NO,-->
+<!--			PROCESS_TYPE_CD,-->
+<!--			DESCRIPTION,-->
+<!--			INSERT_DEPT_NM,-->
+<!--			INSERT_UID,-->
+<!--			INSERT_DT,-->
+<!--			UPDATE_DEPT_NM,-->
+<!--			UPDATE_UID,-->
+<!--			UPDATE_DT,-->
+<!--			INTERFACE_DT-->
+<!--		)-->
+<!--		VALUES (-->
+<!--			#{CN_SERIAL},-->
+<!--			#{OBJECT_ID},-->
+<!--			#{BUSINESS_AREA_CD},-->
+<!--			#{BUSINESS_TYPE_CD},-->
+<!--			#{DOC_CLASS_CD1},-->
+<!--			#{DOC_CLASS_NM1},-->
+<!--			#{DOC_CLASS_CD2},-->
+<!--			#{DOC_CLASS_NM2},-->
+<!--			#{DOCUMENT_NO},-->
+<!--			#{REV_NO},-->
+<!--			#{DOCUMENT_NM},-->
+<!--			#{STATUS_CD},-->
+<!--			#{TOTAL_PAGE_CNT},-->
+<!--			#{SECURITY_TYPE_CD},-->
+<!--			#{APPLY_PRODUCT_NO},-->
+<!--			#{DISTRIBUTE_TYPE_CD},-->
+<!--			#{APPLY_HOGI_NO},-->
+<!--			#{CALL_ID},-->
+<!--			#{ECN_NO},-->
+<!--			#{PROCESS_TYPE_CD},-->
+<!--			#{DESCRIPTION},-->
+<!--			#{INSERT_DEPT_NM},-->
+<!--			#{INSERT_UID},-->
+<!--			#{INSERT_DT},-->
+<!--			#{UPDATE_DEPT_NM},-->
+<!--			#{UPDATE_UID},-->
+<!--			#{UPDATE_DT},-->
+<!--			#{INTERFACE_DT}-->
+<!--		)-->
+<!--	</insert>-->
+
+<!--	<insert id="insertDocsProductDocumentFile">-->
+<!--		INSERT INTO DOCS_PRODUCT_DOCUMENT_FILE (-->
+<!--			CN_SERIAL,-->
+<!--			OBJECT_ID,-->
+<!--			FILE_NO,-->
+<!--			FILE_PATH_NM,-->
+<!--			ORG_FILE_NM,-->
+<!--			FILE_NM,-->
+<!--			DISTRIBUTE_TYPE_CD,-->
+<!--			FILE_SIZE,-->
+<!--			INTERFACE_DT-->
+<!--		)-->
+<!--		VALUES (-->
+<!--			#{CN_SERIAL},-->
+<!--			#{OBJECT_ID},-->
+<!--			#{FILE_NO},-->
+<!--			#{FILE_PATH_NM},-->
+<!--			#{ORG_FILE_NM},-->
+<!--			#{FILE_NM},-->
+<!--			#{DISTRIBUTE_TYPE_CD},-->
+<!--			#{FILE_SIZE},-->
+<!--			#{INTERFACE_DT}-->
+<!--		)-->
+<!--	</insert>-->
+
+<!--	<insert id="insertDocsProductSw">-->
+<!--		INSERT INTO DOCS_PRODUCT_SW (-->
+<!--			CN_SERIAL,-->
+<!--			OBJECT_ID,-->
+<!--			BUSINESS_AREA_CD,-->
+<!--			BUSINESS_TYPE_CD,-->
+<!--			ECN_NO,-->
+<!--			PRODUCT_NO,-->
+<!--			SW_CLASS_CD1,-->
+<!--			SW_CLASS_NM1,-->
+<!--			SW_CLASS_CD2,-->
+<!--			SW_CLASS_NM2,-->
+<!--			SW_NO,-->
+<!--			REV_NO,-->
+<!--			SW_NM,-->
+<!--			SW_VERSION_NO,-->
+<!--			STATUS_CD,-->
+<!--			DESCRIPTION,-->
+<!--			SECURITY_TYPE_CD,-->
+<!--			INSERT_DEPT_NM,-->
+<!--			INSERT_UID,-->
+<!--			INSERT_DT,-->
+<!--			UPDATE_DEPT_NM,-->
+<!--			UPDATE_UID,-->
+<!--			UPDATE_DT,-->
+<!--			INTERFACE_DT,-->
+<!--			DISTRIBUTE_TYPE_CD-->
+<!--		)-->
+<!--		VALUES (-->
+<!--			#{CN_SERIAL},-->
+<!--			#{OBJECT_ID},-->
+<!--			#{BUSINESS_AREA_CD},-->
+<!--			#{BUSINESS_TYPE_CD},-->
+<!--			#{ECN_NO},-->
+<!--			#{PRODUCT_NO},-->
+<!--			#{SW_CLASS_CD1},-->
+<!--			#{SW_CLASS_NM1},-->
+<!--			#{SW_CLASS_CD2},-->
+<!--			#{SW_CLASS_NM2},-->
+<!--			#{SW_NO},-->
+<!--			#{REV_NO},-->
+<!--			#{SW_NM},-->
+<!--			#{SW_VERSION_NO},-->
+<!--			#{STATUS_CD},-->
+<!--			#{DESCRIPTION},-->
+<!--			#{SECURITY_TYPE_CD},-->
+<!--			#{INSERT_DEPT_NM},-->
+<!--			#{INSERT_UID},-->
+<!--			#{INSERT_DT},-->
+<!--			#{UPDATE_DEPT_NM},-->
+<!--			#{UPDATE_UID},-->
+<!--			#{UPDATE_DT},-->
+<!--			#{INTERFACE_DT},-->
+<!--			#{DISTRIBUTE_TYPE_CD}-->
+<!--		)-->
+<!--	</insert>-->
+<!--	<insert id="insertDocsProductSwFile">-->
+<!--		INSERT INTO DOCS_PRODUCT_SW_FILE (-->
+<!--			CN_SERIAL,-->
+<!--			OBJECT_ID,-->
+<!--			FILE_NO,-->
+<!--			FILE_PATH_NM,-->
+<!--			ORG_FILE_NM,-->
+<!--			FILE_NM,-->
+<!--			DISTRIBUTE_TYPE_CD,-->
+<!--			FILE_SIZE,-->
+<!--			CHECK_SUM,-->
+<!--			INTERFACE_DT-->
+<!--		)-->
+<!--		VALUES (-->
+<!--			#{CN_SERIAL},-->
+<!--			#{OBJECT_ID},-->
+<!--			#{FILE_NO},-->
+<!--			#{FILE_PATH_NM},-->
+<!--			#{ORG_FILE_NM},-->
+<!--			#{FILE_NM},-->
+<!--			#{DISTRIBUTE_TYPE_CD},-->
+<!--			#{FILE_SIZE},-->
+<!--			#{CHECK_SUM},-->
+<!--			#{INTERFACE_DT}-->
+<!--		)-->
+<!--	</insert>-->
+
+<!--	<insert id="insertDocsEcoHistory">-->
+<!--		INSERT INTO DOCS_ECO_HISTORY (-->
+<!--			CN_SERIAL,-->
+<!--			BUSINESS_AREA_CD,-->
+<!--			BUSINESS_TYPE_CD,-->
+<!--			ECN_NO,-->
+<!--			UPPER_PART_NO,-->
+<!--			UPPER_PART_REV_NO,-->
+<!--			UPPER_DRAWING_NO,-->
+<!--			UPPER_DRAWING_REV_NO,-->
+<!--			BEFORE_PART_NO,-->
+<!--			BEFORE_PART_REV_NO,-->
+<!--			BEFORE_DRAWING_NO,-->
+<!--			BEFORE_DRAWING_REV_NO,-->
+<!--			AFTER_PART_NO,-->
+<!--			AFTER_PART_REV_NO,-->
+<!--			AFTER_DRAWING_NO,-->
+<!--			AFTER_DRAWING_REV_NO,-->
+<!--			USE_TYPE_CD,-->
+<!--			ECN_INSERT_UID,-->
+<!--			ECN_APPROVAL_DT,-->
+<!--			SEQ_NO,-->
+<!--			INTERFACE_DT-->
+<!--		)-->
+<!--		VALUES (-->
+<!--			#{CN_SERIAL},-->
+<!--			#{BUSINESS_AREA_CD},-->
+<!--			#{BUSINESS_TYPE_CD},-->
+<!--			#{ECN_NO},-->
+<!--			#{UPPER_PART_NO},-->
+<!--			#{UPPER_PART_REV_NO},-->
+<!--			#{UPPER_DRAWING_NO},-->
+<!--			#{UPPER_DRAWING_REV_NO},-->
+<!--			#{BEFORE_PART_NO},-->
+<!--			#{BEFORE_PART_REV_NO},-->
+<!--			#{BEFORE_DRAWING_NO},-->
+<!--			#{BEFORE_DRAWING_REV_NO},-->
+<!--			#{AFTER_PART_NO},-->
+<!--			#{AFTER_PART_REV_NO},-->
+<!--			#{AFTER_DRAWING_NO},-->
+<!--			#{AFTER_DRAWING_REV_NO},-->
+<!--			#{USE_TYPE_CD},-->
+<!--			#{ECN_INSERT_UID},-->
+<!--			#{ECN_APPROVAL_DT},-->
+<!--			#{SEQ_NO},-->
+<!--			#{INTERFACE_DT}-->
+<!--		)-->
+<!--	</insert>-->
+
+
+<!--	<insert id="insertDocsItem">-->
+<!--		INSERT INTO DOCS_ITEM (-->
+<!--			   SERIAL,-->
+<!--			   ITYPE,-->
+<!--			   MATNR,-->
+<!--			   CODE,-->
+<!--			   WERKS,-->
+<!--			   C0001,-->
+<!--			   C0002_1,-->
+<!--			   C0002_2,-->
+<!--			   C0003,-->
+<!--			   C0004,-->
+<!--			   C0005_1,-->
+<!--			   C0005_2,-->
+<!--			   C0006,-->
+<!--			   C0007_1,-->
+<!--			   C0007_2,-->
+<!--			   C0007_3,-->
+<!--			   C0008_1,-->
+<!--			   C0008_2,-->
+<!--			   C0008_3,-->
+<!--			   C0009,-->
+<!--			   C0010,-->
+<!--			   C0011_1,-->
+<!--			   C0011_2,-->
+<!--			   C0013,-->
+<!--			   C0014,-->
+<!--			   C0017,-->
+<!--			   C0018,-->
+<!--			   C0019,-->
+<!--			   C0020,-->
+<!--			   C0021,-->
+<!--			   C0022,-->
+<!--			   C0023,-->
+<!--			   C0027,-->
+<!--			   C0028,-->
+<!--			   C0030,-->
+<!--			   C0032,-->
+<!--			   C0034,-->
+<!--			   C0037,-->
+<!--			   REQID,-->
+<!--			   CN_ERP_TYPE,-->
+<!--			   CN_PREV_MAT_CODE,-->
+<!--			   OBJECT_ID,-->
+<!--			   CN_RESULT,-->
+<!--			   CN_MESSAGE,-->
+<!--			   E_RETURN,-->
+<!--			   C0038,-->
+<!--			   INTERFACE_DT,-->
+<!--			   CN_PART_REV,-->
+<!--			   CN_PDM_PART_NO,-->
+<!--			   CN_JOB_NO-->
+<!--		)-->
+<!--		VALUES (-->
+<!--			   #{SERIAL},-->
+<!--			   #{ITYPE},-->
+<!--			   #{MATNR},-->
+<!--			   #{CODE},-->
+<!--			   #{WERKS},-->
+<!--			   #{C0001},-->
+<!--			   #{C0002_1},-->
+<!--			   #{C0002_2},-->
+<!--			   #{C0003},-->
+<!--			   #{C0004},-->
+<!--			   #{C0005_1},-->
+<!--			   #{C0005_2},-->
+<!--			   #{C0006},-->
+<!--			   #{C0007_1},-->
+<!--			   #{C0007_2},-->
+<!--			   #{C0007_3},-->
+<!--			   #{C0008_1},-->
+<!--			   #{C0008_2},-->
+<!--			   #{C0008_3},-->
+<!--			   #{C0009},-->
+<!--			   #{C0010},-->
+<!--			   #{C0011_1},-->
+<!--			   #{C0011_2},-->
+<!--			   #{C0013},-->
+<!--			   #{C0014},-->
+<!--			   #{C0017},-->
+<!--			   #{C0018},-->
+<!--			   #{C0019},-->
+<!--			   #{C0020},-->
+<!--			   #{C0021},-->
+<!--			   #{C0022},-->
+<!--			   #{C0023},-->
+<!--			   #{C0027},-->
+<!--			   #{C0028},-->
+<!--			   #{C0030},-->
+<!--			   #{C0032},-->
+<!--			   #{C0034},-->
+<!--			   #{C0037},-->
+<!--			   #{REQID},-->
+<!--			   #{CN_ERP_TYPE},-->
+<!--			   #{CN_PRE#{MAT_CODE},-->
+<!--			   #{OBJECT_ID},-->
+<!--			   #{CN_RESULT},-->
+<!--			   #{CN_MESSAGE},-->
+<!--			   #{E_RETURN},-->
+<!--			   #{C0038},-->
+<!--			   #{INTERFACE_DT},-->
+<!--			   #{CN_PART_REV},-->
+<!--			   #{CN_PDM_PART_NO},-->
+<!--			   #{CN_JOB_NO}-->
+<!--		)-->
+<!--	</insert>-->
+
+
+<!--	<update id="updateDocsSw">-->
+<!--		UPDATE DOCS_SW-->
+<!--		SET-->
+<!--			CN_SERIAL = #{CN_SERIAL},-->
+<!--			BUSINESS_AREA_CD = #{BUSINESS_AREA_CD},-->
+<!--			BUSINESS_TYPE_CD = #{BUSINESS_TYPE_CD},-->
+<!--			SW_CLASS_CD1 = #{SW_CLASS_CD1},-->
+<!--			SW_CLASS_NM1 = #{SW_CLASS_NM1},-->
+<!--			SW_CLASS_CD2 = #{SW_CLASS_CD2},-->
+<!--			SW_CLASS_NM2 = #{SW_CLASS_NM2},-->
+<!--			SW_TYPE_CD = #{SW_TYPE_CD},-->
+<!--			PRODUCT_CD = #{PRODUCT_CD},-->
+<!--			ECN_NO = #{ECN_NO},-->
+<!--			ECN_INSERT_UID = #{ECN_INSERT_UID},-->
+<!--			SW_NO = #{SW_NO},-->
+<!--			REV_NO = #{REV_NO},-->
+<!--			SW_NM = #{SW_NM},-->
+<!--			STATUS_CD = #{STATUS_CD},-->
+<!--			SW_VERSION_NO = #{SW_VERSION_NO},-->
+<!--			DOC_VERSION_NO = #{DOC_VERSION_NO},-->
+<!--			PROJECT_CD = #{PROJECT_CD},-->
+<!--			PROJECT_NM = #{PROJECT_NM},-->
+<!--			DISTRIBUTE_TYPE_CD = #{DISTRIBUTE_TYPE_CD},-->
+<!--			STD_GAPP_DT = #{STD_GAPP_DT},-->
+<!--			CHANGE_GAPP_DT = #{CHANGE_GAPP_DT},-->
+<!--			DESCRIPTION = #{DESCRIPTION},-->
+<!--			SECURITY_TYPE_CD = #{SECURITY_TYPE_CD},-->
+<!--			PROTECT_YN = #{PROTECT_YN},-->
+<!--			INSERT_DEPT_NM = #{INSERT_DEPT_NM},-->
+<!--			INSERT_UID = #{INSERT_UID},-->
+<!--			INSERT_DT = #{INSERT_DT},-->
+<!--			UPDATE_DEPT_NM = #{UPDATE_DEPT_NM},-->
+<!--			UPDATE_UID = #{UPDATE_UID},-->
+<!--			UPDATE_DT = #{UPDATE_DT},-->
+<!--			INTERFACE_DT = #{INTERFACE_DT},-->
+<!--			VALID_TYPE = #{VALID_TYPE}-->
+<!--    	WHERE-->
+<!--    		OBJECT_ID = #{OBJECT_ID}-->
+<!--	</update>-->
+
+<!--	<update id="updateDocsDocument">-->
+<!--		UPDATE DOCS_DOCUMENT-->
+<!--		SET-->
+<!--			CN_SERIAL = #{CN_SERIAL},-->
+<!--			BUSINESS_AREA_CD = #{BUSINESS_AREA_CD},-->
+<!--			BUSINESS_TYPE_CD = #{BUSINESS_TYPE_CD},-->
+<!--			DOC_CLASS_CD1 = #{DOC_CLASS_CD1},-->
+<!--			DOC_CLASS_NM1 = #{DOC_CLASS_NM1},-->
+<!--			DOC_CLASS_CD2 = #{DOC_CLASS_CD2},-->
+<!--			DOC_CLASS_NM2 = #{DOC_CLASS_NM2},-->
+<!--			PRODUCT_CD = #{PRODUCT_CD},-->
+<!--			ECN_NO = #{ECN_NO},-->
+<!--			ECN_INSERT_UID = #{ECN_INSERT_UID},-->
+<!--			DOCUMENT_NO = #{DOCUMENT_NO},-->
+<!--			REV_NO = #{REV_NO},-->
+<!--			DOCUMENT_NM = #{DOCUMENT_NM},-->
+<!--			DOCUMENT_ENNM = #{DOCUMENT_ENNM},-->
+<!--			ACCOUNT_NM = #{ACCOUNT_NM},-->
+<!--			STATUS_CD = #{STATUS_CD},-->
+<!--			TOTAL_SHEET = #{TOTAL_SHEET},-->
+<!--			PROJECT_CD = #{PROJECT_CD},-->
+<!--			PROJECT_NM = #{PROJECT_NM},-->
+<!--			DISTRIBUTE_TYPE_CD = #{DISTRIBUTE_TYPE_CD},-->
+<!--			STD_GAPP_DT = #{STD_GAPP_DT},-->
+<!--			CHANGE_GAPP_DT = #{CHANGE_GAPP_DT},-->
+<!--			SECURITY_TYPE_CD = #{SECURITY_TYPE_CD},-->
+<!--			PROTECT_YN = #{PROTECT_YN},-->
+<!--			DESCRIPTION = #{DESCRIPTION},-->
+<!--			INSERT_DEPT_NM = #{INSERT_DEPT_NM},-->
+<!--			INSERT_UID = #{INSERT_UID},-->
+<!--			INSERT_DT = #{INSERT_DT},-->
+<!--			UPDATE_DEPT_NM = #{UPDATE_DEPT_NM},-->
+<!--			UPDATE_UID = #{UPDATE_UID},-->
+<!--			UPDATE_DT = #{UPDATE_DT},-->
+<!--			INTERFACE_DT = #{INTERFACE_DT},-->
+<!--			VALID_TYPE = #{VALID_TYPE}-->
+<!--		WHERE-->
+<!--			OBJECT_ID = #{OBJECT_ID}-->
+<!--	</update>-->
+
+<!--	<update id="updateDocsDocumentFile">-->
+<!--		UPDATE DOCS_DOCUMENT_FILE-->
+<!--		SET-->
+<!--			CN_SERIAL = #{CN_SERIAL},-->
+<!--			FILE_PATH_NM = #{FILE_PATH_NM},-->
+<!--			ORG_FILE_NM = #{ORG_FILE_NM},-->
+<!--			FILE_NM = #{FILE_NM},-->
+<!--			DISTRIBUTE_TYPE_CD = #{DISTRIBUTE_TYPE_CD},-->
+<!--			FILE_SIZE = #{FILE_SIZE},-->
+<!--			INTERFACE_DT = #{INTERFACE_DT}-->
+<!--		WHERE-->
+<!--			OBJECT_ID = #{OBJECT_ID} and FILE_NO = #{FILE_NO}-->
+<!--	</update>-->
+
+<!--	<update id="updateDocsDrawing">-->
+<!--		UPDATE DOCS_DRAWING-->
+<!--		SET-->
+<!--			CN_SERIAL = #{CN_SERIAL},-->
+<!--			BUSINESS_AREA_CD = #{BUSINESS_AREA_CD},-->
+<!--			BUSINESS_TYPE_CD = #{BUSINESS_TYPE_CD},-->
+<!--			ECN_NO = #{ECN_NO},-->
+<!--			ECN_INSERT_UID = #{ECN_INSERT_UID},-->
+<!--			DRAWING_TYPE = #{DRAWING_TYPE},-->
+<!--			DRAWING_NO = #{DRAWING_NO},-->
+<!--			DRAWING_REV = #{DRAWING_REV},-->
+<!--			REV_NO = #{REV_NO},-->
+<!--			DRAWING_NM = #{DRAWING_NM},-->
+<!--			DISTRIBUTE_TYPE_CD = #{DISTRIBUTE_TYPE_CD},-->
+<!--			STATUS_CD = #{STATUS_CD},-->
+<!--			CURRENT_PAGE_NO = #{CURRENT_PAGE_NO},-->
+<!--			TOTAL_PAGE_NO = #{TOTAL_PAGE_NO},-->
+<!--			EFFECTIVE_DT = #{EFFECTIVE_DT},-->
+<!--			FILE_PATH_NM = #{FILE_PATH_NM},-->
+<!--			ORG_FILE_NM = #{ORG_FILE_NM},-->
+<!--			FILE_NM = #{FILE_NM},-->
+<!--			FILE_SIZE = #{FILE_SIZE},-->
+<!--			STD_GAPP_DT = #{STD_GAPP_DT},-->
+<!--			CHANGE_GAPP_DT = #{CHANGE_GAPP_DT},-->
+<!--			PURCHASER_UID = #{PURCHASER_UID},-->
+<!--			VENDOR_CD = #{VENDOR_CD},-->
+<!--			DESCRIPTION = #{DESCRIPTION},-->
+<!--			SECURITY_TYPE_CD = #{SECURITY_TYPE_CD},-->
+<!--			PROTECT_YN = #{PROTECT_YN},-->
+<!--			INSERT_DEPT_NM = #{INSERT_DEPT_NM},-->
+<!--			INSERT_UID = #{INSERT_UID},-->
+<!--			INSERT_DT = #{INSERT_DT},-->
+<!--			UPDATE_DEPT_NM = #{UPDATE_DEPT_NM},-->
+<!--			UPDATE_UID = #{UPDATE_UID},-->
+<!--			UPDATE_DT = #{UPDATE_DT},-->
+<!--			INTERFACE_DT = #{INTERFACE_DT},-->
+<!--			PRODUCT_CD = #{PRODUCT_CD},-->
+<!--			PLANT_CD = #{PLANT_CD},-->
+<!--			PDM_PART_NO = #{PDM_PART_NO},-->
+<!--			PART_REV = #{PART_REV},-->
+<!--			INSERT_USER_NM = #{INSERT_USER_NM},-->
+<!--			ECN_TITLE = #{ECN_TITLE},-->
+<!--			ECN_VENDOR_USER = #{ECN_VENDOR_USER},-->
+<!--			VALID_TYPE = #{VALID_TYPE}-->
+<!--		WHERE-->
+<!--			OBJECT_ID = #{OBJECT_ID}-->
+<!--	</update>-->
+
+<!--	<update id="updateFilePath">-->
+<!--		UPDATE #{TABLE_NAME}-->
+<!--		SET-->
+<!--			FILE_PATH_NM = #{NEW_PATH_NM}-->
+<!--		WHERE-->
+<!--			OBJECT_ID = #{OBJECT_ID}-->
+<!--			<if test='FILE_NO != null'>-->
+<!--				AND FILE_NO = #{FILE_NO}-->
+<!--			</if>-->
+<!--	</update>-->
+
+
+<!--	<update id="updateFileMoveResult">-->
+<!--		UPDATE #{TABLE_NAME}-->
+<!--		SET-->
+<!--			MOVED = #{RESULT}-->
+<!--		WHERE-->
+<!--			OBJECT_ID = #{OBJECT_ID}-->
+<!--			<if test='FILE_NO != null'>-->
+<!--				AND FILE_NO = #{FILE_NO}-->
+<!--			</if>-->
+<!--	</update>-->
+
+
+<!--	<update id="updateDocsProductDocument">-->
+<!--		UPDATE DOCS_PRODUCT_DOCUMENT-->
+<!--		SET-->
+<!--			CN_SERIAL = #{CN_SERIAL},-->
+<!--			BUSINESS_AREA_CD = #{BUSINESS_AREA_CD},-->
+<!--			BUSINESS_TYPE_CD = #{BUSINESS_TYPE_CD},-->
+<!--			DOC_CLASS_CD1 = #{DOC_CLASS_CD1},-->
+<!--			DOC_CLASS_NM1 = #{DOC_CLASS_NM1},-->
+<!--			DOC_CLASS_CD2 = #{DOC_CLASS_CD2},-->
+<!--			DOC_CLASS_NM2 = #{DOC_CLASS_NM2},-->
+<!--			DOCUMENT_NO = #{DOCUMENT_NO},-->
+<!--			REV_NO = #{REV_NO},-->
+<!--			DOCUMENT_NM = #{DOCUMENT_NM},-->
+<!--			STATUS_CD = #{STATUS_CD},-->
+<!--			TOTAL_PAGE_CNT = #{TOTAL_PAGE_CNT},-->
+<!--			SECURITY_TYPE_CD = #{SECURITY_TYPE_CD},-->
+<!--			APPLY_PRODUCT_NO = #{APPLY_PRODUCT_NO},-->
+<!--			DISTRIBUTE_TYPE_CD = #{DISTRIBUTE_TYPE_CD},-->
+<!--			APPLY_HOGI_NO = #{APPLY_HOGI_NO},-->
+<!--			CALL_ID = #{CALL_ID},-->
+<!--			ECN_NO = #{ECN_NO},-->
+<!--			PROCESS_TYPE_CD = #{PROCESS_TYPE_CD},-->
+<!--			DESCRIPTION = #{DESCRIPTION},-->
+<!--			INSERT_DEPT_NM = #{INSERT_DEPT_NM},-->
+<!--			INSERT_UID = #{INSERT_UID},-->
+<!--			INSERT_DT = #{INSERT_DT},-->
+<!--			UPDATE_DEPT_NM = #{UPDATE_DEPT_NM},-->
+<!--			UPDATE_UID = #{UPDATE_UID},-->
+<!--			UPDATE_DT = #{UPDATE_DT},-->
+<!--			INTERFACE_DT = #{INTERFACE_DT}-->
+<!--		WHERE-->
+<!--			OBJECT_ID = #{OBJECT_ID}-->
+<!--	</update>-->
+
+<!--	<update id="updateDocsProductDocumentFile">-->
+<!--		UPDATE DOCS_PRODUCT_DOCUMENT_FILE-->
+<!--		SET-->
+<!--			CN_SERIAL = #{CN_SERIAL},-->
+<!--			FILE_PATH_NM = #{FILE_PATH_NM},-->
+<!--			ORG_FILE_NM = #{ORG_FILE_NM},-->
+<!--			FILE_NM = #{FILE_NM},-->
+<!--			DISTRIBUTE_TYPE_CD = #{DISTRIBUTE_TYPE_CD},-->
+<!--			FILE_SIZE = #{FILE_SIZE},-->
+<!--			INTERFACE_DT = #{INTERFACE_DT}-->
+<!--		WHERE-->
+<!--			OBJECT_ID = #{OBJECT_ID} AND  FILE_NO = #{FILE_NO}-->
+<!--	</update>-->
+
+<!--	<update id="updateDocsProductSw">-->
+<!--		UPDATE DOCS_PRODUCT_SW-->
+<!--		SET-->
+<!--			CN_SERIAL = #{CN_SERIAL},-->
+<!--			BUSINESS_AREA_CD = #{BUSINESS_AREA_CD},-->
+<!--			BUSINESS_TYPE_CD = #{BUSINESS_TYPE_CD},-->
+<!--			ECN_NO = #{ECN_NO},-->
+<!--			PRODUCT_NO = #{PRODUCT_NO},-->
+<!--			SW_CLASS_CD1 = #{SW_CLASS_CD1},-->
+<!--			SW_CLASS_NM1 = #{SW_CLASS_NM1},-->
+<!--			SW_CLASS_CD2 = #{SW_CLASS_CD2},-->
+<!--			SW_CLASS_NM2 = #{SW_CLASS_NM2},-->
+<!--			SW_NO = #{SW_NO},-->
+<!--			REV_NO = #{REV_NO},-->
+<!--			SW_NM = #{SW_NM},-->
+<!--			SW_VERSION_NO = #{SW_VERSION_NO},-->
+<!--			STATUS_CD = #{STATUS_CD},-->
+<!--			DESCRIPTION = #{DESCRIPTION},-->
+<!--			SECURITY_TYPE_CD = #{SECURITY_TYPE_CD},-->
+<!--			INSERT_DEPT_NM = #{INSERT_DEPT_NM},-->
+<!--			INSERT_UID = #{INSERT_UID},-->
+<!--			INSERT_DT = #{INSERT_DT},-->
+<!--			UPDATE_DEPT_NM = #{UPDATE_DEPT_NM},-->
+<!--			UPDATE_UID = #{UPDATE_UID},-->
+<!--			UPDATE_DT = #{UPDATE_DT},-->
+<!--			INTERFACE_DT = #{INTERFACE_DT},-->
+<!--			DISTRIBUTE_TYPE_CD = #{DISTRIBUTE_TYPE_CD}-->
+<!--		WHERE-->
+<!--			OBJECT_ID = #{OBJECT_ID}-->
+<!--	</update>-->
+
+<!--	<update id="updateDocsProductSwFile">-->
+<!--		UPDATE DOCS_PRODUCT_SW_FILE-->
+<!--		SET-->
+<!--			CN_SERIAL = #{CN_SERIAL},-->
+<!--			FILE_PATH_NM = #{FILE_PATH_NM},-->
+<!--			ORG_FILE_NM = #{ORG_FILE_NM},-->
+<!--			FILE_NM = #{FILE_NM},-->
+<!--			DISTRIBUTE_TYPE_CD = #{DISTRIBUTE_TYPE_CD},-->
+<!--			FILE_SIZE = #{FILE_SIZE},-->
+<!--			CHECK_SUM = #{CHECK_SUM},-->
+<!--			INTERFACE_DT = #{INTERFACE_DT}-->
+<!--		WHERE-->
+<!--			OBJECT_ID = #{OBJECT_ID} AND FILE_NO = #{FILE_NO}-->
+<!--	</update>-->
+
+
+
+<!--	<update id="updateDocsSwFile">-->
+<!--		UPDATE DOCS_SW_FILE-->
+<!--		SET-->
+<!--			CN_SERIAL = #{CN_SERIAL},-->
+<!--			FILE_PATH_NM = #{FILE_PATH_NM},-->
+<!--			ORG_FILE_NM = #{ORG_FILE_NM},-->
+<!--			FILE_NM = #{FILE_NM},-->
+<!--			CHECK_SUM = #{CHECK_SUM},-->
+<!--			DISTRIBUTE_TYPE_CD = #{DISTRIBUTE_TYPE_CD},-->
+<!--			FILE_SIZE = #{FILE_SIZE},-->
+<!--			INTERFACE_DT = #{INTERFACE_DT}-->
+<!--		WHERE-->
+<!--			OBJECT_ID = #{OBJECT_ID} AND FILE_NO = #{FILE_NO}-->
+<!--	</update>-->
+
+
+<!--	<update id="updateEcoHistory">-->
+<!--		UPDATE DOCS_ECO_HISTORY-->
+<!--		SET-->
+<!--			BUSINESS_AREA_CD = #{BUSINESS_AREA_CD},-->
+<!--			BUSINESS_TYPE_CD = #{BUSINESS_TYPE_CD},-->
+<!--			UPPER_PART_NO = #{UPPER_PART_NO},-->
+<!--			UPPER_PART_REV_NO = #{UPPER_PART_REV_NO},-->
+<!--			UPPER_DRAWING_NO = #{UPPER_DRAWING_NO},-->
+<!--			UPPER_DRAWING_REV_NO = #{UPPER_DRAWING_REV_NO},-->
+<!--			BEFORE_PART_NO = #{BEFORE_PART_NO},-->
+<!--			BEFORE_PART_REV_NO = #{BEFORE_PART_REV_NO},-->
+<!--			BEFORE_DRAWING_NO = #{BEFORE_DRAWING_NO},-->
+<!--			BEFORE_DRAWING_REV_NO = #{BEFORE_DRAWING_REV_NO},-->
+<!--			AFTER_PART_NO = #{AFTER_PART_NO},-->
+<!--			AFTER_PART_REV_NO = #{AFTER_PART_REV_NO},-->
+<!--			AFTER_DRAWING_NO = #{AFTER_DRAWING_NO},-->
+<!--			AFTER_DRAWING_REV_NO = #{AFTER_DRAWING_REV_NO},-->
+<!--			USE_TYPE_CD = #{USE_TYPE_CD},-->
+<!--			ECN_INSERT_UID = #{ECN_INSERT_UID},-->
+<!--			ECN_APPROVAL_DT = #{ECN_APPROVAL_DT},-->
+<!--			INTERFACE_DT = #{INTERFACE_DT}-->
+<!--		WHERE 1= 1-->
+<!--			AND CN_SERIAL = #{CN_SERIAL}-->
+<!--			AND ECN_NO = #{ECN_NO},-->
+<!--			AND SEQ_NO = #{SEQ_NO}-->
+<!--	</update>-->
+
+
+<!--	<update id="updateDocsItem">-->
+<!--		UPDATE DOCS_ITEM-->
+<!--		SET-->
+<!--			SERIAL = #{SERIAL},-->
+<!--			ITYPE = #{ITYPE},-->
+<!--			MATNR = #{MATNR},-->
+<!--			CODE = #{CODE},-->
+<!--			C0001 = #{C0001},-->
+<!--			C0002_1 = #{C0002_1},-->
+<!--			C0002_2 = #{C0002_2},-->
+<!--			C0003 = #{C0003},-->
+<!--			C0004 = #{C0004},-->
+<!--			C0005_1 = #{C0005_1},-->
+<!--			C0005_2 = #{C0005_2},-->
+<!--			C0006 = #{C0006},-->
+<!--			C0007_1 = #{C0007_1},-->
+<!--			C0007_2 = #{C0007_2},-->
+<!--			C0007_3 = #{C0007_3},-->
+<!--			C0008_1 = #{C0008_1},-->
+<!--			C0008_2 = #{C0008_2},-->
+<!--			C0008_3 = #{C0008_3},-->
+<!--			C0009 = #{C0009},-->
+<!--			C0010 = #{C0010},-->
+<!--			C0011_1 = #{C0011_1},-->
+<!--			C0011_2 = #{C0011_2},-->
+<!--			C0013 = #{C0013},-->
+<!--			C0014 = #{C0014},-->
+<!--			C0017 = #{C0017},-->
+<!--			C0018 = #{C0018},-->
+<!--			C0019 = #{C0019},-->
+<!--			C0020 = #{C0020},-->
+<!--			C0021 = #{C0021},-->
+<!--			C0022 = #{C0022},-->
+<!--			C0023 = #{C0023},-->
+<!--			C0027 = #{C0027},-->
+<!--			C0028 = #{C0028},-->
+<!--			C0030 = #{C0030},-->
+<!--			C0032 = #{C0032},-->
+<!--			C0034 = #{C0034},-->
+<!--			C0037 = #{C0037},-->
+<!--			REQID = #{REQID},-->
+<!--			CN_ERP_TYPE = #{CN_ERP_TYPE},-->
+<!--			CN_PRE#{MAT_CODE = #{CN_PRE#{MAT_CODE},-->
+<!--			OBJECT_ID = #{OBJECT_ID},-->
+<!--			CN_RESULT = #{CN_RESULT},-->
+<!--			CN_MESSAGE = #{CN_MESSAGE},-->
+<!--			E_RETURN = #{E_RETURN},-->
+<!--			C0038 = #{C0038},-->
+<!--			INTERFACE_DT = #{INTERFACE_DT}-->
+<!--		WHERE 1= 1-->
+<!--			AND WERKS = #{WERKS}-->
+<!--			AND CN_PART_REV = #{CN_PART_REV}-->
+<!--			AND CN_PDM_PART_NO = #{CN_PDM_PART_NO}-->
+<!--			AND CN_JOB_NO = #{CN_JOB_NO}-->
+<!--	</update>-->
+
+
+<!--	<delete id="deleteDocsSwMember">-->
+<!--		DELETE FROM DOCS_SW_MEMBER WHERE OBJECT_ID = #{OBJECT_ID} AND ACCESS_UID = #{ACCESS_UID}-->
+<!--	</delete>-->
+
+<!--	<delete id="deleteDocsDocumentMember">-->
+<!--		DELETE FROM DOCS_DOCUMENT_MEMBER WHERE OBJECT_ID = #{OBJECT_ID} AND ACCESS_UID = #{ACCESS_UID}-->
+<!--	</delete>-->
+
+<!--	<delete id="deleteDocsDrawingMember">-->
+<!--		DELETE FROM DOCS_DRAWING_MEMBER WHERE OBJECT_ID = #{OBJECT_ID} AND ACCESS_UID = #{ACCESS_UID}-->
+<!--	</delete>-->
+
+<!--	<select id="selectErrorTableCount" resultType="Integer">-->
+<!--		  SELECT-->
+<!--		    COUNT(*) AS COUNT-->
+<!--		  FROM NOT_COMPLETED_CN_SERIAL-->
+<!--	</select>-->
+
+<!--	<select id="selectErrorCount" resultType="Integer">-->
+<!--		  SELECT-->
+<!--		    COUNT(*) AS COUNT-->
+<!--		  FROM NOT_COMPLETED_CN_SERIAL-->
+<!--		  WHERE CN_SERIAL = #{CN_SERIAL} AND OBJECT_ID = #{OBJECT_ID} AND TABLE_NAME = #{TABLE_NAME}-->
+<!--	</select>-->
+
+<!--	<insert id="insertError">-->
+<!--		INSERT INTO NOT_COMPLETED_CN_SERIAL (-->
+<!--			CN_SERIAL,-->
+<!--			OBJECT_ID,-->
+<!--			TABLE_NAME,-->
+<!--			ERROR-->
+<!--		)-->
+<!--		VALUES (-->
+<!--			#{CN_SERIAL},-->
+<!--			#{OBJECT_ID},-->
+<!--			#{TABLE_NAME},-->
+<!--			#{ERROR}-->
+<!--		)-->
+<!--		&lt;!&ndash;-->
+<!--		ON DUPLICATE KEY UPDATE-->
+<!--			ERROR = #{ERROR}-->
+<!--		 &ndash;&gt;-->
+<!--	</insert>-->
+
+
+<!--	<update id="updateError">-->
+<!--		UPDATE NOT_COMPLETED_CN_SERIAL-->
+<!--		SET-->
+<!--			ERROR = #{ERROR}-->
+<!--		WHERE-->
+<!--			CN_SERIAL = #{CN_SERIAL} AND OBJECT_ID = #{OBJECT_ID} AND TABLE_NAME = #{TABLE_NAME}-->
+<!--	</update>-->
+
+
+<!--	<delete id="deleteError">-->
+<!--		DELETE FROM NOT_COMPLETED_CN_SERIAL WHERE OBJECT_ID = #{OBJECT_ID} AND CN_SERIAL = #{CN_SERIAL} AND TABLE_NAME = #{TABLE_NAME}-->
+<!--	</delete>-->
+
+<!--	<select id="selectCompanyCd" resultType="String">-->
+<!--		  SELECT COMPANY_CD-->
+<!--		  FROM DOCS_COMPANY-->
+<!--		  WHERE BIZ_NO = #{VENDOR_CD}-->
+<!--		  AND ROWNUM = 1-->
+<!--	</select>-->
+
+<!--	<insert id="insertDocsRequest">-->
+<!--	<selectKey resultType="string" keyProperty="REQUEST_NO" order="BEFORE">-->
+<!--		SELECT TO_CHAR(SYSDATE,'YYYYMMDD')||'-'||#{objectTypeCode}||LPAD(NVL(SUBSTR(MAX(REQUEST_NO),11),0)+1,4,0) AS REQUEST_NO-->
+<!--        FROM DOCS_REQUEST-->
+<!--        WHERE SUBSTR(REQUEST_NO,1,10) = TO_CHAR(SYSDATE,'YYYYMMDD')||'-'||#{objectTypeCode}-->
+<!--	</selectKey>-->
+<!--		INSERT INTO DOCS_REQUEST-->
+<!--			(-->
+<!--			REQUEST_NO-->
+<!--			, REQUEST_TYPE-->
+<!--			, REQUEST_PURPOSE-->
+<!--			, APPROVAL_LINE_ID-->
+<!--			, CURRENT_PROCESS_SEQ_NO-->
+<!--			, DEPLOY_COMPANY_CD-->
+<!--			, PRINT_YN-->
+<!--        	, DEPLOY_NORMAL_YN-->
+<!--        	, DEPLOY_SPECIAL_YN-->
+<!--			, INSERT_USER_CD-->
+<!--			, INSERT_DT-->
+<!--			, UPDATE_USER_CD-->
+<!--			, UPDATE_DT-->
+<!--			, STATUS_CD-->
+<!--			, OBJECT_TYPE-->
+<!--			, BUSINESS_AREA_CD-->
+<!--			, PROTECT_YN-->
+<!--			)-->
+<!--		VALUES-->
+<!--			(-->
+<!--			#{REQUEST_NO}-->
+<!--			, 'DISTRIBUTION'			/* 요청유형 : 무조건 배포 */-->
+<!--			, 'PRODUCT'					/* 용도 : 무조건 제조용 */-->
+<!--			, #{APPROVAL_LINE_ID}-->
+<!--			, '2'-->
+<!--			, #{DEPLOY_COMPANY_CD}-->
+<!--			, 'Y'						/* 출력가능여부 */-->
+<!--            , 'N'						/* 일반영역 다운로드 가능 여부*/-->
+<!--            , 'N'						/* 보안영역 다운로드 가능 여부 */-->
+<!--			, #{DEPLOY_USER_CD}-->
+<!--			, SYSDATE-->
+<!--			, #{DEPLOY_USER_CD}-->
+<!--			, SYSDATE-->
+<!--			, 'REQUEST'-->
+<!--			, #{OBJECT_TYPE}-->
+<!--			, #{BUSINESS_AREA_CD}-->
+<!--			, #{PROTECT_YN}-->
+<!--			)-->
+<!--	</insert>-->
+
+<!--	<insert id="insertDocsRequestMapping">-->
+<!--		INSERT INTO DOCS_REQUEST_MAPPING-->
+<!--		(REQUEST_NO-->
+<!--		, USE_YN-->
+<!--		, OBJECT_ID-->
+<!--		, OBJECT_NO-->
+<!--		, OBJECT_NM-->
+<!--		, BUSINESS_AREA_CD-->
+<!--		, BUSINESS_TYPE_CD-->
+<!--		<if test='SW_VERSION_NO != null'>-->
+<!--		, SW_VERSION_NO-->
+<!--		</if>-->
+<!--		<if test='DOC_VERSION_NO != null'>-->
+<!--		, DOC_VERSION_NO-->
+<!--		</if>-->
+<!--		, REV_NO-->
+<!--		<if test='CURRENT_PAGE_NO != null'>-->
+<!--		, CURRENT_PAGE_NO-->
+<!--		</if>-->
+<!--		<if test='TOTAL_PAGE_NO != null'>-->
+<!--		, TOTAL_PAGE_NO-->
+<!--		</if>-->
+<!--		, ECN_NO-->
+<!--		, STD_GAPP_DT-->
+<!--		, CHANGE_GAPP_DT-->
+<!--		, PROTECT_YN-->
+<!--		, PRODUCT_CD-->
+<!--		, DISTRIBUTE_TYPE_CD-->
+<!--		, FILE_NM-->
+<!--		<if test='APPLY_HOGI_NO != null'>-->
+<!--		, APPLY_HOGI_NO-->
+<!--		</if>-->
+<!--		<if test='OBJECT_CLASS_NM2 != null'>-->
+<!--		, OBJECT_CLASS_NM2-->
+<!--		</if>-->
+<!--		<if test='OBJECT_CLASS_CD2 != null'>-->
+<!--		, OBJECT_CLASS_CD2-->
+<!--		</if>-->
+<!--		)-->
+<!--		VALUES(-->
+<!--			#{REQUEST_NO}-->
+<!--			, 'Y'-->
+<!--			, #{OBJECT_ID}-->
+<!--			, #{OBJECT_NO}-->
+<!--			, #{OBJECT_NM}-->
+<!--			, #{BUSINESS_AREA_CD}-->
+<!--			, #{BUSINESS_TYPE_CD}-->
+<!--			<if test='SW_VERSION_NO != null'>-->
+<!--			, #{SW_VERSION_NO}-->
+<!--			</if>-->
+<!--			<if test='DOC_VERSION_NO != null'>-->
+<!--			, #{DOC_VERSION_NO}-->
+<!--			</if>-->
+<!--			, #{REV_NO}-->
+<!--			<if test='CURRENT_PAGE_NO != null'>-->
+<!--			, #{CURRENT_PAGE_NO}-->
+<!--			</if>-->
+<!--			<if test='TOTAL_PAGE_NO != null'>-->
+<!--			, #{TOTAL_PAGE_NO}-->
+<!--			</if>-->
+<!--			, #{ECN_NO}-->
+<!--			, #{STD_GAPP_DT}-->
+<!--			, #{CHANGE_GAPP_DT}-->
+<!--			, #{PROTECT_YN}-->
+<!--			, #{PRODUCT_CD}-->
+<!--			, #{DISTRIBUTE_TYPE_CD}-->
+<!--			, #{FILE_NO}-->
+<!--			<if test='APPLY_HOGI_NO != null'>-->
+<!--			, #{APPLY_HOGI_NO}-->
+<!--			</if>-->
+<!--			<if test='OBJECT_CLASS_NM2 != null'>-->
+<!--			, #{OBJECT_CLASS_NM2}-->
+<!--			</if>-->
+<!--			<if test='OBJECT_CLASS_CD2 != null'>-->
+<!--			, #{OBJECT_CLASS_CD2}-->
+<!--			</if>-->
+<!--			)-->
+<!--	</insert>-->
+
+<!--	<select id="selectDeployUserInfo" resultType="HashMap">-->
+<!--	SELECT-->
+<!--		USER_CD-->
+<!--		, EMAIL-->
+<!--	FROM (-->
+<!--		SELECT-->
+<!--			USER_CD-->
+<!--			, EMAIL-->
+<!--		FROM DOCS_USER u-->
+<!--			INNER JOIN DOCS_COMPANY  c ON c.COMPANY_CD = u.COMPANY_CD-->
+<!--		WHERE BIZ_NO = #{VENDOR_CD}-->
+<!--		AND DISTRIBUTION_PERSON_YN = 'Y'-->
+
+<!--		UNION ALL-->
+
+<!--		SELECT-->
+<!--			USER_CD-->
+<!--			, EMAIL-->
+<!--		FROM DOCS_USER u-->
+<!--			INNER JOIN DOCS_COMPANY  c ON c.COMPANY_CD = u.COMPANY_CD-->
+<!--		WHERE BIZ_NO = #{VENDOR_CD}-->
+<!--	)-->
+<!--	WHERE ROWNUM = 1-->
+<!--	</select>-->
+<!--	<select id="selectDocumentFileInfo" resultType="HashMap">-->
+<!--	SELECT-->
+<!--		USER_CD-->
+<!--		, EMAIL-->
+<!--	FROM (-->
+<!--		SELECT-->
+<!--			USER_CD-->
+<!--			, EMAIL-->
+<!--		FROM DOCS_USER u-->
+<!--			INNER JOIN DOCS_COMPANY  c ON c.COMPANY_CD = u.COMPANY_CD-->
+<!--		WHERE BIZ_NO = #{VENDOR_CD}-->
+<!--		AND DISTRIBUTION_PERSON_YN = 'Y'-->
+
+<!--		UNION ALL-->
+
+<!--		SELECT-->
+<!--			USER_CD-->
+<!--			, EMAIL-->
+<!--		FROM DOCS_USER u-->
+<!--			INNER JOIN DOCS_COMPANY  c ON c.COMPANY_CD = u.COMPANY_CD-->
+<!--		WHERE BIZ_NO = #{VENDOR_CD}-->
+<!--	)-->
+<!--	WHERE ROWNUM = 1-->
+<!--	</select>-->
+
+<!--	<insert id="insertDocsRequestDetail">-->
+<!--		INSERT INTO DOCS_REQUEST_DETAIL-->
+<!--			(-->
+<!--			REQUEST_NO-->
+<!--			, PROCESS_SEQ-->
+<!--			, APPROVAL_STATUS_CD-->
+<!--			, ORIGINAL_USER_CD-->
+<!--			, ACTUAL_USER_CD-->
+<!--			, REQUEST_DESC-->
+<!--			, ACTION_DT-->
+<!--			, ACTION_CD-->
+<!--			, APPROVAL_GRADE_CD-->
+<!--			)-->
+<!--		SELECT #{REQUEST_NO} AS REQUEST_NO-->
+<!--			, PROCESS_SEQ_NO AS PROCESS_SEQ-->
+<!--			, APPROVAL_STATUS_CD-->
+<!--			, CASE WHEN APPROVAL_STATUS_CD = 'REQUEST'-->
+<!--				THEN #{DEPLOY_USER_CD}-->
+<!--				WHEN APPROVAL_STATUS_CD = 'ACCEPT'-->
+<!--				THEN #{ACCEPTANCE_USER_CD}-->
+<!--				ELSE ''-->
+<!--				END AS ORIGINAL_USER_CD-->
+<!--			, CASE WHEN APPROVAL_STATUS_CD = 'REQUEST'-->
+<!--				THEN #{DEPLOY_USER_CD}-->
+<!--				WHEN APPROVAL_STATUS_CD = 'ACCEPT'-->
+<!--				THEN #{ACCEPTANCE_USER_CD}-->
+<!--				ELSE ''-->
+<!--				END AS ACTUAL_USER_CD-->
+<!--			, '긴급도 자동 요청' AS REQUEST_DESC-->
+<!--			, CASE WHEN APPROVAL_STATUS_CD = 'REQUEST'-->
+<!--				THEN SYSDATE-->
+<!--				ELSE NULL-->
+<!--				END AS ACTION_DT-->
+<!--			, CASE WHEN APPROVAL_STATUS_CD = 'REQUEST'-->
+<!--				THEN 'REQUEST'-->
+<!--				ELSE NULL-->
+<!--				END AS ACTION_CD-->
+<!--			, CASE WHEN APPROVAL_LINE_ID = 1 AND PROCESS_SEQ_NO = 3-->
+<!--				THEN 'TL'-->
+<!--				WHEN APPROVAL_LINE_ID = 1 AND PROCESS_SEQ_NO = 4-->
+<!--				THEN 'DEF'-->
+<!--				WHEN APPROVAL_LINE_ID = 2 AND PROCESS_SEQ_NO = 3-->
+<!--				THEN 'TL'-->
+<!--				ELSE ''-->
+<!--				END AS APPROVAL_GRADE_CD-->
+<!--		FROM DOCS_APPROVAL_LINE_DETAIL-->
+<!--		WHERE APPROVAL_LINE_ID = #{APPROVAL_LINE_ID}-->
+<!--	</insert>-->
+
+<!--	<insert id="insertDocsRequestDeploy">-->
+<!--		INSERT INTO DOCS_REQUEST_DEPLOY-->
+<!--		(-->
+<!--			REQUEST_NO-->
+<!--			, DEPLOY_USER_CD-->
+<!--			, DEPLOY_USER_EMAIL-->
+<!--		)-->
+<!--		VALUES-->
+<!--		(-->
+<!--			#{REQUEST_NO}-->
+<!--			, #{DEPLOY_USER_CD}-->
+<!--			, #{DEPLOY_USER_EMAIL}-->
+<!--		)-->
+<!--	</insert>-->
+
+<!--	<insert id="insertDocsRequestFile">-->
+<!--&lt;!&ndash; 	<selectKey resultType="string" keyProperty="REQUEST_NO" order="BEFORE"> &ndash;&gt;-->
+<!--&lt;!&ndash; 		SELECT TO_CHAR(SYSDATE,'YYYYMMDD')||'-'||#{objectTypeCode}||LPAD(NVL(SUBSTR(MAX(REQUEST_NO),11),0)+1,4,0) AS REQUEST_NO &ndash;&gt;-->
+<!--&lt;!&ndash;         FROM DOCS_REQUEST &ndash;&gt;-->
+<!--&lt;!&ndash;         WHERE SUBSTR(REQUEST_NO,1,10) = TO_CHAR(SYSDATE,'YYYYMMDD')||'-'||#{objectTypeCode} &ndash;&gt;-->
+<!--&lt;!&ndash; 	</selectKey> &ndash;&gt;-->
+<!--		INSERT INTO DOCS_REQUEST_FILE-->
+<!--		(-->
+<!--			REQUEST_NO-->
+<!--			, OBJECT_ID-->
+<!--			, FILE_PATH_NM-->
+<!--			, ORG_FILE_NM-->
+<!--			, FILE_NM-->
+<!--			, FILE_SIZE-->
+<!--			<if test='CHECK_SUM != null'>-->
+<!--			, CHECK_SUM-->
+<!--			</if>-->
+<!--			, FILE_NO-->
+<!--			, USE_START_YMD-->
+<!--			, USE_END_YMD-->
+<!--		)-->
+<!--		VALUES-->
+<!--		(-->
+<!--			#{REQUEST_NO}-->
+<!--			, #{OBJECT_ID}-->
+<!--			, #{FILE_PATH_NM}-->
+<!--			, #{ORG_FILE_NM}-->
+<!--			, #{FILE_NM}-->
+<!--			, #{FILE_SIZE}-->
+<!--			<if test='CHECK_SUM != null'>-->
+<!--			, #{CHECK_SUM}-->
+<!--			</if>-->
+<!--			, #{FILE_NO}-->
+<!--			, #{USE_START_YMD}-->
+<!--			, #{USE_END_YMD}-->
+<!--		)-->
+<!--	</insert>-->
+
+<!--	<select id="selectPurchaserUserCd" resultType="String">-->
+<!--		SELECT DIST_PURCHASER_USER_CD-->
+<!--	    FROM DOCS_COMPANY company-->
+<!--	    INNER JOIN DOCS_COMPANY_PURCHASER purchaser ON purchaser.COMPANY_CD = company.COMPANY_CD-->
+<!--	    WHERE company.COMPANY_CD = #{DEPLOY_COMPANY_CD}-->
+<!--	    AND purchaser.BUSINESS_AREA_CD = #{BUSINESS_AREA_CD}-->
+<!--	</select>-->
+<!-- </mapper>-->
+
+
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+
+
+
+<mapper namespace="sql.fromItnToDocs">
+
+<select id="selectConfig" resultType="HashMap">
+	SELECT SYSTEM_CONFIG_CD, SYSTEM_CONFIG_VALUE FROM DOCS_SYSTEM_CONFIG WHERE SYSTEM_CONFIG_GROUP = 'DB_INTERFACE_CONFIG'
+</select>
+
+<select id="selectNewDataItn" resultType="HashMap">
+    <![CDATA[
+    SELECT T2.* FROM (
+        SELECT ROW_NUMBER() OVER(ORDER BY CN_SERIAL) AS RN, T1.*
+        FROM ${TABLE_NAME} T1
+        WHERE MOVED_TO_DOCS = 'N'
+        ORDER BY CN_SERIAL
+    ) T2 WHERE RN <= #{unit}
+    ]]>
+</select>
+
+<select id="selectNewItemItn" resultType="HashMap">
+    <![CDATA[
+    SELECT T2.* FROM (
+        SELECT ROW_NUMBER() OVER(ORDER BY WERKS, CN_PART_REV, CN_PDM_PART_NO, CN_JOB_NO) AS RN, T1.*
+        FROM ITN_ITEM T1
+        WHERE MOVED_TO_DOCS = 'N'
+        ORDER BY WERKS, CN_PART_REV, CN_PDM_PART_NO, CN_JOB_NO
+    ) T2 WHERE RN <= #{unit}
+    ]]>
+</select>
+
+<select id="selectNewDataTemp" resultType="HashMap">
+    <![CDATA[
+    SELECT T2.* FROM (
+        SELECT ROW_NUMBER() OVER(ORDER BY CN_SERIAL) AS RN, T1.*
+        FROM ${TABLE_NAME} T1
+        WHERE MOVED = 'N'
+        ORDER BY CN_SERIAL
+    ) T2 WHERE RN <= #{unit}
+    ]]>
+</select>
+
+
+<!--  삭제 할것  -->
+<select id="selectSWFilePath" resultType="HashMap">
+	SELECT FILE_PATH_NM FROM DOCS_SW_FILE
+</select>
+
+<update id="updateMovedData">
+	UPDATE #{TABLE_NAME} SET
+	MOVED_TO_DOCS = #{RESULT}
+	WHERE
+	CN_SERIAL = #{CN_SERIAL}
+	<if test='OBJECT_ID != null'>
+		AND OBJECT_ID = #{OBJECT_ID}
+	</if>
+	<if test='FILE_NO != null'>
+		AND FILE_NO = #{FILE_NO}
+	</if>
+	<if test='ACCESS_UID != null'>
+		AND ACCESS_UID = #{ACCESS_UID}
+	</if>
+</update>
+
+<update id="updateMovedItem">
+	UPDATE #{TABLE_NAME} SET
+		MOVED_TO_DOCS = #{RESULT}
+	WHERE
+		WERKS = #{WERKS}
+	  AND CN_PART_REV = #{CN_PART_REV}
+	  AND CN_PDM_PART_NO = #{CN_PDM_PART_NO}
+	  AND CN_JOB_NO = #{CN_JOB_NO}
+</update>
+
+<select id="selectFileProtect" resultType="HashMap">
+	SELECT PROTECT_YN FROM #{TABLE_NAME} WHERE CN_SERIAL = #{CN_SERIAL} AND OBJECT_ID = #{OBJECT_ID}
+</select>
+
+<select id="selectDocsObjectCount" resultType="Integer">
+	SELECT
+	COUNT(*) AS COUNT
+	FROM #{TABLE_NAME}
+	WHERE OBJECT_ID = #{OBJECT_ID}
+	<if test='FILE_NO != null'>
+		AND FILE_NO = #{FILE_NO}
+	</if>
+	<if test='ACCESS_UID != null'>
+		AND ACCESS_UID = #{ACCESS_UID}
+	</if>
+</select>
+
+<select id="selectDocsEcoCount" resultType="Integer">
+	SELECT
+		COUNT(*) AS COUNT
+	FROM DOCS_ECO_HISTORY
+	WHERE CN_SERIAL = #{CN_SERIAL}
+	  AND ECN_NO = #{ECN_NO}
+	  AND SEQ_NO = #{SEQ_NO}
+</select>
+
+<select id="selectDocsItemCount" resultType="Integer">
+	SELECT
+		COUNT(*) AS COUNT
+	FROM DOCS_ITEM
+	WHERE WERKS = #{WERKS}
+	  AND CN_PART_REV = #{CN_PART_REV}
+	  AND CN_PDM_PART_NO = #{CN_PDM_PART_NO}
+	  AND CN_JOB_NO = #{CN_JOB_NO}
+</select>
+
+<insert id="insertDocsSw">
+	INSERT INTO DOCS_SW (
+		CN_SERIAL,
+		OBJECT_ID,
+		BUSINESS_AREA_CD,
+		BUSINESS_TYPE_CD,
+		SW_CLASS_CD1,
+		SW_CLASS_NM1,
+		SW_CLASS_CD2,
+		SW_CLASS_NM2,
+		SW_TYPE_CD,
+		PRODUCT_CD,
+		ECN_NO,
+		ECN_INSERT_UID,
+		SW_NO,
+		REV_NO,
+		SW_NM,
+		STATUS_CD,
+		SW_VERSION_NO,
+		DOC_VERSION_NO,
+		PROJECT_CD,
+		PROJECT_NM,
+		DISTRIBUTE_TYPE_CD,
+		STD_GAPP_DT,
+		CHANGE_GAPP_DT,
+		DESCRIPTION,
+		SECURITY_TYPE_CD,
+		PROTECT_YN,
+		INSERT_DEPT_NM,
+		INSERT_UID,
+		INSERT_DT,
+		UPDATE_DEPT_NM,
+		UPDATE_UID,
+		UPDATE_DT,
+		INTERFACE_DT,
+		VALID_TYPE)
+	VALUES (
+			   #{CN_SERIAL},
+			   #{OBJECT_ID},
+			   #{BUSINESS_AREA_CD},
+			   #{BUSINESS_TYPE_CD},
+			   #{SW_CLASS_CD1},
+			   #{SW_CLASS_NM1},
+			   #{SW_CLASS_CD2},
+			   #{SW_CLASS_NM2},
+			   #{SW_TYPE_CD},
+			   #{PRODUCT_CD},
+			   #{ECN_NO},
+			   #{ECN_INSERT_UID},
+			   #{SW_NO},
+			   #{REV_NO},
+			   #{SW_NM},
+			   #{STATUS_CD},
+			   #{SW_VERSION_NO},
+			   #{DOC_VERSION_NO},
+			   #{PROJECT_CD},
+			   #{PROJECT_NM},
+			   #{DISTRIBUTE_TYPE_CD},
+			   #{STD_GAPP_DT},
+			   #{CHANGE_GAPP_DT},
+			   #{DESCRIPTION},
+			   #{SECURITY_TYPE_CD},
+			   #{PROTECT_YN},
+			   #{INSERT_DEPT_NM},
+			   #{INSERT_UID},
+			   #{INSERT_DT},
+			   #{UPDATE_DEPT_NM},
+			   #{UPDATE_UID},
+			   #{UPDATE_DT},
+			   #{INTERFACE_DT},
+			   #{VALID_TYPE}
+		   )
+</insert>
+
+<insert id="insertDocsSwMember">
+	INSERT INTO DOCS_SW_MEMBER (
+		OBJECT_ID,
+		ACCESS_UID
+	)
+	VALUES (
+			   #{OBJECT_ID},
+			   #{ACCESS_UID}
+		   )
+</insert>
+
+<insert id="insertDocsSwFile">
+	INSERT INTO DOCS_SW_FILE (
+		CN_SERIAL,
+		OBJECT_ID,
+		FILE_NO,
+		FILE_PATH_NM,
+		ORG_FILE_NM,
+		FILE_NM,
+		CHECK_SUM,
+		DISTRIBUTE_TYPE_CD,
+		FILE_SIZE,
+		INTERFACE_DT
+	)
+	VALUES (
+			   #{CN_SERIAL},
+			   #{OBJECT_ID},
+			   #{FILE_NO},
+			   #{FILE_PATH_NM},
+			   #{ORG_FILE_NM},
+			   #{FILE_NM},
+			   #{CHECK_SUM},
+			   #{DISTRIBUTE_TYPE_CD},
+			   #{FILE_SIZE},
+			   #{INTERFACE_DT}
+		   )
+</insert>
+
+<insert id="insertDocsDrawing">
+	INSERT INTO DOCS_DRAWING (
+		CN_SERIAL,
+		OBJECT_ID,
+		BUSINESS_AREA_CD,
+		BUSINESS_TYPE_CD,
+		ECN_NO,
+		ECN_INSERT_UID,
+		DRAWING_TYPE,
+		DRAWING_NO,
+		DRAWING_REV,
+		REV_NO,
+		DRAWING_NM,
+		DISTRIBUTE_TYPE_CD,
+		STATUS_CD,
+		CURRENT_PAGE_NO,
+		TOTAL_PAGE_NO,
+		EFFECTIVE_DT,
+		FILE_PATH_NM,
+		ORG_FILE_NM,
+		FILE_NM,
+		FILE_SIZE,
+		STD_GAPP_DT,
+		CHANGE_GAPP_DT,
+		PURCHASER_UID,
+		VENDOR_CD,
+		DESCRIPTION,
+		SECURITY_TYPE_CD,
+		PROTECT_YN,
+		INSERT_DEPT_NM,
+		INSERT_UID,
+		INSERT_DT,
+		UPDATE_DEPT_NM,
+		UPDATE_UID,
+		UPDATE_DT,
+		INTERFACE_DT,
+		PRODUCT_CD,
+		PLANT_CD,
+		PDM_PART_NO,
+		PART_REV,
+		INSERT_USER_NM,
+		ECN_TITLE,
+		ECN_VENDOR_USER,
+		VALID_TYPE,
+		DISTRIBUTION_YN
+	)
+	VALUES (
+			   #{CN_SERIAL},
+			   #{OBJECT_ID},
+			   #{BUSINESS_AREA_CD},
+			   #{BUSINESS_TYPE_CD},
+			   #{ECN_NO},
+			   #{ECN_INSERT_UID},
+			   #{DRAWING_TYPE},
+			   #{DRAWING_NO},
+			   #{DRAWING_REV},
+			   #{REV_NO},
+			   #{DRAWING_NM},
+			   #{DISTRIBUTE_TYPE_CD},
+			   #{STATUS_CD},
+			   #{CURRENT_PAGE_NO},
+			   #{TOTAL_PAGE_NO},
+			   #{EFFECTIVE_DT},
+			   #{FILE_PATH_NM},
+			   #{ORG_FILE_NM},
+			   #{FILE_NM},
+			   #{FILE_SIZE},
+			   #{STD_GAPP_DT},
+			   #{CHANGE_GAPP_DT},
+			   #{PURCHASER_UID},
+			   #{VENDOR_CD},
+			   #{DESCRIPTION},
+			   #{SECURITY_TYPE_CD},
+			   #{PROTECT_YN},
+			   #{INSERT_DEPT_NM},
+			   #{INSERT_UID},
+			   #{INSERT_DT},
+			   #{UPDATE_DEPT_NM},
+			   #{UPDATE_UID},
+			   #{UPDATE_DT},
+			   #{INTERFACE_DT},
+			   #{PRODUCT_CD},
+			   #{PLANT_CD},
+			   #{PDM_PART_NO},
+			   #{PART_REV},
+			   #{INSERT_USER_NM},
+			   #{ECN_TITLE},
+			   #{ECN_VENDOR_USER},
+			   #{VALID_TYPE},
+			   #{DISTRIBUTION_YN}
+		   )
+</insert>
+
+<insert id="insertDocsDrawingMember">
+	INSERT INTO DOCS_DRAWING_MEMBER (
+		CN_SERIAL,
+		OBJECT_ID,
+		ACCESS_UID,
+		INTERFACE_DT
+	)
+	VALUES (
+			   #{CN_SERIAL},
+			   #{OBJECT_ID},
+			   #{ACCESS_UID},
+			   #{INTERFACE_DT}
+		   )
+</insert>
+
+<insert id="insertDocsDocument">
+	INSERT INTO DOCS_DOCUMENT (
+		CN_SERIAL,
+		OBJECT_ID,
+		BUSINESS_AREA_CD,
+		BUSINESS_TYPE_CD,
+		DOC_CLASS_CD1,
+		DOC_CLASS_NM1,
+		DOC_CLASS_CD2,
+		DOC_CLASS_NM2,
+		PRODUCT_CD,
+		ECN_NO,
+		ECN_INSERT_UID,
+		DOCUMENT_NO,
+		REV_NO,
+		DOCUMENT_NM,
+		DOCUMENT_ENNM,
+		ACCOUNT_NM,
+		STATUS_CD,
+		TOTAL_SHEET,
+		PROJECT_CD,
+		PROJECT_NM,
+		DISTRIBUTE_TYPE_CD,
+		STD_GAPP_DT,
+		CHANGE_GAPP_DT,
+		SECURITY_TYPE_CD,
+		PROTECT_YN,
+		DESCRIPTION,
+		INSERT_DEPT_NM,
+		INSERT_UID,
+		INSERT_DT,
+		UPDATE_DEPT_NM,
+		UPDATE_UID,
+		UPDATE_DT,
+		INTERFACE_DT,
+		VALID_TYPE
+	)
+	VALUES (
+			   #{CN_SERIAL},
+			   #{OBJECT_ID},
+			   #{BUSINESS_AREA_CD},
+			   #{BUSINESS_TYPE_CD},
+			   #{DOC_CLASS_CD1},
+			   #{DOC_CLASS_NM1},
+			   #{DOC_CLASS_CD2},
+			   #{DOC_CLASS_NM2},
+			   #{PRODUCT_CD},
+			   #{ECN_NO},
+			   #{ECN_INSERT_UID},
+			   #{DOCUMENT_NO},
+			   #{REV_NO},
+			   #{DOCUMENT_NM},
+			   #{DOCUMENT_ENNM},
+			   #{ACCOUNT_NM},
+			   #{STATUS_CD},
+			   #{TOTAL_SHEET},
+			   #{PROJECT_CD},
+			   #{PROJECT_NM},
+			   #{DISTRIBUTE_TYPE_CD},
+			   #{STD_GAPP_DT},
+			   #{CHANGE_GAPP_DT},
+			   #{SECURITY_TYPE_CD},
+			   #{PROTECT_YN},
+			   #{DESCRIPTION},
+			   #{INSERT_DEPT_NM},
+			   #{INSERT_UID},
+			   #{INSERT_DT},
+			   #{UPDATE_DEPT_NM},
+			   #{UPDATE_UID},
+			   #{UPDATE_DT},
+			   #{INTERFACE_DT},
+			   #{VALID_TYPE}
+		   )
+</insert>
+
+<insert id="insertDocsDocumentMember">
+	INSERT INTO DOCS_DOCUMENT_MEMBER (
+		CN_SERIAL,
+		OBJECT_ID,
+		ACCESS_UID,
+		INTERFACE_DT
+	)
+	VALUES (
+			   #{CN_SERIAL},
+			   #{OBJECT_ID},
+			   #{ACCESS_UID},
+			   #{INTERFACE_DT}
+		   )
+</insert>
+
+<insert id="insertDocsDocumentFile">
+	INSERT INTO DOCS_DOCUMENT_FILE (
+		CN_SERIAL,
+		OBJECT_ID,
+		FILE_NO,
+		FILE_PATH_NM,
+		ORG_FILE_NM,
+		FILE_NM,
+		DISTRIBUTE_TYPE_CD,
+		FILE_SIZE,
+		INTERFACE_DT
+	)
+	VALUES (
+			   #{CN_SERIAL},
+			   #{OBJECT_ID},
+			   #{FILE_NO},
+			   #{FILE_PATH_NM},
+			   #{ORG_FILE_NM},
+			   #{FILE_NM},
+			   #{DISTRIBUTE_TYPE_CD},
+			   #{FILE_SIZE},
+			   #{INTERFACE_DT}
+		   )
+</insert>
+
+<insert id="insertDocsProductDocument">
+	INSERT INTO DOCS_PRODUCT_DOCUMENT (
+		CN_SERIAL,
+		OBJECT_ID,
+		BUSINESS_AREA_CD,
+		BUSINESS_TYPE_CD,
+		DOC_CLASS_CD1,
+		DOC_CLASS_NM1,
+		DOC_CLASS_CD2,
+		DOC_CLASS_NM2,
+		DOCUMENT_NO,
+		REV_NO,
+		DOCUMENT_NM,
+		STATUS_CD,
+		TOTAL_PAGE_CNT,
+		SECURITY_TYPE_CD,
+		APPLY_PRODUCT_NO,
+		DISTRIBUTE_TYPE_CD,
+		APPLY_HOGI_NO,
+		CALL_ID,
+		ECN_NO,
+		PROCESS_TYPE_CD,
+		DESCRIPTION,
+		INSERT_DEPT_NM,
+		INSERT_UID,
+		INSERT_DT,
+		UPDATE_DEPT_NM,
+		UPDATE_UID,
+		UPDATE_DT,
+		INTERFACE_DT
+	)
+	VALUES (
+			   #{CN_SERIAL},
+			   #{OBJECT_ID},
+			   #{BUSINESS_AREA_CD},
+			   #{BUSINESS_TYPE_CD},
+			   #{DOC_CLASS_CD1},
+			   #{DOC_CLASS_NM1},
+			   #{DOC_CLASS_CD2},
+			   #{DOC_CLASS_NM2},
+			   #{DOCUMENT_NO},
+			   #{REV_NO},
+			   #{DOCUMENT_NM},
+			   #{STATUS_CD},
+			   #{TOTAL_PAGE_CNT},
+			   #{SECURITY_TYPE_CD},
+			   #{APPLY_PRODUCT_NO},
+			   #{DISTRIBUTE_TYPE_CD},
+			   #{APPLY_HOGI_NO},
+			   #{CALL_ID},
+			   #{ECN_NO},
+			   #{PROCESS_TYPE_CD},
+			   #{DESCRIPTION},
+			   #{INSERT_DEPT_NM},
+			   #{INSERT_UID},
+			   #{INSERT_DT},
+			   #{UPDATE_DEPT_NM},
+			   #{UPDATE_UID},
+			   #{UPDATE_DT},
+			   #{INTERFACE_DT}
+		   )
+</insert>
+
+<insert id="insertDocsProductDocumentFile">
+	INSERT INTO DOCS_PRODUCT_DOCUMENT_FILE (
+		CN_SERIAL,
+		OBJECT_ID,
+		FILE_NO,
+		FILE_PATH_NM,
+		ORG_FILE_NM,
+		FILE_NM,
+		DISTRIBUTE_TYPE_CD,
+		FILE_SIZE,
+		INTERFACE_DT
+	)
+	VALUES (
+			   #{CN_SERIAL},
+			   #{OBJECT_ID},
+			   #{FILE_NO},
+			   #{FILE_PATH_NM},
+			   #{ORG_FILE_NM},
+			   #{FILE_NM},
+			   #{DISTRIBUTE_TYPE_CD},
+			   #{FILE_SIZE},
+			   #{INTERFACE_DT}
+		   )
+</insert>
+
+<insert id="insertDocsProductSw">
+	INSERT INTO DOCS_PRODUCT_SW (
+		CN_SERIAL,
+		OBJECT_ID,
+		BUSINESS_AREA_CD,
+		BUSINESS_TYPE_CD,
+		ECN_NO,
+		PRODUCT_NO,
+		SW_CLASS_CD1,
+		SW_CLASS_NM1,
+		SW_CLASS_CD2,
+		SW_CLASS_NM2,
+		SW_NO,
+		REV_NO,
+		SW_NM,
+		SW_VERSION_NO,
+		STATUS_CD,
+		DESCRIPTION,
+		SECURITY_TYPE_CD,
+		INSERT_DEPT_NM,
+		INSERT_UID,
+		INSERT_DT,
+		UPDATE_DEPT_NM,
+		UPDATE_UID,
+		UPDATE_DT,
+		INTERFACE_DT,
+		DISTRIBUTE_TYPE_CD
+	)
+	VALUES (
+			   #{CN_SERIAL},
+			   #{OBJECT_ID},
+			   #{BUSINESS_AREA_CD},
+			   #{BUSINESS_TYPE_CD},
+			   #{ECN_NO},
+			   #{PRODUCT_NO},
+			   #{SW_CLASS_CD1},
+			   #{SW_CLASS_NM1},
+			   #{SW_CLASS_CD2},
+			   #{SW_CLASS_NM2},
+			   #{SW_NO},
+			   #{REV_NO},
+			   #{SW_NM},
+			   #{SW_VERSION_NO},
+			   #{STATUS_CD},
+			   #{DESCRIPTION},
+			   #{SECURITY_TYPE_CD},
+			   #{INSERT_DEPT_NM},
+			   #{INSERT_UID},
+			   #{INSERT_DT},
+			   #{UPDATE_DEPT_NM},
+			   #{UPDATE_UID},
+			   #{UPDATE_DT},
+			   #{INTERFACE_DT},
+			   #{DISTRIBUTE_TYPE_CD}
+		   )
+</insert>
+<insert id="insertDocsProductSwFile">
+	INSERT INTO DOCS_PRODUCT_SW_FILE (
+		CN_SERIAL,
+		OBJECT_ID,
+		FILE_NO,
+		FILE_PATH_NM,
+		ORG_FILE_NM,
+		FILE_NM,
+		DISTRIBUTE_TYPE_CD,
+		FILE_SIZE,
+		CHECK_SUM,
+		INTERFACE_DT
+	)
+	VALUES (
+			   #{CN_SERIAL},
+			   #{OBJECT_ID},
+			   #{FILE_NO},
+			   #{FILE_PATH_NM},
+			   #{ORG_FILE_NM},
+			   #{FILE_NM},
+			   #{DISTRIBUTE_TYPE_CD},
+			   #{FILE_SIZE},
+			   #{CHECK_SUM},
+			   #{INTERFACE_DT}
+		   )
+</insert>
+
+<insert id="insertDocsEcoHistory">
+	INSERT INTO DOCS_ECO_HISTORY (
+		CN_SERIAL,
+		BUSINESS_AREA_CD,
+		BUSINESS_TYPE_CD,
+		ECN_NO,
+		UPPER_PART_NO,
+		UPPER_PART_REV_NO,
+		UPPER_DRAWING_NO,
+		UPPER_DRAWING_REV_NO,
+		BEFORE_PART_NO,
+		BEFORE_PART_REV_NO,
+		BEFORE_DRAWING_NO,
+		BEFORE_DRAWING_REV_NO,
+		AFTER_PART_NO,
+		AFTER_PART_REV_NO,
+		AFTER_DRAWING_NO,
+		AFTER_DRAWING_REV_NO,
+		USE_TYPE_CD,
+		ECN_INSERT_UID,
+		ECN_APPROVAL_DT,
+		SEQ_NO,
+		INTERFACE_DT
+	)
+	VALUES (
+			   #{CN_SERIAL},
+			   #{BUSINESS_AREA_CD},
+			   #{BUSINESS_TYPE_CD},
+			   #{ECN_NO},
+			   #{UPPER_PART_NO},
+			   #{UPPER_PART_REV_NO},
+			   #{UPPER_DRAWING_NO},
+			   #{UPPER_DRAWING_REV_NO},
+			   #{BEFORE_PART_NO},
+			   #{BEFORE_PART_REV_NO},
+			   #{BEFORE_DRAWING_NO},
+			   #{BEFORE_DRAWING_REV_NO},
+			   #{AFTER_PART_NO},
+			   #{AFTER_PART_REV_NO},
+			   #{AFTER_DRAWING_NO},
+			   #{AFTER_DRAWING_REV_NO},
+			   #{USE_TYPE_CD},
+			   #{ECN_INSERT_UID},
+			   #{ECN_APPROVAL_DT},
+			   #{SEQ_NO},
+			   #{INTERFACE_DT}
+		   )
+</insert>
+
+<insert id="insertDocsItem">
+	INSERT INTO DOCS_ITEM (
+		SERIAL,
+		ITYPE,
+		MATNR,
+		CODE,
+		WERKS,
+		C0001,
+		C0002_1,
+		C0002_2,
+		C0003,
+		C0004,
+		C0005_1,
+		C0005_2,
+		C0006,
+		C0007_1,
+		C0007_2,
+		C0007_3,
+		C0008_1,
+		C0008_2,
+		C0008_3,
+		C0009,
+		C0010,
+		C0011_1,
+		C0011_2,
+		C0013,
+		C0014,
+		C0017,
+		C0018,
+		C0019,
+		C0020,
+		C0021,
+		C0022,
+		C0023,
+		C0027,
+		C0028,
+		C0030,
+		C0032,
+		C0034,
+		C0037,
+		REQID,
+		CN_ERP_TYPE,
+		CN_PREV_MAT_CODE,
+		OBJECT_ID,
+		CN_RESULT,
+		CN_MESSAGE,
+		E_RETURN,
+		C0038,
+		INTERFACE_DT,
+		CN_PART_REV,
+		CN_PDM_PART_NO,
+		CN_JOB_NO
+	)
+	VALUES (
+			   #{SERIAL},
+			   #{ITYPE},
+			   #{MATNR},
+			   #{CODE},
+			   #{WERKS},
+			   #{C0001},
+			   #{C0002_1},
+			   #{C0002_2},
+			   #{C0003},
+			   #{C0004},
+			   #{C0005_1},
+			   #{C0005_2},
+			   #{C0006},
+			   #{C0007_1},
+			   #{C0007_2},
+			   #{C0007_3},
+			   #{C0008_1},
+			   #{C0008_2},
+			   #{C0008_3},
+			   #{C0009},
+			   #{C0010},
+			   #{C0011_1},
+			   #{C0011_2},
+			   #{C0013},
+			   #{C0014},
+			   #{C0017},
+			   #{C0018},
+			   #{C0019},
+			   #{C0020},
+			   #{C0021},
+			   #{C0022},
+			   #{C0023},
+			   #{C0027},
+			   #{C0028},
+			   #{C0030},
+			   #{C0032},
+			   #{C0034},
+			   #{C0037},
+			   #{REQID},
+			   #{CN_ERP_TYPE},
+			   #{CN_PREV_MAT_CODE},
+			   #{OBJECT_ID},
+			   #{CN_RESULT},
+			   #{CN_MESSAGE},
+			   #{E_RETURN},
+			   #{C0038},
+			   #{INTERFACE_DT},
+			   #{CN_PART_REV},
+			   #{CN_PDM_PART_NO},
+			   #{CN_JOB_NO}
+		   )
+</insert>
+
+<update id="updateDocsSw">
+	UPDATE DOCS_SW
+	SET
+		CN_SERIAL = #{CN_SERIAL},
+		BUSINESS_AREA_CD = #{BUSINESS_AREA_CD},
+		BUSINESS_TYPE_CD = #{BUSINESS_TYPE_CD},
+		SW_CLASS_CD1 = #{SW_CLASS_CD1},
+		SW_CLASS_NM1 = #{SW_CLASS_NM1},
+		SW_CLASS_CD2 = #{SW_CLASS_CD2},
+		SW_CLASS_NM2 = #{SW_CLASS_NM2},
+		SW_TYPE_CD = #{SW_TYPE_CD},
+		PRODUCT_CD = #{PRODUCT_CD},
+		ECN_NO = #{ECN_NO},
+		ECN_INSERT_UID = #{ECN_INSERT_UID},
+		SW_NO = #{SW_NO},
+		REV_NO = #{REV_NO},
+		SW_NM = #{SW_NM},
+		STATUS_CD = #{STATUS_CD},
+		SW_VERSION_NO = #{SW_VERSION_NO},
+		DOC_VERSION_NO = #{DOC_VERSION_NO},
+		PROJECT_CD = #{PROJECT_CD},
+		PROJECT_NM = #{PROJECT_NM},
+		DISTRIBUTE_TYPE_CD = #{DISTRIBUTE_TYPE_CD},
+		STD_GAPP_DT = #{STD_GAPP_DT},
+		CHANGE_GAPP_DT = #{CHANGE_GAPP_DT},
+		DESCRIPTION = #{DESCRIPTION},
+		SECURITY_TYPE_CD = #{SECURITY_TYPE_CD},
+		PROTECT_YN = #{PROTECT_YN},
+		INSERT_DEPT_NM = #{INSERT_DEPT_NM},
+		INSERT_UID = #{INSERT_UID},
+		INSERT_DT = #{INSERT_DT},
+		UPDATE_DEPT_NM = #{UPDATE_DEPT_NM},
+		UPDATE_UID = #{UPDATE_UID},
+		UPDATE_DT = #{UPDATE_DT},
+		INTERFACE_DT = #{INTERFACE_DT},
+		VALID_TYPE = #{VALID_TYPE}
+	WHERE
+		OBJECT_ID = #{OBJECT_ID}
+</update>
+
+<update id="updateDocsDocument">
+	UPDATE DOCS_DOCUMENT
+	SET
+		CN_SERIAL = #{CN_SERIAL},
+		BUSINESS_AREA_CD = #{BUSINESS_AREA_CD},
+		BUSINESS_TYPE_CD = #{BUSINESS_TYPE_CD},
+		DOC_CLASS_CD1 = #{DOC_CLASS_CD1},
+		DOC_CLASS_NM1 = #{DOC_CLASS_NM1},
+		DOC_CLASS_CD2 = #{DOC_CLASS_CD2},
+		DOC_CLASS_NM2 = #{DOC_CLASS_NM2},
+		PRODUCT_CD = #{PRODUCT_CD},
+		ECN_NO = #{ECN_NO},
+		ECN_INSERT_UID = #{ECN_INSERT_UID},
+		DOCUMENT_NO = #{DOCUMENT_NO},
+		REV_NO = #{REV_NO},
+		DOCUMENT_NM = #{DOCUMENT_NM},
+		DOCUMENT_ENNM = #{DOCUMENT_ENNM},
+		ACCOUNT_NM = #{ACCOUNT_NM},
+		STATUS_CD = #{STATUS_CD},
+		TOTAL_SHEET = #{TOTAL_SHEET},
+		PROJECT_CD = #{PROJECT_CD},
+		PROJECT_NM = #{PROJECT_NM},
+		DISTRIBUTE_TYPE_CD = #{DISTRIBUTE_TYPE_CD},
+		STD_GAPP_DT = #{STD_GAPP_DT},
+		CHANGE_GAPP_DT = #{CHANGE_GAPP_DT},
+		SECURITY_TYPE_CD = #{SECURITY_TYPE_CD},
+		PROTECT_YN = #{PROTECT_YN},
+		DESCRIPTION = #{DESCRIPTION},
+		INSERT_DEPT_NM = #{INSERT_DEPT_NM},
+		INSERT_UID = #{INSERT_UID},
+		INSERT_DT = #{INSERT_DT},
+		UPDATE_DEPT_NM = #{UPDATE_DEPT_NM},
+		UPDATE_UID = #{UPDATE_UID},
+		UPDATE_DT = #{UPDATE_DT},
+		INTERFACE_DT = #{INTERFACE_DT},
+		VALID_TYPE = #{VALID_TYPE}
+	WHERE
+		OBJECT_ID = #{OBJECT_ID}
+</update>
+
+<update id="updateDocsDocumentFile">
+	UPDATE DOCS_DOCUMENT_FILE
+	SET
+		CN_SERIAL = #{CN_SERIAL},
+		FILE_PATH_NM = #{FILE_PATH_NM},
+		ORG_FILE_NM = #{ORG_FILE_NM},
+		FILE_NM = #{FILE_NM},
+		DISTRIBUTE_TYPE_CD = #{DISTRIBUTE_TYPE_CD},
+		FILE_SIZE = #{FILE_SIZE},
+		INTERFACE_DT = #{INTERFACE_DT}
+	WHERE
+		OBJECT_ID = #{OBJECT_ID} and FILE_NO = #{FILE_NO}
+</update>
+
+<update id="updateDocsDrawing">
+	UPDATE DOCS_DRAWING
+	SET
+		CN_SERIAL = #{CN_SERIAL},
+		BUSINESS_AREA_CD = #{BUSINESS_AREA_CD},
+		BUSINESS_TYPE_CD = #{BUSINESS_TYPE_CD},
+		ECN_NO = #{ECN_NO},
+		ECN_INSERT_UID = #{ECN_INSERT_UID},
+		DRAWING_TYPE = #{DRAWING_TYPE},
+		DRAWING_NO = #{DRAWING_NO},
+		DRAWING_REV = #{DRAWING_REV},
+		REV_NO = #{REV_NO},
+		DRAWING_NM = #{DRAWING_NM},
+		DISTRIBUTE_TYPE_CD = #{DISTRIBUTE_TYPE_CD},
+		STATUS_CD = #{STATUS_CD},
+		CURRENT_PAGE_NO = #{CURRENT_PAGE_NO},
+		TOTAL_PAGE_NO = #{TOTAL_PAGE_NO},
+		EFFECTIVE_DT = #{EFFECTIVE_DT},
+		FILE_PATH_NM = #{FILE_PATH_NM},
+		ORG_FILE_NM = #{ORG_FILE_NM},
+		FILE_NM = #{FILE_NM},
+		FILE_SIZE = #{FILE_SIZE},
+		STD_GAPP_DT = #{STD_GAPP_DT},
+		CHANGE_GAPP_DT = #{CHANGE_GAPP_DT},
+		PURCHASER_UID = #{PURCHASER_UID},
+		VENDOR_CD = #{VENDOR_CD},
+		DESCRIPTION = #{DESCRIPTION},
+		SECURITY_TYPE_CD = #{SECURITY_TYPE_CD},
+		PROTECT_YN = #{PROTECT_YN},
+		INSERT_DEPT_NM = #{INSERT_DEPT_NM},
+		INSERT_UID = #{INSERT_UID},
+		INSERT_DT = #{INSERT_DT},
+		UPDATE_DEPT_NM = #{UPDATE_DEPT_NM},
+		UPDATE_UID = #{UPDATE_UID},
+		UPDATE_DT = #{UPDATE_DT},
+		INTERFACE_DT = #{INTERFACE_DT},
+		PRODUCT_CD = #{PRODUCT_CD},
+		PLANT_CD = #{PLANT_CD},
+		PDM_PART_NO = #{PDM_PART_NO},
+		PART_REV = #{PART_REV},
+		INSERT_USER_NM = #{INSERT_USER_NM},
+		ECN_TITLE = #{ECN_TITLE},
+		ECN_VENDOR_USER = #{ECN_VENDOR_USER},
+		VALID_TYPE = #{VALID_TYPE}
+	WHERE
+		OBJECT_ID = #{OBJECT_ID}
+</update>
+
+<update id="updateFilePath">
+	UPDATE #{TABLE_NAME}
+	SET
+	FILE_PATH_NM = #{NEW_PATH_NM}
+	WHERE
+	OBJECT_ID = #{OBJECT_ID}
+	<if test='FILE_NO != null'>
+		AND FILE_NO = #{FILE_NO}
+	</if>
+</update>
+
+<update id="updateFileMoveResult">
+	UPDATE #{TABLE_NAME}
+	SET
+	MOVED = #{RESULT}
+	WHERE
+	OBJECT_ID = #{OBJECT_ID}
+	<if test='FILE_NO != null'>
+		AND FILE_NO = #{FILE_NO}
+	</if>
+</update>
+
+<update id="updateDocsProductDocument">
+	UPDATE DOCS_PRODUCT_DOCUMENT
+	SET
+		CN_SERIAL = #{CN_SERIAL},
+		BUSINESS_AREA_CD = #{BUSINESS_AREA_CD},
+		BUSINESS_TYPE_CD = #{BUSINESS_TYPE_CD},
+		DOC_CLASS_CD1 = #{DOC_CLASS_CD1},
+		DOC_CLASS_NM1 = #{DOC_CLASS_NM1},
+		DOC_CLASS_CD2 = #{DOC_CLASS_CD2},
+		DOC_CLASS_NM2 = #{DOC_CLASS_NM2},
+		DOCUMENT_NO = #{DOCUMENT_NO},
+		REV_NO = #{REV_NO},
+		DOCUMENT_NM = #{DOCUMENT_NM},
+		STATUS_CD = #{STATUS_CD},
+		TOTAL_PAGE_CNT = #{TOTAL_PAGE_CNT},
+		SECURITY_TYPE_CD = #{SECURITY_TYPE_CD},
+		APPLY_PRODUCT_NO = #{APPLY_PRODUCT_NO},
+		DISTRIBUTE_TYPE_CD = #{DISTRIBUTE_TYPE_CD},
+		APPLY_HOGI_NO = #{APPLY_HOGI_NO},
+		CALL_ID = #{CALL_ID},
+		ECN_NO = #{ECN_NO},
+		PROCESS_TYPE_CD = #{PROCESS_TYPE_CD},
+		DESCRIPTION = #{DESCRIPTION},
+		INSERT_DEPT_NM = #{INSERT_DEPT_NM},
+		INSERT_UID = #{INSERT_UID},
+		INSERT_DT = #{INSERT_DT},
+		UPDATE_DEPT_NM = #{UPDATE_DEPT_NM},
+		UPDATE_UID = #{UPDATE_UID},
+		UPDATE_DT = #{UPDATE_DT},
+		INTERFACE_DT = #{INTERFACE_DT}
+	WHERE
+		OBJECT_ID = #{OBJECT_ID}
+</update>
+
+<update id="updateDocsProductDocumentFile">
+	UPDATE DOCS_PRODUCT_DOCUMENT_FILE
+	SET
+		CN_SERIAL = #{CN_SERIAL},
+		FILE_PATH_NM = #{FILE_PATH_NM},
+		ORG_FILE_NM = #{ORG_FILE_NM},
+		FILE_NM = #{FILE_NM},
+		DISTRIBUTE_TYPE_CD = #{DISTRIBUTE_TYPE_CD},
+		FILE_SIZE = #{FILE_SIZE},
+		INTERFACE_DT = #{INTERFACE_DT}
+	WHERE
+		OBJECT_ID = #{OBJECT_ID} AND  FILE_NO = #{FILE_NO}
+</update>
+
+<update id="updateDocsProductSw">
+	UPDATE DOCS_PRODUCT_SW
+	SET
+		CN_SERIAL = #{CN_SERIAL},
+		BUSINESS_AREA_CD = #{BUSINESS_AREA_CD},
+		BUSINESS_TYPE_CD = #{BUSINESS_TYPE_CD},
+		ECN_NO = #{ECN_NO},
+		PRODUCT_NO = #{PRODUCT_NO},
+		SW_CLASS_CD1 = #{SW_CLASS_CD1},
+		SW_CLASS_NM1 = #{SW_CLASS_NM1},
+		SW_CLASS_CD2 = #{SW_CLASS_CD2},
+		SW_CLASS_NM2 = #{SW_CLASS_NM2},
+		SW_NO = #{SW_NO},
+		REV_NO = #{REV_NO},
+		SW_NM = #{SW_NM},
+		SW_VERSION_NO = #{SW_VERSION_NO},
+		STATUS_CD = #{STATUS_CD},
+		DESCRIPTION = #{DESCRIPTION},
+		SECURITY_TYPE_CD = #{SECURITY_TYPE_CD},
+		INSERT_DEPT_NM = #{INSERT_DEPT_NM},
+		INSERT_UID = #{INSERT_UID},
+		INSERT_DT = #{INSERT_DT},
+		UPDATE_DEPT_NM = #{UPDATE_DEPT_NM},
+		UPDATE_UID = #{UPDATE_UID},
+		UPDATE_DT = #{UPDATE_DT},
+		INTERFACE_DT = #{INTERFACE_DT},
+		DISTRIBUTE_TYPE_CD = #{DISTRIBUTE_TYPE_CD}
+	WHERE
+		OBJECT_ID = #{OBJECT_ID}
+</update>
+
+<update id="updateDocsProductSwFile">
+	UPDATE DOCS_PRODUCT_SW_FILE
+	SET
+		CN_SERIAL = #{CN_SERIAL},
+		FILE_PATH_NM = #{FILE_PATH_NM},
+		ORG_FILE_NM = #{ORG_FILE_NM},
+		FILE_NM = #{FILE_NM},
+		DISTRIBUTE_TYPE_CD = #{DISTRIBUTE_TYPE_CD},
+		FILE_SIZE = #{FILE_SIZE},
+		CHECK_SUM = #{CHECK_SUM},
+		INTERFACE_DT = #{INTERFACE_DT}
+	WHERE
+		OBJECT_ID = #{OBJECT_ID} AND FILE_NO = #{FILE_NO}
+</update>
+
+<update id="updateDocsSwFile">
+	UPDATE DOCS_SW_FILE
+	SET
+		CN_SERIAL = #{CN_SERIAL},
+		FILE_PATH_NM = #{FILE_PATH_NM},
+		ORG_FILE_NM = #{ORG_FILE_NM},
+		FILE_NM = #{FILE_NM},
+		CHECK_SUM = #{CHECK_SUM},
+		DISTRIBUTE_TYPE_CD = #{DISTRIBUTE_TYPE_CD},
+		FILE_SIZE = #{FILE_SIZE},
+		INTERFACE_DT = #{INTERFACE_DT}
+	WHERE
+		OBJECT_ID = #{OBJECT_ID} AND FILE_NO = #{FILE_NO}
+</update>
+
+<update id="updateEcoHistory">
+	UPDATE DOCS_ECO_HISTORY
+	SET
+		BUSINESS_AREA_CD = #{BUSINESS_AREA_CD},
+		BUSINESS_TYPE_CD = #{BUSINESS_TYPE_CD},
+		UPPER_PART_NO = #{UPPER_PART_NO},
+		UPPER_PART_REV_NO = #{UPPER_PART_REV_NO},
+		UPPER_DRAWING_NO = #{UPPER_DRAWING_NO},
+		UPPER_DRAWING_REV_NO = #{UPPER_DRAWING_REV_NO},
+		BEFORE_PART_NO = #{BEFORE_PART_NO},
+		BEFORE_PART_REV_NO = #{BEFORE_PART_REV_NO},
+		BEFORE_DRAWING_NO = #{BEFORE_DRAWING_NO},
+		BEFORE_DRAWING_REV_NO = #{BEFORE_DRAWING_REV_NO},
+		AFTER_PART_NO = #{AFTER_PART_NO},
+		AFTER_PART_REV_NO = #{AFTER_PART_REV_NO},
+		AFTER_DRAWING_NO = #{AFTER_DRAWING_NO},
+		AFTER_DRAWING_REV_NO = #{AFTER_DRAWING_REV_NO},
+		USE_TYPE_CD = #{USE_TYPE_CD},
+		ECN_INSERT_UID = #{ECN_INSERT_UID},
+		ECN_APPROVAL_DT = #{ECN_APPROVAL_DT},
+		INTERFACE_DT = #{INTERFACE_DT}
+	WHERE 1= 1
+	  AND CN_SERIAL = #{CN_SERIAL}
+	  AND ECN_NO = #{ECN_NO}
+	  AND SEQ_NO = #{SEQ_NO}
+</update>
+
+<update id="updateDocsItem">
+	UPDATE DOCS_ITEM
+	SET
+		SERIAL = #{SERIAL},
+		ITYPE = #{ITYPE},
+		MATNR = #{MATNR},
+		CODE = #{CODE},
+		C0001 = #{C0001},
+		C0002_1 = #{C0002_1},
+		C0002_2 = #{C0002_2},
+		C0003 = #{C0003},
+		C0004 = #{C0004},
+		C0005_1 = #{C0005_1},
+		C0005_2 = #{C0005_2},
+		C0006 = #{C0006},
+		C0007_1 = #{C0007_1},
+		C0007_2 = #{C0007_2},
+		C0007_3 = #{C0007_3},
+		C0008_1 = #{C0008_1},
+		C0008_2 = #{C0008_2},
+		C0008_3 = #{C0008_3},
+		C0009 = #{C0009},
+		C0010 = #{C0010},
+		C0011_1 = #{C0011_1},
+		C0011_2 = #{C0011_2},
+		C0013 = #{C0013},
+		C0014 = #{C0014},
+		C0017 = #{C0017},
+		C0018 = #{C0018},
+		C0019 = #{C0019},
+		C0020 = #{C0020},
+		C0021 = #{C0021},
+		C0022 = #{C0022},
+		C0023 = #{C0023},
+		C0027 = #{C0027},
+		C0028 = #{C0028},
+		C0030 = #{C0030},
+		C0032 = #{C0032},
+		C0034 = #{C0034},
+		C0037 = #{C0037},
+		REQID = #{REQID},
+		CN_ERP_TYPE = #{CN_ERP_TYPE},
+		CN_PREV_MAT_CODE = #{CN_PREV_MAT_CODE},
+		OBJECT_ID = #{OBJECT_ID},
+		CN_RESULT = #{CN_RESULT},
+		CN_MESSAGE = #{CN_MESSAGE},
+		E_RETURN = #{E_RETURN},
+		C0038 = #{C0038},
+		INTERFACE_DT = #{INTERFACE_DT}
+	WHERE 1= 1
+	  AND WERKS = #{WERKS}
+	  AND CN_PART_REV = #{CN_PART_REV}
+	  AND CN_PDM_PART_NO = #{CN_PDM_PART_NO}
+	  AND CN_JOB_NO = #{CN_JOB_NO}
+</update>
+
+<delete id="deleteDocsSwMember">
+	DELETE FROM DOCS_SW_MEMBER WHERE OBJECT_ID = #{OBJECT_ID} AND ACCESS_UID = #{ACCESS_UID}
+</delete>
+
+<delete id="deleteDocsDocumentMember">
+	DELETE FROM DOCS_DOCUMENT_MEMBER WHERE OBJECT_ID = #{OBJECT_ID} AND ACCESS_UID = #{ACCESS_UID}
+</delete>
+
+<delete id="deleteDocsDrawingMember">
+	DELETE FROM DOCS_DRAWING_MEMBER WHERE OBJECT_ID = #{OBJECT_ID} AND ACCESS_UID = #{ACCESS_UID}
+</delete>
+
+<select id="selectErrorTableCount" resultType="Integer">
+	SELECT
+		COUNT(*) AS COUNT
+	FROM NOT_COMPLETED_CN_SERIAL
+</select>
+
+<select id="selectErrorCount" resultType="Integer">
+	SELECT
+		COUNT(*) AS COUNT
+	FROM NOT_COMPLETED_CN_SERIAL
+	WHERE CN_SERIAL = #{CN_SERIAL} AND OBJECT_ID = #{OBJECT_ID} AND TABLE_NAME = #{TABLE_NAME}
+</select>
+
+<insert id="insertError">
+	INSERT INTO NOT_COMPLETED_CN_SERIAL (
+	CN_SERIAL,
+	OBJECT_ID,
+	TABLE_NAME,
+	ERROR
+	)
+	VALUES (
+	#{CN_SERIAL},
+	#{OBJECT_ID},
+	#{TABLE_NAME},
+	#{ERROR}
+	)
+	<!--
+    ON DUPLICATE KEY UPDATE
+        ERROR = #{ERROR}
+     -->
+</insert>
+
+<update id="updateError">
+	UPDATE NOT_COMPLETED_CN_SERIAL
+	SET
+		ERROR = #{ERROR}
+	WHERE
+		CN_SERIAL = #{CN_SERIAL} AND OBJECT_ID = #{OBJECT_ID} AND TABLE_NAME = #{TABLE_NAME}
+</update>
+
+<delete id="deleteError">
+	DELETE FROM NOT_COMPLETED_CN_SERIAL WHERE OBJECT_ID = #{OBJECT_ID} AND CN_SERIAL = #{CN_SERIAL} AND TABLE_NAME = #{TABLE_NAME}
+</delete>
+
+<select id="selectCompanyCd" resultType="String">
+	SELECT COMPANY_CD
+	FROM DOCS_COMPANY
+	WHERE BIZ_NO = #{VENDOR_CD}
+		LIMIT 1
+</select>
+
+<insert id="insertDocsRequest">
+	<selectKey resultType="string" keyProperty="REQUEST_NO" order="BEFORE">
+		SELECT TO_CHAR(CURRENT_TIMESTAMP,'YYYYMMDD')||'-'||#{objectTypeCode}||LPAD(NVL(SUBSTR(MAX(REQUEST_NO),11),0)+1,4,0) AS REQUEST_NO
+		FROM DOCS_REQUEST
+		WHERE SUBSTR(REQUEST_NO,1,10) = TO_CHAR(CURRENT_TIMESTAMP,'YYYYMMDD')||'-'||#{objectTypeCode}
+	</selectKey>
+	INSERT INTO DOCS_REQUEST
+	(
+	REQUEST_NO
+	, REQUEST_TYPE
+	, REQUEST_PURPOSE
+	, APPROVAL_LINE_ID
+	, CURRENT_PROCESS_SEQ_NO
+	, DEPLOY_COMPANY_CD
+	, PRINT_YN
+	, DEPLOY_NORMAL_YN
+	, DEPLOY_SPECIAL_YN
+	, INSERT_USER_CD
+	, INSERT_DT
+	, UPDATE_USER_CD
+	, UPDATE_DT
+	, STATUS_CD
+	, OBJECT_TYPE
+	, BUSINESS_AREA_CD
+	, PROTECT_YN
+	)
+	VALUES
+	(
+	#{REQUEST_NO}
+	, 'DISTRIBUTION'			/* 요청유형 : 무조건 배포 */
+	, 'PRODUCT'					/* 용도 : 무조건 제조용 */
+	, #{APPROVAL_LINE_ID}
+	, '2'
+	, #{DEPLOY_COMPANY_CD}
+	, 'Y'						/* 출력가능여부 */
+	, 'N'						/* 일반영역 다운로드 가능 여부*/
+	, 'N'						/* 보안영역 다운로드 가능 여부 */
+	, #{DEPLOY_USER_CD}
+	, CURRENT_TIMESTAMP
+	, #{DEPLOY_USER_CD}
+	, CURRENT_TIMESTAMP
+	, 'REQUEST'
+	, #{OBJECT_TYPE}
+	, #{BUSINESS_AREA_CD}
+	, #{PROTECT_YN}
+	)
+</insert>
+
+<insert id="insertDocsRequestMapping">
+	INSERT INTO DOCS_REQUEST_MAPPING
+	(REQUEST_NO
+	, USE_YN
+	, OBJECT_ID
+	, OBJECT_NO
+	, OBJECT_NM
+	, BUSINESS_AREA_CD
+	, BUSINESS_TYPE_CD
+	<if test='SW_VERSION_NO != null'>
+		, SW_VERSION_NO
+	</if>
+	<if test='DOC_VERSION_NO != null'>
+		, DOC_VERSION_NO
+	</if>
+	, REV_NO
+	<if test='CURRENT_PAGE_NO != null'>
+		, CURRENT_PAGE_NO
+	</if>
+	<if test='TOTAL_PAGE_NO != null'>
+		, TOTAL_PAGE_NO
+	</if>
+	, ECN_NO
+	, STD_GAPP_DT
+	, CHANGE_GAPP_DT
+	, PROTECT_YN
+	, PRODUCT_CD
+	, DISTRIBUTE_TYPE_CD
+	, FILE_NM
+	<if test='APPLY_HOGI_NO != null'>
+		, APPLY_HOGI_NO
+	</if>
+	<if test='OBJECT_CLASS_NM2 != null'>
+		, OBJECT_CLASS_NM2
+	</if>
+	<if test='OBJECT_CLASS_CD2 != null'>
+		, OBJECT_CLASS_CD2
+	</if>
+	)
+	VALUES(
+	#{REQUEST_NO}
+	, 'Y'
+	, #{OBJECT_ID}
+	, #{OBJECT_NO}
+	, #{OBJECT_NM}
+	, #{BUSINESS_AREA_CD}
+	, #{BUSINESS_TYPE_CD}
+	<if test='SW_VERSION_NO != null'>
+		, #{SW_VERSION_NO}
+	</if>
+	<if test='DOC_VERSION_NO != null'>
+		, #{DOC_VERSION_NO}
+	</if>
+	, #{REV_NO}
+	<if test='CURRENT_PAGE_NO != null'>
+		, #{CURRENT_PAGE_NO}
+	</if>
+	<if test='TOTAL_PAGE_NO != null'>
+		, #{TOTAL_PAGE_NO}
+	</if>
+	, #{ECN_NO}
+	, #{STD_GAPP_DT}
+	, #{CHANGE_GAPP_DT}
+	, #{PROTECT_YN}
+	, #{PRODUCT_CD}
+	, #{DISTRIBUTE_TYPE_CD}
+	, #{FILE_NO}
+	<if test='APPLY_HOGI_NO != null'>
+		, #{APPLY_HOGI_NO}
+	</if>
+	<if test='OBJECT_CLASS_NM2 != null'>
+		, #{OBJECT_CLASS_NM2}
+	</if>
+	<if test='OBJECT_CLASS_CD2 != null'>
+		, #{OBJECT_CLASS_CD2}
+	</if>
+	)
+</insert>
+
+<select id="selectDeployUserInfo" resultType="HashMap">
+	SELECT
+		USER_CD
+		 , EMAIL
+	FROM (
+			 SELECT
+				 USER_CD
+				  , EMAIL
+			 FROM DOCS_USER u
+					  INNER JOIN DOCS_COMPANY  c ON c.COMPANY_CD = u.COMPANY_CD
+			 WHERE BIZ_NO = #{VENDOR_CD}
+			   AND DISTRIBUTION_PERSON_YN = 'Y'
+
+			 UNION ALL
+
+			 SELECT
+				 USER_CD
+				  , EMAIL
+			 FROM DOCS_USER u
+					  INNER JOIN DOCS_COMPANY  c ON c.COMPANY_CD = u.COMPANY_CD
+			 WHERE BIZ_NO = #{VENDOR_CD}
+		 )
+			 LIMIT 1
+</select>
+<select id="selectDocumentFileInfo" resultType="HashMap">
+	SELECT
+		USER_CD
+		 , EMAIL
+	FROM (
+			 SELECT
+				 USER_CD
+				  , EMAIL
+			 FROM DOCS_USER u
+					  INNER JOIN DOCS_COMPANY  c ON c.COMPANY_CD = u.COMPANY_CD
+			 WHERE BIZ_NO = #{VENDOR_CD}
+			   AND DISTRIBUTION_PERSON_YN = 'Y'
+
+			 UNION ALL
+
+			 SELECT
+				 USER_CD
+				  , EMAIL
+			 FROM DOCS_USER u
+					  INNER JOIN DOCS_COMPANY  c ON c.COMPANY_CD = u.COMPANY_CD
+			 WHERE BIZ_NO = #{VENDOR_CD}
+		 )
+			 LIMIT 1
+</select>
+
+<insert id="insertDocsRequestDetail">
+	INSERT INTO DOCS_REQUEST_DETAIL
+	(
+		REQUEST_NO
+	, PROCESS_SEQ
+	, APPROVAL_STATUS_CD
+	, ORIGINAL_USER_CD
+	, ACTUAL_USER_CD
+	, REQUEST_DESC
+	, ACTION_DT
+	, ACTION_CD
+	, APPROVAL_GRADE_CD
+	)
+	SELECT #{REQUEST_NO} AS REQUEST_NO
+		 , PROCESS_SEQ_NO AS PROCESS_SEQ
+		 , APPROVAL_STATUS_CD
+		 , CASE WHEN APPROVAL_STATUS_CD = 'REQUEST'
+					THEN #{DEPLOY_USER_CD}
+				WHEN APPROVAL_STATUS_CD = 'ACCEPT'
+					THEN #{ACCEPTANCE_USER_CD}
+				ELSE ''
+		END AS ORIGINAL_USER_CD
+		 , CASE WHEN APPROVAL_STATUS_CD = 'REQUEST'
+					THEN #{DEPLOY_USER_CD}
+				WHEN APPROVAL_STATUS_CD = 'ACCEPT'
+					THEN #{ACCEPTANCE_USER_CD}
+				ELSE ''
+		END AS ACTUAL_USER_CD
+		 , '긴급도 자동 요청' AS REQUEST_DESC
+		 , CASE WHEN APPROVAL_STATUS_CD = 'REQUEST'
+					THEN CURRENT_TIMESTAMP
+				ELSE NULL
+		END AS ACTION_DT
+		 , CASE WHEN APPROVAL_STATUS_CD = 'REQUEST'
+					THEN 'REQUEST'
+				ELSE NULL
+		END AS ACTION_CD
+		 , CASE WHEN APPROVAL_LINE_ID = 1 AND PROCESS_SEQ_NO = 3
+					THEN 'TL'
+				WHEN APPROVAL_LINE_ID = 1 AND PROCESS_SEQ_NO = 4
+					THEN 'DEF'
+				WHEN APPROVAL_LINE_ID = 2 AND PROCESS_SEQ_NO = 3
+					THEN 'TL'
+				ELSE ''
+		END AS APPROVAL_GRADE_CD
+	FROM DOCS_APPROVAL_LINE_DETAIL
+	WHERE APPROVAL_LINE_ID = #{APPROVAL_LINE_ID}
+</insert>
+
+<insert id="insertDocsRequestDeploy">
+	INSERT INTO DOCS_REQUEST_DEPLOY
+	(
+		REQUEST_NO
+	, DEPLOY_USER_CD
+	, DEPLOY_USER_EMAIL
+	)
+	VALUES
+		(
+			#{REQUEST_NO}
+		, #{DEPLOY_USER_CD}
+		, #{DEPLOY_USER_EMAIL}
+		)
+</insert>
+
+<insert id="insertDocsRequestFile">
+	INSERT INTO DOCS_REQUEST_FILE
+	(
+	REQUEST_NO
+	, OBJECT_ID
+	, FILE_PATH_NM
+	, ORG_FILE_NM
+	, FILE_NM
+	, FILE_SIZE
+	<if test='CHECK_SUM != null'>
+		, CHECK_SUM
+	</if>
+	, FILE_NO
+	, USE_START_YMD
+	, USE_END_YMD
+	)
+	VALUES
+	(
+	#{REQUEST_NO}
+	, #{OBJECT_ID}
+	, #{FILE_PATH_NM}
+	, #{ORG_FILE_NM}
+	, #{FILE_NM}
+	, #{FILE_SIZE}
+	<if test='CHECK_SUM != null'>
+		, #{CHECK_SUM}
+	</if>
+	, #{FILE_NO}
+	, #{USE_START_YMD}
+	, #{USE_END_YMD}
+	)
+</insert>
+
+<select id="selectPurchaserUserCd" resultType="String">
+	SELECT ''
+	FROM DOCS_COMPANY
+	WHERE 1=0
+</select>
+</mapper>

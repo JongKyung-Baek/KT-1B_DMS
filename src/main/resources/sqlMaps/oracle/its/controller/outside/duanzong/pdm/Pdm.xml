@@ -1,0 +1,255 @@
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+
+<!--<mapper namespace="sql.DuanzongPdm">-->
+
+<!--	<select id="selectList"-->
+<!--		resultType="kr.esob.fdms.controller.outside.duanzong.pdm.PdmListVO">-->
+<!--		SELECT-->
+<!--			B1.*-->
+<!--		FROM-->
+<!--			(-->
+<!--			SELECT-->
+<!--				A1.*-->
+<!--				, ROWNUM AS PAGEINDEX-->
+<!--			FROM (-->
+<!--				SELECT-->
+<!--					ROWNUM AS pno,												/* NO */ -->
+<!--					PROD_CD_NM AS prodCdNm,										/* 기종 */-->
+<!--					BUSINESS_AREA_CD AS businessAreaCd,							/* 사업장 */-->
+<!--					DEPT_CD as deptCd,											/* 부서코드 */-->
+<!--					DEPT_NM AS deptNm,											/* 부서명 */-->
+<!--					DELIVERY_VENDOR_NM AS deliveryVendorNm,						/* 납품업체명 */-->
+<!--					DELIVERY_LRU_PART_NO AS deliveryLruPartNo,					/* 납춤조립체부품번호(URL)*/-->
+<!--					DELIVERY_PART_NM AS deliveryPartNm,                 		/* 납품 조립체 품명 */-->
+<!--					HYPERSTASIS_SRU_PART_NO AS hyperstasisSruPartNo,			/* 차상위 조립체 부품번호(SRU) */-->
+<!--					HYPERSTASIS_PART_NM AS hyperstasisPartNm,                   /* 차상위 조립체 품명 */-->
+<!--					MAKE_NM AS makeNm,                  						/* 원제조사(국명) */-->
+<!--					MAKE_PART_NO AS makePartNo,                 				/* 원제조사 부품번호 */-->
+<!--					STANDARDIZATION_PART_NO AS standardizationPartNo,           /* 규격화 부품번호(제안된 공급품 도면) */-->
+<!--					PART_NM AS partNm,                  						/* 품명 */-->
+<!--					CLASSIFICATION AS classification,                   		/* 분류 */-->
+<!--					MANAGE_DIV AS manageDiv,                    				/* 관리구분 */-->
+<!--					CONTRACT_PART_NO AS contractPartNo,                 		/* 원제조사 부품번호(필요시 보정) */-->
+<!--					MATCHED_MFR AS matchedMfr,                  				/* Matched Mfr */-->
+<!--					MATCHED_PN AS matchedPn,                    				/* Matched P/N */-->
+<!--					MATCHED_PART_DESC AS matchedPartDesc,                   	/* Matched Part Description */-->
+<!--					PART_CATEGORY AS partCategory,                  			/* Part Category */-->
+<!--					CURRENT_PART_ST AS currentPartSt,                   		/* 현재 Part Status */-->
+<!--					PAST_PART_NO AS pastPartNo,                					/* 이전 Part Status */-->
+<!--					LCC_CD AS lccCd,                    						/* LCC(Life Cycle Code : 수명상태 추치 값) */-->
+<!--					LCS_CD AS lcsCd,                    						/* LCS(Life Cycle Stage : 수명 상태) */-->
+<!--					ESTIMATIED_YTEOL AS estimatiedYteol,                    	/* Estimated YTEOL */-->
+<!--					LTB_DT AS ltbDt,                    						/* LTB Date(Last Time Buy (마지막 구매 가능 일자)) */-->
+<!--					LTD_DT AS ltdDt,                    						/* LTD Date(Last Time Delivery (마지막 배송 가능 일자)) */-->
+<!--					RECOMMED_SUBSTITUTED_VENDOR AS recommedSubstitutedVendor,   /* 추천 대체품 제조사 */-->
+<!--					RECOMMED_SUBSTITUTED_PART_NO AS recommedSubstitutedPartNo,  /* 추천 대체품 부품번호 */-->
+<!--					ACQUIRE_DT AS acquireDt,                    				/* 획득일자 */-->
+<!--					SKILL_CHANGE AS skillChange,                    			/* 기술변경 */-->
+<!--					DUANZONG_SYNTHESIS_YN AS duanzongSynthesisYn,               /* 단종여부 (종합결정) */-->
+<!--					DUANZONG_YN AS duanzongYn,                  				/* 단종여부 */-->
+<!--					DUANZONG_DT AS duanzongDt,                  				/* 단종 예정일 */-->
+<!--					DUANZONG_REASON AS duanzongReason,                  		/* 단종 사유 */-->
+<!--					DUANZONG_CAUSE AS duanzongCause,                    		/* 단종 근거 */-->
+<!--					STOCK AS stock,                 							/* 재고 (추가 조달 가능수 포함) */-->
+<!--					PRODUCTION_ACTION_DT AS productionActionDt,                 /* 생산대응 가능월 */-->
+<!--					DAUNZONG_MEASURE AS daunzongMeasure,                    	/* 단종대책 */-->
+<!--					CONTRACT_INFOR AS contractInfor,                    		/* 원제조사 연락처 (전화, 이메일) */-->
+<!--					REPLACEMENT_PART_NO AS replacementPartNo,                   /* 대체품 제조사 품번 (제조사명) */-->
+<!--					COST_IMPACT AS costImpact,                  				/* 원가영향성 */-->
+<!--					ACQUISITION_DT AS acquisitionDt,                    		/* 획득일자 */-->
+<!--					INSERT_UID AS insertUid,									/* 등록/수정자 계정 */-->
+<!--					INSERT_NM AS insertNm,										/* 등록/수정자 */-->
+<!--					'' AS makePartNo1,											/* 제조사품번1(제조사명) */-->
+<!--					'' AS makePartNo2,											/* 제조사품번2(제조사명) */-->
+<!--					'' AS makePartNo3,											/* 제조사품번3(제조사명) */-->
+<!--					'' AS makePartNo4,											/* 제조사품번4(제조사명) */-->
+<!--					'' AS makePartNo5,											/* 제조사품번5(제조사명) */-->
+<!--					TO_CHAR(INSERT_DT,'YYYY-MM-DD') AS INSERT_DT, OBJECT_ID, UPDATE_UID, UPDATE_NM,                    -->
+<!--					TO_CHAR(UPDATE_DT,'YYYY-MM-DD') AS UPDATE_DT-->
+<!--				FROM ITEM_USE_INFO-->
+<!--	    WHERE 1 = 1-->
+<!--	    <if test='delivery_vendor_nm != null and !delivery_vendor_nm.equals("")'>-->
+<!--		AND DELIVERY_VENDOR_NM = #{delivery_vendor_nm}-->
+<!--		</if>-->
+<!--		<if test='delivery_lru_part_no != null and !delivery_lru_part_no.equals("")'>-->
+<!--		AND DELIVERY_LRU_PART_NO LIKE '%' || #{delivery_lru_part_no} || '%'-->
+<!--		</if>-->
+<!--		<if test='hyperstasis_sru_part_no != null and !hyperstasis_sru_part_no.equals("")'>-->
+<!--		AND HYPERSTASIS_SRU_PART_NO LIKE '%' || #{hyperstasis_sru_part_no} || '%'-->
+<!--		</if>-->
+<!--		<if test='make_part_no != null and !make_part_no.equals("")'>-->
+<!--		AND MAKE_PART_NO LIKE '%' || #{make_part_no} || '%'-->
+<!--		</if>-->
+<!--       	<if test='sortColumn != null and !"".equals(sortColumn)'>-->
+<!--       		ORDER BY ${sortColumn} ${order}-->
+<!--       	</if>-->
+<!--		) A1-->
+<!--			WHERE 1=1-->
+<!--			<if test='end != null and !end.equals("")'>-->
+<!--			AND ROWNUM <![CDATA[ <= ]]> #{end}-->
+<!--			</if>-->
+<!--		) B1-->
+<!--		<if test='start != null and !start.equals("")'>-->
+<!--		WHERE PAGEINDEX <![CDATA[ >= ]]>#{start}-->
+<!--		</if>-->
+<!--	</select>-->
+<!--	-->
+<!--	<select id="selectListCount" resultType="Integer">-->
+<!--		SELECT-->
+<!--		COUNT(*) AS-->
+<!--		TOTAL_COUNT-->
+<!--		FROM ITEM_USE_INFO-->
+<!--		WHERE 1 = 1-->
+<!--		<if test='delivery_vendor_nm != null and !delivery_vendor_nm.equals("")'>-->
+<!--		AND DELIVERY_VENDOR_NM = #{delivery_vendor_nm}-->
+<!--		</if>-->
+<!--		<if test='delivery_lru_part_no != null and !delivery_lru_part_no.equals("")'>-->
+<!--		AND DELIVERY_LRU_PART_NO LIKE '%' || #{delivery_lru_part_no} || '%'-->
+<!--		</if>-->
+<!--		<if test='hyperstasis_sru_part_no != null and !hyperstasis_sru_part_no.equals("")'>-->
+<!--		AND HYPERSTASIS_SRU_PART_NO LIKE '%' || #{hyperstasis_sru_part_no} || '%'-->
+<!--		</if>-->
+<!--		<if test='make_part_no != null and !make_part_no.equals("")'>-->
+<!--		AND MAKE_PART_NO LIKE '%' || #{make_part_no} || '%'-->
+<!--		</if>-->
+<!--       	<if test='sortColumn != null and !"".equals(sortColumn)'>-->
+<!--       		ORDER BY ${sortColumn} ${order}-->
+<!--       	</if>-->
+<!--	</select>-->
+
+<!--</mapper>-->
+
+
+
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+
+
+
+
+
+<mapper namespace="sql.DuanzongPdm">
+
+<select id="selectList"
+		resultType="kr.esob.fdms.controller.outside.duanzong.pdm.PdmListVO">
+	SELECT
+	B1.*
+	FROM
+	(
+	SELECT
+	A1.*
+	, ROW_NUMBER() OVER () AS PAGEINDEX
+	FROM (
+	SELECT
+	ROW_NUMBER() OVER () AS pno,                                             /* NO */
+	PROD_CD_NM AS prodCdNm,                                       /* 기종 */
+	BUSINESS_AREA_CD AS businessAreaCd,                           /* 사업장 */
+	DEPT_CD as deptCd,                                            /* 부서코드 */
+	DEPT_NM AS deptNm,                                            /* 부서명 */
+	DELIVERY_VENDOR_NM AS deliveryVendorNm,                       /* 납품업체명 */
+	DELIVERY_LRU_PART_NO AS deliveryLruPartNo,                    /* 납춤조립체부품번호(URL)*/
+	DELIVERY_PART_NM AS deliveryPartNm,                           /* 납품 조립체 품명 */
+	HYPERSTASIS_SRU_PART_NO AS hyperstasisSruPartNo,              /* 차상위 조립체 부품번호(SRU) */
+	HYPERSTASIS_PART_NM AS hyperstasisPartNm,                     /* 차상위 조립체 품명 */
+	MAKE_NM AS makeNm,                                            /* 원제조사(국명) */
+	MAKE_PART_NO AS makePartNo,                                   /* 원제조사 부품번호 */
+	STANDARDIZATION_PART_NO AS standardizationPartNo,             /* 규격화 부품번호(제안된 공급품 도면) */
+	PART_NM AS partNm,                                            /* 품명 */
+	CLASSIFICATION AS classification,                             /* 분류 */
+	MANAGE_DIV AS manageDiv,                                      /* 관리구분 */
+	CONTRACT_PART_NO AS contractPartNo,                           /* 원제조사 부품번호(필요시 보정) */
+	MATCHED_MFR AS matchedMfr,                                    /* Matched Mfr */
+	MATCHED_PN AS matchedPn,                                      /* Matched P/N */
+	MATCHED_PART_DESC AS matchedPartDesc,                         /* Matched Part Description */
+	PART_CATEGORY AS partCategory,                                /* Part Category */
+	CURRENT_PART_ST AS currentPartSt,                             /* 현재 Part Status */
+	PAST_PART_NO AS pastPartNo,                                   /* 이전 Part Status */
+	LCC_CD AS lccCd,                                              /* LCC(Life Cycle Code : 수명상태 추치 값) */
+	LCS_CD AS lcsCd,                                              /* LCS(Life Cycle Stage : 수명 상태) */
+	ESTIMATIED_YTEOL AS estimatiedYteol,                          /* Estimated YTEOL */
+	LTB_DT AS ltbDt,                                              /* LTB Date(Last Time Buy (마지막 구매 가능 일자)) */
+	LTD_DT AS ltdDt,                                              /* LTD Date(Last Time Delivery (마지막 배송 가능 일자)) */
+	RECOMMED_SUBSTITUTED_VENDOR AS recommedSubstitutedVendor,     /* 추천 대체품 제조사 */
+	RECOMMED_SUBSTITUTED_PART_NO AS recommedSubstitutedPartNo,    /* 추천 대체품 부품번호 */
+	ACQUIRE_DT AS acquireDt,                                      /* 획득일자 */
+	SKILL_CHANGE AS skillChange,                                  /* 기술변경 */
+	DUANZONG_SYNTHESIS_YN AS duanzongSynthesisYn,                 /* 단종여부 (종합결정) */
+	DUANZONG_YN AS duanzongYn,                                    /* 단종여부 */
+	DUANZONG_DT AS duanzongDt,                                    /* 단종 예정일 */
+	DUANZONG_REASON AS duanzongReason,                            /* 단종 사유 */
+	DUANZONG_CAUSE AS duanzongCause,                              /* 단종 근거 */
+	STOCK AS stock,                                               /* 재고 (추가 조달 가능수 포함) */
+	PRODUCTION_ACTION_DT AS productionActionDt,                   /* 생산대응 가능월 */
+	DAUNZONG_MEASURE AS daunzongMeasure,                          /* 단종대책 */
+	CONTRACT_INFOR AS contractInfor,                              /* 원제조사 연락처 (전화, 이메일) */
+	REPLACEMENT_PART_NO AS replacementPartNo,                     /* 대체품 제조사 품번 (제조사명) */
+	COST_IMPACT AS costImpact,                                    /* 원가영향성 */
+	ACQUISITION_DT AS acquisitionDt,                              /* 획득일자 */
+	INSERT_UID AS insertUid,                                      /* 등록/수정자 계정 */
+	INSERT_NM AS insertNm,                                        /* 등록/수정자 */
+	'' AS makePartNo1,                                            /* 제조사품번1(제조사명) */
+	'' AS makePartNo2,                                            /* 제조사품번2(제조사명) */
+	'' AS makePartNo3,                                            /* 제조사품번3(제조사명) */
+	'' AS makePartNo4,                                            /* 제조사품번4(제조사명) */
+	'' AS makePartNo5,                                            /* 제조사품번5(제조사명) */
+	TO_CHAR(INSERT_DT,'YYYY-MM-DD') AS INSERT_DT, OBJECT_ID, UPDATE_UID, UPDATE_NM,
+	TO_CHAR(UPDATE_DT,'YYYY-MM-DD') AS UPDATE_DT
+	FROM ITEM_USE_INFO
+	WHERE 1 = 1
+	<if test='delivery_vendor_nm != null and !delivery_vendor_nm.equals("")'>
+		AND DELIVERY_VENDOR_NM = #{delivery_vendor_nm}
+	</if>
+	<if test='delivery_lru_part_no != null and !delivery_lru_part_no.equals("")'>
+		AND DELIVERY_LRU_PART_NO LIKE '%' || #{delivery_lru_part_no} || '%'
+	</if>
+	<if test='hyperstasis_sru_part_no != null and !hyperstasis_sru_part_no.equals("")'>
+		AND HYPERSTASIS_SRU_PART_NO LIKE '%' || #{hyperstasis_sru_part_no} || '%'
+	</if>
+	<if test='make_part_no != null and !make_part_no.equals("")'>
+		AND MAKE_PART_NO LIKE '%' || #{make_part_no} || '%'
+	</if>
+	<if test='sortColumn != null and !"".equals(sortColumn)'>
+		ORDER BY ${sortColumn} ${order}
+	</if>
+	) A1
+	WHERE 1=1
+	<if test='end != null and !end.equals("")'>
+		AND PAGEINDEX <![CDATA[ <= ]]> #{end}
+	</if>
+	) B1
+	<if test='start != null and !start.equals("")'>
+		WHERE PAGEINDEX >= #{start}
+	</if>
+</select>
+
+<select id="selectListCount" resultType="Integer">
+	SELECT
+	COUNT(*) AS TOTAL_COUNT
+	FROM ITEM_USE_INFO
+	WHERE 1 = 1
+	<if test='delivery_vendor_nm != null and !delivery_vendor_nm.equals("")'>
+		AND DELIVERY_VENDOR_NM = #{delivery_vendor_nm}
+	</if>
+	<if test='delivery_lru_part_no != null and !delivery_lru_part_no.equals("")'>
+		AND DELIVERY_LRU_PART_NO LIKE '%' || #{delivery_lru_part_no} || '%'
+	</if>
+	<if test='hyperstasis_sru_part_no != null and !hyperstasis_sru_part_no.equals("")'>
+		AND HYPERSTASIS_SRU_PART_NO LIKE '%' || #{hyperstasis_sru_part_no} || '%'
+	</if>
+	<if test='make_part_no != null and !make_part_no.equals("")'>
+		AND MAKE_PART_NO LIKE '%' || #{make_part_no} || '%'
+	</if>
+	<if test='sortColumn != null and !"".equals(sortColumn)'>
+		ORDER BY ${sortColumn} ${order}
+	</if>
+</select>
+
+</mapper>

@@ -1,0 +1,687 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+
+<!--<mapper namespace="sql.PrintDestroyApproval">-->
+
+<!--	<select id="selectList" resultType="kr.esob.fdms.controller.inside.distribution.printdestroyapproval.PrintDestroyApprovalListVO">-->
+<!--		SELECT-->
+<!--			B1.*-->
+<!--		FROM-->
+<!--		(-->
+<!--			SELECT-->
+<!--				A1.*-->
+<!--				, ROWNUM AS PAGEINDEX-->
+<!--			FROM (-->
+<!--				SELECT-->
+<!--					destroyReq.DESTROY_REQUEST_NO 													AS destroyRequestNo		/* 폐기요청번호 */-->
+<!--					, destroyReq.DESTROY_REQUEST_NO 												AS hiddenDestroyRequestNo		/* 폐기요청번호 */-->
+<!--					, (-->
+<!--						SELECT USER_NM-->
+<!--						FROM DOCS_USER tmp-->
+<!--						WHERE tmp.USER_CD = destroyReq.INSERT_USER_CD-->
+<!--					) 																				AS destroyRequestUserNm /* 폐기요청자 */-->
+<!--					, destroyReq.INSERT_USER_CD														AS destroyRequestUserCd	/* 폐기요청자 */-->
+<!--					, destroyReq.INSERT_DT															AS destroyRequestDt 	/* 요청일 */-->
+<!--   					, destroyReq.BUSINESS_AREA_CD													AS businessAreaCd-->
+<!--   					, FN_GET_CD_NM('businessAreaCd', destroyReq.BUSINESS_AREA_CD, #{sessionLang}) 	AS businessAreaNm-->
+<!--				FROM DOCS_DESTROY_REQUEST destroyReq-->
+<!--					INNER JOIN DOCS_DESTROY_REQUEST_DETAIL destroyReqDtl ON destroyReqDtl.DESTROY_REQUEST_NO = destroyReq.DESTROY_REQUEST_NO AND destroyReqDtl.PROCESS_SEQ = destroyReq.CURRENT_PROCESS_SEQ_NO-->
+<!--				WHERE destroyReqDtl.APPROVAL_STATUS_CD = 'APPROVAL'-->
+<!--				AND destroyReqDtl.ACTUAL_USER_CD = #{sessionUser.userCd}		/* 내가 결재 해야 할 것 */-->
+<!--				AND destroyReq.STATUS_CD = 'REQUEST'-->
+<!--				AND destroyReq.REQUEST_TYPE = 'PRINT'							/* 출력물 */-->
+<!--				<if test='requestStartDt != null and !requestStartDt.equals("")'>-->
+<!--				AND destroyReq.INSERT_DT BETWEEN TO_DATE(#{requestStartDt}, 'YYYY-MM-DD')-->
+<!--		                         AND TO_DATE(#{requestEndDt}, 'YYYY-MM-DD')+1-->
+<!--				</if>-->
+<!--				<if test='sortColumn == null or "".equals(sortColumn)'>-->
+<!--	           		ORDER BY destroyRequestDt desc-->
+<!--				</if>-->
+<!--	         	<if test='sortColumn != null and !"".equals(sortColumn)'>-->
+<!--	         		ORDER BY ${sortColumn} ${order}-->
+<!--	         	</if>-->
+<!--			) A1-->
+<!--	    	WHERE 1=1-->
+<!--	    	<if test='destroyRequestUserCd != null and !destroyRequestUserCd.equals("")'>-->
+<!--			AND destroyRequestUserCd = #{destroyRequestUserCd}-->
+<!--			</if>-->
+<!--			<if test='businessAreaCd != null and !businessAreaCd.equals("")'>-->
+<!--			AND businessAreaCd = #{businessAreaCd}-->
+<!--			</if>-->
+<!--			<if test='end != null and !end.equals("")'>-->
+<!--			AND ROWNUM <![CDATA[ <= ]]> #{end}-->
+<!--			</if>-->
+<!--		) B1-->
+<!--		<if test='start != null and !start.equals("")'>-->
+<!--		WHERE PAGEINDEX <![CDATA[ >= ]]>#{start}-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	<select id="selectListCount" resultType="Integer">-->
+<!--		SELECT COUNT(*) AS TOTAL_COUNT-->
+<!--		FROM-->
+<!--			(-->
+<!--				SELECT-->
+<!--					destroyReq.DESTROY_REQUEST_NO 					AS destroyRequestNo/* 폐기요청번호 */-->
+<!--					, (-->
+<!--						SELECT USER_NM-->
+<!--						FROM DOCS_USER tmp-->
+<!--						WHERE tmp.USER_CD = destroyReq.INSERT_USER_CD-->
+<!--					) 												AS destroyRequestUserNm /* 폐기요청자 */-->
+<!--					, destroyReq.INSERT_USER_CD						AS destroyRequestUserCd	/* 폐기요청자 */-->
+<!--					, TO_CHAR(destroyReq.INSERT_DT, 'YYYY-MM-DD')	AS destroyRequestDt /* 요청일 */-->
+<!--   					, destroyReq.BUSINESS_AREA_CD					AS businessAreaCd-->
+<!--				FROM DOCS_DESTROY_REQUEST destroyReq-->
+<!--					INNER JOIN DOCS_DESTROY_REQUEST_DETAIL destroyReqDtl ON destroyReqDtl.DESTROY_REQUEST_NO = destroyReq.DESTROY_REQUEST_NO AND destroyReqDtl.PROCESS_SEQ = destroyReq.CURRENT_PROCESS_SEQ_NO-->
+<!--				WHERE destroyReqDtl.APPROVAL_STATUS_CD = 'APPROVAL'-->
+<!--				AND destroyReq.REQUEST_TYPE = 'PRINT'							/* 출력물 */-->
+<!--				AND destroyReqDtl.ACTUAL_USER_CD = #{sessionUser.userCd}		/* 내가 결재 해야 할 것 */-->
+<!--				AND destroyReq.STATUS_CD = 'REQUEST'-->
+<!--				<if test='requestStartDt != null and !requestStartDt.equals("")'>-->
+<!--				AND destroyReq.INSERT_DT BETWEEN TO_DATE(#{requestStartDt}, 'YYYY-MM-DD')-->
+<!--		                         AND TO_DATE(#{requestEndDt}, 'YYYY-MM-DD')+1-->
+<!--				</if>-->
+<!--			) B1-->
+<!--			WHERE 1=1-->
+<!--			<if test='destroyRequestUserCd != null and !destroyRequestUserCd.equals("")'>-->
+<!--			AND destroyRequestUserCd = #{destroyRequestUserCd}-->
+<!--			</if>-->
+<!--			<if test='businessAreaCd != null and !businessAreaCd.equals("")'>-->
+<!--			AND businessAreaCd = #{businessAreaCd}-->
+<!--			</if>-->
+<!--	</select>-->
+
+<!--	&lt;!&ndash; 폐기 리스트 검색을 위한 조건 리스트 조회 [2019.10.07(최금영)] &ndash;&gt;-->
+<!--	<select id="selectSearchInfo" parameterType="kr.esob.fdms.controller.inside.distribution.printdestroyapproval.PrintDestroyApprovalListParam" resultType="kr.esob.fdms.controller.inside.distribution.printdestroyapproval.PrintDestroyApprovalListParam">-->
+<!--		/* 폐기 리스트 검색을 위한 조건 리스트 조회 */-->
+<!--		SELECT REQUEST_NO AS requestNo-->
+<!--			, OBJECT_ID AS objectId-->
+<!--		FROM DOCS_DESTROY_REQUEST_MAPPING-->
+<!--		WHERE DESTROY_REQUEST_NO = #{destroyRequestNo}-->
+<!--	</select>-->
+
+
+<!--	&lt;!&ndash; 출력물 폐기 요청 리스트 조회 [2019.10.07(최금영)] &ndash;&gt;-->
+<!--	<select id="selectPopupList" parameterType="kr.esob.fdms.controller.inside.distribution.printdestroyapproval.PrintDestroyApprovalListParam" resultType="kr.esob.fdms.controller.inside.distribution.printdestroyapproval.PrintDestroyApprovalListVO">-->
+<!--		SELECT *-->
+<!--    	FROM (-->
+<!--        	SELECT-->
+<!--			<if test='sortColumn == null or "".equals(sortColumn)'>-->
+<!--				ROW_NUMBER() OVER(ORDER BY requestDt desc) AS PAGEINDEX-->
+<!--			</if>-->
+<!--			<if test='sortColumn != null and !"".equals(sortColumn)'>-->
+<!--				ROW_NUMBER() OVER(ORDER BY ${sortColumn} ${order}) AS PAGEINDEX-->
+<!--			</if>-->
+<!--           		, B1.*-->
+<!--        	FROM (-->
+<!--                	SELECT DISTINCT fileInfo.FILE_NO  														AS fileNo-->
+<!--                	    , mapping.BUSINESS_TYPE_CD															AS businessTypeCd            		/* 사업구분코드 */-->
+<!--                		, FN_GET_CD_NM('businessTypeCd', mapping.BUSINESS_TYPE_CD, #{sessionLang})			AS businessTypeNm-->
+<!--                    	, req.REQUEST_NO                       	   											AS requestNo                		/* 요청번호 */-->
+<!--                    	, req.OBJECT_TYPE                          											AS objectType                		/* 자료유형코드 */-->
+<!--                    	, FN_GET_CD_NM('objectTypeWithP', req.OBJECT_TYPE, #{sessionLang})					AS objectTypeNm-->
+<!--	                    , mapping.OBJECT_ID                        											AS objectNo                    		/* 자료번호 */-->
+<!--	                    , mapping.REV_NO                           											AS revNo                    		/* rev */-->
+<!--	                    , mapping.SW_VERSION_NO                    											AS swVersionNo                 		/* sw 버전 */-->
+<!--	                    , mapping.DOC_VERSION_NO                    										AS docVersionNo             		/* 명세서 버전 */-->
+<!--	                    , mapping.OBJECT_NM                         										AS objectNm                    		/* 자료명 */-->
+<!--	                    , mapping.CURRENT_PAGE_NO                   										AS currentPageNo             		/* 페이지 */-->
+<!--	                    , mapping.TOTAL_PAGE_NO                     										AS totalPageNo                 		/* 총 페이지 */-->
+<!--	                    , mapping.ECN_NO                           											AS ecnNo                    		/* CO번호 */-->
+<!--	                    , req.REQUEST_PURPOSE                       										AS requestPurpose            		/* 용도 */-->
+<!--	                    , FN_GET_CD_NM('requestPurpose', req.REQUEST_PURPOSE, #{sessionLang})				AS requestPurposeNm-->
+<!--	                    , req.INSERT_USER_CD                        										AS requestUserCd            		/* 출력요청자 */-->
+<!--	                    , req.INSERT_DT						     											AS requestDt                		/* 출력 요청일 */-->
+<!--	                    , fileInfo.PRINT_COUNT              											AS printCount                		/* 출력횟수 */-->
+<!--	                    , TO_CHAR(TO_DATE(fileInfo.USE_END_YMD, 'YYYYMMDD'), 'YYYY-MM-DD') 						AS useEndYmd                		/* 유효기간 */-->
+<!--	                    , TO_CHAR(TO_DATE(req.DESTROY_TODO_YMD, 'YYYYMMDD'), 'YYYY-MM-DD') 					AS destroyTodoYmd               	/* 폐기기한 */-->
+<!--                    	, mapping.STD_GAPP_DT																AS stdGappDt                		/* 규격화 승인일 */-->
+<!--                    	, mapping.CHANGE_GAPP_DT															AS changeGappDt                		/* 기술변경 승인일 */-->
+<!--                    	, mapping.PRODUCT_CD                       											AS productCd                		/* 기종 */-->
+<!--                    	, mapping.BUSINESS_AREA_CD                 											AS businessAreaCd            		/* 사업장 */-->
+<!--                    	, FN_GET_CD_NM('businessAreaCd', mapping.BUSINESS_AREA_CD, #{sessionLang}) 			AS businessAreaNm-->
+<!--                    	, mapping.PROTECT_YN                       											AS protectYn                		/* 방산기술자료 */-->
+<!--                    	, reqDetail.REQUEST_DESC               												AS requestDesc                		/* 요청사유 */-->
+<!--                    	, destroyReq.INSERT_USER_CD             											AS destroyRequestUserCd        		/* 폐기요청자 */-->
+<!--                    	, destroyReq.APPROVAL_DT                											AS destroyApprovalDt        		/* 폐기승인일 */-->
+<!--                    	, approvalFile.DESTROY_STATUS_CD        											AS destroyStatusCd            		/* 폐기상태코드 */-->
+<!--                    	, FN_GET_CD_NM('destroyStatusCd', approvalFile.DESTROY_STATUS_CD, #{sessionLang}) 	AS destroyStatusNm	/* 폐기상태 */-->
+<!--						, mapping.OBJECT_ID																	AS objectId-->
+<!--						, fileInfo.ORG_FILE_NM																AS orgFileNm-->
+<!--                    	, approvalFile.DESTROY_DT															AS destroyDt                		/* 폐기일자 */-->
+<!--	                	, (-->
+<!--	                    	SELECT USER_NM-->
+<!--	                    	FROM DOCS_USER tmp WHERE tmp.USER_CD = req.INSERT_USER_CD-->
+<!--	                		)                                       										AS requestUser 						/* 출력 요청자 */-->
+<!--	                	, (-->
+<!--		                    SELECT CN_CD || ' ' || CN_CD_DESC-->
+<!--		                    FROM (SELECT DISTINCT PRODUCT_CD AS CN_CD, PRODUCT_CD AS CN_CD_DESC FROM DOCS_REQUEST_MAPPING WHERE PRODUCT_CD IS NOT NULL) tmp-->
+<!--		                    WHERE tmp.CN_CD = mapping.PRODUCT_CD-->
+<!--	                		)                                           									AS productNm 						/* 기종명 */-->
+<!--	                	, (-->
+<!--		                    SELECT USER_NM-->
+<!--		                    FROM DOCS_USER tmp WHERE tmp.USER_CD = destroyReq.INSERT_USER_CD-->
+<!--	                		) 																				AS destroyRequestUserNm				/* 폐기요청자 */-->
+<!--                	FROM DOCS_REQUEST_FILE fileInfo-->
+<!--                	INNER JOIN DOCS_REQUEST_MAPPING mapping ON fileInfo.REQUEST_NO = mapping.REQUEST_NO AND fileInfo.OBJECT_ID = mapping.OBJECT_ID-->
+<!--                	INNER JOIN DOCS_REQUEST req ON mapping.REQUEST_NO = req.REQUEST_NO-->
+<!--                    INNER JOIN DOCS_REQUEST_DETAIL reqDetail ON reqDetail.REQUEST_NO = req.REQUEST_NO AND reqDetail.APPROVAL_STATUS_CD = 'REQUEST'-->
+<!--                    LEFT JOIN DOCS_APPROVAL_FILE approvalFile ON approvalFile.REQUEST_NO = mapping.REQUEST_NO AND approvalFile.OBJECT_ID = mapping.OBJECT_ID-->
+<!--                    LEFT JOIN DOCS_DESTROY_REQUEST_MAPPING destroyMapping ON destroyMapping.REQUEST_NO = mapping.REQUEST_NO AND destroyMapping.OBJECT_ID = mapping.OBJECT_ID-->
+<!--                    LEFT JOIN DOCS_DESTROY_REQUEST destroyReq ON destroyReq.DESTROY_REQUEST_NO = destroyMapping.DESTROY_REQUEST_NO-->
+<!--                    LEFT JOIN DOCS_DESTROY_REQUEST_DETAIL destroyReqDtl ON destroyReqDtl.DESTROY_REQUEST_NO = destroyReq.DESTROY_REQUEST_NO AND destroyReqDtl.APPROVAL_STATUS_CD = 'REQUEST'-->
+<!--					WHERE destroyReq.DESTROY_REQUEST_NO = #{destroyRequestNo}-->
+<!--&lt;!&ndash; 	       			<if test="list.size!=0"> &ndash;&gt;-->
+<!--&lt;!&ndash;         			WHERE 1=1 &ndash;&gt;-->
+<!--&lt;!&ndash;         			AND &ndash;&gt;-->
+<!--&lt;!&ndash; 		       			<foreach collection="list" open="(" close=")" separator="OR" item="item"> &ndash;&gt;-->
+<!--&lt;!&ndash; 							req.REQUEST_NO = #{item.requestNo} AND mapping.OBJECT_ID = #{item.objectId} &ndash;&gt;-->
+<!--&lt;!&ndash; 						</foreach> &ndash;&gt;-->
+<!--&lt;!&ndash; 					</if> &ndash;&gt;-->
+
+<!--        		) B1-->
+
+<!--    		) C1-->
+<!--	</select>-->
+
+
+<!--	&lt;!&ndash; 폐기 요청 수정 [2019.10.07(최금영)] &ndash;&gt;-->
+<!--	<update id="updatePrintDestroyRequestInfo" parameterType="kr.esob.fdms.controller.inside.distribution.printdestroyapproval.PrintDestroyApprovalPopupParam">-->
+<!--		UPDATE DOCS_DESTROY_REQUEST-->
+<!--		SET STATUS_CD = #{statusCd}-->
+<!--		, DESTROY_STATUS_CD = DECODE(#{statusCd}, 'APPROVAL', '3', 'REJECT', '4', '')-->
+<!--		, CURRENT_PROCESS_SEQ_NO =#{currentProcessSeqNo}-->
+<!--		<if test='"APPROVAL".equals(statusCd)'>-->
+<!--		, APPROVAL_DT = SYSDATE-->
+<!--		</if>-->
+<!--		WHERE DESTROY_REQUEST_NO = #{destroyRequestNo}-->
+<!--	</update>-->
+
+<!--	&lt;!&ndash; 폐기 요청 상세 정보 수정 [2019.10.07(최금영)] &ndash;&gt;-->
+<!--	<update id="updatePrintDestroyRequestDetail" parameterType="kr.esob.fdms.controller.inside.distribution.printdestroyapproval.PrintDestroyApprovalPopupParam">-->
+<!--		UPDATE DOCS_DESTROY_REQUEST_DETAIL-->
+<!--		SET ACTION_CD = #{actionCd}-->
+<!--		<if test='rejectDesc != null and !"".equals(rejectDesc)'>-->
+<!--		, REQUEST_DESC = #{rejectDesc}-->
+<!--		</if>-->
+<!--		, ACTION_DT = SYSDATE-->
+<!--		WHERE APPROVAL_STATUS_CD = #{approvalStatusCd}-->
+<!--		AND APPROVAL_GRADE_CD = #{approvalGradeCd}-->
+<!--	</update>-->
+
+<!--	&lt;!&ndash; 폐기 요청 정보 조회 [2019.10.07(최금영)] &ndash;&gt;-->
+<!--	<select id="getDestroyRequestInfo" parameterType="kr.esob.fdms.controller.inside.distribution.printdestroyapproval.PrintDestroyApprovalPopupParam" resultType="kr.esob.fdms.controller.inside.distribution.printdestroyapproval.PrintDestroyApprovalPopupParam">-->
+<!--		SELECT destRequest.DESTROY_REQUEST_NO 		AS destroyRequestNo-->
+<!--			, destRequest.APPROVAL_LINE_ID 			AS approvalLineId-->
+<!--			, destRequest.CURRENT_PROCESS_SEQ_NO	AS currentProcessSeqNo-->
+<!--			, appLine.APPROVAL_STATUS_CD 			AS approvalStatusCd-->
+<!--			, appLine.APPROVAL_GRADE_CD 			AS approvalGradeCd-->
+<!--			, #{saveType}							AS saveType-->
+<!--			, #{rejectDesc}							AS rejectDesc-->
+<!--		FROM DOCS_DESTROY_REQUEST destRequest-->
+<!--    	JOIN DOCS_APPROVAL_LINE_DETAIL appLine-->
+<!--   		 ON destRequest.APPROVAL_LINE_ID = appLine.APPROVAL_LINE_ID AND appLine.PROCESS_SEQ_NO = destRequest.CURRENT_PROCESS_SEQ_NO-->
+<!--		WHERE DESTROY_REQUEST_NO = #{destroyRequestNo}-->
+<!--	</select>-->
+
+<!--	&lt;!&ndash; 폐기할 아이템 조회 [2019.10.07(최금영)] &ndash;&gt;-->
+<!--	<select id="selectDestroyItemList" parameterType="kr.esob.fdms.controller.inside.distribution.printdestroyapproval.PrintDestroyApprovalPopupParam" resultType="kr.esob.fdms.controller.inside.distribution.printdestroyapproval.PrintDestroyItemListVO">-->
+<!--		SELECT REQUEST_NO AS requestNo-->
+<!--			, OBJECT_ID	AS objectId-->
+<!--		FROM DOCS_DESTROY_REQUEST_MAPPING-->
+<!--		WHERE DESTROY_REQUEST_NO = #{destroyRequestNo}-->
+<!--	</select>-->
+
+<!--	&lt;!&ndash; 폐기된 아이템 미사용 처리 [2019.10.07(최금영)] &ndash;&gt;-->
+<!--	<update id="updateRequestMapping" parameterType="kr.esob.fdms.controller.inside.distribution.printdestroyapproval.PrintDestroyApprovalPopupParam">-->
+<!--		UPDATE DOCS_REQUEST_MAPPING-->
+<!--		SET USE_YN = 'N'-->
+<!--		WHERE REQUEST_NO = #{requestNo}-->
+<!--		AND OBJECT_ID = #{objectId}-->
+<!--	</update>-->
+
+<!--	&lt;!&ndash; 폐기 요청 정보 조회 [2019.10.07(최금영)] &ndash;&gt;-->
+<!--	<select id="getDestroyRequest" resultType="kr.esob.fdms.controller.inside.distribution.printdestroyapproval.PrintDestroyItemListVO">-->
+<!--		SELECT dstReqDtl.REQUEST_DESC	AS requestDesc-->
+<!--		FROM DOCS_DESTROY_REQUEST dstReq-->
+<!--		JOIN DOCS_DESTROY_REQUEST_DETAIL dstReqDtl-->
+<!--		ON dstReq.DESTROY_REQUEST_NO = dstReqDtl.DESTROY_REQUEST_NO AND dstReqDtl.APPROVAL_STATUS_CD = 'REQUEST'-->
+<!--		WHERE dstReq.DESTROY_REQUEST_NO = #{destroyRequestNo}-->
+<!--&lt;!&ndash; 		AND APPROVAL_STATUS_CD = 'REQUEST' &ndash;&gt;-->
+<!--	</select>-->
+
+
+<!--	&lt;!&ndash; 출력물 폐기 요청 리스트 조회 [2019.10.07(최금영)] &ndash;&gt;-->
+<!--	<select id="selectPopupListCount" resultType="Integer" parameterType="kr.esob.fdms.controller.inside.distribution.printdestroyapproval.PrintDestroyApprovalListParam">-->
+<!--		/* 출력물 폐기 요청 리스트 갯수 */-->
+<!--		SELECT COUNT(*) AS TOTAL_COUNT-->
+<!--    	FROM (-->
+<!--        	SELECT-->
+<!--			<if test='sortColumn == null or "".equals(sortColumn)'>-->
+<!--				ROW_NUMBER() OVER(ORDER BY requestDt desc) AS PAGEINDEX-->
+<!--			</if>-->
+<!--			<if test='sortColumn != null and !"".equals(sortColumn)'>-->
+<!--				ROW_NUMBER() OVER(ORDER BY ${sortColumn} ${order}) AS PAGEINDEX-->
+<!--			</if>-->
+<!--           		, B1.*-->
+<!--        	FROM (-->
+<!--                	SELECT DISTINCT mapping.BUSINESS_TYPE_CD		AS businessTypeCd            		/* 사업구분코드 */-->
+<!--                    	, req.REQUEST_NO                       	   	AS requestNo                		/* 요청번호 */-->
+<!--                    	, req.OBJECT_TYPE                          	AS objectType                		/* 자료유형코드 */-->
+<!--	                    , mapping.OBJECT_ID                        	AS objectNo                    		/* 자료번호 */-->
+<!--	                    , mapping.REV_NO                           	AS revNo                    		/* rev */-->
+<!--	                    , mapping.SW_VERSION_NO                    	AS swVersionNo                 		/* sw 버전 */-->
+<!--	                    , mapping.DOC_VERSION_NO                    AS docVersionNo             		/* 명세서 버전 */-->
+<!--	                    , mapping.OBJECT_NM                         AS objectNm                    		/* 자료명 */-->
+<!--	                    , mapping.CURRENT_PAGE_NO                   AS currentPageNo             		/* 페이지 */-->
+<!--	                    , mapping.TOTAL_PAGE_NO                     AS totalPageNo                 		/* 총 페이지 */-->
+<!--	                    , mapping.ECN_NO                            AS ecnNo                    		/* CO번호 */-->
+<!--	                    , req.REQUEST_PURPOSE                       AS requestPurpose            		/* 용도 */-->
+<!--	                    , req.INSERT_USER_CD                        AS requestUserCd            		/* 출력요청자 */-->
+<!--	                    , TO_CHAR(req.INSERT_DT, 'YYYY-MM-DD')     	AS requestDt                		/* 출력 요청일 */-->
+<!--	                    , fileInfo.PRINT_COUNT              	AS printCount                		/* 출력횟수 */-->
+<!--	                    , (SELECT MAX(TO_CHAR(TO_DATE(fileInfo.USE_END_YMD, 'YYYYMMDD'), 'YYYY-MM-DD'))-->
+<!--						     FROM DOCS_REQUEST_FILE fileInfo-->
+<!--						   WHERE mapping.REQUEST_NO = fileInfo.REQUEST_NO-->
+<!--						        AND mapping.OBJECT_ID = fileInfo.OBJECT_ID-->
+<!--						  )                                                                 AS useEndYmd            /* 유효기간 */-->
+<!--                    	, CASE WHEN req.DESTROY_TODO_YMD IS NULL THEN NULL-->
+<!--                            ELSE SUBSTR(req.DESTROY_TODO_YMD, 0, 4) || '-' || SUBSTR(req.DESTROY_TODO_YMD, 5, 2) || '-' || SUBSTR(req.DESTROY_TODO_YMD, 7, 2)-->
+<!--                        	END                                 	AS destroyTodoYmd                	/* 폐기기한 */-->
+<!--                    	, TO_CHAR(mapping.STD_GAPP_DT, 'YYYY-MM-DD')	AS stdGappDt                		/* 규격화 승인일 */-->
+<!--                    	, TO_CHAR(mapping.CHANGE_GAPP_DT, 'YYYY-MM-DD') AS changeGappDt                		/* 기술변경 승인일 */-->
+<!--                    	, mapping.PRODUCT_CD                       	AS productCd                		/* 기종 */-->
+<!--                    	, mapping.BUSINESS_AREA_CD                 	AS businessAreaCd            		/* 사업장 */-->
+<!--                    	, mapping.PROTECT_YN                       	AS protectYn                		/* 방산기술자료 */-->
+<!--                    	, reqDetail.REQUEST_DESC               		AS requestDesc                		/* 요청사유 */-->
+<!--                    	, destroyReq.INSERT_USER_CD             	AS destroyRequestUserCd        		/* 폐기요청자 */-->
+<!--                    	, destroyReq.APPROVAL_DT                	AS destroyApprovalDt        		/* 폐기승인일 */-->
+<!--                    	, approvalFile.DESTROY_STATUS_CD        	AS destroyStatusCd            		/* 폐기상태코드 */-->
+<!--                    	, TO_CHAR(approvalFile.DESTROY_DT, 'YYYY-MM-DD')  	AS destroyDt                		/* 폐기일자 */-->
+<!--                        , mapping.BUSINESS_TYPE_CD 					AS businessTypeNm					/* 사업구분 */-->
+<!--                	 	, mapping.OBJECT_NM							AS objectTypeNm 					/* 자료유형 */-->
+<!--	                	, req.REQUEST_PURPOSE 						AS requestPurposeNm-->
+<!--	                	, (-->
+<!--	                    	SELECT USER_NM-->
+<!--	                    	FROM DOCS_USER tmp WHERE tmp.USER_CD = req.INSERT_USER_CD-->
+<!--	                		)                                       AS requestUser 						/* 출력 요청자 */-->
+<!--	                	, (-->
+<!--		                    SELECT CN_CD || ' ' || CN_CD_DESC-->
+<!--		                    FROM (SELECT DISTINCT PRODUCT_CD AS CN_CD, PRODUCT_CD AS CN_CD_DESC FROM DOCS_REQUEST_MAPPING WHERE PRODUCT_CD IS NOT NULL) tmp-->
+<!--		                    WHERE tmp.CN_CD = mapping.PRODUCT_CD-->
+<!--	                		)                                           AS productNm 						/* 기종명 */-->
+<!--	                	, mapping.BUSINESS_AREA_CD						AS businessAreaNm					/* 사업장 */-->
+<!--	                	, (-->
+<!--		                    SELECT USER_NM-->
+<!--		                    FROM DOCS_USER tmp WHERE tmp.USER_CD = destroyReq.INSERT_USER_CD-->
+<!--	                		) 											AS destroyRequestUserNm				/* 폐기요청자 */-->
+<!--                	FROM DOCS_REQUEST req-->
+<!--                    INNER JOIN DOCS_REQUEST_DETAIL reqDetail ON reqDetail.REQUEST_NO = req.REQUEST_NO AND reqDetail.APPROVAL_STATUS_CD = 'REQUEST'-->
+<!--                    INNER JOIN DOCS_REQUEST_MAPPING mapping ON mapping.REQUEST_NO = req.REQUEST_NO-->
+<!--                    LEFT JOIN DOCS_APPROVAL_FILE approvalFile ON approvalFile.REQUEST_NO = mapping.REQUEST_NO AND approvalFile.OBJECT_ID = mapping.OBJECT_ID-->
+<!--                    LEFT JOIN DOCS_DESTROY_REQUEST_MAPPING destroyMapping ON destroyMapping.REQUEST_NO = mapping.REQUEST_NO AND destroyMapping.OBJECT_ID = mapping.OBJECT_ID-->
+<!--                    LEFT JOIN DOCS_DESTROY_REQUEST destroyReq ON destroyReq.DESTROY_REQUEST_NO = destroyMapping.DESTROY_REQUEST_NO-->
+<!--                    LEFT JOIN DOCS_DESTROY_REQUEST_DETAIL destroyReqDtl ON destroyReqDtl.DESTROY_REQUEST_NO = destroyReq.DESTROY_REQUEST_NO AND destroyReqDtl.APPROVAL_STATUS_CD = 'REQUEST'-->
+<!--	       			WHERE 1=1-->
+<!--					<foreach collection="list" open="AND(" close=")" separator="OR" item="item">-->
+<!--						req.REQUEST_NO = #{item.requestNo} AND mapping.OBJECT_NO = #{item.objectId}-->
+<!--					</foreach>-->
+
+<!--        		) B1-->
+
+<!--    		) C1-->
+<!--	</select>-->
+
+<!--	<select id="selectRequestInfo" resultType="kr.esob.fdms.controller.inside.distribution.printdestroyapproval.PrintDestroyApprovalPopupParam">-->
+<!--		SELECT DESTROY_REQUEST_NO-->
+<!--			, #{saveType}-->
+<!--		FROM DOCS_DESTROY_REQUEST-->
+<!--		WHERE DESTROY_REQUEST_NO = #{destroyRequestNo}-->
+<!--	</select>-->
+<!--</mapper>-->
+
+
+
+
+
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+
+
+<mapper namespace="sql.PrintDestroyApproval">
+
+    <select id="selectList" resultType="kr.esob.fdms.controller.inside.distribution.printdestroyapproval.PrintDestroyApprovalListVO">
+        SELECT
+        B1.*
+        FROM
+        (
+        SELECT
+        A1.*
+        , ROW_NUMBER() OVER (ORDER BY destroyRequestDt DESC) AS PAGEINDEX
+        FROM (
+        SELECT
+        destroyReq.DESTROY_REQUEST_NO AS destroyRequestNo		/* 폐기요청번호 */
+        , destroyReq.DESTROY_REQUEST_NO AS hiddenDestroyRequestNo		/* 폐기요청번호 */
+        , (
+        SELECT USER_NM
+        FROM DOCS_USER tmp
+        WHERE tmp.USER_CD = destroyReq.INSERT_USER_CD
+        ) AS destroyRequestUserNm /* 폐기요청자 */
+        , destroyReq.INSERT_USER_CD AS destroyRequestUserCd	/* 폐기요청자 */
+        , destroyReq.INSERT_DT AS destroyRequestDt 	/* 요청일 */
+        , destroyReq.BUSINESS_AREA_CD AS businessAreaCd
+        , FN_GET_CD_NM('businessAreaCd', destroyReq.BUSINESS_AREA_CD, #{sessionLang}) AS businessAreaNm
+        FROM DOCS_DESTROY_REQUEST destroyReq
+        INNER JOIN DOCS_DESTROY_REQUEST_DETAIL destroyReqDtl
+        ON destroyReqDtl.DESTROY_REQUEST_NO = destroyReq.DESTROY_REQUEST_NO
+        AND destroyReqDtl.PROCESS_SEQ = destroyReq.CURRENT_PROCESS_SEQ_NO
+        WHERE destroyReqDtl.APPROVAL_STATUS_CD = 'APPROVAL'
+        AND destroyReqDtl.ACTUAL_USER_CD = #{sessionUser.userCd}		/* 내가 결재 해야 할 것 */
+        AND destroyReq.STATUS_CD = 'REQUEST'
+        AND destroyReq.REQUEST_TYPE = 'PRINT'	/* 출력물 */
+        <if test='requestStartDt != null and !requestStartDt.equals("")'>
+            AND destroyReq.INSERT_DT BETWEEN #{requestStartDt}::date AND (#{requestEndDt}::date + INTERVAL '1 DAY')
+        </if>
+        <if test='sortColumn == null or "".equals(sortColumn)'>
+            ORDER BY destroyRequestDt DESC
+        </if>
+        <if test='sortColumn != null and !"".equals(sortColumn)'>
+            ORDER BY ${sortColumn} ${order}
+        </if>
+        ) A1
+        ) B1
+        WHERE 1=1
+        <if test='destroyRequestUserCd != null and !destroyRequestUserCd.equals("")'>
+            AND destroyRequestUserCd = #{destroyRequestUserCd}
+        </if>
+        <if test='businessAreaCd != null and !businessAreaCd.equals("")'>
+            AND businessAreaCd = #{businessAreaCd}
+        </if>
+        <if test='end != null and !end.equals("")'>
+            AND PAGEINDEX <![CDATA[ <= ]]> #{end}
+        </if>
+        <if test='start != null and !start.equals("")'>
+            AND PAGEINDEX <![CDATA[ >= ]]> #{start}
+        </if>
+    </select>
+
+
+
+    <select id="selectListCount" resultType="Integer">
+        SELECT COUNT(*) AS TOTAL_COUNT
+        FROM
+        (
+        SELECT
+        destroyReq.DESTROY_REQUEST_NO 					AS destroyRequestNo/* 폐기요청번호 */
+        , (
+        SELECT USER_NM
+        FROM DOCS_USER tmp
+        WHERE tmp.USER_CD = destroyReq.INSERT_USER_CD
+        ) 												AS destroyRequestUserNm /* 폐기요청자 */
+        , destroyReq.INSERT_USER_CD						AS destroyRequestUserCd	/* 폐기요청자 */
+        , TO_CHAR(destroyReq.INSERT_DT, 'YYYY-MM-DD')	AS destroyRequestDt /* 요청일 */
+        , destroyReq.BUSINESS_AREA_CD					AS businessAreaCd
+        FROM DOCS_DESTROY_REQUEST destroyReq
+        INNER JOIN DOCS_DESTROY_REQUEST_DETAIL destroyReqDtl ON destroyReqDtl.DESTROY_REQUEST_NO = destroyReq.DESTROY_REQUEST_NO AND destroyReqDtl.PROCESS_SEQ = destroyReq.CURRENT_PROCESS_SEQ_NO
+        WHERE destroyReqDtl.APPROVAL_STATUS_CD = 'APPROVAL'
+        AND destroyReq.REQUEST_TYPE = 'PRINT'							/* 출력물 */
+        AND destroyReqDtl.ACTUAL_USER_CD = #{sessionUser.userCd}		/* 내가 결재 해야 할 것 */
+        AND destroyReq.STATUS_CD = 'REQUEST'
+        <if test='requestStartDt != null and !requestStartDt.equals("")'>
+            AND destroyReq.INSERT_DT BETWEEN #{requestStartDt}::date
+            AND (#{requestEndDt}::date + INTERVAL '1 DAY')
+        </if>
+        ) B1
+        WHERE 1=1
+        <if test='destroyRequestUserCd != null and !destroyRequestUserCd.equals("")'>
+            AND destroyRequestUserCd = #{destroyRequestUserCd}
+        </if>
+        <if test='businessAreaCd != null and !businessAreaCd.equals("")'>
+            AND businessAreaCd = #{businessAreaCd}
+        </if>
+    </select>
+
+    <!-- 폐기 리스트 검색을 위한 조건 리스트 조회 [2019.10.07(최금영)] -->
+    <select id="selectSearchInfo" parameterType="kr.esob.fdms.controller.inside.distribution.printdestroyapproval.PrintDestroyApprovalListParam" resultType="kr.esob.fdms.controller.inside.distribution.printdestroyapproval.PrintDestroyApprovalListParam">
+        /* 폐기 리스트 검색을 위한 조건 리스트 조회 */
+        SELECT REQUEST_NO AS requestNo
+             , OBJECT_ID AS objectId
+        FROM DOCS_DESTROY_REQUEST_MAPPING
+        WHERE DESTROY_REQUEST_NO = #{destroyRequestNo}
+    </select>
+
+
+    <!-- 출력물 폐기 요청 리스트 조회 [2019.10.07(최금영)] -->
+    <select id="selectPopupList" parameterType="kr.esob.fdms.controller.inside.distribution.printdestroyapproval.PrintDestroyApprovalListParam" resultType="kr.esob.fdms.controller.inside.distribution.printdestroyapproval.PrintDestroyApprovalListVO">
+        SELECT *
+        FROM (
+        SELECT
+        <if test='sortColumn == null or "".equals(sortColumn)'>
+            ROW_NUMBER() OVER(ORDER BY requestDt DESC) AS PAGEINDEX
+        </if>
+        <if test='sortColumn != null and !"".equals(sortColumn)'>
+            ROW_NUMBER() OVER(ORDER BY ${sortColumn} ${order}) AS PAGEINDEX
+        </if>
+        , B1.*
+        FROM (
+        SELECT DISTINCT fileInfo.FILE_NO  														AS fileNo
+        , mapping.BUSINESS_TYPE_CD															AS businessTypeCd            		/* 사업구분코드 */
+        , FN_GET_CD_NM('businessTypeCd', mapping.BUSINESS_TYPE_CD, #{sessionLang})			AS businessTypeNm
+        , req.REQUEST_NO                       	   											AS requestNo                		/* 요청번호 */
+        , req.OBJECT_TYPE                          											AS objectType                		/* 자료유형코드 */
+        , FN_GET_CD_NM('objectTypeWithP', req.OBJECT_TYPE, #{sessionLang})					AS objectTypeNm
+        , mapping.OBJECT_ID                        											AS objectNo                    		/* 자료번호 */
+        , mapping.REV_NO                           											AS revNo                    		/* rev */
+        , mapping.SW_VERSION_NO                    											AS swVersionNo                 		/* sw 버전 */
+        , mapping.DOC_VERSION_NO                    										AS docVersionNo             		/* 명세서 버전 */
+        , mapping.OBJECT_NM                         										AS objectNm                    		/* 자료명 */
+        , mapping.CURRENT_PAGE_NO                   										AS currentPageNo             		/* 페이지 */
+        , mapping.TOTAL_PAGE_NO                     										AS totalPageNo                 		/* 총 페이지 */
+        , mapping.ECN_NO                           											AS ecnNo                    		/* CO번호 */
+        , req.REQUEST_PURPOSE                       										AS requestPurpose            		/* 용도 */
+        , FN_GET_CD_NM('requestPurpose', req.REQUEST_PURPOSE, #{sessionLang})				AS requestPurposeNm
+        , req.INSERT_USER_CD                        										AS requestUserCd            		/* 출력요청자 */
+        , req.INSERT_DT						     											AS requestDt                		/* 출력 요청일 */
+        , fileInfo.PRINT_COUNT              											AS printCount                		/* 출력횟수 */
+        , TO_CHAR(fileInfo.USE_END_YMD::date, 'YYYY-MM-DD') 						AS useEndYmd                		/* 유효기간 */
+        , TO_CHAR(req.DESTROY_TODO_YMD::date, 'YYYY-MM-DD') 					AS destroyTodoYmd               	/* 폐기기한 */
+        , mapping.STD_GAPP_DT																AS stdGappDt                		/* 규격화 승인일 */
+        , mapping.CHANGE_GAPP_DT															AS changeGappDt                		/* 기술변경 승인일 */
+        , mapping.PRODUCT_CD                       											AS productCd                		/* 기종 */
+        , mapping.BUSINESS_AREA_CD                 											AS businessAreaCd            		/* 사업장 */
+        , FN_GET_CD_NM('businessAreaCd', mapping.BUSINESS_AREA_CD, #{sessionLang}) 			AS businessAreaNm
+        , mapping.PROTECT_YN                       											AS protectYn                		/* 방산기술자료 */
+        , reqDetail.REQUEST_DESC               												AS requestDesc                		/* 요청사유 */
+        , destroyReq.INSERT_USER_CD             											AS destroyRequestUserCd        		/* 폐기요청자 */
+        , destroyReq.APPROVAL_DT                											AS destroyApprovalDt        		/* 폐기승인일 */
+        , approvalFile.DESTROY_STATUS_CD        											AS destroyStatusCd            		/* 폐기상태코드 */
+        , FN_GET_CD_NM('destroyStatusCd', approvalFile.DESTROY_STATUS_CD, #{sessionLang}) 	AS destroyStatusNm	/* 폐기상태 */
+        , mapping.OBJECT_ID																	AS objectId
+        , fileInfo.ORG_FILE_NM																AS orgFileNm
+        , approvalFile.DESTROY_DT															AS destroyDt                		/* 폐기일자 */
+        , (
+        SELECT USER_NM
+        FROM DOCS_USER tmp WHERE tmp.USER_CD = req.INSERT_USER_CD
+        )                                       										AS requestUser 						/* 출력 요청자 */
+        , COALESCE(mapping.PRODUCT_CD, '')                                           									AS productNm 						/* 기종명 */
+        , (
+        SELECT USER_NM
+        FROM DOCS_USER tmp WHERE tmp.USER_CD = destroyReq.INSERT_USER_CD
+        ) 																				AS destroyRequestUserNm				/* 폐기요청자 */
+        FROM DOCS_REQUEST_FILE fileInfo
+        INNER JOIN DOCS_REQUEST_MAPPING mapping ON fileInfo.REQUEST_NO = mapping.REQUEST_NO AND fileInfo.OBJECT_ID = mapping.OBJECT_ID
+        INNER JOIN DOCS_REQUEST req ON mapping.REQUEST_NO = req.REQUEST_NO
+        INNER JOIN DOCS_REQUEST_DETAIL reqDetail ON reqDetail.REQUEST_NO = req.REQUEST_NO AND reqDetail.APPROVAL_STATUS_CD = 'REQUEST'
+        LEFT JOIN DOCS_APPROVAL_FILE approvalFile ON approvalFile.REQUEST_NO = mapping.REQUEST_NO AND approvalFile.OBJECT_ID = mapping.OBJECT_ID
+        LEFT JOIN DOCS_DESTROY_REQUEST_MAPPING destroyMapping ON destroyMapping.REQUEST_NO = mapping.REQUEST_NO AND destroyMapping.OBJECT_ID = mapping.OBJECT_ID
+        LEFT JOIN DOCS_DESTROY_REQUEST destroyReq ON destroyReq.DESTROY_REQUEST_NO = destroyMapping.DESTROY_REQUEST_NO
+        LEFT JOIN DOCS_DESTROY_REQUEST_DETAIL destroyReqDtl ON destroyReqDtl.DESTROY_REQUEST_NO = destroyReq.DESTROY_REQUEST_NO AND destroyReqDtl.APPROVAL_STATUS_CD = 'REQUEST'
+        WHERE destroyReq.DESTROY_REQUEST_NO = #{destroyRequestNo}
+        ) B1
+
+        ) C1
+    </select>
+
+
+    <!-- 폐기 요청 수정 [2019.10.07(최금영)] -->
+    <update id="updatePrintDestroyRequestInfo" parameterType="kr.esob.fdms.controller.inside.distribution.printdestroyapproval.PrintDestroyApprovalPopupParam">
+        UPDATE DOCS_DESTROY_REQUEST
+        SET STATUS_CD = #{statusCd}
+        , DESTROY_STATUS_CD = CASE
+        WHEN #{statusCd} = 'APPROVAL' THEN '3'
+        WHEN #{statusCd} = 'REJECT' THEN '4'
+        ELSE ''
+        END
+        , CURRENT_PROCESS_SEQ_NO = CAST(#{currentProcessSeqNo} AS INTEGER)
+        <if test='"APPROVAL".equals(statusCd)'>
+            , APPROVAL_DT = NOW()
+        </if>
+        WHERE DESTROY_REQUEST_NO = #{destroyRequestNo}
+    </update>
+
+
+    <!-- 폐기 요청 상세 정보 수정 [2019.10.07(최금영)] -->
+    <update id="updatePrintDestroyRequestDetail" parameterType="kr.esob.fdms.controller.inside.distribution.printdestroyapproval.PrintDestroyApprovalPopupParam">
+        UPDATE DOCS_DESTROY_REQUEST_DETAIL
+        SET ACTION_CD = #{actionCd}
+        <if test='rejectDesc != null and !"".equals(rejectDesc)'>
+            , REQUEST_DESC = #{rejectDesc}
+        </if>
+        , ACTION_DT = NOW()
+        WHERE APPROVAL_STATUS_CD = #{approvalStatusCd}
+        AND APPROVAL_GRADE_CD = #{approvalGradeCd}
+    </update>
+
+    <!-- 폐기 요청 정보 조회 [2019.10.07(최금영)] -->
+    <select id="getDestroyRequestInfo" parameterType="kr.esob.fdms.controller.inside.distribution.printdestroyapproval.PrintDestroyApprovalPopupParam" resultType="kr.esob.fdms.controller.inside.distribution.printdestroyapproval.PrintDestroyApprovalPopupParam">
+        SELECT destRequest.DESTROY_REQUEST_NO 		AS destroyRequestNo
+             , destRequest.APPROVAL_LINE_ID 			AS approvalLineId
+             , destRequest.CURRENT_PROCESS_SEQ_NO	AS currentProcessSeqNo
+             , appLine.APPROVAL_STATUS_CD 			AS approvalStatusCd
+             , appLine.APPROVAL_GRADE_CD 			AS approvalGradeCd
+             , #{saveType}							AS saveType
+             , #{rejectDesc}							AS rejectDesc
+        FROM DOCS_DESTROY_REQUEST destRequest
+                 JOIN DOCS_APPROVAL_LINE_DETAIL appLine
+                      ON destRequest.APPROVAL_LINE_ID = appLine.APPROVAL_LINE_ID AND appLine.PROCESS_SEQ_NO = destRequest.CURRENT_PROCESS_SEQ_NO
+        WHERE DESTROY_REQUEST_NO = #{destroyRequestNo}
+    </select>
+
+    <!-- 폐기할 아이템 조회 [2019.10.07(최금영)] -->
+    <select id="selectDestroyItemList" parameterType="kr.esob.fdms.controller.inside.distribution.printdestroyapproval.PrintDestroyApprovalPopupParam" resultType="kr.esob.fdms.controller.inside.distribution.printdestroyapproval.PrintDestroyItemListVO">
+        SELECT REQUEST_NO AS requestNo
+             , OBJECT_ID	AS objectId
+        FROM DOCS_DESTROY_REQUEST_MAPPING
+        WHERE DESTROY_REQUEST_NO = #{destroyRequestNo}
+    </select>
+
+    <!-- 폐기된 아이템 미사용 처리 [2019.10.07(최금영)] -->
+    <update id="updateRequestMapping" parameterType="kr.esob.fdms.controller.inside.distribution.printdestroyapproval.PrintDestroyApprovalPopupParam">
+        UPDATE DOCS_REQUEST_MAPPING
+        SET USE_YN = 'N'
+        WHERE REQUEST_NO = #{requestNo}
+          AND OBJECT_ID = #{objectId}
+    </update>
+
+    <!-- 폐기 요청 정보 조회 [2019.10.07(최금영)] -->
+    <select id="getDestroyRequest" resultType="kr.esob.fdms.controller.inside.distribution.printdestroyapproval.PrintDestroyItemListVO">
+        SELECT dstReqDtl.REQUEST_DESC	AS requestDesc
+        FROM DOCS_DESTROY_REQUEST dstReq
+                 JOIN DOCS_DESTROY_REQUEST_DETAIL dstReqDtl
+                      ON dstReq.DESTROY_REQUEST_NO = dstReqDtl.DESTROY_REQUEST_NO AND dstReqDtl.APPROVAL_STATUS_CD = 'REQUEST'
+        WHERE dstReq.DESTROY_REQUEST_NO = #{destroyRequestNo}
+    </select>
+
+
+    <!-- 출력물 폐기 요청 리스트 조회 [2019.10.07(최금영)] -->
+    <select id="selectPopupListCount" resultType="Integer" parameterType="kr.esob.fdms.controller.inside.distribution.printdestroyapproval.PrintDestroyApprovalListParam">
+        /* 출력물 폐기 요청 리스트 갯수 */
+        SELECT COUNT(*) AS TOTAL_COUNT
+        FROM (
+        SELECT
+        <if test='sortColumn == null or "".equals(sortColumn)'>
+            ROW_NUMBER() OVER(ORDER BY requestDt DESC) AS PAGEINDEX
+        </if>
+        <if test='sortColumn != null and !"".equals(sortColumn)'>
+            ROW_NUMBER() OVER(ORDER BY ${sortColumn} ${order}) AS PAGEINDEX
+        </if>
+        , B1.*
+        FROM (
+        SELECT DISTINCT mapping.BUSINESS_TYPE_CD		AS businessTypeCd            		/* 사업구분코드 */
+        , req.REQUEST_NO                       	   	AS requestNo                		/* 요청번호 */
+        , req.OBJECT_TYPE                          	AS objectType                		/* 자료유형코드 */
+        , mapping.OBJECT_ID                        	AS objectNo                    		/* 자료번호 */
+        , mapping.REV_NO                           	AS revNo                    		/* rev */
+        , mapping.SW_VERSION_NO                    	AS swVersionNo                 		/* sw 버전 */
+        , mapping.DOC_VERSION_NO                    AS docVersionNo             		/* 명세서 버전 */
+        , mapping.OBJECT_NM                         AS objectNm                    		/* 자료명 */
+        , mapping.CURRENT_PAGE_NO                   AS currentPageNo             		/* 페이지 */
+        , mapping.TOTAL_PAGE_NO                     AS totalPageNo                 		/* 총 페이지 */
+        , mapping.ECN_NO                            AS ecnNo                    		/* CO번호 */
+        , req.REQUEST_PURPOSE                       AS requestPurpose            		/* 용도 */
+        , req.INSERT_USER_CD                        AS requestUserCd            		/* 출력요청자 */
+        , TO_CHAR(req.INSERT_DT, 'YYYY-MM-DD')     	AS requestDt                		/* 출력 요청일 */
+        , fileInfo.PRINT_COUNT              	AS printCount                		/* 출력횟수 */
+        , (SELECT MAX(TO_CHAR(fileInfo.USE_END_YMD::date, 'YYYY-MM-DD'))
+        FROM DOCS_REQUEST_FILE fileInfo
+        WHERE mapping.REQUEST_NO = fileInfo.REQUEST_NO
+        AND mapping.OBJECT_ID = fileInfo.OBJECT_ID
+        )                                                                 AS useEndYmd            /* 유효기간 */
+        , CASE WHEN req.DESTROY_TODO_YMD IS NULL THEN NULL
+        ELSE SUBSTRING(req.DESTROY_TODO_YMD, 1, 4) || '-' || SUBSTRING(req.DESTROY_TODO_YMD, 5, 2) || '-' || SUBSTRING(req.DESTROY_TODO_YMD, 7, 2)
+        END                                 	AS destroyTodoYmd                	/* 폐기기한 */
+        , TO_CHAR(mapping.STD_GAPP_DT, 'YYYY-MM-DD')	AS stdGappDt                		/* 규격화 승인일 */
+        , TO_CHAR(mapping.CHANGE_GAPP_DT, 'YYYY-MM-DD') AS changeGappDt                		/* 기술변경 승인일 */
+        , mapping.PRODUCT_CD                       	AS productCd                		/* 기종 */
+        , mapping.BUSINESS_AREA_CD                 	AS businessAreaCd            		/* 사업장 */
+        , mapping.PROTECT_YN                       	AS protectYn                		/* 방산기술자료 */
+        , reqDetail.REQUEST_DESC               		AS requestDesc                		/* 요청사유 */
+        , destroyReq.INSERT_USER_CD             	AS destroyRequestUserCd        		/* 폐기요청자 */
+        , destroyReq.APPROVAL_DT                	AS destroyApprovalDt        		/* 폐기승인일 */
+        , approvalFile.DESTROY_STATUS_CD        	AS destroyStatusCd            		/* 폐기상태코드 */
+        , TO_CHAR(approvalFile.DESTROY_DT, 'YYYY-MM-DD')  	AS destroyDt                		/* 폐기일자 */
+        , mapping.BUSINESS_TYPE_CD 					AS businessTypeNm					/* 사업구분 */
+        , mapping.OBJECT_NM							AS objectTypeNm 					/* 자료유형 */
+        , req.REQUEST_PURPOSE 						AS requestPurposeNm
+        , (
+        SELECT USER_NM
+        FROM DOCS_USER tmp WHERE tmp.USER_CD = req.INSERT_USER_CD
+        )                                       AS requestUser 						/* 출력 요청자 */
+        , COALESCE(mapping.PRODUCT_CD, '')                                           AS productNm 						/* 기종명 */
+        , mapping.BUSINESS_AREA_CD						AS businessAreaNm					/* 사업장 */
+        , (
+        SELECT USER_NM
+        FROM DOCS_USER tmp WHERE tmp.USER_CD = destroyReq.INSERT_USER_CD
+        ) 											AS destroyRequestUserNm				/* 폐기요청자 */
+        FROM DOCS_REQUEST req
+        INNER JOIN DOCS_REQUEST_DETAIL reqDetail ON reqDetail.REQUEST_NO = req.REQUEST_NO AND reqDetail.APPROVAL_STATUS_CD = 'REQUEST'
+        INNER JOIN DOCS_REQUEST_MAPPING mapping ON mapping.REQUEST_NO = req.REQUEST_NO
+        LEFT JOIN DOCS_APPROVAL_FILE approvalFile ON approvalFile.REQUEST_NO = mapping.REQUEST_NO AND approvalFile.OBJECT_ID = mapping.OBJECT_ID
+        LEFT JOIN DOCS_DESTROY_REQUEST_MAPPING destroyMapping ON destroyMapping.REQUEST_NO = mapping.REQUEST_NO AND destroyMapping.OBJECT_ID = mapping.OBJECT_ID
+        LEFT JOIN DOCS_DESTROY_REQUEST destroyReq ON destroyReq.DESTROY_REQUEST_NO = destroyMapping.DESTROY_REQUEST_NO
+        LEFT JOIN DOCS_DESTROY_REQUEST_DETAIL destroyReqDtl ON destroyReqDtl.DESTROY_REQUEST_NO = destroyReq.DESTROY_REQUEST_NO AND destroyReqDtl.APPROVAL_STATUS_CD = 'REQUEST'
+        WHERE 1=1
+        <foreach collection="list" open="AND(" close=")" separator="OR" item="item">
+            req.REQUEST_NO = #{item.requestNo} AND mapping.OBJECT_ID = #{item.objectId}
+        </foreach>
+
+        ) B1
+
+        ) C1
+    </select>
+
+    <select id="selectRequestInfo" resultType="kr.esob.fdms.controller.inside.distribution.printdestroyapproval.PrintDestroyApprovalPopupParam">
+        SELECT DESTROY_REQUEST_NO
+             , #{saveType}
+        FROM DOCS_DESTROY_REQUEST
+        WHERE DESTROY_REQUEST_NO = #{destroyRequestNo}
+    </select>
+</mapper>

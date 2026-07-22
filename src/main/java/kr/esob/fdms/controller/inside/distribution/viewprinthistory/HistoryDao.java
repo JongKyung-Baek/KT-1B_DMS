@@ -1,0 +1,48 @@
+package kr.esob.fdms.controller.inside.distribution.viewprinthistory;
+
+import kr.esob.fdms.commonlogic.abstractclass.AbstractDao;
+import kr.esob.fdms.controller.inside.distribution.commonrequest.ApprovalLineDetailVO;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Map;
+
+@Repository
+public class HistoryDao extends AbstractDao {
+	private String prefix = "sql.ViewPrintHistory.";
+
+	@SuppressWarnings("unchecked")
+	public List<HistoryListParam> selectList(Object param){
+		return list(prefix + "selectList", param);
+	}
+
+	public Integer selectListCount(Object param){
+		return (Integer) obj(prefix + "selectListCount", param);
+	}
+
+	public String inserDestoryRequest(DestroyRequestParam param) {
+		insert(prefix + "inserDestoryRequest", param);
+		return param.getDestroyRequestNo();
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<ApprovalLineDetailVO> getDocsApprovalLineDetail(String approvalLineId) {
+		return list(prefix + "getDocsApprovalLineDetail", approvalLineId);
+	}
+
+	public void insertDocsDestroyRequestDetail(DestroyRequestParam param) {
+		insert(prefix + "insertDocsDestroyRequestDetail", param);
+	}
+
+	public void insertDocsDestoryRequestMapping(DestroyRequestParam param) {
+		insert(prefix + "insertDocsDestoryRequestMapping", param);
+	}
+
+	public List<Map<String, Object>> getProtectUser(DestroyRequestParam param) {
+		return list(prefix + "getProtectUser", param);
+	}
+
+	public void updateApprovalFile(DestroyRequestParam param) {
+		update(prefix + "updateApprovalFile", param);
+	}
+}

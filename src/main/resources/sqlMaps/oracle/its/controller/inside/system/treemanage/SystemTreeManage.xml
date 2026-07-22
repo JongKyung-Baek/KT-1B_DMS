@@ -1,0 +1,504 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="sql.SystemTreeManage">
+
+    <!-- selectFunctionCode1List
+DOC 모드의 Function Code 1(최상위) 목록 조회
+- 대상 테이블: DOCS_DRAWING_TREE
+- 조건: USE_YN='Y', TREE_DEPTH=1
+- 정렬: SORT_ORDER, TREE_NM -->
+    <select id="selectFunctionCode1List" resultType="kr.esob.fdms.controller.inside.system.treemanage.TreeManageNodeVO">
+        SELECT TREE_CD AS id,
+               COALESCE(UPPER_TREE_CD, '#') AS parent,
+               TREE_NM AS text,
+               COALESCE(FUNCTION_CD, TREE_CD) AS functionCd,
+               CAST(TREE_DEPTH AS VARCHAR) AS "level",
+               'group' AS type,
+               COALESCE(SORT_ORDER, 0) AS sort,
+               COALESCE(USE_YN, 'Y') AS useYn
+          FROM DOCS_DRAWING_TREE
+         WHERE COALESCE(USE_YN, 'Y') = 'Y'
+           AND COALESCE(TREE_DEPTH, 0) = 1
+         ORDER BY SORT_ORDER, TREE_NM
+    </select>
+
+    <!-- selectFunctionCode2List
+DOC 모드의 Function Code 2 목록 조회
+- parentTreeCd(상위 코드)의 직계 자식만 조회 -->
+    <select id="selectFunctionCode2List" parameterType="kr.esob.fdms.controller.inside.system.treemanage.TreeManageListParam" resultType="kr.esob.fdms.controller.inside.system.treemanage.TreeManageNodeVO">
+        SELECT TREE_CD AS id,
+               COALESCE(UPPER_TREE_CD, '#') AS parent,
+               TREE_NM AS text,
+               COALESCE(FUNCTION_CD, TREE_CD) AS functionCd,
+               CAST(TREE_DEPTH AS VARCHAR) AS "level",
+               'group' AS type,
+               COALESCE(SORT_ORDER, 0) AS sort,
+               COALESCE(USE_YN, 'Y') AS useYn
+          FROM DOCS_DRAWING_TREE
+         WHERE COALESCE(USE_YN, 'Y') = 'Y'
+           AND UPPER_TREE_CD = #{parentTreeCd,jdbcType=VARCHAR}
+         ORDER BY SORT_ORDER, TREE_NM
+    </select>
+
+    <!-- selectDocumentTypeList
+DOC 모드의 Document Type 목록 조회
+- parentTreeCd(Function Code 2)의 직계 자식만 조회 -->
+    <select id="selectDocumentTypeList" parameterType="kr.esob.fdms.controller.inside.system.treemanage.TreeManageListParam" resultType="kr.esob.fdms.controller.inside.system.treemanage.TreeManageNodeVO">
+        SELECT TREE_CD AS id,
+               COALESCE(UPPER_TREE_CD, '#') AS parent,
+               TREE_NM AS text,
+               COALESCE(FUNCTION_CD, TREE_CD) AS functionCd,
+               CAST(TREE_DEPTH AS VARCHAR) AS "level",
+               'item' AS type,
+               COALESCE(SORT_ORDER, 0) AS sort,
+               COALESCE(USE_YN, 'Y') AS useYn
+          FROM DOCS_DRAWING_TREE
+         WHERE COALESCE(USE_YN, 'Y') = 'Y'
+           AND UPPER_TREE_CD = #{parentTreeCd,jdbcType=VARCHAR}
+         ORDER BY SORT_ORDER, TREE_NM
+    </select>
+
+    <!-- selectBoardFunctionCode1List
+BOARD 모드의 Function Code 1(최상위) 목록 조회
+- 기준 트리: DOCS_SW_TREE -->
+    <select id="selectBoardFunctionCode1List" resultType="kr.esob.fdms.controller.inside.system.treemanage.TreeManageNodeVO">
+        SELECT DISTINCT ON (u.id)
+               u.id,
+               u.parent,
+               u.text,
+               u.functionCd,
+               u."level",
+               u.type,
+               u.sort,
+               u.useYn
+          FROM (
+                SELECT TREE_CD AS id,
+                       COALESCE(UPPER_TREE_CD, '#') AS parent,
+                       TREE_NM AS text,
+                       COALESCE(FUNCTION_CD, TREE_CD) AS functionCd,
+                       CAST(TREE_DEPTH AS VARCHAR) AS "level",
+                       'group' AS type,
+                       COALESCE(SORT_ORDER, 0) AS sort,
+                       COALESCE(USE_YN, 'Y') AS useYn
+                  FROM DOCS_SW_TREE
+                 WHERE COALESCE(USE_YN, 'Y') = 'Y'
+                   AND COALESCE(TREE_DEPTH, 0) = 1
+                   AND COALESCE(UPPER_TREE_CD, '') = 'ROOT'
+                UNION ALL
+                SELECT TREE_CD AS id,
+                       COALESCE(UPPER_TREE_CD, '#') AS parent,
+                       TREE_NM AS text,
+                       COALESCE(FUNCTION_CD, TREE_CD) AS functionCd,
+                       CAST(TREE_DEPTH AS VARCHAR) AS "level",
+                       'group' AS type,
+                       COALESCE(SORT_ORDER, 0) AS sort,
+                       COALESCE(USE_YN, 'Y') AS useYn
+                  FROM DOCS_PRODUCT_TREE
+                 WHERE COALESCE(USE_YN, 'Y') = 'Y'
+                   AND COALESCE(TREE_DEPTH, 0) = 1
+                   AND COALESCE(UPPER_TREE_CD, '') = 'ROOT'
+                UNION ALL
+                SELECT TREE_CD AS id,
+                       COALESCE(UPPER_TREE_CD, '#') AS parent,
+                       TREE_NM AS text,
+                       COALESCE(FUNCTION_CD, TREE_CD) AS functionCd,
+                       CAST(TREE_DEPTH AS VARCHAR) AS "level",
+                       'group' AS type,
+                       COALESCE(SORT_ORDER, 0) AS sort,
+                       COALESCE(USE_YN, 'Y') AS useYn
+                  FROM DOCS_DXF_TREE
+                 WHERE COALESCE(USE_YN, 'Y') = 'Y'
+                   AND COALESCE(TREE_DEPTH, 0) = 1
+                   AND COALESCE(UPPER_TREE_CD, '') = 'ROOT'
+               ) u
+         ORDER BY u.id, u.sort, u.text
+    </select>
+
+    <!-- selectBoardFunctionCode2List
+BOARD 모드의 Function Code 2 목록 조회
+- 기준 트리: DOCS_SW_TREE
+- parentTreeCd 직계 자식 조회 -->
+    <select id="selectBoardFunctionCode2List" parameterType="kr.esob.fdms.controller.inside.system.treemanage.TreeManageListParam" resultType="kr.esob.fdms.controller.inside.system.treemanage.TreeManageNodeVO">
+        SELECT TREE_CD AS id,
+               COALESCE(UPPER_TREE_CD, '#') AS parent,
+               TREE_NM AS text,
+               COALESCE(FUNCTION_CD, TREE_CD) AS functionCd,
+               CAST(TREE_DEPTH AS VARCHAR) AS "level",
+               'group' AS type,
+               COALESCE(SORT_ORDER, 0) AS sort,
+               COALESCE(USE_YN, 'Y') AS useYn
+          FROM DOCS_SW_TREE
+         WHERE COALESCE(USE_YN, 'Y') = 'Y'
+           AND UPPER_TREE_CD = #{parentTreeCd,jdbcType=VARCHAR}
+         ORDER BY SORT_ORDER, TREE_NM
+    </select>
+
+    <!-- selectBoardDocumentTypeList
+BOARD 모드의 Type Code 목록 조회
+- 기준 트리: DOCS_SW_TREE
+- parentTreeCd 직계 자식 조회 -->
+    <select id="selectBoardDocumentTypeList" parameterType="kr.esob.fdms.controller.inside.system.treemanage.TreeManageListParam" resultType="kr.esob.fdms.controller.inside.system.treemanage.TreeManageNodeVO">
+        SELECT TREE_CD AS id,
+               COALESCE(UPPER_TREE_CD, '#') AS parent,
+               TREE_NM AS text,
+               COALESCE(FUNCTION_CD, TREE_CD) AS functionCd,
+               CAST(TREE_DEPTH AS VARCHAR) AS "level",
+               'item' AS type,
+               COALESCE(SORT_ORDER, 0) AS sort,
+               COALESCE(USE_YN, 'Y') AS useYn
+          FROM DOCS_SW_TREE
+         WHERE COALESCE(USE_YN, 'Y') = 'Y'
+           AND UPPER_TREE_CD = #{parentTreeCd,jdbcType=VARCHAR}
+         ORDER BY SORT_ORDER, TREE_NM
+    </select>
+
+    <!-- insertNode
+DOC 모드 등록(DRAWING)
+- INSERT: DOCS_DRAWING_TREE
+- TREE_DEPTH: 부모 기준 +1
+- SORT_ORDER: 같은 부모의 MAX+1
+- TREE_PATH: 부모 경로 + 현재 명칭
+- parentTreeCd가 NULL이고 treeCd가 FC*이면 ROOT로 보정 -->
+    <update id="insertNode" parameterType="kr.esob.fdms.controller.inside.system.treemanage.TreeManageSaveParam">
+        INSERT INTO DOCS_DRAWING_TREE (TREE_CD, FUNCTION_CD, UPPER_TREE_CD, TREE_NM, TREE_DEPTH, SORT_ORDER, TREE_PATH, USE_YN)
+        SELECT #{treeCd},
+               #{functionCd},
+               CASE WHEN #{parentTreeCd,jdbcType=VARCHAR} IS NULL AND #{functionCd} LIKE 'FC%' THEN 'ROOT' ELSE #{parentTreeCd,jdbcType=VARCHAR} END,
+               #{treeNm},
+               CASE WHEN #{parentTreeCd,jdbcType=VARCHAR} IS NULL THEN 1
+                    ELSE (SELECT COALESCE(TREE_DEPTH, 0) + 1
+                            FROM DOCS_DRAWING_TREE
+                           WHERE UPPER(TRIM(TREE_CD)) = UPPER(TRIM(#{parentTreeCd,jdbcType=VARCHAR}))) END,
+               COALESCE(
+                   (SELECT old.SORT_ORDER
+                      FROM DOCS_DRAWING_TREE old
+                     WHERE UPPER(TRIM(COALESCE(old.FUNCTION_CD, ''))) = UPPER(TRIM(#{functionCd}))
+                       AND COALESCE(old.USE_YN, 'Y') = 'N'
+                     ORDER BY old.SORT_ORDER
+                     LIMIT 1),
+                   (SELECT MAX(SORT_ORDER) + 1
+                      FROM DOCS_DRAWING_TREE
+                     WHERE COALESCE(UPPER_TREE_CD, '#') = COALESCE((CASE WHEN #{parentTreeCd,jdbcType=VARCHAR} IS NULL AND #{functionCd} LIKE 'FC%' THEN 'ROOT' ELSE #{parentTreeCd,jdbcType=VARCHAR} END), '#')),
+                   1),
+               CASE WHEN #{parentTreeCd,jdbcType=VARCHAR} IS NULL THEN '/' || #{treeNm} || '/'
+                    ELSE (SELECT COALESCE(TREE_PATH, '/') || #{treeNm} || '/'
+                            FROM DOCS_DRAWING_TREE
+                           WHERE UPPER(TRIM(TREE_CD)) = UPPER(TRIM(#{parentTreeCd,jdbcType=VARCHAR}))) END,
+               'Y'
+    </update>
+
+    <!-- insertIocNode
+DOC 모드 등록(DOCUMENT)
+- insertNode와 동일 규칙으로 DOCS_DOCUMENT_TREE에 동시 반영 -->
+    <update id="insertIocNode" parameterType="kr.esob.fdms.controller.inside.system.treemanage.TreeManageSaveParam">
+        INSERT INTO DOCS_DOCUMENT_TREE (TREE_CD, FUNCTION_CD, UPPER_TREE_CD, TREE_NM, TREE_DEPTH, SORT_ORDER, TREE_PATH, USE_YN)
+        SELECT #{treeCd},
+               #{functionCd},
+               CASE WHEN #{parentTreeCd,jdbcType=VARCHAR} IS NULL AND #{functionCd} LIKE 'FC%' THEN 'ROOT' ELSE #{parentTreeCd,jdbcType=VARCHAR} END,
+               #{treeNm},
+               CASE WHEN #{parentTreeCd,jdbcType=VARCHAR} IS NULL THEN 1
+                    ELSE (SELECT COALESCE(TREE_DEPTH, 0) + 1
+                            FROM DOCS_DOCUMENT_TREE
+                           WHERE UPPER(TRIM(TREE_CD)) = UPPER(TRIM(#{parentTreeCd,jdbcType=VARCHAR}))) END,
+               COALESCE(
+                   (SELECT old.SORT_ORDER
+                      FROM DOCS_DOCUMENT_TREE old
+                     WHERE UPPER(TRIM(COALESCE(old.FUNCTION_CD, ''))) = UPPER(TRIM(#{functionCd}))
+                       AND COALESCE(old.USE_YN, 'Y') = 'N'
+                     ORDER BY old.SORT_ORDER
+                     LIMIT 1),
+                   (SELECT MAX(SORT_ORDER) + 1
+                      FROM DOCS_DOCUMENT_TREE
+                     WHERE COALESCE(UPPER_TREE_CD, '#') = COALESCE((CASE WHEN #{parentTreeCd,jdbcType=VARCHAR} IS NULL AND #{functionCd} LIKE 'FC%' THEN 'ROOT' ELSE #{parentTreeCd,jdbcType=VARCHAR} END), '#')),
+                   1),
+               CASE WHEN #{parentTreeCd,jdbcType=VARCHAR} IS NULL THEN '/' || #{treeNm} || '/'
+                    ELSE (SELECT COALESCE(TREE_PATH, '/') || #{treeNm} || '/'
+                            FROM DOCS_DOCUMENT_TREE
+                           WHERE UPPER(TRIM(TREE_CD)) = UPPER(TRIM(#{parentTreeCd,jdbcType=VARCHAR}))) END,
+               'Y'
+    </update>
+
+    <!-- insertBoardSwNode
+BOARD 모드 등록(SW)
+- INSERT: DOCS_SW_TREE -->
+    <update id="insertBoardSwNode" parameterType="kr.esob.fdms.controller.inside.system.treemanage.TreeManageSaveParam">
+        INSERT INTO DOCS_SW_TREE (TREE_CD, FUNCTION_CD, UPPER_TREE_CD, TREE_NM, TREE_DEPTH, SORT_ORDER, TREE_PATH, USE_YN)
+        SELECT #{treeCd},
+               #{functionCd},
+               CASE WHEN #{parentTreeCd,jdbcType=VARCHAR} IS NULL THEN 'ROOT' ELSE #{parentTreeCd,jdbcType=VARCHAR} END,
+               #{treeNm},
+               CASE WHEN #{parentTreeCd,jdbcType=VARCHAR} IS NULL THEN 1
+                    ELSE (SELECT COALESCE(TREE_DEPTH, 0) + 1 FROM DOCS_SW_TREE WHERE TREE_CD = #{parentTreeCd,jdbcType=VARCHAR}) END,
+               COALESCE(
+                   (SELECT old.SORT_ORDER
+                      FROM DOCS_SW_TREE old
+                     WHERE UPPER(TRIM(COALESCE(old.FUNCTION_CD, ''))) = UPPER(TRIM(#{functionCd}))
+                       AND COALESCE(old.USE_YN, 'Y') = 'N'
+                     ORDER BY old.SORT_ORDER
+                     LIMIT 1),
+                   (SELECT MAX(SORT_ORDER) + 1
+                      FROM DOCS_SW_TREE
+                     WHERE COALESCE(UPPER_TREE_CD, '#') = COALESCE((CASE WHEN #{parentTreeCd,jdbcType=VARCHAR} IS NULL THEN 'ROOT' ELSE #{parentTreeCd,jdbcType=VARCHAR} END), '#')),
+                   1),
+               CASE WHEN #{parentTreeCd,jdbcType=VARCHAR} IS NULL THEN '/' || #{treeNm} || '/'
+                    ELSE (SELECT COALESCE(TREE_PATH, '/') || #{treeNm} || '/' FROM DOCS_SW_TREE WHERE TREE_CD = #{parentTreeCd,jdbcType=VARCHAR}) END,
+               'Y'
+    </update>
+
+    <!-- insertBoardProductNode
+BOARD 모드 등록(PRODUCT)
+- INSERT: DOCS_PRODUCT_TREE -->
+    <update id="insertBoardProductNode" parameterType="kr.esob.fdms.controller.inside.system.treemanage.TreeManageSaveParam">
+        INSERT INTO DOCS_PRODUCT_TREE (TREE_CD, FUNCTION_CD, UPPER_TREE_CD, TREE_NM, TREE_DEPTH, SORT_ORDER, TREE_PATH, USE_YN)
+        SELECT #{treeCd},
+               #{functionCd},
+               CASE WHEN #{parentTreeCd,jdbcType=VARCHAR} IS NULL THEN 'ROOT' ELSE #{parentTreeCd,jdbcType=VARCHAR} END,
+               #{treeNm},
+               CASE WHEN #{parentTreeCd,jdbcType=VARCHAR} IS NULL THEN 1
+                    ELSE (SELECT COALESCE(TREE_DEPTH, 0) + 1 FROM DOCS_PRODUCT_TREE WHERE TREE_CD = #{parentTreeCd,jdbcType=VARCHAR}) END,
+               COALESCE(
+                   (SELECT old.SORT_ORDER
+                      FROM DOCS_PRODUCT_TREE old
+                     WHERE UPPER(TRIM(COALESCE(old.FUNCTION_CD, ''))) = UPPER(TRIM(#{functionCd}))
+                       AND COALESCE(old.USE_YN, 'Y') = 'N'
+                     ORDER BY old.SORT_ORDER
+                     LIMIT 1),
+                   (SELECT MAX(SORT_ORDER) + 1
+                      FROM DOCS_PRODUCT_TREE
+                     WHERE COALESCE(UPPER_TREE_CD, '#') = COALESCE((CASE WHEN #{parentTreeCd,jdbcType=VARCHAR} IS NULL THEN 'ROOT' ELSE #{parentTreeCd,jdbcType=VARCHAR} END), '#')),
+                   1),
+               CASE WHEN #{parentTreeCd,jdbcType=VARCHAR} IS NULL THEN '/' || #{treeNm} || '/'
+                    ELSE (SELECT COALESCE(TREE_PATH, '/') || #{treeNm} || '/' FROM DOCS_PRODUCT_TREE WHERE TREE_CD = #{parentTreeCd,jdbcType=VARCHAR}) END,
+               'Y'
+    </update>
+
+    <!-- insertBoardDxfNode
+BOARD 모드 등록(DXF)
+- INSERT: DOCS_DXF_TREE -->
+    <update id="insertBoardDxfNode" parameterType="kr.esob.fdms.controller.inside.system.treemanage.TreeManageSaveParam">
+        INSERT INTO DOCS_DXF_TREE (TREE_CD, FUNCTION_CD, UPPER_TREE_CD, TREE_NM, TREE_DEPTH, SORT_ORDER, TREE_PATH, USE_YN)
+        SELECT #{treeCd},
+               #{functionCd},
+               CASE WHEN #{parentTreeCd,jdbcType=VARCHAR} IS NULL THEN 'ROOT' ELSE #{parentTreeCd,jdbcType=VARCHAR} END,
+               #{treeNm},
+               CASE WHEN #{parentTreeCd,jdbcType=VARCHAR} IS NULL THEN 1
+                    ELSE (SELECT COALESCE(TREE_DEPTH, 0) + 1 FROM DOCS_DXF_TREE WHERE TREE_CD = #{parentTreeCd,jdbcType=VARCHAR}) END,
+               COALESCE(
+                   (SELECT old.SORT_ORDER
+                      FROM DOCS_DXF_TREE old
+                     WHERE UPPER(TRIM(COALESCE(old.FUNCTION_CD, ''))) = UPPER(TRIM(#{functionCd}))
+                       AND COALESCE(old.USE_YN, 'Y') = 'N'
+                     ORDER BY old.SORT_ORDER
+                     LIMIT 1),
+                   (SELECT MAX(SORT_ORDER) + 1
+                      FROM DOCS_DXF_TREE
+                     WHERE COALESCE(UPPER_TREE_CD, '#') = COALESCE((CASE WHEN #{parentTreeCd,jdbcType=VARCHAR} IS NULL THEN 'ROOT' ELSE #{parentTreeCd,jdbcType=VARCHAR} END), '#')),
+                   1),
+               CASE WHEN #{parentTreeCd,jdbcType=VARCHAR} IS NULL THEN '/' || #{treeNm} || '/'
+                    ELSE (SELECT COALESCE(TREE_PATH, '/') || #{treeNm} || '/' FROM DOCS_DXF_TREE WHERE TREE_CD = #{parentTreeCd,jdbcType=VARCHAR}) END,
+               'Y'
+    </update>
+
+    <!-- updateNode / updateIocNode
+DOC 모드 명칭 수정
+- DRAWING, DOCUMENT 트리 동시 수정 -->
+    <update id="updateNode" parameterType="kr.esob.fdms.controller.inside.system.treemanage.TreeManageSaveParam">
+        UPDATE DOCS_DRAWING_TREE SET TREE_NM = #{treeNm} WHERE TREE_CD = #{treeCd}
+    </update>
+
+    <update id="updateIocNode" parameterType="kr.esob.fdms.controller.inside.system.treemanage.TreeManageSaveParam">
+        UPDATE DOCS_DOCUMENT_TREE SET TREE_NM = #{treeNm} WHERE TREE_CD = #{treeCd}
+    </update>
+
+    <!-- updateBoardSwNode / updateBoardProductNode / updateBoardDxfNode
+BOARD 모드 명칭 수정
+- SW, PRODUCT, DXF 트리 동시 수정 -->
+    <update id="updateBoardSwNode" parameterType="kr.esob.fdms.controller.inside.system.treemanage.TreeManageSaveParam">
+        UPDATE DOCS_SW_TREE SET TREE_NM = #{treeNm} WHERE TREE_CD = #{treeCd}
+    </update>
+
+    <update id="updateBoardProductNode" parameterType="kr.esob.fdms.controller.inside.system.treemanage.TreeManageSaveParam">
+        UPDATE DOCS_PRODUCT_TREE SET TREE_NM = #{treeNm} WHERE TREE_CD = #{treeCd}
+    </update>
+
+    <update id="updateBoardDxfNode" parameterType="kr.esob.fdms.controller.inside.system.treemanage.TreeManageSaveParam">
+        UPDATE DOCS_DXF_TREE SET TREE_NM = #{treeNm} WHERE TREE_CD = #{treeCd}
+    </update>
+
+    <!-- countChildren / countIocChildren
+DOC 모드 하위 노드 존재 여부 확인
+- 삭제 가능 여부 검증용 -->
+    <select id="countChildren" parameterType="String" resultType="Integer">
+        SELECT COUNT(*) FROM DOCS_DRAWING_TREE WHERE UPPER_TREE_CD = #{value} AND COALESCE(USE_YN, 'Y') = 'Y'
+    </select>
+
+    <select id="countIocChildren" parameterType="String" resultType="Integer">
+        SELECT COUNT(*) FROM DOCS_DOCUMENT_TREE WHERE UPPER_TREE_CD = #{value} AND COALESCE(USE_YN, 'Y') = 'Y'
+    </select>
+
+    <!-- countBoardSwChildren / countBoardProductChildren / countBoardDxfChildren
+BOARD 모드 하위 노드 존재 여부 확인
+- 삭제 가능 여부 검증용 -->
+    <select id="countBoardSwChildren" parameterType="String" resultType="Integer">
+        SELECT COUNT(*) FROM DOCS_SW_TREE WHERE UPPER_TREE_CD = #{value} AND COALESCE(USE_YN, 'Y') = 'Y'
+    </select>
+
+    <select id="countBoardProductChildren" parameterType="String" resultType="Integer">
+        SELECT COUNT(*) FROM DOCS_PRODUCT_TREE WHERE UPPER_TREE_CD = #{value} AND COALESCE(USE_YN, 'Y') = 'Y'
+    </select>
+
+    <select id="countBoardDxfChildren" parameterType="String" resultType="Integer">
+        SELECT COUNT(*) FROM DOCS_DXF_TREE WHERE UPPER_TREE_CD = #{value} AND COALESCE(USE_YN, 'Y') = 'Y'
+    </select>
+
+    <!-- countLinkedDrawing / countLinkedDocument
+DOC 모드 연결 데이터 존재 여부 확인
+- 연결 데이터가 있으면 삭제 불가 -->
+    <select id="countLinkedDrawing" parameterType="String" resultType="Integer">
+        SELECT COUNT(*) FROM DOCS_DRAWING WHERE TREE_CD = #{value} AND COALESCE(DELETED_YN, 'N') = 'N'
+    </select>
+
+    <select id="countLinkedDocument" parameterType="String" resultType="Integer">
+        SELECT COUNT(*) FROM DOCS_DOCUMENT WHERE TREE_CD = #{value} AND COALESCE(DELETED_YN, 'N') = 'N'
+    </select>
+
+    <!-- countLinkedSw / countLinkedProduct / countLinkedDxf
+BOARD 모드 연결 데이터 존재 여부 확인
+- 연결 데이터가 있으면 삭제 불가 -->
+    <select id="countLinkedSw" parameterType="String" resultType="Integer">
+        SELECT COUNT(*) FROM DOCS_SW WHERE TREE_CD = #{value} AND COALESCE(DELETED_YN, 'N') = 'N'
+    </select>
+
+    <select id="countLinkedProduct" parameterType="String" resultType="Integer">
+        SELECT COUNT(*) FROM DOCS_PRODUCT_DOCUMENT WHERE TREE_CD = #{value}
+    </select>
+
+    <select id="countLinkedDxf" parameterType="String" resultType="Integer">
+        SELECT COUNT(*) FROM DOCS_DXF_DOCUMENT WHERE TREE_CD = #{value}
+    </select>
+
+    <!-- countByTreeCd / countIocByTreeCd
+DOC 모드 코드 중복 여부 확인
+- 등록 전 중복 방지 -->
+    <select id="countByTreeCd" parameterType="String" resultType="Integer">
+        SELECT COUNT(*) FROM DOCS_DRAWING_TREE WHERE TREE_CD = #{value}
+    </select>
+
+    <select id="countByFunctionCd" parameterType="String" resultType="Integer">
+        SELECT COUNT(*)
+          FROM DOCS_DRAWING_TREE
+         WHERE UPPER(TRIM(COALESCE(FUNCTION_CD, ''))) = UPPER(TRIM(#{value}))
+           AND COALESCE(USE_YN, 'Y') = 'Y'
+    </select>
+
+    <select id="countIocByTreeCd" parameterType="String" resultType="Integer">
+        SELECT COUNT(*) FROM DOCS_DOCUMENT_TREE WHERE TREE_CD = #{value}
+    </select>
+
+    <select id="countIocByFunctionCd" parameterType="String" resultType="Integer">
+        SELECT COUNT(*)
+          FROM DOCS_DOCUMENT_TREE
+         WHERE UPPER(TRIM(COALESCE(FUNCTION_CD, ''))) = UPPER(TRIM(#{value}))
+           AND COALESCE(USE_YN, 'Y') = 'Y'
+    </select>
+
+    <!-- countBoardSwByTreeCd / countBoardProductByTreeCd / countBoardDxfByTreeCd
+BOARD 모드 코드 중복 여부 확인
+- 등록 전 중복 방지 -->
+    <select id="countBoardSwByTreeCd" parameterType="String" resultType="Integer">
+        SELECT COUNT(*) FROM DOCS_SW_TREE WHERE TREE_CD = #{value}
+    </select>
+
+    <select id="countBoardSwByFunctionCd" parameterType="String" resultType="Integer">
+        SELECT COUNT(*)
+          FROM DOCS_SW_TREE
+         WHERE UPPER(TRIM(COALESCE(FUNCTION_CD, ''))) = UPPER(TRIM(#{value}))
+           AND COALESCE(USE_YN, 'Y') = 'Y'
+    </select>
+
+    <select id="countBoardProductByTreeCd" parameterType="String" resultType="Integer">
+        SELECT COUNT(*) FROM DOCS_PRODUCT_TREE WHERE TREE_CD = #{value}
+    </select>
+
+    <select id="countBoardProductByFunctionCd" parameterType="String" resultType="Integer">
+        SELECT COUNT(*)
+          FROM DOCS_PRODUCT_TREE
+         WHERE UPPER(TRIM(COALESCE(FUNCTION_CD, ''))) = UPPER(TRIM(#{value}))
+           AND COALESCE(USE_YN, 'Y') = 'Y'
+    </select>
+
+    <select id="countBoardDxfByTreeCd" parameterType="String" resultType="Integer">
+        SELECT COUNT(*) FROM DOCS_DXF_TREE WHERE TREE_CD = #{value}
+    </select>
+
+    <select id="countBoardDxfByFunctionCd" parameterType="String" resultType="Integer">
+        SELECT COUNT(*)
+          FROM DOCS_DXF_TREE
+         WHERE UPPER(TRIM(COALESCE(FUNCTION_CD, ''))) = UPPER(TRIM(#{value}))
+           AND COALESCE(USE_YN, 'Y') = 'Y'
+    </select>
+
+    <select id="selectDrawingTreeDepth" parameterType="String" resultType="Integer">
+        SELECT COALESCE(TREE_DEPTH, 0)
+          FROM DOCS_DRAWING_TREE
+         WHERE UPPER(TRIM(TREE_CD)) = UPPER(TRIM(#{value}))
+    </select>
+
+    <select id="selectDrawingTreeCdExact" parameterType="String" resultType="String">
+        SELECT TREE_CD
+          FROM DOCS_DRAWING_TREE
+         WHERE UPPER(TRIM(TREE_CD)) = UPPER(TRIM(#{value}))
+         LIMIT 1
+    </select>
+    <select id="selectNextDocTreeCd" resultType="String">
+        SELECT 'TRD' || LPAD(
+               (COALESCE(MAX(CAST(SUBSTRING(TREE_CD FROM '^TRD([0-9]+)$') AS INTEGER)), 0) + 1)::TEXT,
+               6,
+               '0')
+          FROM DOCS_DRAWING_TREE
+         WHERE TREE_CD ~ '^TRD[0-9]+$'
+    </select>
+
+    <select id="selectNextBoardTreeCd" resultType="String">
+        SELECT 'TRB' || LPAD(
+               (COALESCE(MAX(CAST(SUBSTRING(TREE_CD FROM '^TRB([0-9]+)$') AS INTEGER)), 0) + 1)::TEXT,
+               6,
+               '0')
+          FROM DOCS_SW_TREE
+         WHERE TREE_CD ~ '^TRB[0-9]+$'
+    </select>
+
+    <!-- deleteNode / deleteIocNode
+DOC 모드 soft delete -->
+    <update id="deleteNode" parameterType="String">
+        UPDATE DOCS_DRAWING_TREE SET USE_YN = 'N' WHERE TREE_CD = #{value}
+    </update>
+
+    <update id="deleteIocNode" parameterType="String">
+        UPDATE DOCS_DOCUMENT_TREE SET USE_YN = 'N' WHERE TREE_CD = #{value}
+    </update>
+
+    <!-- deleteBoardSwNode / deleteBoardProductNode / deleteBoardDxfNode
+BOARD 모드 soft delete -->
+    <update id="deleteBoardSwNode" parameterType="String">
+        UPDATE DOCS_SW_TREE SET USE_YN = 'N' WHERE TREE_CD = #{value}
+    </update>
+
+    <update id="deleteBoardProductNode" parameterType="String">
+        UPDATE DOCS_PRODUCT_TREE SET USE_YN = 'N' WHERE TREE_CD = #{value}
+    </update>
+
+    <update id="deleteBoardDxfNode" parameterType="String">
+        UPDATE DOCS_DXF_TREE SET USE_YN = 'N' WHERE TREE_CD = #{value}
+    </update>
+
+</mapper>
+
+
+
+
+
+

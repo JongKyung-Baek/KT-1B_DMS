@@ -1,0 +1,363 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+
+<!--<mapper namespace="sql.configNotice">-->
+
+<!--	<select id="selectList"-->
+<!--		resultType="kr.esob.fdms.controller.configurationmanage.notice.ConfigNoticeListVO">-->
+<!--		SELECT-->
+<!--			B1.*-->
+<!--		FROM-->
+<!--			(-->
+<!--			SELECT-->
+<!--				A1.*-->
+<!--				, ROWNUM AS PAGEINDEX-->
+<!--			FROM (-->
+<!--				SELECT-->
+<!--					NOTICE_CD AS noticeCd,											/* 글번호 */-->
+<!--					to_char(INSERT_DT, 'YYYY-MM-DD') AS insertDt,					/* 등록일자 */-->
+<!--					TITLE AS title,													/* 제목명 */-->
+<!--					(SELECT USER_NM FROM DOCS_USER-->
+<!--					WHERE USER_CD = INSERT_USER_CD) AS insertUserNm,				/* 게시자 */-->
+<!--					(SELECT TEXT FROM docs_combo WHERE SEQ = NOTICE_TYPE-->
+<!--					AND combo_cd = 'noticeType') AS noticeType,						/* 게시물 유형 */-->
+<!--					NOTICE_HIT AS noticeHit											/* 조회수 */-->
+<!--				FROM DOCS_CONF_NOTICE-->
+<!--	    WHERE 1 = 1-->
+<!--		<if test='noticeType != null and !noticeType.equals("")'>-->
+<!--		AND NOTICE_TYPE = #{noticeType}-->
+<!--		</if>-->
+<!--		<if test='insertUserNm != null and !insertUserNm.equals("")'>-->
+<!--		AND INSERT_USER_CD = #{insertUserNm}-->
+<!--		</if>-->
+<!--		<if test='title != null and !title.equals("")'>-->
+<!--		AND TITLE LIKE '%' || #{title} || '%'-->
+<!--		</if>-->
+<!--		<if test='insertStartDt != null and !insertStartDt.equals("")'>-->
+<!--		AND INSERT_DT BETWEEN TO_DATE(#{insertStartDt}, 'YYYY-MM-DD')-->
+<!--                         AND TO_DATE(#{insertEndDt}, 'YYYY-MM-DD')+1-->
+<!--		</if>-->
+<!--		<if test='sortColumn == null or "".equals(sortColumn)'>-->
+<!--          	ORDER BY noticeCd desc-->
+<!--		</if>-->
+<!--       	<if test='sortColumn != null and !"".equals(sortColumn)'>-->
+<!--       		ORDER BY ${sortColumn} ${order}-->
+<!--       	</if>-->
+<!--		) A1-->
+<!--		WHERE 1=1-->
+<!--		<if test='end != null and !end.equals("")'>-->
+<!--			AND ROWNUM <![CDATA[ <= ]]> #{end}-->
+<!--		</if>-->
+<!--		) B1-->
+<!--		<if test='start != null and !start.equals("")'>-->
+<!--		WHERE PAGEINDEX <![CDATA[ >= ]]>#{start}-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	<select id="selectListCount" resultType="Integer">-->
+<!--		SELECT-->
+<!--			COUNT(*) AS TOTAL_COUNT-->
+<!--		FROM DOCS_CONF_NOTICE-->
+<!--		WHERE 1 = 1-->
+<!--		<if test='noticeType != null and !noticeType.equals("")'>-->
+<!--		AND NOTICE_TYPE = #{noticeType}-->
+<!--		</if>-->
+<!--		<if test='insertUserNm != null and !insertUserNm.equals("")'>-->
+<!--		AND INSERT_USER_CD = #{insertUserNm}-->
+<!--		</if>-->
+<!--		<if test='title != null and !title.equals("")'>-->
+<!--		AND TITLE LIKE '%' || #{title} || '%'-->
+<!--		</if>-->
+<!--		<if test='insertStartDt != null and !insertStartDt.equals("")'>-->
+<!--		AND INSERT_DT BETWEEN TO_DATE(#{insertStartDt}, 'YYYY-MM-DD')-->
+<!--                         AND TO_DATE(#{insertEndDt}, 'YYYY-MM-DD')+1-->
+<!--		</if>-->
+<!--	</select>-->
+<!--	-->
+<!--	<insert id="insertConfigNotice" parameterType="kr.esob.fdms.controller.configurationmanage.notice.ConfigNoticeAddParam">-->
+<!--	<selectKey keyProperty="noticeCd" resultType="kr.esob.fdms.controller.configurationmanage.notice.ConfigNoticeAddParam" order="BEFORE">	-->
+<!--		SELECT NVL(MAX(NOTICE_CD),0)+1 AS noticeCd-->
+<!--        FROM DOCS_CONF_NOTICE-->
+<!--	</selectKey>-->
+<!--		INSERT INTO DOCS_CONF_NOTICE-->
+<!--		(-->
+
+<!--			NOTICE_CD,-->
+<!--			TITLE,-->
+<!--			CONTENTS,-->
+<!--			NOTICE_TYPE,	-->
+<!--			NOTICE_HIT,-->
+<!--			INSERT_USER_CD,-->
+<!--			INSERT_DT-->
+<!--		)-->
+<!--		VALUES-->
+<!--		(-->
+<!--			#{noticeCd},-->
+<!--			#{title},-->
+<!--			#{contents},  -->
+<!--			#{noticeType},-->
+<!--			0,-->
+<!--			#{sessionUser.userCd},-->
+<!--			SYSDATE-->
+<!--		)-->
+<!--	</insert>-->
+<!--	-->
+<!--	<insert id="insertConfigNoticeFile" parameterType="kr.esob.fdms.controller.configurationmanage.notice.ConfigNoticeAddParam">-->
+<!--		<selectKey keyProperty="fileNo" resultType="kr.esob.fdms.controller.configurationmanage.notice.ConfigNoticeAddParam" order="BEFORE">-->
+<!--			SELECT NVL(MAX(to_number(FILE_NO)),0)+1 AS fileNo-->
+<!--	        FROM DOCS_CONF_NOTICE_FILE-->
+<!--		</selectKey>-->
+<!--		INSERT INTO DOCS_CONF_NOTICE_FILE-->
+<!--		(-->
+<!--			FILE_NO,-->
+<!--			NOTICE_CD,-->
+<!--			FILE_PATH,-->
+<!--			FILE_NM,-->
+<!--			ORG_FILE_NM-->
+<!--		)-->
+<!--		VALUES-->
+<!--		(-->
+<!--			#{fileNo},-->
+<!--			#{noticeCd},-->
+<!--			#{filePath},-->
+<!--			#{fileNm},-->
+<!--			#{orgFileNm}-->
+<!--		)-->
+<!--	</insert>-->
+<!--	-->
+<!--	<select id="getNoticeInfo" resultType="kr.esob.fdms.controller.configurationmanage.notice.ConfigNoticePopupVO">-->
+<!--		SELECT-->
+<!--			NOTICE_CD AS noticeCd,											/* 글번호 */-->
+<!--			(SELECT VALUE FROM docs_combo WHERE SEQ = NOTICE_TYPE-->
+<!--			AND combo_cd = 'noticeType') AS noticeType,						/* 게시물 유형 */-->
+<!--			INSERT_USER_CD AS insertUserCd,-->
+<!--			(SELECT USER_NM FROM DOCS_USER-->
+<!--			WHERE USER_CD = INSERT_USER_CD) AS insertUserNm,				/* 게시자 */-->
+<!--			TITLE AS title,													/* 제목명 */-->
+<!--			CONTENTS AS contents,											/* 내용 */-->
+<!--			NOTICE_HIT AS noticeHit											/* 조회수 */-->
+<!--		FROM DOCS_CONF_NOTICE-->
+<!--		WHERE NOTICE_CD = #{noticeCd}-->
+<!--	</select>-->
+<!--	-->
+<!--	<update id="updateHitCount" parameterType="kr.esob.fdms.controller.configurationmanage.notice.ConfigNoticePopupVO">-->
+<!--		UPDATE DOCS_CONF_NOTICE-->
+<!--		SET NOTICE_HIT = NVL(NOTICE_HIT, 0) + 1-->
+<!--		WHERE NOTICE_CD = #{noticeCd}-->
+<!--	</update>-->
+
+<!--	<update id="updateNoticeInfo">-->
+<!--		UPDATE DOCS_CONF_NOTICE SET-->
+<!--			TITLE = #{title},-->
+<!--			CONTENTS = #{contents},-->
+<!--			NOTICE_TYPE = #{noticeType}-->
+<!--		WHERE NOTICE_CD = #{noticeCd}-->
+<!--	</update>-->
+<!--	-->
+<!--	<select id="selectFileInfo" resultType="kr.esob.fdms.controller.configurationmanage.notice.ConfigNoticeAddParam">-->
+<!--		SELECT-->
+<!--			FILE_NO AS fileNo,-->
+<!--			NOTICE_CD AS noticeCd,-->
+<!--			FILE_PATH AS filePath,-->
+<!--			FILE_NM AS fileNm,-->
+<!--			ORG_FILE_NM AS orgFileNm-->
+<!--		FROM DOCS_CONF_NOTICE_FILE-->
+<!--		WHERE NOTICE_CD = #{noticeCd}-->
+<!--	</select>-->
+<!--	-->
+<!--	<delete id="deleteNotice" parameterType="kr.esob.fdms.controller.configurationmanage.notice.ConfigNoticePopupVO">-->
+<!--		DELETE FROM DOCS_CONF_NOTICE WHERE NOTICE_CD = #{noticeCd}-->
+<!--	</delete>-->
+<!--	-->
+<!--	<delete id="deleteNoticeFile">-->
+<!--		DELETE FROM DOCS_CONF_NOTICE_FILE WHERE NOTICE_CD = #{noticeCd}-->
+<!--	</delete>-->
+<!--	-->
+<!--</mapper>-->
+
+
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+
+
+
+
+<mapper namespace="sql.configNotice">
+
+<select id="selectList" resultType="kr.esob.fdms.controller.configurationmanage.notice.ConfigNoticeListVO">
+	SELECT
+	B1.*
+	FROM
+	(
+	SELECT
+	A1.*
+	, ROW_NUMBER() OVER (ORDER BY noticeCd DESC) AS PAGEINDEX
+	FROM (
+	SELECT
+	NOTICE_CD AS noticeCd,                                          /* 글번호 */
+	to_char(INSERT_DT, 'YYYY-MM-DD') AS insertDt,                  /* 등록일자 */
+	TITLE AS title,                                                 /* 제목명 */
+	(SELECT USER_NM FROM DOCS_USER
+	WHERE USER_CD = INSERT_USER_CD) AS insertUserNm,                /* 게시자 */
+	(SELECT TEXT FROM docs_combo WHERE SEQ = NOTICE_TYPE
+	AND combo_cd = 'noticeType') AS noticeType,                     /* 게시물 유형 */
+	NOTICE_HIT AS noticeHit                                         /* 조회수 */
+	FROM DOCS_CONF_NOTICE
+	WHERE 1 = 1
+	<if test='noticeType != null and !noticeType.equals("")'>
+		AND NOTICE_TYPE = #{noticeType}
+	</if>
+	<if test='insertUserNm != null and !insertUserNm.equals("")'>
+		AND INSERT_USER_CD = #{insertUserNm}
+	</if>
+	<if test='title != null and !title.equals("")'>
+		AND TITLE LIKE '%' || #{title} || '%'
+	</if>
+	<if test='insertStartDt != null and !insertStartDt.equals("")'>
+		AND INSERT_DT BETWEEN TO_DATE(#{insertStartDt}, 'YYYY-MM-DD')
+		AND TO_DATE(#{insertEndDt}, 'YYYY-MM-DD') + INTERVAL '1 day'
+	</if>
+	<if test='sortColumn == null or "".equals(sortColumn)'>
+		ORDER BY noticeCd desc
+	</if>
+	<if test='sortColumn != null and !"".equals(sortColumn)'>
+		ORDER BY ${sortColumn} ${order}
+	</if>
+	) A1
+	WHERE 1=1
+	<if test='end != null and !end.equals("")'>
+		LIMIT #{end}
+	</if>
+	) B1
+	<if test='start != null and !start.equals("")'>
+		WHERE PAGEINDEX >= #{start}
+	</if>
+</select>
+
+<select id="selectListCount" resultType="Integer">
+	SELECT
+	COUNT(*) AS TOTAL_COUNT
+	FROM DOCS_CONF_NOTICE
+	WHERE 1 = 1
+	<if test='noticeType != null and !noticeType.equals("")'>
+		AND NOTICE_TYPE = #{noticeType}
+	</if>
+	<if test='insertUserNm != null and !insertUserNm.equals("")'>
+		AND INSERT_USER_CD = #{insertUserNm}
+	</if>
+	<if test='title != null and !title.equals("")'>
+		AND TITLE LIKE '%' || #{title} || '%'
+	</if>
+	<if test='insertStartDt != null and !insertStartDt.equals("")'>
+		AND INSERT_DT BETWEEN TO_DATE(#{insertStartDt}, 'YYYY-MM-DD')
+		AND TO_DATE(#{insertEndDt}, 'YYYY-MM-DD') + INTERVAL '1 day'
+	</if>
+</select>
+
+<insert id="insertConfigNotice" parameterType="kr.esob.fdms.controller.configurationmanage.notice.ConfigNoticeAddParam">
+	<selectKey keyProperty="noticeCd" resultType="kr.esob.fdms.controller.configurationmanage.notice.ConfigNoticeAddParam" order="BEFORE">
+		SELECT COALESCE(MAX(NOTICE_CD),0)+1 AS noticeCd
+		FROM DOCS_CONF_NOTICE
+	</selectKey>
+	INSERT INTO DOCS_CONF_NOTICE
+	(
+	NOTICE_CD,
+	TITLE,
+	CONTENTS,
+	NOTICE_TYPE,
+	NOTICE_HIT,
+	INSERT_USER_CD,
+	INSERT_DT
+	)
+	VALUES
+	(
+	#{noticeCd},
+	#{title},
+	#{contents},
+	#{noticeType},
+	0,
+	#{sessionUser.userCd},
+	CURRENT_TIMESTAMP
+	)
+</insert>
+
+<insert id="insertConfigNoticeFile" parameterType="kr.esob.fdms.controller.configurationmanage.notice.ConfigNoticeAddParam">
+	<selectKey keyProperty="fileNo" resultType="kr.esob.fdms.controller.configurationmanage.notice.ConfigNoticeAddParam" order="BEFORE">
+		SELECT COALESCE(MAX(CAST(FILE_NO AS INTEGER)),0)+1 AS fileNo
+		FROM DOCS_CONF_NOTICE_FILE
+	</selectKey>
+	INSERT INTO DOCS_CONF_NOTICE_FILE
+	(
+	FILE_NO,
+	NOTICE_CD,
+	FILE_PATH,
+	FILE_NM,
+	ORG_FILE_NM
+	)
+	VALUES
+	(
+	#{fileNo},
+	#{noticeCd},
+	#{filePath},
+	#{fileNm},
+	#{orgFileNm}
+	)
+</insert>
+
+<select id="getNoticeInfo" resultType="kr.esob.fdms.controller.configurationmanage.notice.ConfigNoticePopupVO">
+	SELECT
+		NOTICE_CD AS noticeCd,                                          /* 글번호 */
+		(SELECT VALUE FROM docs_combo WHERE SEQ = NOTICE_TYPE
+										AND combo_cd = 'noticeType') AS noticeType,                     /* 게시물 유형 */
+		INSERT_USER_CD AS insertUserCd,
+		(SELECT USER_NM FROM DOCS_USER
+		 WHERE USER_CD = INSERT_USER_CD) AS insertUserNm,                /* 게시자 */
+		TITLE AS title,                                                 /* 제목명 */
+		CONTENTS AS contents,                                           /* 내용 */
+		NOTICE_HIT AS noticeHit                                         /* 조회수 */
+	FROM DOCS_CONF_NOTICE
+	WHERE NOTICE_CD = #{noticeCd}
+</select>
+
+<update id="updateHitCount" parameterType="kr.esob.fdms.controller.configurationmanage.notice.ConfigNoticePopupVO">
+	UPDATE DOCS_CONF_NOTICE
+	SET NOTICE_HIT = COALESCE(NOTICE_HIT, 0) + 1
+	WHERE NOTICE_CD = #{noticeCd}
+</update>
+
+<update id="updateNoticeInfo">
+	UPDATE DOCS_CONF_NOTICE SET
+								TITLE = #{title},
+								CONTENTS = #{contents},
+								NOTICE_TYPE = #{noticeType}
+	WHERE NOTICE_CD = #{noticeCd}
+</update>
+
+<select id="selectFileInfo" resultType="kr.esob.fdms.controller.configurationmanage.notice.ConfigNoticeAddParam">
+	SELECT
+		FILE_NO AS fileNo,
+		NOTICE_CD AS noticeCd,
+		FILE_PATH AS filePath,
+		FILE_NM AS fileNm,
+		ORG_FILE_NM AS orgFileNm
+	FROM DOCS_CONF_NOTICE_FILE
+	WHERE NOTICE_CD = #{noticeCd}
+</select>
+
+<delete id="deleteNotice" parameterType="kr.esob.fdms.controller.configurationmanage.notice.ConfigNoticePopupVO">
+	DELETE FROM DOCS_CONF_NOTICE WHERE NOTICE_CD = #{noticeCd}
+</delete>
+
+<delete id="deleteNoticeFile">
+	DELETE FROM DOCS_CONF_NOTICE_FILE WHERE NOTICE_CD = #{noticeCd}
+</delete>
+
+</mapper>

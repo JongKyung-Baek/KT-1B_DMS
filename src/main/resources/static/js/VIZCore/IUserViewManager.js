@@ -1,0 +1,1 @@
+class UserView{constructor(a,b){let c=this;this['Main']=a;}}export default UserView;

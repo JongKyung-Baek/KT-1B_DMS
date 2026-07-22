@@ -1,0 +1,38 @@
+HELP.md
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**
+!**/src/test/**
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+
+### VS Code ###
+.vscode/
+.svn/
+*.png
+!src/main/resources/static/images/icon/*.png
+!src/main/resources/static/images/kess/*.png
+!src/main/resources/static/images/depth*.png
+src/main/webapp/excel/grid_20263181336596.xlsx
+src/main/webapp/excel/grid_2026318142345.xlsx

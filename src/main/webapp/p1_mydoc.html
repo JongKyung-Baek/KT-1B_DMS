@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="kr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>도면 - 검색 및 배포요청 - 자료배포 - CollabHub</title>
+<script type="text/javascript" src="resources/js/jquery/jquery-1.10.1.js"></script>
+<script type="text/javascript" src="resources/js/jqGrid-master/js/jquery.jqGrid.min.js"></script>
+<script type="text/javascript" src="resources/jquery-ui-1.12.1.custom/jquery-ui.js"></script>
+<script type="text/javascript" src="resources/js/common.js"></script>
+<script type="text/javascript" src="resources/js/gridscript.js"></script>
+<link type="text/css" rel="stylesheet" href="resources/js/jqGrid-master/css/ui.jqgrid.css" media="screen"/>
+<link type="text/css" rel="stylesheet" href="resources/jquery-ui-1.12.1.custom/jquery-ui.css" media="screen" />
+<link type="text/css" rel="stylesheet" href="resources/css/style.css" media="screen" />
+<script>
+	$(document).ready(function(){	
+	});
+</script>
+<style>
+	.ui-jqgrid th.ui-th-column div{height:auto !important; padding:2px; white-space:normal !important;}
+	.ui-jqgrid tr.ui-row-ltr td{text-align:center;}
+
+</style>
+</head>
+<body>
+<div class="bodyWrap inside">
+	<div class="header">
+		<div class="left">
+			<h1 class="logo">
+			 	<a href="#" onclick="location.href='p0_dashboard.html'">logo</a>
+				<span>CollabHub</span>
+			</h1>
+		</div>
+		<div class="right">
+			<button type="button" class="userInfo dropdownBtn">홍길동</button>
+			<button type="button" class="linkBtn" onclick="location.href='p0_login3.html'">로그아웃</button>
+		</div>
+	</div>
+	<div class="wrap">
+		<div class="gnb">
+			<h2 class="gnbToggleArea">
+				<p class="title">CollabHub</p>
+				<button class="gnbToggle"></button>
+			</h2>
+			<div class="gnbDepthArea">
+				<ul class="depth1">
+					<li>
+						<a href="" title="자료배포"><span>자료배포</span></a>
+						<ul class="depth2">
+							<li><a href="#"><span>배포요청접수</span></a></li>
+							<li>
+								<a href="#"><span>검색 및 배포요청</span></a>
+								<ul class="depth3">
+									<li><a href="#" onclick="location.href='p1_mydoc.html'"><span>도면</a></li>
+									<li><a href="#"><span>문서</a></li>
+									<li><a href="#"><span>S/W</a></li>
+								</ul>
+							</li>
+							<li><a href="#"><span>배포승인</span></a></li>
+							<li>
+								<a href="#"><span>검색 및 배포요청</span></a>
+								<ul class="depth3">
+									<li><a href="#"><span>도면</a></li>
+									<li><a href="#"><span>문서</a></li>
+									<li><a href="#"><span>S/W</a></li>
+									<li><a href="#"><span>설계변경</a></li>
+								</ul>
+							</li>
+							<li><a href="#"><span>배포이력</span></a></li>
+							<li><a href="#"><span>출력승인</span></a></li>
+							<li><a href="#"><span>출력이력</span></a></li>
+							<li><a href="#"><span>출력물 폐기승인</span></a></li>
+						</ul>
+					</li>
+
+
+					<li><a href="" title="CR"><span>CR</span></a>
+						<ul class="depth2">
+							<li><a href="#"><span>CR 접수</span></a></li>
+							<li><a href="#"><span>CR 승인</span></a></li>
+							<li><a href="#"><span>CR 이력</span></a></li>
+						</ul>
+					</li>
+					<li><a href="" title="미등록자료 배포"><span>미등록자료 배포</span></a>
+						<ul class="depth2">
+							<li><a href="#"><span>등록 및 배포요청</span></a></li>
+							<li><a href="#"><span>배포승인</span></a></li>
+							<li><a href="#"><span>배포이력</span></a></li>
+						</ul>
+					</li>
+					<li><a href="" title="생산기술자료"><span>생산기술자료</span></a>
+						<ul class="depth2">
+							<li><a href="#"><span>검색 및 배포요청</span></a></li>
+							<li><a href="#"><span>배포승인</span></a></li>
+							<li><a href="#"><span>현장관리 접수</span></a></li>
+							<li><a href="#"><span>현황 및 폐기</span></a></li>
+							<li><a href="#"><span>배포이력</span></a></li>
+							<li><a href="#"><span>출력승인</span></a></li>
+							<li><a href="#"><span>출력이력</span></a></li>
+						</ul>
+					</li>
+					<li><a href="" title="업체 및 사용자"><span>업체 및 사용자</span></a>
+						<ul class="depth2">
+							<li><a href="#"><span>내부사용자 관리</span></a></li>
+							<li><a href="#"><span>업체 및 사용자 관리</span></a></li>
+							<li><a href="#"><span>변경요청 접수</span></a></li>
+						</ul>
+					</li>
+					<li><a href="" title="설정"><span>설정</span></a>
+						<ul class="depth2">
+							<li><a href="#"><span>권한설정</span></a></li>
+							<li><a href="#"><span>대결자</span></a></li>
+						</ul>
+					</li>
+				</ul>
+			</div>
+		</div>
+		<div class="container whole"> <!-- half whole -->
+			<div class="br">
+				<div class="nav">
+					<h3 class="titleBox"><span>도면<span></h3>
+					<p class="navBox"><span>자료배포</span><span>검색 및 배포요청</span></p>
+				</div>
+				<div class="sbr">
+					<ul class="ibx">
+						<li>
+							<label for="input1">도면번호</label>
+							<input type="text" name="" id="input1">
+						</li>
+						<li>
+							<label for="input2">도번명</label>
+							<input type="text" name="" id="input2">
+						</li>
+						<li>
+							<label for="input3">사업장</label>
+							<select id="input3"><option>1사업장</option></select>
+						</li>
+						<li>
+							<label for="input4">구매담당자</label>
+							<select id="input4"><option>로그인사용자</option></select>
+						</li>
+						<li>
+							<label for="input5">CC번호</label>
+							<input type="text" name="" id="input5">
+						</li>
+						<li>
+							<label for="input6">기종코드</label>
+							<select id="input6"><option>전체</option></select>
+						</li>
+						<li>
+							<label for="input7">업체명</label>
+							<input type="text" name="" id="input7">
+						</li>
+						<li>
+							<label for="input8">등록자</label>
+							<select id="input8"><option>전체</option></select>
+						</li>
+						<li>
+							<label for="input9">등록일</label>
+							<input type="date" class="ui-corner-all" name="" id="input9">
+							<span class="fromTo">~</span>
+							<input type="date" class="ui-corner-all" name="" id="">
+						</li>
+						<li>
+							<label for="input10">Vendor</label>
+							<input type="checkbox" name="" id="input10">
+						</li>
+						<li>
+							<label for="input11">최종 Rev.</label>
+							<input type="checkbox" name="" id="input11">
+						</li>
+					</ul>
+					<div class="btnBox">
+						<button class="ui-button ui-corner-all searchBtn">조회</button>
+					</div>
+				</div>
+				<div class="contentArea whole">
+					<div class="br">
+						<div class="btnArea">
+							<div class="left">
+								<button class="ui-button ui-corner-all ">엑셀</button>
+								<button class="ui-button ui-corner-all ">일괄검색</button>
+							</div>
+							<div class="right">
+								<button class="ui-button ui-corner-all ">Viewing</button>
+								<button class="ui-button ui-corner-all ">업체지정</button>
+								<button class="ui-button ui-corner-all ">배포승인요청</button>
+								<button class="ui-button ui-corner-all ">출력승인요청</button>
+							</div>
+						</div>
+						<div class="gridArea whole">
+							<div class="gridContainer br">
+								<table id="jqGrid3"></table>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+</body>
+</html>

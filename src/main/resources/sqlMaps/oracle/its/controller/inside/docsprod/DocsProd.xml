@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--<mapper namespace="sql.docsProd">-->
+<!--	<select id="selectProdCombo"-->
+<!--			resultType="kr.esob.fdms.commonlogic.combo.ComboInfoVO">-->
+<!--		&lt;!&ndash; sql.docsProd.selectProdCombo 기종목록 COMBO &ndash;&gt;-->
+<!--		SELECT-->
+<!--			'prod' 									AS comboCd-->
+<!--			, t1.CN_CD 								AS comboVal-->
+<!--			, t1.CN_CD || ' [' || t2.BUSINESS_TYPE_CD || '] ' || t1.CN_CD_DESC	AS comboLabel-->
+<!--		FROM DOCS_PROD t1-->
+<!--           , DOCS_PROD_PDM t2-->
+<!--       WHERE t1.CN_CD = t2.PROD_CD-->
+<!--       ORDER BY t1.CN_CD-->
+<!--	</select>-->
+
+<!--	<select id="selectProdSearchCombo" resultType="searchComboInfoVo">-->
+<!--		SELECT Z.*-->
+<!--		FROM (-->
+<!--			SELECT X.*-->
+<!--			  FROM (-->
+<!--				SELECT CN_CD || ' ' || CN_CD_DESC AS text-->
+<!--				     , CN_CD AS id-->
+<!--				     , CN_CD_DESC-->
+<!--				  FROM (SELECT DISTINCT PRODUCT_CD AS CN_CD, PRODUCT_CD AS CN_CD_DESC FROM DOCS_REQUEST_MAPPING WHERE PRODUCT_CD IS NOT NULL) PROD_SRC-->
+<!--			 ) X-->
+<!--			 <if test='term != null and !"".equals(term)'>-->
+<!--			 WHERE text LIKE '%' || #{term} || '%'-->
+<!--			 </if>-->
+<!--			 ORDER BY CN_CD_DESC ASC-->
+<!--		) Z-->
+<!--	    WHERE ROWNUM <![CDATA[ <= ]]> 10-->
+<!--	</select>-->
+
+<!--	<select id="selectOldCombo" resultType="kr.esob.fdms.commonlogic.combo.ComboInfoVO">-->
+<!--		SELECT-->
+<!--			'oldProd'		AS comboCd-->
+<!--			, PRODUCT		AS comboVal-->
+<!--			, PRODUCT_DESC	AS comboLabel-->
+<!--		FROM ITS_OLD_PRODUCT-->
+<!--		ORDER BY PRODUCT_DESC-->
+<!--	</select>-->
+<!--</mapper>-->
+
+
+
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+
+
+
+<mapper namespace="sql.docsProd">
+<select id="selectProdCombo"
+		resultType="kr.esob.fdms.commonlogic.combo.ComboInfoVO">
+	<!-- sql.docsProd.selectProdCombo 기종목록 COMBO -->
+	SELECT
+	'prod' AS comboCd,
+	t1.CN_CD AS comboVal,
+	t1.CN_CD || ' [' || t2.BUSINESS_TYPE_CD || '] ' || t1.CN_CD_DESC AS comboLabel
+	FROM DOCS_PROD t1
+	JOIN DOCS_PROD_PDM t2 ON t1.CN_CD = t2.PROD_CD
+	ORDER BY t1.CN_CD
+</select>
+
+<select id="selectProdSearchCombo" resultType="searchComboInfoVo">
+	SELECT X.*
+	FROM (
+	SELECT CN_CD || ' ' || CN_CD_DESC AS text,
+	CN_CD AS id,
+	CN_CD_DESC
+	FROM (SELECT DISTINCT PRODUCT_CD AS CN_CD, PRODUCT_CD AS CN_CD_DESC FROM DOCS_REQUEST_MAPPING WHERE PRODUCT_CD IS NOT NULL) PROD_SRC
+	<if test='term != null and !"".equals(term)'>
+		WHERE text LIKE '%' || #{term} || '%'
+	</if>
+	ORDER BY CN_CD_DESC ASC
+	) X
+	LIMIT 10
+</select>
+
+<select id="selectOldCombo" resultType="kr.esob.fdms.commonlogic.combo.ComboInfoVO">
+	SELECT
+		'oldProd' AS comboCd,
+		PRODUCT AS comboVal,
+		PRODUCT_DESC AS comboLabel
+	FROM ITS_OLD_PRODUCT
+	ORDER BY PRODUCT_DESC
+</select>
+</mapper>
+

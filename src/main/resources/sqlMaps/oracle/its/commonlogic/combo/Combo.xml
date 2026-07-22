@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="sql.Combo">
+
+<!-- 다국어 지원을 위한 콤보 언어 선택 -->
+<select id="selectComboLang" resultType="kr.esob.fdms.commonlogic.combo.ComboCdVO">
+    SELECT combo.*
+         , COALESCE((SELECT LANG_DESC
+                     FROM DOCS_LANG
+                     WHERE LANG_CD = combo.LANG_CD
+                       AND LANG_TYPE = 'ko'), combo.TEXT) AS LANG_DESC
+    FROM DOCS_COMBO combo
+    WHERE USE_YN = 'Y'
+</select>
+
+<!-- 특정 콤보 코드에 따라 콤보 리스트 조회 -->
+<select id="selectComboListByCd" resultType="kr.esob.fdms.commonlogic.combo.ComboInfoVO">
+    SELECT COMBO_CD as comboCd
+         , VALUE AS comboVal
+         , COALESCE((SELECT LANG_DESC FROM DOCS_LANG WHERE LANG_CD = combo.LANG_CD AND LANG_TYPE = 'ko'), TEXT) AS comboLabel
+         , TOOLTIP as comboTooltip
+    FROM DOCS_COMBO combo
+    WHERE COMBO_CD = #{comboCd}
+      AND USE_YN = 'Y'
+    ORDER BY SEQ
+</select>
+
+<!-- 콤보 리스트 전체 조회 -->
+<select id="selectComboList" resultType="kr.esob.fdms.commonlogic.combo.ComboInfoVO">
+    SELECT
+    COMBO_CD as comboCd
+    , COALESCE((SELECT LANG_DESC FROM DOCS_LANG WHERE LANG_TYPE = 'ko' AND LANG_CD = A1.LANG_CD), A1.TEXT) AS comboLabel
+    , VALUE AS comboVal
+    , COALESCE((SELECT LANG_DESC FROM DOCS_LANG WHERE LANG_TYPE = 'ko' AND LANG_CD = A1.TOOLTIP), A1.TOOLTIP) AS comboTooltip
+    FROM DOCS_COMBO A1
+    WHERE COMBO_CD = #{comboCd}
+    AND USE_YN = 'Y'
+    ORDER BY SEQ ASC
+</select>
+
+<!-- 제품 리스트 조회 -->
+<select id="selectProdList" resultType="kr.esob.fdms.commonlogic.combo.SearchComboInfoVO">
+    SELECT X.*
+    FROM (
+    SELECT CN_CD AS id
+    , CN_CD || ' ' || CN_CD_DESC AS text
+    , CN_CD || ' ' || CN_CD_DESC AS title
+    , ROW_NUMBER() OVER(ORDER BY CN_CD_DESC) AS pageindex
+    FROM (SELECT DISTINCT PRODUCT_CD AS CN_CD, PRODUCT_CD AS CN_CD_DESC FROM DOCS_REQUEST_MAPPING WHERE PRODUCT_CD IS NOT NULL) PROD_SRC
+    WHERE 1=1
+    <if test='term != null and !"".equals(term)'>
+        AND CN_CD_DESC LIKE '%' || #{term} || '%'
+    </if>
+    ) X
+    <if test='page != null and !page.equals("")'>
+        WHERE PAGEINDEX BETWEEN #{posStart}
+        AND #{count} * #{page}
+    </if>
+</select>
+
+<!-- 내부 사용자 콤보 조회 -->
+<select id="selectInsideUserCombo" resultType="kr.esob.fdms.commonlogic.combo.SearchComboInfoVO">
+    SELECT X.*
+    FROM (
+    SELECT USER_CD AS id
+    , USER_NM AS text
+    , USER_NM || '[' || USER_ID || ']' AS title
+    , ROW_NUMBER() OVER(ORDER BY USER_NM) AS pageindex
+    FROM DOCS_USER
+    WHERE COMPANY_CD != #{companyCd}
+    <if test='term != null and !"".equals(term)'>
+        AND USER_NM LIKE '%' || #{term} || '%'
+    </if>
+    AND USE_YN = 'Y'
+    AND DEL_YN = 'N'
+    ) X
+    <if test='page != null and !page.equals("")'>
+        WHERE PAGEINDEX BETWEEN #{posStart}
+        AND #{count} * #{page}
+    </if>
+</select>
+
+<!--공동발행자 값조회-->
+<select id="selectActiveUserList" resultType="kr.esob.fdms.commonlogic.combo.ComboInfoVO">
+    SELECT u.USER_NM AS comboVal
+         , u.USER_NM AS comboLabel
+         , p.POSITION_NM AS comboTooltip
+    FROM DOCS_USER u
+    LEFT JOIN DOCS_POSITION p
+      ON u.POSITION_CD = p.POSITION_CD
+    WHERE u.USE_YN = 'Y'
+      AND u.DEL_YN = 'N'
+      AND u.DEPT_CD = 'D1DJ151'
+    ORDER BY u.USER_NM
+</select>
+
+
+    <select id="selectObjectClassCdSw" resultType="comboInfoVo">
+        SELECT COMBO_CD AS comboCd,
+               VALUE AS comboVal,
+               COALESCE((SELECT LANG_DESC
+                         FROM DOCS_LANG
+                         WHERE LANG_CD = combo.LANG_CD
+                           AND LANG_TYPE = 'ko'), TEXT) AS comboLabel,
+               TOOLTIP as comboTooltip
+        FROM DOCS_COMBO combo
+        WHERE COMBO_CD = 'docClassCd2'
+          AND USE_YN = 'Y'
+          AND VALUE = 'A0401'
+        ORDER BY SEQ
+    </select>
+
+
+    <select id="selectObjectClassCdDoc" resultType="comboInfoVo">
+        SELECT COMBO_CD AS comboCd,
+               VALUE AS comboVal,
+               COALESCE((SELECT LANG_DESC
+                         FROM DOCS_LANG
+                         WHERE LANG_CD = combo.LANG_CD
+                           AND LANG_TYPE = 'ko'), TEXT) AS comboLabel,
+               TOOLTIP as comboTooltip
+        FROM DOCS_COMBO combo
+        WHERE COMBO_CD = 'docClassCd2'
+          AND USE_YN = 'Y'
+          AND VALUE != 'A0401'
+        ORDER BY SEQ
+    </select>
+
+</mapper>
+
+

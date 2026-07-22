@@ -1,0 +1,3549 @@
+/* Shared popup styles. Apply by passing extraDialogClass to openDialogPopup. */
+
+.ui-dialog.popup-common .dialogContent,
+.ui-dialog[class*=" popup-"] .dialogContent {
+  padding: 8px 20px;
+  border-bottom: 0;
+}
+
+.ui-dialog.popup-common .dialogContent .dialogBtnSet,
+.ui-dialog[class*=" popup-"] .dialogContent .dialogBtnSet {
+  margin-top: 6px;
+  padding-top: 0;
+}
+
+.ui-dialog.popup-common .dialogBtnSet .right #close,
+.ui-dialog[class*=" popup-"] .dialogBtnSet .right #close {
+  background: #ebeced !important;
+  border: 1px solid #d6dade !important;
+  color: #6e6b7b !important;
+}
+
+/* style.css .ui-dialog .bottomBtn (purple) override */
+.ui-dialog .dialogBtnSet .right .bottomBtn[name="close"] {
+  background: #ebeced !important;
+  border: 1px solid #d6dade !important;
+  color: #6e6b7b !important;
+}
+
+.ui-dialog.popup-common .dialogBtnSet .right #save,
+.ui-dialog[class*=" popup-"] .dialogBtnSet .right #save {
+  background: #034C8C !important;
+  border: 1px solid #034C8C !important;
+  color: #fff !important;
+}
+
+.ui-dialog.popup-common .dialogBtnSet .right #reqDeploymentApproval,
+.ui-dialog.popup-common .dialogBtnSet .right #reqPrintApproval,
+.ui-dialog.popup-common .dialogBtnSet .right #req,
+.ui-dialog.popup-common .dialogBtnSet .right #approvalRequest,
+.ui-dialog.popup-common .dialogBtnSet .right #approval,
+.ui-dialog.popup-common .dialogBtnSet .right #reject,
+.ui-dialog.popup-common .dialogBtnSet .right #destroy,
+.ui-dialog.popup-common .dialogBtnSet .right .versionCompareBtn,
+.ui-dialog[class*=" popup-"] .dialogBtnSet .right #reqDeploymentApproval,
+.ui-dialog[class*=" popup-"] .dialogBtnSet .right #reqPrintApproval,
+.ui-dialog[class*=" popup-"] .dialogBtnSet .right #req,
+.ui-dialog[class*=" popup-"] .dialogBtnSet .right #approvalRequest,
+.ui-dialog[class*=" popup-"] .dialogBtnSet .right #approval,
+.ui-dialog[class*=" popup-"] .dialogBtnSet .right #reject,
+.ui-dialog[class*=" popup-"] .dialogBtnSet .right #destroy,
+.ui-dialog[class*=" popup-"] .dialogBtnSet .right .versionCompareBtn {
+  background: #034C8C !important;
+  border: 1px solid #034C8C !important;
+  color: #fff !important;
+}
+
+/* Some popups render dialogBtnSet as sibling of dialogContent */
+.commonPrintRequestPopup + .dialogBtnSet #reqPrintApproval,
+.commonPrintRequestPopup + .dialogBtnSet .right #reqPrintApproval,
+.commonPrintRequestPopup + .dialogBtnSet .right .bottomBtn#reqPrintApproval {
+  background: #034C8C !important;
+  border: 1px solid #034C8C !important;
+  color: #fff !important;
+}
+
+.commonPrintRequestPopup + .dialogBtnSet #close,
+.commonPrintRequestPopup + .dialogBtnSet .right #close,
+.commonPrintRequestPopup + .dialogBtnSet .right .bottomBtn#close {
+  background: #ebeced !important;
+  border: 1px solid #d6dade !important;
+  color: #6e6b7b !important;
+}
+
+/* Keep datepicker trigger inside the date input wrapper. */
+.ui-dialog.popup-common .input-append.date,
+.ui-dialog[class*=" popup-"] .input-append.date {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+.ui-dialog.popup-common .input-append.date input.hasDatepicker,
+.ui-dialog[class*=" popup-"] .input-append.date input.hasDatepicker {
+  width: 100% !important;
+  padding-right: 34px;
+  box-sizing: border-box;
+}
+
+.ui-dialog.popup-common .input-append.date .ui-datepicker-trigger,
+.ui-dialog[class*=" popup-"] .input-append.date .ui-datepicker-trigger {
+  position: absolute;
+  top: 5px;
+  right: 1px;
+  width: 30px;
+  height: 23px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0 4px 4px 0;
+  z-index: 2;
+}
+
+.ui-dialog.popup-common .dialogContent.noticeAddPopup .input-append.date .ui-datepicker-trigger,
+.ui-dialog.popup-common .dialogContent.noticeDetailPopup .input-append.date .ui-datepicker-trigger {
+  top: 5px;
+  right: 1px;
+  width: 30px;
+  height: 23px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0 4px 4px 0;
+}
+
+/* Shared form-popup layout (register/revision popups) */
+.drawingRegisterPopup,
+.docRegisterPopup,
+.swRegisterPopup,
+.productionRegisterPopup,
+.dxfRegisterPopup,
+.drawingRevisionUpdatePopup {
+  padding: 8px 20px !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow: hidden !important;
+  border-bottom: 0 !important;
+}
+
+.drawingRegisterPopup .popupHero,
+.docRegisterPopup .popupHero,
+.swRegisterPopup .popupHero,
+.productionRegisterPopup .popupHero,
+.dxfRegisterPopup .popupHero,
+.drawingRevisionUpdatePopup .popupHero {
+  margin-bottom: 6px;
+  text-align: center;
+}
+
+.drawingRegisterPopup .popupHero h2,
+.docRegisterPopup .popupHero h2,
+.swRegisterPopup .popupHero h2,
+.productionRegisterPopup .popupHero h2,
+.dxfRegisterPopup .popupHero h2,
+.drawingRevisionUpdatePopup .popupHero h2,
+.menuPopup .popupHero h2 {
+  padding-top: 24px;
+  margin-bottom: 4px;
+  color: #2f3349;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.drawingRegisterPopup .popupHero p,
+.docRegisterPopup .popupHero p,
+.swRegisterPopup .popupHero p,
+.productionRegisterPopup .popupHero p,
+.dxfRegisterPopup .popupHero p,
+.drawingRevisionUpdatePopup .popupHero p {
+  color: #7a7f93;
+  font-size: 15px;
+  line-height: 1.3;
+}
+
+.drawingRegisterPopup .popupCard,
+.docRegisterPopup .popupCard,
+.swRegisterPopup .popupCard,
+.productionRegisterPopup .popupCard,
+.dxfRegisterPopup .popupCard,
+.drawingRevisionUpdatePopup .popupCard {
+  padding: 8px 80px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+}
+
+.drawingRegisterPopup .popupFormGrid,
+.swRegisterPopup .popupFormGrid,
+.productionRegisterPopup .popupFormGrid,
+.dxfRegisterPopup .popupFormGrid,
+.drawingRevisionUpdatePopup .popupFormGrid,
+.docRegisterPopup .popupFormGrid:not(.popup-grid-4) {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 18px;
+}
+
+.docRegisterPopup .popupFormGrid.popup-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 6px 18px;
+}
+
+.drawingRegisterPopup .popupFormGrid > li,
+.docRegisterPopup .popupFormGrid > li,
+.swRegisterPopup .popupFormGrid > li,
+.productionRegisterPopup .popupFormGrid > li,
+.dxfRegisterPopup .popupFormGrid > li,
+.drawingRevisionUpdatePopup .popupFormGrid > li {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.drawingRegisterPopup .popupFormGrid > li.full,
+.docRegisterPopup .popupFormGrid > li.full,
+.swRegisterPopup .popupFormGrid > li.full,
+.productionRegisterPopup .popupFormGrid > li.full,
+.dxfRegisterPopup .popupFormGrid > li.full,
+.drawingRevisionUpdatePopup .popupFormGrid > li.full {
+  grid-column: 1 / -1;
+}
+
+.drawingRegisterPopup .popupFormGrid > li:hover,
+.docRegisterPopup .popupFormGrid > li:hover,
+.swRegisterPopup .popupFormGrid > li:hover,
+.productionRegisterPopup .popupFormGrid > li:hover,
+.dxfRegisterPopup .popupFormGrid > li:hover,
+.drawingRevisionUpdatePopup .popupFormGrid > li:hover {
+  background-color: transparent;
+}
+
+.drawingRegisterPopup .popupFormGrid > li > label:not(.ui-controlgroup-item),
+.docRegisterPopup .popupFormGrid > li > label:not(.ui-controlgroup-item),
+.swRegisterPopup .popupFormGrid > li > label:not(.ui-controlgroup-item),
+.productionRegisterPopup .popupFormGrid > li > label:not(.ui-controlgroup-item),
+.dxfRegisterPopup .popupFormGrid > li > label:not(.ui-controlgroup-item),
+.drawingRevisionUpdatePopup .popupFormGrid > li > label:not(.ui-controlgroup-item) {
+  display: block;
+  margin-bottom: 2px;
+  padding: 0;
+  color: #4f5468;
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.drawingRegisterPopup .popupFormGrid > li > label:not(.ui-controlgroup-item) + div,
+.drawingRegisterPopup .popupFormGrid > li > input[type="text"],
+.docRegisterPopup .popupFormGrid > li > label:not(.ui-controlgroup-item) + div,
+.docRegisterPopup .popupFormGrid > li > input[type="text"],
+.swRegisterPopup .popupFormGrid > li > label:not(.ui-controlgroup-item) + div,
+.swRegisterPopup .popupFormGrid > li > input[type="text"],
+.productionRegisterPopup .popupFormGrid > li > label:not(.ui-controlgroup-item) + div,
+.productionRegisterPopup .popupFormGrid > li > input[type="text"],
+.dxfRegisterPopup .popupFormGrid > li > label:not(.ui-controlgroup-item) + div,
+.dxfRegisterPopup .popupFormGrid > li > input[type="text"],
+.drawingRevisionUpdatePopup .popupFormGrid > li > label:not(.ui-controlgroup-item) + div,
+.drawingRevisionUpdatePopup .popupFormGrid > li > input[type="text"] {
+  width: 100% !important;
+}
+
+.drawingRegisterPopup .popupFormGrid .singleFileUpload,
+.docRegisterPopup .popupFormGrid .singleFileUpload,
+.swRegisterPopup .popupFormGrid .singleFileUpload,
+.productionRegisterPopup .popupFormGrid .singleFileUpload,
+.dxfRegisterPopup .popupFormGrid .singleFileUpload,
+.drawingRevisionUpdatePopup .popupFormGrid .singleFileUpload {
+  display: block;
+}
+
+.drawingRegisterPopup .popupFormGrid .singleFileUpload .uploadLine,
+.docRegisterPopup .popupFormGrid .singleFileUpload .uploadLine,
+.swRegisterPopup .popupFormGrid .singleFileUpload .uploadLine,
+.productionRegisterPopup .popupFormGrid .singleFileUpload .uploadLine,
+.dxfRegisterPopup .popupFormGrid .singleFileUpload .uploadLine,
+.drawingRevisionUpdatePopup .popupFormGrid .singleFileUpload .uploadLine {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.drawingRegisterPopup .popupFormGrid .singleFileUpload #fileName,
+.docRegisterPopup .popupFormGrid .singleFileUpload #fileName,
+.swRegisterPopup .popupFormGrid .singleFileUpload #fileName,
+.productionRegisterPopup .popupFormGrid .singleFileUpload #fileName,
+.dxfRegisterPopup .popupFormGrid .singleFileUpload #fileName,
+.drawingRevisionUpdatePopup .popupFormGrid .singleFileUpload #fileName {
+  width: calc(100% - 32px);
+}
+
+/* Notice add popup uses drawing popup structure; keep calendar/popover rendering stable. */
+.noticeAddPopup.drawingRegisterPopup {
+  max-height: calc(100vh - 160px) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+.drawingRegisterPopup .dialogBtnSet,
+.docRegisterPopup .dialogBtnSet,
+.swRegisterPopup .dialogBtnSet,
+.productionRegisterPopup .dialogBtnSet,
+.dxfRegisterPopup .dialogBtnSet,
+.drawingRevisionUpdatePopup .dialogBtnSet {
+  margin-top: 4px;
+  padding-top: 0;
+}
+
+.drawingRegisterPopup .dialogBtnSet .left,
+.docRegisterPopup .dialogBtnSet .left,
+.swRegisterPopup .dialogBtnSet .left,
+.productionRegisterPopup .dialogBtnSet .left,
+.dxfRegisterPopup .dialogBtnSet .left,
+.drawingRevisionUpdatePopup .dialogBtnSet .left {
+  display: none;
+}
+
+.drawingRegisterPopup .dialogBtnSet .right,
+.docRegisterPopup .dialogBtnSet .right,
+.swRegisterPopup .dialogBtnSet .right,
+.productionRegisterPopup .dialogBtnSet .right,
+.dxfRegisterPopup .dialogBtnSet .right,
+.drawingRevisionUpdatePopup .dialogBtnSet .right {
+  width: 100%;
+  text-align: center;
+}
+
+.drawingRegisterPopup .bottomBtn,
+.docRegisterPopup .bottomBtn,
+.swRegisterPopup .bottomBtn,
+.productionRegisterPopup .bottomBtn,
+.dxfRegisterPopup .bottomBtn,
+.drawingRevisionUpdatePopup .bottomBtn {
+  border-radius: 8px !important;
+}
+
+/* Shared style for batch-search popup */
+.dialogContent.searchAllPopup {
+  padding: 8px 20px !important;
+  border-bottom: 0 !important;
+}
+
+.dialogContent.searchAllPopup .section.popupCard {
+  height: 100%;
+  padding: 8px 20px !important;
+  border: 0 !important;
+  border-radius: 8px;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.dialogContent.searchAllPopup .gridContainer {
+  height: calc(100% - 35px);
+}
+
+.dialogContent.searchAllPopup .gridContainer .ui-jqgrid {
+  height: 100%;
+  border: 0 !important;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.dialogContent.searchAllPopup .ui-jqgrid .ui-jqgrid-view {
+  height: 100%;
+}
+
+.dialogContent.searchAllPopup .gridContainer .ui-jqgrid .ui-jqgrid-bdiv {
+  height: calc(100% - 38px) !important;
+  max-height: none;
+}
+
+.dialogContent.searchAllPopup .dialogToolbar .right .ui-button {
+  min-width: 88px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 8px !important;
+  border: 1px solid #034C8C !important;
+  background: #034C8C !important;
+  color: #fff !important;
+}
+
+.dialogContent.searchAllPopup .dialogToolbar .right .ui-button:hover {
+  background: #7e90bc !important;
+  border-color: #7e90bc !important;
+}
+
+.searchAllPopup + .dialogBtnSet {
+  margin-top: 4px;
+  padding-top: 0;
+}
+
+.searchAllPopup + .dialogBtnSet .left {
+  display: none;
+}
+
+.searchAllPopup + .dialogBtnSet .right {
+  width: 100%;
+  text-align: center;
+}
+
+.searchAllPopup + .dialogBtnSet .right .bottomBtn {
+  background: #ebeced !important;
+  border: 1px solid #d6dade !important;
+  color: #6e6b7b !important;
+}
+
+.searchAllPopup + .dialogBtnSet .right .bottomBtn:hover,
+.searchAllPopup + .dialogBtnSet .right .bottomBtn:focus {
+  background: #e1e3e6 !important;
+  border-color: #cfcdd6 !important;
+}
+
+/* Shared radio visuals for pretty radio + bootstrap fallback */
+.drawingRegisterPopup .prettyradio,
+.docRegisterPopup .prettyradio,
+.productionRegisterPopup .prettyradio {
+  margin-right: 8px;
+}
+
+.commonRequestPopup .prettyradio {
+  margin-right: 8px;
+}
+
+.drawingRegisterPopup .prettyradio > a,
+.docRegisterPopup .prettyradio > a,
+.productionRegisterPopup .prettyradio > a {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #b9b8c3;
+  border-radius: 50%;
+  background: none !important;
+  box-sizing: border-box;
+  position: relative;
+  transition: all 0.18s ease;
+}
+
+.commonRequestPopup .prettyradio > a {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #b9b8c3;
+  border-radius: 50%;
+  background: none !important;
+  box-sizing: border-box;
+  position: relative;
+  transition: all 0.18s ease;
+}
+
+.drawingRegisterPopup .prettyradio > a:hover,
+.docRegisterPopup .prettyradio > a:hover,
+.productionRegisterPopup .prettyradio > a:hover,
+.commonRequestPopup .prettyradio > a:hover {
+  border-color: #8f8ca5;
+}
+
+.drawingRegisterPopup .prettyradio > a.checked,
+.docRegisterPopup .prettyradio > a.checked,
+.productionRegisterPopup .prettyradio > a.checked,
+.commonRequestPopup .prettyradio > a.checked {
+  border-color: #034C8C;
+  background: #034C8C !important;
+  box-shadow: 0 2px 8px rgba(115, 103, 240, 0.28);
+}
+
+.drawingRegisterPopup .prettyradio > a.checked:after,
+.docRegisterPopup .prettyradio > a.checked:after,
+.productionRegisterPopup .prettyradio > a.checked:after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #fff;
+  transform: translate(-50%, -50%);
+}
+
+.commonRequestPopup .prettyradio > a.checked:after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #fff;
+  transform: translate(-50%, -50%);
+}
+
+.drawingRegisterPopup .prettyradio > a.disabled,
+.docRegisterPopup .prettyradio > a.disabled,
+.productionRegisterPopup .prettyradio > a.disabled,
+.commonRequestPopup .prettyradio > a.disabled {
+  border-color: #d6dade;
+  background: #f1f0f3 !important;
+  box-shadow: none;
+}
+
+.drawingRegisterPopup .prettyradio > a.checked.disabled,
+.docRegisterPopup .prettyradio > a.checked.disabled,
+.productionRegisterPopup .prettyradio > a.checked.disabled,
+.commonRequestPopup .prettyradio > a.checked.disabled {
+  border-color: #f3f9ff;
+  background: #f3f9ff !important;
+}
+
+.drawingRegisterPopup .prettyradio label,
+.docRegisterPopup .prettyradio label,
+.productionRegisterPopup .prettyradio label {
+  margin-left: 4px;
+  color: #4f5468;
+  font-size: 13px;
+  line-height: 18px;
+}
+
+@media (max-width: 767.98px) {
+  .docRegisterPopup .popupFormGrid.popup-grid-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767.98px) {
+  .ui-dialog.popup-common .dialogContent.docRegisterPopup.popup-base .popupFormGrid.popup-grid-4,
+  .ui-dialog[class*=" popup-"] .dialogContent.docRegisterPopup.popup-base .popupFormGrid.popup-grid-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.commonRequestPopup .prettyradio label {
+  margin-left: 4px;
+  color: #4f5468;
+  font-size: 13px;
+  line-height: 18px;
+}
+
+  .commonRequestPopup .distributionTypeOption {
+        display: inline-flex;
+        align-items: center;
+  }
+
+ .commonRequestPopup .fileDistributionType {
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: center;
+        gap: 12px;
+        margin: 0;
+        padding: 6px 10px;
+        border: 1px solid #d0d0d0;
+        border-radius: 4px;
+        white-space: nowrap;
+  }
+
+  .commonRequestPopup .fileDistributionType.has-pretty-child {
+        display: flex;
+        width: auto;
+        margin: 0;
+  }
+
+  .ui-dialog .dialogContent.commonRequestPopup ul.section li.distributionCheck .fileDistributionType.has-pretty-child > .clearfix {
+        display: inline-flex;
+        width: auto;
+        align-items: center;
+        margin: 0;
+  }
+
+  .ui-dialog .dialogContent.commonRequestPopup ul.section li.distributionCheck .fileDistributionType.has-pretty-child > .clearfix + .clearfix,
+  .ui-dialog .dialogContent.commonRequestPopup ul.section li.distributionCheck .fileDistributionType.has-pretty-child > .clearfix + script + .clearfix {
+        margin-left: 12px;
+        margin-top: 0;
+  }
+
+  .ui-dialog .dialogContent.commonRequestPopup ul.section li.distributionCheck .distributionTypeGroup {
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: center;
+        column-gap: 24px;
+        row-gap: 0;
+  }
+
+  .ui-dialog .dialogContent.commonRequestPopup ul.section li.distributionCheck .distributionTypeOption {
+        display: inline-flex;
+        align-items: center;
+        width: auto;
+        flex: 0 0 auto;
+  }
+
+  .ui-dialog .dialogContent.commonRequestPopup ul.section li.distributionCheck .distributionTypeOptionFile {
+        display: inline-flex;
+        align-items: center;
+        width: auto;
+        flex: 0 0 auto;
+        column-gap: 10px;
+  }
+
+  .ui-dialog .dialogContent.commonRequestPopup ul.section li.distributionCheck .distributionTypeOptionMain {
+        display: inline-flex;
+        align-items: center;
+        width: auto;
+        flex: 0 0 auto;
+  }
+
+  .ui-dialog .dialogContent.commonRequestPopup ul.section li.distributionCheck .fileDistributionType {
+        display: inline-flex;
+        flex-wrap: nowrap;
+        align-items: center;
+        width: auto;
+        flex: 0 0 auto;
+        gap: 12px;
+        margin: 0;
+        padding: 6px 10px;
+        border: 1px solid #d0d0d0;
+        border-radius: 4px;
+        white-space: nowrap;
+  }
+
+  .ui-dialog .dialogContent.commonRequestPopup ul.section li.distributionCheck .fileDistributionType.has-pretty-
+  child > .clearfix {
+        display: inline-flex;
+        width: auto;
+        align-items: center;
+        margin: 0;
+        flex: 0 0 auto;
+  }
+
+  .ui-dialog .dialogContent.commonRequestPopup ul.section li.distributionCheck .fileDistributionType.has-pretty-
+  child > .clearfix + .clearfix,
+  .ui-dialog .dialogContent.commonRequestPopup ul.section li.distributionCheck .fileDistributionType.has-pretty-
+  child > .clearfix + script + .clearfix {
+        margin-left: 12px;
+        margin-top: 0;
+  }
+
+  .commonRequestPopup .fileDistributionType label {
+        white-space: nowrap;
+  }
+
+  .ui-dialog.popup-common .dialogContent.commonRequestPopup .dialogToolbar,
+  .ui-dialog[class*=" popup-"] .dialogContent.commonRequestPopup .dialogToolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+
+  .ui-dialog.popup-common .dialogContent.commonRequestPopup .dialogToolbar .left,
+  .ui-dialog[class*=" popup-"] .dialogContent.commonRequestPopup .dialogToolbar .left {
+    flex: 0 1 auto;
+    min-width: 0;
+    white-space: nowrap;
+  }
+
+  .ui-dialog.popup-common .dialogContent.commonRequestPopup .dialogToolbar .right,
+  .ui-dialog[class*=" popup-"] .dialogContent.commonRequestPopup .dialogToolbar .right {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+    flex: 0 0 auto;
+  }
+
+  .ui-dialog.popup-common .dialogContent.commonRequestPopup .dialogToolbar .right .ui-button,
+  .ui-dialog[class*=" popup-"] .dialogContent.commonRequestPopup .dialogToolbar .right .ui-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 72px;
+    height: 28px;
+    padding: 0 10px;
+    border: 1px solid var(--bs-primary);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--bs-primary);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+    box-shadow: none;
+    margin-right: 0;
+    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.16s ease;
+  }  
+
+  .ui-dialog.popup-common .dialogContent.commonRequestPopup .dialogToolbar .right .ui-button:hover,
+  .ui-dialog.popup-common .dialogContent.commonRequestPopup .dialogToolbar .right .ui-button:focus,
+  .ui-dialog[class*=" popup-"] .dialogContent.commonRequestPopup .dialogToolbar .right .ui-button:hover,
+  .ui-dialog[class*=" popup-"] .dialogContent.commonRequestPopup .dialogToolbar .right .ui-button:focus {
+    border-color: var(--bs-primary);
+    background: rgba(var(--bs-primary-rgb), 0.08);
+    color: var(--bs-primary);
+    box-shadow: none;
+  }
+
+  @media (max-width: 767.98px) {
+    .ui-dialog.popup-common .dialogContent.commonRequestPopup .dialogToolbar,
+    .ui-dialog[class*=" popup-"] .dialogContent.commonRequestPopup .dialogToolbar {
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .ui-dialog.popup-common .dialogContent.commonRequestPopup .dialogToolbar .left,
+    .ui-dialog[class*=" popup-"] .dialogContent.commonRequestPopup .dialogToolbar .left {
+      flex: 1 1 100%;
+      white-space: normal;
+    }
+
+    .ui-dialog.popup-common .dialogContent.commonRequestPopup .dialogToolbar .right,
+    .ui-dialog[class*=" popup-"] .dialogContent.commonRequestPopup .dialogToolbar .right {
+      flex: 1 1 100%;
+      margin-left: 0;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      row-gap: 6px;
+    }
+  }  
+
+.drawingRegisterPopup .form-check,
+.docRegisterPopup .form-check,
+.productionRegisterPopup .form-check {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 18px;
+}
+
+.drawingRegisterPopup .form-check .form-check-input,
+.docRegisterPopup .form-check .form-check-input,
+.productionRegisterPopup .form-check .form-check-input {
+  width: 22px;
+  height: 22px;
+  margin-top: 0;
+  border: 2px solid #b9b8c3;
+  cursor: pointer;
+}
+
+.drawingRegisterPopup .form-check .form-check-input:checked,
+.docRegisterPopup .form-check .form-check-input:checked,
+.productionRegisterPopup .form-check .form-check-input:checked {
+  background-color: #034C8C;
+  border-color: #034C8C;
+  box-shadow: 0 2px 8px rgba(115, 103, 240, 0.28);
+}
+
+.drawingRegisterPopup .form-check .form-check-label,
+.docRegisterPopup .form-check .form-check-label,
+.productionRegisterPopup .form-check .form-check-label {
+  margin-left: 8px;
+  color: #4f5468;
+  font-size: 13px;
+  line-height: 22px;
+}
+
+/* Version radio style for drawing/doc register popups */
+.drawingRegisterPopup .popupFormGrid > li > label + .inlineCheckGroup,
+.docRegisterPopup .popupFormGrid > li > label + .inlineCheckGroup {
+  display: flex !important;
+  width: 100%;
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+.drawingRegisterPopup .inlineCheckGroup,
+.docRegisterPopup .inlineCheckGroup {
+  display: flex;
+  align-items: center;
+  column-gap: 18px;
+  row-gap: 8px;
+  min-height: 32px;
+}
+
+.drawingRegisterPopup .inlineCheckGroup > label,
+.docRegisterPopup .inlineCheckGroup > label {
+  display: inline-flex;
+  align-items: center;
+  column-gap: 8px;
+  margin: 0;
+  color: #4f5468;
+  font-size: 14px;
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.drawingRegisterPopup .inlineCheckGroup input[type="radio"],
+.docRegisterPopup .inlineCheckGroup input[type="radio"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px !important;
+  height: 16px !important;
+  min-width: 16px;
+  min-height: 24px;
+  max-width: 16px;
+  max-height: 24px;
+  flex: 0 0 16px;
+  display: inline-block;
+  box-sizing: border-box;
+  border: 2px solid #b9b8c3;
+  border-radius: 50%;
+  background: #fff;
+  margin: 0 2px 0 0;
+  vertical-align: middle;
+  position: relative;
+  cursor: pointer;
+  transition: border-color .18s ease, box-shadow .18s ease, background-color .18s ease;
+}
+
+.drawingRegisterPopup .inlineCheckGroup input[type="radio"]:hover,
+.docRegisterPopup .inlineCheckGroup input[type="radio"]:hover {
+  border-color: #8f8ca5;
+}
+
+.drawingRegisterPopup .inlineCheckGroup input[type="radio"]:checked,
+.docRegisterPopup .inlineCheckGroup input[type="radio"]:checked {
+  border-color: #034C8C;
+  background: #034C8C;
+  box-shadow: 0 2px 8px rgba(115, 103, 240, 0.28);
+}
+
+.drawingRegisterPopup .inlineCheckGroup input[type="radio"]:checked::after,
+.docRegisterPopup .inlineCheckGroup input[type="radio"]:checked::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #fff;
+  transform: translate(-50%, -50%);
+}
+
+/* Select2 theme for popup dialogs */
+.ui-dialog.popup-common .select2-container--default .select2-selection--multiple .select2-selection__choice {
+  background: #7367f029 !important;
+  color: #034C8C !important;
+}
+
+[id^="select2-businessTypeCd"][id$="-results"] .select2-results__option,
+[id^="select2-distributeTypeCd"][id$="-results"] .select2-results__option,
+[id^="select2-authSite"][id$="-results"] .select2-results__option,
+[id^="select2-requestPurpose"][id$="-results"] .select2-results__option,
+[id^="select2-vendorUid"][id$="-results"] .select2-results__option,
+[id^="select2-approvalUser"][id$="-results"] .select2-results__option,
+[id^="select2-businessAreaCd"][id$="-results"] .select2-results__option,
+[id^="select2-purchaserUid"][id$="-results"] .select2-results__option,
+[id^="select2-productNo"][id$="-results"] .select2-results__option,
+[id^="select2-crTypeCd"][id$="-results"] .select2-results__option,
+body .formAcceptanceDropdown .select2-results__option {
+  font-family: "Pretendard", "Noto Sans KR", "Malgun Gothic", sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  line-height: 1.25 !important;
+  color: #5e5873 !important;
+  border-radius: 10px !important;
+  margin: 6px 8px !important;
+}
+
+[id^="select2-businessTypeCd"][id$="-results"] .select2-results__option--highlighted[aria-selected="false"],
+[id^="select2-distributeTypeCd"][id$="-results"] .select2-results__option--highlighted[aria-selected="false"],
+[id^="select2-authSite"][id$="-results"] .select2-results__option--highlighted[aria-selected="false"],
+[id^="select2-requestPurpose"][id$="-results"] .select2-results__option--highlighted[aria-selected="false"],
+[id^="select2-vendorUid"][id$="-results"] .select2-results__option--highlighted[aria-selected="false"],
+[id^="select2-approvalUser"][id$="-results"] .select2-results__option--highlighted[aria-selected="false"],
+[id^="select2-businessAreaCd"][id$="-results"] .select2-results__option--highlighted[aria-selected="false"],
+[id^="select2-purchaserUid"][id$="-results"] .select2-results__option--highlighted[aria-selected="false"],
+[id^="select2-productNo"][id$="-results"] .select2-results__option--highlighted[aria-selected="false"],
+[id^="select2-crTypeCd"][id$="-results"] .select2-results__option--highlighted[aria-selected="false"],
+body .formAcceptanceDropdown .select2-results__option--highlighted[aria-selected="false"],
+body .formAcceptanceDropdown .select2-results__option--highlighted {
+  background: #f2f2f2 !important;
+  color: #5e5873 !important;
+}
+
+[id^="select2-businessTypeCd"][id$="-results"] .select2-results__option[aria-selected="true"],
+[id^="select2-businessTypeCd"][id$="-results"] .select2-results__option--highlighted[aria-selected="true"],
+[id^="select2-businessTypeCd"][id$="-results"] .select2-results__option--highlighted[aria-selected="false"].select2-results__option--selected,
+[id^="select2-distributeTypeCd"][id$="-results"] .select2-results__option[aria-selected="true"],
+[id^="select2-distributeTypeCd"][id$="-results"] .select2-results__option--highlighted[aria-selected="true"],
+[id^="select2-distributeTypeCd"][id$="-results"] .select2-results__option--highlighted[aria-selected="false"].select2-results__option--selected,
+[id^="select2-authSite"][id$="-results"] .select2-results__option[aria-selected="true"],
+[id^="select2-authSite"][id$="-results"] .select2-results__option--highlighted[aria-selected="true"],
+[id^="select2-authSite"][id$="-results"] .select2-results__option--highlighted[aria-selected="false"].select2-results__option--selected,
+[id^="select2-requestPurpose"][id$="-results"] .select2-results__option[aria-selected="true"],
+[id^="select2-requestPurpose"][id$="-results"] .select2-results__option--highlighted[aria-selected="true"],
+[id^="select2-requestPurpose"][id$="-results"] .select2-results__option--highlighted[aria-selected="false"].select2-results__option--selected,
+[id^="select2-vendorUid"][id$="-results"] .select2-results__option[aria-selected="true"],
+[id^="select2-vendorUid"][id$="-results"] .select2-results__option--highlighted[aria-selected="true"],
+[id^="select2-vendorUid"][id$="-results"] .select2-results__option--highlighted[aria-selected="false"].select2-results__option--selected,
+[id^="select2-approvalUser"][id$="-results"] .select2-results__option[aria-selected="true"],
+[id^="select2-approvalUser"][id$="-results"] .select2-results__option--highlighted[aria-selected="true"],
+[id^="select2-approvalUser"][id$="-results"] .select2-results__option--highlighted[aria-selected="false"].select2-results__option--selected,
+[id^="select2-businessAreaCd"][id$="-results"] .select2-results__option[aria-selected="true"],
+[id^="select2-businessAreaCd"][id$="-results"] .select2-results__option--highlighted[aria-selected="true"],
+[id^="select2-businessAreaCd"][id$="-results"] .select2-results__option--highlighted[aria-selected="false"].select2-results__option--selected,
+[id^="select2-purchaserUid"][id$="-results"] .select2-results__option[aria-selected="true"],
+[id^="select2-purchaserUid"][id$="-results"] .select2-results__option--highlighted[aria-selected="true"],
+[id^="select2-purchaserUid"][id$="-results"] .select2-results__option--highlighted[aria-selected="false"].select2-results__option--selected,
+[id^="select2-productNo"][id$="-results"] .select2-results__option[aria-selected="true"],
+[id^="select2-productNo"][id$="-results"] .select2-results__option--highlighted[aria-selected="true"],
+[id^="select2-productNo"][id$="-results"] .select2-results__option--highlighted[aria-selected="false"].select2-results__option--selected,
+[id^="select2-crTypeCd"][id$="-results"] .select2-results__option[aria-selected="true"],
+[id^="select2-crTypeCd"][id$="-results"] .select2-results__option--highlighted[aria-selected="true"],
+[id^="select2-crTypeCd"][id$="-results"] .select2-results__option--highlighted[aria-selected="false"].select2-results__option--selected,
+body .formAcceptanceDropdown .select2-results__option[aria-selected="true"],
+body .formAcceptanceDropdown .select2-results__option--highlighted[aria-selected="true"],
+body .formAcceptanceDropdown .select2-results__option--highlighted[aria-selected="false"].select2-results__option--selected {
+  background: rgba(115, 103, 240, 0.12) !important;
+  color: #034C8C !important;
+  font-weight: 600 !important;
+}
+
+/* Shared styles for request/version popups */
+/* OUTSIDE scope note:
+   - /outside/user/information/requestPopup.jsp
+   - /outside/user/information/userModPopup.jsp
+   These popups primarily use `.commonRequestPopup` styles in this section. */
+.commonRequestPopup,
+.commonPrintRequestPopup,
+.annotationPopup,
+.drawingVersionCheckPopup {
+  padding: 8px 20px !important;
+  height: auto !important;
+  border-bottom: 0 !important;
+}
+
+.commonRequestPopup,
+.commonPrintRequestPopup,
+.annotationPopup {
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+.drawingVersionCheckPopup {
+  max-height: none !important;
+  overflow: hidden !important;
+}
+
+.commonRequestPopup .section li textarea,
+.commonPrintRequestPopup .section li textarea,
+.annotationPopup .section li textarea,
+.drawingVersionCheckPopup .section li textarea {
+  height: 40px;
+}
+
+.commonRequestPopup .popupHero,
+.commonPrintRequestPopup .popupHero,
+.annotationPopup .popupHero,
+.drawingVersionCheckPopup .popupHero,
+.menuPopup .popupHero {
+  margin-bottom: 6px;
+  text-align: center;
+}
+
+.commonRequestPopup .popupHero h2,
+.commonPrintRequestPopup .popupHero h2,
+.annotationPopup .popupHero h2,
+.drawingVersionCheckPopup .popupHero h2,
+.menuPopup .popupHero h2 {
+  margin-bottom: 4px;
+  color: #2f3349;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.commonRequestPopup .popupHero p,
+.commonPrintRequestPopup .popupHero p,
+.annotationPopup .popupHero p,
+.drawingVersionCheckPopup .popupHero p,
+.menuPopup .popupHero p {
+  color: #7a7f93;
+  font-size: 15px;
+  line-height: 1.3;
+}
+
+.commonRequestPopup .popupCard,
+.commonPrintRequestPopup .popupCard,
+.annotationPopup .popupCard,
+.drawingVersionCheckPopup .popupCard,
+.menuPopup .popupCard {
+  padding: 8px 24px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+}
+
+.commonRequestPopup .popupCard > li,
+.commonPrintRequestPopup .popupCard > li,
+.annotationPopup .popupCard > li,
+.drawingVersionCheckPopup .popupCard > li,
+.menuPopup .popupCard > li {
+  margin: 0 0 8px 0;
+  padding: 0;
+  vertical-align: top;
+}
+
+.commonRequestPopup .popupCard > li:hover,
+.commonPrintRequestPopup .popupCard > li:hover,
+.annotationPopup .popupCard > li:hover,
+.drawingVersionCheckPopup .popupCard > li:hover,
+.menuPopup .popupCard > li:hover {
+  background-color: transparent;
+}
+
+.commonRequestPopup .popupCard > li > label,
+.commonPrintRequestPopup .popupCard > li > label,
+.annotationPopup .popupCard > li > label,
+.drawingVersionCheckPopup .popupCard > li > label,
+.menuPopup .popupCard > li > label {
+  display: block;
+  margin: 0 0 4px 0;
+  padding: 0;
+  color: #4f5468;
+  font-size: 13px;
+  line-height: 1.25;
+}
+
+.commonRequestPopup .popupCard > li > label + div,
+.commonRequestPopup .popupCard > li > input[type="text"],
+.commonPrintRequestPopup .popupCard > li > label + div,
+.commonPrintRequestPopup .popupCard > li > input[type="text"],
+.annotationPopup .popupCard > li > label + div,
+.annotationPopup .popupCard > li > input[type="text"],
+.drawingVersionCheckPopup .popupCard > li > label + div,
+.drawingVersionCheckPopup .popupCard > li > input[type="text"],
+.menuPopup .popupCard > li > label + div,
+.menuPopup .popupCard > li > input[type="text"] {
+  width: 100% !important;
+}
+
+.commonRequestPopup .popupCard > li.half > div + label:not(.ui-controlgroup-item),
+.commonRequestPopup .popupCard > li.half > div + script + label:not(.ui-controlgroup-item),
+.commonRequestPopup .popupCard > li.full > div + label:not(.ui-controlgroup-item),
+.commonRequestPopup .popupCard > li.full > div + script + label:not(.ui-controlgroup-item),
+.commonPrintRequestPopup .popupCard > li.half > div + label:not(.ui-controlgroup-item),
+.commonPrintRequestPopup .popupCard > li.half > div + script + label:not(.ui-controlgroup-item),
+.commonPrintRequestPopup .popupCard > li.full > div + label:not(.ui-controlgroup-item),
+.commonPrintRequestPopup .popupCard > li.full > div + script + label:not(.ui-controlgroup-item),
+.annotationPopup .popupCard > li.half > div + label:not(.ui-controlgroup-item),
+.annotationPopup .popupCard > li.half > div + script + label:not(.ui-controlgroup-item),
+.annotationPopup .popupCard > li.full > div + label:not(.ui-controlgroup-item),
+.annotationPopup .popupCard > li.full > div + script + label:not(.ui-controlgroup-item),
+.drawingVersionCheckPopup .popupCard > li.half > div + label:not(.ui-controlgroup-item),
+.drawingVersionCheckPopup .popupCard > li.half > div + script + label:not(.ui-controlgroup-item),
+.drawingVersionCheckPopup .popupCard > li.full > div + label:not(.ui-controlgroup-item),
+.drawingVersionCheckPopup .popupCard > li.full > div + script + label:not(.ui-controlgroup-item),
+.menuPopup .popupCard > li.half > div + label:not(.ui-controlgroup-item),
+.menuPopup .popupCard > li.half > div + script + label:not(.ui-controlgroup-item),
+.menuPopup .popupCard > li.full > div + label:not(.ui-controlgroup-item),
+.menuPopup .popupCard > li.full > div + script + label:not(.ui-controlgroup-item) {
+  margin-left: 0 !important;
+  margin-top: 10px !important;
+}
+
+/* Align action buttons to the same right edge as form fields */
+.commonRequestPopup .dialogBtnSet,
+.commonPrintRequestPopup .dialogBtnSet,
+.annotationPopup .dialogBtnSet,
+.drawingVersionCheckPopup .dialogBtnSet,
+.menuPopup .dialogBtnSet {
+  padding-left: 24px !important;
+  padding-right: 24px !important;
+  box-sizing: border-box;
+}
+
+.commonRequestPopup .gridContainer {
+  background: #fff;
+  border: 1px solid #dbdade;
+  border-radius: 12px;
+  box-shadow: 0 0.125rem 0.375rem rgba(47, 43, 61, 0.08);
+  overflow: hidden;
+}
+
+.annotationPopup .gridContainer {
+  background: #fff;
+  border: 1px solid #dbdade;
+  border-radius: 12px;
+  box-shadow: 0 0.125rem 0.375rem rgba(47, 43, 61, 0.08);
+  overflow: hidden;
+}
+
+/* ===== DRAWING VERSION CHECK POPUP GRID STYLE START ===== */
+/* drawing list-like grid style for version-check popup */
+.drawingVersionCheckPopup .gridContainer {
+  background: transparent;
+  border: 0 !important;
+  border-radius: 0 !important;
+}
+
+.drawingVersionCheckPopup .section {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.drawingVersionCheckPopup .gridContainer .ui-jqgrid {
+  height: 230px !important;
+  border: 0 !important;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.drawingVersionCheckPopup .ui-jqgrid .ui-jqgrid-view {
+  height: 100% !important;
+  background: #fff;
+  border-radius: 8px;
+}
+
+.drawingVersionCheckPopup .ui-jqgrid .ui-jqgrid-hdiv {
+  background: #fff;
+  border-bottom: 1px solid var(--bs-border-color);
+}
+
+.drawingVersionCheckPopup .ui-jqgrid .ui-jqgrid-htable th {
+  border-color: #d9d9df;
+  background: #fff;
+}
+
+.drawingVersionCheckPopup .ui-jqgrid .ui-jqgrid-htable th div:not(.clearfix) {
+  font-size: 15px;
+  color: #6e6b7b;
+}
+
+.drawingVersionCheckPopup .ui-jqgrid .ui-jqgrid-htable th div:not(.clearfix),
+.drawingVersionCheckPopup .ui-jqgrid .ui-jqgrid-btable td {
+  white-space: nowrap !important;
+}
+
+.drawingVersionCheckPopup .ui-jqgrid .ui-jqgrid-btable td {
+  font-size: 13px;
+  border-color: #ebe9f1;
+  background: #fff;
+}
+
+.drawingVersionCheckPopup .ui-jqgrid .ui-jqgrid-btable td[aria-describedby$="_revNo"],
+.drawingVersionCheckPopup .ui-jqgrid .ui-jqgrid-btable td[aria-describedby$="_currentPageNo"],
+.drawingVersionCheckPopup .ui-jqgrid .ui-jqgrid-btable td[aria-describedby$="_totalPageNo"] {
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+
+.drawingVersionCheckPopup .ui-jqgrid .ui-jqgrid-bdiv {
+  height: calc(100% - 40px) !important;
+  max-height: none;
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+}
+
+/* ===== DRAWING VERSION CHECK POPUP GRID STYLE END ===== */
+
+/* Distribution approval popup */
+.distributionApprovalPopup {
+  max-height: calc(100vh - 120px) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+.distributionApprovalPopup .popupFormGrid > li textarea {
+  height: 80px;
+}
+
+.distributionApprovalPopup .section.popupCard {
+  margin: 0 0 8px 0 !important;
+}
+
+.distributionApprovalPopup .dialogBtnSet {
+  padding-left: 24px !important;
+  padding-right: 24px !important;
+  box-sizing: border-box;
+}
+
+.distributionApprovalPopup .dialogBtnSet .left {
+  display: none !important;
+}
+
+.distributionApprovalPopup .dialogBtnSet .right {
+  width: 100% !important;
+  text-align: center !important;
+}
+
+.distributionApprovalPopup .popupOptionRow {
+  padding: 0 24px 8px !important;
+  text-align: left;
+}
+
+.distributionApprovalPopup .popupOptionRow .prettycheckbox label {
+  padding: 5px 0;
+  line-height: 15px;
+}
+
+.distributionApprovalPopup .popupOptionRow .prettycheckbox > a {
+  margin-top: 1px;
+}
+
+/* Distribution print approval popup */
+.printApprovalPopup {
+  max-height: calc(100vh - 120px) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+.printApprovalPopup .popupFormGrid > li textarea {
+  height: 80px;
+}
+
+.printApprovalPopup .dialogBtnSet .left {
+  display: none !important;
+}
+
+.printApprovalPopup .dialogBtnSet .right {
+  width: 100% !important;
+  text-align: center !important;
+}
+
+/* Distribution acceptance popup: keep bottom action buttons fully visible */
+.acceptanceApprovalPopup {
+  max-height: calc(100vh - 120px) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  padding-bottom: 12px !important;
+}
+
+.acceptanceApprovalPopup .dialogBtnSet,
+.acceptanceApprovalPopup + .dialogBtnSet {
+  margin-top: 4px !important;
+  padding: 0 20px 12px !important;
+  box-sizing: border-box;
+}
+
+.acceptanceApprovalPopup .dialogBtnSet .left,
+.acceptanceApprovalPopup + .dialogBtnSet .left {
+  display: none !important;
+}
+
+.acceptanceApprovalPopup .dialogBtnSet .right,
+.acceptanceApprovalPopup + .dialogBtnSet .right {
+  width: 100% !important;
+  text-align: center !important;
+}
+
+/* Keep spacing rhythm consistent in distribution acceptance popup */
+.acceptanceApprovalPopup .section.popupCard {
+  margin: 0 0 10px 0 !important;
+  padding: 8px 20px !important;
+}
+
+.acceptanceApprovalPopup .section.popupCard:last-of-type {
+  margin-bottom: 0 !important;
+}
+
+.acceptanceApprovalPopup .popupFormGrid.popup-grid-2 {
+  row-gap: 10px !important;
+  column-gap: 18px !important;
+}
+
+.acceptanceApprovalPopup .popupFormGrid > li > label:not(.ui-controlgroup-item) {
+  margin-bottom: 4px !important;
+}
+
+/* Distribution disposal-acceptance popup */
+.disposalAcceptancePopup {
+  max-height: calc(100vh - 120px) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+.disposalAcceptancePopup .popupFormGrid > li textarea {
+  height: 80px;
+}
+
+.disposalAcceptancePopup .fileDownload .fileDownBtn {
+  margin: 0 6px 6px 0;
+}
+
+.disposalAcceptancePopup .dialogBtnSet .left,
+.disposalAcceptancePopup + .dialogBtnSet .left {
+  display: none !important;
+}
+
+.disposalAcceptancePopup .dialogBtnSet .right,
+.disposalAcceptancePopup + .dialogBtnSet .right {
+  width: 100% !important;
+  text-align: center !important;
+}
+
+/* Distribution print-history disposal request popup */
+.printHistoryDisposalRequestPopup {
+  max-height: calc(100vh - 120px) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+.printHistoryDisposalRequestPopup .popupFormGrid > li textarea {
+  height: 80px;
+}
+
+.printHistoryDisposalRequestPopup .dialogBtnSet .left {
+  display: none !important;
+}
+
+.printHistoryDisposalRequestPopup .dialogBtnSet .right {
+  width: 100% !important;
+  text-align: center !important;
+}
+
+.ui-dialog.popup-common .dialogContent.printHistoryDisposalRequestPopup .dialogBtnSet .right #req,
+.ui-dialog[class*=" popup-"] .dialogContent.printHistoryDisposalRequestPopup .dialogBtnSet .right #req {
+  background: #034C8C !important;
+  border: 1px solid #034C8C !important;
+  color: #fff !important;
+}
+
+.ui-dialog.popup-common .dialogContent.printHistoryDisposalRequestPopup .dialogBtnSet .right #close,
+.ui-dialog[class*=" popup-"] .dialogContent.printHistoryDisposalRequestPopup .dialogBtnSet .right #close,
+.ui-dialog.popup-common .dialogContent.printHistoryDisposalRequestPopup .dialogBtnSet .right [name="close"],
+.ui-dialog[class*=" popup-"] .dialogContent.printHistoryDisposalRequestPopup .dialogBtnSet .right [name="close"] {
+  background: #ebeced !important;
+  border: 1px solid #d6dade !important;
+  color: #6e6b7b !important;
+}
+
+/* Version-check popup button alignment (match grid/form right edge) */
+.drawingVersionCheckPopup .dialogBtnSet {
+  padding-left: 24px !important;
+  padding-right: 24px !important;
+  box-sizing: border-box;
+}
+
+.drawingVersionCheckPopup .dialogBtnSet .left {
+  display: none;
+}
+
+.drawingVersionCheckPopup .dialogBtnSet .right {
+  width: 100%;
+  text-align: center;
+}
+
+/* Production request popup tuning */
+.productionRequestPopup {
+  max-height: calc(100vh - 300px) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+.productionRequestPopup .popupCard {
+  padding: 6px 20px !important;
+}
+
+.productionRequestPopup .dialogBtnSet {
+  padding-left: 20px !important;
+  padding-right: 20px !important;
+  box-sizing: border-box;
+}
+
+.productionRequestPopup .popupFormGrid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 8px 18px !important;
+}
+
+.productionRequestPopup .popupFormGrid > li,
+.productionRequestPopup .popupFormGrid > li.half {
+  width: auto !important;
+  display: block !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.productionRequestPopup .popupFormGrid > li.full {
+  grid-column: 1 / -1;
+}
+
+.productionRequestPopup .popupFormGrid > li > label:not(.ui-controlgroup-item) {
+  display: block;
+  margin: 0 0 4px 0;
+  line-height: 1.25;
+}
+
+.productionRequestPopup .popupFormGrid > li > label + div,
+.productionRequestPopup .popupFormGrid > li > input[type="text"],
+.productionRequestPopup .popupFormGrid > li > .input-append.date,
+.productionRequestPopup .popupFormGrid > li > .select2-container {
+  width: 100% !important;
+}
+
+.productionRequestPopup .gridContainer {
+  max-height: 94px;
+}
+
+.productionRequestPopup #gbox_gridProductionRequestAcceptance .ui-jqgrid-bdiv,
+.productionRequestPopup #gbox_gridProductionRequestProduction .ui-jqgrid-bdiv {
+  max-height: 58px !important;
+}
+
+.productionRequestPopup .radioInlineSingle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+  justify-content: flex-start;
+}
+
+.productionRequestPopup .radioInlineSingle > label {
+  display: inline-block !important;
+  margin: 0 !important;
+  white-space: nowrap;
+  min-width: 0;
+  line-height: 1.2;
+}
+
+.productionRequestPopup .radioInlineSingle .prettyradio {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+.productionRequestPopup .radioInlineSingle .prettyradio label {
+  white-space: nowrap;
+  display: inline-block;
+}
+
+.productionRequestPopup #requestDesc {
+  min-height: 58px !important;
+  height: 58px !important;
+}
+
+.ui-dialog .dialogContent.destroyPopup textarea {
+  color: #5e5873 !important;
+  border: 1px solid #d6dade !important;
+  border-radius: 10px !important;
+}
+
+/* Focus color alignment (except approver dropdown) */
+.productionRequestPopup input[type="text"]:focus,
+.productionRequestPopup textarea:focus,
+.productionRequestPopup .input-append.date input.hasDatepicker:focus,
+.productionRequestPopup .popupFormGrid > li > div > input[type="text"]:focus,
+.ui-dialog .dialogContent.destroyPopup input[type="text"]:focus,
+.ui-dialog .dialogContent.destroyPopup textarea:focus,
+.ui-dialog .dialogContent.destroyPopup .input-append.date input.hasDatepicker:focus,
+.ui-dialog .dialogContent.destroyPopup .popupFormGrid > li > div > input[type="text"]:focus {
+  border-color: #034C8C !important;
+  box-shadow: 0 0 0 2px rgba(115, 103, 240, 0.15) !important;
+  outline: none !important;
+}
+
+.productionRequestPopup + .dialogBtnSet {
+  margin-top: 4px;
+  padding: 0;
+}
+
+.productionRequestPopup + .dialogBtnSet .right {
+  width: 100%;
+  text-align: center;
+}
+
+
+/* Remove extra top-gap only for upload section rows. */
+.ui-dialog.popup-common .dialogContent .section.uploadOnly,
+.ui-dialog[class*=" popup-"] .dialogContent .section.uploadOnly {
+  margin-top: 0 !important;
+}
+
+/* Calendar text/layout fallback for popup dialogs (datepicker + internal select2) */
+.ui-datepicker,
+.ui-datepicker *,
+.ui-datepicker .ui-datepicker-title,
+.ui-datepicker table th,
+.ui-datepicker table td,
+.ui-datepicker .ui-datepicker-buttonpane button,
+.ui-datepicker .select2-container,
+.ui-datepicker .select2-selection__rendered,
+.ui-datepicker .select2-results__option {
+  font-family: "Pretendard", "Noto Sans KR", "Malgun Gothic", sans-serif !important;
+  font-size: 13px !important;
+}
+
+/* Notice add popup: keep publish date(start~end) on one line */
+.ui-dialog.popup-common .dialogContent.noticeAddPopup .popupFormGrid > li.half > label + div.input-append.date,
+.ui-dialog.popup-common .dialogContent.noticeAddPopup .popupFormGrid > li.full > label + div.input-append.date,
+.ui-dialog.popup-common .dialogContent.noticeDetailPopup .popupFormGrid > li.half > label + div.input-append.date,
+.ui-dialog.popup-common .dialogContent.noticeDetailPopup .popupFormGrid > li.full > label + div.input-append.date,
+.ui-dialog[class*=" popup-"] .dialogContent.noticeAddPopup .popupFormGrid > li.half > label + div.input-append.date,
+.ui-dialog[class*=" popup-"] .dialogContent.noticeAddPopup .popupFormGrid > li.full > label + div.input-append.date,
+.ui-dialog[class*=" popup-"] .dialogContent.noticeDetailPopup .popupFormGrid > li.half > label + div.input-append.date,
+.ui-dialog[class*=" popup-"] .dialogContent.noticeDetailPopup .popupFormGrid > li.full > label + div.input-append.date {
+  width: calc(50% - 16px) !important;
+  display: inline-block !important;
+  vertical-align: middle;
+}
+
+.ui-dialog.popup-common .dialogContent.noticeAddPopup .popupFormGrid > li.half > .fromTo,
+.ui-dialog.popup-common .dialogContent.noticeAddPopup .popupFormGrid > li.full > .fromTo,
+.ui-dialog.popup-common .dialogContent.noticeDetailPopup .popupFormGrid > li.half > .fromTo,
+.ui-dialog.popup-common .dialogContent.noticeDetailPopup .popupFormGrid > li.full > .fromTo,
+.ui-dialog[class*=" popup-"] .dialogContent.noticeAddPopup .popupFormGrid > li.half > .fromTo,
+.ui-dialog[class*=" popup-"] .dialogContent.noticeAddPopup .popupFormGrid > li.full > .fromTo,
+.ui-dialog[class*=" popup-"] .dialogContent.noticeDetailPopup .popupFormGrid > li.half > .fromTo,
+.ui-dialog[class*=" popup-"] .dialogContent.noticeDetailPopup .popupFormGrid > li.full > .fromTo {
+  display: inline-block;
+  width: 32px;
+  text-align: center;
+  line-height: 30px;
+  vertical-align: middle;
+}
+
+.ui-dialog.popup-common .dialogContent.noticeAddPopup .popupFormGrid > li.half > .fromTo + div.input-append.date,
+.ui-dialog.popup-common .dialogContent.noticeAddPopup .popupFormGrid > li.full > .fromTo + div.input-append.date,
+.ui-dialog.popup-common .dialogContent.noticeDetailPopup .popupFormGrid > li.half > .fromTo + div.input-append.date,
+.ui-dialog.popup-common .dialogContent.noticeDetailPopup .popupFormGrid > li.full > .fromTo + div.input-append.date,
+.ui-dialog[class*=" popup-"] .dialogContent.noticeAddPopup .popupFormGrid > li.half > .fromTo + div.input-append.date,
+.ui-dialog[class*=" popup-"] .dialogContent.noticeAddPopup .popupFormGrid > li.full > .fromTo + div.input-append.date,
+.ui-dialog[class*=" popup-"] .dialogContent.noticeDetailPopup .popupFormGrid > li.half > .fromTo + div.input-append.date,
+.ui-dialog[class*=" popup-"] .dialogContent.noticeDetailPopup .popupFormGrid > li.full > .fromTo + div.input-append.date {
+  width: calc(50% - 16px) !important;
+  display: inline-block !important;
+  vertical-align: middle;
+}
+
+.ui-dialog.popup-common .dialogContent.noticeAddPopup .noticeDateRange,
+.ui-dialog.popup-common .dialogContent.noticeDetailPopup .noticeDateRange,
+.ui-dialog[class*=" popup-"] .dialogContent.noticeAddPopup .noticeDateRange {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ui-dialog.popup-common .dialogContent.noticeAddPopup .noticeDateRange .input-append.date,
+.ui-dialog.popup-common .dialogContent.noticeDetailPopup .noticeDateRange .input-append.date,
+.ui-dialog[class*=" popup-"] .dialogContent.noticeAddPopup .noticeDateRange .input-append.date {
+  flex: 1 1 0;
+  min-width: 0;
+  width: auto !important;
+  display: block !important;
+}
+
+.ui-dialog.popup-common .dialogContent.noticeAddPopup .noticeDateRange .fromTo,
+.ui-dialog.popup-common .dialogContent.noticeDetailPopup .noticeDateRange .fromTo,
+.ui-dialog[class*=" popup-"] .dialogContent.noticeAddPopup .noticeDateRange .fromTo {
+  width: auto;
+  min-width: 20px;
+  line-height: 1;
+}
+
+.noticeDetailPopup.drawingRegisterPopup {
+  max-height: calc(100vh - 160px) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+.noticeDetailPopup + .dialogBtnSet {
+  margin-top: 6px;
+  padding-top: 0;
+}
+
+.noticeDetailPopup + .dialogBtnSet .left {
+  display: none;
+}
+
+.noticeDetailPopup + .dialogBtnSet .right {
+  float: none !important;
+  width: 100%;
+  text-align: center;
+}
+
+.qnaAddPopup.drawingRegisterPopup {
+  max-height: calc(100vh - 160px) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+.qnaAddPopup + .dialogBtnSet {
+  margin-top: 6px;
+  padding-top: 0;
+}
+
+.qnaAddPopup + .dialogBtnSet .left {
+  display: none;
+}
+
+.qnaAddPopup + .dialogBtnSet .right {
+  float: none !important;
+  width: 100%;
+  text-align: center;
+}
+
+.qnaDetailPopup.drawingRegisterPopup {
+  max-height: calc(100vh - 160px) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+.qnaDetailPopup + .dialogBtnSet {
+  margin-top: 6px;
+  padding-top: 0;
+}
+
+.qnaDetailPopup + .dialogBtnSet .left {
+  display: none;
+}
+
+.qnaDetailPopup + .dialogBtnSet .right {
+  float: none !important;
+  width: 100%;
+  text-align: center;
+}
+
+.qnaReplyPopup.drawingRegisterPopup {
+  max-height: calc(100vh - 160px) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+.qnaReplyPopup + .dialogBtnSet {
+  margin-top: 6px;
+  padding-top: 0;
+}
+
+.qnaReplyPopup + .dialogBtnSet .left {
+  display: none;
+}
+
+.qnaReplyPopup + .dialogBtnSet .right {
+  float: none !important;
+  width: 100%;
+  text-align: center;
+}
+
+.dialogContent.actLogPopup {
+  padding: 8px 20px !important;
+  border-bottom: 0 !important;
+}
+
+.dialogContent.actLogPopup .popupHero,
+.dialogContent.downHistoryPopup .popupHero {
+  margin-bottom: 6px;
+  text-align: center;
+}
+
+.dialogContent.actLogPopup .popupHero h2,
+.dialogContent.downHistoryPopup .popupHero h2 {
+  margin-bottom: 4px;
+  color: #2f3349;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.dialogContent.actLogPopup .section.popupCard {
+  height: 100%;
+  padding: 8px 20px !important;
+  border: 0 !important;
+  border-radius: 8px;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.dialogContent.actLogPopup .gridContainer {
+  height: 100%;
+}
+
+.dialogContent.actLogPopup .gridContainer .ui-jqgrid {
+  border: 0 !important;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.actLogPopup + .dialogBtnSet {
+  margin-top: 4px;
+  padding-top: 0;
+  padding-bottom: 24px;
+}
+
+.actLogPopup + .dialogBtnSet .left {
+  display: none;
+}
+
+.actLogPopup + .dialogBtnSet .right {
+  width: 100%;
+  text-align: center;
+}
+
+.actLogPopup + .dialogBtnSet .right #close {
+  background: #ebeced !important;
+  border: 1px solid #d6dade !important;
+  color: #6e6b7b !important;
+}
+
+.dialogContent.annotationPopup {
+  padding: 8px 20px !important;
+  border-bottom: 0 !important;
+}
+
+.dialogContent.annotationPopup .popupHero,
+.dialogContent.searchAllPopup .popupHero {
+  margin-bottom: 6px;
+  text-align: center;
+}
+
+.dialogContent.annotationPopup .popupHero h2,
+.dialogContent.searchAllPopup .popupHero h2 {
+  margin-bottom: 4px;
+  color: #2f3349;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.dialogContent.annotationPopup .section.popupCard {
+  height: 100%;
+  padding: 8px 20px !important;
+  border: 0 !important;
+  border-radius: 8px;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.dialogContent.annotationPopup .gridContainer {
+  height: 100%;
+}
+
+.dialogContent.annotationPopup .gridContainer .ui-jqgrid {
+  border: 0 !important;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.annotationPopup + .dialogBtnSet {
+  margin-top: 4px;
+  padding-top: 0;
+}
+
+.annotationPopup + .dialogBtnSet .left {
+  display: none;
+}
+
+.annotationPopup + .dialogBtnSet .right {
+  width: 100%;
+  text-align: center;
+}
+
+.annotationPopup + .dialogBtnSet .right #close {
+  background: #ebeced !important;
+  border: 1px solid #d6dade !important;
+  color: #6e6b7b !important;
+}
+
+.dialogContent.downHistoryPopup {
+  padding: 8px 20px !important;
+  border-bottom: 0 !important;
+}
+
+.dialogContent.downHistoryPopup .section.popupCard {
+  height: 100%;
+  padding: 8px 20px !important;
+  border: 0 !important;
+  border-radius: 8px;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.dialogContent.downHistoryPopup .gridContainer {
+  height: 100%;
+}
+
+.dialogContent.downHistoryPopup .gridContainer .ui-jqgrid {
+  border: 0 !important;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.downHistoryPopup + .dialogBtnSet {
+  margin-top: 4px;
+  padding-top: 0;
+}
+
+.downHistoryPopup + .dialogBtnSet .left {
+  display: none;
+}
+
+.downHistoryPopup + .dialogBtnSet .right {
+  width: 100%;
+  text-align: center;
+}
+
+.downHistoryPopup + .dialogBtnSet .right #close {
+  background: #ebeced !important;
+  border: 1px solid #d6dade !important;
+  color: #6e6b7b !important;
+}
+
+.dialogContent.requestStatusPopup {
+  padding: 8px 20px !important;
+  border-bottom: 0 !important;
+  max-height: calc(100vh - 180px) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+.dialogContent.requestStatusPopup .popupHero {
+  margin-bottom: 6px;
+  text-align: center;
+}
+
+.dialogContent.requestStatusPopup .popupHero h2 {
+  margin-bottom: 4px;
+  color: #2f3349;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.dialogContent.requestStatusPopup .section {
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.dialogContent.requestStatusPopup form > .section {
+  margin-top: 0 !important;
+  padding: 0 !important;
+}
+
+.dialogContent.requestStatusPopup form > .section li.half {
+  display: inline-block;
+  width: calc(50% - 10px);
+  margin: 0;
+  padding: 0;
+  vertical-align: top;
+}
+
+.dialogContent.requestStatusPopup form > .section li.half + li.half {
+  margin-left: 20px;
+}
+
+.dialogContent.requestStatusPopup form > .section li.half > label:not(.ui-controlgroup-item) {
+  display: block;
+  width: auto !important;
+  margin-bottom: 2px;
+  padding: 0 !important;
+}
+
+.dialogContent.requestStatusPopup form > .section li.half > label:not(.ui-controlgroup-item) + div {
+  display: block;
+  width: 100% !important;
+}
+
+.ui-dialog.popup-common .dialogContent.requestStatusPopup.popup-base .popupFormGrid > li.half,
+.ui-dialog[class*=" popup-"] .dialogContent.requestStatusPopup.popup-base .popupFormGrid > li.half {
+  display: block;
+  width: 100%;
+  margin-left: 0;
+}
+
+.ui-dialog.popup-common .dialogContent.requestStatusPopup.popup-base .popupFormGrid > li.half + li.half,
+.ui-dialog[class*=" popup-"] .dialogContent.requestStatusPopup.popup-base .popupFormGrid > li.half + li.half {
+  margin-left: 0;
+}
+
+.ui-dialog.popup-common .dialogContent.requestStatusPopup.popup-base .popupFormGrid > li.full,
+.ui-dialog[class*=" popup-"] .dialogContent.requestStatusPopup.popup-base .popupFormGrid > li.full {
+  width: 100%;
+}
+
+.ui-dialog.popup-common .dialogContent.requestStatusPopup.popup-base .popupFormGrid.popup-grid-4,
+.ui-dialog[class*=" popup-"] .dialogContent.requestStatusPopup.popup-base .popupFormGrid.popup-grid-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px 18px;
+}
+
+/* .dialogContent.requestStatusPopup #requestDesc,
+.dialogContent.requestStatusPopup #rejectDesc {
+  min-height: 78px !important;
+} */
+
+.ui-dialog.popup-common .dialogContent.requestStatusPopup .fileDownloadList,
+.ui-dialog[class*=" popup-"] .dialogContent.requestStatusPopup .fileDownloadList {
+  min-height: 40px;
+  padding: 6px;
+  border: 1px solid #d8d6de;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.dialogContent.requestStatusPopup > .section {
+  margin-top: 8px !important;
+  padding: 0 !important;
+}
+
+.dialogContent.requestStatusPopup > .section .gridContainer {
+  height: 260px;
+}
+
+.dialogContent.requestStatusPopup > .section .gridContainer .ui-jqgrid {
+  height: 100% !important;
+}
+
+.requestStatusPopup + .dialogBtnSet {
+  margin-top: 2px;
+  padding-top: 0;
+}
+
+.requestStatusPopup + .dialogBtnSet .left {
+  display: none;
+}
+
+.requestStatusPopup + .dialogBtnSet .right {
+  width: 100%;
+  text-align: center;
+}
+
+.requestStatusPopup + .dialogBtnSet .right #close {
+  background: #ebeced !important;
+  border: 1px solid #d8d6de !important;
+  color: #6e6b7b !important;
+}
+
+.ui-dialog.popup-common .dialogContent.popup-base {
+  padding: 8px 20px !important;
+  border-bottom: 0 !important;
+}
+
+.ui-dialog.popup-common .dialogContent.popup-overflow-visible {
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+.ui-dialog.popup-common .dialogContent.popup-base .popupHero {
+  margin-bottom: 6px;
+  text-align: center;
+}
+
+.ui-dialog.popup-common .dialogContent.popup-base .popupHero h2 {
+  margin-bottom: 4px;
+  color: #2f3349;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.ui-dialog.popup-common .dialogContent.popup-base .section.popupCard {
+  padding: 8px 28px !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.ui-dialog.popup-common .dialogContent.popup-base .popupFormGrid {
+  display: grid;
+}
+
+.ui-dialog.popup-common .dialogContent.popup-base .popupFormGrid.popup-grid-1 {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px 0;
+}
+
+.ui-dialog.popup-common .dialogContent.popup-base .popupFormGrid.popup-grid-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 18px;
+}
+
+.ui-dialog.popup-common .dialogContent.popup-base .popupFormGrid.popup-grid-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px 18px;
+}
+
+.ui-dialog.popup-common .dialogContent.popup-base .popupFormGrid.popup-grid-4,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-base .popupFormGrid.popup-grid-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px 18px;
+}
+
+.ui-dialog.popup-common .dialogContent.popup-base .popupFormGrid.popup-gap-lg {
+  gap: 16px 18px;
+}
+
+.ui-dialog.popup-common .dialogContent.popup-base .popupFormGrid > li {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.ui-dialog.popup-common .dialogContent.popup-base .popupFormGrid > li.full {
+  grid-column: 1 / -1;
+}
+
+.ui-dialog.popup-common .dialogContent.popup-base .popupFormGrid > li:hover {
+  background-color: transparent;
+}
+
+.ui-dialog.popup-common .dialogContent.popup-base .popupFormGrid > li > label:not(.ui-controlgroup-item) {
+  display: block;
+  margin-bottom: 2px;
+  padding: 0;
+  color: #4f5468;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.ui-dialog.popup-common .dialogContent.popup-base .popupFormGrid > li > label:not(.ui-controlgroup-item) + div,
+.ui-dialog.popup-common .dialogContent.popup-base .popupFormGrid > li > input[type="text"] {
+  width: 100% !important;
+}
+
+/* OUTSIDE layout base:
+   requestPopup/userModPopup use `popup-base`, `popupFormGrid`, `popup-actions-center`.
+   If outside popup spacing/alignment needs adjustment, start from this block. */
+.ui-dialog.popup-common .dialogContent.popup-actions-center + .dialogBtnSet {
+  margin-top: 4px;
+  padding-top: 0;
+}
+
+.ui-dialog.popup-common .dialogContent.popup-actions-center + .dialogBtnSet .left {
+  display: none;
+}
+
+.ui-dialog.popup-common .dialogContent.popup-actions-center + .dialogBtnSet .right {
+  width: 100% !important;
+  text-align: center !important;
+}
+
+/* Inside user register popup: keep action buttons centered */
+.ui-dialog .dialogContent.registerUserPopup + .dialogBtnSet .left {
+  display: none !important;
+}
+
+.ui-dialog .dialogContent.registerUserPopup + .dialogBtnSet .right {
+  width: 100% !important;
+  text-align: center !important;
+  float: none !important;
+}
+
+/* ===== OUTSIDE ONLY POPUP STYLE START =====
+   Target pages:
+   - /outside/user/information/requestPopup.jsp  (.outsideUserInfoRequestPopup)
+   - /outside/user/information/userModPopup.jsp  (.outsideUserModPopup)
+*/
+.ui-dialog.popup-common .dialogContent.outsideCrRequestPopup {
+  max-height: none !important;
+  overflow: visible !important;
+  padding-bottom: 4px !important;
+}
+
+.ui-dialog.popup-common .dialogContent.outsideCrRequestPopup .textCaution {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+.ui-dialog.popup-common .dialogContent.outsideCrRequestPopup + .dialogBtnSet {
+  margin-top: 4px !important;
+  padding-top: 0 !important;
+}
+
+/* outside CR request popup grid: match drawingVersionCheckPopup grid look */
+.outsideCrRequestPopup .gridContainer {
+  background: transparent;
+  border: 0 !important;
+  border-radius: 0 !important;
+}
+
+.outsideCrRequestPopup .gridContainer .ui-jqgrid {
+  height: 230px !important;
+  border: 0 !important;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.outsideCrRequestPopup .ui-jqgrid .ui-jqgrid-view {
+  height: 100% !important;
+}
+
+.outsideCrRequestPopup .ui-jqgrid .ui-jqgrid-hdiv {
+  border-bottom: 1px solid #ebe9f1;
+  overflow-x: hidden !important;
+}
+
+.outsideCrRequestPopup .ui-jqgrid .ui-jqgrid-htable,
+.outsideCrRequestPopup .ui-jqgrid .ui-jqgrid-btable {
+  table-layout: fixed !important;
+}
+
+.outsideCrRequestPopup .ui-jqgrid .ui-jqgrid-htable th div:not(.clearfix),
+.outsideCrRequestPopup .ui-jqgrid .ui-jqgrid-btable td {
+  white-space: nowrap !important;
+}
+
+.outsideCrRequestPopup .ui-jqgrid .ui-jqgrid-bdiv {
+  height: calc(100% - 40px) !important;
+  max-height: none;
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+}
+
+/* partNo inspection input/button alignment fix */
+.outsideCrRequestPopup label[for="partNo"] + div {
+  display: flex;
+  align-items: stretch;
+}
+
+.outsideCrRequestPopup #partNo.rightBtn {
+  width: calc(100% - 34px) !important;
+  height: 32px !important;
+  line-height: 32px !important;
+}
+
+.outsideCrRequestPopup #partNo + .checkBtn.rightBtn {
+  width: 34px !important;
+  min-width: 34px !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+  border-color: #d8d6de !important;
+  border-left-color: #d8d6de !important;
+}
+
+.outsideCrRequestPopup #partNo + .checkBtn.rightBtn:before {
+  margin: 0;
+}
+
+
+/* ===== OUTSIDE ONLY POPUP STYLE END ===== */
+
+/* destroyPopup (history) : keep same modal spacing pattern */
+.ui-dialog.popup-common .dialogContent.destroyPopup {
+  max-height: calc(100vh - 190px) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+.ui-dialog.popup-common .dialogContent.destroyPopup .popupCard {
+  padding: 8px 28px !important;
+}
+
+.ui-dialog.popup-common .dialogContent.destroyPopup .dialogBtnSet .left,
+.ui-dialog[class*=" popup-"] .dialogContent.destroyPopup .dialogBtnSet .left {
+  display: none !important;
+}
+
+.ui-dialog.popup-common .dialogContent.destroyPopup .dialogBtnSet .right,
+.ui-dialog[class*=" popup-"] .dialogContent.destroyPopup .dialogBtnSet .right {
+  float: none !important;
+  width: 100% !important;
+  text-align: center !important;
+}
+
+/* stopDealPopup (history) */
+.ui-dialog.popup-common .dialogContent.stopDealPopup {
+  max-height: calc(100vh - 180px) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+.ui-dialog.popup-common .dialogContent.stopDealPopup .popupCard {
+  padding: 8px 24px !important;
+}
+
+.ui-dialog.popup-common .dialogContent.stopDealPopup .textCaution {
+  margin: 0 24px 8px 24px !important;
+  color: #6e6b7b;
+}
+
+.ui-dialog.popup-common .dialogContent.stopDealPopup .btnBox {
+  margin-top: 8px;
+  text-align: right;
+}
+
+.ui-dialog.popup-common .dialogContent.stopDealPopup .btnBox #searchPopup,
+.ui-dialog.popup-common .dialogContent.stopDealPopup .dialogBtnSet .right #stopDeal,
+.ui-dialog.popup-common .dialogContent.stopDealPopup + .dialogBtnSet .right #stopDeal,
+.ui-dialog[class*=" popup-"] .dialogContent.stopDealPopup .btnBox #searchPopup,
+.ui-dialog[class*=" popup-"] .dialogContent.stopDealPopup .dialogBtnSet .right #stopDeal,
+.ui-dialog[class*=" popup-"] .dialogContent.stopDealPopup + .dialogBtnSet .right #stopDeal {
+  background: #034C8C !important;
+  border: 1px solid #034C8C !important;
+  color: #fff !important;
+}
+
+.ui-dialog.popup-common .dialogContent.stopDealPopup .dialogBtnSet .left,
+.ui-dialog.popup-common .dialogContent.stopDealPopup + .dialogBtnSet .left,
+.ui-dialog[class*=" popup-"] .dialogContent.stopDealPopup .dialogBtnSet .left,
+.ui-dialog[class*=" popup-"] .dialogContent.stopDealPopup + .dialogBtnSet .left {
+  display: none !important;
+}
+
+.ui-dialog.popup-common .dialogContent.stopDealPopup .dialogBtnSet .right {
+  float: none !important;
+  width: 100% !important;
+  text-align: center !important;
+}
+
+/* popupSearchSelectBox uses ajax and shows search box by default; hide it in this popup to match single-select look */
+.ui-dialog.popup-inside-user-register .select2-dropdown.register-user-no-search .select2-search--dropdown,
+.ui-dialog.popup-common .select2-dropdown.register-user-no-search .select2-search--dropdown {
+  display: none !important;
+}
+
+/* Match drawingRegisterPopup businessType dropdown look */
+.ui-dialog.popup-inside-user-register .select2-dropdown.drawing-like-dropdown .select2-results__option,
+.ui-dialog.popup-common .select2-dropdown.drawing-like-dropdown .select2-results__option {
+  font-family: "Pretendard", "Noto Sans KR", "Malgun Gothic", sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  line-height: 1.25 !important;
+  color: #5e5873 !important;
+  border-radius: 10px !important;
+  margin: 6px 8px !important;
+}
+
+.ui-dialog.popup-inside-user-register .select2-dropdown.drawing-like-dropdown .select2-results__option--highlighted[aria-selected="false"],
+.ui-dialog.popup-common .select2-dropdown.drawing-like-dropdown .select2-results__option--highlighted[aria-selected="false"] {
+  background: #f2f2f2 !important;
+  color: #5e5873 !important;
+}
+
+.ui-dialog.popup-inside-user-register .select2-dropdown.drawing-like-dropdown .select2-results__option[aria-selected="true"],
+.ui-dialog.popup-inside-user-register .select2-dropdown.drawing-like-dropdown .select2-results__option--highlighted[aria-selected="true"],
+.ui-dialog.popup-inside-user-register .select2-dropdown.drawing-like-dropdown .select2-results__option--highlighted[aria-selected="false"].select2-results__option--selected,
+.ui-dialog.popup-common .select2-dropdown.drawing-like-dropdown .select2-results__option[aria-selected="true"],
+.ui-dialog.popup-common .select2-dropdown.drawing-like-dropdown .select2-results__option--highlighted[aria-selected="true"],
+.ui-dialog.popup-common .select2-dropdown.drawing-like-dropdown .select2-results__option--highlighted[aria-selected="false"].select2-results__option--selected {
+  background: rgba(115, 103, 240, 0.12) !important;
+  color: #034C8C !important;
+  font-weight: 600 !important;
+}
+
+/* Unify focus color for textarea in common popup theme */
+.ui-dialog.popup-common .dialogContent textarea:focus,
+.ui-dialog[class*=" popup-"] .dialogContent textarea:focus {
+  border-color: #034C8C !important;
+  box-shadow: 0 0 0 2px rgba(115, 103, 240, 0.15) !important;
+  outline: none;
+}
+
+/* Select2(v3/v4) focus/active tone unify for popup-common dialogs */
+.ui-dialog.popup-common .select2-container-active .select2-choice,
+.ui-dialog[class*=" popup-"] .select2-container-active .select2-choice,
+.ui-dialog.popup-common .select2-container--default.select2-container--focus .select2-selection--single,
+.ui-dialog.popup-common .select2-container--default.select2-container--open .select2-selection--single,
+.ui-dialog[class*=" popup-"] .select2-container--default.select2-container--focus .select2-selection--single,
+.ui-dialog[class*=" popup-"] .select2-container--default.select2-container--open .select2-selection--single {
+  border-color: #034C8C !important;
+  box-shadow: 0 0 0 2px rgba(115, 103, 240, 0.15) !important;
+  outline: none !important;
+}
+
+/* Select2(v3) dropdown option tone unify */
+.ui-dialog.popup-common .select2-drop .select2-results .select2-highlighted,
+.ui-dialog[class*=" popup-"] .select2-drop .select2-results .select2-highlighted {
+  background: #f2f2f2 !important;
+  color: #5e5873 !important;
+}
+
+.ui-dialog.popup-common .select2-drop .select2-results .select2-result-selected,
+.ui-dialog[class*=" popup-"] .select2-drop .select2-results .select2-result-selected {
+  background: rgba(115, 103, 240, 0.12) !important;
+  color: #034C8C !important;
+  font-weight: 600 !important;
+}
+
+/* Select2 dropdown panel/search input tone unify in popup dialogs (v3/v4) */
+.ui-dialog.popup-common .select2-dropdown,
+.ui-dialog.popup-common .select2-drop,
+.ui-dialog[class*=" popup-"] .select2-dropdown,
+.ui-dialog[class*=" popup-"] .select2-drop,
+#popupDialoga .select2-dropdown,
+#popupDialoga .select2-drop {
+  border: 1px solid #d8d6de !important;
+  border-radius: 10px !important;
+  box-shadow: 0 8px 18px rgba(34, 41, 47, 0.12) !important;
+  overflow: hidden !important;
+}
+
+.ui-dialog.popup-common .select2-search--dropdown,
+.ui-dialog.popup-common .select2-search,
+.ui-dialog[class*=" popup-"] .select2-search--dropdown,
+.ui-dialog[class*=" popup-"] .select2-search,
+#popupDialoga .select2-search--dropdown,
+#popupDialoga .select2-search {
+  padding: 8px !important;
+}
+
+.ui-dialog.popup-common .select2-search--dropdown .select2-search__field,
+.ui-dialog.popup-common .select2-search input,
+.ui-dialog.popup-common .select2-drop .select2-search input,
+.ui-dialog.popup-common .select2-input,
+.ui-dialog[class*=" popup-"] .select2-search--dropdown .select2-search__field,
+.ui-dialog[class*=" popup-"] .select2-search input,
+.ui-dialog[class*=" popup-"] .select2-drop .select2-search input,
+.ui-dialog[class*=" popup-"] .select2-input,
+#popupDialoga .select2-search--dropdown .select2-search__field,
+#popupDialoga .select2-search input,
+#popupDialoga .select2-drop .select2-search input,
+#popupDialoga .select2-input {
+  height: 32px !important;
+  padding: 6px 10px !important;
+  border: 1px solid #d8d6de !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+  font-size: 13px !important;
+  color: #5e5873 !important;
+  outline: none !important;
+}
+
+.ui-dialog.popup-common .select2-search--dropdown .select2-search__field:focus,
+.ui-dialog.popup-common .select2-search input:focus,
+.ui-dialog.popup-common .select2-drop .select2-search input:focus,
+.ui-dialog.popup-common .select2-input:focus,
+.ui-dialog[class*=" popup-"] .select2-search--dropdown .select2-search__field:focus,
+.ui-dialog[class*=" popup-"] .select2-search input:focus,
+.ui-dialog[class*=" popup-"] .select2-drop .select2-search input:focus,
+.ui-dialog[class*=" popup-"] .select2-input:focus,
+#popupDialoga .select2-search__field {
+  display: none !important;
+}
+
+#popupDialoga .select2-search--dropdown .select2-search__field:focus,
+#popupDialoga .select2-search input:focus,
+#popupDialoga .select2-drop .select2-search input:focus,
+#popupDialoga .select2-input:focus {
+  border-color: #034C8C !important;
+  box-shadow: 0 0 0 2px rgba(115, 103, 240, 0.15) !important;
+}
+
+/* v3 select2 option list (some outside popups still render this markup) */
+.ui-dialog.popup-common .select2-drop .select2-results,
+.ui-dialog[class*=" popup-"] .select2-drop .select2-results,
+#popupDialoga .select2-drop .select2-results {
+  padding: 6px 0 !important;
+}
+
+.ui-dialog.popup-common .select2-drop .select2-results li,
+.ui-dialog[class*=" popup-"] .select2-drop .select2-results li,
+#popupDialoga .select2-drop .select2-results li {
+  margin: 0 !important;
+}
+
+.ui-dialog.popup-common .select2-drop .select2-results li .select2-result-label,
+.ui-dialog[class*=" popup-"] .select2-drop .select2-results li .select2-result-label,
+#popupDialoga .select2-drop .select2-results li .select2-result-label {
+  margin: 4px 8px !important;
+  padding: 8px 12px !important;
+  border-radius: 10px !important;
+  font-family: "Pretendard", "Noto Sans KR", "Malgun Gothic", sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  line-height: 1.25 !important;
+  color: #5e5873 !important;
+}
+
+.ui-dialog.popup-common .select2-drop .select2-results .select2-highlighted .select2-result-label,
+.ui-dialog[class*=" popup-"] .select2-drop .select2-results .select2-highlighted .select2-result-label,
+#popupDialoga .select2-drop .select2-results .select2-highlighted .select2-result-label {
+  background: #f2f2f2 !important;
+  color: #5e5873 !important;
+}
+
+.ui-dialog.popup-common .select2-drop .select2-results .select2-result-selected .select2-result-label,
+.ui-dialog[class*=" popup-"] .select2-drop .select2-results .select2-result-selected .select2-result-label,
+#popupDialoga .select2-drop .select2-results .select2-result-selected .select2-result-label {
+  background: rgba(115, 103, 240, 0.12) !important;
+  color: #034C8C !important;
+  font-weight: 600 !important;
+}
+
+body > .ui-dialog {
+  z-index: 2147483000 !important;
+}
+
+body > .ui-dialog.popup-common,
+body > .ui-dialog[class*=" popup-"] {
+  overflow: visible !important;
+}
+
+body > .ui-widget-overlay {
+  z-index: 2147482999 !important;
+}
+
+/* -------------------------------------------------------------------------- */
+/* 레이아웃 클래스 통일작업                                                       */
+/* -------------------------------------------------------------------------- */
+
+.ui-dialog.popup-common .dialogContent.popup-type-form,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-form,
+.ui-dialog.popup-common .dialogContent.popup-type-detail,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-detail,
+.ui-dialog.popup-common .dialogContent.popup-type-form-grid,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-form-grid,
+.ui-dialog.popup-common .dialogContent.popup-type-approval,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-approval,
+.ui-dialog.popup-common .dialogContent.popup-type-upload-grid,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-upload-grid {
+  padding: 8px 20px !important;
+  border-bottom: 0 !important;
+}
+
+.ui-dialog.popup-common .dialogContent.popup-type-form,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-form,
+.ui-dialog.popup-common .dialogContent.popup-type-detail,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-detail,
+.ui-dialog.popup-common .dialogContent.popup-type-form-grid,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-form-grid,
+.ui-dialog.popup-common .dialogContent.popup-type-approval,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-approval,
+.ui-dialog.popup-common .dialogContent.popup-type-upload-grid,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-upload-grid {
+  height: auto !important;
+  max-height: none !important;
+  overflow-y: visible !important;
+  overflow-x: hidden !important;
+}
+
+.ui-dialog.popup-common .dialogContent.popup-type-form .popupHero,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-form .popupHero,
+.ui-dialog.popup-common .dialogContent.popup-type-detail .popupHero,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-detail .popupHero,
+.ui-dialog.popup-common .dialogContent.popup-type-form-grid .popupHero,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-form-grid .popupHero,
+.ui-dialog.popup-common .dialogContent.popup-type-approval .popupHero,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-approval .popupHero,
+.ui-dialog.popup-common .dialogContent.popup-type-upload-grid .popupHero,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-upload-grid .popupHero {
+  margin-bottom: 6px;
+  text-align: center;
+}
+
+.ui-dialog.popup-common .dialogContent.popup-type-form .popupHero h2,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-form .popupHero h2,
+.ui-dialog.popup-common .dialogContent.popup-type-detail .popupHero h2,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-detail .popupHero h2,
+.ui-dialog.popup-common .dialogContent.popup-type-form-grid .popupHero h2,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-form-grid .popupHero h2,
+.ui-dialog.popup-common .dialogContent.popup-type-approval .popupHero h2,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-approval .popupHero h2,
+.ui-dialog.popup-common .dialogContent.popup-type-upload-grid .popupHero h2,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-upload-grid .popupHero h2 {
+  padding-top: 24px;
+  margin-bottom: 4px;
+  color: #2f3349;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.ui-dialog.popup-common .dialogContent.popup-type-form .popupHero p,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-form .popupHero p,
+.ui-dialog.popup-common .dialogContent.popup-type-detail .popupHero p,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-detail .popupHero p,
+.ui-dialog.popup-common .dialogContent.popup-type-form-grid .popupHero p,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-form-grid .popupHero p,
+.ui-dialog.popup-common .dialogContent.popup-type-approval .popupHero p,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-approval .popupHero p,
+.ui-dialog.popup-common .dialogContent.popup-type-upload-grid .popupHero p,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-upload-grid .popupHero p {
+  color: #7a7f93;
+  font-size: 15px;
+  line-height: 1.3;
+}
+
+.ui-dialog.popup-common .dialogContent.popup-type-form .section.popupCard,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-form .section.popupCard,
+.ui-dialog.popup-common .dialogContent.popup-type-detail .section.popupCard,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-detail .section.popupCard,
+.ui-dialog.popup-common .dialogContent.popup-type-form-grid .section.popupCard,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-form-grid .section.popupCard,
+.ui-dialog.popup-common .dialogContent.popup-type-approval .section.popupCard,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-approval .section.popupCard,
+.ui-dialog.popup-common .dialogContent.popup-type-upload-grid .section.popupCard,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-upload-grid .section.popupCard {
+  padding: 8px 24px !important;
+  border: 0 !important;
+  border-radius: 8px;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.ui-dialog.popup-common .dialogContent.popup-type-form .popupFormGrid,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-form .popupFormGrid,
+.ui-dialog.popup-common .dialogContent.popup-type-detail .popupFormGrid,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-detail .popupFormGrid,
+.ui-dialog.popup-common .dialogContent.popup-type-form-grid .popupFormGrid,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-form-grid .popupFormGrid,
+.ui-dialog.popup-common .dialogContent.popup-type-approval .popupFormGrid,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-approval .popupFormGrid,
+.ui-dialog.popup-common .dialogContent.popup-type-upload-grid .popupFormGrid,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-upload-grid .popupFormGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 18px;
+}
+
+.ui-dialog.popup-common .dialogContent.popup-type-form .popupFormGrid.popup-grid-1,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-form .popupFormGrid.popup-grid-1,
+.ui-dialog.popup-common .dialogContent.popup-type-detail .popupFormGrid.popup-grid-1,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-detail .popupFormGrid.popup-grid-1,
+.ui-dialog.popup-common .dialogContent.popup-type-form-grid .popupFormGrid.popup-grid-1,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-form-grid .popupFormGrid.popup-grid-1,
+.ui-dialog.popup-common .dialogContent.popup-type-approval .popupFormGrid.popup-grid-1,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-approval .popupFormGrid.popup-grid-1,
+.ui-dialog.popup-common .dialogContent.popup-type-upload-grid .popupFormGrid.popup-grid-1,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-upload-grid .popupFormGrid.popup-grid-1 {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.ui-dialog.popup-common .dialogContent.popup-type-form .popupFormGrid.popup-grid-4,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-form .popupFormGrid.popup-grid-4,
+.ui-dialog.popup-common .dialogContent.popup-type-detail .popupFormGrid.popup-grid-4,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-detail .popupFormGrid.popup-grid-4,
+.ui-dialog.popup-common .dialogContent.popup-type-form-grid .popupFormGrid.popup-grid-4,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-form-grid .popupFormGrid.popup-grid-4,
+.ui-dialog.popup-common .dialogContent.popup-type-approval .popupFormGrid.popup-grid-4,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-approval .popupFormGrid.popup-grid-4,
+.ui-dialog.popup-common .dialogContent.popup-type-upload-grid .popupFormGrid.popup-grid-4,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-upload-grid .popupFormGrid.popup-grid-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.ui-dialog.popup-common .dialogContent.docRegisterPopup.popup-base .popupFormGrid.popup-grid-4,
+.ui-dialog[class*=" popup-"] .dialogContent.docRegisterPopup.popup-base .popupFormGrid.popup-grid-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 8px 18px;
+}
+
+.ui-dialog.popup-common .dialogContent.popup-type-form .popupFormGrid > li,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-form .popupFormGrid > li,
+.ui-dialog.popup-common .dialogContent.popup-type-detail .popupFormGrid > li,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-detail .popupFormGrid > li,
+.ui-dialog.popup-common .dialogContent.popup-type-form-grid .popupFormGrid > li,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-form-grid .popupFormGrid > li,
+.ui-dialog.popup-common .dialogContent.popup-type-approval .popupFormGrid > li,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-approval .popupFormGrid > li,
+.ui-dialog.popup-common .dialogContent.popup-type-upload-grid .popupFormGrid > li,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-upload-grid .popupFormGrid > li {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.ui-dialog.popup-common .dialogContent.popup-type-form .popupFormGrid > li.full,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-form .popupFormGrid > li.full,
+.ui-dialog.popup-common .dialogContent.popup-type-detail .popupFormGrid > li.full,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-detail .popupFormGrid > li.full,
+.ui-dialog.popup-common .dialogContent.popup-type-form-grid .popupFormGrid > li.full,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-form-grid .popupFormGrid > li.full,
+.ui-dialog.popup-common .dialogContent.popup-type-approval .popupFormGrid > li.full,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-approval .popupFormGrid > li.full,
+.ui-dialog.popup-common .dialogContent.popup-type-upload-grid .popupFormGrid > li.full,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-upload-grid .popupFormGrid > li.full {
+  grid-column: 1 / -1;
+}
+
+.ui-dialog.popup-common .dialogContent.popup-type-form .popupFormGrid > li:hover,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-form .popupFormGrid > li:hover,
+.ui-dialog.popup-common .dialogContent.popup-type-detail .popupFormGrid > li:hover,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-detail .popupFormGrid > li:hover,
+.ui-dialog.popup-common .dialogContent.popup-type-form-grid .popupFormGrid > li:hover,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-form-grid .popupFormGrid > li:hover,
+.ui-dialog.popup-common .dialogContent.popup-type-approval .popupFormGrid > li:hover,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-approval .popupFormGrid > li:hover,
+.ui-dialog.popup-common .dialogContent.popup-type-upload-grid .popupFormGrid > li:hover,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-upload-grid .popupFormGrid > li:hover {
+  background-color: transparent;
+}
+
+.ui-dialog.popup-common .dialogContent.popup-type-form .popupFormGrid > li > label:not(.ui-controlgroup-item),
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-form .popupFormGrid > li > label:not(.ui-controlgroup-item),
+.ui-dialog.popup-common .dialogContent.popup-type-detail .popupFormGrid > li > label:not(.ui-controlgroup-item),
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-detail .popupFormGrid > li > label:not(.ui-controlgroup-item),
+.ui-dialog.popup-common .dialogContent.popup-type-form-grid .popupFormGrid > li > label:not(.ui-controlgroup-item),
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-form-grid .popupFormGrid > li > label:not(.ui-controlgroup-item),
+.ui-dialog.popup-common .dialogContent.popup-type-approval .popupFormGrid > li > label:not(.ui-controlgroup-item),
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-approval .popupFormGrid > li > label:not(.ui-controlgroup-item),
+.ui-dialog.popup-common .dialogContent.popup-type-upload-grid .popupFormGrid > li > label:not(.ui-controlgroup-item),
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-upload-grid .popupFormGrid > li > label:not(.ui-controlgroup-item) {
+  display: block;
+  margin-bottom: 4px;
+  padding: 0;
+  color: #4f5468;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.ui-dialog.popup-common .dialogContent.popup-type-form .popupFormGrid > li.half > div + label:not(.ui-controlgroup-item),
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-form .popupFormGrid > li.half > div + label:not(.ui-controlgroup-item),
+.ui-dialog.popup-common .dialogContent.popup-type-form .popupFormGrid > li.half > div + script + label:not(.ui-controlgroup-item),
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-form .popupFormGrid > li.half > div + script + label:not(.ui-controlgroup-item),
+.ui-dialog.popup-common .dialogContent.popup-type-form .popupFormGrid > li.full > div + label:not(.ui-controlgroup-item),
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-form .popupFormGrid > li.full > div + label:not(.ui-controlgroup-item),
+.ui-dialog.popup-common .dialogContent.popup-type-form .popupFormGrid > li.full > div + script + label:not(.ui-controlgroup-item),
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-form .popupFormGrid > li.full > div + script + label:not(.ui-controlgroup-item),
+.ui-dialog.popup-common .dialogContent.popup-type-detail .popupFormGrid > li.half > div + label:not(.ui-controlgroup-item),
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-detail .popupFormGrid > li.half > div + label:not(.ui-controlgroup-item),
+.ui-dialog.popup-common .dialogContent.popup-type-detail .popupFormGrid > li.half > div + script + label:not(.ui-controlgroup-item),
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-detail .popupFormGrid > li.half > div + script + label:not(.ui-controlgroup-item),
+.ui-dialog.popup-common .dialogContent.popup-type-detail .popupFormGrid > li.full > div + label:not(.ui-controlgroup-item),
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-detail .popupFormGrid > li.full > div + label:not(.ui-controlgroup-item),
+.ui-dialog.popup-common .dialogContent.popup-type-detail .popupFormGrid > li.full > div + script + label:not(.ui-controlgroup-item),
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-detail .popupFormGrid > li.full > div + script + label:not(.ui-controlgroup-item),
+.ui-dialog.popup-common .dialogContent.popup-type-form-grid .popupFormGrid > li.half > div + label:not(.ui-controlgroup-item),
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-form-grid .popupFormGrid > li.half > div + label:not(.ui-controlgroup-item),
+.ui-dialog.popup-common .dialogContent.popup-type-form-grid .popupFormGrid > li.half > div + script + label:not(.ui-controlgroup-item),
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-form-grid .popupFormGrid > li.half > div + script + label:not(.ui-controlgroup-item),
+.ui-dialog.popup-common .dialogContent.popup-type-form-grid .popupFormGrid > li.full > div + label:not(.ui-controlgroup-item),
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-form-grid .popupFormGrid > li.full > div + label:not(.ui-controlgroup-item),
+.ui-dialog.popup-common .dialogContent.popup-type-form-grid .popupFormGrid > li.full > div + script + label:not(.ui-controlgroup-item),
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-form-grid .popupFormGrid > li.full > div + script + label:not(.ui-controlgroup-item),
+.ui-dialog.popup-common .dialogContent.popup-type-approval .popupFormGrid > li.half > div + label:not(.ui-controlgroup-item),
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-approval .popupFormGrid > li.half > div + label:not(.ui-controlgroup-item),
+.ui-dialog.popup-common .dialogContent.popup-type-approval .popupFormGrid > li.half > div + script + label:not(.ui-controlgroup-item),
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-approval .popupFormGrid > li.half > div + script + label:not(.ui-controlgroup-item),
+.ui-dialog.popup-common .dialogContent.popup-type-approval .popupFormGrid > li.full > div + label:not(.ui-controlgroup-item),
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-approval .popupFormGrid > li.full > div + label:not(.ui-controlgroup-item),
+.ui-dialog.popup-common .dialogContent.popup-type-approval .popupFormGrid > li.full > div + script + label:not(.ui-controlgroup-item),
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-approval .popupFormGrid > li.full > div + script + label:not(.ui-controlgroup-item),
+.ui-dialog.popup-common .dialogContent.popup-type-upload-grid .popupFormGrid > li.half > div + label:not(.ui-controlgroup-item),
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-upload-grid .popupFormGrid > li.half > div + label:not(.ui-controlgroup-item),
+.ui-dialog.popup-common .dialogContent.popup-type-upload-grid .popupFormGrid > li.half > div + script + label:not(.ui-controlgroup-item),
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-upload-grid .popupFormGrid > li.half > div + script + label:not(.ui-controlgroup-item),
+.ui-dialog.popup-common .dialogContent.popup-type-upload-grid .popupFormGrid > li.full > div + label:not(.ui-controlgroup-item),
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-upload-grid .popupFormGrid > li.full > div + label:not(.ui-controlgroup-item),
+.ui-dialog.popup-common .dialogContent.popup-type-upload-grid .popupFormGrid > li.full > div + script + label:not(.ui-controlgroup-item),
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-upload-grid .popupFormGrid > li.full > div + script + label:not(.ui-controlgroup-item) {
+  margin-top: 10px !important;
+}
+
+.ui-dialog.popup-common .dialogContent.popup-type-form .popupFormGrid > li > label:not(.ui-controlgroup-item) + div,
+.ui-dialog.popup-common .dialogContent.popup-type-form .popupFormGrid > li > input[type="text"],
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-form .popupFormGrid > li > label:not(.ui-controlgroup-item) + div,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-form .popupFormGrid > li > input[type="text"],
+.ui-dialog.popup-common .dialogContent.popup-type-detail .popupFormGrid > li > label:not(.ui-controlgroup-item) + div,
+.ui-dialog.popup-common .dialogContent.popup-type-detail .popupFormGrid > li > input[type="text"],
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-detail .popupFormGrid > li > label:not(.ui-controlgroup-item) + div,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-detail .popupFormGrid > li > input[type="text"],
+.ui-dialog.popup-common .dialogContent.popup-type-form-grid .popupFormGrid > li > label:not(.ui-controlgroup-item) + div,
+.ui-dialog.popup-common .dialogContent.popup-type-form-grid .popupFormGrid > li > input[type="text"],
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-form-grid .popupFormGrid > li > label:not(.ui-controlgroup-item) + div,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-form-grid .popupFormGrid > li > input[type="text"],
+.ui-dialog.popup-common .dialogContent.popup-type-approval .popupFormGrid > li > label:not(.ui-controlgroup-item) + div,
+.ui-dialog.popup-common .dialogContent.popup-type-approval .popupFormGrid > li > input[type="text"],
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-approval .popupFormGrid > li > label:not(.ui-controlgroup-item) + div,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-approval .popupFormGrid > li > input[type="text"],
+.ui-dialog.popup-common .dialogContent.popup-type-upload-grid .popupFormGrid > li > label:not(.ui-controlgroup-item) + div,
+.ui-dialog.popup-common .dialogContent.popup-type-upload-grid .popupFormGrid > li > input[type="text"],
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-upload-grid .popupFormGrid > li > label:not(.ui-controlgroup-item) + div,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-upload-grid .popupFormGrid > li > input[type="text"] {
+  width: 100% !important;
+}
+
+.ui-dialog.popup-common .dialogContent.popup-type-form .dialogBtnSet,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-form .dialogBtnSet,
+.ui-dialog.popup-common .dialogContent.popup-type-detail .dialogBtnSet,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-detail .dialogBtnSet,
+.ui-dialog.popup-common .dialogContent.popup-type-form-grid .dialogBtnSet,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-form-grid .dialogBtnSet,
+.ui-dialog.popup-common .dialogContent.popup-type-approval .dialogBtnSet,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-approval .dialogBtnSet,
+.ui-dialog.popup-common .dialogContent.popup-type-upload-grid .dialogBtnSet,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-upload-grid .dialogBtnSet,
+.ui-dialog.popup-common .dialogContent.popup-actions-center.popup-type-form + .dialogBtnSet,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-actions-center.popup-type-form + .dialogBtnSet,
+.ui-dialog.popup-common .dialogContent.popup-actions-center.popup-type-detail + .dialogBtnSet,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-actions-center.popup-type-detail + .dialogBtnSet,
+.ui-dialog.popup-common .dialogContent.popup-actions-center.popup-type-form-grid + .dialogBtnSet,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-actions-center.popup-type-form-grid + .dialogBtnSet,
+.ui-dialog.popup-common .dialogContent.popup-actions-center.popup-type-approval + .dialogBtnSet,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-actions-center.popup-type-approval + .dialogBtnSet,
+.ui-dialog.popup-common .dialogContent.popup-actions-center.popup-type-upload-grid + .dialogBtnSet,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-actions-center.popup-type-upload-grid + .dialogBtnSet {
+  padding-left: 24px !important;
+  padding-right: 24px !important;
+  padding-bottom: 16px !important;
+  box-sizing: border-box;
+}
+
+.ui-dialog.popup-common .dialogContent.popup-type-form-grid .gridContainer,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-form-grid .gridContainer,
+.ui-dialog.popup-common .dialogContent.popup-type-approval .gridContainer,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-approval .gridContainer,
+.ui-dialog.popup-common .dialogContent.popup-type-upload-grid .gridContainer,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-upload-grid .gridContainer {
+  border: 1px solid #ebe9f1;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.ui-dialog.popup-common .dialogContent.popup-type-form-grid .dialogToolbar,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-form-grid .dialogToolbar,
+.ui-dialog.popup-common .dialogContent.popup-type-approval .dialogToolbar,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-approval .dialogToolbar,
+.ui-dialog.popup-common .dialogContent.popup-type-upload-grid .dialogToolbar,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-upload-grid .dialogToolbar {
+  margin-bottom: 8px;
+}
+
+.ui-dialog.popup-common .dialogContent.popup-type-approval .popupFormGrid > li textarea,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-approval .popupFormGrid > li textarea,
+.ui-dialog.popup-common .dialogContent.popup-type-upload-grid .popupFormGrid > li textarea,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-upload-grid .popupFormGrid > li textarea {
+  min-height: 80px;
+}
+
+.ui-dialog.popup-common .dialogContent.popup-type-upload-grid .dialogToolbar .right .ui-button,
+.ui-dialog[class*=" popup-"] .dialogContent.popup-type-upload-grid .dialogToolbar .right .ui-button {
+  min-width: 88px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 8px !important;
+}
+
+.ui-dialog.popup-destroy-request .dialogContent.popup-type-upload-grid .gridContainer {
+  background: #fff;
+  border: 1px solid #dbdade;
+  border-radius: 12px;
+  box-shadow: 0 0.125rem 0.375rem rgba(47, 43, 61, 0.08);
+}
+
+.ui-dialog.popup-destroy-request .dialogContent.popup-type-upload-grid .gridContainer .ui-jqgrid {
+  border: 0;
+  background: transparent;
+}
+
+.ui-dialog.popup-destroy-request .dialogContent.popup-type-upload-grid .gridContainer .ui-jqgrid-view,
+.ui-dialog.popup-destroy-request .dialogContent.popup-type-upload-grid .gridContainer .ui-jqgrid-hdiv,
+.ui-dialog.popup-destroy-request .dialogContent.popup-type-upload-grid .gridContainer .ui-jqgrid-bdiv,
+.ui-dialog.popup-destroy-request .dialogContent.popup-type-upload-grid .gridContainer .ui-jqgrid-htable,
+.ui-dialog.popup-destroy-request .dialogContent.popup-type-upload-grid .gridContainer .ui-jqgrid-btable {
+  width: 100% !important;
+}
+
+.ui-dialog.popup-destroy-request .dialogContent.popup-type-upload-grid .gridContainer .ui-jqgrid-hdiv {
+  background: #fff;
+  border-bottom: 1px solid #dbdade;
+}
+
+.ui-dialog.popup-destroy-request .dialogContent.popup-type-upload-grid .gridContainer .ui-jqgrid-htable th {
+  height: 44px;
+  padding: 0;
+  border-color: #e9e7ef;
+  background: #fff;
+}
+
+.ui-dialog.popup-destroy-request .dialogContent.popup-type-upload-grid .gridContainer .ui-jqgrid-htable th div:not(.clearfix) {
+  padding: 0 14px !important;
+  color: #6f6b7d;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 44px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap !important;
+}
+
+.ui-dialog.popup-destroy-request .dialogContent.popup-type-upload-grid .gridContainer .ui-jqgrid-bdiv {
+  background: #fff;
+}
+
+.ui-dialog.popup-destroy-request .dialogContent.popup-type-upload-grid .gridContainer .ui-jqgrid-btable tr {
+  background: #fff;
+}
+
+.ui-dialog.popup-destroy-request .dialogContent.popup-type-upload-grid .gridContainer .ui-jqgrid-btable tr:nth-child(odd),
+.ui-dialog.popup-destroy-request .dialogContent.popup-type-upload-grid .gridContainer .ui-jqgrid-btable tr:nth-child(even) {
+  background: #fff;
+}
+
+.ui-dialog.popup-destroy-request .dialogContent.popup-type-upload-grid .gridContainer .ui-jqgrid-btable tr:hover,
+.ui-dialog.popup-destroy-request .dialogContent.popup-type-upload-grid .gridContainer .ui-jqgrid-btable tr.ui-state-hover {
+  background: rgba(0, 127, 175, 0.25) !important;
+}
+
+.ui-dialog.popup-destroy-request .dialogContent.popup-type-upload-grid .gridContainer .ui-jqgrid-btable tr.ui-state-highlight {
+  background: rgba(0, 127, 175, 0.5) !important;
+}
+
+.ui-dialog.popup-destroy-request .dialogContent.popup-type-upload-grid .gridContainer .ui-jqgrid-btable td {
+  height: 29px;
+  padding: 0 14px;
+  border-color: #e9e7ef;
+  color: #444050;
+  font-size: 0.9375rem;
+  vertical-align: middle;
+}
+
+.ui-dialog.popup-destroy-request .dialogContent.popup-type-upload-grid .gridContainer .ui-jqgrid-btable td.ui-state-highlight,
+.ui-dialog.popup-destroy-request .dialogContent.popup-type-upload-grid .gridContainer .ui-jqgrid-btable td.ui-state-active,
+.ui-dialog.popup-destroy-request .dialogContent.popup-type-upload-grid .gridContainer .ui-jqgrid-btable td.edit-cell,
+.ui-dialog.popup-destroy-request .dialogContent.popup-type-upload-grid .gridContainer .ui-jqgrid-btable td.inline-edit-cell {
+  background: rgba(0, 127, 175, 0.5) !important;
+  border-color: rgba(0, 127, 175, 0.7) !important;
+}
+
+.ui-dialog.popup-destroy-request .dialogContent.popup-type-upload-grid .gridContainer .ui-jqgrid-btable td .cbox {
+  margin-top: 0;
+}
+
+.ui-dialog.popup-destroy-request .dialogContent.popup-type-upload-grid .gridContainer .ui-jqgrid-btable td:not(.has-pretty-child) a {
+  color: #5d596c;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.ui-dialog.popup-destroy-request .dialogContent.popup-type-upload-grid .gridContainer .ui-jqgrid-btable td:not(.has-pretty-child) a:hover {
+  color: #034C8C;
+  text-decoration: underline;
+}
+
+.ui-dialog.popup-destroy-request .dialogContent.popup-type-upload-grid .gridContainer .ui-jqgrid-btable tr:last-child td {
+  border-bottom-width: 0;
+}
+
+.ui-dialog.popup-destroy-request .dialogContent.popup-actions-center.popup-type-upload-grid + .dialogBtnSet {
+  margin-top: 0;
+  padding-top: 0;
+  padding-bottom: 12px;
+}
+
+.ui-dialog.popup-destroy-request .dialogContent.popup-actions-center.popup-type-upload-grid + .dialogBtnSet .right .bottomBtn + .bottomBtn {
+  margin-left: 8px;
+}
+
+.ui-dialog.popup-destroy-status .dialogContent.popup-type-detail .fileDownloadList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ui-dialog.popup-destroy-status .dialogContent.popup-type-detail .fileDownload {
+  border: 1px solid #dbdade;
+  border-radius: 10px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.ui-dialog.popup-destroy-status .dialogContent.popup-type-detail .fileDownload .fileDownBtn {
+  width: 100%;
+  min-height: 44px;
+  margin: 0;
+  padding: 10px 14px;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  text-align: left;
+}
+
+.ui-dialog.popup-destroy-status .dialogContent.popup-type-detail .fileDownload .fileDownBtn:hover,
+.ui-dialog.popup-destroy-status .dialogContent.popup-type-detail .fileDownload .fileDownBtn:focus {
+  background: #f8f7fa !important;
+}
+
+.ui-dialog.popup-destroy-status .dialogContent.popup-type-detail .fileDownload .fileDownBtn span {
+  display: block;
+  color: #5d596c;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.45;
+  white-space: normal;
+  word-break: break-all;
+}
+
+.ui-dialog.popup-destroy-status .dialogContent.popup-actions-center.popup-type-detail + .dialogBtnSet {
+  margin-top: 0;
+  padding-top: 0;
+  padding-bottom: 12px;
+}
+
+.ui-dialog.popup-request-detail .dialogContent.popup-type-form-grid .section.popupCard,
+.ui-dialog.popup-common .dialogContent.commonRequestDetailPopup.popup-type-form-grid .section.popupCard,
+.ui-dialog[class*=" popup-"] .dialogContent.commonRequestDetailPopup.popup-type-form-grid .section.popupCard {
+  padding-top: 12px !important;
+  padding-bottom: 12px !important;
+}
+
+.ui-dialog.popup-request-detail .dialogContent.popup-type-form-grid .gridContainer,
+.ui-dialog.popup-common .dialogContent.commonRequestDetailPopup.popup-type-form-grid .gridContainer,
+.ui-dialog[class*=" popup-"] .dialogContent.commonRequestDetailPopup.popup-type-form-grid .gridContainer {
+  background: #fff;
+  border: 1px solid #dbdade;
+  border-radius: 12px;
+  box-shadow: 0 0.125rem 0.375rem rgba(47, 43, 61, 0.08);
+}
+
+.ui-dialog.popup-request-detail .dialogContent.popup-type-form-grid .gridContainer .ui-jqgrid,
+.ui-dialog.popup-common .dialogContent.commonRequestDetailPopup.popup-type-form-grid .gridContainer .ui-jqgrid,
+.ui-dialog[class*=" popup-"] .dialogContent.commonRequestDetailPopup.popup-type-form-grid .gridContainer .ui-jqgrid {
+  border: 0;
+  background: transparent;
+}
+
+.ui-dialog.popup-request-detail .dialogContent.popup-actions-center.popup-type-form-grid + .dialogBtnSet,
+.ui-dialog.popup-common .dialogContent.commonRequestDetailPopup.popup-actions-center.popup-type-form-grid + .dialogBtnSet,
+.ui-dialog[class*=" popup-"] .dialogContent.commonRequestDetailPopup.popup-actions-center.popup-type-form-grid + .dialogBtnSet {
+  margin-top: 0;
+  padding-top: 0;
+  padding-bottom: 12px;
+}
+
+.ui-dialog.popup-request-detail .dialogContent.popup-actions-center.popup-type-form-grid + .dialogBtnSet .right .bottomBtn + .bottomBtn,
+.ui-dialog.popup-common .dialogContent.commonRequestDetailPopup.popup-actions-center.popup-type-form-grid + .dialogBtnSet .right .bottomBtn + .bottomBtn,
+.ui-dialog[class*=" popup-"] .dialogContent.commonRequestDetailPopup.popup-actions-center.popup-type-form-grid + .dialogBtnSet .right .bottomBtn + .bottomBtn {
+  margin-left: 8px;
+}
+
+.ui-dialog.popup-request .dialogContent.commonRequestPopup.popup-type-form-grid,
+.ui-dialog.popup-common .dialogContent.commonRequestPopup.popup-type-form-grid,
+.ui-dialog[class*=" popup-"] .dialogContent.commonRequestPopup.popup-type-form-grid,
+.ui-dialog.popup-common .dialogContent.menuPopup.popup-type-form-grid,
+.ui-dialog[class*=" popup-"] .dialogContent.menuPopup.popup-type-form-grid {
+  overflow-x: visible !important;
+}
+
+.ui-dialog.popup-request .dialogContent.commonRequestPopup.popup-type-form-grid .popupFormGrid,
+.ui-dialog.popup-common .dialogContent.menuPopup.popup-type-form-grid .popupFormGrid,
+.ui-dialog[class*=" popup-"] .dialogContent.menuPopup.popup-type-form-grid .popupFormGrid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+/* 항목 두개인 form */
+.ui-dialog.popup-common .dialogContent.commonRequestPopup.popup-type-form-grid .popupFormGrid,
+.ui-dialog[class*=" popup-"] .dialogContent.commonRequestPopup.popup-type-form-grid .popupFormGrid{
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ui-dialog.popup-request .dialogContent.commonRequestPopup.popup-type-form-grid form,
+.ui-dialog.popup-request .dialogContent.commonRequestPopup.popup-type-form-grid .popupFormGrid,
+.ui-dialog.popup-request .dialogContent.commonRequestPopup.popup-type-form-grid .popupFormGrid > li,
+.ui-dialog.popup-request .dialogContent.commonRequestPopup.popup-type-form-grid .popupFormGrid > li > div,
+.ui-dialog.popup-common .dialogContent.commonRequestPopup.popup-type-form-grid form,
+.ui-dialog.popup-common .dialogContent.commonRequestPopup.popup-type-form-grid .popupFormGrid,
+.ui-dialog.popup-common .dialogContent.commonRequestPopup.popup-type-form-grid .popupFormGrid > li,
+.ui-dialog.popup-common .dialogContent.commonRequestPopup.popup-type-form-grid .popupFormGrid > li > div,
+.ui-dialog[class*=" popup-"] .dialogContent.commonRequestPopup.popup-type-form-grid form,
+.ui-dialog[class*=" popup-"] .dialogContent.commonRequestPopup.popup-type-form-grid .popupFormGrid,
+.ui-dialog[class*=" popup-"] .dialogContent.commonRequestPopup.popup-type-form-grid .popupFormGrid > li,
+.ui-dialog[class*=" popup-"] .dialogContent.commonRequestPopup.popup-type-form-grid .popupFormGrid > li > div,
+.ui-dialog.popup-common .dialogContent.menuPopup.popup-type-form-grid form,
+.ui-dialog.popup-common .dialogContent.menuPopup.popup-type-form-grid .popupFormGrid,
+.ui-dialog.popup-common .dialogContent.menuPopup.popup-type-form-grid .popupFormGrid > li,
+.ui-dialog.popup-common .dialogContent.menuPopup.popup-type-form-grid .popupFormGrid > li > div,
+.ui-dialog[class*=" popup-"] .dialogContent.menuPopup.popup-type-form-grid form,
+.ui-dialog[class*=" popup-"] .dialogContent.menuPopup.popup-type-form-grid .popupFormGrid,
+.ui-dialog[class*=" popup-"] .dialogContent.menuPopup.popup-type-form-grid .popupFormGrid > li,
+.ui-dialog[class*=" popup-"] .dialogContent.menuPopup.popup-type-form-grid .popupFormGrid > li > div {
+  overflow: visible !important;
+}
+
+.ui-dialog.popup-request .dialogContent.commonRequestPopup.popup-type-form-grid .popupFormGrid > li.third,
+.ui-dialog.popup-common .dialogContent.commonRequestPopup.popup-type-form-grid .popupFormGrid > li.third,
+.ui-dialog[class*=" popup-"] .dialogContent.commonRequestPopup.popup-type-form-grid .popupFormGrid > li.third,
+.ui-dialog.popup-common .dialogContent.menuPopup.popup-type-form-grid .popupFormGrid > li.third,
+.ui-dialog[class*=" popup-"] .dialogContent.menuPopup.popup-type-form-grid .popupFormGrid > li.third {
+  grid-column: span 1;
+}
+
+.ui-dialog.popup-request .select2-drop,
+.ui-dialog.popup-request .select2-dropdown,
+.ui-dialog.popup-common .select2-drop,
+.ui-dialog.popup-common .select2-dropdown,
+.ui-dialog[class*=" popup-"] .select2-drop,
+.ui-dialog[class*=" popup-"] .select2-dropdown {
+  z-index: 2147483002 !important;
+}
+
+body > .select2-drop,
+body > .select2-dropdown,
+body .select2-container--open .select2-dropdown,
+body .select2-drop.select2-drop-active {
+  z-index: 2147483002 !important;
+}
+
+.ui-dialog.popup-request .dialogContent.commonRequestPopup.popup-type-form-grid .section.popupCard:last-of-type,
+.ui-dialog.popup-common .dialogContent.commonRequestPopup.popup-type-form-grid .section.popupCard:last-of-type,
+.ui-dialog[class*=" popup-"] .dialogContent.commonRequestPopup.popup-type-form-grid .section.popupCard:last-of-type,
+.ui-dialog.popup-common .dialogContent.menuPopup.popup-type-form-grid .section.popupCard:last-of-type,
+.ui-dialog[class*=" popup-"] .dialogContent.menuPopup.popup-type-form-grid .section.popupCard:last-of-type {
+  padding-top: 12px !important;
+  padding-bottom: 12px !important;
+}
+
+.dialogContent.commonRequestPopup .gridContainer {
+  background: #fff;
+  border: 1px solid #dbdade;
+  border-radius: 12px;
+  box-shadow: 0 0.125rem 0.375rem rgba(47, 43, 61, 0.08);
+  overflow: hidden;
+}
+
+.ui-dialog.popup-common .dialogContent.annotationPopup.popup-type-form-grid .section.popupCard:last-of-type,
+.ui-dialog[class*=" popup-"] .dialogContent.annotationPopup.popup-type-form-grid .section.popupCard:last-of-type {
+  padding-top: 12px !important;
+  padding-bottom: 12px !important;
+}
+
+.ui-dialog.popup-common .dialogContent.annotationPopup.popup-actions-center.popup-type-form-grid + .dialogBtnSet,
+.ui-dialog[class*=" popup-"] .dialogContent.annotationPopup.popup-actions-center.popup-type-form-grid + .dialogBtnSet {
+  padding-left: 24px !important;
+  padding-right: 24px !important;
+  padding-bottom: 16px !important;
+  box-sizing: border-box;
+}
+
+.dialogContent.commonRequestPopup .gridContainer .ui-jqgrid {
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.dialogContent.commonRequestPopup .gridContainer .ui-jqgrid-view,
+.dialogContent.commonRequestPopup .gridContainer .ui-jqgrid-hdiv {
+  min-width: 100%;
+}
+
+.dialogContent.commonRequestPopup .gridContainer .ui-jqgrid-hbox {
+  box-sizing: border-box;
+  padding-right: 0;
+}
+
+.dialogContent.commonRequestPopup .gridContainer .ui-jqgrid-htable,
+.dialogContent.commonRequestPopup .gridContainer .ui-jqgrid-btable {
+  table-layout: fixed !important;
+}
+
+.dialogContent.commonRequestPopup .gridContainer .ui-jqgrid-hdiv {
+  background: #fff;
+  border-bottom: 1px solid #dbdade;
+  overflow-x: hidden;
+}
+
+.dialogContent.commonRequestPopup .gridContainer .ui-jqgrid-bdiv {
+  background: #fff;
+  overflow-x: scroll !important;
+  overflow-y: auto !important;
+}
+
+.dialogContent.commonRequestPopup .gridContainer .ui-jqgrid-bdiv.grid-empty::after {
+  content: "";
+  display: block;
+  width: calc(100% + 120px);
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.dialogContent.commonRequestPopup .gridContainer .ui-jqgrid-htable th {
+  height: 31px;
+  padding: 0;
+  border-color: #e9e7ef;
+  background: #fff;
+}
+
+.dialogContent.commonRequestPopup .gridContainer .ui-jqgrid-htable th div:not(.clearfix) {
+  padding: 0 14px !important;
+  color: #6f6b7d;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap !important;
+  word-break: keep-all !important;
+}
+
+.dialogContent.commonRequestPopup .gridContainer .ui-jqgrid-btable tr:nth-child(odd) {
+  background: #fafbff;
+}
+
+.dialogContent.commonRequestPopup .gridContainer .ui-jqgrid-btable tr:nth-child(even) {
+  background: #fff;
+}
+
+.dialogContent.commonRequestPopup .gridContainer .ui-jqgrid-btable tr:hover,
+.dialogContent.commonRequestPopup .gridContainer .ui-jqgrid-btable tr.ui-state-hover,
+.dialogContent.commonRequestPopup .gridContainer .ui-jqgrid-btable tr.ui-state-highlight {
+  background: rgba(0, 127, 175, 0.5) !important;
+}
+
+.dialogContent.commonRequestPopup .gridContainer .ui-jqgrid-btable td {
+  height: 29px;
+  padding: 0 14px;
+  border-color: #e9e7ef;
+  color: #444050;
+  font-size: 0.9375rem;
+  vertical-align: middle;
+}
+
+.dialogContent.commonRequestPopup .gridContainer .ui-jqgrid-btable td input[name="requestPurposeTerm"] {
+  height: 29px;
+  min-height: 29px;
+  padding: 4px 8px;
+  line-height: 19px;
+  box-sizing: border-box;
+}
+
+.dialogContent.commonRequestPopup .gridContainer .ui-jqgrid-btable td.ui-state-highlight,
+.dialogContent.commonRequestPopup .gridContainer .ui-jqgrid-btable td.ui-state-active,
+.dialogContent.commonRequestPopup .gridContainer .ui-jqgrid-btable td.edit-cell,
+.dialogContent.commonRequestPopup .gridContainer .ui-jqgrid-btable td.inline-edit-cell {
+  background: rgba(0, 127, 175, 0.5) !important;
+  border-color: rgba(0, 127, 175, 0.7) !important;
+  color: #ffffff !important;
+}
+
+@media (max-width: 767.98) {
+  .ui-dialog.popup-request .dialogContent.commonRequestPopup.popup-type-form-grid .popupFormGrid,
+  .ui-dialog.popup-common .dialogContent.commonRequestPopup.popup-type-form-grid .popupFormGrid,
+  .ui-dialog[class*=" popup-"] .dialogContent.commonRequestPopup.popup-type-form-grid .popupFormGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767.98px) {
+  .ui-dialog.popup-common .dialogContent.popup-type-form .popupFormGrid,
+  .ui-dialog[class*=" popup-"] .dialogContent.popup-type-form .popupFormGrid,
+  .ui-dialog.popup-common .dialogContent.popup-type-detail .popupFormGrid,
+  .ui-dialog[class*=" popup-"] .dialogContent.popup-type-detail .popupFormGrid,
+  .ui-dialog.popup-common .dialogContent.popup-type-form-grid .popupFormGrid,
+  .ui-dialog[class*=" popup-"] .dialogContent.popup-type-form-grid .popupFormGrid,
+  .ui-dialog.popup-common .dialogContent.popup-type-approval .popupFormGrid,
+  .ui-dialog[class*=" popup-"] .dialogContent.popup-type-approval .popupFormGrid,
+  .ui-dialog.popup-common .dialogContent.popup-type-upload-grid .popupFormGrid,
+  .ui-dialog[class*=" popup-"] .dialogContent.popup-type-upload-grid .popupFormGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 767.98px) {
+  .ui-dialog.popup-common .dialogContent.docRegisterPopup.popup-base .popupFormGrid.popup-grid-4,
+  .ui-dialog[class*=" popup-"] .dialogContent.docRegisterPopup.popup-base .popupFormGrid.popup-grid-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .ui-dialog.popup-common .dialogContent.commonRequestPopup.popup-type-upload-grid .popupFormGrid.popup-grid-4,
+  .ui-dialog[class*=" popup-"] .dialogContent.commonRequestPopup.popup-type-upload-grid .popupFormGrid.popup-grid-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .ui-dialog.popup-request .dialogContent.commonRequestPopup.popup-type-form-grid .popupFormGrid,
+  .ui-dialog.popup-common .dialogContent.commonRequestPopup.popup-type-form-grid .popupFormGrid,
+  .ui-dialog[class*=" popup-"] .dialogContent.commonRequestPopup.popup-type-form-grid .popupFormGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.ui-dialog.popup-request-status .dialogContent.commonRequestStatusPopup.popup-type-form-grid,
+.ui-dialog.popup-common .dialogContent.commonRequestStatusPopup.popup-type-form-grid,
+.ui-dialog[class*=" popup-"] .dialogContent.commonRequestStatusPopup.popup-type-form-grid {
+  overflow-x: visible !important;
+}
+
+.ui-dialog.popup-request-status .dialogContent.commonRequestStatusPopup.popup-type-form-grid .popupFormGrid,
+.ui-dialog.popup-common .dialogContent.commonRequestStatusPopup.popup-type-form-grid .popupFormGrid,
+.ui-dialog[class*=" popup-"] .dialogContent.commonRequestStatusPopup.popup-type-form-grid .popupFormGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ui-dialog.popup-request-status .dialogContent.commonRequestStatusPopup.popup-type-form-grid form,
+.ui-dialog.popup-request-status .dialogContent.commonRequestStatusPopup.popup-type-form-grid .popupFormGrid,
+.ui-dialog.popup-request-status .dialogContent.commonRequestStatusPopup.popup-type-form-grid .popupFormGrid > li,
+.ui-dialog.popup-request-status .dialogContent.commonRequestStatusPopup.popup-type-form-grid .popupFormGrid > li > div,
+.ui-dialog.popup-common .dialogContent.commonRequestStatusPopup.popup-type-form-grid form,
+.ui-dialog.popup-common .dialogContent.commonRequestStatusPopup.popup-type-form-grid .popupFormGrid,
+.ui-dialog.popup-common .dialogContent.commonRequestStatusPopup.popup-type-form-grid .popupFormGrid > li,
+.ui-dialog.popup-common .dialogContent.commonRequestStatusPopup.popup-type-form-grid .popupFormGrid > li > div,
+.ui-dialog[class*=" popup-"] .dialogContent.commonRequestStatusPopup.popup-type-form-grid form,
+.ui-dialog[class*=" popup-"] .dialogContent.commonRequestStatusPopup.popup-type-form-grid .popupFormGrid,
+.ui-dialog[class*=" popup-"] .dialogContent.commonRequestStatusPopup.popup-type-form-grid .popupFormGrid > li,
+.ui-dialog[class*=" popup-"] .dialogContent.commonRequestStatusPopup.popup-type-form-grid .popupFormGrid > li > div {
+  overflow: visible !important;
+}
+
+.ui-dialog.popup-request-status .dialogContent.commonRequestStatusPopup.popup-type-form-grid .popupFormGrid > li.third,
+.ui-dialog.popup-common .dialogContent.commonRequestStatusPopup.popup-type-form-grid .popupFormGrid > li.third,
+.ui-dialog[class*=" popup-"] .dialogContent.commonRequestStatusPopup.popup-type-form-grid .popupFormGrid > li.third {
+  grid-column: span 1;
+}
+
+.ui-dialog.popup-request-status .dialogContent.commonRequestStatusPopup.popup-type-form-grid .section.popupCard:last-of-type,
+.ui-dialog.popup-common .dialogContent.commonRequestStatusPopup.popup-type-form-grid .section.popupCard:last-of-type,
+.ui-dialog[class*=" popup-"] .dialogContent.commonRequestStatusPopup.popup-type-form-grid .section.popupCard:last-of-type {
+  padding-top: 8px !important;
+  padding-bottom: 8px !important;
+}
+
+.ui-dialog.popup-request-status .dialogContent.commonRequestStatusPopup .section + .section,
+.ui-dialog.popup-common .dialogContent.commonRequestStatusPopup .section + .section,
+.ui-dialog[class*=" popup-"] .dialogContent.commonRequestStatusPopup .section + .section {
+  margin-top: 0 !important;
+}
+
+.ui-dialog.popup-request-status .dialogContent.commonRequestStatusPopup.popup-type-form-grid .gridContainer,
+.ui-dialog.popup-common .dialogContent.commonRequestStatusPopup.popup-type-form-grid .gridContainer,
+.ui-dialog[class*=" popup-"] .dialogContent.commonRequestStatusPopup.popup-type-form-grid .gridContainer {
+  background: #fff;
+  border: 1px solid #dbdade;
+  border-radius: 12px;
+  box-shadow: 0 0.125rem 0.375rem rgba(47, 43, 61, 0.08);
+  overflow: hidden;
+}
+
+.ui-dialog.popup-request-status .dialogContent.commonRequestStatusPopup.popup-type-form-grid .gridContainer .ui-jqgrid,
+.ui-dialog.popup-common .dialogContent.commonRequestStatusPopup.popup-type-form-grid .gridContainer .ui-jqgrid,
+.ui-dialog[class*=" popup-"] .dialogContent.commonRequestStatusPopup.popup-type-form-grid .gridContainer .ui-jqgrid {
+  border: 0;
+  background: transparent;
+}
+
+.ui-dialog.popup-request-status .dialogContent.commonRequestStatusPopup.popup-type-form-grid .gridContainer .ui-jqgrid-hdiv,
+.ui-dialog.popup-common .dialogContent.commonRequestStatusPopup.popup-type-form-grid .gridContainer .ui-jqgrid-hdiv,
+.ui-dialog[class*=" popup-"] .dialogContent.commonRequestStatusPopup.popup-type-form-grid .gridContainer .ui-jqgrid-hdiv {
+  background: #fff;
+  border-bottom: 1px solid #dbdade;
+  overflow-x: hidden;
+}
+
+.ui-dialog.popup-request-status .dialogContent.commonRequestStatusPopup.popup-type-form-grid .gridContainer .ui-jqgrid-bdiv,
+.ui-dialog.popup-common .dialogContent.commonRequestStatusPopup.popup-type-form-grid .gridContainer .ui-jqgrid-bdiv,
+.ui-dialog[class*=" popup-"] .dialogContent.commonRequestStatusPopup.popup-type-form-grid .gridContainer .ui-jqgrid-bdiv {
+  background: #fff;
+  overflow-x: auto !important;
+  overflow-y: scroll !important;
+}
+
+.ui-dialog.popup-request-status .dialogContent.commonRequestStatusPopup.popup-type-form-grid .gridContainer .ui-jqgrid-htable th,
+.ui-dialog.popup-common .dialogContent.commonRequestStatusPopup.popup-type-form-grid .gridContainer .ui-jqgrid-htable th,
+.ui-dialog[class*=" popup-"] .dialogContent.commonRequestStatusPopup.popup-type-form-grid .gridContainer .ui-jqgrid-htable th {
+  height: 31px;
+  padding: 0;
+  border-color: #e9e7ef;
+  background: #fff;
+}
+
+.ui-dialog.popup-request-status .dialogContent.commonRequestStatusPopup.popup-type-form-grid .gridContainer .ui-jqgrid-htable th div:not(.clearfix),
+.ui-dialog.popup-common .dialogContent.commonRequestStatusPopup.popup-type-form-grid .gridContainer .ui-jqgrid-htable th div:not(.clearfix),
+.ui-dialog[class*=" popup-"] .dialogContent.commonRequestStatusPopup.popup-type-form-grid .gridContainer .ui-jqgrid-htable th div:not(.clearfix) {
+  padding: 0 14px !important;
+  color: #6f6b7d;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap !important;
+}
+
+.ui-dialog.popup-request-status .dialogContent.commonRequestStatusPopup.popup-type-form-grid .gridContainer .ui-jqgrid-btable tr:nth-child(odd),
+.ui-dialog.popup-request-status .dialogContent.commonRequestStatusPopup.popup-type-form-grid .gridContainer .ui-jqgrid-btable tr:nth-child(even),
+.ui-dialog.popup-common .dialogContent.commonRequestStatusPopup.popup-type-form-grid .gridContainer .ui-jqgrid-btable tr:nth-child(odd),
+.ui-dialog.popup-common .dialogContent.commonRequestStatusPopup.popup-type-form-grid .gridContainer .ui-jqgrid-btable tr:nth-child(even),
+.ui-dialog[class*=" popup-"] .dialogContent.commonRequestStatusPopup.popup-type-form-grid .gridContainer .ui-jqgrid-btable tr:nth-child(odd),
+.ui-dialog[class*=" popup-"] .dialogContent.commonRequestStatusPopup.popup-type-form-grid .gridContainer .ui-jqgrid-btable tr:nth-child(even) {
+  background: #fff;
+}
+
+.ui-dialog.popup-request-status .dialogContent.commonRequestStatusPopup.popup-type-form-grid .gridContainer .ui-jqgrid-btable tr:hover,
+.ui-dialog.popup-request-status .dialogContent.commonRequestStatusPopup.popup-type-form-grid .gridContainer .ui-jqgrid-btable tr.ui-state-hover,
+.ui-dialog.popup-common .dialogContent.commonRequestStatusPopup.popup-type-form-grid .gridContainer .ui-jqgrid-btable tr:hover,
+.ui-dialog.popup-common .dialogContent.commonRequestStatusPopup.popup-type-form-grid .gridContainer .ui-jqgrid-btable tr.ui-state-hover,
+.ui-dialog[class*=" popup-"] .dialogContent.commonRequestStatusPopup.popup-type-form-grid .gridContainer .ui-jqgrid-btable tr:hover,
+.ui-dialog[class*=" popup-"] .dialogContent.commonRequestStatusPopup.popup-type-form-grid .gridContainer .ui-jqgrid-btable tr.ui-state-hover {
+  background: rgba(0, 127, 175, 0.25) !important;
+}
+
+.ui-dialog.popup-request-status .dialogContent.commonRequestStatusPopup.popup-type-form-grid .gridContainer .ui-jqgrid-btable tr.ui-state-highlight,
+.ui-dialog.popup-common .dialogContent.commonRequestStatusPopup.popup-type-form-grid .gridContainer .ui-jqgrid-btable tr.ui-state-highlight,
+.ui-dialog[class*=" popup-"] .dialogContent.commonRequestStatusPopup.popup-type-form-grid .gridContainer .ui-jqgrid-btable tr.ui-state-highlight {
+  background: rgba(0, 127, 175, 0.5) !important;
+}
+
+.ui-dialog.popup-request-status .dialogContent.commonRequestStatusPopup.popup-type-form-grid .gridContainer .ui-jqgrid-btable td,
+.ui-dialog.popup-common .dialogContent.commonRequestStatusPopup.popup-type-form-grid .gridContainer .ui-jqgrid-btable td,
+.ui-dialog[class*=" popup-"] .dialogContent.commonRequestStatusPopup.popup-type-form-grid .gridContainer .ui-jqgrid-btable td {
+  height: 29px;
+  padding: 0 14px;
+  border-color: #e9e7ef;
+  color: #444050;
+  font-size: 0.9375rem;
+  vertical-align: middle;
+}
+
+.ui-dialog.popup-request-status .dialogContent.commonRequestStatusPopup.popup-actions-center.popup-type-form-grid + .dialogBtnSet,
+.ui-dialog.popup-common .dialogContent.commonRequestStatusPopup.popup-actions-center.popup-type-form-grid + .dialogBtnSet,
+.ui-dialog[class*=" popup-"] .dialogContent.commonRequestStatusPopup.popup-actions-center.popup-type-form-grid + .dialogBtnSet {
+  padding-bottom: 12px !important;
+}
+
+.ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup.popup-actions-center.popup-type-form-grid + .dialogBtnSet,
+.ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup.popup-actions-center.popup-type-form-grid + .dialogBtnSet {
+  padding-bottom: 24px !important;
+}
+
+.ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup.popup-type-form-grid .section.popupCard:last-of-type,
+.ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup.popup-type-form-grid .section.popupCard:last-of-type {
+  padding-top: 8px !important;
+  padding-bottom: 8px !important;
+}
+
+.ui-dialog.popup-common .dialogContent.outsideUserModPopup.popup-actions-center.popup-type-form-grid + .dialogBtnSet,
+.ui-dialog[class*=" popup-"] .dialogContent.outsideUserModPopup.popup-actions-center.popup-type-form-grid + .dialogBtnSet {
+  padding-bottom: 24px !important;
+}
+
+.ui-dialog.popup-common .dialogContent.menuPopup.popup-actions-center.popup-type-form-grid + .dialogBtnSet,
+.ui-dialog[class*=" popup-"] .dialogContent.menuPopup.popup-actions-center.popup-type-form-grid + .dialogBtnSet {
+  padding-bottom: 24px !important;
+}
+
+.ui-dialog.popup-common .dialogContent.outsideUserModPopup.popup-type-form-grid .section.popupCard:last-of-type,
+.ui-dialog[class*=" popup-"] .dialogContent.outsideUserModPopup.popup-type-form-grid .section.popupCard:last-of-type {
+  padding-top: 8px !important;
+  padding-bottom: 8px !important;
+}
+
+.ui-dialog.popup-common .dialogContent.qnaAddPopup.popup-actions-center + .dialogBtnSet,
+.ui-dialog[class*=" popup-"] .dialogContent.qnaAddPopup.popup-actions-center + .dialogBtnSet {
+  padding-bottom: 24px !important;
+}
+
+.ui-dialog.popup-common .dialogContent.noticeAddPopup,
+.ui-dialog[class*=" popup-"] .dialogContent.noticeAddPopup {
+  min-height: 0 !important;
+}
+
+.ui-dialog.popup-common .dialogContent.qnaDetailPopup.popup-actions-center + .dialogBtnSet,
+.ui-dialog[class*=" popup-"] .dialogContent.qnaDetailPopup.popup-actions-center + .dialogBtnSet,
+.ui-dialog.popup-common .dialogContent.noticeDetailPopup.popup-actions-center + .dialogBtnSet,
+.ui-dialog[class*=" popup-"] .dialogContent.noticeDetailPopup.popup-actions-center + .dialogBtnSet {
+  padding-bottom: 24px !important;
+}
+
+.ui-dialog.popup-common .dialogContent.outsideUserModPopup .section + .section,
+.ui-dialog.popup-common .dialogContent.outsideUserModPopup .sbr + .section,
+.ui-dialog.popup-common .dialogContent.outsideUserModPopup form + .section,
+.ui-dialog.popup-common .dialogContent.outsideUserModPopup .section + form,
+.ui-dialog[class*=" popup-"] .dialogContent.outsideUserModPopup .section + .section,
+.ui-dialog[class*=" popup-"] .dialogContent.outsideUserModPopup .sbr + .section,
+.ui-dialog[class*=" popup-"] .dialogContent.outsideUserModPopup form + .section,
+.ui-dialog[class*=" popup-"] .dialogContent.outsideUserModPopup .section + form {
+  margin-top: 0 !important;
+}
+
+.ui-dialog.popup-common .dialogContent.outsideCrRequestPopup.popup-actions-center.popup-type-form-grid + .dialogBtnSet,
+.ui-dialog[class*=" popup-"] .dialogContent.outsideCrRequestPopup.popup-actions-center.popup-type-form-grid + .dialogBtnSet {
+  padding-bottom: 24px !important;
+}
+
+.ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup .section + .section,
+.ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup .sbr + .section,
+.ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup form + .section,
+.ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup .section + form,
+.ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup .section + .section,
+.ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup .sbr + .section,
+.ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup form + .section,
+.ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup .section + form {
+  margin-top: 0 !important;
+}
+
+.ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup .permissionCheckField.has-pretty-child > .clearfix,
+.ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup .permissionCheckField.has-pretty-child > .clearfix {
+  width: 100% !important;
+  margin-left: 0 !important;
+  padding-right: 0 !important;
+  display: inline-flex !important;
+  align-items: center;
+}
+
+.ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup .permissionCheckField.has-pretty-child > .clearfix label,
+.ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup .permissionCheckField.has-pretty-child > .clearfix label {
+  min-width: 0 !important;
+  max-width: none !important;
+  margin-left: 8px !important;
+  line-height: 22px !important;
+  vertical-align: middle !important;
+}
+
+.ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup .permissionCheckField.has-pretty-child > .clearfix a,
+.ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup .permissionCheckField.has-pretty-child > .clearfix a {
+  vertical-align: middle !important;
+}
+
+.ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup .permissionRequestGrid,
+.ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup .permissionRequestGrid {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+}
+
+.ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup .requestTypeField > div,
+.ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup .requestTypeField > div {
+  width: auto !important;
+  display: inline-flex !important;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup .requestTypeField > label:not(.ui-controlgroup-item),
+.ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup .requestTypeField > label:not(.ui-controlgroup-item) {
+  display: inline-flex !important;
+  align-items: center;
+  margin: 0 12px 0 0 !important;
+  vertical-align: middle !important;
+}
+
+.ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup .requestTypeField > label:not(.ui-controlgroup-item) + div,
+.ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup .requestTypeField > label:not(.ui-controlgroup-item) + div {
+  width: auto !important;
+  display: inline-flex !important;
+  vertical-align: middle !important;
+}
+
+.ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup .requestTypeField,
+.ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup .requestTypeField {
+  display: block;
+}
+
+.ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup .requestTypeField .requestTypeInline,
+.ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup .requestTypeField .requestTypeInline {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup .requestTypeField .requestTypeInline > label:not(.ui-controlgroup-item),
+.ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup .requestTypeField .requestTypeInline > label:not(.ui-controlgroup-item) {
+  display: inline-flex !important;
+  align-items: center;
+  margin: 0 12px 0 0 !important;
+  vertical-align: middle !important;
+}
+
+.ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup .requestTypeField .requestTypeInline > div,
+.ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup .requestTypeField .requestTypeInline > div {
+  width: auto !important;
+  display: inline-flex !important;
+  align-items: center;
+  vertical-align: middle !important;
+}
+
+.ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup .requestTypeField .prettyradio,
+.ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup .requestTypeField .prettyradio {
+  margin-right: 0 !important;
+  display: inline-flex !important;
+  align-items: center;
+  padding: 6px 10px;
+}
+
+.ui-dialog.popup-common .dialogToolbar .gridTitle,
+.ui-dialog[class*=" popup-"] .dialogToolbar .gridTitle {
+  font-size: 15px;
+}
+
+.ui-dialog.popup-common .gridContainer .ui-jqgrid-htable th div:not(.clearfix),
+.ui-dialog[class*=" popup-"] .gridContainer .ui-jqgrid-htable th div:not(.clearfix) {
+  font-size: 15px;
+}
+
+.ui-dialog.popup-common .gridContainer .ui-jqgrid-btable td,
+.ui-dialog[class*=" popup-"] .gridContainer .ui-jqgrid-btable td {
+  font-size: 13px;
+}
+
+.ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup .requestTypeField .has-pretty-child,
+.ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup .requestTypeField .has-pretty-child {
+  width: auto !important;
+  display: inline-flex !important;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup .requestTypeField .has-pretty-child > .clearfix,
+.ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup .requestTypeField .has-pretty-child > .clearfix {
+  width: auto !important;
+  margin-left: 0 !important;
+  display: inline-flex !important;
+  align-items: center;
+}
+
+.ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup .popup-grid-3 .requestTypeFieldGrid,
+.ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup .popup-grid-3 .requestTypeFieldGrid {
+  width: 100%;
+}
+
+.ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup .popup-grid-3 .requestTypeFieldGrid > .requestTypeInline,
+.ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup .popup-grid-3 .requestTypeFieldGrid > .requestTypeInline {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup .popup-grid-3 .requestTypeFieldGrid > .requestTypeInline > label:not(.ui-controlgroup-item),
+.ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup .popup-grid-3 .requestTypeFieldGrid > .requestTypeInline > label:not(.ui-controlgroup-item) {
+  display: block !important;
+  margin: 0 !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+}
+
+.ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup .popup-grid-3 .requestTypeFieldGrid > .requestTypeInline > div,
+.ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup .popup-grid-3 .requestTypeFieldGrid > .requestTypeInline > div {
+  width: auto !important;
+  display: inline-flex !important;
+  align-items: center;
+}
+
+.ui-dialog.popup-request-status .dialogContent.commonRequestStatusPopup .permissionCheckField.has-pretty-child > .clearfix,
+.ui-dialog.popup-common .dialogContent.commonRequestStatusPopup .permissionCheckField.has-pretty-child > .clearfix,
+.ui-dialog[class*=" popup-"] .dialogContent.commonRequestStatusPopup .permissionCheckField.has-pretty-child > .clearfix {
+  width: 100% !important;
+  margin-left: 0 !important;
+  padding-right: 0 !important;
+  display: inline-flex !important;
+  align-items: center;
+}
+
+.ui-dialog.popup-request-status .dialogContent.commonRequestStatusPopup .permissionCheckField.has-pretty-child > .clearfix label,
+.ui-dialog.popup-common .dialogContent.commonRequestStatusPopup .permissionCheckField.has-pretty-child > .clearfix label,
+.ui-dialog[class*=" popup-"] .dialogContent.commonRequestStatusPopup .permissionCheckField.has-pretty-child > .clearfix label {
+  min-width: 0 !important;
+  max-width: none !important;
+  margin-left: 8px !important;
+  line-height: 22px !important;
+  vertical-align: middle !important;
+}
+
+.ui-dialog.popup-request-status .dialogContent.commonRequestStatusPopup .permissionCheckField.has-pretty-child > .clearfix a,
+.ui-dialog.popup-common .dialogContent.commonRequestStatusPopup .permissionCheckField.has-pretty-child > .clearfix a,
+.ui-dialog[class*=" popup-"] .dialogContent.commonRequestStatusPopup .permissionCheckField.has-pretty-child > .clearfix a {
+  vertical-align: middle !important;
+}
+
+@media (max-width: 1280px) {
+  .ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup .permissionRequestGrid,
+  .ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup .permissionRequestGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .ui-dialog.popup-request-status .dialogContent.commonRequestStatusPopup.popup-type-form-grid .popupFormGrid,
+  .ui-dialog.popup-common .dialogContent.commonRequestStatusPopup.popup-type-form-grid .popupFormGrid,
+  .ui-dialog[class*=" popup-"] .dialogContent.commonRequestStatusPopup.popup-type-form-grid .popupFormGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767.98px) {
+  .ui-dialog.popup-request-status .dialogContent.commonRequestStatusPopup.popup-type-form-grid .popupFormGrid,
+  .ui-dialog.popup-common .dialogContent.commonRequestStatusPopup.popup-type-form-grid .popupFormGrid,
+  .ui-dialog[class*=" popup-"] .dialogContent.commonRequestStatusPopup.popup-type-form-grid .popupFormGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

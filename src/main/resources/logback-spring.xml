@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="30 seconds">
+	<property resource="logback.properties" />
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+            <Pattern>[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%logger{36}.%M\(%line\)]  - %msg%n</Pattern>
+		</encoder>
+	</appender>
+	<appender name="FILE"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${APP_HOME}/logs/fdms-webapp.log</file>
+		<rollingPolicy
+			class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<!-- 파일이 하루에 한개씩 생성된다 -->
+			<fileNamePattern>${APP_HOME}/logs/fdms-webapp.%d{yyyy-MM-dd}.log</fileNamePattern>
+			<!-- maxHistory에 설정한 숫자만큼 로그 파일이 날짜별로 생성되고 그 이전로그는 자동삭제된다 -->
+			<maxHistory>${MAXHISTORY}</maxHistory>
+		</rollingPolicy>
+
+		<encoder>
+			<Pattern>[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%logger{36}.%M\(%line\)]  - %msg%n</Pattern>
+		</encoder>
+	</appender>
+
+	<logger name="jdbc.sqlonly" additivity="false" >
+		<level value="${SQL_LOG_LEVEL}"/>
+		<appender-ref ref="STDOUT" />
+		<appender-ref ref="FILE" />
+	</logger>
+	<logger name="org.hibernate.SQL" additivity="false" >
+		<level value="${SQL_LOG_LEVEL}"/>
+		<appender-ref ref="STDOUT" />
+		<appender-ref ref="FILE" />
+	</logger>
+	<logger name="org.hibernate.type.descriptor.sql.BasicBinder" additivity="false" >
+		<level value="trace"/>
+		<appender-ref ref="STDOUT" />
+		<appender-ref ref="FILE" />
+	</logger>
+	<logger name="jdbc.resultsettable" additivity="false" >
+		<level value="${SQL_RESULT_LEVEL}"/>
+		<appender-ref ref="STDOUT" />
+		<appender-ref ref="FILE" />
+	</logger>
+	<logger name="jdbc" additivity="false" >
+		<level value="OFF"/>
+		<appender-ref ref="STDOUT" />
+		<appender-ref ref="FILE" />
+	</logger>
+	<logger name="org.springframework" additivity="false" >
+		<level value="OFF"/>
+		<appender-ref ref="STDOUT" />
+		<appender-ref ref="FILE" />
+	</logger>
+
+
+	<root level="${LOG_LEVEL}">
+		<appender-ref ref="STDOUT" />
+		<appender-ref ref="FILE" />
+	</root>
+
+</configuration>

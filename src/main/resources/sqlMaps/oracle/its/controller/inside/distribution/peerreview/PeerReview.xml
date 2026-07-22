@@ -1,0 +1,304 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="sql.PeerReview">
+
+	<select id="selectList" resultType="kr.esob.fdms.controller.inside.distribution.peerreview.PeerReviewListVO">
+		SELECT B1.*
+		FROM (
+			SELECT
+				A1.*,
+				ROW_NUMBER() OVER(
+					ORDER BY
+					<if test='sortColumn == null or "".equals(sortColumn)'>
+						A1."requestDt" DESC, A1."requestNo" DESC
+					</if>
+					<if test='sortColumn != null and !"".equals(sortColumn)'>
+						A1."${sortColumn}" ${order}
+					</if>
+				) AS PAGEINDEX
+			FROM (
+				SELECT
+					'PEERREVIEW' AS "objectType",
+					'Peer Review' AS "objectTypeNm",
+					'DISTRIBUTION' AS "requestType",
+					'배포' AS "requestTypeNm",
+					info.peerreview_no AS "requestNo",
+					info.peerreview_no AS "requestOrgNo",
+					info.peerreview_no AS "peerreviewNo",
+					info.peerreview_no AS "peerReviewNo",
+					info.peerreview_no AS "peerreview_no",
+					info.peerreview_no AS "objectNo",
+					info.peerreview_nm AS "title",
+					info.peerreview_nm AS "peerreviewNm",
+					info.peerreview_nm AS "peerReviewNm",
+					info.peerreview_nm AS "peerreview_nm",
+					info.peerreview_nm AS "objectNm",
+					info.peerreview_nm AS "peerReviewTitle",
+					info.peerreview_nm AS "peerreviewTitle",
+					COALESCE(info.status, '') AS "statusCd",
+					COALESCE(info.status, '') AS "statusNm",
+					COALESCE(info.status, '') AS "status",
+					info.insert_dt AS "requestDt",
+					info.insert_dt AS "insertDt",
+					info.insert_dt AS "insert_dt",
+					COALESCE(info.reviewdate, '') AS "reviewdate",
+					COALESCE(info.reviewdate, '') AS "reviewDate",
+					info.insert_uid AS "insertUid",
+					COALESCE(info.insert_user_nm, '') AS "insertUserNm",
+					COALESCE(info.approver, '') AS "approver",
+					COALESCE(info.approver, '') AS "reviewerUser",
+					COALESCE(info.approved_users, '') AS "approvedUsers",
+					COALESCE(info.processing_status, '') AS "processingStatus",
+					info.object_id AS "objectId",
+					info.object_id AS "hiddenObjectId",
+					COALESCE(info.rev_no, '') AS "revNo"
+				FROM docs_peerreview info
+				WHERE COALESCE(info.deleted_yn, 'N') = 'N'
+				<if test='peerreviewNo != null and !peerreviewNo.equals("")'>
+					AND info.peerreview_no ILIKE CONCAT('%', #{peerreviewNo}, '%')
+				</if>
+				<if test='peerreviewNm != null and !peerreviewNm.equals("")'>
+					AND info.peerreview_nm ILIKE CONCAT('%', #{peerreviewNm}, '%')
+				</if>
+				<if test='statusCd != null and !statusCd.equals("")'>
+					AND info.status = #{statusCd}
+				</if>
+				<if test='requestStartDt != null and !requestStartDt.equals("")'>
+					AND info.insert_dt BETWEEN TO_DATE(#{requestStartDt}, 'YYYY-MM-DD')
+					AND TO_DATE(#{requestEndDt}, 'YYYY-MM-DD') + INTERVAL '1 DAY'
+				</if>
+			) A1
+		) B1
+		WHERE 1=1
+		<if test='end != null and !end.equals("") and !"0".equals(end)'>
+			AND PAGEINDEX <![CDATA[ <= ]]> #{end}
+		</if>
+		<if test='start != null and !start.equals("") and !"0".equals(start)'>
+			AND PAGEINDEX >= #{start}
+		</if>
+	</select>
+
+	<select id="selectListCount" resultType="Integer">
+		SELECT COUNT(*) AS totalCount
+		FROM docs_peerreview info
+		WHERE COALESCE(info.deleted_yn, 'N') = 'N'
+		<if test='peerreviewNo != null and !peerreviewNo.equals("")'>
+			AND info.peerreview_no ILIKE CONCAT('%', #{peerreviewNo}, '%')
+		</if>
+		<if test='peerreviewNm != null and !peerreviewNm.equals("")'>
+			AND info.peerreview_nm ILIKE CONCAT('%', #{peerreviewNm}, '%')
+		</if>
+		<if test='statusCd != null and !statusCd.equals("")'>
+			AND info.status = #{statusCd}
+		</if>
+		<if test='requestStartDt != null and !requestStartDt.equals("")'>
+			AND info.insert_dt BETWEEN TO_DATE(#{requestStartDt}, 'YYYY-MM-DD')
+			AND TO_DATE(#{requestEndDt}, 'YYYY-MM-DD') + INTERVAL '1 DAY'
+		</if>
+	</select>
+
+	<select id="selectNextCnSerial" resultType="Integer">
+		SELECT COALESCE(MAX(cn_serial), 0) + 1 FROM docs_peerreview
+	</select>
+
+	<select id="selectNextPeerReviewNo" resultType="String">
+		SELECT
+			'K8-PeerReview-' || LPAD(
+				(COALESCE(
+					MAX(
+						CASE
+							WHEN peerreview_no ~ '^K8-PeerReview-[0-9]+$'
+							THEN CAST(SUBSTRING(peerreview_no FROM 15) AS INTEGER)
+							ELSE NULL
+						END
+					), 0
+				) + 1)::text,
+				3,
+				'0'
+			) AS nextNo
+		FROM docs_peerreview
+		WHERE COALESCE(deleted_yn, 'N') = 'N'
+	</select>
+
+	<insert id="insertPeerReview" parameterType="kr.esob.fdms.controller.inside.distribution.peerreview.PeerReviewSaveParam">
+		INSERT INTO docs_peerreview (
+			object_id,
+			cn_serial,
+			peerreview_no,
+			peerreview_nm,
+			rev_no,
+			file_nm,
+			org_file_nm,
+			file_path_nm,
+			file_size,
+			current_page_no,
+			total_page_no,
+			processing_status,
+			status,
+			approver,
+			revieweruser,
+			approved_users,
+			reviewdate,
+			insert_uid,
+			insert_user_nm,
+			insert_dt,
+			deleted_yn
+		)
+		VALUES (
+			#{objectId},
+			CAST(#{cnSerial} AS INTEGER),
+			#{peerreviewNo},
+			#{peerreviewNm},
+			COALESCE(NULLIF(#{revNo}, ''), '00'),
+			#{fileNm},
+			#{orgFileNm},
+			#{filePathNm},
+			#{fileSize},
+			COALESCE(NULLIF(#{currentPageNo}, ''), '1'),
+			COALESCE(NULLIF(#{totalPageNo}, ''), '1'),
+			'PROCESSING',
+			COALESCE(NULLIF(#{status}, ''), '승인진행중'),
+			#{approver},
+			#{revieweruser},
+			'',
+			#{reviewdate},
+			#{sessionUser.userId},
+			COALESCE(NULLIF(#{sessionUser.userNm}, ''), #{sessionUser.username}),
+			NOW(),
+			'N'
+		)
+	</insert>
+
+	<select id="selectPeerReviewApprovalInfo" parameterType="string" resultType="map">
+		SELECT
+			object_id AS objectId,
+			insert_uid AS insertUid,
+			insert_user_nm AS insertUserNm,
+			approver AS approver,
+			revieweruser AS reviewerUser,
+			approved_users AS approvedUsers,
+			status AS status,
+			COALESCE(deleted_yn, 'N') AS deletedYn
+		FROM docs_peerreview
+		WHERE object_id = #{objectId}
+	</select>
+
+	<select id="selectMainFileInfo" parameterType="string" resultType="hashmap">
+		SELECT
+			object_id AS "objectId",
+			1 AS "fileNo",
+			COALESCE(NULLIF(org_file_nm, ''), NULLIF(file_nm, ''), peerreview_nm) AS "orgFileNm",
+			COALESCE(file_path_nm, '') AS "filePathNm",
+			COALESCE(NULLIF(file_size, ''), '0') AS "fileSize",
+			COALESCE(processing_status, '') AS "processingStatus"
+		FROM docs_peerreview
+		WHERE object_id = #{objectId}
+		  AND (
+			COALESCE(org_file_nm, '') &lt;&gt; ''
+			OR COALESCE(file_path_nm, '') &lt;&gt; ''
+			OR COALESCE(file_nm, '') &lt;&gt; ''
+		  )
+	</select>
+
+	<select id="selectMainFileInfoByPeerReviewNo" parameterType="string" resultType="hashmap">
+		SELECT
+			object_id AS "objectId",
+			1 AS "fileNo",
+			COALESCE(NULLIF(org_file_nm, ''), NULLIF(file_nm, ''), peerreview_nm) AS "orgFileNm",
+			COALESCE(file_path_nm, '') AS "filePathNm",
+			COALESCE(NULLIF(file_size, ''), '0') AS "fileSize",
+			COALESCE(processing_status, '') AS "processingStatus"
+		FROM docs_peerreview
+		WHERE TRIM(peerreview_no) = TRIM(#{peerreviewNo})
+		  AND COALESCE(deleted_yn, 'N') = 'N'
+		  AND (
+			COALESCE(org_file_nm, '') &lt;&gt; ''
+			OR COALESCE(file_path_nm, '') &lt;&gt; ''
+			OR COALESCE(file_nm, '') &lt;&gt; ''
+		  )
+		ORDER BY insert_dt DESC
+		LIMIT 1
+	</select>
+
+	<select id="selectPeerReviewFileDownloadInfo" parameterType="map" resultType="hashmap">
+		SELECT
+			object_id AS objectId,
+			file_path_nm AS filePath,
+			org_file_nm AS orgFileNm,
+			file_nm AS fileNm,
+			file_size AS fileSize
+		FROM docs_peerreview
+		WHERE object_id = #{objectId}
+	</select>
+
+	<select id="selectObjectIdByPeerReviewNo" parameterType="string" resultType="string">
+		SELECT object_id
+		FROM docs_peerreview
+		WHERE TRIM(peerreview_no) = TRIM(#{peerreviewNo})
+		  AND COALESCE(deleted_yn, 'N') = 'N'
+		ORDER BY insert_dt DESC
+		LIMIT 1
+	</select>
+
+	<update id="deletePeerReview" parameterType="map">
+		UPDATE docs_peerreview
+		   SET deleted_yn = 'Y'
+		 WHERE object_id = #{objectId}
+		   AND COALESCE(deleted_yn, 'N') = 'N'
+	</update>
+
+	<update id="approvePeerReview" parameterType="map">
+		UPDATE docs_peerreview
+		   SET approved_users = #{approvedUsers},
+		       status = #{status}
+		 WHERE object_id = #{objectId}
+		   AND COALESCE(deleted_yn, 'N') = 'N'
+	</update>
+
+	<update id="updateConvertedMainFile" parameterType="map">
+		UPDATE docs_peerreview
+		   SET file_path_nm = #{filePathNm},
+		       file_size = #{fileSize},
+		       processing_status = 'DONE'
+		 WHERE object_id = #{objectId}
+		   AND COALESCE(deleted_yn, 'N') = 'N'
+	</update>
+
+	<update id="updateProcessingStatus" parameterType="map">
+		UPDATE docs_peerreview
+		   SET processing_status = #{processingStatus}
+		 WHERE object_id = #{objectId}
+		   AND COALESCE(deleted_yn, 'N') = 'N'
+	</update>
+
+	<select id="selectApprovalComments" resultType="hashmap">
+		SELECT
+			object_id AS objectId,
+			approver_id AS approverId,
+			comment_txt AS comment
+		FROM DOCS_PEERREVIEW_APPROVAL_COMMENT
+		WHERE object_id = #{objectId}
+	</select>
+
+	<update id="upsertApprovalComment">
+		INSERT INTO DOCS_PEERREVIEW_APPROVAL_COMMENT (
+			OBJECT_ID,
+			APPROVER_ID,
+			COMMENT_TXT,
+			UPDATE_DT
+		) VALUES (
+			#{objectId},
+			#{approverId},
+			#{comment},
+			NOW()
+		)
+		ON CONFLICT (OBJECT_ID, APPROVER_ID) DO UPDATE
+		SET COMMENT_TXT = EXCLUDED.COMMENT_TXT,
+			UPDATE_DT = NOW()
+	</update>
+
+</mapper>
+

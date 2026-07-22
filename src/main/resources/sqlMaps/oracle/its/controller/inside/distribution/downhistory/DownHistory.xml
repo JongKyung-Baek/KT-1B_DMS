@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+
+<!--<mapper namespace="sql.DownHistory">-->
+
+<!--    <select id="selectList" resultType="kr.esob.fdms.controller.inside.distribution.downhistory.HistoryListVO">-->
+<!--        SELECT-->
+<!--        B1.*-->
+<!--        FROM-->
+<!--        (-->
+<!--        SELECT-->
+<!--        A1.*-->
+<!--        , ROWNUM AS PAGEINDEX-->
+<!--        FROM-->
+<!--        (-->
+<!--        SELECT-->
+<!--          downHistory.REQUEST_NO																AS requestNo				/* 요청번호 */-->
+<!--        , downHistory.USER_NM                                                                   AS userNm-->
+<!--        , downHistory.OBJECT_NO 																AS objectNo					/* 자료번호 */-->
+<!--        , downHistory.OBJECT_ID																	AS objectId-->
+<!--        , downHistory.DOWNLOADED_NAME                                                           AS downloadedName-->
+<!--        , downHistory.OBJECT_NM 																AS objectNm					/* 자료명 */-->
+<!--        , downHistory.DOWN_DATE                                                                 AS downDate-->
+<!--        , downHistory.DOWN_COUNT                                                                AS downCount-->
+
+<!--        FROM DOCS_DOWN_HISTORY downHistory-->
+
+<!--        <if test='sortColumn == null or "".equals(sortColumn)'>-->
+<!--            ORDER BY downHistory.DOWN_DATE DESC-->
+<!--        </if>-->
+<!--        ) A1-->
+<!--        WHERE 1=1-->
+<!--        <if test='requestNo != null and !requestNo.equals("")'>-->
+<!--            AND requestNo LIKE '%' || #{requestNo} || '%'-->
+<!--        </if>-->
+<!--        <if test='objectNm != null and !objectNm.equals("")'>-->
+<!--            AND objectNm LIKE '%' || #{objectNm} || '%'-->
+<!--        </if>-->
+<!--        <if test='objectNo != null and !objectNo.equals("")'>-->
+<!--            AND objectNo LIKE '%' || #{objectNo} || '%'-->
+<!--        </if>-->
+<!--        <if test='userNm != null and !userNm.equals("")'>-->
+<!--            AND userNm LIKE '%' || #{userNm} || '%'-->
+<!--        </if>-->
+<!--        <if test='end != null and !end.equals("")'>-->
+<!--            AND ROWNUM <![CDATA[ <= ]]> #{end}-->
+<!--        </if>-->
+<!--        ) B1-->
+<!--        <if test='start != null and !start.equals("")'>-->
+<!--            WHERE PAGEINDEX <![CDATA[ >= ]]>#{start}-->
+<!--        </if>-->
+<!--    </select>-->
+
+<!--    <select id="selectListCount"-->
+
+<!--            resultType="Integer">-->
+<!--        SELECT-->
+<!--        COUNT(*) AS TOTAL_COUNT-->
+<!--        FROM-->
+<!--        (-->
+<!--        SELECT-->
+<!--        A1.*-->
+<!--        FROM-->
+<!--        (-->
+<!--        SELECT-->
+<!--        downHistory.REQUEST_NO																AS requestNo				/* 요청번호 */-->
+<!--        , downHistory.USER_NM                                                                   AS userNm-->
+<!--        , downHistory.OBJECT_NO 																AS objectNo					/* 자료번호 */-->
+<!--        , downHistory.OBJECT_ID																	AS objectId-->
+<!--        , downHistory.DOWNLOADED_NAME                                                           AS downloadedName-->
+<!--        , downHistory.OBJECT_NM 																AS objectNm					/* 자료명 */-->
+<!--        , downHistory.DOWN_DATE                                                                 AS downDate-->
+<!--        , downHistory.DOWN_COUNT                                                                AS downCount-->
+
+<!--        FROM DOCS_DOWN_HISTORY downHistory-->
+
+
+
+<!--        ) A1-->
+<!--        WHERE 1=1-->
+<!--        ) B1-->
+<!--    </select>-->
+
+
+<!--    <select id="selectDownHistoryPopupList" resultType="kr.esob.fdms.controller.inside.distribution.downhistory.HistoryListVO">-->
+
+<!--        SELECT REQUEST_NO, USER_NM, OBJECT_NO, OBJECT_NM, DOWN_DATE, DOWN_COUNT, DOWNLOADED_NAME-->
+<!--        FROM DOCS_DOWN_HISTORY-->
+<!--        WHERE REQUEST_NO = #{requestNo} AND OBJECT_ID = #{objectId}-->
+
+<!--    </select>-->
+
+<!--    <select id="selectActLogPopupList" resultType="kr.esob.fdms.controller.inside.distribution.downhistory.HistoryListVO">-->
+
+<!--        SELECT UUID, ACT_TIME, ACT_TYPE-->
+<!--        FROM DOCS_DOCUMENT_ACT_LOG-->
+<!--        WHERE UUID = #{downloadedName}-->
+
+<!--    </select>-->
+
+
+<!--</mapper>-->
+
+
+        <!-- 이하 PostgreSQL용 쿼리문 -->
+        <!-- 이하 PostgreSQL용 쿼리문 -->
+        <!-- 이하 PostgreSQL용 쿼리문 -->
+        <!-- 이하 PostgreSQL용 쿼리문 -->
+        <!-- 이하 PostgreSQL용 쿼리문 -->
+        <!-- 이하 PostgreSQL용 쿼리문 -->
+
+<mapper namespace="sql.DownHistory">
+
+    <select id="selectList" resultType="kr.esob.fdms.controller.inside.distribution.downhistory.HistoryListVO">
+        SELECT
+        B1.*
+        FROM (
+        SELECT
+        A1.*,
+        ROW_NUMBER() OVER(ORDER BY A1.downDate DESC) AS PAGEINDEX
+        FROM (
+        SELECT
+        downHistory.REQUEST_NO AS requestNo,       /* 요청번호 */
+        downHistory.USER_NM AS userNm,
+        downHistory.OBJECT_NO AS objectNo,        /* 자료번호 */
+        downHistory.OBJECT_ID AS objectId,
+        downHistory.DOWNLOADED_NAME AS downloadedName,
+        downHistory.OBJECT_NM AS objectNm,        /* 자료명 */
+        downHistory.DOWN_DATE AS downDate,
+        downHistory.DOWN_COUNT AS downCount
+        FROM DOCS_DOWN_HISTORY downHistory
+        ) A1
+        ) B1
+        WHERE 1=1
+        <if test='requestNo != null and !requestNo.isEmpty()'>
+            AND requestNo LIKE '%' || #{requestNo} || '%'
+        </if>
+        <if test='objectNm != null and !objectNm.isEmpty()'>
+            AND objectNm LIKE '%' || #{objectNm} || '%'
+        </if>
+        <if test='objectNo != null and !objectNo.isEmpty()'>
+            AND objectNo LIKE '%' || #{objectNo} || '%'
+        </if>
+        <if test='userNm != null and !userNm.isEmpty()'>
+            AND userNm LIKE '%' || #{userNm} || '%'
+        </if>
+        <if test='end != null and end > 0'>
+            AND PAGEINDEX <![CDATA[ <= ]]> #{end}
+        </if>
+        <if test='start != null and start > 0'>
+            AND PAGEINDEX >= #{start}
+        </if>
+    </select>
+
+    <select id="selectListCount" resultType="Integer">
+        SELECT COUNT(*) AS TOTAL_COUNT
+        FROM (
+                 SELECT
+                     downHistory.REQUEST_NO AS requestNo,       /* 요청번호 */
+                     downHistory.USER_NM AS userNm,
+                     downHistory.OBJECT_NO AS objectNo,        /* 자료번호 */
+                     downHistory.OBJECT_ID AS objectId,
+                     downHistory.DOWNLOADED_NAME AS downloadedName,
+                     downHistory.OBJECT_NM AS objectNm,        /* 자료명 */
+                     downHistory.DOWN_DATE AS downDate,
+                     downHistory.DOWN_COUNT AS downCount
+                 FROM DOCS_DOWN_HISTORY downHistory
+             ) A1
+    </select>
+
+    <select id="selectDownHistoryPopupList" resultType="kr.esob.fdms.controller.inside.distribution.downhistory.HistoryListVO">
+        SELECT
+            REQUEST_NO,
+            USER_NM,
+            OBJECT_NO,
+            OBJECT_NM,
+            DOWN_DATE,
+            DOWN_COUNT,
+            DOWNLOADED_NAME
+        FROM DOCS_DOWN_HISTORY
+        WHERE REQUEST_NO = #{requestNo} AND OBJECT_ID = #{objectId}
+    </select>
+
+    <select id="selectActLogPopupList" resultType="kr.esob.fdms.controller.inside.distribution.downhistory.HistoryListVO">
+        SELECT
+            UUID,
+            ACT_TIME,
+            ACT_TYPE
+        FROM DOCS_DOCUMENT_ACT_LOG
+        WHERE UUID = #{downloadedName}
+    </select>
+
+</mapper>
+

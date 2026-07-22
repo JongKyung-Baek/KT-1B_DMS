@@ -1,0 +1,859 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="sql.docRequest">
+
+		<select id="selectTree" resultType="kr.esob.fdms.controller.inside.distribution.docrequest.DocRequestTreeVO">
+		<!-- 2026-03-30: docs_document_tree 기반 처리 -->
+		SELECT TRIM(tree.TREE_CD) AS id
+			 , COALESCE(TRIM(tree.UPPER_TREE_CD), '#') AS parent
+			 , tree.TREE_NM AS text
+			 , CAST(tree.TREE_DEPTH AS VARCHAR) AS "level"
+			 , CASE
+				   WHEN tree.UPPER_TREE_CD IS NULL THEN 'root'
+				   WHEN EXISTS (
+					   SELECT 1
+					   FROM DOCS_DOCUMENT_TREE child
+					   WHERE child.UPPER_TREE_CD = tree.TREE_CD
+					     AND COALESCE(child.USE_YN, 'Y') = 'Y'
+					     AND CAST(child.TREE_DEPTH AS INTEGER) &lt;= 2
+				   ) THEN 'group'
+				   ELSE 'item'
+			   END AS "type"
+			 , tree.SORT_ORDER AS sort
+			 , COALESCE(tree.USE_YN, 'Y') AS useYn
+			 , CASE
+					   WHEN EXISTS (
+						   SELECT 1
+						   FROM DOCS_DOCUMENT_TREE child
+						   WHERE child.UPPER_TREE_CD = tree.TREE_CD
+						     AND COALESCE(child.USE_YN, 'Y') = 'Y'
+							     AND CAST(child.TREE_DEPTH AS INTEGER) &lt;= 2
+					   ) THEN ''
+				   ELSE 'documentNoPrefix'
+			   END AS filterType
+			 , tree.TREE_NM AS filterValue
+			 , CASE
+					   WHEN EXISTS (
+						   SELECT 1
+						   FROM DOCS_DOCUMENT_TREE child
+						   WHERE child.UPPER_TREE_CD = tree.TREE_CD
+						     AND COALESCE(child.USE_YN, 'Y') = 'Y'
+							     AND CAST(child.TREE_DEPTH AS INTEGER) &lt;= 2
+					   ) THEN ''
+				   ELSE tree.TREE_NM
+			   END AS documentNoPrefix
+			 , '' AS distributeTypeCd
+		FROM DOCS_DOCUMENT_TREE tree
+		WHERE COALESCE(tree.USE_YN, 'Y') = 'Y'
+		  AND CAST(tree.TREE_DEPTH AS INTEGER) &lt;= 2
+		ORDER BY COALESCE(TRIM(tree.UPPER_TREE_CD), '#')
+		       , CAST(tree.TREE_DEPTH AS INTEGER)
+		       , COALESCE(tree.SORT_ORDER, 999999)
+		       , tree.TREE_NM
+	</select>
+
+	<select id="selectNextDocRegisterNo" parameterType="map" resultType="Integer">
+		SELECT COALESCE(
+			MAX(
+				CASE
+					WHEN split_part(DOCUMENT_NO, '-', 4) ~ '^[0-9]+$' THEN CAST(split_part(DOCUMENT_NO, '-', 4) AS INTEGER)
+					ELSE NULL
+				END
+			), 0
+		) + 1
+		FROM DOCS_DOCUMENT
+		WHERE COALESCE(DELETED_YN, 'N') = 'N'
+		  AND TREE_CD = #{treeCd}
+		  AND DOCUMENT_NO LIKE ('K8-IOC-' || #{functionCode2No} || '-%')
+	</select>
+
+	<select id="selectList" resultType="kr.esob.fdms.controller.inside.distribution.docrequest.DocRequestVO">
+		SELECT
+		B1.*
+		FROM
+		(
+		SELECT
+		A1.*
+		, ROW_NUMBER() OVER(
+		ORDER BY
+		<if test='sortColumn == null or "".equals(sortColumn)'>
+			A1.insertDt DESC
+		</if>
+		<if test='sortColumn != null and !"".equals(sortColumn)'>
+			<choose>
+				<when test="sortColumn == 'currentPageNo' or sortColumn == 'totalPageNo'">
+					CAST(A1.${sortColumn} AS INTEGER) ${order}
+				</when>
+				<otherwise>
+					A1.${sortColumn} ${order}
+				</otherwise>
+			</choose>
+		</if>
+		) AS PAGEINDEX
+		FROM
+		(
+		SELECT info.*
+		,  insertuser.USER_NM                                                                   AS insertUserNm
+		,  updateUser.USER_NM                                                                   AS updateUserNm
+		,  ecnInsert.USER_NM                                                                    AS ecnUserNM
+		<choose>
+			<when test='lastRevisionYn != null and !lastRevisionYn.equals("") and lastRevisionYn.equals("Y")'>
+				FROM (
+				SELECT info.BUSINESS_TYPE_CD													        AS businessTypeCd
+<!--				, FN_GET_CD_NM('businessTypeCd', info.BUSINESS_TYPE_CD, 'ko') 				AS businessTypeNm   -->
+				, info.BUSINESS_PHASE 																	AS businessTypeNm
+				, info.DISTRIBUTE_TYPE_CD																AS distributeTypeCd
+<!-- 				, FN_GET_CD_NM('distributeTypeCd', info.DISTRIBUTE_TYPE_CD, 'ko') 			AS distributeTypeNm -->
+				, info.file_type 																		AS distributeTypeNm
+				, info.OBJECT_ID																		AS objectId
+				, info.DOC_CLASS_CD2																	AS docClassCd2
+				, FN_GET_CD_NM('docClassCd1', info.DOC_CLASS_CD1, 'ko') 					    AS docClassNm2
+				, info.DOCUMENT_NO																		AS documentNo
+				, info.DOCUMENT_NM																		AS documentNm
+				, info.REV_NO																			AS revNo
+				, info.INSERT_UID																		AS insertUid
+				, info.UPDATE_UID																		AS updateUid
+				, info.ecn_insert_uid                                                                   AS ecn_insert_uid
+				, info.REGISTER_USER																	AS registerUser
+				, info.INSERT_DEPT_NM																	AS insertDeptNm
+				, info.STD_GAPP_DT																		AS stdGappDt
+				, info.CHANGE_GAPP_DT																	AS changeGappDt
+				, info.ECN_NO																			AS ecnNo
+				, info.BUSINESS_AREA_CD																	AS businessAreaCd
+				, FN_GET_CD_NM('businessAreaCdAll', info.BUSINESS_AREA_CD, 'ko') 				AS businessAreaNm
+				, info.PROTECT_YN																		AS protectYn
+				, info.PROTECT_YN                                                                       AS protectYnView
+				, info.UPDATE_DT																		AS updateDt
+				, info.INSERT_DT                                                                        AS insertDt
+				, info.approvaldate                                                                    AS approvalDate
+				, info.approver                                                                        AS approver
+				, COALESCE(fileInfo.PROCESSING_STATUS, '')                                              AS processingStatus
+				, CASE
+					WHEN info.status = '승인완료' THEN '승인완료'
+					WHEN COALESCE(NULLIF(TRIM(info.approver), ''), '') &lt;&gt; ''
+					     AND NOT EXISTS (
+					 		SELECT 1
+					 		FROM regexp_split_to_table(REPLACE(info.approver, ' ', ''), ',') AS ap(token)
+					 		WHERE COALESCE(NULLIF(TRIM(ap.token), ''), '') &lt;&gt; ''
+					 		  AND POSITION(',' || ap.token || ',' IN ',' || REPLACE(COALESCE(info.approved_users, info.status, ''), ' ', '') || ',') = 0
+					     )
+					     AND (
+					       COALESCE(NULLIF(TRIM(info.reviewerUser), ''), '') = ''
+					       OR NOT EXISTS (
+					         SELECT 1
+					         FROM regexp_split_to_table(REPLACE(info.reviewerUser, ' ', ''), ',') AS rv(token)
+					         WHERE COALESCE(NULLIF(TRIM(rv.token), ''), '') &lt;&gt; ''
+					           AND POSITION(',' || rv.token || ',' IN ',' || REPLACE(COALESCE(info.approved_users, info.status, ''), ' ', '') || ',') = 0
+					       )
+					     ) THEN '승인완료'
+					ELSE '승인진행중'
+				  END                                                                                 AS status
+				, info.coPublisher                                                                     AS coPublisher
+				, info.INTERFACE_DT                                                                     AS interfaceDt
+				, info.PRODUCT_CD																	 	AS productCd
+				,info.CURRENT_PAGE_NO 																	AS currentPageNo
+				,info.TOTAL_PAGE_NO 																	AS totalPageNo
+				, COALESCE(info.PRODUCT_CD, '') 		AS productNm
+				, (
+				SELECT COUNT(*)
+				FROM DOCS_DOCUMENT_FILE documentFile
+				WHERE documentFile.OBJECT_ID = info.OBJECT_ID
+				) 																						AS fileCount
+				, fileInfo.FILE_NO																		AS fileNo
+				, fileInfo.ORG_FILE_NM																	AS fileViewNm
+				, fileInfo.FILE_NM																		AS fileNm
+				, fileInfo.FILE_SIZE																	AS fileSize
+				, fileInfo.ORG_FILE_NM																	AS orgFileNm
+				, fileInfo.FILE_PATH_NM																	AS filePath
+				, info.VALID_TYPE                                                                       AS validType
+				, DENSE_RANK() OVER (PARTITION BY DOCUMENT_NO ORDER BY DOCUMENT_NO, LENGTH(REV_NO), REV_NO DESC) AS rnk
+				FROM DOCS_DOCUMENT_FILE fileInfo
+				JOIN DOCS_DOCUMENT info
+				ON fileInfo.OBJECT_ID = info.OBJECT_ID
+			</when>
+			<otherwise>
+				FROM (
+				SELECT info.BUSINESS_TYPE_CD															AS businessTypeCd
+				<!--, FN_GET_CD_NM('businessTypeCd', info.BUSINESS_TYPE_CD, 'ko') 				AS businessTypeNm -->
+				, info.BUSINESS_PHASE 																	AS businessTypeNm
+				, info.DISTRIBUTE_TYPE_CD																AS distributeTypeCd
+				, info.FILE_TYPE 																		AS distributeTypeNm
+				, info.OBJECT_ID																		AS objectId
+				, info.DOC_CLASS_CD2																	AS docClassCd2
+				, FN_GET_CD_NM('docClassCd1', info.DOC_CLASS_CD1, 'ko') 					    AS docClassNm2
+				, info.DOCUMENT_NO																		AS documentNo
+				, info.DOCUMENT_NM																		AS documentNm
+				, info.REV_NO																			AS revNo
+				, info.INSERT_UID																		AS insertUid
+				, info.UPDATE_UID																		AS updateUid
+				,info.CURRENT_PAGE_NO 																	AS currentPageNo
+				,info.TOTAL_PAGE_NO 																	AS totalPageNo
+				, info.ecn_insert_uid                                                                   AS ecn_insert_uid
+				, info.REGISTER_USER																	AS registerUser
+				, info.INSERT_DEPT_NM																	AS insertDeptNm
+				, info.STD_GAPP_DT																		AS stdGappDt
+				, info.CHANGE_GAPP_DT																	AS changeGappDt
+				, info.ECN_NO																			AS ecnNo
+				, info.BUSINESS_AREA_CD																	AS businessAreaCd
+				, FN_GET_CD_NM('businessAreaCdAll', info.BUSINESS_AREA_CD, 'ko') 				AS businessAreaNm
+				, info.PROTECT_YN																		AS protectYn
+				, info.PROTECT_YN                                                                       AS protectYnView
+				, info.UPDATE_DT																		AS updateDt
+				, info.INSERT_DT                                                                        AS insertDt
+				, info.approvaldate                                                                    AS approvalDate
+				, info.approver                                                                        AS approver
+				, COALESCE(fileInfo.PROCESSING_STATUS, '')                                              AS processingStatus
+				, CASE
+					WHEN info.status = '승인완료' THEN '승인완료'
+					WHEN COALESCE(NULLIF(TRIM(info.approver), ''), '') &lt;&gt; ''
+					     AND NOT EXISTS (
+					 		SELECT 1
+					 		FROM regexp_split_to_table(REPLACE(info.approver, ' ', ''), ',') AS ap(token)
+					 		WHERE COALESCE(NULLIF(TRIM(ap.token), ''), '') &lt;&gt; ''
+					 		  AND POSITION(',' || ap.token || ',' IN ',' || REPLACE(COALESCE(info.approved_users, info.status, ''), ' ', '') || ',') = 0
+					     )
+					     AND (
+					       COALESCE(NULLIF(TRIM(info.reviewerUser), ''), '') = ''
+					       OR NOT EXISTS (
+					         SELECT 1
+					         FROM regexp_split_to_table(REPLACE(info.reviewerUser, ' ', ''), ',') AS rv(token)
+					         WHERE COALESCE(NULLIF(TRIM(rv.token), ''), '') &lt;&gt; ''
+					           AND POSITION(',' || rv.token || ',' IN ',' || REPLACE(COALESCE(info.approved_users, info.status, ''), ' ', '') || ',') = 0
+					       )
+					     ) THEN '승인완료'
+					ELSE '승인진행중'
+				  END                                                                                 AS status
+				, info.coPublisher                                                                     AS coPublisher
+				, info.CREATE_DT 																		AS createDt
+				, info.INTERFACE_DT                                                                     AS interfaceDt
+				, info.PRODUCT_CD																		AS productCd
+				, COALESCE(info.PRODUCT_CD, '') 		AS productNm
+				, (
+				SELECT COUNT(*)
+				FROM DOCS_DOCUMENT_FILE documentFile
+				WHERE documentFile.OBJECT_ID = info.OBJECT_ID
+				) 																						AS fileCount
+				, fileInfo.FILE_NO																		AS fileNo
+				, fileInfo.ORG_FILE_NM																	AS fileViewNm
+				, fileInfo.FILE_NM																		AS fileNm
+				, fileInfo.FILE_SIZE																	AS fileSize
+				, fileInfo.ORG_FILE_NM																	AS orgFileNm
+				, fileInfo.FILE_PATH_NM																	AS filePath
+				, info.VALID_TYPE                                                                       AS validType
+				FROM DOCS_DOCUMENT_FILE fileInfo
+				JOIN DOCS_DOCUMENT info
+				ON fileInfo.OBJECT_ID = info.OBJECT_ID
+			</otherwise>
+		</choose>
+		WHERE 1=1 AND info.DELETED_YN = 'N'
+		<if test='businessAreaCd != null and !businessAreaCd.equals("")'>
+			AND BUSINESS_AREA_CD LIKE '%' || #{businessAreaCd} || '%'
+		</if>
+		<if test='businessTypeCd != null and !businessTypeCd.equals("")'>
+			AND BUSINESS_TYPE_CD = #{businessTypeCd}
+		</if>
+		<if test='documentNo != null and !documentNo.equals("")'>
+			<choose>
+				<when test='lastRevisionYn != null and !lastRevisionYn.equals("") and lastRevisionYn.equals("Y")'>
+					AND DOCUMENT_NO = UPPER(TRIM(#{documentNo}))
+				</when>
+				<otherwise>
+					AND DOCUMENT_NO LIKE '%' || UPPER(TRIM(#{documentNo})) || '%'
+				</otherwise>
+			</choose>
+		</if>
+		<!-- 2026-04-02: tree_cd + tree_path descendant filter -->
+		<if test='docTreeCd != null and !docTreeCd.equals("")'>
+			AND EXISTS (
+				SELECT 1
+				FROM DOCS_DOCUMENT_TREE docTree
+				   , DOCS_DOCUMENT_TREE selectedTree
+				WHERE TRIM(docTree.TREE_CD) = TRIM(info.TREE_CD)
+				  AND TRIM(selectedTree.TREE_CD) = TRIM(#{docTreeCd})
+				  AND docTree.TREE_PATH LIKE selectedTree.TREE_PATH || '%'
+			)
+		</if>
+		<if test='documentNm != null and !documentNm.equals("")'>
+			AND DOCUMENT_NM LIKE '%' || #{documentNm} || '%'
+		</if>
+		<if test='docClassCd2 != null and !docClassCd2.equals("")'>
+			AND DOC_CLASS_CD2 = #{docClassCd2}
+		</if>
+		<if test='distributeTypeCd != null and !distributeTypeCd.equals("")'>
+			AND info.DISTRIBUTE_TYPE_CD = #{distributeTypeCd}
+		</if>
+		<if test='distributeTypeNm != null and !distributeTypeNm.equals("")'>
+			AND info.DISTRIBUTE_TYPE_NM = #{distributeTypeNm}
+		</if>
+		<if test='ecnNo != null and !ecnNo.equals("")'>
+			AND ECN_NO LIKE '%' || UPPER(TRIM(#{ecnNo})) || '%'
+		</if>
+		<if test='productCd != null and !productCd.equals("")'>
+			AND PRODUCT_CD = #{productCd}
+		</if>
+		<if test='insertUid != null and !insertUid.equals("")'>
+			AND INSERT_UID = #{insertUid}
+		</if>
+		<if test='docClassNm2 != null and !docClassNm2.equals("")'>
+			AND UPPER(DOC_CLASS_NM2) LIKE '%' || UPPER(TRIM(#{docClassNm2})) || '%'
+		</if>
+		<if test='validType != null and !validType.equals("") and validType.equals("Y")'>
+			AND VALID_TYPE IS NULL
+		</if>
+		<if test='validType != null and !validType.equals("") and validType.equals("N")'>
+			AND VALID_TYPE = 'N'
+		</if>
+		<if test='interfaceStartDt != null and !interfaceStartDt.equals("")'>
+			AND info.INTERFACE_DT BETWEEN TO_DATE(#{interfaceStartDt}, 'YYYY-MM-DD')
+			AND TO_DATE(#{interfaceEndDt}, 'YYYY-MM-DD') + INTERVAL '1 day'
+		</if>
+		<if test='documentList != null and documentList.size() != 0'>
+			<choose>
+				<when test='"Y".equals(useLike)'>
+					AND(
+					<foreach separator="OR" collection="documentList" item="documentInfo">
+						(DOCUMENT_NO LIKE '%' || UPPER(TRIM(#{documentInfo.documentNo})) || '%')
+					</foreach>
+					)
+				</when>
+				<otherwise>
+					AND(
+					<foreach separator="OR" collection="documentList" item="documentInfo">
+						(DOCUMENT_NO = UPPER(TRIM(#{documentInfo.documentNo})) )
+					</foreach>
+					)
+				</otherwise>
+			</choose>
+		</if>
+		) info
+		LEFT JOIN DOCS_USER insertUser ON insertUser.USER_ID = info.insertUid
+		LEFT JOIN DOCS_USER updateUser ON updateUser.USER_ID = info.updateUid
+		LEFT jOIN DOCS_USER ecnInsert  ON ecnInsert.USER_ID = info.ecn_insert_uid
+		<if test='lastRevisionYn != null and !lastRevisionYn.equals("") and lastRevisionYn.equals("Y")'>
+			WHERE rnk = 1
+		</if>
+		<if test='sortColumn == null or "".equals(sortColumn)'>
+			ORDER BY insertDT DESC, documentNo, revNo DESC, fileNo
+		</if>
+		<if test='sortColumn != null and !"".equals(sortColumn)'>
+			ORDER BY ${sortColumn} ${order}
+		</if>
+		) A1
+		) B1
+		WHERE 1=1
+		<if test='end != null and !end.equals("")'>
+			AND PAGEINDEX <![CDATA[ <= ]]> #{end}
+		</if>
+		<if test='start != null and !start.equals("")'>
+			AND PAGEINDEX <![CDATA[ >= ]]> #{start}
+		</if>
+	</select>
+
+	<select id="selectListCount" resultType="Integer">
+		SELECT COUNT(*) AS TOTAL_COUNT
+		FROM
+		(
+		SELECT
+		A1.*
+		FROM
+		(
+		SELECT info.*
+		,  insertuser.USER_NM                                                                      AS insertUserNm
+		,  updateUser.USER_NM                                                                      AS updateUserNm
+		<choose>
+			<when test='lastRevisionYn != null and !lastRevisionYn.equals("") and lastRevisionYn.equals("Y")'>
+				FROM (
+				SELECT info.BUSINESS_TYPE_CD													        AS businessTypeCd
+				, FN_GET_CD_NM('businessTypeCd', info.BUSINESS_TYPE_CD, 'ko') 				AS businessTypeNm
+				, info.DISTRIBUTE_TYPE_CD																AS distributeTypeCd
+-- 				, FN_GET_CD_NM('distributeTypeCd', info.DISTRIBUTE_TYPE_CD, 'ko') 			AS distributeTypeNm
+				, info.FILE_TYPE AS distributeTypeNm
+				, info.OBJECT_ID																		AS objectId
+				, info.DOC_CLASS_CD2																	AS docClassCd2
+				, FN_GET_CD_NM('docClassCd1', info.DOC_CLASS_CD1, 'ko') 					    AS docClassNm2
+				, info.DOCUMENT_NO																		AS documentNo
+				, info.DOCUMENT_NM																		AS documentNm
+				, info.REV_NO																		    AS revNo
+				, info.INSERT_UID																		AS insertUid
+				, info.UPDATE_UID																	    AS updateUid
+				, info.ecn_insert_uid                                                                   AS ecn_insert_uid
+				, info.REGISTER_USER																	AS registerUser
+				, info.INSERT_DEPT_NM																	AS insertDeptNm
+				, info.STD_GAPP_DT																		AS stdGappDt
+				, info.CHANGE_GAPP_DT																	AS changeGappDt
+				, info.ECN_NO																			AS ecnNo
+				, info.BUSINESS_AREA_CD																	AS businessAreaCd
+				, FN_GET_CD_NM('businessAreaCdAll', info.BUSINESS_AREA_CD, 'ko') 				AS businessAreaNm
+				, info.PROTECT_YN																		AS protectYn
+				, info.PROTECT_YN                                                                       AS protectYnView
+				, info.UPDATE_DT																		AS updateDt
+				, info.INSERT_DT                                                                        AS insertDt
+				, info.CREATE_DT 																		AS createDt
+				, info.INTERFACE_DT                                                                     AS interfaceDt
+				, info.PRODUCT_CD																		AS productCd
+				, COALESCE(info.PRODUCT_CD, '') 		AS productNm
+				, (
+				SELECT COUNT(*)
+				FROM DOCS_DOCUMENT_FILE documentFile
+				WHERE documentFile.OBJECT_ID = info.OBJECT_ID
+				) 																						AS fileCount
+				, fileInfo.FILE_NO																		AS fileNo
+				, fileInfo.ORG_FILE_NM																	AS fileViewNm
+				, fileInfo.FILE_NM																		AS fileNm
+				, fileInfo.FILE_SIZE																	AS fileSize
+				, fileInfo.ORG_FILE_NM																	AS orgFileNm
+				, fileInfo.FILE_PATH_NM																	AS filePath
+				, info.VALID_TYPE                                                                       AS validType
+				, DENSE_RANK() OVER (PARTITION BY DOCUMENT_NO ORDER BY REV_NO DESC) as rnk
+				FROM DOCS_DOCUMENT_FILE fileInfo
+				JOIN DOCS_DOCUMENT info
+				ON fileInfo.OBJECT_ID = info.OBJECT_ID
+			</when>
+			<otherwise>
+				FROM (
+				SELECT info.BUSINESS_TYPE_CD															AS businessTypeCd
+				, FN_GET_CD_NM('businessTypeCd', info.BUSINESS_TYPE_CD, 'ko') 				AS businessTypeNm
+				, info.DISTRIBUTE_TYPE_CD																AS distributeTypeCd
+-- 				, FN_GET_CD_NM('distributeTypeCd', info.DISTRIBUTE_TYPE_CD, 'ko') 			AS distributeTypeNm
+				, info.FILE_TYPE AS distributeTypeNm
+				, info.OBJECT_ID																		AS objectId
+				, info.DOC_CLASS_CD2																	AS docClassCd2
+				, info.DOC_CLASS_NM2 																	AS docClassNm2
+				, info.DOCUMENT_NO																		AS documentNo
+				, info.DOCUMENT_NM																		AS documentNm
+				, info.REV_NO																			AS revNo
+				, info.INSERT_UID																		AS insertUid
+				, info.UPDATE_UID																		AS updateUid
+				, info.ecn_insert_uid                                                                   AS ecn_insert_uid
+				, info.REGISTER_USER																	AS registerUser
+				, info.INSERT_DEPT_NM																	AS insertDeptNm
+				, info.STD_GAPP_DT																		AS stdGappDt
+				, info.CHANGE_GAPP_DT																	AS changeGappDt
+				, info.ECN_NO																			AS ecnNo
+				, info.BUSINESS_AREA_CD																	AS businessAreaCd
+				, FN_GET_CD_NM('businessAreaCdAll', info.BUSINESS_AREA_CD, 'ko') 				AS businessAreaNm
+				, info.PROTECT_YN																		AS protectYn
+				, info.PROTECT_YN                                                                       AS protectYnView
+				, info.UPDATE_DT																		AS updateDt
+				, info.INSERT_DT                                                                        AS insertDt
+				, info.CREATE_DT 																		AS createDt
+				, info.CREATE_DT 																		AS createDt
+				, info.INTERFACE_DT                                                                     AS interfaceDt
+				, info.PRODUCT_CD																		AS productCd
+				, COALESCE(info.PRODUCT_CD, '') 		AS productNm
+				, (
+				SELECT COUNT(*)
+				FROM DOCS_DOCUMENT_FILE documentFile
+				WHERE documentFile.OBJECT_ID = info.OBJECT_ID
+				) 																						AS fileCount
+				, fileInfo.FILE_NO																		AS fileNo
+				, fileInfo.ORG_FILE_NM																	AS fileViewNm
+				, fileInfo.FILE_NM																		AS fileNm
+				, fileInfo.FILE_SIZE																	AS fileSize
+				, fileInfo.ORG_FILE_NM																	AS orgFileNm
+				, fileInfo.FILE_PATH_NM																	AS filePath
+				, info.VALID_TYPE                                                                       AS validType
+				FROM DOCS_DOCUMENT_FILE fileInfo
+				JOIN DOCS_DOCUMENT info
+				ON fileInfo.OBJECT_ID = info.OBJECT_ID
+			</otherwise>
+		</choose>
+		WHERE 1=1
+		AND info.DELETED_YN = 'N'
+		<if test='businessAreaCd != null and !businessAreaCd.equals("")'>
+			AND BUSINESS_AREA_CD LIKE '%' || #{businessAreaCd} || '%'
+		</if>
+		<if test='businessTypeCd != null and !businessTypeCd.equals("")'>
+			AND BUSINESS_TYPE_CD = #{businessTypeCd}
+		</if>
+		<if test='documentNo != null and !documentNo.equals("")'>
+			<choose>
+				<when test='lastRevisionYn != null and !lastRevisionYn.equals("") and lastRevisionYn.equals("Y")'>
+					AND DOCUMENT_NO = UPPER(TRIM(#{documentNo}))
+				</when>
+				<otherwise>
+					AND DOCUMENT_NO LIKE '%' || UPPER(TRIM(#{documentNo})) || '%'
+				</otherwise>
+			</choose>
+		</if>
+		<!-- 2026-04-02: tree_cd + tree_path descendant filter -->
+		<if test='docTreeCd != null and !docTreeCd.equals("")'>
+			AND EXISTS (
+				SELECT 1
+				FROM DOCS_DOCUMENT_TREE docTree
+				   , DOCS_DOCUMENT_TREE selectedTree
+				WHERE TRIM(docTree.TREE_CD) = TRIM(info.TREE_CD)
+				  AND TRIM(selectedTree.TREE_CD) = TRIM(#{docTreeCd})
+				  AND docTree.TREE_PATH LIKE selectedTree.TREE_PATH || '%'
+			)
+		</if>
+		<if test='documentNm != null and !documentNm.equals("")'>
+			AND DOCUMENT_NM LIKE '%' || #{documentNm} || '%'
+		</if>
+		<if test='docClassCd2 != null and !docClassCd2.equals("")'>
+			AND DOC_CLASS_CD2 = #{docClassCd2}
+		</if>
+		<if test='docClassNm2 != null and !docClassNm2.equals("")'>
+			AND UPPER(DOC_CLASS_NM2) LIKE '%' || UPPER(TRIM(#{docClassNm2})) || '%'
+		</if>
+		<if test='distributeTypeNm != null and !distributeTypeNm.equals("")'>
+			AND info.DISTRIBUTE_TYPE_NM = #{distributeTypeNm}
+		</if>
+		<if test='ecnNo != null and !ecnNo.equals("")'>
+			AND ECN_NO LIKE '%' || UPPER(TRIM(#{ecnNo})) || '%'
+		</if>
+		<if test='productCd != null and !productCd.equals("")'>
+			AND PRODUCT_CD = #{productCd}
+		</if>
+		<if test='insertUid != null and !insertUid.equals("")'>
+			AND INSERT_UID = #{insertUid}
+		</if>
+		<if test='validType != null and !validType.equals("") and validType.equals("Y")'>
+			AND VALID_TYPE IS NULL
+		</if>
+		<if test='validType != null and !validType.equals("") and validType.equals("N")'>
+			AND VALID_TYPE = 'N'
+		</if>
+		<if test='interfaceStartDt != null and !interfaceStartDt.equals("")'>
+			AND info.INTERFACE_DT BETWEEN TO_DATE(#{interfaceStartDt}, 'YYYY-MM-DD')
+			AND TO_DATE(#{interfaceEndDt}, 'YYYY-MM-DD') + INTERVAL '1 day'
+		</if>
+		<if test='documentList != null and documentList.size() != 0'>
+			<choose>
+				<when test='"Y".equals(useLike)'>
+					AND(
+					<foreach separator="OR" collection="documentList" item="documentInfo">
+						(DOCUMENT_NO LIKE '%' ||  UPPER(TRIM(#{documentInfo.documentNo})) || '%')
+					</foreach>
+					)
+				</when>
+				<otherwise>
+					AND(
+					<foreach separator="OR" collection="documentList" item="documentInfo">
+						(DOCUMENT_NO =  UPPER(TRIM(#{documentInfo.documentNo})) )
+					</foreach>
+					)
+				</otherwise>
+			</choose>
+		</if>
+		) info
+		LEFT JOIN DOCS_USER insertUser ON insertUser.USER_ID = info.insertUid
+		LEFT JOIN DOCS_USER updateUser ON updateUser.USER_ID = info.updateUid
+		<if test='lastRevisionYn != null and !lastRevisionYn.equals("") and lastRevisionYn.equals("Y")'>
+			WHERE rnk = 1
+		</if>
+		) A1
+		) B1
+	</select>
+
+
+	<insert id="insertDocRegisterInfo" parameterType="kr.esob.fdms.controller.inside.distribution.docrequest.DocRegisterPopupParam">
+		<selectKey keyProperty="cnSerial" resultType="kr.esob.fdms.controller.inside.distribution.docrequest.DocRegisterPopupParam" order="BEFORE">
+			/* */
+			SELECT COALESCE(MAX(CAST(CN_SERIAL AS INTEGER)),0)+1 AS cnSerial
+			FROM DOCS_DOCUMENT
+		</selectKey>
+		/* DOCS_DOCUMENT 추가 */
+		INSERT INTO DOCS_DOCUMENT
+		( OBJECT_ID
+		, CN_SERIAL
+		, INSERT_DT
+		, BUSINESS_AREA_CD
+		, BUSINESS_TYPE_CD
+		, DOCUMENT_NO
+		, TREE_CD
+		, DOCUMENT_NM
+		, DISTRIBUTE_TYPE_CD
+		, FILE_TYPE
+		, PROTECT_YN
+		, INSERT_UID
+		, REGISTER_USER
+		, approvaldate
+		, approver
+		, STATUS
+		, coPublisher
+		, revieweruser
+		, REV_NO
+		, DOC_CLASS_CD1
+		)
+
+		VALUES
+		( #{objectId}
+		, CAST(#{cnSerial} AS INTEGER)
+		, CURRENT_TIMESTAMP
+		, #{sessionUser.businessAreaCd}
+		, #{businessTypeCd}
+		, #{docNo}
+		, #{treeCd}
+		, #{fileNm}
+		, #{distributeTypeCd}
+		, #{fileType}
+		, #{protectYn}
+		, #{sessionUser.userId}
+		, COALESCE(NULLIF(#{sessionUser.userNm}, ''), #{sessionUser.username})
+		, #{approvalDate}
+		, #{approver}
+		, '승인진행중'
+		, COALESCE(NULLIF(#{coPublisher}, ''), COALESCE(NULLIF(#{sessionUser.userNm}, ''), #{sessionUser.username}))
+		, #{reviewerUser}
+		, #{revNo}
+		, #{docClassCd1}
+		)
+	</insert>
+
+	<insert id="insertDocReigsterInfoFile" parameterType="kr.esob.fdms.controller.inside.distribution.docrequest.DocRegisterPopupParam">
+		<selectKey keyProperty="cnSerial" resultType="kr.esob.fdms.controller.inside.distribution.docrequest.DocRegisterPopupParam" order="BEFORE">
+			/*  조회 */
+			SELECT COALESCE(MAX(CAST(CN_SERIAL AS INTEGER)),0)+0 AS cnSerial
+			FROM DOCS_DOCUMENT
+
+		</selectKey>
+		/* DOCS_DOCUMENT_FILE 추가 */
+		INSERT INTO DOCS_DOCUMENT_FILE
+		( OBJECT_ID
+		, CN_SERIAL
+		, INTERFACE_DT
+		, FILE_SIZE
+		, ORG_FILE_NM
+		, FILE_NO
+		, DISTRIBUTE_TYPE_CD
+		, FILE_PATH_NM
+		, REGISTER_USER
+		, PROCESSING_STATUS
+		, PROCESSING_ERROR
+		, PROCESSED_AT
+		)
+
+		VALUES
+		( #{objectId}
+		, CAST(#{cnSerial} AS INTEGER)
+		, CURRENT_TIMESTAMP
+		, #{fileSize}
+		, #{orgFileNm}
+		, 1
+		, #{distributeTypeCd}
+		, #{filePath}
+		, COALESCE(NULLIF(#{sessionUser.userNm}, ''), #{sessionUser.username})
+		, 'PROCESSING'
+		, NULL
+		, NULL
+		)
+	</insert>
+
+	<insert id="insertDocSubFile" parameterType="kr.esob.fdms.controller.inside.distribution.docrequest.DocSubFileParam">
+		<selectKey keyProperty="fileNo" resultType="int" order="BEFORE">
+			SELECT COALESCE(MAX(FILE_NO), 0) + 1
+			FROM DOCS_DOCUMENT_SUB_FILE
+			WHERE PARENT_OBJECT_ID = #{parentObjectId}
+		</selectKey>
+		INSERT INTO DOCS_DOCUMENT_SUB_FILE
+		( OBJECT_ID
+		, PARENT_OBJECT_ID
+		, FILE_NO
+		, ORG_FILE_NM
+		, FILE_PATH_NM
+		, FILE_SIZE
+		, USE_YN
+		, INSERT_UID
+		, INSERT_DT
+		, UPDATE_UID
+		, UPDATE_DT
+		)
+		VALUES
+		( #{objectId}
+		, #{parentObjectId}
+		, CAST(#{fileNo} AS INTEGER)
+		, #{orgFileNm}
+		, #{filePath}
+		, CAST(#{fileSize} AS BIGINT)
+		, COALESCE(NULLIF(#{useYn}, ''), 'Y')
+		, COALESCE(NULLIF(#{sessionUser.userId}, ''), #{sessionUser.username})
+		, CURRENT_TIMESTAMP
+		, NULL
+		, NULL
+		)
+	</insert>
+
+	<select id="getDocRegisterByOrgFileNm" resultType="string">
+		SELECT OBJECT_ID
+		FROM DOCS_DOCUMENT_FILE
+		WHERE OBJECT_ID = #{objectId}
+	</select>
+
+	<select id="selectDocWithdrawInfo" resultType="hashmap">
+		SELECT info.OBJECT_ID AS objectId,
+		       COALESCE(info.INSERT_UID, '') AS insertUid,
+		       COALESCE(insertUser.USER_NM, COALESCE(info.REGISTER_USER, '')) AS insertUserNm,
+		       COALESCE(info.COPUBLISHER, '') AS coPublisher,
+		       COALESCE(info.APPROVER, '') AS approver,
+		       COALESCE(info.STATUS, '') AS status,
+		       COALESCE(info.APPROVED_USERS, '') AS approvedUsers,
+		       COALESCE(info.DELETED_YN, 'N') AS deletedYn
+		FROM DOCS_DOCUMENT info
+		LEFT JOIN DOCS_USER insertUser ON insertUser.USER_ID = info.INSERT_UID
+		WHERE info.OBJECT_ID = #{objectId}
+	</select>
+
+	<select id="selectDocApprovalInfo" resultType="hashmap">
+		SELECT OBJECT_ID AS objectId,
+		       COALESCE(APPROVER, '') AS approver,
+		       COALESCE(REVIEWERUSER, '') AS reviewerUser,
+		       COALESCE(STATUS, '') AS status,
+		       COALESCE(APPROVED_USERS, '') AS approvedUsers,
+		       COALESCE(INSERT_UID, '') AS insertUid,
+		       COALESCE(REGISTER_USER, '') AS registerUser,
+		       COALESCE(INSERT_USER_NM, COALESCE(REGISTER_USER, '')) AS insertUserNm,
+		       COALESCE(COPUBLISHER, '') AS coPublisher,
+		       COALESCE(DELETED_YN, 'N') AS deletedYn
+		FROM DOCS_DOCUMENT
+		WHERE OBJECT_ID = #{objectId}
+	</select>
+
+	<select id="selectMainFileInfo" resultType="hashmap">
+		SELECT document.OBJECT_ID AS "objectId",
+		       document.DOCUMENT_NO AS "documentNo",
+		       fileInfo.FILE_NO AS "fileNo",
+		       fileInfo.ORG_FILE_NM AS "orgFileNm",
+		       fileInfo.FILE_SIZE AS "fileSize",
+		       COALESCE(fileInfo.PROCESSING_STATUS, '') AS "processingStatus",
+		       fileInfo.FILE_PATH_NM AS "filePath"
+		FROM DOCS_DOCUMENT document
+		JOIN DOCS_DOCUMENT_FILE fileInfo ON fileInfo.OBJECT_ID = document.OBJECT_ID
+		WHERE document.OBJECT_ID = #{objectId}
+		  AND COALESCE(document.DELETED_YN, 'N') = 'N'
+		  AND CAST(fileInfo.FILE_NO AS INTEGER) = 1
+		LIMIT 1
+	</select>
+
+	<select id="selectSubFileInfo" resultType="hashmap">
+		SELECT fileInfo.OBJECT_ID AS "objectId",
+		       fileInfo.PARENT_OBJECT_ID AS "parentObjectId",
+		       fileInfo.FILE_NO AS "fileNo",
+		       fileInfo.ORG_FILE_NM AS "orgFileNm",
+		       fileInfo.FILE_SIZE AS "fileSize",
+		       fileInfo.FILE_PATH_NM AS "filePath"
+		FROM DOCS_DOCUMENT_SUB_FILE fileInfo
+		WHERE fileInfo.PARENT_OBJECT_ID = #{objectId}
+		  AND COALESCE(fileInfo.USE_YN, 'Y') = 'Y'
+		ORDER BY CAST(fileInfo.FILE_NO AS INTEGER)
+	</select>
+
+	<select id="selectDocFileDownloadInfo" resultType="hashmap">
+		SELECT mainFile.OBJECT_ID AS "objectId",
+		       CAST(mainFile.FILE_NO AS TEXT) AS "fileNo",
+		       mainFile.ORG_FILE_NM AS "orgFileNm",
+		       mainFile.FILE_PATH_NM AS "filePath"
+		FROM DOCS_DOCUMENT_FILE mainFile
+		JOIN DOCS_DOCUMENT document ON document.OBJECT_ID = mainFile.OBJECT_ID
+		WHERE mainFile.OBJECT_ID = #{objectId}
+		  AND COALESCE(document.DELETED_YN, 'N') = 'N'
+		  AND CAST(mainFile.FILE_NO AS INTEGER) = 1
+		  <if test='fileNo != null and !fileNo.isEmpty()'>
+		  AND CAST(mainFile.FILE_NO AS TEXT) = #{fileNo}
+		  </if>
+		UNION ALL
+		SELECT subFile.OBJECT_ID AS "objectId",
+		       CAST(subFile.FILE_NO AS TEXT) AS "fileNo",
+		       subFile.ORG_FILE_NM AS "orgFileNm",
+		       subFile.FILE_PATH_NM AS "filePath"
+		FROM DOCS_DOCUMENT_SUB_FILE subFile
+		WHERE subFile.OBJECT_ID = #{objectId}
+		  AND COALESCE(subFile.USE_YN, 'Y') = 'Y'
+		  <if test='fileNo != null and !fileNo.isEmpty()'>
+		  AND CAST(subFile.FILE_NO AS TEXT) = #{fileNo}
+		  </if>
+		LIMIT 1
+	</select>
+
+	<update id="approveDocument">
+		UPDATE DOCS_DOCUMENT
+		SET APPROVED_USERS =
+			CASE
+				WHEN EXISTS (
+					SELECT 1
+					FROM regexp_split_to_table(COALESCE(APPROVED_USERS, ''), ',') AS au(token)
+					WHERE TRIM(au.token) = TRIM(#{approvedUser})
+				) THEN COALESCE(APPROVED_USERS, '')
+				WHEN COALESCE(NULLIF(TRIM(APPROVED_USERS), ''), '') = '' THEN #{approvedUser}
+				ELSE COALESCE(APPROVED_USERS, '') || ',' || #{approvedUser}
+			END,
+			STATUS =
+			CASE
+				WHEN #{isFinal} = 'Y' THEN '승인완료'
+				ELSE '승인진행중'
+			END
+		WHERE OBJECT_ID = #{objectId}
+		  AND COALESCE(DELETED_YN, 'N') = 'N'
+	</update>
+
+	<select id="selectApprovalComments" resultType="hashmap">
+		SELECT OBJECT_ID AS "objectId",
+		       APPROVER_ID AS "approverId",
+		       COALESCE(COMMENT_TXT, '') AS "comment"
+		FROM DOCS_DOC_APPROVAL_COMMENT
+		WHERE OBJECT_ID = #{objectId}
+	</select>
+
+	<update id="upsertApprovalComment">
+		INSERT INTO DOCS_DOC_APPROVAL_COMMENT (
+			OBJECT_ID,
+			APPROVER_ID,
+			COMMENT_TXT,
+			UPDATE_DT
+		) VALUES (
+			#{objectId},
+			#{approverId},
+			#{comment},
+			CURRENT_TIMESTAMP
+		)
+		ON CONFLICT (OBJECT_ID, APPROVER_ID)
+		DO UPDATE SET
+			COMMENT_TXT = EXCLUDED.COMMENT_TXT,
+			UPDATE_DT = CURRENT_TIMESTAMP
+	</update>
+
+	<update id="updateDoc">
+		UPDATE DOCS_DOCUMENT SET
+		DELETED_YN = 'Y'
+		WHERE OBJECT_ID = #{objectId}
+		  AND DELETED_YN = 'N'
+	</update>
+
+	<update id="updateMainFileAfterCoverMerge" parameterType="hashmap">
+		UPDATE DOCS_DOCUMENT_FILE
+		SET FILE_PATH_NM = #{filePath},
+		    FILE_SIZE = #{fileSize},
+		    PROCESSING_STATUS = 'DONE',
+		    PROCESSING_ERROR = NULL,
+		    PROCESSED_AT = CURRENT_TIMESTAMP
+		WHERE OBJECT_ID = #{objectId}
+		  AND CAST(FILE_NO AS INTEGER) = 1
+	</update>
+
+	<update id="updateMainFileProcessingFail" parameterType="hashmap">
+		UPDATE DOCS_DOCUMENT_FILE
+		SET PROCESSING_STATUS = 'FAIL',
+		    PROCESSING_ERROR = #{errorMessage},
+		    PROCESSED_AT = CURRENT_TIMESTAMP
+		WHERE OBJECT_ID = #{objectId}
+		  AND CAST(FILE_NO AS INTEGER) = 1
+	</update>
+
+	<select id="selectUserPositionByNames" resultType="hashmap" parameterType="hashmap">
+		SELECT u.USER_NM AS "userName",
+		       COALESCE(p.POSITION_NM, '') AS "positionName"
+		FROM DOCS_USER u
+		LEFT JOIN DOCS_POSITION p
+		  ON p.POSITION_CD = u.POSITION_CD
+		WHERE u.USER_NM IN
+		<foreach collection="names" item="name" open="(" separator="," close=")">
+			#{name}
+		</foreach>
+	</select>
+</mapper>
+
+
+

@@ -1,0 +1,500 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--<mapper namespace="sql.OrganizationmanageOutsideCompany">-->
+<!--	<select id="selectList" resultType="kr.esob.fdms.controller.inside.organizationmanage.outsideuser.CompanyListVO">-->
+<!--		&lt;!&ndash; sql.OrganizationmanageOutsideCompany.selectList ?몃??낆껜紐⑸줉 &ndash;&gt;-->
+<!--		SELECT-->
+<!--			B1.*-->
+<!--		FROM-->
+<!--		(-->
+<!--			SELECT-->
+<!--				A1.*-->
+<!--				, ROWNUM AS PAGEINDEX-->
+<!--			FROM-->
+<!--			(-->
+<!--				SELECT-->
+<!--				  company.COMPANY_NM	AS companyNm-->
+<!--				  , (-->
+<!--				  	SELECT USER_NM-->
+<!--				  	FROM DOCS_COMPANY_PURCHASER t1-->
+<!--				  	INNER JOIN DOCS_USER t2 ON t2.USER_CD = t1.DIST_PURCHASER_USER_CD-->
+<!--				  	WHERE t1.COMPANY_CD = company.COMPANY_CD-->
+<!--				  	AND t1.BUSINESS_AREA_CD = '1210'-->
+<!--				  )												AS distPurchaserUserNm1	/* 諛고룷援щℓ?대떦??- 1?ъ뾽??*/-->
+<!--				  , (-->
+<!--				  	SELECT USER_NM-->
+<!--				  	FROM DOCS_COMPANY_PURCHASER t1-->
+<!--				  	INNER JOIN DOCS_USER t2 ON t2.USER_CD = t1.CR_PURCHASER_USER_CD-->
+<!--				  	WHERE t1.COMPANY_CD = company.COMPANY_CD-->
+<!--				  	AND t1.BUSINESS_AREA_CD = '1210'-->
+<!--				  )												AS crPurchaserUserNm1	/* CR援щℓ?대떦??- 1?ъ뾽??*/-->
+<!--				  , (-->
+<!--				  	SELECT USER_NM-->
+<!--				  	FROM DOCS_COMPANY_PURCHASER t1-->
+<!--				  	INNER JOIN DOCS_USER t2 ON t2.USER_CD = t1.DIST_PURCHASER_USER_CD-->
+<!--				  	WHERE t1.COMPANY_CD = company.COMPANY_CD-->
+<!--				  	AND t1.BUSINESS_AREA_CD = '1310'-->
+<!--				  )												AS distPurchaserUserNm2	/* 諛고룷援щℓ?대떦??- 2?ъ뾽??*/-->
+<!--				  , (-->
+<!--				  	SELECT USER_NM-->
+<!--				  	FROM DOCS_COMPANY_PURCHASER t1-->
+<!--				  	INNER JOIN DOCS_USER t2 ON t2.USER_CD = t1.CR_PURCHASER_USER_CD-->
+<!--				  	WHERE t1.COMPANY_CD = company.COMPANY_CD-->
+<!--				  	AND t1.BUSINESS_AREA_CD = '1310'-->
+<!--				  )												AS crPurchaserUserNm2	/* CR援щℓ?대떦??- 2?ъ뾽??*/-->
+<!--				  , company.COMPANY_CD	AS companyCd-->
+<!--				  , company.BIZ_NO		AS bizNo-->
+<!--				FROM DOCS_COMPANY company-->
+<!--				WHERE company.COMPANY_CD != 'COMP_0000000999'		/* ?쒗솕?뷀렂???쒖쇅 */-->
+<!--				AND USE_YN = 'Y'-->
+<!--				AND DEL_YN = 'N'-->
+<!--				<if test='sortColumn == null or "".equals(sortColumn)'>-->
+<!--	           		ORDER BY companyNm asc-->
+<!--				</if>-->
+<!--	         	<if test='sortColumn != null and !"".equals(sortColumn)'>-->
+<!--	         		ORDER BY ${sortColumn} ${order}-->
+<!--	         	</if>-->
+<!--			) A1-->
+<!--			WHERE 1=1-->
+<!--			<if test='bizNo != null and !bizNo.equals("")'>-->
+<!--			AND bizNo LIKE '%' || REPLACE(#{bizNo}, '-', '') || '%'-->
+<!--			</if>-->
+<!--			<if test='companyCd != null and !companyCd.equals("")'>-->
+<!--			AND companyCd = #{companyCd}-->
+<!--			</if>-->
+<!--			<if test='end != null and !end.equals("")'>-->
+<!--			AND ROWNUM <![CDATA[ <= ]]> #{end}-->
+<!--			</if>-->
+<!--		) B1-->
+<!--		<if test='start != null and !start.equals("")'>-->
+<!--		WHERE PAGEINDEX <![CDATA[ >= ]]>#{start}-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	<select id="selectListCount" resultType="Integer">-->
+<!--		SELECT-->
+<!--			COUNT(*)-->
+<!--		FROM-->
+<!--		(-->
+<!--			SELECT-->
+<!--				A1.*-->
+<!--			FROM-->
+<!--			(-->
+<!--				SELECT-->
+<!--				  company.COMPANY_NM	AS companyNm-->
+<!--				  , company.COMPANY_CD	AS companyCd-->
+<!--				  , company.BIZ_NO		AS bizNo-->
+<!--				FROM DOCS_COMPANY company-->
+<!--				WHERE company.COMPANY_CD != 'COMP_0000000999'		/* ?쒗솕?뷀렂???쒖쇅 */-->
+<!--				AND USE_YN = 'Y'-->
+<!--				AND DEL_YN = 'N'-->
+<!--			) A1-->
+<!--			WHERE 1=1-->
+<!--			<if test='bizNo != null and !bizNo.equals("")'>-->
+<!--			AND bizNo LIKE '%' || REPLACE(#{bizNo}, '-', '') || '%'-->
+<!--			</if>-->
+<!--			<if test='companyCd != null and !companyCd.equals("")'>-->
+<!--			AND companyCd = #{companyCd}-->
+<!--			</if>-->
+<!--		) B1-->
+<!--	</select>-->
+
+<!--	<select id="selectCompanyInfo" resultType="kr.esob.fdms.controller.inside.organizationmanage.outsideuser.CompanyInfoVO">-->
+<!--		SELECT-->
+<!--		  company.COMPANY_NM				AS companyNm-->
+<!--		  , (-->
+<!--		  	SELECT DIST_PURCHASER_USER_CD-->
+<!--		  	FROM DOCS_COMPANY_PURCHASER t1-->
+<!--		  	WHERE t1.COMPANY_CD = company.COMPANY_CD-->
+<!--		  	AND t1.BUSINESS_AREA_CD = '1210'-->
+<!--		  )												AS distPurchaserUserCd1	/* 諛고룷援щℓ?대떦??- 1?ъ뾽??*/-->
+<!--		  , (-->
+<!--		  	SELECT CR_PURCHASER_USER_CD-->
+<!--		  	FROM DOCS_COMPANY_PURCHASER t1-->
+<!--		  	WHERE t1.COMPANY_CD = company.COMPANY_CD-->
+<!--		  	AND t1.BUSINESS_AREA_CD = '1210'-->
+<!--		  )												AS crPurchaserUserCd1	/* CR援щℓ?대떦??- 1?ъ뾽??*/-->
+<!--		  , (-->
+<!--		  	SELECT DIST_PURCHASER_USER_CD-->
+<!--		  	FROM DOCS_COMPANY_PURCHASER t1-->
+<!--		  	WHERE t1.COMPANY_CD = company.COMPANY_CD-->
+<!--		  	AND t1.BUSINESS_AREA_CD = '1310'-->
+<!--		  )												AS distPurchaserUserCd2	/* 諛고룷援щℓ?대떦??- 2?ъ뾽??*/-->
+<!--		  , (-->
+<!--		  	SELECT CR_PURCHASER_USER_CD-->
+<!--		  	FROM DOCS_COMPANY_PURCHASER t1-->
+<!--		  	WHERE t1.COMPANY_CD = company.COMPANY_CD-->
+<!--		  	AND t1.BUSINESS_AREA_CD = '1310'-->
+<!--		  )												AS crPurchaserUserCd2	/* CR援щℓ?대떦??- 2?ъ뾽??*/-->
+<!--		  , company.COMPANY_CD				AS companyCd-->
+<!--		  , company.BIZ_NO					AS bizNo-->
+<!--		FROM DOCS_COMPANY company-->
+<!--		WHERE company.COMPANY_CD = #{companyCd}-->
+<!--		AND USE_YN = 'Y'-->
+<!--		AND DEL_YN = 'N'-->
+<!--	</select>-->
+
+<!--	<insert id="insertCompany">-->
+<!--		INSERT INTO DOCS_COMPANY(-->
+<!--			COMPANY_CD-->
+<!--			, COMPANY_NM-->
+<!--			, COMPANY_TYPE-->
+<!--			, BIZ_NO-->
+<!--			, USE_START_DT-->
+<!--			, USE_END_DT-->
+<!--			, USE_YN-->
+<!--			, DEL_YN-->
+<!--			, INSERT_USER_CD-->
+<!--			, INSERT_DT-->
+<!--			, UPDATE_USER_CD-->
+<!--			, UPDATE_DT-->
+<!--		)-->
+<!--		VALUES(-->
+<!--			#{companyCd}-->
+<!--			, #{companyNm}-->
+<!--			, 'E'-->
+<!--			, #{bizNo}-->
+<!--			, TO_CHAR(SYSDATE, 'YYYYMMDD')-->
+<!--			, '99991231'-->
+<!--			, 'Y'-->
+<!--			, 'N'-->
+<!--			, #{sessionUser.userCd}-->
+<!--			, SYSDATE-->
+<!--			, #{sessionUser.userCd}-->
+<!--			, SYSDATE-->
+<!--		)-->
+<!--	</insert>-->
+
+<!--	<insert id="insertCompanyPurchaser">-->
+<!--		INSERT INTO DOCS_COMPANY_PURCHASER(-->
+<!--			COMPANY_CD-->
+<!--			, COMPANY_NM-->
+<!--			, BIZ_NO-->
+<!--			, DIST_PURCHASER_USER_CD-->
+<!--			, CR_PURCHASER_USER_CD-->
+<!--			, BUSINESS_AREA_CD-->
+<!--		)-->
+<!--		VALUES(-->
+<!--			#{companyCd}-->
+<!--			, #{companyNm}-->
+<!--			, #{bizNo}-->
+<!--			, #{distPurchaserUserCd}-->
+<!--			, #{crPurchaserUserCd}-->
+<!--			, #{businessAreaCd}-->
+<!--		)-->
+<!--	</insert>-->
+
+<!--	<delete id="deleteCompanyPurchaser">-->
+<!--		DELETE FROM DOCS_COMPANY_PURCHASER-->
+<!--		WHERE COMPANY_CD = #{companyCd}-->
+<!--	</delete>-->
+
+<!--	<update id="updateCompany">-->
+<!--		UPDATE DOCS_COMPANY-->
+<!--		SET COMPANY_NM = #{companyNm}-->
+<!--		, BIZ_NO = #{bizNo}-->
+<!--		, UPDATE_USER_CD = #{sessionUser.userCd}-->
+<!--		, UPDATE_DT = SYSDATE-->
+<!--		WHERE COMPANY_CD = #{companyCd}-->
+<!--	</update>-->
+
+<!--	<select id="selectCompanyCd" resultType="String">-->
+<!--		SELECT-->
+<!--			'COMP_' || NVL(LPAD(TO_NUMBER(SUBSTR(MAX(COMPANY_CD), 6)) + 1, 10, '0'), '0000000001')-->
+<!--		FROM DOCS_COMPANY-->
+<!--	</select>-->
+
+<!--	<select id="selectItnVendorSerial" resultType="Integer">-->
+<!--		SELECT MAX(CN_SERIAL) + 1 FROM ITN_VENDOR-->
+<!--	</select>-->
+
+<!--    <select id="selectCompanyCheck" resultType="Integer">-->
+<!--		select-->
+<!--		COUNT(*) AS TOTAL_COUNT-->
+<!--		FROM DOCS_COMPANY-->
+<!--		WHERE BIZ_NO = #{bizNo}-->
+<!--	</select>-->
+
+
+<!--	<select id="">-->
+<!--	</select>-->
+
+<!--	<insert id="insertItnVendor">-->
+<!--		INSERT INTO ITN_VENDOR(-->
+<!--			CN_SERIAL-->
+<!--			, CN_CHANGE_TYPE-->
+<!--			, VENDOR_CD-->
+<!--			, VENDOR_NM-->
+<!--			, VENDOR_STATUS-->
+<!--			, DIST_PURCHASER_UID-->
+<!--			, DIST_PURCHASER_UID_EMAIL-->
+<!--			, CR_PURCHASER_UID-->
+<!--			, CR_PURCHASER_UID_EMAIL-->
+<!--			, BUSINESS_AREA_CD-->
+<!--			, INSERT_UID-->
+<!--			, UPDATE_UID-->
+<!--		)-->
+<!--		VALUES (-->
+<!--			#{cnSerial}-->
+<!--			, 'I'-->
+<!--			, #{bizNo}-->
+<!--			, #{companyNm}-->
+<!--			, 'Y'-->
+<!--			, #{distPurchaserUid}-->
+<!--			, #{distPurchaserUidEmail}-->
+<!--			, #{crPurchaserUid}-->
+<!--			, #{crPurchaserUidEmail}-->
+<!--			, #{businessAreaCd}-->
+<!--			, #{sessionUser.userId}-->
+<!--			, #{sessionUser.userId}-->
+<!--		)-->
+<!--	</insert>-->
+
+<!--	<update id="updateItnVendor">-->
+<!--		UPDATE ITN_VENDOR-->
+<!--		SET VENDOR_NM = #{companyNm}-->
+<!--		, CN_CHANGE_TYPE = 'U'-->
+<!--		, DIST_PURCHASER_UID = #{distPurchaserUid}-->
+<!--		, DIST_PURCHASER_UID_EMAIL = #{distPurchaserUidEmail}-->
+<!--		, CR_PURCHASER_UID = #{crPurchaserUid}-->
+<!--		, CR_PURCHASER_UID_EMAIL = #{crPurchaserUidEmail}-->
+<!--		, UPDATE_UID = #{sessionUser.userId}-->
+<!--		WHERE VENDOR_CD = #{bizNo}-->
+<!--		AND BUSINESS_AREA_CD = #{businessAreaCd}-->
+<!--	</update>-->
+
+<!--	<select id="selectItnVendorCount" resultType="Integer">-->
+<!--		SELECT COUNT(*) FROM ITN_VENDOR-->
+<!--		WHERE VENDOR_CD = #{bizNo}-->
+<!--		AND BUSINESS_AREA_CD = #{businessAreaCd}-->
+<!--	</select>-->
+<!--</mapper>-->
+
+
+
+		<!-- ?댄븯 PostgreSQL??荑쇰━臾?-->
+		<!-- ?댄븯 PostgreSQL??荑쇰━臾?-->
+		<!-- ?댄븯 PostgreSQL??荑쇰━臾?-->
+		<!-- ?댄븯 PostgreSQL??荑쇰━臾?-->
+		<!-- ?댄븯 PostgreSQL??荑쇰━臾?-->
+		<!-- ?댄븯 PostgreSQL??荑쇰━臾?-->
+
+
+
+
+<mapper namespace="sql.OrganizationmanageOutsideCompany">
+	<select id="selectList" resultType="kr.esob.fdms.controller.inside.organizationmanage.outsideuser.CompanyListVO">
+		<!-- sql.OrganizationmanageOutsideCompany.selectList ?몃??낆껜紐⑸줉 -->
+		SELECT
+		B1.*
+		FROM
+		(
+		SELECT
+		A1.*,
+		ROW_NUMBER() OVER () AS PAGEINDEX
+		FROM
+		(
+		SELECT
+		company.COMPANY_NM AS companyNm,
+		'' AS distPurchaserUserNm1,  /* 배포구매담당자 - 1사업장 */
+		'' AS crPurchaserUserNm1,  /* CR구매담당자 - 1사업장 */
+		'' AS distPurchaserUserNm2,  /* 배포구매담당자 - 2사업장 */
+		'' AS crPurchaserUserNm2,  /* CR구매담당자 - 2사업장 */
+		company.COMPANY_CD AS companyCd,
+		company.BIZ_NO AS bizNo
+		FROM DOCS_COMPANY company
+		WHERE company.COMPANY_CD != 'COMP_0000000999'  /* ?쒗솕?뷀렂???쒖쇅 */
+		AND USE_YN = 'Y'
+		AND DEL_YN = 'N'
+		<if test='sortColumn == null or "".equals(sortColumn)'>
+			ORDER BY companyNm ASC
+		</if>
+		<if test='sortColumn != null and !"".equals(sortColumn)'>
+			ORDER BY ${sortColumn} ${order}
+		</if>
+		) A1
+		WHERE 1=1
+		<if test='bizNo != null and !bizNo.equals("")'>
+			AND bizNo LIKE '%' || REPLACE(#{bizNo}, '-', '') || '%'
+		</if>
+		<if test='companyCd != null and !companyCd.equals("")'>
+			AND companyCd = #{companyCd}
+		</if>
+		) B1
+	</select>
+
+
+
+
+
+<select id="selectListCount" resultType="Integer">
+	SELECT
+	COUNT(*)
+	FROM
+	(
+	SELECT
+	A1.*
+	FROM
+	(
+	SELECT
+	company.COMPANY_NM	AS companyNm
+	, company.COMPANY_CD	AS companyCd
+	, company.BIZ_NO		AS bizNo
+	FROM DOCS_COMPANY company
+	WHERE company.COMPANY_CD != 'COMP_0000000999'		/* ?쒗솕?뷀렂???쒖쇅 */
+	AND USE_YN = 'Y'
+	AND DEL_YN = 'N'
+	) A1
+	WHERE 1=1
+	<if test='bizNo != null and !bizNo.equals("")'>
+		AND bizNo LIKE '%' || REPLACE(#{bizNo}, '-', '') || '%'
+	</if>
+	<if test='companyCd != null and !companyCd.equals("")'>
+		AND companyCd = #{companyCd}
+	</if>
+	) B1
+</select>
+
+<select id="selectCompanyInfo" resultType="kr.esob.fdms.controller.inside.organizationmanage.outsideuser.CompanyInfoVO">
+	SELECT
+		company.COMPANY_NM				AS companyNm
+		 , '' AS distPurchaserUserCd1	/* 배포구매담당자 - 1사업장 */
+		 , '' AS crPurchaserUserCd1	/* CR구매담당자 - 1사업장 */
+		 , '' AS distPurchaserUserCd2	/* 배포구매담당자 - 2사업장 */
+		 , '' AS crPurchaserUserCd2	/* CR구매담당자 - 2사업장 */
+		 , company.COMPANY_CD				AS companyCd
+		 , company.BIZ_NO					AS bizNo
+	FROM DOCS_COMPANY company
+	WHERE company.COMPANY_CD = #{companyCd}
+	  AND USE_YN = 'Y'
+	  AND DEL_YN = 'N'
+</select>
+
+<insert id="insertCompany">
+	INSERT INTO DOCS_COMPANY(
+							  COMPANY_CD
+							, COMPANY_NM
+							, COMPANY_TYPE
+							, BIZ_NO
+							, USE_START_DT
+							, USE_END_DT
+							, USE_YN
+							, DEL_YN
+							, INSERT_USER_CD
+							, INSERT_DT
+							, UPDATE_USER_CD
+							, UPDATE_DT
+	)
+	VALUES(
+			  #{companyCd}
+		  , #{companyNm}
+		  , 'E'
+		  , #{bizNo}
+		  , TO_CHAR(CURRENT_TIMESTAMP, 'YYYYMMDD')
+		  , '99991231'
+		  , 'Y'
+		  , 'N'
+		  , #{sessionUser.userCd}
+		  , CURRENT_TIMESTAMP
+		  , #{sessionUser.userCd}
+		  , CURRENT_TIMESTAMP
+		  )
+</insert>
+
+<insert id="insertCompanyPurchaser">
+	INSERT INTO DOCS_COMPANY(COMPANY_CD)
+	SELECT NULL
+	WHERE 1=0
+</insert>
+
+<delete id="deleteCompanyPurchaser">
+	DELETE FROM DOCS_COMPANY
+	WHERE 1=0
+</delete>
+
+<update id="updateCompany">
+	UPDATE DOCS_COMPANY
+	SET COMPANY_NM = #{companyNm}
+	  , BIZ_NO = #{bizNo}
+	  , UPDATE_USER_CD = #{sessionUser.userCd}
+	  , UPDATE_DT = CURRENT_TIMESTAMP
+	WHERE COMPANY_CD = #{companyCd}
+</update>
+
+	<select id="selectCompanyCd" resultType="String">
+		SELECT
+				'COMP_' || LPAD(CAST(CAST(SUBSTR(MAX(COMPANY_CD), 6) AS INTEGER) + 1 AS TEXT), 10, '0')
+		FROM DOCS_COMPANY;
+
+	</select>
+
+
+<select id="selectItnVendorSerial" resultType="Integer">
+	SELECT MAX(CN_SERIAL) + 1 FROM ITN_VENDOR
+</select>
+
+<select id="selectCompanyCheck" resultType="Integer">
+	SELECT
+		COUNT(*) AS TOTAL_COUNT
+	FROM DOCS_COMPANY
+	WHERE BIZ_NO = #{bizNo}
+</select>
+
+<select id="">
+</select>
+
+<insert id="insertItnVendor">
+	INSERT INTO ITN_VENDOR(
+							CN_SERIAL
+						  , CN_CHANGE_TYPE
+						  , VENDOR_CD
+						  , VENDOR_NM
+						  , VENDOR_STATUS
+						  , DIST_PURCHASER_UID
+						  , DIST_PURCHASER_UID_EMAIL
+						  , CR_PURCHASER_UID
+						  , CR_PURCHASER_UID_EMAIL
+						  , BUSINESS_AREA_CD
+						  , INSERT_UID
+						  , UPDATE_UID
+	)
+	VALUES (
+			   #{cnSerial}
+		   , 'I'
+		   , #{bizNo}
+		   , #{companyNm}
+		   , 'Y'
+		   , #{distPurchaserUid}
+		   , #{distPurchaserUidEmail}
+		   , #{crPurchaserUid}
+		   , #{crPurchaserUidEmail}
+		   , #{businessAreaCd}
+		   , #{sessionUser.userId}
+		   , #{sessionUser.userId}
+		   )
+</insert>
+
+<update id="updateItnVendor">
+	UPDATE ITN_VENDOR
+	SET VENDOR_NM = #{companyNm}
+	  , CN_CHANGE_TYPE = 'U'
+	  , DIST_PURCHASER_UID = #{distPurchaserUid}
+	  , DIST_PURCHASER_UID_EMAIL = #{distPurchaserUidEmail}
+	  , CR_PURCHASER_UID = #{crPurchaserUid}
+	  , CR_PURCHASER_UID_EMAIL = #{crPurchaserUidEmail}
+	  , UPDATE_UID = #{sessionUser.userId}
+	WHERE VENDOR_CD = #{bizNo}
+	  AND BUSINESS_AREA_CD = #{businessAreaCd}
+</update>
+
+<select id="selectItnVendorCount" resultType="Integer">
+	SELECT COUNT(*) FROM ITN_VENDOR
+	WHERE VENDOR_CD = #{bizNo}
+	  AND BUSINESS_AREA_CD = #{businessAreaCd}
+</select>
+</mapper>
+
+

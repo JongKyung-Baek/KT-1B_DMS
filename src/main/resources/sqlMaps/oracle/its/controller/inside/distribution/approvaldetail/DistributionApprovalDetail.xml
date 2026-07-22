@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="sql.distributionApprovalDetail">
+	<insert id="insertApprovalDetail" parameterType="hashmap">
+		INSERT INTO DOCS_DISTRIBUTION_APPROVAL_DETAIL (
+			OBJECT_ID,
+			OBJECT_TYPE,
+			APPROVAL_ROLE,
+			APPROVAL_ORDER,
+			USER_NM,
+			USER_ID,
+			APPROVAL_STATUS,
+			INSERT_DT,
+			UPDATE_DT
+		) VALUES (
+			#{objectId},
+			#{objectType},
+			#{approvalRole},
+			CAST(#{approvalOrder} AS INTEGER),
+			#{userNm},
+			#{userId},
+			'WAIT',
+			CURRENT_TIMESTAMP,
+			CURRENT_TIMESTAMP
+		)
+		ON CONFLICT (OBJECT_ID, OBJECT_TYPE, APPROVAL_ROLE, APPROVAL_ORDER)
+		DO UPDATE SET
+			USER_NM = EXCLUDED.USER_NM,
+			USER_ID = EXCLUDED.USER_ID,
+			APPROVAL_STATUS = CASE
+				WHEN DOCS_DISTRIBUTION_APPROVAL_DETAIL.APPROVAL_STATUS = 'APPROVAL' THEN 'APPROVAL'
+				ELSE 'WAIT'
+			END,
+			UPDATE_DT = CURRENT_TIMESTAMP
+	</insert>
+
+	<update id="updateApprovalDetailApproved" parameterType="hashmap">
+		UPDATE DOCS_DISTRIBUTION_APPROVAL_DETAIL
+		   SET APPROVAL_STATUS = 'APPROVAL',
+		       APPROVAL_DT = CURRENT_TIMESTAMP,
+		       UPDATE_DT = CURRENT_TIMESTAMP
+		 WHERE OBJECT_ID = #{objectId}
+		   AND OBJECT_TYPE = #{objectType}
+		   AND (
+		       USER_NM = #{userNm}
+		       OR USER_ID = #{userId}
+		       OR USER_NM = #{userId}
+		       OR USER_ID = #{userNm}
+		   )
+		   AND COALESCE(APPROVAL_STATUS, 'WAIT') != 'APPROVAL'
+	</update>
+
+	<select id="selectApprovalDetails" parameterType="hashmap" resultType="hashmap">
+		SELECT OBJECT_ID AS "objectId",
+		       OBJECT_TYPE AS "objectType",
+		       APPROVAL_ROLE AS "approvalRole",
+		       APPROVAL_ORDER AS "approvalOrder",
+		       USER_NM AS "userNm",
+		       COALESCE(USER_ID, '') AS "userId",
+		       COALESCE(APPROVAL_STATUS, 'WAIT') AS "approvalStatus",
+		       COALESCE(TO_CHAR(APPROVAL_DT, 'YYYY-MM-DD'), '') AS "approvalDt"
+		FROM DOCS_DISTRIBUTION_APPROVAL_DETAIL
+		WHERE OBJECT_ID = #{objectId}
+		  AND OBJECT_TYPE = #{objectType}
+		ORDER BY CASE APPROVAL_ROLE WHEN 'REVIEWER' THEN 1 WHEN 'APPROVER' THEN 2 ELSE 9 END,
+		         APPROVAL_ORDER
+	</select>
+</mapper>

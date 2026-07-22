@@ -1,0 +1,646 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--<mapper namespace="sql.commonApproval">-->
+
+<!--	&lt;!&ndash; 배포승인 리스트 [2019.09.24(최금영)]&ndash;&gt;-->
+<!--	<select id="selectApprovalList" parameterType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonApprovalParam" resultType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonApprovalPopupListVO">-->
+<!--		SELECT A.*-->
+<!--			<if test='sortColumn == null or "".equals(sortColumn)'>-->
+<!--		    , ROW_NUMBER() OVER(ORDER BY objectNm asc) AS PAGEINDEX-->
+<!--		    </if>-->
+<!--		    <if test='sortColumn != null and !"".equals(sortColumn)'>-->
+<!--		    , ROW_NUMBER() OVER(ORDER BY ${sortColumn} ${order}) AS PAGEINDEX-->
+<!--		    </if>-->
+<!--		  FROM (-->
+<!--		  		SELECT REQ_MAP.BUSINESS_TYPE_CD 				AS businessTypeCd-->
+<!--                    , REQ_MAP.DISTRIBUTE_TYPE_CD 				AS distributeTypeCd-->
+<!--                    , REQ.OBJECT_TYPE 							AS objectType-->
+<!--&lt;!&ndash;                  , (SELECT REQ.REQUEST_PURPOSE FROM DOCS_REQUEST REQ WHERE REQ.REQUEST_NO = REQ_MAP.REQUEST_NO) AS distributeType &ndash;&gt;-->
+<!--                    , CASE WHEN REQ.PRINT_YN = 'Y' THEN 'viewPrint'-->
+<!--                           WHEN REQ.DEPLOY_NORMAL_YN = 'Y' THEN 'general'-->
+<!--                           WHEN REQ.DEPLOY_SPECIAL_YN = 'Y' THEN 'security'-->
+<!--                           ELSE 'viewPrint'-->
+<!--                           END 									AS distributionMethodCd-->
+<!--                    , REQ_MAP.OBJECT_NO 						AS objectNo-->
+<!--                    , REQ_MAP.OBJECT_NM 						AS objectNm-->
+<!--                    , REQ_MAP.CURRENT_PAGE_NO 					AS page-->
+<!--                    , REQ_MAP.TOTAL_PAGE_NO 					AS totalPage-->
+<!--                    , REQ_MAP.SW_VERSION_NO 					AS swVersion-->
+<!--                    , REQ_MAP.DOC_VERSION_NO 					AS docVersionNo-->
+<!--                    , REQ_MAP.PRODUCT_CD 						AS productNo-->
+<!--                    , REQ_MAP.REV_NO 							AS rev-->
+<!--                    , REQ_MAP.STD_GAPP_DT 						AS stdGappDt-->
+<!--                    , REQ_MAP.CHANGE_GAPP_DT 					AS changeGappDt-->
+<!--                    , REQ.BUSINESS_AREA_CD 						AS businessAreaCd-->
+<!--                    , REQ_MAP.PROTECT_YN 						AS protectYn-->
+<!--                    , REQ_MAP.OBJECT_ID							AS objectId-->
+<!--                    , REQ.REQUEST_NO							AS requestNo-->
+<!--                    , FILE_INFO.FILE_NO							AS fileNo-->
+<!--                    , FILE_INFO.ORG_FILE_NM						AS orgFileNm-->
+<!--                    , FILE_INFO.USE_START_YMD					AS useStartYmd-->
+<!--                    , FILE_INFO.USE_END_YMD						AS useEndYmd-->
+<!--                    , FILE_INFO.FILE_NM							AS fileNm-->
+<!--                 FROM DOCS_REQUEST_FILE FILE_INFO-->
+<!--                 JOIN DOCS_REQUEST_MAPPING REQ_MAP-->
+<!--                 ON FILE_INFO.OBJECT_ID = REQ_MAP.OBJECT_ID AND FILE_INFO.REQUEST_NO = REQ_MAP.REQUEST_NO-->
+<!--                 JOIN DOCS_REQUEST REQ-->
+<!--                 ON REQ.REQUEST_NO = REQ_MAP.REQUEST_NO-->
+<!--                 WHERE REQ.REQUEST_NO = #{requestNo}-->
+<!--				 ) A-->
+<!--	</select>-->
+
+<!--	&lt;!&ndash; 배포 승인 요청 메시지 조회 [2019.09.24(최금영)]&ndash;&gt;-->
+<!--	<select id="getDistributionApprovalRequestDesc" parameterType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonApprovalParam" resultType="String">-->
+<!--		SELECT REQUEST_DESC-->
+<!--		FROM DOCS_REQUEST_DETAIL-->
+<!--		WHERE REQUEST_NO = #{requestNo}-->
+<!--		AND APPROVAL_STATUS_CD = 'REQUEST'-->
+<!--	</select>-->
+
+<!--	&lt;!&ndash; 구매팀장 결재 후 방산팀장으로 요청 [2019.09.25(최금영)] &ndash;&gt;-->
+<!--	<update id="updateRequestDefInfo" parameterType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonApprovalParam">-->
+<!--		UPDATE DOCS_REQUEST-->
+<!--		SET CURRENT_PROCESS_SEQ_NO = '4'-->
+<!--&lt;!&ndash; 		  , STATUS_CD = #{statusCd} &ndash;&gt;-->
+<!--		WHERE REQUEST_NO = #{requestNo}-->
+<!--	</update>-->
+
+<!--	&lt;!&ndash; 배포 승인 결과 수정 [2019.09.25(최금영)] &ndash;&gt;-->
+<!--	<update id="updateRequestInfo" parameterType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonApprovalParam">-->
+<!--		UPDATE DOCS_REQUEST-->
+<!--		SET STATUS_CD = #{statusCd}-->
+<!--		<if test='"APPROVAL".equals(statusCd)'>-->
+<!--       		, APPROVAL_DT = SYSDATE-->
+<!--		</if>-->
+<!--		WHERE REQUEST_NO = #{requestNo}-->
+<!--	</update>-->
+
+<!--	&lt;!&ndash; 배포 요청 상세 수정 [2019.09.25(최금영)] &ndash;&gt;-->
+<!--	<update id="updateRequestDetail" parameterType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonApprovalParam">-->
+<!--		UPDATE DOCS_REQUEST_DETAIL-->
+<!--		SET REQUEST_DESC = #{rejectDesc}-->
+<!--		  , ACTION_CD = #{actionCd}-->
+<!--		  , ACTION_DT = SYSDATE-->
+<!--		WHERE REQUEST_NO = #{requestNo}-->
+<!--		  AND APPROVAL_STATUS_CD = #{approvalStatusCd}-->
+<!--		  AND APPROVAL_GRADE_CD = #{approvalGradeCd}-->
+<!--	</update>-->
+
+<!--	&lt;!&ndash; 승인 요청 아이템 리스트 갯수 조회[2019.10.01(최금영)]  &ndash;&gt;-->
+<!--	<select id="selectListCount" resultType="Integer" parameterType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonApprovalParam">-->
+<!--		/* 승인 요청 아이템 갯수 */-->
+<!--		SELECT COUNT(*) AS totalCount-->
+<!--		 FROM DOCS_REQUEST_MAPPING REQ_MAP-->
+<!--		 JOIN DOCS_REQUEST REQ-->
+<!--		 ON REQ.REQUEST_NO = REQ_MAP.REQUEST_NO-->
+<!--		 WHERE REQ.REQUEST_NO = #{requestNo}-->
+<!--	</select>-->
+
+
+<!--	&lt;!&ndash; 최종 승인 데이터에 입력할 아이템 리스트 조회 [2019.10.01(최금영)]&ndash;&gt;-->
+<!--	<select id="selectItemList" resultType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonApprovalPopupListVO" parameterType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonApprovalParam">-->
+<!--		/* 최종 승인에 추가할 아이템 리스트 조회 */-->
+<!--		SELECT mapping.OBJECT_ID AS objectId-->
+<!--			, mapping.OBJECT_NO AS objectNo-->
+<!--			, mapping.REV_NO AS rev-->
+<!--			, mapping.REQUEST_NO AS requestNo-->
+<!--			, mapping.BUSINESS_AREA_CD AS businessArea-->
+<!--			, mapping.CURRENT_PAGE_NO AS currentPage-->
+<!--			, deploy.DEPLOY_USER_CD AS deployUserCd-->
+<!--			, fileInfo.FILE_NO AS fileNo-->
+<!--			, req.OBJECT_TYPE AS objectTypeCd-->
+<!--			, req.deploy_company_cd AS deployCompanyCd-->
+<!--		FROM DOCS_REQUEST_MAPPING mapping-->
+<!--		INNER JOIN DOCS_REQUEST req-->
+<!--		ON req.REQUEST_NO = mapping.REQUEST_NO-->
+<!--		INNER JOIN DOCS_REQUEST_DEPLOY deploy-->
+<!--		ON mapping.REQUEST_NO = deploy.REQUEST_NO-->
+<!--		INNER JOIN DOCS_REQUEST_FILE fileInfo-->
+<!--		ON fileInfo.REQUEST_NO = mapping.REQUEST_NO-->
+<!--		AND fileInfo.OBJECT_ID = mapping.OBJECT_ID-->
+<!--		WHERE mapping.REQUEST_NO = #{requestNo}-->
+<!--		AND mapping.USE_YN = 'Y'-->
+<!--	</select>-->
+
+<!--	&lt;!&ndash; 최종 승인 데이터 추가 [2019.10.01(최금영)]&ndash;&gt;-->
+<!--	<insert id="insertApprovalFile" parameterType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonApprovalParam">-->
+<!--		/* 최종 승인(DOCS_APPROVAL_FILE)에 추가 */-->
+<!--		INSERT INTO DOCS_APPROVAL_FILE-->
+<!--			 ( REQUEST_NO-->
+<!--			 , INSERT_USER_CD-->
+<!--			 , INSERT_DT-->
+<!--			 , UPDATE_USER_CD-->
+<!--			 , UPDATE_DT-->
+<!--			 , OBJECT_ID-->
+<!--			 , DEPLOY_USER_CD-->
+<!--			 , FILE_NO-->
+<!--			 )-->
+<!--		VALUES-->
+<!--			 ( #{requestNo}-->
+<!--			 , #{sessionUser.userCd}-->
+<!--			 , SYSDATE-->
+<!--			 , #{sessionUser.userCd}-->
+<!--			 , SYSDATE-->
+<!--			 , #{objectId}-->
+<!--			 , #{deployUserCd}-->
+<!--			 , #{fileNo}-->
+<!--			 )-->
+<!--	</insert>-->
+
+<!--	&lt;!&ndash; 이전 버전 폐기할 아이템 리스트 조회 [2019.10.18(최금영)] &ndash;&gt;-->
+<!--	&lt;!&ndash; OBJECT_NO(NOT INDEX, NOT UNIQUE)로 이전 REV을 찾아야해서 INDEX를 절대 태울수 없으므로 걍 이렇게함 (APPROVAL_FILE INDEX : REQUEST_NO, OBJECT_ID, DESTROY_USER_CD)&ndash;&gt;-->
+<!--	<update id="updateRequestFileDestroy" >-->
+<!--		/* 이전 버전 폐기할 아이템 리스트 조회 */-->
+<!--		UPDATE DOCS_REQUEST_FILE-->
+<!--		SET DESTROY_TYPE = '2'-->
+<!--			, DESTROY_STATUS_CD = '1'-->
+<!--		WHERE (OBJECT_ID, REQUEST_NO, FILE_NO) IN-->
+<!--		(-->
+<!--			SELECT reqMapping.OBJECT_ID AS objectId-->
+<!--				, req.REQUEST_NO AS requestNo-->
+<!--&lt;!&ndash; 				, req.OBJECT_TYPE AS objectTypeCd &ndash;&gt;-->
+<!--&lt;!&ndash; 				, req.BUSINESS_AREA_CD AS businessArea &ndash;&gt;-->
+<!--		        , fileInfo.FILE_NO AS fileNo-->
+<!--			FROM DOCS_REQUEST_MAPPING reqMapping-->
+<!--			INNER JOIN DOCS_REQUEST req-->
+<!--			ON req.REQUEST_NO = reqMapping.REQUEST_NO-->
+<!--		    INNER JOIN DOCS_REQUEST_FILE fileInfo-->
+<!--		    ON fileInfo.REQUEST_NO = reqMapping.REQUEST_NO-->
+<!--		    AND fileInfo.OBJECT_ID = reqMapping.OBJECT_ID-->
+<!--		    AND fileInfo.DESTROY_STATUS_CD IS NULL-->
+<!--			WHERE  1=1-->
+<!--			AND req.deploy_company_cd = #{deployCompanyCd}-->
+<!--	    	AND reqMapping.OBJECT_NO = #{objectNo}-->
+<!--			AND req.REQUEST_NO != #{requestNo}-->
+<!--			AND REV_NO <![CDATA[ <= ]]> #{rev}-->
+<!--			<if test='"DRAWING".equals(objectType)'>-->
+<!--			AND reqMapping.CURRENT_PAGE_NO = #{currentPage}-->
+<!--			</if>-->
+<!--			AND req.STATUS_CD = 'APPROVAL'-->
+<!--			AND req.REQUEST_TYPE = 'DISTRIBUTION'-->
+<!--		)-->
+<!--	</update>-->
+
+
+<!--	&lt;!&ndash; 이전 버전 폐기 요청 추가 [2019.10.18(최금영)] &ndash;&gt;-->
+<!--	<insert id="insertDestroyRequest" parameterType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonApprovalParam">-->
+<!--		<selectKey keyProperty="destroyRequestNo" resultType="String" order="BEFORE">-->
+<!--            SELECT TO_CHAR(SYSDATE,'YYYYMMDD')||'-X'||LPAD(NVL(SUBSTR(MAX(DESTROY_REQUEST_NO),11),0)+1,4,0) AS DESTROY_REQUEST_NO-->
+<!--              FROM DOCS_DESTROY_REQUEST-->
+<!--             WHERE SUBSTR(DESTROY_REQUEST_NO,1,10) = TO_CHAR(SYSDATE,'YYYYMMDD')||'-X'-->
+<!--        </selectKey>-->
+<!--        	/* 이전 버전 폐기 요청 추가 */-->
+<!--			INSERT INTO DOCS_DESTROY_REQUEST-->
+<!--				( DESTROY_REQUEST_NO-->
+<!--				, APPROVAL_LINE_ID-->
+<!--				, CURRENT_PROCESS_SEQ_NO-->
+<!--				, STATUS_CD-->
+<!--				, INSERT_USER_CD-->
+<!--				, INSERT_DT-->
+<!--				, APPROVAL_DT-->
+<!--				, DESTROY_TYPE-->
+<!--				, DESTROY_STATUS_CD-->
+<!--				, BUSINESS_AREA_CD-->
+<!--				, REQUEST_TYPE-->
+<!--				)-->
+<!--			VALUES-->
+<!--				( #{destroyRequestNo}-->
+<!--				, '5'-->
+<!--				, '1'-->
+<!--				, 'APPROVAL'-->
+<!--				, #{sessionUser.userCd}-->
+<!--				, SYSDATE-->
+<!--				, SYSDATE-->
+<!--				, '2'-->
+<!--				, '1'-->
+<!--				, #{businessAreaCd}-->
+<!--				, #{requestType}-->
+<!--&lt;!&ndash; 				, (SELECT BUSINESS_AREA_CD FROM DOCS_REQUEST WHERE REQUEST_NO = #{requestNo}) &ndash;&gt;-->
+<!--&lt;!&ndash; 				, (SELECT REQUEST_TYPE FROM DOCS_REQUEST WHERE REQUEST_NO = #{requestNo}) &ndash;&gt;-->
+<!--				)-->
+<!--	</insert>-->
+
+<!--	<insert id="insertDestroyRequestDetail" parameterType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonApprovalParam">-->
+<!--		INSERT INTO DOCS_DESTROY_REQUEST_DETAIL-->
+<!--			( DESTROY_REQUEST_NO-->
+<!--			, PROCESS_SEQ-->
+<!--			, APPROVAL_STATUS_CD-->
+<!--			, ACTION_CD-->
+<!--			, ORIGINAL_USER_CD-->
+<!--			, ACTUAL_USER_CD-->
+<!--			, ACTION_DT-->
+<!--			)-->
+<!--		VALUES-->
+<!--			( #{destroyRequestNo}-->
+<!--			, #{processSeq}-->
+<!--			, #{approvalStatusCd}-->
+<!--			, 'APPROVAL'-->
+<!--			, #{sessionUser.userCd}-->
+<!--			, #{sessionUser.userCd}-->
+<!--			, SYSDATE-->
+<!--			)-->
+<!--	</insert>-->
+
+<!--	&lt;!&ndash;결재 라인 상세정보 [2019.09.18(최금영)] &ndash;&gt;-->
+<!--	<select id="getDocsApprovalLineDetail" resultType="kr.esob.fdms.controller.inside.distribution.commonrequest.ApprovalLineDetailVO">-->
+<!--		/* 결재 라인 상세정보 */-->
+<!--		SELECT APPROVAL_STATUS_CD 		AS approvalStatusCd-->
+<!--			 , APPROVAL_GRADE_CD		AS approvalGradeCd-->
+<!--		  FROM DOCS_APPROVAL_LINE_DETAIL-->
+<!--		 WHERE APPROVAL_LINE_ID = #{approvalLineId}-->
+<!--		ORDER BY PROCESS_SEQ_NO-->
+<!--	</select>-->
+
+
+<!--	&lt;!&ndash; 폐기 요청 mapping 추가 [2019.10.11(최금영)] &ndash;&gt;-->
+<!--	<insert id="insertDestroyRequestMapping" parameterType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonApprovalParam">-->
+<!--		/* 폐기 요청 mapping 추가 */-->
+<!--		INSERT INTO DOCS_DESTROY_REQUEST_MAPPING-->
+<!--			( REQUEST_NO-->
+<!--			, OBJECT_ID-->
+<!--			, DESTROY_REQUEST_NO-->
+<!--			, DEPLOY_USER_CD-->
+<!--			)-->
+<!--		VALUES-->
+<!--			( #{requestNo}-->
+<!--			, #{objectId}-->
+<!--			, #{destroyRequestNo}-->
+<!--			, #{sessionUser.userCd}-->
+<!--			)-->
+<!--	</insert>-->
+
+
+<!--	&lt;!&ndash; 배포 파일 폐기 상태 수정[2019.10.21(최금영)] &ndash;&gt;-->
+<!--	<update id="updateApprovalFile" parameterType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonApprovalParam">-->
+<!--		UPDATE DOCS_APPROVAL_FILE-->
+<!--		SET DESTROY_STATUS_CD = '2'		&lt;!&ndash; 이전 버전 폐기 &ndash;&gt;-->
+<!--			, LAST_DESTROY_REQUEST_NO = #{destroyRequestNo}-->
+<!--		WHERE REQUEST_NO = #{requestNo}-->
+<!--		AND OBJECT_ID = #{objectId}-->
+<!--	</update>-->
+
+<!--	&lt;!&ndash; 현재 결재 라인 조회  &ndash;&gt;-->
+<!--	<select id="getCurrentApprovalInfo" parameterType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonApprovalParam" resultType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonApprovalParam">-->
+<!--		SELECT lineDtl.APPROVAL_GRADE_CD	AS approvalGradeCd-->
+<!--  			, lineDtl.APPROVAL_STATUS_CD	AS approvalStatusCd-->
+<!--  			, lineDtl.APPROVAL_LINE_ID		AS approvalLineId-->
+<!--  			, req.CURRENT_PROCESS_SEQ_NO	AS currentProcessSeqNo-->
+<!--  			, req.PROTECT_YN				AS protectYn-->
+<!--  			, deploy.DEPLOY_USER_CD			AS deployUserCd-->
+<!--  			, req.OBJECT_TYPE				AS objectType-->
+<!-- 		FROM DOCS_APPROVAL_LINE_DETAIL lineDtl-->
+<!-- 		JOIN DOCS_APPROVAL_LINE line-->
+<!-- 		ON lineDtl.APPROVAL_LINE_ID = line.APPROVAL_LINE_ID-->
+<!-- 		JOIN DOCS_REQUEST req-->
+<!-- 		ON line.APPROVAL_LINE_ID = req.APPROVAL_LINE_ID-->
+<!-- 		AND req.REQUEST_NO = #{requestNo}-->
+<!-- 		JOIN DOCS_REQUEST_DEPLOY deploy-->
+<!-- 		ON req.REQUEST_NO = deploy.REQUEST_NO-->
+<!-- 		WHERE lineDtl.PROCESS_SEQ_NO = req.CURRENT_PROCESS_SEQ_NO-->
+<!--	</select>-->
+
+<!--	<update id="updatePassTarget">-->
+<!--		/* 방산기술자료 결재대상 변경 */-->
+<!--		UPDATE DOCS_REQUEST_DETAIL-->
+<!--		SET ACTUAL_USER_CD = #{passTarget}-->
+<!--		WHERE REQUEST_NO = #{requestNo}-->
+<!--		AND APPROVAL_STATUS_CD = 'APPROVAL'-->
+<!--		AND APPROVAL_GRADE_CD = 'DEF'-->
+<!--	</update>-->
+
+<!--	<select id="selectRequestInfo" resultType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonApprovalParam">-->
+<!--		SELECT REQUEST_NO AS requestNo-->
+<!--			, REQUEST_TYPE AS approvalType-->
+<!--			, APPROVAL_LINE_ID-->
+<!--			, CURRENT_PROCESS_SEQ_NO-->
+<!--			, OBJECT_TYPE-->
+<!--			, #{saveType} AS saveType-->
+<!--		FROM DOCS_REQUEST-->
+<!--		WHERE REQUEST_NO = #{requestNo}-->
+<!--	</select>-->
+
+<!--&lt;!&ndash; 	<update id="updateRequestFileDestroy"> &ndash;&gt;-->
+<!--&lt;!&ndash; 		UPDATE DOCS_REQUEST_FILE &ndash;&gt;-->
+<!--&lt;!&ndash; 		SET DESTROY_TYPE = '2' &ndash;&gt;-->
+<!--&lt;!&ndash; 			, DESTROY_STATUS_CD = '1' &ndash;&gt;-->
+<!--&lt;!&ndash; 		WHERE REQUEST_NO = #{requestNo} &ndash;&gt;-->
+<!--&lt;!&ndash; 		AND OBJECT_ID = #{objectId} &ndash;&gt;-->
+<!--&lt;!&ndash; 		AND FILE_NO = #{fileNo} &ndash;&gt;-->
+<!--&lt;!&ndash; 	</update> &ndash;&gt;-->
+
+<!--</mapper>-->
+
+
+
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+
+
+<mapper namespace="sql.commonApproval">
+
+<!-- 배포승인 리스트 [2019.09.24(최금영)]-->
+<select id="selectApprovalList" parameterType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonApprovalParam" resultType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonApprovalPopupListVO">
+	SELECT A.*
+	<if test='sortColumn == null or "".equals(sortColumn)'>
+		, ROW_NUMBER() OVER(ORDER BY objectNm asc) AS PAGEINDEX
+	</if>
+	<if test='sortColumn != null and !"".equals(sortColumn)'>
+		, ROW_NUMBER() OVER(ORDER BY ${sortColumn} ${order}) AS PAGEINDEX
+	</if>
+	FROM (
+	SELECT REQ_MAP.BUSINESS_TYPE_CD 				AS businessTypeCd
+	, REQ_MAP.DISTRIBUTE_TYPE_CD 				AS distributeTypeCd
+	, REQ.OBJECT_TYPE 							AS objectType
+	, CASE WHEN REQ.PRINT_YN = 'Y' THEN 'viewPrint'
+	WHEN REQ.DEPLOY_NORMAL_YN = 'Y' THEN 'general'
+	WHEN REQ.DEPLOY_SPECIAL_YN = 'Y' THEN 'security'
+	ELSE 'viewPrint'
+	END 									AS distributionMethodCd
+	, REQ_MAP.OBJECT_NO 						AS objectNo
+	, REQ_MAP.OBJECT_NM 						AS objectNm
+	, REQ_MAP.CURRENT_PAGE_NO 					AS page
+	, REQ_MAP.TOTAL_PAGE_NO 					AS totalPage
+	, REQ_MAP.SW_VERSION_NO 					AS swVersion
+	, REQ_MAP.DOC_VERSION_NO 					AS docVersionNo
+	, REQ_MAP.PRODUCT_CD 						AS productNo
+	, REQ_MAP.REV_NO 							AS rev
+	, REQ_MAP.STD_GAPP_DT 						AS stdGappDt
+	, REQ_MAP.CHANGE_GAPP_DT 					AS changeGappDt
+	, REQ.BUSINESS_AREA_CD 						AS businessAreaCd
+	, REQ_MAP.PROTECT_YN 						AS protectYn
+	, REQ_MAP.OBJECT_ID							AS objectId
+	, REQ.REQUEST_NO							AS requestNo
+	, FILE_INFO.FILE_NO							AS fileNo
+	, FILE_INFO.ORG_FILE_NM						AS orgFileNm
+	, FILE_INFO.USE_START_YMD					AS useStartYmd
+	, FILE_INFO.USE_END_YMD						AS useEndYmd
+	, FILE_INFO.FILE_NM							AS fileNm
+	FROM DOCS_REQUEST_FILE FILE_INFO
+	JOIN DOCS_REQUEST_MAPPING REQ_MAP
+	ON FILE_INFO.OBJECT_ID = REQ_MAP.OBJECT_ID AND FILE_INFO.REQUEST_NO = REQ_MAP.REQUEST_NO
+	JOIN DOCS_REQUEST REQ
+	ON REQ.REQUEST_NO = REQ_MAP.REQUEST_NO
+	WHERE REQ.REQUEST_NO = #{requestNo}
+	) A
+</select>
+
+<!-- 배포 승인 요청 메시지 조회 [2019.09.24(최금영)]-->
+<select id="getDistributionApprovalRequestDesc" parameterType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonApprovalParam" resultType="String">
+	SELECT REQUEST_DESC
+	FROM DOCS_REQUEST_DETAIL
+	WHERE REQUEST_NO = #{requestNo}
+	  AND APPROVAL_STATUS_CD = 'REQUEST'
+</select>
+
+<!-- 구매팀장 결재 후 방산팀장으로 요청 [2019.09.25(최금영)] -->
+<update id="updateRequestDefInfo" parameterType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonApprovalParam">
+	UPDATE DOCS_REQUEST
+	SET CURRENT_PROCESS_SEQ_NO = '4'
+	WHERE REQUEST_NO = #{requestNo}
+</update>
+
+<!-- 배포 승인 결과 수정 [2019.09.25(최금영)] -->
+<update id="updateRequestInfo" parameterType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonApprovalParam">
+	UPDATE DOCS_REQUEST
+	SET STATUS_CD = #{statusCd}
+	<if test='"APPROVAL".equals(statusCd)'>
+		, APPROVAL_DT = CURRENT_TIMESTAMP
+	</if>
+	WHERE REQUEST_NO = #{requestNo}
+</update>
+
+<!-- 배포 요청 상세 수정 [2019.09.25(최금영)] -->
+<update id="updateRequestDetail" parameterType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonApprovalParam">
+	UPDATE DOCS_REQUEST_DETAIL
+	SET REQUEST_DESC = #{rejectDesc}
+	  , ACTION_CD = #{actionCd}
+	  , ACTION_DT = CURRENT_TIMESTAMP
+	WHERE REQUEST_NO = #{requestNo}
+	  AND APPROVAL_STATUS_CD = #{approvalStatusCd}
+	  AND APPROVAL_GRADE_CD = #{approvalGradeCd}
+</update>
+
+<!-- 승인 요청 아이템 리스트 갯수 조회[2019.10.01(최금영)]  -->
+<select id="selectListCount" resultType="Integer" parameterType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonApprovalParam">
+	SELECT COUNT(*) AS totalCount
+	FROM DOCS_REQUEST_MAPPING REQ_MAP
+			 JOIN DOCS_REQUEST REQ
+				  ON REQ.REQUEST_NO = REQ_MAP.REQUEST_NO
+	WHERE REQ.REQUEST_NO = #{requestNo}
+</select>
+
+<!-- 최종 승인 데이터에 입력할 아이템 리스트 조회 [2019.10.01(최금영)]-->
+<select id="selectItemList" resultType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonApprovalPopupListVO" parameterType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonApprovalParam">
+	SELECT mapping.OBJECT_ID AS objectId
+		 , mapping.OBJECT_NO AS objectNo
+		 , mapping.REV_NO AS rev
+		 , mapping.REQUEST_NO AS requestNo
+		 , mapping.BUSINESS_AREA_CD AS businessArea
+		 , mapping.CURRENT_PAGE_NO AS currentPage
+		 , deploy.DEPLOY_USER_CD AS deployUserCd
+		 , fileInfo.FILE_NO AS fileNo
+		 , req.OBJECT_TYPE AS objectTypeCd
+		 , req.deploy_company_cd AS deployCompanyCd
+	FROM DOCS_REQUEST_MAPPING mapping
+			 INNER JOIN DOCS_REQUEST req
+						ON req.REQUEST_NO = mapping.REQUEST_NO
+			 INNER JOIN DOCS_REQUEST_DEPLOY deploy
+						ON mapping.REQUEST_NO = deploy.REQUEST_NO
+			 INNER JOIN DOCS_REQUEST_FILE fileInfo
+						ON fileInfo.REQUEST_NO = mapping.REQUEST_NO
+							AND fileInfo.OBJECT_ID = mapping.OBJECT_ID
+	WHERE mapping.REQUEST_NO = #{requestNo}
+	  AND mapping.USE_YN = 'Y'
+</select>
+
+<!-- 최종 승인 데이터 추가 [2019.10.01(최금영)]-->
+<insert id="insertApprovalFile" parameterType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonApprovalParam">
+	INSERT INTO DOCS_APPROVAL_FILE
+	( REQUEST_NO
+	, INSERT_USER_CD
+	, INSERT_DT
+	, UPDATE_USER_CD
+	, UPDATE_DT
+	, OBJECT_ID
+	, DEPLOY_USER_CD
+	, FILE_NO
+	)
+	VALUES
+		( #{requestNo}
+		, #{sessionUser.userCd}
+		, CURRENT_TIMESTAMP
+		, #{sessionUser.userCd}
+		, CURRENT_TIMESTAMP
+		, #{objectId}
+		, #{deployUserCd}
+		, #{fileNo}
+		)
+</insert>
+
+<!-- 이전 버전 폐기할 아이템 리스트 조회 [2019.10.18(최금영)] -->
+<!-- OBJECT_NO(NOT INDEX, NOT UNIQUE)로 이전 REV을 찾아야해서 INDEX를 절대 태울수 없으므로 걍 이렇게함 (APPROVAL_FILE INDEX : REQUEST_NO, OBJECT_ID, DESTROY_USER_CD)-->
+<update id="updateRequestFileDestroy">
+	UPDATE DOCS_REQUEST_FILE
+	SET DESTROY_TYPE = '2'
+	, DESTROY_STATUS_CD = '1'
+	WHERE (OBJECT_ID, REQUEST_NO, FILE_NO) IN
+	(
+	SELECT reqMapping.OBJECT_ID AS objectId
+	, req.REQUEST_NO AS requestNo
+	, fileInfo.FILE_NO AS fileNo
+	FROM DOCS_REQUEST_MAPPING reqMapping
+	INNER JOIN DOCS_REQUEST req
+	ON req.REQUEST_NO = reqMapping.REQUEST_NO
+	INNER JOIN DOCS_REQUEST_FILE fileInfo
+	ON fileInfo.REQUEST_NO = reqMapping.REQUEST_NO
+	AND fileInfo.OBJECT_ID = reqMapping.OBJECT_ID
+	AND fileInfo.DESTROY_STATUS_CD IS NULL
+	WHERE  1=1
+	AND req.deploy_company_cd = #{deployCompanyCd}
+	AND reqMapping.OBJECT_NO = #{objectNo}
+	AND req.REQUEST_NO != #{requestNo}
+	AND REV_NO <![CDATA[ <= ]]> #{rev}
+	<if test='"DRAWING".equals(objectType)'>
+		AND reqMapping.CURRENT_PAGE_NO = #{currentPage}
+	</if>
+	AND req.STATUS_CD = 'APPROVAL'
+	AND req.REQUEST_TYPE = 'DISTRIBUTION'
+	)
+</update>
+
+<!-- 이전 버전 폐기 요청 추가 [2019.10.18(최금영)] -->
+<insert id="insertDestroyRequest" parameterType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonApprovalParam">
+	<selectKey keyProperty="destroyRequestNo" resultType="String" order="BEFORE">
+		SELECT TO_CHAR(CURRENT_DATE,'YYYYMMDD')||'-X'||LPAD(COALESCE(SUBSTR(MAX(DESTROY_REQUEST_NO),11)::INTEGER,0)+1,4,'0') AS DESTROY_REQUEST_NO
+		FROM DOCS_DESTROY_REQUEST
+		WHERE SUBSTR(DESTROY_REQUEST_NO,1,10) = TO_CHAR(CURRENT_DATE,'YYYYMMDD')||'-X'
+	</selectKey>
+	INSERT INTO DOCS_DESTROY_REQUEST
+	( DESTROY_REQUEST_NO
+	, APPROVAL_LINE_ID
+	, CURRENT_PROCESS_SEQ_NO
+	, STATUS_CD
+	, INSERT_USER_CD
+	, INSERT_DT
+	, APPROVAL_DT
+	, DESTROY_TYPE
+	, DESTROY_STATUS_CD
+	, BUSINESS_AREA_CD
+	, REQUEST_TYPE
+	)
+	VALUES
+	( #{destroyRequestNo}
+	, '5'
+	, '1'
+	, 'APPROVAL'
+	, #{sessionUser.userCd}
+	, CURRENT_TIMESTAMP
+	, CURRENT_TIMESTAMP
+	, '2'
+	, '1'
+	, #{businessAreaCd}
+	, #{requestType}
+	)
+</insert>
+
+<insert id="insertDestroyRequestDetail" parameterType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonApprovalParam">
+	INSERT INTO DOCS_DESTROY_REQUEST_DETAIL
+	( DESTROY_REQUEST_NO
+	, PROCESS_SEQ
+	, APPROVAL_STATUS_CD
+	, ACTION_CD
+	, ORIGINAL_USER_CD
+	, ACTUAL_USER_CD
+	, ACTION_DT
+	)
+	VALUES
+		( #{destroyRequestNo}
+		, CAST(#{processSeq} AS INTEGER)
+		, #{approvalStatusCd}
+		, 'APPROVAL'
+		, #{sessionUser.userCd}
+		, #{sessionUser.userCd}
+		, CURRENT_TIMESTAMP
+		)
+</insert>
+
+<!--결재 라인 상세정보 [2019.09.18(최금영)] -->
+<select id="getDocsApprovalLineDetail" resultType="kr.esob.fdms.controller.inside.distribution.commonrequest.ApprovalLineDetailVO">
+	SELECT APPROVAL_STATUS_CD 		AS approvalStatusCd
+		 , APPROVAL_GRADE_CD		AS approvalGradeCd
+	FROM DOCS_APPROVAL_LINE_DETAIL
+	WHERE APPROVAL_LINE_ID = CAST(#{approvalLineId} AS INTEGER)
+	ORDER BY PROCESS_SEQ_NO
+</select>
+
+<!-- 폐기 요청 mapping 추가 [2019.10.11(최금영)] -->
+<insert id="insertDestroyRequestMapping" parameterType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonApprovalParam">
+	INSERT INTO DOCS_DESTROY_REQUEST_MAPPING
+	( REQUEST_NO
+	, OBJECT_ID
+	, DESTROY_REQUEST_NO
+	, DEPLOY_USER_CD
+	)
+	VALUES
+		( #{requestNo}
+		, #{objectId}
+		, #{destroyRequestNo}
+		, #{sessionUser.userCd}
+		)
+</insert>
+
+<!-- 배포 파일 폐기 상태 수정[2019.10.21(최금영)] -->
+<update id="updateApprovalFile" parameterType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonApprovalParam">
+	UPDATE DOCS_APPROVAL_FILE
+	SET DESTROY_STATUS_CD = '2'		<!-- 이전 버전 폐기 -->
+	, LAST_DESTROY_REQUEST_NO = #{destroyRequestNo}
+	WHERE REQUEST_NO = #{requestNo}
+	AND OBJECT_ID = #{objectId}
+</update>
+
+<!-- 현재 결재 라인 조회  -->
+<select id="getCurrentApprovalInfo" parameterType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonApprovalParam" resultType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonApprovalParam">
+	SELECT lineDtl.APPROVAL_GRADE_CD	AS approvalGradeCd
+		 , lineDtl.APPROVAL_STATUS_CD	AS approvalStatusCd
+		 , lineDtl.APPROVAL_LINE_ID		AS approvalLineId
+		 , req.CURRENT_PROCESS_SEQ_NO	AS currentProcessSeqNo
+		 , req.PROTECT_YN				AS protectYn
+		 , deploy.DEPLOY_USER_CD			AS deployUserCd
+		 , req.OBJECT_TYPE				AS objectType
+	FROM DOCS_APPROVAL_LINE_DETAIL lineDtl
+			 JOIN DOCS_APPROVAL_LINE line
+				  ON lineDtl.APPROVAL_LINE_ID = line.APPROVAL_LINE_ID
+			 JOIN DOCS_REQUEST req
+				  ON line.APPROVAL_LINE_ID = req.APPROVAL_LINE_ID
+					  AND req.REQUEST_NO = #{requestNo}
+			 JOIN DOCS_REQUEST_DEPLOY deploy
+				  ON req.REQUEST_NO = deploy.REQUEST_NO
+	WHERE lineDtl.PROCESS_SEQ_NO = req.CURRENT_PROCESS_SEQ_NO
+</select>
+
+<update id="updatePassTarget">
+	UPDATE DOCS_REQUEST_DETAIL
+	SET ACTUAL_USER_CD = #{passTarget}
+	WHERE REQUEST_NO = #{requestNo}
+	  AND APPROVAL_STATUS_CD = 'APPROVAL'
+	  AND APPROVAL_GRADE_CD = 'DEF'
+</update>
+
+<select id="selectRequestInfo" resultType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonApprovalParam">
+	SELECT REQUEST_NO AS requestNo
+		 , REQUEST_TYPE AS approvalType
+		 , APPROVAL_LINE_ID
+		 , CURRENT_PROCESS_SEQ_NO
+		 , OBJECT_TYPE
+		 , #{saveType} AS saveType
+	FROM DOCS_REQUEST
+	WHERE REQUEST_NO = #{requestNo}
+</select>
+
+</mapper>

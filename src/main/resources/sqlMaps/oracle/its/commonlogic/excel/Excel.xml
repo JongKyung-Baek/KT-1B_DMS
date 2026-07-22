@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="sql.Excel">
+
+<!-- 일반 목록 조회 -->
+<select id="selectList" resultType="kr.esob.fdms.commonlogic.grid.GridInfoVO">
+    SELECT
+        grid.COLUMN_ID AS name,
+        COALESCE(lang.LANG_DESC, grid.COLUMN_NM) AS label,
+        grid.COLUMN_ID AS columnId,
+        grid.COLUMN_SIZE AS width,
+        grid.COLUMN_ALIGN AS align,
+        grid.COLUMN_HIDDEN AS hidden,
+        grid.SORT_YN AS sortable,
+        grid.FORMATTER AS formatter,
+        grid.COLUMN_EDITABLE AS editable,
+        grid.MAX_LENGTH AS maxlength
+    FROM DOCS_GRID_INFO grid
+    LEFT JOIN DOCS_LANG lang ON lang.LANG_CD = grid.LANG_CD AND lang.LANG_TYPE = #{sessionLang}
+    WHERE GRID_ID = #{gridId}
+      AND COLUMN_HIDDEN = 'N' /* Excel에서는 숨겨진 column은 가져오지 않는다. */
+    ORDER BY COLUMN_SEQ
+</select>
+
+<!-- 특별한 그리드 설정 목록 조회 -->
+<select id="selectListDuanzongPdm" resultType="kr.esob.fdms.commonlogic.grid.GridInfoVO">
+    SELECT
+        grid.COLUMN_ID AS name,
+        COALESCE(lang.LANG_DESC, grid.COLUMN_NM) AS label,
+        grid.COLUMN_ID AS columnId,
+        grid.COLUMN_SIZE AS width,
+        grid.COLUMN_ALIGN AS align,
+        grid.COLUMN_HIDDEN AS hidden,
+        grid.SORT_YN AS sortable,
+        grid.FORMATTER AS formatter,
+        grid.COLUMN_EDITABLE AS editable,
+        grid.MAX_LENGTH AS maxlength
+    FROM DOCS_GRID_INFO grid
+    LEFT JOIN DOCS_LANG lang ON lang.LANG_CD = grid.LANG_CD AND lang.LANG_TYPE = #{sessionLang}
+    WHERE GRID_ID = #{gridId}
+    ORDER BY COLUMN_SEQ
+</select>
+
+</mapper>
+

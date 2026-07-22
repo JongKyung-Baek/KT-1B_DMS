@@ -1,0 +1,1392 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+
+<!--<mapper namespace="sql.DistributionHistory">-->
+
+<!--	<select id="selectList" resultType="kr.esob.fdms.controller.inside.distribution.history.HistoryListVO">-->
+<!--		SELECT-->
+<!--			B1.*-->
+<!--		FROM-->
+<!--		(-->
+<!--			SELECT-->
+<!--				A1.*-->
+<!--				, ROWNUM AS PAGEINDEX-->
+<!--			FROM-->
+<!--			(-->
+<!--				SELECT-->
+<!--					REQ.REQUEST_NO 																		AS requestNo 			/* 요청번호 */-->
+<!--					, REQ.REQUEST_TYPE																	AS requestType			/* 요청유형 */-->
+<!--					, REQ.OBJECT_TYPE																	AS objectType			/* 자료유형 */-->
+<!--					, FN_GET_CD_NM('objectTypeWithP', REQ.OBJECT_TYPE, #{sessionLang}) 					AS objectTypeNm-->
+<!--					, REQ_MAPPING.BUSINESS_TYPE_CD 														AS businessTypeCd		/* 사업구분코드 */-->
+<!--					, FN_GET_CD_NM('businessTypeCd', REQ_MAPPING.BUSINESS_TYPE_CD, #{sessionLang}) 		AS businessTypeNm-->
+<!--  					, REQ_MAPPING.DISTRIBUTE_TYPE_CD 													AS distributeTypeCd		/* 배포유형코드 */-->
+<!--  					, FN_GET_CD_NM('distributeTypeCd', REQ_MAPPING.DISTRIBUTE_TYPE_CD, #{sessionLang})	AS distributeTypeNm		/* 배포유형 */-->
+<!--					, CASE-->
+<!--						WHEN DEPLOY_NORMAL_YN = 'Y'-->
+<!--							THEN (SELECT LANG_DESC FROM DOCS_LANG lang WHERE lang.LANG_CD = 'combo.deployType.normalArea' AND lang.LANG_TYPE = #{sessionLang})-->
+<!--						WHEN DEPLOY_SPECIAL_YN = 'Y'-->
+<!--							THEN (SELECT LANG_DESC FROM DOCS_LANG lang WHERE lang.LANG_CD = 'combo.deployType.specialArea' AND lang.LANG_TYPE = #{sessionLang})-->
+<!--						ELSE (SELECT LANG_DESC FROM DOCS_LANG lang WHERE lang.LANG_CD = 'combo.deployType.viewing' AND lang.LANG_TYPE = #{sessionLang})-->
+<!--					END 																				AS deployTypeNm 		/* 배포방식 */-->
+<!--					, CASE-->
+<!--						WHEN DEPLOY_NORMAL_YN = 'Y'-->
+<!--							THEN 'NORMAL'-->
+<!--						WHEN DEPLOY_SPECIAL_YN = 'Y'-->
+<!--							THEN 'SPECIAL'-->
+<!--						ELSE 'VIEWING'-->
+<!--					END 																				AS deployType 			/* 배포방식 */-->
+<!--					, REQ.REQUEST_PURPOSE 																AS requestPurpose		/* 용도 */-->
+<!--					, FN_GET_CD_NM('requestPurpose', REQ.REQUEST_PURPOSE, #{sessionLang}) 				AS requestPurposeNm-->
+<!--					, REQ_MAPPING.OBJECT_NO 															AS objectNo				/* 자료번호 */-->
+<!--					, REQ_MAPPING.REV_NO 																AS revNo				/* REV */-->
+<!--					, (-->
+<!--                      CASE REQ.OBJECT_TYPE-->
+<!--                        WHEN TO_NCHAR('DOC') THEN (-->
+<!--                          SELECT MAX(REV_NO)-->
+<!--                          FROM DOCS_DOCUMENT doc-->
+<!--                          WHERE doc.DOCUMENT_NO = REQ_MAPPING.OBJECT_NO)-->
+<!--                        WHEN TO_NCHAR('DRAWING') THEN (-->
+<!--                          SELECT MAX(REV_NO)-->
+<!--                          FROM DOCS_DRAWING doc-->
+<!--                          WHERE doc.DRAWING_NO = REQ_MAPPING.OBJECT_NO)-->
+<!--                        WHEN TO_NCHAR('SW') THEN (-->
+<!--                          SELECT MAX(REV_NO)-->
+<!--                          FROM DOCS_SW doc-->
+<!--                          WHERE doc.SW_NO = REQ_MAPPING.OBJECT_NO)-->
+<!--                        END-->
+<!--                      )                                             									AS lastRevNo       		/* 최종 REV */-->
+<!--					, REQ_MAPPING.SW_VERSION_NO															AS swVersionNo 			/* SW 버전 */-->
+<!--					, REQ_MAPPING.DOC_VERSION_NO   														AS docVersionNo 		/* 명세서 버전 */-->
+<!--					, REQ_MAPPING.OBJECT_NM 															AS objectNm				/* 자료명 */-->
+<!--					, REQ_MAPPING.CURRENT_PAGE_NO 														AS currentPageNo		/* 페이지 */-->
+<!--					, REQ_MAPPING.TOTAL_PAGE_NO 														AS totalPageNo			/* 총 페이지 */-->
+<!--					, REQ_MAPPING.ECN_NO 																AS ecnNo				/* CO 번호 */-->
+<!--					,(-->
+<!--                        SELECT CN_CD || ' ' || CN_CD_DESC-->
+<!--                        FROM (SELECT DISTINCT PRODUCT_CD AS CN_CD, PRODUCT_CD AS CN_CD_DESC FROM DOCS_REQUEST_MAPPING WHERE PRODUCT_CD IS NOT NULL) prod-->
+<!--                        WHERE prod.CN_CD = REQ_MAPPING.PRODUCT_CD-->
+<!--                    ) 																					AS productNm 			/* 기종 */-->
+<!--                    , REQ_MAPPING.PRODUCT_CD 															AS productCd			/* 기종코드 */-->
+<!--					, REQ_MAPPING.BUSINESS_AREA_CD 														AS businessAreaCd		/* 사업장 */-->
+<!--					, FN_GET_CD_NM('businessAreaCd', REQ_MAPPING.BUSINESS_AREA_CD, #{sessionLang}) 		AS businessAreaNm-->
+<!--					, REQ_MAPPING.PROTECT_YN 															AS protectYn			/* 방산기술 */-->
+<!--					, DEPLOY_COMPANY.COMPANY_CD                                                         AS deployCompanyCd      /* 업체코드 */-->
+<!--                    , DEPLOY_COMPANY.COMPANY_NM                                                         AS deployCompanyNm      /* 업체명 */-->
+<!--					, REQ_MAPPING.OBJECT_ID																AS objectId-->
+<!--					, ACC_USER.USER_NM  																AS purchaserUserNm		/* 구매담당자 */-->
+<!--					, CASE-->
+<!--						WHEN REQ.STATUS_CD = 'APPROVAL'-->
+<!--							THEN-->
+<!--								CASE-->
+<!--									WHEN DEF_APPROVAL_USER.USER_CD IS NULL-->
+<!--										THEN TL_APPROVAL_USER.USER_CD-->
+<!--									ELSE DEF_APPROVAL_USER.USER_CD-->
+<!--								END-->
+<!--						WHEN REQ.STATUS_CD = 'REJECT'-->
+<!--							THEN REJECT_USER.USER_CD-->
+<!--						ELSE NULL-->
+<!--					END 																				AS approvalUserCd 		/* 승인자코드 */-->
+<!--					, CASE-->
+<!--						WHEN REQ.STATUS_CD = 'APPROVAL'-->
+<!--							THEN-->
+<!--								CASE-->
+<!--									WHEN DEF_APPROVAL_USER.USER_NM IS NULL-->
+<!--										THEN TL_APPROVAL_USER.USER_NM-->
+<!--									ELSE DEF_APPROVAL_USER.USER_NM-->
+<!--								END-->
+<!--						WHEN REQ.STATUS_CD = 'REJECT'-->
+<!--							THEN REJECT_USER.USER_NM-->
+<!--						ELSE NULL-->
+<!--					END 																				AS approvalUserNm 		/* 승인자 */-->
+<!--					, REQ.APPROVAL_DT						 											AS approvalDt			/* 승인일자 */-->
+<!--					, REQ.INSERT_DT																		AS requestDt			/* 요청일자 */-->
+<!--					, REQ_DETAIL.REQUEST_DESC 															AS requestReason		/* 배포요청사유 */-->
+<!--					, TO_CHAR(TO_DATE(FILE_INFO.USE_END_YMD, 'YYYYMMDD'), 'YYYY-MM-DD')					AS useEndYmd			/* 유효기간 */-->
+<!--					, REQ.STATUS_CD 																	AS statusCd				/* 결재상태 */-->
+<!--					, FN_GET_CD_NM('requestStatusCd', REQ.STATUS_CD, #{sessionLang}) 					AS statusNm-->
+<!--					, FILE_INFO.DESTROY_STATUS_CD														AS destroyStatusCd-->
+<!--					, FN_GET_CD_NM('destroyStatusCd', FILE_INFO.DESTROY_STATUS_CD, #{sessionLang})		AS destroyStatusNm-->
+<!--					, FN_GET_CD_NM('destroyType', FILE_INFO.DESTROY_TYPE, #{sessionLang})				AS destroyType-->
+<!--&lt;!&ndash; 					, DESTROY_REQUEST.DESTROY_STATUS_CD													AS destroyStatusCd 	/* 폐기구분 */ &ndash;&gt;-->
+<!--&lt;!&ndash; 					, FN_GET_CD_NM('destroyStatusCd', DESTROY_REQUEST.DESTROY_STATUS_CD, #{sessionLang}) AS destroyStatusNm &ndash;&gt;-->
+<!--&lt;!&ndash; 					, FN_GET_CD_NM('destroyType', DESTROY_REQUEST.DESTROY_TYPE, #{sessionLang})			AS destroyType 		/* 폐기유형 */ &ndash;&gt;-->
+<!--					, DEPLOY_USER.USER_NM																AS companyUserNm		/* 업체담당자 */-->
+<!--	           		, (-->
+<!--					    SELECT USER_NM-->
+<!--					    FROM DOCS_REQUEST_DETAIL requestDetail-->
+<!--					      INNER JOIN DOCS_USER docsUser ON docsUser.USER_CD = requestDetail.ACTUAL_USER_CD-->
+<!--					    WHERE requestDetail.REQUEST_NO = REQ.REQUEST_NO-->
+<!--					    AND requestDetail.APPROVAL_STATUS_CD = 'ACCEPT'-->
+<!--					) 																					AS deployUserNm   		/* 배포자 */-->
+<!--					, FILE_INFO.FILE_NO																	AS fileNo-->
+<!--					, FILE_INFO.ORG_FILE_NM																AS orgFileNm-->
+<!--					, ACC_DETAIL.ACTUAL_USER_CD 														AS purchaserUserCd-->
+<!--					, (SELECT USER_NM FROM DOCS_USER t WHERE t.USER_CD = REQ.INSERT_USER_CD) 			AS requestUserNm-->
+<!--					, REQ.VENDOR_ACCEPT_YN                                                              AS vendorAcceptYn       /* 업체접수여부 */-->
+<!--                    , FN_GET_CD_NM('vendorAcceptYn', REQ.VENDOR_ACCEPT_YN, 'ko')                        AS vendorAcceptNm       /* 업체접수여부 */-->
+<!--				FROM DOCS_REQUEST_FILE FILE_INFO-->
+<!--					INNER JOIN DOCS_REQUEST_MAPPING REQ_MAPPING ON FILE_INFO.REQUEST_NO = REQ_MAPPING.REQUEST_NO AND FILE_INFO.OBJECT_ID = REQ_MAPPING.OBJECT_ID-->
+<!--					INNER JOIN DOCS_REQUEST REQ ON REQ_MAPPING.REQUEST_NO = REQ.REQUEST_NO-->
+<!--					INNER JOIN DOCS_REQUEST_DETAIL REQ_DETAIL ON REQ_DETAIL.REQUEST_NO = REQ.REQUEST_NO AND REQ_DETAIL.APPROVAL_STATUS_CD = 'REQUEST'-->
+<!--					INNER JOIN DOCS_USER REQ_USER ON REQ_USER.USER_CD = REQ_DETAIL.ACTUAL_USER_CD-->
+<!--					INNER JOIN DOCS_REQUEST_DEPLOY REQUEST_DEPLOY ON REQUEST_DEPLOY.REQUEST_NO = REQ.REQUEST_NO-->
+<!--					INNER JOIN DOCS_USER DEPLOY_USER ON DEPLOY_USER.USER_CD = REQUEST_DEPLOY.DEPLOY_USER_CD-->
+<!--					INNER JOIN DOCS_COMPANY DEPLOY_COMPANY ON DEPLOY_COMPANY.COMPANY_CD = DEPLOY_USER.COMPANY_CD-->
+<!--					INNER JOIN DOCS_REQUEST_DETAIL ACC_DETAIL ON ACC_DETAIL.REQUEST_NO = REQ.REQUEST_NO AND ACC_DETAIL.APPROVAL_STATUS_CD = 'ACCEPT'-->
+<!--					INNER JOIN DOCS_USER ACC_USER ON ACC_USER.USER_CD = ACC_DETAIL.ORIGINAL_USER_CD-->
+<!--					LEFT JOIN DOCS_REQUEST_DETAIL TL_APPROVAL_DETAIL ON TL_APPROVAL_DETAIL.REQUEST_NO = REQ.REQUEST_NO AND TL_APPROVAL_DETAIL.APPROVAL_STATUS_CD = 'APPROVAL' AND TL_APPROVAL_DETAIL.APPROVAL_GRADE_CD = 'TL'-->
+<!--					LEFT JOIN DOCS_USER TL_APPROVAL_USER ON TL_APPROVAL_USER.USER_CD = TL_APPROVAL_DETAIL.ACTUAL_USER_CD-->
+<!--					LEFT JOIN DOCS_REQUEST_DETAIL DEF_APPROVAL_DETAIL ON DEF_APPROVAL_DETAIL.REQUEST_NO = REQ.REQUEST_NO AND DEF_APPROVAL_DETAIL.APPROVAL_STATUS_CD = 'APPROVAL' AND DEF_APPROVAL_DETAIL.APPROVAL_GRADE_CD = 'DEF'-->
+<!--					LEFT JOIN DOCS_USER DEF_APPROVAL_USER ON DEF_APPROVAL_USER.USER_CD = DEF_APPROVAL_DETAIL.ACTUAL_USER_CD-->
+<!--					LEFT JOIN DOCS_APPROVAL_FILE APPROVAL_FILE ON APPROVAL_FILE.REQUEST_NO = REQ.REQUEST_NO AND APPROVAL_FILE.OBJECT_ID = FILE_INFO.OBJECT_ID AND APPROVAL_FILE.FILE_NO = FILE_INFO.FILE_NO-->
+<!--&lt;!&ndash; 					LEFT JOIN DOCS_DESTROY_REQUEST DESTROY_REQUEST ON DESTROY_REQUEST.DESTROY_REQUEST_NO = APPROVAL_FILE.LAST_DESTROY_REQUEST_NO &ndash;&gt;-->
+<!--					LEFT JOIN DOCS_REQUEST_DETAIL REJECT_DETAIL ON REJECT_DETAIL.REQUEST_NO = REQ.REQUEST_NO AND REJECT_DETAIL.ACTION_CD = 'REJECT'-->
+<!--                    LEFT JOIN DOCS_USER REJECT_USER ON REJECT_USER.USER_CD = REJECT_DETAIL.ACTUAL_USER_CD-->
+<!--				WHERE REQ.REQUEST_TYPE='DISTRIBUTION'-->
+<!--				<if test='sortColumn == null or "".equals(sortColumn)'>-->
+<!--	           		ORDER BY requestDt desc, requestNo desc-->
+<!--				</if>-->
+<!--	         	<if test='sortColumn != null and !"".equals(sortColumn)'>-->
+<!--	         		ORDER BY ${sortColumn} ${order}-->
+<!--	         		<if test='"requestDt".equals(sortColumn)'>-->
+<!--	         		, requestNo desc-->
+<!--	         		</if>-->
+<!--	         	</if>-->
+<!--			) A1-->
+<!--			WHERE 1=1-->
+<!--			<if test='requestNo != null and !requestNo.equals("")'>-->
+<!--			AND requestNo = #{requestNo}-->
+<!--			</if>-->
+<!--			<if test='deployCompanyCd != null and !deployCompanyCd.equals("")'>-->
+<!--			AND deployCompanyCd = #{deployCompanyCd}-->
+<!--			</if>-->
+<!--			<if test='objectNo != null and !objectNo.equals("")'>-->
+<!--			AND objectNo LIKE '%' || UPPER(TRIM(#{objectNo})) || '%'-->
+<!--			</if>-->
+<!--			<if test='validTermOverYn != null and validTermOverYn.equals("Y")'>-->
+<!--			AND useEndYmd <![CDATA[ < ]]> TO_CHAR(SYSDATE, 'YYYY-MM-DD')-->
+<!--			</if>-->
+<!--			<if test='businessAreaCd != null and !businessAreaCd.equals("")'>-->
+<!--			AND businessAreaCd = #{businessAreaCd}-->
+<!--			</if>-->
+<!--			<if test='approvalUserCd != null and !approvalUserCd.equals("")'>-->
+<!--			AND approvalUserCd = #{approvalUserCd}-->
+<!--			</if>-->
+<!--			<if test='purchaserUserCd != null and !purchaserUserCd.equals("")'>-->
+<!--			AND purchaserUserCd = #{purchaserUserCd}-->
+<!--			</if>-->
+<!--			<choose>-->
+<!--				<when test='statusCd != null and !statusCd.equals("")'>-->
+<!--				AND statusCd = #{statusCd}-->
+<!--				</when>-->
+<!--				<otherwise>-->
+<!--				AND statusCd IN ('APPROVAL', 'REJECT')-->
+<!--				</otherwise>-->
+<!--			</choose>-->
+<!--			<if test='productCd != null and !productCd.equals("")'>-->
+<!--			AND productCd = #{productCd}-->
+<!--			</if>-->
+<!--			<if test='objectType != null and !objectType.equals("")'>-->
+<!--			AND objectType = #{objectType}-->
+<!--			</if>-->
+<!--&lt;!&ndash;		<if test='businessTypeCd != null and !businessTypeCd.equals("")'>-->
+<!--			AND businessTypeCd = #{businessTypeCd}-->
+<!--			</if> &ndash;&gt;-->
+<!--			<if test='destroyStatusCd != null and !destroyStatusCd.equals("")'>-->
+<!--			AND destroyStatusCd = #{destroyStatusCd}-->
+<!--			</if>-->
+<!--			<if test='distributeTypeCd != null and !distributeTypeCd.equals("")'>-->
+<!--			AND distributeTypeCd = #{distributeTypeCd}-->
+<!--			</if>-->
+<!--			<if test='deployType != null and !deployType.equals("")'>-->
+<!--			AND deployType = #{deployType}-->
+<!--			</if>-->
+<!--			<if test='drawingList != null and drawingList.size() != 0'>-->
+<!--				<choose>-->
+<!--					<when test='"Y".equals(useLike)'>-->
+<!--						AND(-->
+<!--						<foreach separator="OR" collection="drawingList" item="drawingInfo">-->
+<!--						(objectType = 'DRAWING' AND objectNo LIKE '%' || UPPER(TRIM(#{drawingInfo.drawingNo})) || '%')-->
+<!--						</foreach>-->
+<!--						OR-->
+<!--						<foreach separator="OR" collection="documentList" item="documentInfo">-->
+<!--						(objectType = 'DOC' AND objectNo LIKE '%' || UPPER(TRIM(#{documentInfo.documentNo})) || '%')-->
+<!--						</foreach>-->
+<!--						OR-->
+<!--						<foreach separator="OR" collection="swList" item="swInfo">-->
+<!--						(objectType = 'SW' AND objectNo LIKE '%' || UPPER(TRIM(#{swInfo.swNo})) || '%')-->
+<!--						</foreach>-->
+<!--						)-->
+<!--					</when>-->
+<!--					<otherwise>-->
+<!--						AND(-->
+<!--						<foreach separator="OR" collection="drawingList" item="drawingInfo">-->
+<!--						(objectType = 'DRAWING' AND objectNo = UPPER(TRIM(#{drawingInfo.drawingNo})) )-->
+<!--						</foreach>-->
+<!--						OR-->
+<!--						<foreach separator="OR" collection="documentList" item="documentInfo">-->
+<!--						(objectType = 'DOC' AND objectNo = UPPER(TRIM(#{documentInfo.documentNo})) )-->
+<!--						</foreach>-->
+<!--						OR-->
+<!--						<foreach separator="OR" collection="swList" item="swInfo">-->
+<!--						(objectType = 'SW' AND objectNo = UPPER(TRIM(#{swInfo.swNo})) )-->
+<!--						</foreach>-->
+<!--						)-->
+<!--					</otherwise>-->
+<!--				</choose>-->
+<!--			</if>-->
+<!--&lt;!&ndash; 			<if test='approvalStartDt != null and !approvalStartDt.equals("")'> &ndash;&gt;-->
+<!--&lt;!&ndash; 			AND approvalDt BETWEEN TO_DATE('${approvalStartDt}', 'YYYY-MM-DD') &ndash;&gt;-->
+<!--&lt;!&ndash; 	                         AND TO_DATE('${approvalEndDt} ', 'YYYY-MM-DD')+1 &ndash;&gt;-->
+<!--&lt;!&ndash; 			</if>  &ndash;&gt;-->
+<!--			<if test='requestStartDt != null and !requestStartDt.equals("")'>-->
+<!--				AND requestDt BETWEEN TO_DATE(#{requestStartDt}, 'YYYY-MM-DD')-->
+<!--	            AND TO_DATE(#{requestEndDt}, 'YYYY-MM-DD')+1-->
+<!--			</if>-->
+<!--			<if test='end != null and !end.equals("")'>-->
+<!--			AND ROWNUM <![CDATA[ <= ]]> #{end}-->
+<!--			</if>-->
+<!--		) B1-->
+<!--		<if test='start != null and !start.equals("")'>-->
+<!--		WHERE PAGEINDEX <![CDATA[ >= ]]>#{start}-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	<select id="selectListCount" resultType="Integer">-->
+<!--		SELECT COUNT(*) AS TOTAL_COUNT-->
+<!--		FROM-->
+<!--			(-->
+<!--			SELECT-->
+<!--				A1.*-->
+<!--			FROM-->
+<!--			(-->
+<!--				SELECT-->
+<!--					REQ.REQUEST_NO 																		AS requestNo 			/* 요청번호 */-->
+<!--					, REQ.REQUEST_TYPE																	AS requestType			/* 요청유형 */-->
+<!--					, REQ.OBJECT_TYPE																	AS objectType			/* 자료유형 */-->
+<!--					, FN_GET_CD_NM('objectTypeWithP', REQ.OBJECT_TYPE, #{sessionLang}) 					AS objectTypeNm-->
+<!--					, REQ_MAPPING.BUSINESS_TYPE_CD 														AS businessTypeCd		/* 사업구분코드 */-->
+<!--					, FN_GET_CD_NM('businessTypeCd', REQ_MAPPING.BUSINESS_TYPE_CD, #{sessionLang}) 		AS businessTypeNm-->
+<!--  					, REQ_MAPPING.DISTRIBUTE_TYPE_CD 													AS distributeTypeCd		/* 배포유형코드 */-->
+<!--  					, FN_GET_CD_NM('distributeTypeCd', REQ_MAPPING.DISTRIBUTE_TYPE_CD, #{sessionLang})	AS distributeTypeNm		/* 배포유형 */-->
+<!--					, CASE-->
+<!--						WHEN DEPLOY_NORMAL_YN = 'Y'-->
+<!--							THEN (SELECT LANG_DESC FROM DOCS_LANG lang WHERE lang.LANG_CD = 'combo.deployType.normalArea' AND lang.LANG_TYPE = #{sessionLang})-->
+<!--						WHEN DEPLOY_SPECIAL_YN = 'Y'-->
+<!--							THEN (SELECT LANG_DESC FROM DOCS_LANG lang WHERE lang.LANG_CD = 'combo.deployType.specialArea' AND lang.LANG_TYPE = #{sessionLang})-->
+<!--						ELSE (SELECT LANG_DESC FROM DOCS_LANG lang WHERE lang.LANG_CD = 'combo.deployType.viewing' AND lang.LANG_TYPE = #{sessionLang})-->
+<!--					END 																				AS deployTypeNm 		/* 배포방식 */-->
+<!--					, CASE-->
+<!--						WHEN DEPLOY_NORMAL_YN = 'Y'-->
+<!--							THEN 'NORMAL'-->
+<!--						WHEN DEPLOY_SPECIAL_YN = 'Y'-->
+<!--							THEN 'SPECIAL'-->
+<!--						ELSE 'VIEWING'-->
+<!--					END 																				AS deployType 			/* 배포방식 */-->
+<!--					, REQ.REQUEST_PURPOSE 																AS requestPurpose		/* 용도 */-->
+<!--					, FN_GET_CD_NM('requestPurpose', REQ.REQUEST_PURPOSE, #{sessionLang}) 				AS requestPurposeNm-->
+<!--					, REQ_MAPPING.OBJECT_NO 															AS objectNo				/* 자료번호 */-->
+<!--					, REQ_MAPPING.REV_NO 																AS revNo				/* REV */-->
+<!--					, (-->
+<!--                      CASE REQ.OBJECT_TYPE-->
+<!--                        WHEN TO_NCHAR('DOC') THEN (-->
+<!--                          SELECT MAX(REV_NO)-->
+<!--                          FROM DOCS_DOCUMENT doc-->
+<!--                          WHERE doc.DOCUMENT_NO = REQ_MAPPING.OBJECT_NO)-->
+<!--                        WHEN TO_NCHAR('DRAWING') THEN (-->
+<!--                          SELECT MAX(REV_NO)-->
+<!--                          FROM DOCS_DRAWING doc-->
+<!--                          WHERE doc.DRAWING_NO = REQ_MAPPING.OBJECT_NO)-->
+<!--                        WHEN TO_NCHAR('SW') THEN (-->
+<!--                          SELECT MAX(REV_NO)-->
+<!--                          FROM DOCS_SW doc-->
+<!--                          WHERE doc.SW_NO = REQ_MAPPING.OBJECT_NO)-->
+<!--                        END-->
+<!--                      )                                             									AS lastRevNo       		/* 최종 REV */-->
+<!--					, REQ_MAPPING.SW_VERSION_NO															AS swVersionNo 			/* SW 버전 */-->
+<!--					, REQ_MAPPING.DOC_VERSION_NO   														AS docVersionNo 		/* 명세서 버전 */-->
+<!--					, REQ_MAPPING.OBJECT_NM 															AS objectNm				/* 자료명 */-->
+<!--					, REQ_MAPPING.CURRENT_PAGE_NO 														AS currentPageNo		/* 페이지 */-->
+<!--					, REQ_MAPPING.TOTAL_PAGE_NO 														AS totalPageNo			/* 총 페이지 */-->
+<!--					, REQ_MAPPING.ECN_NO 																AS ecnNo				/* CO 번호 */-->
+<!--					,(-->
+<!--                        SELECT CN_CD || ' ' || CN_CD_DESC-->
+<!--                        FROM (SELECT DISTINCT PRODUCT_CD AS CN_CD, PRODUCT_CD AS CN_CD_DESC FROM DOCS_REQUEST_MAPPING WHERE PRODUCT_CD IS NOT NULL) prod-->
+<!--                        WHERE prod.CN_CD = REQ_MAPPING.PRODUCT_CD-->
+<!--                    ) 																					AS productNm 			/* 기종 */-->
+<!--                    , REQ_MAPPING.PRODUCT_CD 															AS productCd			/* 기종코드 */-->
+<!--					, REQ_MAPPING.BUSINESS_AREA_CD 														AS businessAreaCd		/* 사업장 */-->
+<!--					, FN_GET_CD_NM('businessAreaCd', REQ_MAPPING.BUSINESS_AREA_CD, #{sessionLang}) 		AS businessAreaNm-->
+<!--					, REQ_MAPPING.PROTECT_YN 															AS protectYn			/* 방산기술 */-->
+<!--					, DEPLOY_COMPANY.COMPANY_CD                                                         AS deployCompanyCd      /* 업체코드 */-->
+<!--                    , DEPLOY_COMPANY.COMPANY_NM                                                         AS deployCompanyNm      /* 업체명 */-->
+<!--					, REQ_MAPPING.OBJECT_ID																AS objectId-->
+<!--					, ACC_USER.USER_NM  																AS purchaserUserNm		/* 구매담당자 */-->
+<!--					, CASE-->
+<!--						WHEN REQ.STATUS_CD = 'APPROVAL'-->
+<!--							THEN-->
+<!--								CASE-->
+<!--									WHEN DEF_APPROVAL_USER.USER_CD IS NULL-->
+<!--										THEN TL_APPROVAL_USER.USER_CD-->
+<!--									ELSE DEF_APPROVAL_USER.USER_CD-->
+<!--								END-->
+<!--						WHEN REQ.STATUS_CD = 'REJECT'-->
+<!--							THEN REJECT_USER.USER_CD-->
+<!--						ELSE NULL-->
+<!--					END 																				AS approvalUserCd 		/* 승인자코드 */-->
+<!--					, CASE-->
+<!--						WHEN REQ.STATUS_CD = 'APPROVAL'-->
+<!--							THEN-->
+<!--								CASE-->
+<!--									WHEN DEF_APPROVAL_USER.USER_NM IS NULL-->
+<!--										THEN TL_APPROVAL_USER.USER_NM-->
+<!--									ELSE DEF_APPROVAL_USER.USER_NM-->
+<!--								END-->
+<!--						WHEN REQ.STATUS_CD = 'REJECT'-->
+<!--							THEN REJECT_USER.USER_NM-->
+<!--						ELSE NULL-->
+<!--					END 																				AS approvalUserNm 		/* 승인자 */-->
+<!--					, REQ.APPROVAL_DT						 											AS approvalDt			/* 승인일자 */-->
+<!--					, REQ.INSERT_DT																		AS requestDt			/* 요청일자 */-->
+<!--					, REQ_DETAIL.REQUEST_DESC 															AS requestReason		/* 배포요청사유 */-->
+<!--					, TO_CHAR(TO_DATE(FILE_INFO.USE_END_YMD, 'YYYYMMDD'), 'YYYY-MM-DD')					AS useEndYmd			/* 유효기간 */-->
+<!--					, REQ.STATUS_CD 																	AS statusCd				/* 결재상태 */-->
+<!--					, FN_GET_CD_NM('requestStatusCd', REQ.STATUS_CD, #{sessionLang}) 					AS statusNm-->
+<!--					, FILE_INFO.DESTROY_STATUS_CD														AS destroyStatusCd-->
+<!--					, FN_GET_CD_NM('destroyStatusCd', FILE_INFO.DESTROY_STATUS_CD, #{sessionLang})		AS destroyStatusNm-->
+<!--					, FN_GET_CD_NM('destroyType', FILE_INFO.DESTROY_TYPE, #{sessionLang})				AS destroyType-->
+<!--&lt;!&ndash; 					, DESTROY_REQUEST.DESTROY_STATUS_CD													AS destroyStatusCd 	/* 폐기구분 */ &ndash;&gt;-->
+<!--&lt;!&ndash; 					, FN_GET_CD_NM('destroyStatusCd', DESTROY_REQUEST.DESTROY_STATUS_CD, #{sessionLang}) AS destroyStatusNm &ndash;&gt;-->
+<!--&lt;!&ndash; 					, FN_GET_CD_NM('destroyType', DESTROY_REQUEST.DESTROY_TYPE, #{sessionLang})			AS destroyType 		/* 폐기유형 */ &ndash;&gt;-->
+<!--					, DEPLOY_USER.USER_NM																AS companyUserNm		/* 업체담당자 */-->
+<!--	           		, (-->
+<!--					    SELECT USER_NM-->
+<!--					    FROM DOCS_REQUEST_DETAIL requestDetail-->
+<!--					      INNER JOIN DOCS_USER docsUser ON docsUser.USER_CD = requestDetail.ACTUAL_USER_CD-->
+<!--					    WHERE requestDetail.REQUEST_NO = REQ.REQUEST_NO-->
+<!--					    AND requestDetail.APPROVAL_STATUS_CD = 'ACCEPT'-->
+<!--					) 																					AS deployUserNm   		/* 배포자 */-->
+<!--					, FILE_INFO.FILE_NO																	AS fileNo-->
+<!--					, FILE_INFO.ORG_FILE_NM																AS orgFileNm-->
+<!--					, ACC_DETAIL.ACTUAL_USER_CD 														AS purchaserUserCd-->
+<!--					, (SELECT USER_NM FROM DOCS_USER t WHERE t.USER_CD = REQ.INSERT_USER_CD) 			AS requestUserNm-->
+<!--				FROM DOCS_REQUEST_FILE FILE_INFO-->
+<!--					INNER JOIN DOCS_REQUEST_MAPPING REQ_MAPPING ON FILE_INFO.REQUEST_NO = REQ_MAPPING.REQUEST_NO AND FILE_INFO.OBJECT_ID = REQ_MAPPING.OBJECT_ID-->
+<!--					INNER JOIN DOCS_REQUEST REQ ON REQ_MAPPING.REQUEST_NO = REQ.REQUEST_NO-->
+<!--					INNER JOIN DOCS_REQUEST_DETAIL REQ_DETAIL ON REQ_DETAIL.REQUEST_NO = REQ.REQUEST_NO AND REQ_DETAIL.APPROVAL_STATUS_CD = 'REQUEST'-->
+<!--					INNER JOIN DOCS_USER REQ_USER ON REQ_USER.USER_CD = REQ_DETAIL.ACTUAL_USER_CD-->
+<!--					INNER JOIN DOCS_REQUEST_DEPLOY REQUEST_DEPLOY ON REQUEST_DEPLOY.REQUEST_NO = REQ.REQUEST_NO-->
+<!--					INNER JOIN DOCS_USER DEPLOY_USER ON DEPLOY_USER.USER_CD = REQUEST_DEPLOY.DEPLOY_USER_CD-->
+<!--					INNER JOIN DOCS_COMPANY DEPLOY_COMPANY ON DEPLOY_COMPANY.COMPANY_CD = DEPLOY_USER.COMPANY_CD-->
+<!--					INNER JOIN DOCS_REQUEST_DETAIL ACC_DETAIL ON ACC_DETAIL.REQUEST_NO = REQ.REQUEST_NO AND ACC_DETAIL.APPROVAL_STATUS_CD = 'ACCEPT'-->
+<!--					INNER JOIN DOCS_USER ACC_USER ON ACC_USER.USER_CD = ACC_DETAIL.ORIGINAL_USER_CD-->
+<!--					LEFT JOIN DOCS_REQUEST_DETAIL TL_APPROVAL_DETAIL ON TL_APPROVAL_DETAIL.REQUEST_NO = REQ.REQUEST_NO AND TL_APPROVAL_DETAIL.APPROVAL_STATUS_CD = 'APPROVAL' AND TL_APPROVAL_DETAIL.APPROVAL_GRADE_CD = 'TL'-->
+<!--					LEFT JOIN DOCS_USER TL_APPROVAL_USER ON TL_APPROVAL_USER.USER_CD = TL_APPROVAL_DETAIL.ACTUAL_USER_CD-->
+<!--					LEFT JOIN DOCS_REQUEST_DETAIL DEF_APPROVAL_DETAIL ON DEF_APPROVAL_DETAIL.REQUEST_NO = REQ.REQUEST_NO AND DEF_APPROVAL_DETAIL.APPROVAL_STATUS_CD = 'APPROVAL' AND DEF_APPROVAL_DETAIL.APPROVAL_GRADE_CD = 'DEF'-->
+<!--					LEFT JOIN DOCS_USER DEF_APPROVAL_USER ON DEF_APPROVAL_USER.USER_CD = DEF_APPROVAL_DETAIL.ACTUAL_USER_CD-->
+<!--					LEFT JOIN DOCS_APPROVAL_FILE APPROVAL_FILE ON APPROVAL_FILE.REQUEST_NO = REQ.REQUEST_NO AND APPROVAL_FILE.OBJECT_ID = FILE_INFO.OBJECT_ID AND APPROVAL_FILE.FILE_NO = FILE_INFO.FILE_NO-->
+<!--&lt;!&ndash; 					LEFT JOIN DOCS_DESTROY_REQUEST DESTROY_REQUEST ON DESTROY_REQUEST.DESTROY_REQUEST_NO = APPROVAL_FILE.LAST_DESTROY_REQUEST_NO &ndash;&gt;-->
+<!--					LEFT JOIN DOCS_REQUEST_DETAIL REJECT_DETAIL ON REJECT_DETAIL.REQUEST_NO = REQ.REQUEST_NO AND REJECT_DETAIL.ACTION_CD = 'REJECT'-->
+<!--                    LEFT JOIN DOCS_USER REJECT_USER ON REJECT_USER.USER_CD = REJECT_DETAIL.ACTUAL_USER_CD-->
+<!--				WHERE REQ.REQUEST_TYPE='DISTRIBUTION'-->
+<!--			) A1-->
+<!--			WHERE 1=1-->
+<!--			<if test='requestNo != null and !requestNo.equals("")'>-->
+<!--			AND requestNo = #{requestNo}-->
+<!--			</if>-->
+<!--			<if test='deployCompanyCd != null and !deployCompanyCd.equals("")'>-->
+<!--			AND deployCompanyCd = #{deployCompanyCd}-->
+<!--			</if>-->
+<!--			<if test='objectNo != null and !objectNo.equals("")'>-->
+<!--			AND objectNo LIKE '%' || UPPER(TRIM(#{objectNo})) || '%'-->
+<!--			</if>-->
+<!--			<if test='validTermOverYn != null and validTermOverYn.equals("Y")'>-->
+<!--			AND useEndYmd <![CDATA[ < ]]> TO_CHAR(SYSDATE, 'YYYY-MM-DD')-->
+<!--			</if>-->
+<!--			<if test='businessAreaCd != null and !businessAreaCd.equals("")'>-->
+<!--			AND businessAreaCd = #{businessAreaCd}-->
+<!--			</if>-->
+<!--			<if test='approvalUserCd != null and !approvalUserCd.equals("")'>-->
+<!--			AND approvalUserCd = #{approvalUserCd}-->
+<!--			</if>-->
+<!--			<if test='purchaserUserCd != null and !purchaserUserCd.equals("")'>-->
+<!--			AND purchaserUserCd = #{purchaserUserCd}-->
+<!--			</if>-->
+<!--			<choose>-->
+<!--				<when test='statusCd != null and !statusCd.equals("")'>-->
+<!--				AND statusCd = #{statusCd}-->
+<!--				</when>-->
+<!--				<otherwise>-->
+<!--				AND statusCd IN ('APPROVAL', 'REJECT')-->
+<!--				</otherwise>-->
+<!--			</choose>-->
+<!--			<if test='productCd != null and !productCd.equals("")'>-->
+<!--			AND productCd = #{productCd}-->
+<!--			</if>-->
+<!--			<if test='objectType != null and !objectType.equals("")'>-->
+<!--			AND objectType = #{objectType}-->
+<!--			</if>-->
+<!--&lt;!&ndash;		<if test='businessTypeCd != null and !businessTypeCd.equals("")'>-->
+<!--			AND businessTypeCd = #{businessTypeCd}-->
+<!--			</if> &ndash;&gt;-->
+<!--			<if test='destroyStatusCd != null and !destroyStatusCd.equals("")'>-->
+<!--			AND destroyStatusCd = #{destroyStatusCd}-->
+<!--			</if>-->
+<!--			<if test='distributeTypeCd != null and !distributeTypeCd.equals("")'>-->
+<!--			AND distributeTypeCd = #{distributeTypeCd}-->
+<!--			</if>-->
+<!--			<if test='deployType != null and !deployType.equals("")'>-->
+<!--			AND deployType = #{deployType}-->
+<!--			</if>-->
+<!--			<if test='drawingList != null and drawingList.size() != 0'>-->
+<!--				<choose>-->
+<!--					<when test='"Y".equals(useLike)'>-->
+<!--						AND(-->
+<!--						<foreach separator="OR" collection="drawingList" item="drawingInfo">-->
+<!--						(objectType = 'DRAWING' AND objectNo LIKE '%' || UPPER(TRIM(#{drawingInfo.drawingNo})) || '%')-->
+<!--						</foreach>-->
+<!--						OR-->
+<!--						<foreach separator="OR" collection="documentList" item="documentInfo">-->
+<!--						(objectType = 'DOC' AND objectNo LIKE '%' || UPPER(TRIM(#{documentInfo.documentNo})) || '%')-->
+<!--						</foreach>-->
+<!--						OR-->
+<!--						<foreach separator="OR" collection="swList" item="swInfo">-->
+<!--						(objectType = 'SW' AND objectNo LIKE '%' || UPPER(TRIM(#{swInfo.swNo})) || '%')-->
+<!--						</foreach>-->
+<!--						)-->
+<!--					</when>-->
+<!--					<otherwise>-->
+<!--						AND(-->
+<!--						<foreach separator="OR" collection="drawingList" item="drawingInfo">-->
+<!--						(objectType = 'DRAWING' AND objectNo = UPPER(TRIM(#{drawingInfo.drawingNo})) )-->
+<!--						</foreach>-->
+<!--						OR-->
+<!--						<foreach separator="OR" collection="documentList" item="documentInfo">-->
+<!--						(objectType = 'DOC' AND objectNo = UPPER(TRIM(#{documentInfo.documentNo})) )-->
+<!--						</foreach>-->
+<!--						OR-->
+<!--						<foreach separator="OR" collection="swList" item="swInfo">-->
+<!--						(objectType = 'SW' AND objectNo = UPPER(TRIM(#{swInfo.swNo})) )-->
+<!--						</foreach>-->
+<!--						)-->
+<!--					</otherwise>-->
+<!--				</choose>-->
+<!--			</if>-->
+<!--			<if test='requestStartDt != null and !requestStartDt.equals("")'>-->
+<!--			AND requestDt BETWEEN TO_DATE(#{requestStartDt}, 'YYYY-MM-DD')-->
+<!--	                         AND TO_DATE(#{requestEndDt}, 'YYYY-MM-DD')+1-->
+<!--			</if>-->
+<!--			&lt;!&ndash; <if test='approvalStartDt != null and !approvalStartDt.equals("")'>-->
+<!--			AND approvalDt BETWEEN TO_DATE('${approvalStartDt}', 'YYYY-MM-DD')-->
+<!--	                         AND TO_DATE('${approvalEndDt} ', 'YYYY-MM-DD')+1-->
+<!--			</if> &ndash;&gt;-->
+<!--			) B1-->
+<!--	</select>-->
+
+
+
+
+
+
+
+
+
+
+
+<!--	<select id="getDrawingInfoList" resultType="kr.esob.fdms.controller.outside.drawing.request.DrawingInfoVO">-->
+<!--        SELECT *-->
+<!--        FROM DOCS_DRAWING-->
+<!--        WHERE DRAWING_NO IN-->
+<!--        <foreach collection="list" open="(" close=")" separator="," item="DrawingInfoVO">-->
+<!--        	#{DrawingInfoVO.drawingNo}-->
+<!--        </foreach>-->
+<!--	</select>-->
+
+<!--	<select id="getDrawingInfo" resultType="kr.esob.fdms.controller.outside.drawing.request.DrawingInfoVO">-->
+<!--		SELECT 'Y' AS inspectionYn, info.*-->
+<!--		FROM DOCS_DRAWING info-->
+<!--		WHERE DRAWING_NO = #{drawingNo}-->
+<!--		AND ROWNUM <![CDATA[<=]]> 1-->
+<!--	</select>-->
+
+
+<!--	&lt;!&ndash; 사업자 리스트 조회 [2019.09.30(최금영)] &ndash;&gt;-->
+<!--	<select id="selectCompanyList" resultType="kr.esob.fdms.controller.inside.distribution.history.CompanyListVO" parameterType="kr.esob.fdms.controller.inside.distribution.history.HistoryListParam">-->
+<!--		/* 업체 리스트 */-->
+<!--		SELECT *-->
+<!--		FROM (-->
+<!--			SELECT-->
+<!--				<if test='sortColumn == null or "".equals(sortColumn)'>-->
+<!--					ROW_NUMBER() OVER(ORDER BY companyNm asc) AS PAGEINDEX-->
+<!--				</if>-->
+<!--				<if test='sortColumn != null and !"".equals(sortColumn)'>-->
+<!--					ROW_NUMBER() OVER(ORDER BY ${sortColumn} ${order}) AS PAGEINDEX-->
+<!--				</if>-->
+<!--				, B1.*-->
+<!--			FROM (-->
+<!--				SELECT BIZ_NO AS bizNo-->
+<!--					, COMPANY_NM AS companyNm-->
+<!--					, COMPANY_CD AS companyCd-->
+<!--					, CASE WHEN (USE_YN = 'N' OR DEL_YN ='Y') THEN '거래중단'-->
+<!--                           ELSE ''-->
+<!--                      END stopDeal-->
+<!--				FROM DOCS_COMPANY-->
+<!--				WHERE 1 = 1-->
+<!--			   	<if test='bizNo != null and !bizNo.equals("")'>-->
+<!--				AND BIZ_NO LIKE '%' || #{bizNo} || '%'-->
+<!--				</if>-->
+<!--				<if test='companyNm != null and !companyNm.equals("")'>-->
+<!--				AND COMPANY_NM LIKE '%' || #{companyNm} || '%'-->
+<!--				ORDER BY COMPANY_NM-->
+<!--				</if>-->
+<!--				) B1-->
+<!--				<if test='end != null and !end.equals("")'>-->
+<!--				WHERE ROWNUM <![CDATA[ <= ]]> #{end}-->
+<!--				</if>-->
+<!--			)-->
+<!--			<if test='start != null and !start.equals("")'>-->
+<!--			WHERE PAGEINDEX <![CDATA[ >= ]]>#{start}-->
+<!--			ORDER BY companyNm-->
+<!--			</if>-->
+<!--	</select>-->
+
+
+<!--	&lt;!&ndash; 사업자 리스트 총 갯수 [2019.09.30(최금영)] &ndash;&gt;-->
+<!--	<select id="selectCompanyListCount" resultType="Integer" parameterType="kr.esob.fdms.controller.inside.distribution.history.HistoryListParam">-->
+<!--		/* 업체 리스트 */-->
+<!--		SELECT COUNT(*) AS TOTAL_COUNT-->
+<!--		FROM DOCS_COMPANY-->
+<!--		WHERE DEL_YN ='N'-->
+<!--	   	<if test='bizNo != null and !bizNo.equals("")'>-->
+<!--		AND BIZ_NO LIKE '%' || #{bizNo} || '%'-->
+<!--		</if>-->
+<!--		<if test='companyNm != null and !companyNm.equals("")'>-->
+<!--		AND COMPANY_NM LIKE '%' || #{companyNm} || '%'-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	&lt;!&ndash; 업체 거래중단-삭제 [2019.09.30(최금영)] &ndash;&gt;-->
+<!--	<update id="deleteCompany">-->
+<!--		/* 업체 거래중단 */-->
+<!--		UPDATE DOCS_COMPANY-->
+<!--		SET DEL_YN = 'Y'-->
+<!--		WHERE COMPANY_CD = #{companyCd}-->
+<!--	</update>-->
+
+<!--	<update id="deleteUser">-->
+<!--		/* 업체 거래중단 - 사용여부를 모두 N으로 변경 */-->
+<!--		UPDATE DOCS_USER-->
+<!--		SET USE_YN = 'N'-->
+<!--		WHERE COMPANY_CD = #{companyCd}-->
+<!--	</update>-->
+
+<!--	&lt;!&ndash; 업체 거래중단으로 인한 배포 파일 폐기중으로 변경 [2019.10.02(최금영)] &ndash;&gt;-->
+<!--	<update id="destroyDistribution">-->
+<!--		/* 업체 거래중단으로 인한 배포 파일 폐기중으로 변경 */-->
+<!--		UPDATE DOCS_APPROVAL_FILE-->
+<!--		SET LAST_DESTROY_REQUEST_NO = #{destroyRequestNo}-->
+<!--		WHERE REQUEST_NO = #{requestNo}-->
+<!--		AND OBJECT_ID = #{objectId}-->
+<!--	</update>-->
+
+<!--	&lt;!&ndash; 업체 거래중단-삭제 &ndash;&gt;-->
+<!--	<update id="deleteVendor">-->
+<!--		/* 업체 거래중단 */-->
+<!--		UPDATE ITN_VENDOR-->
+<!--		SET VENDOR_STATUS = 'N', CN_CHANGE_TYPE = 'U'-->
+<!--		WHERE VENDOR_CD = #{bizNo}-->
+<!--	</update>-->
+
+<!--	&lt;!&ndash; 폐기 등록 [2019.10.08(최금영)] &ndash;&gt;-->
+<!--	<insert id="insertDestroyInfo" parameterType="kr.esob.fdms.controller.inside.distribution.history.DestroyPopupParam" useGeneratedKeys="true" keyProperty="destroyNo">-->
+<!--		<selectKey keyProperty="destroyNo" resultType="String" order="BEFORE">-->
+<!--            SELECT DOCS_DESTROY_SEQ.NEXTVAL-->
+<!--              FROM DUAL-->
+<!--        </selectKey>-->
+<!--        INSERT INTO DOCS_DESTROY-->
+<!--        	( DESTROY_NO )-->
+<!--        VALUES-->
+<!--        	( #{destroyNo} )-->
+<!--	</insert>-->
+
+<!--	&lt;!&ndash; 폐기 등록된 파일 정보 추가 [2019.10.08(최금영)] &ndash;&gt;-->
+<!--	<insert id="insertDestroyFile" parameterType="kr.esob.fdms.controller.inside.distribution.history.DestroyPopupParam">-->
+<!--		INSERT INTO DOCS_DESTROY_FILE-->
+<!--			( DESTROY_NO-->
+<!--			, DESTROY_FILE_SEQ-->
+<!--			, FILE_PATH-->
+<!--			)-->
+<!--		VALUES-->
+<!--			( #{destroyNo}-->
+<!--			, #{destroyFileSeq}-->
+<!--			, #{filePath}-->
+<!--			)-->
+<!--	</insert>-->
+
+
+<!--	&lt;!&ndash; 폐기 완료 상태 수정 [2019.10.11(최금영)] &ndash;&gt;-->
+<!--	&lt;!&ndash; <update id="updateDestroyRequest" parameterType="kr.esob.fdms.controller.inside.distribution.history.DestroyPopupParam">-->
+<!--		/* 폐기 완료 상태 수정 */-->
+<!--		UPDATE DOCS_DESTROY_REQUEST-->
+<!--		SET DESTROY_STATUS_CD = '2'-->
+<!--			, DESTROY_NO = #{destroyNo}-->
+<!--			, APPROVAL_DT = SYSDATE-->
+<!--			, DESTROY_DT = SYSDATE-->
+<!--		WHERE DESTROY_REQUEST_NO IN ( SELECT DESTROY_REQUEST_NO-->
+<!--									 FROM DOCS_DESTROY_REQUEST_MAPPING-->
+<!--									 WHERE REQUEST_NO = #{requestNo}-->
+<!--									 AND OBJECT_ID = #{objectId} )-->
+<!--	</update> &ndash;&gt;-->
+
+<!--	&lt;!&ndash; 배포 수정 [2019.10.11(최금영)] &ndash;&gt;-->
+<!--	<update id="updateDeistributeInfo" parameterType="kr.esob.fdms.controller.inside.distribution.history.DestroyPopupParam">-->
+<!--		/* 배포 내용 수정 */-->
+<!--		UPDATE DOCS_APPROVAL_FILE-->
+<!--		SET LAST_DESTROY_REQUEST_NO = (SELECT DESTROY_REQUEST_NO-->
+<!--									 FROM DOCS_DESTROY_REQUEST_MAPPING-->
+<!--									 WHERE REQUEST_NO = #{requestNo}-->
+<!--									 AND OBJECT_ID = #{objectId})-->
+<!--			, DESTROY_STATUS_CD = '2'-->
+<!--		WHERE REQUEST_NO = #{requestNo}-->
+<!--		AND OBJECT_ID = #{objectId}-->
+<!--	</update>-->
+
+
+
+<!--	&lt;!&ndash; 거래 중단 시 해당 업체의 모든 배포요청 리스트 조회 [2010.10.11(최금영)] &ndash;&gt;-->
+<!--	<select id="selectDestroyList" resultType="kr.esob.fdms.controller.inside.distribution.history.stopDealPopupParam">-->
+<!--		/* 거래 중단 시 해당 업체의 모든 배포요청 리스트 조회 */-->
+<!--		SELECT REQUEST_NO AS requestNo-->
+<!--			, OBJECT_ID AS objectId-->
+<!--		FROM DOCS_REQUEST_MAPPING-->
+<!--		WHERE REQUEST_NO IN (-->
+<!--			SELECT REQUEST_NO-->
+<!--			FROM DOCS_REQUEST-->
+<!--			WHERE DEPLOY_COMPANY_CD = #{companyCd}-->
+<!--			AND REQUEST_TYPE = 'DISTRIBUTION'-->
+<!--		)-->
+<!--	</select>-->
+
+
+<!--	&lt;!&ndash; 폐기 요청 추가 [2019.10.11(최금영)] &ndash;&gt;-->
+<!--	<insert id="insertDestroyRequest" parameterType="kr.esob.fdms.controller.inside.distribution.history.stopDealPopupParam">-->
+<!--		<selectKey keyProperty="destroyRequestNo" resultType="String" order="BEFORE">-->
+<!--            SELECT TO_CHAR(SYSDATE,'YYYYMMDD')||'-X'||LPAD(NVL(SUBSTR(MAX(DESTROY_REQUEST_NO),11),0)+1,4,0) AS DESTROY_REQUEST_NO-->
+<!--              FROM DOCS_DESTROY_REQUEST-->
+<!--             WHERE SUBSTR(DESTROY_REQUEST_NO,1,10) = TO_CHAR(SYSDATE,'YYYYMMDD')||'-X'-->
+<!--        </selectKey>-->
+<!--        	/* 폐기 요청 추가 */-->
+<!--			INSERT INTO DOCS_DESTROY_REQUEST-->
+<!--				( DESTROY_REQUEST_NO-->
+<!--				, APPROVAL_LINE_ID-->
+<!--				, CURRENT_PROCESS_SEQ_NO-->
+<!--				, STATUS_CD-->
+<!--				, INSERT_USER_CD-->
+<!--				, INSERT_DT-->
+<!--				, APPROVAL_DT-->
+<!--				, DESTROY_TYPE-->
+<!--				, DESTROY_STATUS_CD-->
+<!--				, BUSINESS_AREA_CD-->
+<!--				)-->
+<!--			VALUES-->
+<!--				( #{destroyRequestNo}-->
+<!--				, '5'-->
+<!--				, '1'-->
+<!--				, 'APPROVAL'-->
+<!--				, #{sessionUser.userCd}-->
+<!--				, SYSDATE-->
+<!--				, SYSDATE-->
+<!--				, '3'-->
+<!--				, '1'-->
+<!--				, (SELECT BUSINESS_AREA_CD FROM DOCS_REQUEST WHERE REQUEST_NO = #{requestNo})-->
+<!--				)-->
+<!--	</insert>-->
+
+
+<!--	&lt;!&ndash; 폐기 요청 상세정보 추가 [2019.10.11(최금영)] &ndash;&gt;-->
+<!--	<insert id="insertDestroyRequestDetail" parameterType="kr.esob.fdms.controller.inside.distribution.history.stopDealPopupParam">-->
+<!--		INSERT INTO DOCS_DESTROY_REQUEST_DETAIL-->
+<!--			( DESTROY_REQUEST_NO-->
+<!--			, PROCESS_SEQ-->
+<!--			, APPROVAL_STATUS_CD-->
+<!--			, ACTION_CD-->
+<!--			, ORIGINAL_USER_CD-->
+<!--			, ACTUAL_USER_CD-->
+<!--			, ACTION_DT-->
+<!--			)-->
+<!--		VALUES-->
+<!--			( #{destroyRequestNo}-->
+<!--			, #{processSeq}-->
+<!--			, #{approvalStatusCd}-->
+<!--			, 'APPROVAL'-->
+<!--			, #{sessionUser.userCd}-->
+<!--			, #{sessionUser.userCd}-->
+<!--			, SYSDATE-->
+<!--			)-->
+<!--	</insert>-->
+
+
+<!--	&lt;!&ndash; 폐기 요청 mapping 추가 [2019.10.11(최금영)] &ndash;&gt;-->
+<!--	<insert id="insertDestroyRequestMapping" parameterType="kr.esob.fdms.controller.inside.distribution.history.stopDealPopupParam">-->
+<!--		INSERT INTO DOCS_DESTROY_REQUEST_MAPPING-->
+<!--			( REQUEST_NO-->
+<!--			, OBJECT_ID-->
+<!--			, DESTROY_REQUEST_NO-->
+<!--			, DEPLOY_USER_CD-->
+<!--			)-->
+<!--		VALUES-->
+<!--			( #{requestNo}-->
+<!--			, #{objectId}-->
+<!--			, #{destroyRequestNo}-->
+<!--			, #{sessionUser.userCd}-->
+<!--			)-->
+<!--	</insert>-->
+
+<!--	&lt;!&ndash;결재 라인 상세정보 [2019.09.18(최금영)] &ndash;&gt;-->
+<!--	<select id="getDocsApprovalLineDetail" resultType="kr.esob.fdms.controller.inside.distribution.commonrequest.ApprovalLineDetailVO">-->
+<!--		SELECT APPROVAL_STATUS_CD 		AS approvalStatusCd-->
+<!--			 , APPROVAL_GRADE_CD		AS approvalGradeCd-->
+<!--		  FROM DOCS_APPROVAL_LINE_DETAIL-->
+<!--		 WHERE APPROVAL_LINE_ID = #{approvalLineId}-->
+<!--		ORDER BY PROCESS_SEQ_NO-->
+<!--	</select>-->
+
+<!--	&lt;!&ndash; 폐기 사유 등록 [2019.10.11(최금영)] &ndash;&gt;-->
+<!--	&lt;!&ndash; <update id="updateDestroyRequestDesc" parameterType="kr.esob.fdms.controller.inside.distribution.history.DestroyPopupParam">-->
+<!--		UPDATE DOCS_DESTROY_REQUEST_DETAIL-->
+<!--		SET REQUEST_DESC = #{destroyDesc}-->
+<!--		WHERE DESTROY_REQUEST_NO = ( SELECT DESTROY_REQUEST_NO-->
+<!--									 FROM DOCS_DESTROY_REQUEST_MAPPING-->
+<!--									 WHERE REQUEST_NO = #{requestNo}-->
+<!--									 AND OBJECT_ID = #{objectId} )-->
+<!--		AND APPROVAL_STATUS_CD = 'REQUEST'-->
+<!--	</update> &ndash;&gt;-->
+
+<!--	<update id="updateRequestFileDestroy">-->
+<!--		UPDATE DOCS_REQUEST_FILE-->
+<!--		SET DESTROY_TYPE = '3'-->
+<!--			, DESTROY_STATUS_CD = '1'-->
+<!--		WHERE REQUEST_NO IN-->
+<!--		(-->
+<!--			SELECT fileInfo.REQUEST_NO-->
+<!--            FROM DOCS_REQUEST request-->
+<!--            INNER JOIN-->
+<!--            (-->
+<!--	            SELECT REQUEST_NO-->
+<!--	            FROM DOCS_REQUEST_FILE-->
+<!--	            GROUP BY REQUEST_NO-->
+<!--            ) fileInfo-->
+<!--            ON fileInfo.REQUEST_NO = request.REQUEST_NO-->
+<!--            WHERE DEPLOY_COMPANY_CD = #{companyCd}-->
+<!--            AND REQUEST_TYPE = 'DISTRIBUTION'-->
+<!--		)-->
+<!--	</update>-->
+
+<!--	<update id="updateUnderDestroy">-->
+<!--		UPDATE DOCS_REQUEST_FILE-->
+<!--		SET DESTROY_TYPE = '4'-->
+<!--			, DESTROY_STATUS_CD = '1'-->
+<!--		WHERE REQUEST_NO = #{requestNo}-->
+<!--		AND OBJECT_ID = #{objectId}-->
+<!--		AND FILE_NO = #{fileNo}-->
+<!--	</update>-->
+
+<!--</mapper>-->
+
+
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+
+
+
+
+<mapper namespace="sql.DistributionHistory">
+
+	<select id="selectList" resultType="kr.esob.fdms.controller.inside.distribution.history.HistoryListVO">
+		SELECT B1.*
+		FROM (
+		SELECT A1.*,
+		ROW_NUMBER() OVER () AS PAGEINDEX
+		FROM (
+		SELECT
+		REQ.REQUEST_NO AS requestNo,
+		REQ.REQUEST_TYPE AS requestType,
+		REQ.OBJECT_TYPE AS objectType,
+		FN_GET_CD_NM('objectTypeWithP', REQ.OBJECT_TYPE, #{sessionLang}) AS objectTypeNm,
+		REQ_MAPPING.BUSINESS_TYPE_CD AS businessTypeCd,
+		FN_GET_CD_NM('businessTypeCd', REQ_MAPPING.BUSINESS_TYPE_CD, #{sessionLang}) AS businessTypeNm,
+		REQ_MAPPING.DISTRIBUTE_TYPE_CD AS distributeTypeCd,
+		FN_GET_CD_NM('distributeTypeCd', REQ_MAPPING.DISTRIBUTE_TYPE_CD, #{sessionLang}) AS distributeTypeNm,
+		CASE
+		WHEN request_deploy.DEPLOY_NORMAL_YN = 'Y' THEN (SELECT LANG_DESC FROM DOCS_LANG lang WHERE lang.LANG_CD = 'combo.deployType.normalArea' AND lang.LANG_TYPE = #{sessionLang})
+		WHEN request_deploy.DEPLOY_SPECIAL_YN = 'Y' THEN (SELECT LANG_DESC FROM DOCS_LANG lang WHERE lang.LANG_CD = 'combo.deployType.specialArea' AND lang.LANG_TYPE = #{sessionLang})
+		ELSE (SELECT LANG_DESC FROM DOCS_LANG lang WHERE lang.LANG_CD = 'combo.deployType.viewing' AND lang.LANG_TYPE = #{sessionLang})
+		END AS deployTypeNm,
+		CASE
+		WHEN request_deploy.DEPLOY_NORMAL_YN = 'Y' THEN 'NORMAL'
+		WHEN request_deploy.DEPLOY_SPECIAL_YN = 'Y' THEN 'SPECIAL'
+		ELSE 'VIEWING'
+		END AS deployType,
+		REQ.REQUEST_PURPOSE AS requestPurpose,
+		FN_GET_CD_NM('requestPurpose', REQ.REQUEST_PURPOSE, #{sessionLang}) AS requestPurposeNm,
+		REQ_MAPPING.OBJECT_NO AS objectNo,
+		REQ_MAPPING.REV_NO AS revNo,
+		CASE REQ.OBJECT_TYPE
+		WHEN 'DOC' THEN (SELECT MAX(REV_NO) FROM DOCS_DOCUMENT doc WHERE doc.DOCUMENT_NO = REQ_MAPPING.OBJECT_NO)
+		WHEN 'DRAWING' THEN (SELECT MAX(REV_NO) FROM DOCS_DRAWING doc WHERE doc.DRAWING_NO = REQ_MAPPING.OBJECT_NO)
+		WHEN 'SW' THEN (SELECT MAX(REV_NO) FROM DOCS_SW doc WHERE doc.SW_NO = REQ_MAPPING.OBJECT_NO)
+		END AS lastRevNo,
+		REQ_MAPPING.SW_VERSION_NO AS swVersionNo,
+		REQ_MAPPING.DOC_VERSION_NO AS docVersionNo,
+		REQ_MAPPING.OBJECT_NM AS objectNm,
+		REQ_MAPPING.CURRENT_PAGE_NO AS currentPageNo,
+		REQ_MAPPING.TOTAL_PAGE_NO AS totalPageNo,
+		REQ_MAPPING.ECN_NO AS ecnNo,
+		COALESCE(REQ_MAPPING.PRODUCT_CD, '') AS productNm,
+		REQ_MAPPING.PRODUCT_CD AS productCd,
+		REQ_MAPPING.BUSINESS_AREA_CD AS businessAreaCd,
+		FN_GET_CD_NM('businessAreaCd', REQ_MAPPING.BUSINESS_AREA_CD, #{sessionLang}) AS businessAreaNm,
+		REQ_MAPPING.PROTECT_YN AS protectYn,
+		DEPLOY_COMPANY.COMPANY_CD AS deployCompanyCd,
+		DEPLOY_COMPANY.COMPANY_NM AS deployCompanyNm,
+		REQ_MAPPING.OBJECT_ID AS objectId,
+		ACC_USER.USER_NM AS purchaserUserNm,
+		CASE
+		WHEN REQ.STATUS_CD = 'APPROVAL' THEN COALESCE(DEF_APPROVAL_USER.USER_CD, TL_APPROVAL_USER.USER_CD)
+		WHEN REQ.STATUS_CD = 'REJECT' THEN REJECT_USER.USER_CD
+		ELSE NULL
+		END AS approvalUserCd,
+		CASE
+		WHEN REQ.STATUS_CD = 'APPROVAL' THEN COALESCE(DEF_APPROVAL_USER.USER_NM, TL_APPROVAL_USER.USER_NM)
+		WHEN REQ.STATUS_CD = 'REJECT' THEN REJECT_USER.USER_NM
+		ELSE NULL
+		END AS approvalUserNm,
+		REQ.APPROVAL_DT AS approvalDt,
+		REQ.INSERT_DT AS requestDt,
+		REQ_DETAIL.REQUEST_DESC AS requestReason,
+		TO_CHAR(FILE_INFO.USE_END_YMD::DATE, 'YYYY-MM-DD') AS useEndYmd,
+		REQ.STATUS_CD AS statusCd,
+		FN_GET_CD_NM('requestStatusCd', REQ.STATUS_CD, #{sessionLang}) AS statusNm,
+		FILE_INFO.DESTROY_STATUS_CD AS destroyStatusCd,
+		FN_GET_CD_NM('destroyStatusCd', FILE_INFO.DESTROY_STATUS_CD, #{sessionLang}) AS destroyStatusNm,
+		FN_GET_CD_NM('destroyType', FILE_INFO.DESTROY_TYPE, #{sessionLang}) AS destroyType,
+		DEPLOY_USER.USER_NM AS companyUserNm,
+		(SELECT USER_NM FROM DOCS_REQUEST_DETAIL requestDetail INNER JOIN DOCS_USER docsUser ON docsUser.USER_CD = requestDetail.ACTUAL_USER_CD WHERE requestDetail.REQUEST_NO = REQ.REQUEST_NO AND requestDetail.APPROVAL_STATUS_CD = 'ACCEPT') AS deployUserNm,
+		FILE_INFO.FILE_NO AS fileNo,
+		FILE_INFO.ORG_FILE_NM AS orgFileNm,
+		ACC_DETAIL.ACTUAL_USER_CD AS purchaserUserCd,
+		(SELECT USER_NM FROM DOCS_USER t WHERE t.USER_CD = REQ.INSERT_USER_CD) AS requestUserNm,
+		REQ.VENDOR_ACCEPT_YN AS vendorAcceptYn,
+		FN_GET_CD_NM('vendorAcceptYn', REQ.VENDOR_ACCEPT_YN, 'ko') AS vendorAcceptNm
+		FROM DOCS_REQUEST_FILE FILE_INFO
+		INNER JOIN DOCS_REQUEST_MAPPING REQ_MAPPING ON FILE_INFO.REQUEST_NO = REQ_MAPPING.REQUEST_NO AND FILE_INFO.OBJECT_ID = REQ_MAPPING.OBJECT_ID
+		INNER JOIN DOCS_REQUEST REQ ON REQ_MAPPING.REQUEST_NO = REQ.REQUEST_NO
+		INNER JOIN DOCS_REQUEST_DETAIL REQ_DETAIL ON REQ_DETAIL.REQUEST_NO = REQ.REQUEST_NO AND REQ_DETAIL.APPROVAL_STATUS_CD = 'REQUEST'
+		INNER JOIN DOCS_USER REQ_USER ON REQ_USER.USER_CD = REQ_DETAIL.ACTUAL_USER_CD
+		INNER JOIN DOCS_REQUEST_DEPLOY REQUEST_DEPLOY ON REQUEST_DEPLOY.REQUEST_NO = REQ.REQUEST_NO
+		INNER JOIN DOCS_USER DEPLOY_USER ON DEPLOY_USER.USER_CD = REQUEST_DEPLOY.DEPLOY_USER_CD
+		INNER JOIN DOCS_COMPANY DEPLOY_COMPANY ON DEPLOY_COMPANY.COMPANY_CD = DEPLOY_USER.COMPANY_CD
+		INNER JOIN DOCS_REQUEST_DETAIL ACC_DETAIL ON ACC_DETAIL.REQUEST_NO = REQ.REQUEST_NO AND ACC_DETAIL.APPROVAL_STATUS_CD = 'ACCEPT'
+		INNER JOIN DOCS_USER ACC_USER ON ACC_USER.USER_CD = ACC_DETAIL.ORIGINAL_USER_CD
+		LEFT JOIN DOCS_REQUEST_DETAIL TL_APPROVAL_DETAIL ON TL_APPROVAL_DETAIL.REQUEST_NO = REQ.REQUEST_NO AND TL_APPROVAL_DETAIL.APPROVAL_STATUS_CD = 'APPROVAL' AND TL_APPROVAL_DETAIL.APPROVAL_GRADE_CD = 'TL'
+		LEFT JOIN DOCS_USER TL_APPROVAL_USER ON TL_APPROVAL_USER.USER_CD = TL_APPROVAL_DETAIL.ACTUAL_USER_CD
+		LEFT JOIN DOCS_REQUEST_DETAIL DEF_APPROVAL_DETAIL ON DEF_APPROVAL_DETAIL.REQUEST_NO = REQ.REQUEST_NO AND DEF_APPROVAL_DETAIL.APPROVAL_STATUS_CD = 'APPROVAL' AND DEF_APPROVAL_DETAIL.APPROVAL_GRADE_CD = 'DEF'
+		LEFT JOIN DOCS_USER DEF_APPROVAL_USER ON DEF_APPROVAL_USER.USER_CD = DEF_APPROVAL_DETAIL.ACTUAL_USER_CD
+		LEFT JOIN DOCS_APPROVAL_FILE APPROVAL_FILE ON APPROVAL_FILE.REQUEST_NO = REQ.REQUEST_NO AND APPROVAL_FILE.OBJECT_ID = FILE_INFO.OBJECT_ID AND APPROVAL_FILE.FILE_NO = FILE_INFO.FILE_NO
+		LEFT JOIN DOCS_REQUEST_DETAIL REJECT_DETAIL ON REJECT_DETAIL.REQUEST_NO = REQ.REQUEST_NO AND REJECT_DETAIL.ACTION_CD = 'REJECT'
+		LEFT JOIN DOCS_USER REJECT_USER ON REJECT_USER.USER_CD = REJECT_DETAIL.ACTUAL_USER_CD
+		WHERE REQ.REQUEST_TYPE='DISTRIBUTION'
+		<if test='sortColumn != null and !"".equals(sortColumn)'>
+			ORDER BY ${sortColumn} ${order}
+		</if>
+		) A1
+		WHERE 1=1
+		<if test='requestNo != null and !requestNo.isEmpty()'>
+			AND requestNo = #{requestNo}
+		</if>
+		<if test='deployCompanyCd != null and !deployCompanyCd.isEmpty()'>
+			AND deployCompanyCd = #{deployCompanyCd}
+		</if>
+		<if test='objectNo != null and !objectNo.isEmpty()'>
+			AND objectNo LIKE '%' || UPPER(TRIM(#{objectNo})) || '%'
+		</if>
+		<if test='validTermOverYn != null and validTermOverYn.equals("Y")'>
+			AND useEndYmd <![CDATA[ < ]]> TO_CHAR(CURRENT_DATE, 'YYYY-MM-DD')
+		</if>
+		<if test='businessAreaCd != null and !businessAreaCd.isEmpty()'>
+			AND businessAreaCd = #{businessAreaCd}
+		</if>
+		<if test='approvalUserCd != null and !approvalUserCd.isEmpty()'>
+			AND approvalUserCd = #{approvalUserCd}
+		</if>
+		<if test='purchaserUserCd != null and !purchaserUserCd.isEmpty()'>
+			AND purchaserUserCd = #{purchaserUserCd}
+		</if>
+		<choose>
+			<when test='statusCd != null and !statusCd.isEmpty()'>
+				AND statusCd = #{statusCd}
+			</when>
+			<otherwise>
+				AND statusCd IN ('APPROVAL', 'REJECT')
+			</otherwise>
+		</choose>
+		<if test='productCd != null and !productCd.isEmpty()'>
+			AND productCd = #{productCd}
+		</if>
+		<if test='objectType != null and !objectType.isEmpty()'>
+			AND objectType = #{objectType}
+		</if>
+		<if test='destroyStatusCd != null and !destroyStatusCd.isEmpty()'>
+			AND destroyStatusCd = #{destroyStatusCd}
+		</if>
+		<if test='distributeTypeCd != null and !distributeTypeCd.isEmpty()'>
+			AND distributeTypeCd = #{distributeTypeCd}
+		</if>
+		<if test='deployType != null and !deployType.isEmpty()'>
+			AND deployType = #{deployType}
+		</if>
+		<if test='drawingList != null and drawingList.size() != 0'>
+			<choose>
+				<when test='"Y".equals(useLike)'>
+					AND (
+					<foreach separator="OR" collection="drawingList" item="drawingInfo">
+						(objectType = 'DRAWING' AND objectNo LIKE '%' || UPPER(TRIM(#{drawingInfo.drawingNo})) || '%')
+					</foreach>
+					OR
+					<foreach separator="OR" collection="documentList" item="documentInfo">
+						(objectType = 'DOC' AND objectNo LIKE '%' || UPPER(TRIM(#{documentInfo.documentNo})) || '%')
+					</foreach>
+					OR
+					<foreach separator="OR" collection="swList" item="swInfo">
+						(objectType = 'SW' AND objectNo LIKE '%' || UPPER(TRIM(#{swInfo.swNo})) || '%')
+					</foreach>
+					)
+				</when>
+				<otherwise>
+					AND (
+					<foreach separator="OR" collection="drawingList" item="drawingInfo">
+						(objectType = 'DRAWING' AND objectNo = UPPER(TRIM(#{drawingInfo.drawingNo})))
+					</foreach>
+					OR
+					<foreach separator="OR" collection="documentList" item="documentInfo">
+						(objectType = 'DOC' AND objectNo = UPPER(TRIM(#{documentInfo.documentNo})))
+					</foreach>
+					OR
+					<foreach separator="OR" collection="swList" item="swInfo">
+						(objectType = 'SW' AND objectNo = UPPER(TRIM(#{swInfo.swNo})))
+					</foreach>
+					)
+				</otherwise>
+			</choose>
+		</if>
+		<if test='requestStartDt != null and !requestStartDt.isEmpty()'>
+			AND requestDt BETWEEN TO_DATE(#{requestStartDt}, 'YYYY-MM-DD') AND TO_DATE(#{requestEndDt}, 'YYYY-MM-DD') + INTERVAL '1' DAY
+		</if>
+		) B1
+		<if test='start != null and start > 0'>
+			WHERE PAGEINDEX >= #{start}
+		</if>
+	</select>
+
+
+	<select id="selectListCount" resultType="Integer">
+		SELECT COUNT(*) AS TOTAL_COUNT
+		FROM (
+		SELECT A1.*
+		FROM (
+		SELECT
+		REQ.REQUEST_NO AS requestNo,
+		REQ.REQUEST_TYPE AS requestType,
+		REQ.OBJECT_TYPE AS objectType,
+		FN_GET_CD_NM('objectTypeWithP', REQ.OBJECT_TYPE, #{sessionLang}) AS objectTypeNm,
+		REQ_MAPPING.BUSINESS_TYPE_CD AS businessTypeCd,
+		FN_GET_CD_NM('businessTypeCd', REQ_MAPPING.BUSINESS_TYPE_CD, #{sessionLang}) AS businessTypeNm,
+		REQ_MAPPING.DISTRIBUTE_TYPE_CD AS distributeTypeCd,
+		FN_GET_CD_NM('distributeTypeCd', REQ_MAPPING.DISTRIBUTE_TYPE_CD, #{sessionLang}) AS distributeTypeNm,
+		CASE
+		WHEN request_deploy.DEPLOY_NORMAL_YN = 'Y' THEN (SELECT LANG_DESC FROM DOCS_LANG lang WHERE lang.LANG_CD = 'combo.deployType.normalArea' AND lang.LANG_TYPE = #{sessionLang})
+		WHEN request_deploy.DEPLOY_SPECIAL_YN = 'Y' THEN (SELECT LANG_DESC FROM DOCS_LANG lang WHERE lang.LANG_CD = 'combo.deployType.specialArea' AND lang.LANG_TYPE = #{sessionLang})
+		ELSE (SELECT LANG_DESC FROM DOCS_LANG lang WHERE lang.LANG_CD = 'combo.deployType.viewing' AND lang.LANG_TYPE = #{sessionLang})
+		END AS deployTypeNm,
+		CASE
+		WHEN request_deploy.DEPLOY_NORMAL_YN = 'Y' THEN 'NORMAL'
+		WHEN request_deploy.DEPLOY_SPECIAL_YN = 'Y' THEN 'SPECIAL'
+		ELSE 'VIEWING'
+		END AS deployType,
+		REQ.REQUEST_PURPOSE AS requestPurpose,
+		FN_GET_CD_NM('requestPurpose', REQ.REQUEST_PURPOSE, #{sessionLang}) AS requestPurposeNm,
+		REQ_MAPPING.OBJECT_NO AS objectNo,
+		REQ_MAPPING.REV_NO AS revNo,
+		CASE REQ.OBJECT_TYPE
+		WHEN 'DOC' THEN (SELECT MAX(REV_NO) FROM DOCS_DOCUMENT doc WHERE doc.DOCUMENT_NO = REQ_MAPPING.OBJECT_NO)
+		WHEN 'DRAWING' THEN (SELECT MAX(REV_NO) FROM DOCS_DRAWING doc WHERE doc.DRAWING_NO = REQ_MAPPING.OBJECT_NO)
+		WHEN 'SW' THEN (SELECT MAX(REV_NO) FROM DOCS_SW doc WHERE doc.SW_NO = REQ_MAPPING.OBJECT_NO)
+		END AS lastRevNo,
+		REQ_MAPPING.SW_VERSION_NO AS swVersionNo,
+		REQ_MAPPING.DOC_VERSION_NO AS docVersionNo,
+		REQ_MAPPING.OBJECT_NM AS objectNm,
+		REQ_MAPPING.CURRENT_PAGE_NO AS currentPageNo,
+		REQ_MAPPING.TOTAL_PAGE_NO AS totalPageNo,
+		REQ_MAPPING.ECN_NO AS ecnNo,
+		COALESCE(REQ_MAPPING.PRODUCT_CD, '') AS productNm,
+		REQ_MAPPING.PRODUCT_CD AS productCd,
+		REQ_MAPPING.BUSINESS_AREA_CD AS businessAreaCd,
+		FN_GET_CD_NM('businessAreaCd', REQ_MAPPING.BUSINESS_AREA_CD, #{sessionLang}) AS businessAreaNm,
+		REQ_MAPPING.PROTECT_YN AS protectYn,
+		DEPLOY_COMPANY.COMPANY_CD AS deployCompanyCd,
+		DEPLOY_COMPANY.COMPANY_NM AS deployCompanyNm,
+		REQ_MAPPING.OBJECT_ID AS objectId,
+		ACC_USER.USER_NM AS purchaserUserNm,
+		CASE
+		WHEN REQ.STATUS_CD = 'APPROVAL' THEN COALESCE(DEF_APPROVAL_USER.USER_CD, TL_APPROVAL_USER.USER_CD)
+		WHEN REQ.STATUS_CD = 'REJECT' THEN REJECT_USER.USER_CD
+		ELSE NULL
+		END AS approvalUserCd,
+		CASE
+		WHEN REQ.STATUS_CD = 'APPROVAL' THEN COALESCE(DEF_APPROVAL_USER.USER_NM, TL_APPROVAL_USER.USER_NM)
+		WHEN REQ.STATUS_CD = 'REJECT' THEN REJECT_USER.USER_NM
+		ELSE NULL
+		END AS approvalUserNm,
+		REQ.APPROVAL_DT AS approvalDt,
+		REQ.INSERT_DT AS requestDt,
+		REQ_DETAIL.REQUEST_DESC AS requestReason,
+		TO_CHAR(FILE_INFO.USE_END_YMD::DATE, 'YYYY-MM-DD') AS useEndYmd,
+		REQ.STATUS_CD AS statusCd,
+		FN_GET_CD_NM('requestStatusCd', REQ.STATUS_CD, #{sessionLang}) AS statusNm,
+		FILE_INFO.DESTROY_STATUS_CD AS destroyStatusCd,
+		FN_GET_CD_NM('destroyStatusCd', FILE_INFO.DESTROY_STATUS_CD, #{sessionLang}) AS destroyStatusNm,
+		FN_GET_CD_NM('destroyType', FILE_INFO.DESTROY_TYPE, #{sessionLang}) AS destroyType,
+		DEPLOY_USER.USER_NM AS companyUserNm,
+		(SELECT USER_NM FROM DOCS_REQUEST_DETAIL requestDetail INNER JOIN DOCS_USER docsUser ON docsUser.USER_CD = requestDetail.ACTUAL_USER_CD WHERE requestDetail.REQUEST_NO = REQ.REQUEST_NO AND requestDetail.APPROVAL_STATUS_CD = 'ACCEPT') AS deployUserNm,
+		FILE_INFO.FILE_NO AS fileNo,
+		FILE_INFO.ORG_FILE_NM AS orgFileNm,
+		ACC_DETAIL.ACTUAL_USER_CD AS purchaserUserCd,
+		(SELECT USER_NM FROM DOCS_USER t WHERE t.USER_CD = REQ.INSERT_USER_CD) AS requestUserNm
+		FROM DOCS_REQUEST_FILE FILE_INFO
+		INNER JOIN DOCS_REQUEST_MAPPING REQ_MAPPING ON FILE_INFO.REQUEST_NO = REQ_MAPPING.REQUEST_NO AND FILE_INFO.OBJECT_ID = REQ_MAPPING.OBJECT_ID
+		INNER JOIN DOCS_REQUEST REQ ON REQ_MAPPING.REQUEST_NO = REQ.REQUEST_NO
+		INNER JOIN DOCS_REQUEST_DETAIL REQ_DETAIL ON REQ_DETAIL.REQUEST_NO = REQ.REQUEST_NO AND REQ_DETAIL.APPROVAL_STATUS_CD = 'REQUEST'
+		INNER JOIN DOCS_USER REQ_USER ON REQ_USER.USER_CD = REQ_DETAIL.ACTUAL_USER_CD
+		INNER JOIN DOCS_REQUEST_DEPLOY REQUEST_DEPLOY ON REQUEST_DEPLOY.REQUEST_NO = REQ.REQUEST_NO
+		INNER JOIN DOCS_USER DEPLOY_USER ON DEPLOY_USER.USER_CD = REQUEST_DEPLOY.DEPLOY_USER_CD
+		INNER JOIN DOCS_COMPANY DEPLOY_COMPANY ON DEPLOY_COMPANY.COMPANY_CD = DEPLOY_USER.COMPANY_CD
+		INNER JOIN DOCS_REQUEST_DETAIL ACC_DETAIL ON ACC_DETAIL.REQUEST_NO = REQ.REQUEST_NO AND ACC_DETAIL.APPROVAL_STATUS_CD = 'ACCEPT'
+		INNER JOIN DOCS_USER ACC_USER ON ACC_USER.USER_CD = ACC_DETAIL.ORIGINAL_USER_CD
+		LEFT JOIN DOCS_REQUEST_DETAIL TL_APPROVAL_DETAIL ON TL_APPROVAL_DETAIL.REQUEST_NO = REQ.REQUEST_NO AND TL_APPROVAL_DETAIL.APPROVAL_STATUS_CD = 'APPROVAL' AND TL_APPROVAL_DETAIL.APPROVAL_GRADE_CD = 'TL'
+		LEFT JOIN DOCS_USER TL_APPROVAL_USER ON TL_APPROVAL_USER.USER_CD = TL_APPROVAL_DETAIL.ACTUAL_USER_CD
+		LEFT JOIN DOCS_REQUEST_DETAIL DEF_APPROVAL_DETAIL ON DEF_APPROVAL_DETAIL.REQUEST_NO = REQ.REQUEST_NO AND DEF_APPROVAL_DETAIL.APPROVAL_STATUS_CD = 'APPROVAL' AND DEF_APPROVAL_DETAIL.APPROVAL_GRADE_CD = 'DEF'
+		LEFT JOIN DOCS_USER DEF_APPROVAL_USER ON DEF_APPROVAL_USER.USER_CD = DEF_APPROVAL_DETAIL.ACTUAL_USER_CD
+		LEFT JOIN DOCS_APPROVAL_FILE APPROVAL_FILE ON APPROVAL_FILE.REQUEST_NO = REQ.REQUEST_NO AND APPROVAL_FILE.OBJECT_ID = FILE_INFO.OBJECT_ID AND APPROVAL_FILE.FILE_NO = FILE_INFO.FILE_NO
+		LEFT JOIN DOCS_REQUEST_DETAIL REJECT_DETAIL ON REJECT_DETAIL.REQUEST_NO = REQ.REQUEST_NO AND REJECT_DETAIL.ACTION_CD = 'REJECT'
+		LEFT JOIN DOCS_USER REJECT_USER ON REJECT_USER.USER_CD = REJECT_DETAIL.ACTUAL_USER_CD
+		WHERE REQ.REQUEST_TYPE='DISTRIBUTION'
+		) A1
+		WHERE 1=1
+		<if test='requestNo != null and !requestNo.isEmpty()'>
+			AND requestNo = #{requestNo}
+		</if>
+		<if test='deployCompanyCd != null and !deployCompanyCd.isEmpty()'>
+			AND deployCompanyCd = #{deployCompanyCd}
+		</if>
+		<if test='objectNo != null and !objectNo.isEmpty()'>
+			AND objectNo LIKE '%' || UPPER(TRIM(#{objectNo})) || '%'
+		</if>
+		<if test='validTermOverYn != null and validTermOverYn.equals("Y")'>
+			AND useEndYmd <![CDATA[ < ]]> TO_CHAR(CURRENT_DATE, 'YYYY-MM-DD')
+		</if>
+		<if test='businessAreaCd != null and !businessAreaCd.isEmpty()'>
+			AND businessAreaCd = #{businessAreaCd}
+		</if>
+		<if test='approvalUserCd != null and !approvalUserCd.isEmpty()'>
+			AND approvalUserCd = #{approvalUserCd}
+		</if>
+		<if test='purchaserUserCd != null and !purchaserUserCd.isEmpty()'>
+			AND purchaserUserCd = #{purchaserUserCd}
+		</if>
+		<choose>
+			<when test='statusCd != null and !statusCd.isEmpty()'>
+				AND statusCd = #{statusCd}
+			</when>
+			<otherwise>
+				AND statusCd IN ('APPROVAL', 'REJECT')
+			</otherwise>
+		</choose>
+		<if test='productCd != null and !productCd.isEmpty()'>
+			AND productCd = #{productCd}
+		</if>
+		<if test='objectType != null and !objectType.isEmpty()'>
+			AND objectType = #{objectType}
+		</if>
+		<if test='destroyStatusCd != null and !destroyStatusCd.isEmpty()'>
+			AND destroyStatusCd = #{destroyStatusCd}
+		</if>
+		<if test='distributeTypeCd != null and !distributeTypeCd.isEmpty()'>
+			AND distributeTypeCd = #{distributeTypeCd}
+		</if>
+		<if test='deployType != null and !deployType.isEmpty()'>
+			AND deployType = #{deployType}
+		</if>
+		) B1
+	</select>
+
+
+	<select id="getDrawingInfoList" resultType="kr.esob.fdms.controller.outside.drawing.request.DrawingInfoVO">
+		SELECT *
+		FROM DOCS_DRAWING
+		WHERE DRAWING_NO IN (
+		<foreach collection="list" open="" close="" separator="," item="DrawingInfoVO">
+			#{DrawingInfoVO.drawingNo}
+		</foreach>
+		)
+	</select>
+
+
+	<select id="getDrawingInfo" resultType="kr.esob.fdms.controller.outside.drawing.request.DrawingInfoVO">
+		SELECT 'Y' AS inspectionYn, info.*
+		FROM DOCS_DRAWING info
+		WHERE DRAWING_NO = #{drawingNo}
+			LIMIT 1
+	</select>
+
+
+	<select id="selectCompanyList" resultType="kr.esob.fdms.controller.inside.distribution.history.CompanyListVO" parameterType="kr.esob.fdms.controller.inside.distribution.history.HistoryListParam">
+		/* 업체 리스트 */
+		SELECT *
+		FROM (
+		SELECT
+		ROW_NUMBER() OVER (
+		<if test='sortColumn == null or "".equals(sortColumn)'>
+			ORDER BY companyNm ASC
+		</if>
+		<if test='sortColumn != null and !"".equals(sortColumn)'>
+			ORDER BY ${sortColumn} ${order}
+		</if>
+		) AS PAGEINDEX,
+		B1.*
+		FROM (
+		SELECT
+		BIZ_NO AS bizNo,
+		COMPANY_NM AS companyNm,
+		COMPANY_CD AS companyCd,
+		CASE WHEN (USE_YN = 'N' OR DEL_YN = 'Y') THEN '거래중단'
+		ELSE ''
+		END AS stopDeal
+		FROM DOCS_COMPANY
+		WHERE 1 = 1
+		<if test='bizNo != null and !bizNo.equals("")'>
+			AND BIZ_NO LIKE '%' || #{bizNo} || '%'
+		</if>
+		<if test='companyNm != null and !companyNm.equals("")'>
+			AND COMPANY_NM LIKE '%' || #{companyNm} || '%'
+		</if>
+		) B1
+		) A
+		WHERE PAGEINDEX <![CDATA[ >= ]]> #{start}
+		<if test='end != null and !end.equals("")'>
+			AND PAGEINDEX <![CDATA[ <= ]]> #{end}
+		</if>
+	</select>
+
+
+	<select id="selectCompanyListCount" resultType="Integer" parameterType="kr.esob.fdms.controller.inside.distribution.history.HistoryListParam">
+		SELECT COUNT(*) AS TOTAL_COUNT
+		FROM DOCS_COMPANY
+		WHERE DEL_YN = 'N'
+		<if test='bizNo != null and !bizNo.isEmpty()'>
+			AND BIZ_NO LIKE '%' || #{bizNo} || '%'
+		</if>
+		<if test='companyNm != null and !companyNm.isEmpty()'>
+			AND COMPANY_NM LIKE '%' || #{companyNm} || '%'
+		</if>
+	</select>
+
+
+	<update id="deleteCompany">
+		UPDATE DOCS_COMPANY
+		SET DEL_YN = 'Y'
+		WHERE COMPANY_CD = #{companyCd}
+	</update>
+
+	<update id="deleteUser">
+		UPDATE DOCS_USER
+		SET USE_YN = 'N'
+		WHERE COMPANY_CD = #{companyCd}
+	</update>
+
+	<update id="destroyDistribution">
+		UPDATE DOCS_APPROVAL_FILE
+		SET LAST_DESTROY_REQUEST_NO = #{destroyRequestNo}
+		WHERE REQUEST_NO = #{requestNo}
+		  AND OBJECT_ID = #{objectId}
+	</update>
+
+	<update id="deleteVendor">
+		UPDATE ITN_VENDOR
+		SET VENDOR_STATUS = 'N', CN_CHANGE_TYPE = 'U'
+		WHERE VENDOR_CD = #{bizNo}
+	</update>
+
+	<insert id="insertDestroyInfo" parameterType="kr.esob.fdms.controller.inside.distribution.history.DestroyPopupParam" useGeneratedKeys="true" keyProperty="destroyNo">
+		<selectKey keyProperty="destroyNo" resultType="String" order="BEFORE">
+			SELECT NEXTVAL('DOCS_DESTROY_SEQ') AS destroyNo
+		</selectKey>
+		INSERT INTO DOCS_DESTROY (DESTROY_NO)
+		VALUES (#{destroyNo})
+	</insert>
+
+
+	<insert id="insertDestroyFile" parameterType="kr.esob.fdms.controller.inside.distribution.history.DestroyPopupParam">
+		INSERT INTO DOCS_DESTROY_FILE (
+			DESTROY_NO,
+			DESTROY_FILE_SEQ,
+			FILE_PATH
+		)
+		VALUES (
+				   #{destroyNo},
+				   #{destroyFileSeq},
+				   #{filePath}
+			   )
+	</insert>
+
+	<update id="updateDistributeInfo" parameterType="kr.esob.fdms.controller.inside.distribution.history.DestroyPopupParam">
+		UPDATE DOCS_APPROVAL_FILE
+		SET LAST_DESTROY_REQUEST_NO = (
+			SELECT DESTROY_REQUEST_NO
+			FROM DOCS_DESTROY_REQUEST_MAPPING
+			WHERE REQUEST_NO = #{requestNo}
+			  AND OBJECT_ID = #{objectId}
+		), DESTROY_STATUS_CD = '2'
+		WHERE REQUEST_NO = #{requestNo}
+		  AND OBJECT_ID = #{objectId}
+	</update>
+
+
+	<select id="selectDestroyList" resultType="kr.esob.fdms.controller.inside.distribution.history.stopDealPopupParam">
+		SELECT REQUEST_NO AS requestNo, OBJECT_ID AS objectId
+		FROM DOCS_REQUEST_MAPPING
+		WHERE REQUEST_NO IN (
+			SELECT REQUEST_NO
+			FROM DOCS_REQUEST
+			WHERE DEPLOY_COMPANY_CD = #{companyCd}
+			  AND REQUEST_TYPE = 'DISTRIBUTION'
+		)
+	</select>
+
+
+	<insert id="insertDestroyRequest" parameterType="kr.esob.fdms.controller.inside.distribution.history.stopDealPopupParam">
+		<selectKey keyProperty="destroyRequestNo" resultType="String" order="BEFORE">
+			SELECT TO_CHAR(CURRENT_DATE, 'YYYYMMDD') || '-X' || LPAD(COALESCE(MAX(SUBSTRING(DESTROY_REQUEST_NO FROM 11 FOR 4)::INT), 0) + 1, 4, '0') AS DESTROY_REQUEST_NO
+			FROM DOCS_DESTROY_REQUEST
+			WHERE SUBSTRING(DESTROY_REQUEST_NO, 1, 10) = TO_CHAR(CURRENT_DATE, 'YYYYMMDD') || '-X'
+		</selectKey>
+		INSERT INTO DOCS_DESTROY_REQUEST (
+		DESTROY_REQUEST_NO,
+		APPROVAL_LINE_ID,
+		CURRENT_PROCESS_SEQ_NO,
+		STATUS_CD,
+		INSERT_USER_CD,
+		INSERT_DT,
+		APPROVAL_DT,
+		DESTROY_TYPE,
+		DESTROY_STATUS_CD,
+		BUSINESS_AREA_CD
+		)
+		VALUES (
+		#{destroyRequestNo},
+		'5',
+		'1',
+		'APPROVAL',
+		#{sessionUser.userCd},
+		CURRENT_DATE,
+		CURRENT_DATE,
+		'3',
+		'1',
+		(SELECT BUSINESS_AREA_CD FROM DOCS_REQUEST WHERE REQUEST_NO = #{requestNo})
+		)
+	</insert>
+
+	<insert id="insertDestroyRequestDetail" parameterType="kr.esob.fdms.controller.inside.distribution.history.stopDealPopupParam">
+		INSERT INTO DOCS_DESTROY_REQUEST_DETAIL (
+			DESTROY_REQUEST_NO,
+			PROCESS_SEQ,
+			APPROVAL_STATUS_CD,
+			ACTION_CD,
+			ORIGINAL_USER_CD,
+			ACTUAL_USER_CD,
+			ACTION_DT
+		)
+		VALUES (
+				   #{destroyRequestNo},
+				   #{processSeq},
+				   #{approvalStatusCd},
+				   'APPROVAL',
+				   #{sessionUser.userCd},
+				   #{sessionUser.userCd},
+				   CURRENT_DATE
+			   )
+	</insert>
+
+
+	<insert id="insertDestroyRequestMapping" parameterType="kr.esob.fdms.controller.inside.distribution.history.stopDealPopupParam">
+		INSERT INTO DOCS_DESTROY_REQUEST_MAPPING (
+			REQUEST_NO,
+			OBJECT_ID,
+			DESTROY_REQUEST_NO,
+			DEPLOY_USER_CD
+		)
+		VALUES (
+				   #{requestNo},
+				   #{objectId},
+				   #{destroyRequestNo},
+				   #{sessionUser.userCd}
+			   )
+	</insert>
+
+
+	<select id="getDocsApprovalLineDetail" resultType="kr.esob.fdms.controller.inside.distribution.commonrequest.ApprovalLineDetailVO">
+		SELECT APPROVAL_STATUS_CD AS approvalStatusCd,
+			   APPROVAL_GRADE_CD AS approvalGradeCd
+		FROM DOCS_APPROVAL_LINE_DETAIL
+		WHERE APPROVAL_LINE_ID = #{approvalLineId}
+		ORDER BY PROCESS_SEQ_NO
+	</select>
+
+
+	<update id="updateRequestFileDestroy">
+		UPDATE DOCS_REQUEST_FILE
+		SET DESTROY_TYPE = '3',
+			DESTROY_STATUS_CD = '1'
+		WHERE REQUEST_NO IN (
+			SELECT fileInfo.REQUEST_NO
+			FROM DOCS_REQUEST request
+					 INNER JOIN (
+				SELECT REQUEST_NO
+				FROM DOCS_REQUEST_FILE
+				GROUP BY REQUEST_NO
+			) fileInfo ON fileInfo.REQUEST_NO = request.REQUEST_NO
+			WHERE DEPLOY_COMPANY_CD = #{companyCd}
+			  AND REQUEST_TYPE = 'DISTRIBUTION'
+		)
+	</update>
+
+
+	<update id="updateUnderDestroy">
+		UPDATE DOCS_REQUEST_FILE
+		SET DESTROY_TYPE = '4',
+			DESTROY_STATUS_CD = '1'
+		WHERE REQUEST_NO = #{requestNo}
+		  AND OBJECT_ID = #{objectId}
+		  AND FILE_NO = CAST(#{fileNo} AS INTEGER)
+	</update>
+
+
+</mapper>

@@ -1,0 +1,265 @@
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+
+<!--<mapper namespace="sql.OutsideUserStatus">-->
+
+<!--	<select id="selectList" resultType="kr.esob.fdms.controller.outside.user.status.StatusListParam">-->
+<!--	select-->
+<!--	B1.*-->
+<!--	FROM-->
+<!--	(-->
+<!--		select-->
+<!--			A1.*-->
+<!--			, ROWNUM as PAGEINDEX-->
+<!--		FROM-->
+<!--		(-->
+<!--		    SELECT-->
+<!--			    a.REQUEST_NO         as requestNo-->
+<!--			    , FN_GET_CD_NM('userRequestType', a.REQUEST_TYPE, #{sessionLang})    as requestNm-->
+<!--			    , a.USER_NM            as userNm-->
+<!--			    , b.user_NM          as insertUserNm-->
+<!--			    , a.INSERT_DT          as insertDt-->
+<!--			    , a.APPROVAL_DT        as approvalDt-->
+<!--			    , FN_GET_CD_NM('requestStatusCd', a.STATUS_CD, #{sessionLang}) as statusNm-->
+<!--			    , a.STATUS_CD          as statusCd-->
+<!--			    , a.REJECT_REASON      as rejectReason-->
+<!--			    , d.User_Nm      		as approvalUserNm-->
+<!--		    FROM DOCS_USER_REQUEST a-->
+<!--			    inner join docs_user b on a.insert_user_cd = b.user_cd-->
+<!--			    <if test='insertUserNm != null and !insertUserNm.equals("")'>-->
+<!--					and b.user_NM like '%' || #{insertUserNm} || '%'-->
+<!--				</if>-->
+<!--			    inner join docs_company c on b.company_cd = c.company_cd-->
+<!--                inner join docs_user d on a.approval_user_cd = d.user_cd-->
+<!--		    where b.company_cd = #{sessionUser.companyCd}-->
+<!--		    <if test='insertUserCd != null and !insertUserCd.equals("")'>-->
+<!--					and a.insert_User_Cd = #{insertUserCd}-->
+<!--			</if>-->
+<!--		    <if test='requestNo != null and !requestNo.equals("")'>-->
+<!--				AND a.REQUEST_NO like '%' || UPPER(TRIM(#{requestNo})) || '%'-->
+<!--			</if>-->
+<!--		    <if test='requestType != null and !requestType.equals("")'>-->
+<!--				AND a.REQUEST_TYPE = #{requestType}-->
+<!--			</if>-->
+<!--		    <if test='statusCd != null and !statusCd.equals("")'>-->
+<!--				AND a.STATUS_CD = #{statusCd}-->
+<!--			</if>-->
+<!--			<if test='requestStartDt != null and !requestStartDt.equals("")'>-->
+<!--				AND a.INSERT_DT BETWEEN TO_DATE(#{requestStartDt}, 'YYYY-MM-DD')-->
+<!--		                        AND TO_DATE(#{requestEndDt}, 'YYYY-MM-DD')+1-->
+<!--			</if>-->
+<!--			<if test='sortColumn == null or "".equals(sortColumn)'>-->
+<!--           		ORDER BY a.REQUEST_NO desc-->
+<!--			</if>-->
+<!--         	<if test='sortColumn != null and !"".equals(sortColumn)'>-->
+<!--         		ORDER BY ${sortColumn} ${order}-->
+<!--         	</if>-->
+<!--		) A1-->
+<!--		where 1=1-->
+<!--		<if test='end != null and !end.equals("")'>-->
+<!--		AND ROWNUM <![CDATA[ <= ]]> #{end}-->
+<!--		</if>-->
+<!--	) B1-->
+<!--	where 1=1-->
+<!--		<if test='start != null and !start.equals("")'>-->
+<!--		AND PAGEINDEX <![CDATA[ >= ]]>#{start}-->
+<!--		</if>-->
+<!--  </select>-->
+
+<!--  <select id="selectListCount" resultType="Integer">-->
+<!--    select-->
+<!--    COUNT(*) AS TOTAL_COUNT-->
+<!--    FROM DOCS_USER_REQUEST a-->
+<!--    left join docs_user b on a.insert_user_cd = b.user_cd-->
+<!--    <if test='insertUserNm != null and !insertUserNm.equals("")'>-->
+<!--		and b.user_NM like '%' || #{insertUserNm} || '%'-->
+<!--	</if>-->
+<!--    where b.company_cd = #{sessionUser.companyCd}-->
+<!--    <if test='insertUserCd != null and !insertUserCd.equals("")'>-->
+<!--		and a.insert_User_Cd = #{insertUserCd}-->
+<!--	</if>-->
+<!--    <if test='requestNo != null and !requestNo.equals("")'>-->
+<!--		AND a.REQUEST_NO like '%' || UPPER(TRIM(#{requestNo})) || '%'-->
+<!--	</if>-->
+<!--    <if test='requestType != null and !requestType.equals("")'>-->
+<!--		AND a.REQUEST_TYPE = #{requestType}-->
+<!--	</if>-->
+<!--    <if test='statusCd != null and !statusCd.equals("")'>-->
+<!--		AND a.STATUS_CD = #{statusCd}-->
+<!--	</if>-->
+<!--	<if test='requestStartDt != null and !requestStartDt.equals("")'>-->
+<!--		AND a.INSERT_DT BETWEEN TO_DATE(#{requestStartDt}, 'YYYY-MM-DD')-->
+<!--                        AND TO_DATE(#{requestEndDt}, 'YYYY-MM-DD')+1-->
+<!--	</if>-->
+<!--  </select>-->
+
+<!--  <select id="selectInformationDetail" resultType="kr.esob.fdms.controller.outside.user.status.StatusListParam">-->
+<!--    SELECT-->
+<!--    a.USER_NM              as userNm-->
+<!--    , a.EMAIL              as email-->
+<!--    , a.PROTECT_YN         as protectYn-->
+<!--    , a.CR_YN       	   as crYn-->
+<!--    , a.REQUEST_REASON     as requestReason-->
+<!--    , a.REQUEST_TYPE       as requestType-->
+<!--    , FN_GET_CD_NM('userRequestType', a.REQUEST_TYPE, #{sessionLang})    as requestNm-->
+<!--    , d.User_Nm      		as approvalUserNm-->
+<!--    FROM DOCS_USER_REQUEST a-->
+<!--    left join docs_user b on a.insert_user_cd = b.user_cd-->
+<!--    left join docs_company c on b.company_cd = c.company_cd-->
+<!--    inner join docs_user d on a.approval_user_cd = d.user_cd-->
+<!--    where a.REQUEST_NO = #{requestNo}-->
+<!--  </select>-->
+
+<!--  <select id="selectRequestUserCombo" resultType="comboInfoVo">-->
+<!--	select-->
+<!--	      'requestUserCd'			AS comboCd-->
+<!--	      , a.insert_user_cd  as comboVal-->
+<!--	      , b.user_nm  as comboLabel-->
+<!--	      , b.user_nm AS comboTooltip-->
+<!--	  from docs_user_request a-->
+<!--        inner join docs_user b-->
+<!--        on a.insert_user_cd = b.user_cd-->
+<!--    where a.company_cd = #{sessionUser.companyCd}-->
+<!--	  group by-->
+<!--	      a.insert_user_cd-->
+<!--	      , b.user_nm-->
+<!--	</select>-->
+
+<!--</mapper>-->
+
+
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+
+
+
+
+<mapper namespace="sql.OutsideUserStatus">
+
+<select id="selectList" resultType="kr.esob.fdms.controller.outside.user.status.StatusListParam">
+	SELECT
+	B1.*
+	FROM (
+	SELECT
+	A1.*,
+	ROW_NUMBER() OVER (ORDER BY A1.requestNo DESC) AS PAGEINDEX
+	FROM (
+	SELECT
+	a.REQUEST_NO AS requestNo,
+	FN_GET_CD_NM('userRequestType', a.REQUEST_TYPE, #{sessionLang}) AS requestNm,
+	a.USER_NM AS userNm,
+	b.user_NM AS insertUserNm,
+	a.INSERT_DT AS insertDt,
+	a.APPROVAL_DT AS approvalDt,
+	FN_GET_CD_NM('requestStatusCd', a.STATUS_CD, #{sessionLang}) AS statusNm,
+	a.STATUS_CD AS statusCd,
+	a.REJECT_REASON AS rejectReason,
+	d.User_Nm AS approvalUserNm
+	FROM DOCS_USER_REQUEST a
+	INNER JOIN docs_user b ON a.insert_user_cd = b.user_cd
+	INNER JOIN docs_company c ON b.company_cd = c.company_cd
+	INNER JOIN docs_user d ON a.approval_user_cd = d.user_cd
+	WHERE b.company_cd = #{sessionUser.companyCd}
+	<if test='insertUserNm != null and !insertUserNm.equals("")'>
+		AND b.user_NM LIKE '%' || #{insertUserNm} || '%'
+	</if>
+	<if test='insertUserCd != null and !insertUserCd.equals("")'>
+		AND a.insert_User_Cd = #{insertUserCd}
+	</if>
+	<if test='requestNo != null and !requestNo.equals("")'>
+		AND a.REQUEST_NO LIKE '%' || UPPER(TRIM(#{requestNo})) || '%'
+	</if>
+	<if test='requestType != null and !requestType.equals("")'>
+		AND a.REQUEST_TYPE = #{requestType}
+	</if>
+	<if test='statusCd != null and !statusCd.equals("")'>
+		AND a.STATUS_CD = #{statusCd}
+	</if>
+	<if test='requestStartDt != null and !requestStartDt.equals("")'>
+		AND a.INSERT_DT BETWEEN TO_TIMESTAMP(#{requestStartDt}, 'YYYY-MM-DD')
+		AND TO_TIMESTAMP(#{requestEndDt}, 'YYYY-MM-DD') + INTERVAL '1 day'
+	</if>
+	<if test='sortColumn == null or "".equals(sortColumn)'>
+		ORDER BY a.REQUEST_NO DESC
+	</if>
+	<if test='sortColumn != null and !"".equals(sortColumn)'>
+		ORDER BY ${sortColumn} ${order}
+	</if>
+	) A1
+	) B1
+	WHERE 1=1
+	<if test="end != null and !end.equals('')">
+		<![CDATA[ AND B1.PAGEINDEX <= #{end} ]]>
+	</if>
+	<if test="start != null and !start.equals('')">
+		AND B1.PAGEINDEX >= #{start}
+	</if>
+</select>
+
+<select id="selectListCount" resultType="Integer">
+	select
+	COUNT(*) AS TOTAL_COUNT
+	FROM DOCS_USER_REQUEST a
+	left join docs_user b on a.insert_user_cd = b.user_cd
+	<if test='insertUserNm != null and !insertUserNm.equals("")'>
+		and b.user_NM like '%' || #{insertUserNm} || '%'
+	</if>
+	where b.company_cd = #{sessionUser.companyCd}
+	<if test='insertUserCd != null and !insertUserCd.equals("")'>
+		and a.insert_User_Cd = #{insertUserCd}
+	</if>
+	<if test='requestNo != null and !requestNo.equals("")'>
+		AND a.REQUEST_NO like '%' || UPPER(TRIM(#{requestNo})) || '%'
+	</if>
+	<if test='requestType != null and !requestType.equals("")'>
+		AND a.REQUEST_TYPE = #{requestType}
+	</if>
+	<if test='statusCd != null and !statusCd.equals("")'>
+		AND a.STATUS_CD = #{statusCd}
+	</if>
+	<if test='requestStartDt != null and !requestStartDt.equals("")'>
+		AND a.INSERT_DT BETWEEN TO_TIMESTAMP(#{requestStartDt}, 'YYYY-MM-DD')
+		AND TO_TIMESTAMP(#{requestEndDt}, 'YYYY-MM-DD') + INTERVAL '1 day'
+	</if>
+</select>
+
+<select id="selectInformationDetail" resultType="kr.esob.fdms.controller.outside.user.status.StatusListParam">
+	SELECT
+		a.USER_NM              as userNm
+		 , a.EMAIL              as email
+		 , a.PROTECT_YN         as protectYn
+		 , a.CR_YN       	   as crYn
+		 , a.REQUEST_REASON     as requestReason
+		 , a.REQUEST_TYPE       as requestType
+		 , FN_GET_CD_NM('userRequestType', a.REQUEST_TYPE, #{sessionLang})    as requestNm
+		 , d.User_Nm      		as approvalUserNm
+	FROM DOCS_USER_REQUEST a
+			 left join docs_user b on a.insert_user_cd = b.user_cd
+			 left join docs_company c on b.company_cd = c.company_cd
+			 inner join docs_user d on a.approval_user_cd = d.user_cd
+	where a.REQUEST_NO = #{requestNo}
+</select>
+
+<select id="selectRequestUserCombo" resultType="comboInfoVo">
+	select
+		'requestUserCd'			AS comboCd
+		 , a.insert_user_cd  as comboVal
+		 , b.user_nm  as comboLabel
+		 , b.user_nm AS comboTooltip
+	from docs_user_request a
+			 inner join docs_user b
+						on a.insert_user_cd = b.user_cd
+	where a.company_cd = #{sessionUser.companyCd}
+	group by
+		a.insert_user_cd
+		   , b.user_nm
+</select>
+
+</mapper>

@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="sql.VideoRequest">
+
+<select id="selectList" resultType="kr.esob.fdms.controller.inside.distribution.video.VideoRequestVO">
+    SELECT
+    B1.*
+    FROM (
+    SELECT
+    A1.*,
+    ROW_NUMBER() OVER () AS PAGEINDEX
+    FROM (
+    SELECT
+    info.BUSINESS_TYPE_CD AS businessTypeCd,
+    FN_GET_CD_NM('businessTypeCd', info.BUSINESS_TYPE_CD, 'ko') AS businessTypeNm,
+    info.DISTRIBUTE_TYPE_CD AS distributeTypeCd,
+    FN_GET_CD_NM('distributeTypeCd', info.DISTRIBUTE_TYPE_CD, 'ko') AS distributeTypeNm,
+    info.VIDEO_NO AS videoNo,
+    info.VIDEO_NM AS videoNm,
+    info.REV_NO AS revNo,
+    info.CURRENT_PAGE_NO AS currentPageNo,
+    info.TOTAL_PAGE_NO AS totalPageNo,
+    info.INSERT_UID AS insertUid,
+    info.OBJECT_ID AS objectId,
+    info.INSERT_USER_NM AS insertUserNm,
+    updateUser.USER_NM AS updateUserNm,
+    info.INSERT_DEPT_NM AS insertDeptNm,
+    info.STD_GAPP_DT AS stdGappDt,
+    info.CHANGE_GAPP_DT AS changeGappDt,
+    info.ECN_NO AS ecnNo,
+    ecnInsert.USER_NM AS ecnUserNm,
+    company.COMPANY_NM AS companyNm,
+    purchaser.USER_NM AS purchaserUserNm,
+    info.PURCHASER_UID AS purchaserUid,
+    info.BUSINESS_AREA_CD AS businessAreaCd,
+    FN_GET_CD_NM('businessAreaCdAll', info.BUSINESS_AREA_CD, 'ko') AS businessAreaNm,
+    info.PROTECT_YN AS protectYn,
+    info.PROTECT_YN AS protectYnView,
+    info.UPDATE_DT AS updateDt,
+    info.INSERT_DT AS insertDt,
+    info.INTERFACE_DT AS interfaceDt,
+    company.COMPANY_CD AS companyCd,
+    info.PRODUCT_CD AS productCd,
+    COALESCE(info.PRODUCT_CD, '') AS productNm,
+    1 AS fileNo,
+    info.FILE_NM AS fileNm,
+    info.FILE_PATH_NM AS filePath,
+    info.ORG_FILE_NM AS fileViewNm,
+    info.ORG_FILE_NM AS orgFileNm,
+    info.FILE_SIZE AS fileSize,
+    info.ECN_TITLE AS ecnTitle,
+    info.ECN_VENDOR_USER AS ecnVendorUser,
+    info.VALID_TYPE AS validType,
+    '' AS checkSum
+    FROM DOCS_VIDEO info
+    LEFT JOIN DOCS_USER insertUser ON info.INSERT_UID = insertUser.USER_ID
+    LEFT JOIN DOCS_USER updateUser ON info.UPDATE_UID = updateUser.USER_ID
+    LEFT JOIN DOCS_COMPANY company ON company.BIZ_NO = info.VENDOR_CD
+    LEFT JOIN DOCS_USER purchaser ON purchaser.USER_ID = info.PURCHASER_UID
+    LEFT JOIN DOCS_USER ecnInsert ON ecnInsert.USER_ID = info.ecn_insert_uid
+    WHERE 1=1
+    -- 조건절들
+    <if test='businessTypeCd != null and !businessTypeCd.equals("")'>
+        AND info.BUSINESS_TYPE_CD = #{businessTypeCd}
+    </if>
+    <if test='businessAreaCd != null and !businessAreaCd.equals("")'>
+        AND info.BUSINESS_AREA_CD LIKE '%' || #{businessAreaCd} || '%'
+    </if>
+    <if test='videoNo != null and !videoNo.equals("")'>
+        <choose>
+            <when test='lastRevisionYn != null and !lastRevisionYn.equals("") and lastRevisionYn.equals("Y")'>
+                AND info.VIDEO_NO = UPPER(TRIM(#{videoNo}))
+            </when>
+            <otherwise>
+                AND info.VIDEO_NO LIKE '%' || UPPER(TRIM(#{videoNo})) || '%'
+            </otherwise>
+        </choose>
+    </if>
+    -- 기타 조건들 생략
+    <if test='sortColumn == null or "".equals(sortColumn)'>
+        ORDER BY info.INSERT_DT DESC, info.CURRENT_PAGE_NO
+    </if>
+    <if test='sortColumn != null and !"".equals(sortColumn)'>
+        ORDER BY ${sortColumn} ${order}
+    </if>
+    ) A1
+    ) B1
+    WHERE 1=1
+    <if test='end != null and !end.equals("")'>
+        AND B1.PAGEINDEX <![CDATA[ <= ]]> #{end}
+    </if>
+    <if test='start != null and !start.equals("")'>
+        AND B1.PAGEINDEX >= #{start}
+    </if>
+
+</select>
+
+<select id="selectListCount" resultType="Integer">
+    SELECT COUNT(*) AS TOTAL_COUNT
+    FROM (
+    SELECT
+    A1.*
+    FROM (
+    SELECT
+    info.BUSINESS_TYPE_CD AS businessTypeCd
+    , FN_GET_CD_NM('businessTypeCd', info.BUSINESS_TYPE_CD, 'ko') AS businessTypeNm
+    , info.DISTRIBUTE_TYPE_CD AS distributeTypeCd
+    , FN_GET_CD_NM('distributeTypeCd', info.DISTRIBUTE_TYPE_CD, 'ko') AS distributeTypeNm
+    , info.VIDEO_NO AS videoNo
+    , info.VIDEO_NM AS videoNm
+    , info.REV_NO AS revNo
+    , info.CURRENT_PAGE_NO AS currentPageNo
+    , info.TOTAL_PAGE_NO AS totalPageNo
+    , info.INSERT_UID AS insertUid
+    , info.OBJECT_ID AS objectId
+    , insertUser.USER_NM AS insertUserNm
+    , updateUser.USER_NM AS updateUserNm
+    , info.INSERT_DEPT_NM AS insertDeptNm
+    , info.STD_GAPP_DT AS stdGappDt
+    , info.CHANGE_GAPP_DT AS changeGappDt
+    , info.ECN_NO AS ecnNo
+    , ecnInsert.USER_NM AS ecnUserNm
+    , company.COMPANY_NM AS companyNm
+    , purchaser.USER_NM AS purchaserUserNm
+    , info.PURCHASER_UID AS purchaserUid
+    , info.BUSINESS_AREA_CD AS businessAreaCd
+    , FN_GET_CD_NM('businessAreaCdAll', info.BUSINESS_AREA_CD, 'ko') AS businessAreaNm
+    , info.PROTECT_YN AS protectYn
+    , info.PROTECT_YN AS protectYnView
+    , info.UPDATE_DT AS updateDt
+    , info.INSERT_DT AS insertDt
+    , info.INTERFACE_DT AS interfaceDt
+    , company.COMPANY_CD AS companyCd
+    , info.PRODUCT_CD AS productCd
+    , COALESCE(info.PRODUCT_CD, '') AS productNm
+    , 1 AS fileNo
+    , info.FILE_NM AS fileNm
+    , info.FILE_PATH_NM AS filePath
+    , info.ORG_FILE_NM AS fileViewNm
+    , info.ORG_FILE_NM AS orgFileNm
+    , info.FILE_SIZE AS fileSize
+    , info.ECN_TITLE AS ecnTitle
+    , info.ECN_VENDOR_USER AS ecnVendorUser
+    , info.VALID_TYPE AS validType
+    , '' AS checkSum
+    FROM DOCS_VIDEO info
+    LEFT JOIN DOCS_USER insertUser ON info.INSERT_UID = insertUser.USER_ID
+    LEFT JOIN DOCS_USER updateUser ON info.UPDATE_UID = updateUser.USER_ID
+    LEFT JOIN DOCS_COMPANY company ON company.BIZ_NO = info.VENDOR_CD
+    LEFT JOIN DOCS_USER purchaser ON purchaser.USER_ID = info.PURCHASER_UID
+    LEFT JOIN DOCS_USER ecnInsert ON ecnInsert.USER_ID = info.ecn_insert_uid
+    WHERE 1=1
+    <if test='businessTypeCd != null and !businessTypeCd.equals("")'>
+        AND info.BUSINESS_TYPE_CD = #{businessTypeCd}
+    </if>
+    <if test='businessAreaCd != null and !businessAreaCd.equals("")'>
+        AND info.BUSINESS_AREA_CD LIKE '%' || #{businessAreaCd} || '%'
+    </if>
+    <if test='videoNo != null and !videoNo.equals("")'>
+        <choose>
+            <when test='lastRevisionYn != null and !lastRevisionYn.equals("") and lastRevisionYn.equals("Y")'>
+                AND info.VIDEO_NO = UPPER(TRIM(#{videoNo}))
+            </when>
+            <otherwise>
+                AND info.VIDEO_NO LIKE '%' || UPPER(TRIM(#{videoNo})) || '%'
+            </otherwise>
+        </choose>
+    </if>
+    <if test='videoNm != null and !videoNm.equals("")'>
+        AND info.VIDEO_NM LIKE '%' || #{videoNm} || '%'
+    </if>
+    <if test='purchaserUid != null and !purchaserUid.equals("")'>
+        AND info.PURCHASER_UID = #{purchaserUid}
+    </if>
+    <if test='distributeTypeCd != null and !distributeTypeCd.equals("")'>
+        AND info.DISTRIBUTE_TYPE_CD = #{distributeTypeCd}
+    </if>
+    <if test='ecnNo != null and !ecnNo.equals("")'>
+        AND info.ECN_NO LIKE '%' || UPPER(TRIM(#{ecnNo})) || '%'
+    </if>
+    <if test='companyCd != null and !companyCd.equals("")'>
+        AND company.COMPANY_CD = #{companyCd}
+    </if>
+    <if test='productCd != null and !productCd.equals("")'>
+        AND info.PRODUCT_CD = #{productCd}
+    </if>
+    <if test='insertUid != null and !insertUid.equals("")'>
+        AND info.INSERT_UID = #{insertUid}
+    </if>
+    <if test='validType != null and !validType.equals("") and validType.equals("Y")'>
+        AND info.VALID_TYPE IS NULL
+    </if>
+    <if test='validType != null and !validType.equals("") and validType.equals("N")'>
+        AND info.VALID_TYPE = 'N'
+    </if>
+    <if test='interfaceStartDt != null and !interfaceStartDt.equals("")'>
+        AND info.INTERFACE_DT BETWEEN TO_DATE(#{interfaceStartDt}, 'YYYY-MM-DD') AND TO_DATE(#{interfaceEndDt}, 'YYYY-MM-DD') + INTERVAL '1 DAY'
+    </if>
+    <if test='lastRevisionYn != null and !lastRevisionYn.equals("") and lastRevisionYn.equals("Y")'>
+        AND LPAD(info.REV_NO, 2, '0') = (
+        SELECT MAX(LPAD(sub_info.REV_NO, 2, '0'))
+        FROM DOCS_VIDEO sub_info
+        WHERE sub_info.VIDEO_NO = info.VIDEO_NO
+        AND sub_info.CURRENT_PAGE_NO = info.CURRENT_PAGE_NO
+        )
+    </if>
+    <if test='videoList != null and videoList.size() != 0'>
+        <choose>
+            <when test='"Y".equals(useLike)'>
+                AND (
+                <foreach separator="OR" collection="videoList" item="videoInfo">
+                    (info.VIDEO_NO LIKE '%' || UPPER(TRIM(#{videoInfo.videoNo})) || '%')
+                </foreach>
+                )
+            </when>
+            <otherwise>
+                AND (
+                <foreach separator="OR" collection="videoList" item="videoInfo">
+                    (info.VIDEO_NO = UPPER(TRIM(#{videoInfo.videoNo})))
+                </foreach>
+                )
+            </otherwise>
+        </choose>
+    </if>
+    ) A1
+    ) B1
+</select>
+
+<insert id="insertVideoRegisterInfo" parameterType="kr.esob.fdms.controller.inside.distribution.video.VideoRegisterPopupParam">
+    <selectKey keyProperty="videoNo,cnSerial" resultType="kr.esob.fdms.controller.inside.distribution.video.VideoRegisterPopupParam" order="BEFORE">
+        /* 미등록 자료 CODE 조회 */
+        SELECT COALESCE(MAX(CAST(CN_SERIAL AS INTEGER)), 0)+1 AS cnSerial,
+        'VIDEO_' || TO_CHAR(COALESCE(MAX(CAST(CN_SERIAL AS INTEGER)), 0)+1) AS videoNo
+        FROM DOCS_VIDEO
+    </selectKey>
+    /* DOCS_VIDEO 추가 */
+    INSERT INTO DOCS_VIDEO
+    ( OBJECT_ID,
+    CN_SERIAL,
+    INSERT_DT,
+    BUSINESS_AREA_CD,
+    BUSINESS_TYPE_CD,
+    VIDEO_NO,
+    VIDEO_NM,
+    DISTRIBUTE_TYPE_CD,
+    FILE_PATH_NM,
+    ORG_FILE_NM,
+    FILE_NM,
+    FILE_SIZE,
+    PROTECT_YN,
+    INSERT_USER_NM,
+    CURRENT_PAGE_NO,
+    TOTAL_PAGE_NO,
+    REV_NO,
+    STATUS_CD)
+    VALUES
+    ( #{objectId},
+    #{cnSerial},
+    CURRENT_TIMESTAMP,
+    #{sessionUser.businessAreaCd},
+    #{businessTypeCd},
+    #{videoNo},
+    #{fileNm},
+    #{distributeTypeCd},
+    #{filePath},
+    #{orgFileNm},
+    #{fileNm},
+    #{fileSize},
+    #{protectYn},
+    #{sessionUser.userNm},
+    #{currentPageNo},
+    #{totalPageNo},
+    #{revNo},
+    #{statusCd})
+</insert>
+
+<select id="getVideoRegisterByOrgFileNm" resultType="string">
+    SELECT OBJECT_ID
+    FROM DOCS_VIDEO
+    WHERE OBJECT_ID = #{objectId}
+</select>
+
+<select id="getVideoPath" resultType="string">
+    SELECT FILE_PATH_NM
+    FROM DOCS_VIDEO
+    WHERE OBJECT_ID = #{objectId}
+</select>
+
+</mapper>
+

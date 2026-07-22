@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+
+<!--<mapper namespace="sql.SettingPermission">-->
+
+<!--	<select id="getMenuCombo" resultType="kr.esob.fdms.commonlogic.tree.TreeVO" parameterType="String">-->
+<!--		WITH PARENT (MENU_CD, PARENT_MENU_CD, MENU_NM, MENU_URL, MENU_LEVEL, MENU_TYPE, MAIN_CODE) AS (-->
+<!--			SELECT MENU_CD-->
+<!--				, PARENT_MENU_CD-->
+<!--				, MENU_NM AS MENU_NM-->
+<!--			  	, MENU_URL AS MENU_URL-->
+<!--				, 1 AS MENU_LEVEL-->
+<!--			  	, MENU_TYPE-->
+<!--				, MENU_CD AS MAIN_CODE-->
+<!--			FROM DOCS_MENU-->
+<!--			WHERE PARENT_MENU_CD IN (#{pageType}, 'B')-->
+<!--			UNION ALL-->
+<!--			SELECT MENU.MENU_CD-->
+<!--				, MENU.PARENT_MENU_CD-->
+<!--			  	, MENU.MENU_NM AS MENU_NM-->
+<!--			  	, MENU.MENU_URL-->
+<!--				, PARENT.MENU_LEVEL + 1 AS MENU_LEVEL-->
+<!--			  	, MENU.MENU_TYPE-->
+<!--				, PARENT.MAIN_CODE AS MAIN_CODE-->
+<!--			FROM DOCS_MENU MENU-->
+<!--			JOIN PARENT-->
+<!--			ON MENU.PARENT_MENU_CD = PARENT.MENU_CD-->
+<!--			) SELECT MENU_CD AS id-->
+<!--				, CASE A.MENU_LEVEL WHEN 1 THEN '#' ELSE NVL(A.PARENT_MENU_CD, '#') END AS parent-->
+<!--				, TREE_TYPE AS type-->
+<!--				, NVL((SELECT LANG_DESC FROM DOCS_LANG WHERE LANG_CODE = A.MESSAGE_CD AND LANG_TYPE = #{sessionLang}), A.MENU_NAME) AS text-->
+<!--			  FROM PARENT T-->
+<!--			  WHERE MENU_NM LIKE '%' || UPPER(#{value}) || '%'-->
+<!--			  ORDER BY MAIN_CODE, MENU_CD-->
+<!--	</select>-->
+
+<!--</mapper>-->
+
+
+
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+
+
+<mapper namespace="sql.SettingPermission">
+
+<select id="getMenuCombo" resultType="kr.esob.fdms.commonlogic.tree.TreeVO" parameterType="String">
+	WITH RECURSIVE PARENT AS (
+            SELECT MENU_CD,
+                   PARENT_MENU_CD,
+                   MENU_NM AS MENU_NM,
+                   MENU_URL AS MENU_URL,
+                   1 AS MENU_LEVEL,
+                   MENU_TYPE,
+                   MENU_CD AS MAIN_CODE
+            FROM DOCS_MENU
+            WHERE PARENT_MENU_CD IN (#{pageType}, 'B')
+				   UNION ALL
+				   SELECT MENU.MENU_CD,
+					   MENU.PARENT_MENU_CD,
+					   MENU.MENU_NM AS MENU_NM,
+					   MENU.MENU_URL,
+					   PARENT.MENU_LEVEL + 1 AS MENU_LEVEL,
+					   MENU.MENU_TYPE,
+					   PARENT.MAIN_CODE AS MAIN_CODE
+				   FROM DOCS_MENU MENU
+					   JOIN PARENT ON MENU.PARENT_MENU_CD = PARENT.MENU_CD
+					   )
+				   SELECT MENU_CD AS id,
+					   CASE WHEN A.MENU_LEVEL = 1 THEN '#' ELSE COALESCE(A.PARENT_MENU_CD, '#') END AS parent,
+					   TREE_TYPE AS type,
+					   COALESCE((SELECT LANG_DESC FROM DOCS_LANG WHERE LANG_CODE = A.MESSAGE_CD AND LANG_TYPE = #{sessionLang}), A.MENU_NM) AS text
+				   FROM PARENT A
+				   WHERE MENU_NM LIKE '%' || UPPER(#{value}) || '%'
+				   ORDER BY MAIN_CODE, MENU_CD
+</select>
+
+</mapper>
+
+
+
+

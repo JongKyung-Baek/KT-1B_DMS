@@ -1,0 +1,821 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+
+<!--<mapper namespace="sql.commonRequest">-->
+
+<!--	&lt;!&ndash; 사용자 이메일 조회 [2019.09.18(최금영)] &ndash;&gt;-->
+<!--	<select id="getUserEmail" resultType="String">-->
+<!--		SELECT EMAIL-->
+<!--		FROM DOCS_USER-->
+<!--		WHERE USER_CD = #{userCd}-->
+<!--	</select>-->
+
+<!--	&lt;!&ndash; 요청 등록 [2019.09.18(최금영)]&ndash;&gt;-->
+<!--	<insert id="inserRequest" parameterType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonDistributionRequestParam" useGeneratedKeys="true" keyProperty="requestNo">-->
+<!--		<selectKey keyProperty="requestNo" resultType="String" order="BEFORE">-->
+<!--            SELECT TO_CHAR(SYSDATE,'YYYYMMDD')||#{requestKeyType}||LPAD(NVL(SUBSTR(MAX(REQUEST_NO),11),0)+1,4,0) AS REQUEST_NO-->
+<!--              FROM DOCS_REQUEST-->
+<!--             WHERE SUBSTR(REQUEST_NO,1,10) = TO_CHAR(SYSDATE,'YYYYMMDD')||#{requestKeyType}-->
+<!--        </selectKey>-->
+
+<!--        INSERT INTO DOCS_REQUEST-->
+<!--        	( REQUEST_NO-->
+<!--        	, REQUEST_TYPE-->
+<!--        	, REQUEST_PURPOSE-->
+<!--        	, APPROVAL_LINE_ID-->
+<!--        	, CURRENT_PROCESS_SEQ_NO-->
+<!--        	<if test='requestPurposeTerm != null and !"".equals(requestPurposeTerm)'>-->
+<!--        	, DEPLOY_TERM-->
+<!--        	</if>-->
+<!--&lt;!&ndash;         	<if test='deployTerm != null and !"".equals(deployTerm)'> &ndash;&gt;-->
+<!--&lt;!&ndash;         	, DEPLOY_TERM &ndash;&gt;-->
+<!--&lt;!&ndash;         	</if> &ndash;&gt;-->
+<!--        	, USE_START_YMD-->
+<!--        	, USE_END_YMD-->
+<!--        	, PRINT_YN-->
+<!--        	, DEPLOY_NORMAL_YN-->
+<!--        	, DEPLOY_SPECIAL_YN-->
+<!--        	, INSERT_USER_CD-->
+<!--        	, INSERT_DT-->
+<!--        	, UPDATE_USER_CD-->
+<!--        	, UPDATE_DT-->
+<!--        	, STATUS_CD-->
+<!--        	, OBJECT_TYPE-->
+<!--        	, DEPLOY_COMPANY_CD-->
+<!--        	, PROTECT_YN-->
+<!--        	, DESTROY_TODO_YMD-->
+<!--        	, BUSINESS_AREA_CD-->
+<!--        	)-->
+<!--       VALUES-->
+<!--            ( #{requestNo}-->
+<!--            , #{approvalRequestType}-->
+<!--            , #{requestPurpose}-->
+<!--            , #{approvalLineId}-->
+<!--            , #{currentProcessSeqNo}-->
+<!--            <if test='requestPurposeTerm != null and !"".equals(requestPurposeTerm)'>-->
+<!--            , #{requestPurposeTerm}-->
+<!--        	</if>-->
+<!--&lt;!&ndash;             <if test='deployTerm != null and !"".equals(deployTerm)'> &ndash;&gt;-->
+<!--&lt;!&ndash;             , #{deployTerm} &ndash;&gt;-->
+<!--&lt;!&ndash;         	</if> &ndash;&gt;-->
+<!--            , #{useStartYmd}-->
+<!--            , #{useEndYmd}-->
+<!--            , #{printYn}-->
+<!--            , #{deployNormalYn}-->
+<!--            , #{deploySpecialYn}-->
+<!--            , #{sessionUser.userCd}-->
+<!--            , SYSDATE-->
+<!--            , #{sessionUser.userCd}-->
+<!--            , SYSDATE-->
+<!--            , 'REQUEST'-->
+<!--            , #{objectType}-->
+<!--            , #{companyCd}-->
+<!--            , #{protectYn}-->
+<!--            , #{destroyTodoYmd}-->
+<!--            , #{sessionUser.businessAreaCd}-->
+<!--       )-->
+<!--	</insert>-->
+
+
+
+<!--	&lt;!&ndash; 요청 배포 정보 입력 [2019.09.18(최금영)] &ndash;&gt;-->
+<!--	<insert id="insertRequestDeploy" parameterType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonDistributionRequestParam">-->
+<!--        INSERT INTO DOCS_REQUEST_DEPLOY-->
+<!--        	( REQUEST_NO-->
+<!--        	, DEPLOY_USER_CD-->
+<!--        	, DEPLOY_USER_EMAIL-->
+<!--        	)-->
+<!--       VALUES-->
+<!--            ( #{requestNo}-->
+<!--            , #{companyUserCd}-->
+<!--            , #{deployUserEmail}-->
+<!--       )-->
+<!--	</insert>-->
+
+<!--	&lt;!&ndash;결재 라인 상세정보 [2019.09.18(최금영)] &ndash;&gt;-->
+<!--	<select id="getDocsApprovalLineDetail" resultType="kr.esob.fdms.controller.inside.distribution.commonrequest.ApprovalLineDetailVO">-->
+<!--		SELECT APPROVAL_STATUS_CD 		AS approvalStatusCd-->
+<!--			 , APPROVAL_GRADE_CD		AS approvalGradeCd-->
+<!--		  FROM DOCS_APPROVAL_LINE_DETAIL-->
+<!--		 WHERE APPROVAL_LINE_ID = #{approvalLineId}-->
+<!--		ORDER BY PROCESS_SEQ_NO-->
+<!--	</select>-->
+
+
+<!--	&lt;!&ndash; 방산아닌 요청 추가 [2019.09.18(최금영)] &ndash;&gt;-->
+<!--	<insert id="insertDocsRequestDetail" parameterType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonDistributionRequestParam">-->
+<!--		INSERT INTO DOCS_REQUEST_DETAIL-->
+<!--		     ( REQUEST_NO-->
+<!--		     , PROCESS_SEQ-->
+<!--		     , APPROVAL_STATUS_CD-->
+<!--		     , APPROVAL_GRADE_CD-->
+<!--		     , ORIGINAL_USER_CD-->
+<!--		     , ACTUAL_USER_CD-->
+<!--		     <if test='"REQUEST".equals(approvalStatusCd)'>	&lt;!&ndash; 요청 내용 입력 &ndash;&gt;-->
+<!--		     , REQUEST_DESC-->
+<!--		     </if>-->
+<!--		     <if test='!"APPROVAL".equals(approvalStatusCd)'> &lt;!&ndash; 구매팀장, 방산 팀장일 경우 생략 &ndash;&gt;-->
+<!--		     , ACTION_DT-->
+<!--		     , ACTION_CD-->
+<!--		     </if>-->
+<!--		     )-->
+<!--		VALUES-->
+<!--		     ( #{requestNo}-->
+<!--		     , #{processSeq}-->
+<!--		     , #{approvalStatusCd}-->
+<!--		     , #{approvalGradeCd}-->
+<!--		     <if test='"REQUEST".equals(approvalStatusCd)'>					&lt;!&ndash; 요청자 &ndash;&gt;-->
+<!--		     , #{sessionUser.userCd}										&lt;!&ndash; 로그인된 사용자 &ndash;&gt;-->
+<!--		     , #{sessionUser.userCd}										&lt;!&ndash; 로그인된 사용자 &ndash;&gt;-->
+<!--		     </if>-->
+<!--			 <if test='"ACCEPT".equals(approvalStatusCd)'>					&lt;!&ndash; 구매담당자 &ndash;&gt;-->
+<!--			 , #{purchaseTeam}												&lt;!&ndash; 현재 선택된 구매 담당자 &ndash;&gt;-->
+<!--		     , #{sessionUser.userCd}										&lt;!&ndash; 실제 생성한 구매 담당자 &ndash;&gt;-->
+<!--			 </if>-->
+<!--			 <if test='"TL".equals(approvalGradeCd)'>						&lt;!&ndash; 구매 팀장 &ndash;&gt;-->
+<!--		     , ( SELECT TEAM_LEADER_USER_CD									&lt;!&ndash; 로그인한 사용자의 팀장 &ndash;&gt;-->
+<!--				 FROM DOCS_DEPT-->
+<!--				 WHERE DEPT_CD = #{sessionUser.deptCd} )-->
+<!--			 , #{purchaseUid}												&lt;!&ndash; 실제 선택된 구매 팀장 &ndash;&gt;-->
+<!--			 </if>-->
+<!--			 <if test='"DEF".equals(approvalGradeCd)'>						&lt;!&ndash; 방산 팀장 &ndash;&gt;-->
+<!--			 <if test='"Development".equals(businessTypeCd)'>				&lt;!&ndash; 양산 &ndash;&gt;-->
+<!--			 	, #{developmentProtectUserUid}-->
+<!--			 	, #{developmentProtectUserUid}-->
+<!--		 	 </if>-->
+<!--		 	 <if test='"Production".equals(businessTypeCd)'>				&lt;!&ndash; 개발 &ndash;&gt;-->
+<!--		 		, #{productProtectUid}-->
+<!--		 		, #{productProtectUid}-->
+<!--		 	 </if>-->
+<!--&lt;!&ndash; 		     , ( SELECT TEAM_LEADER_USER_CD										원래 방산 팀장 &ndash;&gt;-->
+<!--&lt;!&ndash; 			 					  FROM DOCS_DEPT &ndash;&gt;-->
+<!--&lt;!&ndash; 			 					 WHERE DEFENSE_TEAM_YN = 'Y' ) &ndash;&gt;-->
+<!--&lt;!&ndash; 			 , #{protectiveOfficerUid}										 실제 선택된 방산 팀장 &ndash;&gt;-->
+<!--			 </if>-->
+<!--			  <if test='"REQUEST".equals(approvalStatusCd)'>				&lt;!&ndash;  요청 내용 입력 &ndash;&gt;-->
+<!--			 , #{requestDesc}-->
+<!--			 </if>-->
+<!--			 <if test='!"APPROVAL".equals(approvalStatusCd)'>-->
+<!--			 , SYSDATE-->
+<!--				 <if test='"REQUEST".equals(approvalStatusCd)'>-->
+<!--				 , 'REQUEST'-->
+<!--				 </if>-->
+<!--				 <if test='"ACCEPT".equals(approvalStatusCd)'>-->
+<!--				 , 'ACCEPT'-->
+<!--				 </if>-->
+<!--			 </if>-->
+<!--			 )-->
+<!--	</insert>-->
+
+<!--	&lt;!&ndash; 방산아닌 요청 추가 [2019.09.18(최금영)] &ndash;&gt;-->
+<!--	<insert id="insertDocsRequestMapping" parameterType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonDistributionRequestParam">-->
+<!--		INSERT INTO DOCS_REQUEST_MAPPING-->
+<!--		     ( REQUEST_NO-->
+<!--		     , USE_YN-->
+<!--		     , OBJECT_ID-->
+<!--		     , OBJECT_NO-->
+<!--		     , OBJECT_NM-->
+<!--		     , SW_VERSION_NO-->
+<!--		     , DOC_VERSION_NO-->
+<!--		     , REV_NO-->
+<!--		     , CURRENT_PAGE_NO-->
+<!--		     , TOTAL_PAGE_NO-->
+<!--		     , DISTRIBUTE_TYPE_CD-->
+<!--		     , BUSINESS_AREA_CD-->
+<!--		     , PRODUCT_CD-->
+<!--		     , APPLY_HOGI_NO-->
+<!--		     , OBJECT_CLASS_NM2-->
+<!--		     , OBJECT_CLASS_CD2-->
+<!--		     , ECN_NO-->
+<!--		     , STD_GAPP_DT-->
+<!--		     , CHANGE_GAPP_DT-->
+<!--		     , BUSINESS_TYPE_CD-->
+<!--		     , PROTECT_YN-->
+<!--		     , PURCHASER_UID-->
+<!--		     )-->
+<!--		SELECT #{requestNo} AS requestNo-->
+<!--		     , 'Y'-->
+<!--		     , fileInfo.OBJECT_ID-->
+<!--		<if test="'DRAWING'.equals(requestType)">-->
+<!--			 , fileInfo.DRAWING_NO-->
+<!--			 , fileInfo.DRAWING_NM-->
+<!--			 , NULL AS swVersionNo-->
+<!--			 , NULL AS docVersionNo-->
+<!--			 , fileInfo.REV_NO-->
+<!--			 , fileInfo.CURRENT_PAGE_NO-->
+<!--			 , fileInfo.TOTAL_PAGE_NO-->
+<!--			 , fileInfo.DISTRIBUTE_TYPE_CD-->
+<!--			 , fileInfo.BUSINESS_AREA_CD-->
+<!--			 , fileInfo.PRODUCT_CD-->
+<!--			 , NULL AS applyHogiNo-->
+<!--			 , NULL AS objectClassNm2-->
+<!--			 , NULL AS objectClassCd2-->
+<!-- 			 , fileInfo.ECN_NO-->
+<!--			 , fileInfo.STD_GAPP_DT-->
+<!--			 , fileInfo.CHANGE_GAPP_DT-->
+<!--			 , fileInfo.BUSINESS_TYPE_CD-->
+<!--			 , fileInfo.PROTECT_YN-->
+<!--			 , #{purchaseUid} AS purchaserUid-->
+<!--&lt;!&ndash; 			 , item.WERKS &ndash;&gt;-->
+<!--		</if>-->
+<!--		<if test="'DOC'.equals(requestType)">-->
+<!--			 , fileInfo.DOCUMENT_NO-->
+<!--			 , fileInfo.DOCUMENT_NM-->
+<!--			 , NULL AS swVersionNo-->
+<!--			 , NULL AS docVersionNo-->
+<!--			 , fileInfo.REV_NO-->
+<!--			 , NULL AS currentPageNo-->
+<!--			 , NULL AS totalPageNo-->
+<!--			 &lt;!&ndash; , (SELECT t.DISTRIBUTE_TYPE_CD FROM DOCS_DOCUMENT_FILE t WHERE t.OBJECT_ID = #{objectId} AND t.FILE_NO = #{fileNo}) &ndash;&gt;-->
+<!--			 &lt;!&ndash;, #{distributeTypeCd} &ndash;&gt;-->
+<!--			 , fileInfo.DISTRIBUTE_TYPE_CD-->
+<!--			 , fileInfo.BUSINESS_AREA_CD-->
+<!--			 , fileInfo.PRODUCT_CD-->
+<!--			 , NULL AS applyHogiNo-->
+<!--			 , fileInfo.DOC_CLASS_NM2 AS objectClassNm2-->
+<!--			 , fileInfo.DOC_CLASS_CD2 AS objectClassCd2-->
+<!--			 , fileInfo.ECN_NO-->
+<!--			 , fileInfo.STD_GAPP_DT-->
+<!--			 , fileInfo.CHANGE_GAPP_DT-->
+<!--			 , fileInfo.BUSINESS_TYPE_CD-->
+<!--			 , fileInfo.PROTECT_YN-->
+<!--			 , #{purchaseUid} AS purchaserUid-->
+<!--		</if>-->
+<!--		<if test="'SW'.equals(requestType)">-->
+<!--			 , fileInfo.SW_NO-->
+<!--			 , fileInfo.SW_NM-->
+<!--		     , fileInfo.SW_VERSION_NO-->
+<!--		     , fileInfo.DOC_VERSION_NO-->
+<!--		     , fileInfo.REV_NO-->
+<!--			 , NULL AS currentPageNo-->
+<!--			 , NULL AS totalPageNo-->
+<!--			 &lt;!&ndash;, (SELECT t.DISTRIBUTE_TYPE_CD FROM DOCS_SW_FILE t WHERE t.OBJECT_ID = #{objectId}) &ndash;&gt;-->
+<!--			 , fileInfo.DISTRIBUTE_TYPE_CD-->
+<!--			 , fileInfo.BUSINESS_AREA_CD-->
+<!--			 , fileInfo.PRODUCT_CD-->
+<!--			 , NULL AS applyHogiNo-->
+<!--			 , fileInfo.SW_CLASS_NM2 AS objectClassNm2-->
+<!--			 , fileInfo.SW_CLASS_CD2 AS objectClassCd2-->
+<!--			 , fileInfo.ECN_NO-->
+<!--			 , fileInfo.STD_GAPP_DT-->
+<!--			 , fileInfo.CHANGE_GAPP_DT-->
+<!--			 , fileInfo.BUSINESS_TYPE_CD-->
+<!--			 , fileInfo.PROTECT_YN-->
+<!--			 , #{purchaseUid} AS purchaserUid-->
+<!--		</if>-->
+<!--		<if test="'PRODUCT_DOC'.equals(requestType)">-->
+<!--			 , fileInfo.DOCUMENT_NO-->
+<!--			 , fileInfo.DOCUMENT_NM-->
+<!--			 , NULL AS swVersionNo-->
+<!--			 , NULL AS docVersionNo-->
+<!--			 , fileInfo.REV_NO-->
+<!--			 , NULL AS currentPageNo-->
+<!--			 , NULL AS totalPageNo-->
+<!--			 , NULL AS distributeTypeCd-->
+<!--			 , fileInfo.BUSINESS_AREA_CD-->
+<!--			 , NULL AS productCd-->
+<!--			 , fileInfo.APPLY_HOGI_NO-->
+<!--			 , fileInfo.DOC_CLASS_NM2 AS objectClassNm2-->
+<!--			 , fileInfo.DOC_CLASS_CD2 AS objectClassCd2-->
+<!--			 , fileInfo.ECN_NO-->
+<!--			 , NULL AS stdGappDt-->
+<!--			 , NULL AS changeGappDt-->
+<!--			 , fileInfo.BUSINESS_TYPE_CD-->
+<!--			 , 'N' AS protectYn-->
+<!--			 , #{purchaseUid} AS purchaserUid-->
+<!--		</if>-->
+<!--		<if test="'PRODUCT_SW'.equals(requestType)">-->
+<!--			 , fileInfo.SW_NO-->
+<!--			 , fileInfo.SW_NM-->
+<!--			 , fileInfo.SW_VERSION_NO-->
+<!--			 , NULL AS docVersionNo-->
+<!--			 , fileInfo.REV_NO-->
+<!--			 , NULL AS currentPageNo-->
+<!--			 , NULL AS totalPageNo-->
+<!--			 , NULL AS distributeTypeCd-->
+<!--			 , fileInfo.BUSINESS_AREA_CD-->
+<!--			 , fileInfo.PRODUCT_NO AS productCd-->
+<!--			 , NULL AS applyHogiNo-->
+<!--			 , fileInfo.SW_CLASS_NM2 AS objectClassNm2-->
+<!--			 , fileInfo.SW_CLASS_CD2 AS objectClassCd2-->
+<!--			 , fileInfo.ECN_NO-->
+<!--			 , NULL AS stdGappDt-->
+<!--			 , NULL AS changeGappDt-->
+<!--			 , fileInfo.BUSINESS_TYPE_CD-->
+<!--			 , 'N' AS protectYn-->
+<!--			 , #{purchaseUid} AS purchaserUid-->
+<!--		</if>-->
+<!--		<if test="'DRAWING'.equals(requestType)">-->
+<!--		FROM DOCS_DRAWING fileInfo-->
+<!--&lt;!&ndash; 		LEFT JOIN DOCS_ITEM item &ndash;&gt;-->
+<!--&lt;!&ndash; 		ON fileInfo.DRAWING_NO = item.C0003 &ndash;&gt;-->
+<!--&lt;!&ndash;         AND fileInfo.REV_NO = item.C0004 &ndash;&gt;-->
+<!--		</if>-->
+<!--		<if test="'DOC'.equals(requestType)">-->
+<!--		FROM DOCS_DOCUMENT fileInfo-->
+<!--		</if>-->
+<!--		<if test="'SW'.equals(requestType)">-->
+<!--		FROM DOCS_SW fileInfo-->
+<!--		</if>-->
+<!--		<if test="'PRODUCT_DOC'.equals(requestType)">-->
+<!--		FROM DOCS_PRODUCT_DOCUMENT fileInfo-->
+<!--		</if>-->
+<!--		<if test="'PRODUCT_SW'.equals(requestType)">-->
+<!--		FROM DOCS_PRODUCT_SW fileInfo-->
+<!--		</if>-->
+<!--		WHERE fileInfo.OBJECT_ID = #{objectId}-->
+<!--	</insert>-->
+
+<!--	<insert id="insertDocsRequestFileUsingMap">-->
+<!--		INSERT INTO DOCS_REQUEST_FILE-->
+<!--		(-->
+<!--			REQUEST_NO-->
+<!--			, OBJECT_ID-->
+<!--			, FILE_PATH_NM-->
+<!--			, ORG_FILE_NM-->
+<!--			, FILE_NM-->
+<!--			, FILE_SIZE-->
+<!--			, CHECK_SUM-->
+<!--			, FILE_NO-->
+<!--			, USE_START_YMD-->
+<!--			, USE_END_YMD-->
+<!--			, DEPLOY_TERM-->
+<!--		)-->
+<!--		VALUES-->
+<!--		(-->
+<!--			#{requestNo}-->
+<!--			, #{objectId}-->
+<!--			, #{filePath}-->
+<!--			, #{orgFileNm}-->
+<!--			, #{fileNm}-->
+<!--			, #{fileSize}-->
+<!--			, #{checkSum}-->
+<!--			, #{fileNo}-->
+<!--			, #{useStartYmd}-->
+<!--			, #{useEndYmd}-->
+<!--			, #{deployTerm}-->
+<!--		)-->
+<!--	</insert>-->
+
+
+<!--	&lt;!&ndash; 개발(연구소) 두명 골랐는지 검증 [2019.11.04(최금영)] &ndash;&gt;-->
+<!--	<select id="verificationProtectUser" resultType="Integer" parameterType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonDistributionRequestParam">-->
+<!--		SELECT COUNT(*) TOTAL_COUNT-->
+<!--		FROM DOCS_PROTECT_USER-->
+<!--		WHERE BUSINESS_TYPE_CD = 'Development'-->
+<!--		<foreach open="AND USER_CD IN (" close=")" separator="," collection="protectUserUid" item="userCd">-->
+<!--           #{userCd}-->
+<!--        </foreach>-->
+<!--	</select>-->
+
+<!--	<select id="selectRequestMappingDuplicate" resultType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonDistributionRequestParam">-->
+<!--		SELECT OBJECT_ID-->
+<!--		FROM DOCS_REQUEST_MAPPING-->
+<!--		WHERE REQUEST_NO = #{requestNo}-->
+<!--		AND OBJECT_ID = #{objectId}-->
+<!--	</select>-->
+
+
+<!--	&lt;!&ndash; 개발, 양산  방산결재자 정보 조회 [2019.11.04(최금영)]&ndash;&gt;-->
+<!--	<select id="getProtectUser" resultType="HashMap" parameterType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonDistributionRequestParam">-->
+<!--		SELECT BUSINESS_TYPE_CD-->
+<!--			, USER_CD-->
+<!--		FROM DOCS_PROTECT_USER-->
+<!--		<foreach open="WHERE USER_CD IN (" close=")" separator="," collection="protectUserUid" item="userCd">-->
+<!--           #{userCd}-->
+<!--        </foreach>-->
+<!--	</select>-->
+
+<!--	<select id="selectInsaDeptProductTeam" resultType="Integer">-->
+<!--		SELECT COUNT(DEPT_CD)-->
+<!--		FROM DOCS_INSA_DEPT_CD-->
+<!--		WHERE COLUMN_NM = 'PRODUCT_TEAM_YN'-->
+<!--		AND DEPT_CD = #{deptCd}-->
+<!--	</select>-->
+
+
+<!--	<select id="selectProtectPopupList" resultType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonDistributionRequestVO">-->
+<!--	   SELECT DENSE_RANK() OVER (ORDER BY docsUser.USER_NM,  docsMember.ACCESS_UID) as rnk,-->
+<!--	   	      docsMember.ACCESS_UID AS userId,-->
+<!--	          docsUser.USER_NM AS userNm,-->
+<!--	          docsPos.POSITION_NM AS positionNm,-->
+<!--	          docsDept.DEPT_NM AS deptNm-->
+<!--			<if test="'DRAWING'.equals(objectType)">-->
+<!--			FROM DOCS_DRAWING_MEMBER docsMember-->
+<!--			</if>-->
+<!--			<if test="'DOC'.equals(objectType)">-->
+<!--			FROM DOCS_DOCUMENT_MEMBER docsMember-->
+<!--			</if>-->
+<!--			<if test="'SW'.equals(objectType)">-->
+<!--			FROM DOCS_SW_MEMBER docsMember-->
+<!--			</if>-->
+<!--	        , DOCS_USER docsUser-->
+<!--	        , DOCS_DEPT docsDept-->
+<!--	        , DOCS_POSITION docsPos-->
+<!--	    WHERE docsMember.OBJECT_ID = #{objectId}-->
+<!--	      AND docsMember.ACCESS_UID =  docsUser.USER_ID-->
+<!--	      AND docsUser.DEPT_CD = docsDept.DEPT_CD-->
+<!--	      AND docsUser.POSITION_CD = docsPos.POSITION_CD-->
+<!--	</select>-->
+<!--</mapper>-->
+
+
+
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+
+<mapper namespace="sql.commonRequest">
+
+	<!-- 사용자 이메일 조회 [2019.09.18(최금영)] -->
+	<select id="getUserEmail" resultType="String">
+		SELECT EMAIL
+		FROM DOCS_USER
+		WHERE USER_CD = #{userCd}
+	</select>
+
+	<!-- 요청 등록 [2019.09.18(최금영)] -->
+	<insert id="inserRequest" parameterType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonDistributionRequestParam" useGeneratedKeys="true" keyProperty="requestNo">
+		<selectKey keyProperty="requestNo" resultType="String" order="BEFORE">
+			SELECT TO_CHAR(CURRENT_DATE, 'YYYYMMDD') || #{requestKeyType} || LPAD((COALESCE(MAX(SUBSTRING(REQUEST_NO, 11, 4))::INTEGER, 0) + 1)::TEXT, 4, '0') AS REQUEST_NO
+			FROM DOCS_REQUEST
+			WHERE SUBSTRING(REQUEST_NO, 1, 10) = TO_CHAR(CURRENT_DATE, 'YYYYMMDD') || #{requestKeyType}
+		</selectKey>
+
+		INSERT INTO DOCS_REQUEST
+		( REQUEST_NO
+		, REQUEST_TYPE
+		, REQUEST_PURPOSE
+		, APPROVAL_LINE_ID
+		, CURRENT_PROCESS_SEQ_NO
+		<if test='requestPurposeTerm != null and !"".equals(requestPurposeTerm)'>
+			, DEPLOY_TERM
+		</if>
+		, USE_START_YMD
+		, USE_END_YMD
+		, PRINT_YN
+		, DEPLOY_NORMAL_YN
+		, DEPLOY_SPECIAL_YN
+		, INSERT_USER_CD
+		, INSERT_DT
+		, UPDATE_USER_CD
+		, UPDATE_DT
+		, STATUS_CD
+		, OBJECT_TYPE
+		, DEPLOY_COMPANY_CD
+		, PROTECT_YN
+		, DESTROY_TODO_YMD
+		, BUSINESS_AREA_CD
+		)
+		VALUES
+		( #{requestNo}
+		, #{approvalRequestType}
+		, #{requestPurpose}
+		, CAST(#{approvalLineId} AS INTEGER)
+		, CAST(#{currentProcessSeqNo} AS INTEGER)
+		<if test='requestPurposeTerm != null and !"".equals(requestPurposeTerm)'>
+			, #{requestPurposeTerm}
+		</if>
+		, #{useStartYmd}
+		, #{useEndYmd}
+		, #{printYn}
+		, #{deployNormalYn}
+		, #{deploySpecialYn}
+		, #{sessionUser.userCd}
+		, CURRENT_TIMESTAMP
+		, #{sessionUser.userCd}
+		, CURRENT_TIMESTAMP
+		, 'REQUEST'
+		, #{objectType}
+		, #{companyCd}
+		, #{protectYn}
+		, #{destroyTodoYmd}
+		, #{sessionUser.businessAreaCd}
+		)
+	</insert>
+
+	<!-- 요청 배포 정보 입력 [2019.09.18(최금영)] -->
+	<insert id="insertRequestDeploy" parameterType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonDistributionRequestParam">
+		INSERT INTO DOCS_REQUEST_DEPLOY
+		( REQUEST_NO
+		, DEPLOY_USER_CD
+		, DEPLOY_USER_EMAIL
+		)
+		VALUES
+			( #{requestNo}
+			, #{companyUserCd}
+			, #{deployUserEmail}
+			)
+	</insert>
+
+	<!-- 결재 라인 상세정보 [2019.09.18(최금영)] -->
+	<select id="getDocsApprovalLineDetail" resultType="kr.esob.fdms.controller.inside.distribution.commonrequest.ApprovalLineDetailVO">
+		SELECT APPROVAL_STATUS_CD AS approvalStatusCd
+			 , APPROVAL_GRADE_CD AS approvalGradeCd
+		FROM DOCS_APPROVAL_LINE_DETAIL
+		WHERE APPROVAL_LINE_ID = CAST(#{approvalLineId} AS INTEGER)
+		ORDER BY PROCESS_SEQ_NO
+	</select>
+
+	<!-- 방산아닌 요청 추가 [2019.09.18(최금영)] -->
+	<insert id="insertDocsRequestDetail" parameterType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonDistributionRequestParam">
+		INSERT INTO DOCS_REQUEST_DETAIL
+		( REQUEST_NO
+		, PROCESS_SEQ
+		, APPROVAL_STATUS_CD
+		, APPROVAL_GRADE_CD
+		, ORIGINAL_USER_CD
+		, ACTUAL_USER_CD
+		<if test='"REQUEST".equals(approvalStatusCd)'> <!-- 요청 내용 입력 -->
+			, REQUEST_DESC
+		</if>
+		<if test='!"APPROVAL".equals(approvalStatusCd)'> <!-- 구매팀장, 방산 팀장일 경우 생략 -->
+			, ACTION_DT
+			, ACTION_CD
+		</if>
+		)
+		VALUES
+		( #{requestNo}
+		, CAST(#{processSeq} AS INTEGER)
+		, #{approvalStatusCd}
+		, #{approvalGradeCd}
+		<if test='"REQUEST".equals(approvalStatusCd)'> <!-- 요청자 -->
+			, #{sessionUser.userCd} <!-- 로그인된 사용자 -->
+			, #{sessionUser.userCd} <!-- 로그인된 사용자 -->
+		</if>
+		<if test='"ACCEPT".equals(approvalStatusCd)'> <!-- 구매담당자 -->
+			, #{purchaseTeam} <!-- 현재 선택된 구매 담당자 -->
+			, #{sessionUser.userCd} <!-- 실제 생성한 구매 담당자 -->
+		</if>
+		<if test='"TL".equals(approvalGradeCd)'> <!-- 구매 팀장 -->
+			, (SELECT TEAM_LEADER_USER_CD <!-- 로그인한 사용자의 팀장 -->
+			FROM DOCS_DEPT
+			WHERE DEPT_CD = #{sessionUser.deptCd})
+			, #{purchaseUid} <!-- 실제 선택된 구매 팀장 -->
+		</if>
+		<if test='"DEF".equals(approvalGradeCd)'> <!-- 방산 팀장 -->
+			<if test='"Development".equals(businessTypeCd)'> <!-- 양산 -->
+				, #{developmentProtectUserUid}
+				, #{developmentProtectUserUid}
+			</if>
+			<if test='"Production".equals(businessTypeCd)'> <!-- 개발 -->
+				, #{productProtectUid}
+				, #{productProtectUid}
+			</if>
+		</if>
+		<if test='"REQUEST".equals(approvalStatusCd)'> <!-- 요청 내용 입력 -->
+			, #{requestDesc}
+		</if>
+		<if test='!"APPROVAL".equals(approvalStatusCd)'>
+			, CURRENT_TIMESTAMP
+			<if test='"REQUEST".equals(approvalStatusCd)'>
+				, 'REQUEST'
+			</if>
+			<if test='"ACCEPT".equals(approvalStatusCd)'>
+				, 'ACCEPT'
+			</if>
+		</if>
+		)
+	</insert>
+
+	<!-- 방산아닌 요청 추가 [2019.09.18(최금영)] -->
+	<insert id="insertDocsRequestMapping" parameterType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonDistributionRequestParam">
+		INSERT INTO DOCS_REQUEST_MAPPING
+		( REQUEST_NO
+		, USE_YN
+		, OBJECT_ID
+		, OBJECT_NO
+		, OBJECT_NM
+		, SW_VERSION_NO
+		, DOC_VERSION_NO
+		, REV_NO
+		, CURRENT_PAGE_NO
+		, TOTAL_PAGE_NO
+		, DISTRIBUTE_TYPE_CD
+		, BUSINESS_AREA_CD
+		, PRODUCT_CD
+		, APPLY_HOGI_NO
+		, OBJECT_CLASS_NM2
+		, OBJECT_CLASS_CD2
+		, ECN_NO
+		, STD_GAPP_DT
+		, CHANGE_GAPP_DT
+		, BUSINESS_TYPE_CD
+		, PROTECT_YN
+		, PURCHASER_UID
+		)
+		SELECT #{requestNo} AS requestNo
+		, 'Y'
+		, fileInfo.OBJECT_ID
+		<if test="'DRAWING'.equals(requestType)">
+			, fileInfo.DRAWING_NO
+			, fileInfo.DRAWING_NM
+			, NULL AS swVersionNo
+			, NULL AS docVersionNo
+			, fileInfo.REV_NO
+			, fileInfo.CURRENT_PAGE_NO
+			, fileInfo.TOTAL_PAGE_NO
+			, fileInfo.DISTRIBUTE_TYPE_CD
+			, fileInfo.BUSINESS_AREA_CD
+			, fileInfo.PRODUCT_CD
+			, NULL AS applyHogiNo
+			, NULL AS objectClassNm2
+			, NULL AS objectClassCd2
+			, fileInfo.ECN_NO
+			, fileInfo.STD_GAPP_DT
+			, fileInfo.CHANGE_GAPP_DT
+			, fileInfo.BUSINESS_TYPE_CD
+			, fileInfo.PROTECT_YN
+			, #{purchaseUid} AS purchaserUid
+		</if>
+		<if test="'DOC'.equals(requestType)">
+			, fileInfo.DOCUMENT_NO
+			, fileInfo.DOCUMENT_NM
+			, NULL AS swVersionNo
+			, NULL AS docVersionNo
+			, fileInfo.REV_NO
+			, NULL AS currentPageNo
+			, NULL AS totalPageNo
+			, fileInfo.DISTRIBUTE_TYPE_CD
+			, fileInfo.BUSINESS_AREA_CD
+			, fileInfo.PRODUCT_CD
+			, NULL AS applyHogiNo
+			, fileInfo.DOC_CLASS_NM2 AS objectClassNm2
+			, fileInfo.DOC_CLASS_CD2 AS objectClassCd2
+			, fileInfo.ECN_NO
+			, fileInfo.STD_GAPP_DT
+			, fileInfo.CHANGE_GAPP_DT
+			, fileInfo.BUSINESS_TYPE_CD
+			, fileInfo.PROTECT_YN
+			, #{purchaseUid} AS purchaserUid
+		</if>
+		<if test="'SW'.equals(requestType)">
+			, fileInfo.SW_NO
+			, fileInfo.SW_NM
+			, fileInfo.SW_VERSION_NO
+			, fileInfo.DOC_VERSION_NO
+			, fileInfo.REV_NO
+			, NULL AS currentPageNo
+			, NULL AS totalPageNo
+			, fileInfo.DISTRIBUTE_TYPE_CD
+			, fileInfo.BUSINESS_AREA_CD
+			, fileInfo.PRODUCT_CD
+			, NULL AS applyHogiNo
+			, fileInfo.SW_CLASS_NM2 AS objectClassNm2
+			, fileInfo.SW_CLASS_CD2 AS objectClassCd2
+			, fileInfo.ECN_NO
+			, fileInfo.STD_GAPP_DT
+			, fileInfo.CHANGE_GAPP_DT
+			, fileInfo.BUSINESS_TYPE_CD
+			, fileInfo.PROTECT_YN
+			, #{purchaseUid} AS purchaserUid
+		</if>
+		<if test="'PRODUCT_DOC'.equals(requestType)">
+			, fileInfo.DOCUMENT_NO
+			, fileInfo.DOCUMENT_NM
+			, NULL AS swVersionNo
+			, NULL AS docVersionNo
+			, fileInfo.REV_NO
+			, NULL AS currentPageNo
+			, NULL AS totalPageNo
+			, NULL AS distributeTypeCd
+			, fileInfo.BUSINESS_AREA_CD
+			, NULL AS productCd
+			, fileInfo.APPLY_HOGI_NO
+			, fileInfo.DOC_CLASS_NM2 AS objectClassNm2
+			, fileInfo.DOC_CLASS_CD2 AS objectClassCd2
+			, fileInfo.ECN_NO
+			, NULL AS stdGappDt
+			, NULL AS changeGappDt
+			, fileInfo.BUSINESS_TYPE_CD
+			, 'N' AS protectYn
+			, #{purchaseUid} AS purchaserUid
+		</if>
+		<if test="'PRODUCT_SW'.equals(requestType)">
+			, fileInfo.SW_NO
+			, fileInfo.SW_NM
+			, fileInfo.SW_VERSION_NO
+			, NULL AS docVersionNo
+			, fileInfo.REV_NO
+			, NULL AS currentPageNo
+			, NULL AS totalPageNo
+			, NULL AS distributeTypeCd
+			, fileInfo.BUSINESS_AREA_CD
+			, fileInfo.PRODUCT_NO AS productCd
+			, NULL AS applyHogiNo
+			, fileInfo.SW_CLASS_NM2 AS objectClassNm2
+			, fileInfo.SW_CLASS_CD2 AS objectClassCd2
+			, fileInfo.ECN_NO
+			, NULL AS stdGappDt
+			, NULL AS changeGappDt
+			, fileInfo.BUSINESS_TYPE_CD
+			, 'N' AS protectYn
+			, #{purchaseUid} AS purchaserUid
+		</if>
+		<if test="'DRAWING'.equals(requestType)">
+			FROM DOCS_DRAWING fileInfo
+		</if>
+		<if test="'DOC'.equals(requestType)">
+			FROM DOCS_DOCUMENT fileInfo
+		</if>
+		<if test="'SW'.equals(requestType)">
+			FROM DOCS_SW fileInfo
+		</if>
+		<if test="'PRODUCT_DOC'.equals(requestType)">
+			FROM DOCS_PRODUCT_DOCUMENT fileInfo
+		</if>
+		<if test="'PRODUCT_SW'.equals(requestType)">
+			FROM DOCS_PRODUCT_SW fileInfo
+		</if>
+		WHERE fileInfo.OBJECT_ID = #{objectId}
+	</insert>
+
+	<insert id="insertDocsRequestFileUsingMap">
+		INSERT INTO DOCS_REQUEST_FILE
+		(
+			REQUEST_NO
+		, OBJECT_ID
+		, FILE_PATH_NM
+		, ORG_FILE_NM
+		, FILE_NM
+		, FILE_SIZE
+		, CHECK_SUM
+		, FILE_NO
+		, USE_START_YMD
+		, USE_END_YMD
+		, DEPLOY_TERM
+		)
+		VALUES
+			(
+				#{requestNo}
+			, #{objectId}
+			, #{filePath}
+			, #{orgFileNm}
+			, #{fileNm}
+			, #{fileSize}
+			, #{checkSum}
+			, #{fileNo}
+			, #{useStartYmd}
+			, #{useEndYmd}
+			, #{deployTerm}
+			)
+	</insert>
+
+	<!-- 개발(연구소) 두명 골랐는지 검증 [2019.11.04(최금영)] -->
+	<select id="verificationProtectUser" resultType="Integer" parameterType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonDistributionRequestParam">
+		SELECT 0 AS TOTAL_COUNT
+	</select>
+
+	<select id="selectRequestMappingDuplicate" resultType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonDistributionRequestParam">
+		SELECT OBJECT_ID
+		FROM DOCS_REQUEST_MAPPING
+		WHERE REQUEST_NO = #{requestNo}
+		  AND OBJECT_ID = #{objectId}
+	</select>
+
+	<!-- 개발, 양산  방산결재자 정보 조회 [2019.11.04(최금영)]-->
+	<select id="getProtectUser" resultType="HashMap" parameterType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonDistributionRequestParam">
+		SELECT NULL AS BUSINESS_TYPE_CD
+		, NULL AS USER_CD
+		WHERE 1 = 0
+	</select>
+
+	<select id="selectInsaDeptProductTeam" resultType="Integer">
+		SELECT COUNT(DEPT_CD)
+		FROM DOCS_INSA_DEPT_CD
+		WHERE COLUMN_NM = 'PRODUCT_TEAM_YN'
+		  AND DEPT_CD = #{deptCd}
+	</select>
+
+	<select id="selectProtectPopupList" resultType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonDistributionRequestVO">
+		SELECT DENSE_RANK() OVER (ORDER BY docsUser.USER_NM, docsMember.ACCESS_UID) AS rnk,
+		docsMember.ACCESS_UID AS userId,
+		docsUser.USER_NM AS userNm,
+		docsPos.POSITION_NM AS positionNm,
+		docsDept.DEPT_NM AS deptNm
+		<if test="'DRAWING'.equals(objectType)">
+			FROM DOCS_DRAWING_MEMBER docsMember
+		</if>
+		<if test="'DOC'.equals(objectType)">
+			FROM DOCS_DOCUMENT_MEMBER docsMember
+		</if>
+		<if test="'SW'.equals(objectType)">
+			FROM DOCS_SW_MEMBER docsMember
+		</if>
+		, DOCS_USER docsUser
+		, DOCS_DEPT docsDept
+		, DOCS_POSITION docsPos
+		WHERE docsMember.OBJECT_ID = #{objectId}
+		AND docsMember.ACCESS_UID = docsUser.USER_ID
+		AND docsUser.DEPT_CD = docsDept.DEPT_CD
+		AND docsUser.POSITION_CD = docsPos.POSITION_CD
+	</select>
+
+</mapper>

@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="sql.OrganizationmanageAuditLog">
+
+    <select id="selectList"
+            resultType="kr.esob.fdms.controller.inside.organizationmanage.auditlog.AuditLogListVO">
+        SELECT
+              log_no AS "logNo"
+            , user_id AS "userId"
+            , user_name AS "userName"
+            , user_name AS "userNm"
+            , action_type AS "actionType"
+            , access_ip AS "accessIp"
+            , TO_CHAR(log_dt, 'YYYY-MM-DD HH24:MI:SS') AS "date"
+            , TO_CHAR(log_dt, 'YYYY-MM-DD HH24:MI:SS') AS "logDt"
+        FROM docs_audit_log
+        WHERE 1 = 1
+        <if test='userId != null and userId != ""'>
+            AND user_id ILIKE '%' || #{userId} || '%'
+        </if>
+        <if test='userName != null and userName != ""'>
+            AND user_name ILIKE '%' || #{userName} || '%'
+        </if>
+        <if test='userNm != null and userNm != ""'>
+            AND user_name ILIKE '%' || #{userNm} || '%'
+        </if>
+        <if test='actionType != null and actionType != ""'>
+            AND action_type ILIKE '%' || #{actionType} || '%'
+        </if>
+        <if test='accessIp != null and accessIp != ""'>
+            AND access_ip ILIKE '%' || #{accessIp} || '%'
+        </if>
+        <if test='startDt != null and startDt != ""'>
+            AND log_dt >= TO_TIMESTAMP(#{startDt} || ' 00:00:00', 'YYYY-MM-DD HH24:MI:SS')
+        </if>
+        <if test='endDt != null and endDt != ""'>
+            AND log_dt <![CDATA[ < ]]> TO_TIMESTAMP(#{endDt}, 'YYYY-MM-DD') + INTERVAL '1 day'
+        </if>
+        <choose>
+            <when test='sortColumn != null and (sortColumn.equalsIgnoreCase("logNo") or sortColumn.equalsIgnoreCase("log_no"))'>
+                ORDER BY log_no
+            </when>
+            <when test='sortColumn != null and (sortColumn.equalsIgnoreCase("userId") or sortColumn.equalsIgnoreCase("user_id"))'>
+                ORDER BY user_id
+            </when>
+            <when test='sortColumn != null and (sortColumn.equalsIgnoreCase("userName") or sortColumn.equalsIgnoreCase("userNm") or sortColumn.equalsIgnoreCase("user_name"))'>
+                ORDER BY user_name
+            </when>
+            <when test='sortColumn != null and (sortColumn.equalsIgnoreCase("actionType") or sortColumn.equalsIgnoreCase("action_type"))'>
+                ORDER BY action_type
+            </when>
+            <when test='sortColumn != null and (sortColumn.equalsIgnoreCase("accessIp") or sortColumn.equalsIgnoreCase("access_ip"))'>
+                ORDER BY access_ip
+            </when>
+            <when test='sortColumn != null and (sortColumn.equalsIgnoreCase("date") or sortColumn.equalsIgnoreCase("logDt") or sortColumn.equalsIgnoreCase("log_dt"))'>
+                ORDER BY log_dt
+            </when>
+            <otherwise>
+                ORDER BY log_dt
+            </otherwise>
+        </choose>
+        <choose>
+            <when test='order != null and order.equalsIgnoreCase("asc")'>
+                ASC
+            </when>
+            <otherwise>
+                DESC
+            </otherwise>
+        </choose>
+        <if test='sortColumn == null or !(sortColumn.equalsIgnoreCase("logNo") or sortColumn.equalsIgnoreCase("log_no"))'>
+            , log_no DESC
+        </if>
+        <if test='size != null and page != null'>
+            LIMIT CAST(#{size} AS INTEGER)
+            OFFSET ((CAST(#{page} AS INTEGER) - 1) * CAST(#{size} AS INTEGER))
+        </if>
+    </select>
+
+    <select id="selectListCount" resultType="Integer">
+        SELECT COUNT(*)
+        FROM docs_audit_log
+        WHERE 1 = 1
+        <if test='userId != null and userId != ""'>
+            AND user_id ILIKE '%' || #{userId} || '%'
+        </if>
+        <if test='userName != null and userName != ""'>
+            AND user_name ILIKE '%' || #{userName} || '%'
+        </if>
+        <if test='userNm != null and userNm != ""'>
+            AND user_name ILIKE '%' || #{userNm} || '%'
+        </if>
+        <if test='actionType != null and actionType != ""'>
+            AND action_type ILIKE '%' || #{actionType} || '%'
+        </if>
+        <if test='accessIp != null and accessIp != ""'>
+            AND access_ip ILIKE '%' || #{accessIp} || '%'
+        </if>
+        <if test='startDt != null and startDt != ""'>
+            AND log_dt >= TO_TIMESTAMP(#{startDt} || ' 00:00:00', 'YYYY-MM-DD HH24:MI:SS')
+        </if>
+        <if test='endDt != null and endDt != ""'>
+            AND log_dt <![CDATA[ < ]]> TO_TIMESTAMP(#{endDt}, 'YYYY-MM-DD') + INTERVAL '1 day'
+        </if>
+    </select>
+
+    <insert id="insertAuditLog">
+        INSERT INTO docs_audit_log (
+              user_id
+            , user_name
+            , action_type
+            , access_ip
+            , log_dt
+        ) VALUES (
+              #{userId}
+            , #{userName}
+            , #{actionType}
+            , #{accessIp}
+            , CURRENT_TIMESTAMP
+        )
+    </insert>
+
+</mapper>

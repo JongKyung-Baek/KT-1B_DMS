@@ -1,0 +1,728 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+
+<!--<mapper namespace="sql.PrintHistory">-->
+
+<!--	<select id="selectList" resultType="kr.esob.fdms.controller.inside.distribution.printhistory.HistoryListVO">-->
+<!--		SELECT-->
+<!--			B1.*-->
+<!--		FROM-->
+<!--		(-->
+<!--			SELECT-->
+<!--				A1.*-->
+<!--				, ROWNUM AS PAGEINDEX-->
+<!--			FROM-->
+<!--			(-->
+<!--			    SELECT-->
+<!--					mapping.BUSINESS_TYPE_CD 															AS businessTypeCd			/* 사업구분코드 */-->
+<!--					, FN_GET_CD_NM('businessTypeCd', mapping.BUSINESS_TYPE_CD, #{sessionLang}) 			AS businessTypeNm-->
+<!--					, req.REQUEST_NO																	AS requestNo				/* 요청번호 */-->
+<!--					, req.OBJECT_TYPE 																	AS objectType				/* 자료유형코드 */-->
+<!--					, FN_GET_CD_NM('objectTypeWithP', req.OBJECT_TYPE, #{sessionLang}) 						AS objectTypeNm-->
+<!--					, mapping.OBJECT_NO 																AS objectNo					/* 자료번호 */-->
+<!--					, mapping.OBJECT_ID																	AS objectId-->
+<!--					, mapping.REV_NO 																	AS revNo					/* rev */-->
+<!--					, mapping.SW_VERSION_NO 															AS swVersionNo 				/* sw 버전 */-->
+<!--					, mapping.DOC_VERSION_NO															AS docVersionNo 			/* 명세서 버전 */-->
+<!--					, mapping.OBJECT_NM 																AS objectNm					/* 자료명 */-->
+<!--					, mapping.CURRENT_PAGE_NO 															AS currentPageNo 			/* 페이지 */-->
+<!--					, mapping.TOTAL_PAGE_NO 															AS totalPageNo 				/* 총 페이지 */-->
+<!--					, mapping.ECN_NO 																	AS ecnNo					/* CO번호 */-->
+<!--					, req.REQUEST_PURPOSE 																AS requestPurpose			/* 용도 */-->
+<!--					, FN_GET_CD_NM('printRequestType', req.REQUEST_PURPOSE, #{sessionLang}) 			AS requestPurposeNm-->
+<!--					, (-->
+<!--						SELECT USER_NM-->
+<!--						FROM DOCS_USER tmp WHERE tmp.USER_CD = req.INSERT_USER_CD-->
+<!--					) 																					AS requestUserNm 			/* 출력 요청자 */-->
+<!--					, req.INSERT_USER_CD																AS requestUserCd			/* 출력요청자 */-->
+<!--					, req.INSERT_DT																		AS requestDt				/* 출력 요청일 */-->
+<!--					, fileInfo.PRINT_COUNT 															    AS printCount				/* 출력횟수 */-->
+<!--					, TO_CHAR(TO_DATE(fileInfo.USE_END_YMD, 'YYYYMMDD'), 'YYYY-MM-DD') 					AS useEndYmd				/* 유효기간 */-->
+<!--					, CASE WHEN (SYSDATE > fileInfo.USE_END_YMD) THEN 'Y' ELSE 'N' END                   AS useEndYmdYn              /* 유효기간체크 */-->
+<!--					, TO_CHAR(TO_DATE(req.DESTROY_TODO_YMD, 'YYYYMMDD'), 'YYYY-MM-DD') 					AS destroyTodoYmd			/* 폐기기한 */-->
+<!--					, mapping.STD_GAPP_DT 																AS stdGappDt				/* 규격화 승인일 */-->
+<!--					, mapping.CHANGE_GAPP_DT 															AS changeGappDt				/* 기술변경 승인일 */-->
+<!--					, (-->
+<!--						SELECT-->
+<!--							CN_CD || ' ' || CN_CD_DESC-->
+<!--						FROM (SELECT DISTINCT PRODUCT_CD AS CN_CD, PRODUCT_CD AS CN_CD_DESC FROM DOCS_REQUEST_MAPPING WHERE PRODUCT_CD IS NOT NULL) prod-->
+<!--						WHERE prod.CN_CD = mapping.PRODUCT_CD-->
+<!--					)																					AS productNm				/* 기종명 */-->
+<!--					, mapping.PRODUCT_CD 																AS productCd				/* 기종 */-->
+<!--					, mapping.BUSINESS_AREA_CD															AS businessAreaCd			/* 사업장 */-->
+<!--					, FN_GET_CD_NM('businessAreaCd', mapping.BUSINESS_AREA_CD, #{sessionLang}) 			AS businessAreaNm-->
+<!--					, mapping.PROTECT_YN 																AS protectYn				/* 방산기술자료 */-->
+<!--					, reqDetail.REQUEST_DESC 															AS requestDesc				/* 요청사유 */-->
+<!--					, destroyReq.INSERT_USER_CD															AS destroyRequestUserCd		/* 폐기요청자 */-->
+<!--					, (-->
+<!--						SELECT USER_NM-->
+<!--						FROM DOCS_USER tmp WHERE tmp.USER_CD = destroyReq.INSERT_USER_CD-->
+<!--					) 																					AS destroyRequestUserNm		/* 폐기요청자 */-->
+<!--					, destroyReq.APPROVAL_DT															AS destroyApprovalDt		/* 폐기승인일 */-->
+<!--					, destroyReq.DESTROY_STATUS_CD													    AS destroyStatusCd			/* 폐기상태코드 */-->
+<!--					, FN_GET_CD_NM('destroyStatusCd', destroyReq.DESTROY_STATUS_CD, #{sessionLang})	    AS destroyStatusNm	        /* 폐기상태명 */-->
+<!--					, destroyReq.DESTROY_TYPE 											                AS destroyType 		        /* 폐기구분코드 */-->
+<!--					, FN_GET_CD_NM('destroyType', destroyReq.DESTROY_TYPE, #{sessionLang}) 			    AS destroyTypeNm            /* 폐기구분명 */-->
+<!--					, approvalFile.DESTROY_DT															AS destroyDt				/* 폐기일자 */-->
+<!--					, fileInfo.FILE_NO																	AS fileNo					/* 파일 순서 */-->
+<!--					, fileInfo.ORG_FILE_NM																AS orgFileNm-->
+<!--					, appDetail.ACTUAL_USER_CD                                                          AS approvalUserCd-->
+<!--                    , (-->
+<!--                        SELECT USER_NM-->
+<!--                        FROM DOCS_USER tmp WHERE tmp.USER_CD = appDetail.ACTUAL_USER_CD-->
+<!--                    )                                                                                   AS approvalUserNm      /*출력결재자*/-->
+<!--				FROM DOCS_REQUEST_FILE fileInfo-->
+<!--                    INNER JOIN DOCS_REQUEST_MAPPING mapping ON fileInfo.REQUEST_NO = mapping.REQUEST_NO AND fileInfo.OBJECT_ID = mapping.OBJECT_ID-->
+<!--                    INNER JOIN DOCS_REQUEST req ON mapping.REQUEST_NO = req.REQUEST_NO-->
+<!--                    INNER JOIN DOCS_REQUEST_DETAIL reqDetail ON reqDetail.REQUEST_NO = req.REQUEST_NO AND reqDetail.APPROVAL_STATUS_CD = 'REQUEST'-->
+<!--					LEFT JOIN DOCS_APPROVAL_FILE approvalFile ON approvalFile.REQUEST_NO = mapping.REQUEST_NO AND approvalFile.OBJECT_ID = mapping.OBJECT_ID-->
+<!--					LEFT JOIN DOCS_DESTROY_REQUEST_MAPPING destroyMapping ON destroyMapping.REQUEST_NO = mapping.REQUEST_NO AND destroyMapping.OBJECT_ID = mapping.OBJECT_ID-->
+<!--					LEFT JOIN DOCS_DESTROY_REQUEST destroyReq ON destroyReq.DESTROY_REQUEST_NO = destroyMapping.DESTROY_REQUEST_NO-->
+<!--					LEFT JOIN DOCS_DESTROY_REQUEST_DETAIL destroyReqDtl ON destroyReqDtl.DESTROY_REQUEST_NO = destroyReq.DESTROY_REQUEST_NO AND destroyReqDtl.APPROVAL_STATUS_CD = 'REQUEST'-->
+<!--				    LEFT JOIN DOCS_REQUEST_DETAIL appDetail ON appDetail.REQUEST_NO = req.REQUEST_NO AND appDetail.APPROVAL_STATUS_CD = 'APPROVAL'-->
+<!--				WHERE req.REQUEST_TYPE = 'PRINT'-->
+<!--				AND req.STATUS_CD = 'APPROVAL' /* 최종 승인 난 목록만 보여줌 */-->
+<!--				<if test='requestStartDt != null and !requestStartDt.equals("")'>-->
+<!--					AND req.INSERT_DT BETWEEN TO_DATE(#{requestStartDt}, 'YYYY-MM-DD')-->
+<!--                    AND TO_DATE(#{requestEndDt}, 'YYYY-MM-DD')+1-->
+<!--				</if>-->
+<!--				<if test='printTermYn != null and printTermYn.equals("Y")'>-->
+<!--					AND fileInfo.USE_END_YMD <![CDATA[ >= ]]> TO_CHAR(SYSDATE-(SELECT SYSTEM_CONFIG_VALUE FROM DOCS_SYSTEM_CONFIG t WHERE t.SYSTEM_CONFIG_GROUP='SYSTEM_CONFIG' AND t.SYSTEM_CONFIG_CD='VALID_TERM'), 'YYYYMMDD')-->
+<!--					AND fileInfo.USE_END_YMD <![CDATA[ <= ]]> TO_CHAR(SYSDATE, 'YYYYMMDD')-->
+<!--				</if>-->
+<!--				<if test='printDisposalTermYn != null and printDisposalTermYn.equals("Y")'>-->
+<!--					AND req.DESTROY_TODO_YMD <![CDATA[ >= ]]> TO_CHAR(SYSDATE-(SELECT SYSTEM_CONFIG_VALUE FROM DOCS_SYSTEM_CONFIG t WHERE t.SYSTEM_CONFIG_GROUP='SYSTEM_CONFIG' AND t.SYSTEM_CONFIG_CD='VALID_TERM'), 'YYYYMMDD')-->
+<!--					AND req.DESTROY_TODO_YMD <![CDATA[ <= ]]> TO_CHAR(SYSDATE, 'YYYYMMDD')-->
+<!--				</if>-->
+<!--				<if test='sortColumn == null or "".equals(sortColumn)'>-->
+<!--					<choose>-->
+<!--						&lt;!&ndash; 출력기한임박이 우선 &ndash;&gt;-->
+<!--						<when test='printTermYn.equals("Y")'>-->
+<!--								ORDER BY useEndYmd DESC-->
+<!--						</when>-->
+<!--						<when test='printDisposalTermYn.equals("Y")'>-->
+<!--								ORDER BY destroyTodoYmd DESC-->
+<!--						</when>-->
+<!--						<otherwise>-->
+<!--							<if test='requestStartDt != null and !requestStartDt.equals("")'>-->
+<!--								ORDER BY requestDt desc, requestNo desc-->
+<!--							</if>-->
+<!--						</otherwise>-->
+<!--					</choose>-->
+<!--				</if>-->
+<!--	         	<if test='sortColumn != null and !"".equals(sortColumn)'>-->
+<!--	         		ORDER BY ${sortColumn} ${order}, requestNo ${order}-->
+<!--	         	</if>-->
+<!-- 				&lt;!&ndash; 요청일 기준으로 정렬 &ndash;&gt;-->
+<!--				<if test='sortColumn == null or "".equals(sortColumn)'>-->
+<!--					ORDER BY requestDt DESC-->
+<!--				</if>-->
+<!--		) A1-->
+<!--			WHERE 1=1-->
+<!--			<if test='requestNo != null and !requestNo.equals("")'>-->
+<!--			AND requestNo = #{requestNo}-->
+<!--			</if>-->
+<!--			<if test='objectType != null and !objectType.equals("")'>-->
+<!--			AND objectType = #{objectType}-->
+<!--			</if>-->
+<!--			<if test='requestUserCd != null and !requestUserCd.equals("")'>-->
+<!--			AND requestUserCd = #{requestUserCd}-->
+<!--			</if>-->
+<!--			<if test='requestPurpose != null and !requestPurpose.equals("")'>-->
+<!--			AND requestPurpose = #{requestPurpose}-->
+<!--			</if>-->
+<!--			<if test='destroyStatusCd != null and !destroyStatusCd.equals("")'>-->
+<!--			AND destroyStatusCd = #{destroyStatusCd}-->
+<!--			</if>-->
+<!--			<if test='businessAreaCd != null and !businessAreaCd.equals("")'>-->
+<!--			AND businessAreaCd = #{businessAreaCd}-->
+<!--			</if>-->
+<!--			<if test='destroyRequestUserCd != null and !destroyRequestUserCd.equals("")'>-->
+<!--			AND destroyRequestUserCd = #{destroyRequestUserCd}-->
+<!--			</if>-->
+<!--			<if test='end != null and !end.equals("")'>-->
+<!--			AND ROWNUM <![CDATA[ <= ]]> #{end}-->
+<!--			</if>-->
+<!--		) B1-->
+<!--		<if test='start != null and !start.equals("")'>-->
+<!--		WHERE PAGEINDEX <![CDATA[ >= ]]>#{start}-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	<select id="selectListCount" resultType="Integer">-->
+<!--			SELECT-->
+<!--				COUNT(*) AS TOTAL_COUNT-->
+<!--			FROM-->
+<!--			(-->
+<!--				SELECT-->
+<!--					A1.*-->
+<!--				FROM-->
+<!--				(-->
+<!--    			    SELECT-->
+<!--						mapping.BUSINESS_TYPE_CD 															AS businessTypeCd			/* 사업구분코드 */-->
+<!--						, FN_GET_CD_NM('businessTypeCd', mapping.BUSINESS_TYPE_CD, #{sessionLang}) 			AS businessTypeNm-->
+<!--						, req.REQUEST_NO																	AS requestNo				/* 요청번호 */-->
+<!--						, req.OBJECT_TYPE 																	AS objectType				/* 자료유형코드 */-->
+<!--						, FN_GET_CD_NM('objectTypeWithP', req.OBJECT_TYPE, #{sessionLang}) 						AS objectTypeNm-->
+<!--						, mapping.OBJECT_NO 																AS objectNo					/* 자료번호 */-->
+<!--						, mapping.OBJECT_ID																	AS objectId-->
+<!--						, mapping.REV_NO 																	AS revNo					/* rev */-->
+<!--						, mapping.SW_VERSION_NO 															AS swVersionNo 				/* sw 버전 */-->
+<!--						, mapping.DOC_VERSION_NO															AS docVersionNo 			/* 명세서 버전 */-->
+<!--						, mapping.OBJECT_NM 																AS objectNm					/* 자료명 */-->
+<!--						, mapping.CURRENT_PAGE_NO 															AS currentPageNo 			/* 페이지 */-->
+<!--						, mapping.TOTAL_PAGE_NO 															AS totalPageNo 				/* 총 페이지 */-->
+<!--						, mapping.ECN_NO 																	AS ecnNo					/* CO번호 */-->
+<!--						, req.REQUEST_PURPOSE 																AS requestPurpose			/* 용도 */-->
+<!--						, FN_GET_CD_NM('printRequestType', req.REQUEST_PURPOSE, #{sessionLang}) 			AS requestPurposeNm-->
+<!--						, (-->
+<!--							SELECT USER_NM-->
+<!--							FROM DOCS_USER tmp WHERE tmp.USER_CD = req.INSERT_USER_CD-->
+<!--						) 																					AS requestUserNm 			/* 출력 요청자 */-->
+<!--						, req.INSERT_USER_CD																AS requestUserCd			/* 출력요청자 */-->
+<!--						, req.INSERT_DT																		AS requestDt				/* 출력 요청일 */-->
+<!--						, fileInfo.PRINT_COUNT 															    AS printCount				/* 출력횟수 */-->
+<!--						, TO_CHAR(TO_DATE(fileInfo.USE_END_YMD, 'YYYYMMDD'), 'YYYY-MM-DD') 					AS useEndYmd				/* 유효기간 */-->
+<!--						, CASE WHEN (SYSDATE > fileInfo.USE_END_YMD) THEN 'Y' ELSE 'N' END                   AS useEndYmdYn              /* 유효기간체크 */-->
+<!--						, TO_CHAR(TO_DATE(req.DESTROY_TODO_YMD, 'YYYYMMDD'), 'YYYY-MM-DD') 					AS destroyTodoYmd			/* 폐기기한 */-->
+<!--						, mapping.STD_GAPP_DT 																AS stdGappDt				/* 규격화 승인일 */-->
+<!--						, mapping.CHANGE_GAPP_DT 															AS changeGappDt				/* 기술변경 승인일 */-->
+<!--						, (-->
+<!--							SELECT-->
+<!--								CN_CD || ' ' || CN_CD_DESC-->
+<!--							FROM (SELECT DISTINCT PRODUCT_CD AS CN_CD, PRODUCT_CD AS CN_CD_DESC FROM DOCS_REQUEST_MAPPING WHERE PRODUCT_CD IS NOT NULL) prod-->
+<!--							WHERE prod.CN_CD = mapping.PRODUCT_CD-->
+<!--						)																					AS productNm				/* 기종명 */-->
+<!--						, mapping.PRODUCT_CD 																AS productCd				/* 기종 */-->
+<!--						, mapping.BUSINESS_AREA_CD															AS businessAreaCd			/* 사업장 */-->
+<!--						, FN_GET_CD_NM('businessAreaCd', mapping.BUSINESS_AREA_CD, #{sessionLang}) 			AS businessAreaNm-->
+<!--						, mapping.PROTECT_YN 																AS protectYn				/* 방산기술자료 */-->
+<!--						, reqDetail.REQUEST_DESC 															AS requestDesc				/* 요청사유 */-->
+<!--						, destroyReq.INSERT_USER_CD															AS destroyRequestUserCd		/* 폐기요청자 */-->
+<!--						, (-->
+<!--							SELECT USER_NM-->
+<!--							FROM DOCS_USER tmp WHERE tmp.USER_CD = destroyReq.INSERT_USER_CD-->
+<!--						) 																					AS destroyRequestUserNm		/* 폐기요청자 */-->
+<!--						, destroyReq.APPROVAL_DT															AS destroyApprovalDt		/* 폐기승인일 */-->
+<!--						, destroyReq.DESTROY_STATUS_CD													    AS destroyStatusCd			/* 폐기상태코드 */-->
+<!--						, FN_GET_CD_NM('destroyStatusCd', destroyReq.DESTROY_STATUS_CD, #{sessionLang})	    AS destroyStatusNm	        /* 폐기상태명 */-->
+<!--						, destroyReq.DESTROY_TYPE 											                AS destroyType 		        /* 폐기구분코드 */-->
+<!--						, FN_GET_CD_NM('destroyType', destroyReq.DESTROY_TYPE, #{sessionLang}) 			    AS destroyTypeNm            /* 폐기구분명 */-->
+<!--						, approvalFile.DESTROY_DT															AS destroyDt				/* 폐기일자 */-->
+<!--						, fileInfo.FILE_NO																	AS fileNo					/* 파일 순서 */-->
+<!--						, fileInfo.ORG_FILE_NM																AS orgFileNm-->
+<!--						, appDetail.ACTUAL_USER_CD                                                          AS approvalUserCd-->
+<!--						, (-->
+<!--                           SELECT USER_NM-->
+<!--                           FROM DOCS_USER tmp WHERE tmp.USER_CD = appDetail.ACTUAL_USER_CD-->
+<!--                        )                                                                                   AS approvalUserNm      /*출력결재자*/-->
+<!--					FROM DOCS_REQUEST_FILE fileInfo-->
+<!--	                    INNER JOIN DOCS_REQUEST_MAPPING mapping ON fileInfo.REQUEST_NO = mapping.REQUEST_NO AND fileInfo.OBJECT_ID = mapping.OBJECT_ID-->
+<!--	                    INNER JOIN DOCS_REQUEST req ON mapping.REQUEST_NO = req.REQUEST_NO-->
+<!--	                    INNER JOIN DOCS_REQUEST_DETAIL reqDetail ON reqDetail.REQUEST_NO = req.REQUEST_NO AND reqDetail.APPROVAL_STATUS_CD = 'REQUEST'-->
+<!--						LEFT JOIN DOCS_APPROVAL_FILE approvalFile ON approvalFile.REQUEST_NO = mapping.REQUEST_NO AND approvalFile.OBJECT_ID = mapping.OBJECT_ID-->
+<!--						LEFT JOIN DOCS_DESTROY_REQUEST_MAPPING destroyMapping ON destroyMapping.REQUEST_NO = mapping.REQUEST_NO AND destroyMapping.OBJECT_ID = mapping.OBJECT_ID-->
+<!--						LEFT JOIN DOCS_DESTROY_REQUEST destroyReq ON destroyReq.DESTROY_REQUEST_NO = destroyMapping.DESTROY_REQUEST_NO-->
+<!--						LEFT JOIN DOCS_DESTROY_REQUEST_DETAIL destroyReqDtl ON destroyReqDtl.DESTROY_REQUEST_NO = destroyReq.DESTROY_REQUEST_NO AND destroyReqDtl.APPROVAL_STATUS_CD = 'REQUEST'-->
+<!--					    LEFT JOIN DOCS_REQUEST_DETAIL appDetail ON appDetail.REQUEST_NO = req.REQUEST_NO AND appDetail.APPROVAL_STATUS_CD = 'APPROVAL'-->
+<!--					WHERE req.REQUEST_TYPE = 'PRINT'-->
+<!--					AND req.STATUS_CD = 'APPROVAL' /* 최종 승인 난 목록만 보여줌 */-->
+<!--				<if test='requestStartDt != null and !requestStartDt.equals("")'>-->
+<!--					AND req.INSERT_DT BETWEEN TO_DATE(#{requestStartDt}, 'YYYY-MM-DD')-->
+<!--                    AND TO_DATE(#{requestEndDt}, 'YYYY-MM-DD')+1-->
+<!--				</if>-->
+<!--				<if test='printTermYn != null and printTermYn.equals("Y")'>-->
+<!--					AND fileInfo.USE_END_YMD <![CDATA[ >= ]]> TO_CHAR(SYSDATE-(SELECT SYSTEM_CONFIG_VALUE FROM DOCS_SYSTEM_CONFIG t WHERE t.SYSTEM_CONFIG_GROUP='SYSTEM_CONFIG' AND t.SYSTEM_CONFIG_CD='VALID_TERM'), 'YYYYMMDD')-->
+<!--					AND fileInfo.USE_END_YMD <![CDATA[ <= ]]> TO_CHAR(SYSDATE, 'YYYYMMDD')-->
+<!--				</if>-->
+<!--				<if test='printDisposalTermYn != null and printDisposalTermYn.equals("Y")'>-->
+<!--					AND req.DESTROY_TODO_YMD <![CDATA[ >= ]]> TO_CHAR(SYSDATE-(SELECT SYSTEM_CONFIG_VALUE FROM DOCS_SYSTEM_CONFIG t WHERE t.SYSTEM_CONFIG_GROUP='SYSTEM_CONFIG' AND t.SYSTEM_CONFIG_CD='VALID_TERM'), 'YYYYMMDD')-->
+<!--					AND req.DESTROY_TODO_YMD <![CDATA[ <= ]]> TO_CHAR(SYSDATE, 'YYYYMMDD')-->
+<!--				</if>-->
+<!--		) A1-->
+<!--			WHERE 1=1-->
+<!--			<if test='objectType != null and !objectType.equals("")'>-->
+<!--			AND objectType = #{objectType}-->
+<!--			</if>-->
+<!--			<if test='requestUserCd != null and !requestUserCd.equals("")'>-->
+<!--			AND requestUserCd = #{requestUserCd}-->
+<!--			</if>-->
+<!--			<if test='requestPurpose != null and !requestPurpose.equals("")'>-->
+<!--			AND requestPurpose = #{requestPurpose}-->
+<!--			</if>-->
+<!--			<if test='destroyStatusCd != null and !destroyStatusCd.equals("")'>-->
+<!--			AND destroyStatusCd = #{destroyStatusCd}-->
+<!--			</if>-->
+<!--			<if test='businessAreaCd != null and !businessAreaCd.equals("")'>-->
+<!--			AND businessAreaCd = #{businessAreaCd}-->
+<!--			</if>-->
+<!--			<if test='destroyRequestUserCd != null and !destroyRequestUserCd.equals("")'>-->
+<!--			AND destroyRequestUserCd = #{destroyRequestUserCd}-->
+<!--			</if>-->
+<!--			) B1-->
+<!--	</select>-->
+
+
+<!--	&lt;!&ndash; 출력물 폐기 요청 추가 [2019.10.04(최금영)] &ndash;&gt;-->
+<!--	<insert id="inserDestoryRequest" parameterType="kr.esob.fdms.controller.inside.distribution.printhistory.DestroyRequestParam">-->
+<!--		<selectKey keyProperty="destroyRequestNo" resultType="String" order="BEFORE">-->
+<!--            SELECT TO_CHAR(SYSDATE,'YYYYMMDD')||'-X'||LPAD(NVL(SUBSTR(MAX(DESTROY_REQUEST_NO),11),0)+1,4,0) AS DESTROY_REQUEST_NO-->
+<!--              FROM DOCS_DESTROY_REQUEST-->
+<!--             WHERE SUBSTR(DESTROY_REQUEST_NO,1,10) = TO_CHAR(SYSDATE,'YYYYMMDD')||'-X'-->
+<!--        </selectKey>-->
+<!--        	/* 폐기 요청 추가 */-->
+<!--			INSERT INTO DOCS_DESTROY_REQUEST-->
+<!--				( DESTROY_REQUEST_NO-->
+<!--				, APPROVAL_LINE_ID-->
+<!--				, CURRENT_PROCESS_SEQ_NO-->
+<!--				, STATUS_CD-->
+<!--				, INSERT_USER_CD-->
+<!--				, INSERT_DT-->
+<!--				, DESTROY_TYPE-->
+<!--				, DESTROY_STATUS_CD-->
+<!--				, BUSINESS_AREA_CD-->
+<!--				, REQUEST_TYPE-->
+<!--				)-->
+<!--			VALUES-->
+<!--				( #{destroyRequestNo}-->
+<!--				, #{approvalLineId}-->
+<!--				, #{currentProcessSeqNo}-->
+<!--				, 'REQUEST'-->
+<!--				, #{sessionUser.userCd}-->
+<!--				, SYSDATE-->
+<!--				, '6'-->
+<!--				, '2'-->
+<!--				, #{businessAreaCd}-->
+<!--				, 'PRINT'-->
+<!--				)-->
+<!--	</insert>-->
+
+<!--	&lt;!&ndash; 결재 라인 조회 [2019.10.04(최금영)] &ndash;&gt;-->
+<!--	<select id="getDocsApprovalLineDetail" parameterType="kr.esob.fdms.controller.inside.distribution.printhistory.DestroyRequestParam" resultType="kr.esob.fdms.controller.inside.distribution.commonrequest.ApprovalLineDetailVO">-->
+<!--		/* 결재 라인 조회 */-->
+<!--		SELECT APPROVAL_STATUS_CD 		AS approvalStatusCd-->
+<!--			 , APPROVAL_GRADE_CD		AS approvalGradeCd-->
+<!--		  FROM DOCS_APPROVAL_LINE_DETAIL-->
+<!--		 WHERE APPROVAL_LINE_ID = #{approvalLineId}-->
+<!--		ORDER BY PROCESS_SEQ_NO-->
+<!--	</select>-->
+
+<!--	&lt;!&ndash; 폐기 요청 상세 추가 [2019.10.04(최금영)] &ndash;&gt;-->
+<!--	<insert id="insertDocsDestroyRequestDetail" parameterType="kr.esob.fdms.controller.inside.distribution.printhistory.DestroyRequestParam">-->
+<!--		/* 폐기 요청 상세 추가 */-->
+<!--		INSERT INTO DOCS_DESTROY_REQUEST_DETAIL-->
+<!--			( DESTROY_REQUEST_NO-->
+<!--			, PROCESS_SEQ-->
+<!--			, APPROVAL_STATUS_CD-->
+<!--			, APPROVAL_GRADE_CD-->
+<!--			<if test='"REQUEST".equals(approvalStatusCd)'>-->
+<!--			, REQUEST_DESC-->
+<!--			, ACTION_DT-->
+<!--			, ACTION_CD-->
+<!--			</if>-->
+<!--			, ORIGINAL_USER_CD-->
+<!--			, ACTUAL_USER_CD-->
+<!--			<if test='"REQUEST".equals(approvalStatusCd)'>-->
+<!--			</if>-->
+<!--			)-->
+<!--		VALUES-->
+<!--			( #{destroyRequestNo}-->
+<!--			, #{processSeq}-->
+<!--			, #{approvalStatusCd}-->
+<!--			, #{approvalGradeCd}-->
+<!--			<if test='"REQUEST".equals(approvalStatusCd)'>-->
+<!--			, #{requestDesc}-->
+<!--			, SYSDATE-->
+<!--			, 'REQUEST'-->
+<!--			, #{sessionUser.userCd}-->
+<!--			, #{sessionUser.userCd}-->
+<!--			</if>-->
+<!--			<if test='"APPROVAL".equals(approvalStatusCd) and "TL".equals(approvalGradeCd)' >	  &lt;!&ndash; 결재자  &ndash;&gt;-->
+<!--			, (SELECT TEAM_LEADER_USER_CD-->
+<!--			   FROM DOCS_DEPT-->
+<!--			   WHERE DEPT_CD = #{sessionUser.deptCd} )-->
+<!--			, #{teamLeaderUid}-->
+<!--			</if>-->
+<!--			<if test='"APPROVAL".equals(approvalStatusCd) and "DEF".equals(approvalGradeCd)'>	&lt;!&ndash; 방산팀장 &ndash;&gt;-->
+<!--				<if test='"Development".equals(businessTypeCd)'>			&lt;!&ndash; 양산 &ndash;&gt;-->
+<!--			 	, #{developmentProtectUserUid}-->
+<!--			 	, #{developmentProtectUserUid}-->
+<!--		 	 	</if>-->
+<!--		 	 	<if test='"Production".equals(businessTypeCd)'>			&lt;!&ndash; 개발 &ndash;&gt;-->
+<!--		 		, #{productProtectUid}-->
+<!--		 		, #{productProtectUid}-->
+<!--		 	 	</if>-->
+<!--&lt;!&ndash; 			, (SELECT TEAM_LEADER_USER_CD &ndash;&gt;-->
+<!--&lt;!&ndash; 			   FROM DOCS_DEPT &ndash;&gt;-->
+<!--&lt;!&ndash; 			   WHERE DEFENSE_TEAM_YN = 'Y' ) &ndash;&gt;-->
+<!--&lt;!&ndash; 			, #{protectiveOfficerUid} &ndash;&gt;-->
+<!--			</if>-->
+<!--			)-->
+<!--	</insert>-->
+
+<!--	&lt;!&ndash; 폐기 요청 아이템 맵핑 추가 [2019.10.04(최금영)] &ndash;&gt;-->
+<!--	<insert id="insertDocsDestoryRequestMapping" parameterType="kr.esob.fdms.controller.inside.distribution.printhistory.DestroyRequestParam">-->
+<!--		/* 폐기 요청 아이템 맵핑 추가 */-->
+<!--		INSERT INTO DOCS_DESTROY_REQUEST_MAPPING-->
+<!--			( REQUEST_NO-->
+<!--			, OBJECT_ID-->
+<!--			, DESTROY_REQUEST_NO-->
+<!--			, DEPLOY_USER_CD-->
+<!--			)-->
+<!--		VALUES-->
+<!--			( #{requestNo}-->
+<!--			, #{objectId}-->
+<!--			, #{destroyRequestNo}-->
+<!--			, #{sessionUser.userCd}-->
+<!--			)-->
+<!--	</insert>-->
+
+<!--	&lt;!&ndash; 개발, 양산  방산결재자 정보 조회 [2019.11.04(최금영)]&ndash;&gt;-->
+<!--	<select id="getProtectUser" resultType="HashMap" parameterType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonDistributionRequestParam">-->
+<!--		SELECT BUSINESS_TYPE_CD-->
+<!--			, USER_CD-->
+<!--		FROM DOCS_PROTECT_USER-->
+<!--		<foreach open="WHERE USER_CD IN (" close=")" separator="," collection="protectUserUid" item="userCd">-->
+<!--           #{userCd}-->
+<!--        </foreach>-->
+<!--	</select>-->
+
+<!--	<update id="updateApprovalFile" parameterType="kr.esob.fdms.controller.inside.distribution.printhistory.DestroyRequestParam">-->
+<!--		UPDATE DOCS_APPROVAL_FILE-->
+<!--		SET LAST_DESTROY_REQUEST_NO = #{destroyRequestNo}-->
+<!--		WHERE REQUEST_NO = #{requestNo}-->
+<!--		AND OBJECT_ID = #{objectId}-->
+<!--	</update>-->
+<!--</mapper>-->
+
+
+
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+
+
+
+<mapper namespace="sql.PrintHistory">
+
+	<select id="selectList" resultType="kr.esob.fdms.controller.inside.distribution.printhistory.HistoryListVO">
+		SELECT
+		B1.*
+		FROM (
+		SELECT
+		A1.*,
+		ROW_NUMBER() OVER () AS PAGEINDEX
+		FROM (
+		SELECT
+		mapping.BUSINESS_TYPE_CD AS businessTypeCd,
+		FN_GET_CD_NM('businessTypeCd', mapping.BUSINESS_TYPE_CD, #{sessionLang}) AS businessTypeNm,
+		req.REQUEST_NO AS requestNo,
+		req.OBJECT_TYPE AS objectType,
+		FN_GET_CD_NM('objectTypeWithP', req.OBJECT_TYPE, #{sessionLang}) AS objectTypeNm,
+		mapping.OBJECT_NO AS objectNo,
+		mapping.OBJECT_ID AS objectId,
+		mapping.REV_NO AS revNo,
+		mapping.SW_VERSION_NO AS swVersionNo,
+		mapping.DOC_VERSION_NO AS docVersionNo,
+		mapping.OBJECT_NM AS objectNm,
+		mapping.CURRENT_PAGE_NO AS currentPageNo,
+		mapping.TOTAL_PAGE_NO AS totalPageNo,
+		mapping.ECN_NO AS ecnNo,
+		req.REQUEST_PURPOSE AS requestPurpose,
+		FN_GET_CD_NM('printRequestType', req.REQUEST_PURPOSE, #{sessionLang}) AS requestPurposeNm,
+		(SELECT USER_NM FROM DOCS_USER tmp WHERE tmp.USER_CD = req.INSERT_USER_CD) AS requestUserNm,
+		req.INSERT_USER_CD AS requestUserCd,
+		req.INSERT_DT AS requestDt,
+		fileInfo.PRINT_COUNT AS printCount,
+		TO_CHAR(fileInfo.USE_END_YMD::DATE, 'YYYY-MM-DD') AS useEndYmd,
+		CASE WHEN (CURRENT_DATE > fileInfo.USE_END_YMD::DATE) THEN 'Y' ELSE 'N' END AS useEndYmdYn,
+		TO_CHAR(req.DESTROY_TODO_YMD::DATE, 'YYYY-MM-DD') AS destroyTodoYmd,
+		mapping.STD_GAPP_DT AS stdGappDt,
+		mapping.CHANGE_GAPP_DT AS changeGappDt,
+		COALESCE(mapping.PRODUCT_CD, '') AS productNm,
+		mapping.PRODUCT_CD AS productCd,
+		mapping.BUSINESS_AREA_CD AS businessAreaCd,
+		FN_GET_CD_NM('businessAreaCd', mapping.BUSINESS_AREA_CD, #{sessionLang}) AS businessAreaNm,
+		mapping.PROTECT_YN AS protectYn,
+		reqDetail.REQUEST_DESC AS requestDesc,
+		destroyReq.INSERT_USER_CD AS destroyRequestUserCd,
+		(SELECT USER_NM FROM DOCS_USER tmp WHERE tmp.USER_CD = destroyReq.INSERT_USER_CD) AS destroyRequestUserNm,
+		destroyReq.APPROVAL_DT AS destroyApprovalDt,
+		destroyReq.DESTROY_STATUS_CD AS destroyStatusCd,
+		FN_GET_CD_NM('destroyStatusCd', destroyReq.DESTROY_STATUS_CD, #{sessionLang}) AS destroyStatusNm,
+		destroyReq.DESTROY_TYPE AS destroyType,
+		FN_GET_CD_NM('destroyType', destroyReq.DESTROY_TYPE, #{sessionLang}) AS destroyTypeNm,
+		approvalFile.DESTROY_DT AS destroyDt,
+		fileInfo.FILE_NO AS fileNo,
+		fileInfo.ORG_FILE_NM AS orgFileNm,
+		appDetail.ACTUAL_USER_CD AS approvalUserCd,
+		(SELECT USER_NM FROM DOCS_USER tmp WHERE tmp.USER_CD = appDetail.ACTUAL_USER_CD) AS approvalUserNm
+		FROM DOCS_REQUEST_FILE fileInfo
+		INNER JOIN DOCS_REQUEST_MAPPING mapping ON fileInfo.REQUEST_NO = mapping.REQUEST_NO AND fileInfo.OBJECT_ID = mapping.OBJECT_ID
+		INNER JOIN DOCS_REQUEST req ON mapping.REQUEST_NO = req.REQUEST_NO
+		INNER JOIN DOCS_REQUEST_DETAIL reqDetail ON reqDetail.REQUEST_NO = req.REQUEST_NO AND reqDetail.APPROVAL_STATUS_CD = 'REQUEST'
+		LEFT JOIN DOCS_APPROVAL_FILE approvalFile ON approvalFile.REQUEST_NO = mapping.REQUEST_NO AND approvalFile.OBJECT_ID = mapping.OBJECT_ID
+		LEFT JOIN DOCS_DESTROY_REQUEST_MAPPING destroyMapping ON destroyMapping.REQUEST_NO = mapping.REQUEST_NO AND destroyMapping.OBJECT_ID = mapping.OBJECT_ID
+		LEFT JOIN DOCS_DESTROY_REQUEST destroyReq ON destroyReq.DESTROY_REQUEST_NO = destroyMapping.DESTROY_REQUEST_NO
+		LEFT JOIN DOCS_DESTROY_REQUEST_DETAIL destroyReqDtl ON destroyReqDtl.DESTROY_REQUEST_NO = destroyReq.DESTROY_REQUEST_NO AND destroyReqDtl.APPROVAL_STATUS_CD = 'REQUEST'
+		LEFT JOIN DOCS_REQUEST_DETAIL appDetail ON appDetail.REQUEST_NO = req.REQUEST_NO AND appDetail.APPROVAL_STATUS_CD = 'APPROVAL'
+		WHERE req.REQUEST_TYPE = 'PRINT'
+		AND req.STATUS_CD = 'APPROVAL'
+		<if test='requestStartDt != null and !requestStartDt.equals("")'>
+			AND req.INSERT_DT BETWEEN TO_DATE(#{requestStartDt}, 'YYYY-MM-DD') AND TO_DATE(#{requestEndDt}, 'YYYY-MM-DD') + INTERVAL '1 DAY'
+		</if>
+		<if test='printTermYn != null and printTermYn.equals("Y")'>
+			AND fileInfo.USE_END_YMD >= TO_CHAR(CURRENT_DATE - (SELECT SYSTEM_CONFIG_VALUE::INTEGER FROM DOCS_SYSTEM_CONFIG t WHERE t.SYSTEM_CONFIG_GROUP = 'SYSTEM_CONFIG' AND t.SYSTEM_CONFIG_CD = 'VALID_TERM'), 'YYYYMMDD')
+			AND fileInfo.USE_END_YMD <![CDATA[ <= ]]> TO_CHAR(CURRENT_DATE, 'YYYYMMDD')
+		</if>
+		<if test='printDisposalTermYn != null and printDisposalTermYn.equals("Y")'>
+			AND req.DESTROY_TODO_YMD >= TO_CHAR(CURRENT_DATE - (SELECT SYSTEM_CONFIG_VALUE::INTEGER FROM DOCS_SYSTEM_CONFIG t WHERE t.SYSTEM_CONFIG_GROUP = 'SYSTEM_CONFIG' AND t.SYSTEM_CONFIG_CD = 'VALID_TERM'), 'YYYYMMDD')
+			AND req.DESTROY_TODO_YMD <![CDATA[ <= ]]> TO_CHAR(CURRENT_DATE, 'YYYYMMDD')
+		</if>
+		<if test='sortColumn == null or "".equals(sortColumn)'>
+			<choose>
+				<when test='printTermYn.equals("Y")'>
+					ORDER BY useEndYmd DESC
+				</when>
+				<when test='printDisposalTermYn.equals("Y")'>
+					ORDER BY destroyTodoYmd DESC
+				</when>
+				<otherwise>
+					<if test='requestStartDt != null and !requestStartDt.equals("")'>
+						ORDER BY requestDt DESC, requestNo DESC
+					</if>
+				</otherwise>
+			</choose>
+		</if>
+		<if test='sortColumn != null and !"".equals(sortColumn)'>
+			ORDER BY ${sortColumn} ${order}, requestNo ${order}
+		</if>
+		<if test='sortColumn == null or "".equals(sortColumn)'>
+			ORDER BY requestDt DESC
+		</if>
+		) A1
+		) B1
+		<if test='requestNo != null and !requestNo.equals("")'>
+			AND requestNo = #{requestNo}
+		</if>
+		<if test='objectType != null and !objectType.equals("")'>
+			AND objectType = #{objectType}
+		</if>
+		<if test='requestUserCd != null and !requestUserCd.equals("")'>
+			AND requestUserCd = #{requestUserCd}
+		</if>
+		<if test='requestPurpose != null and !requestPurpose.equals("")'>
+			AND requestPurpose = #{requestPurpose}
+		</if>
+		<if test='destroyStatusCd != null and !destroyStatusCd.equals("")'>
+			AND destroyStatusCd = #{destroyStatusCd}
+		</if>
+		<if test='businessAreaCd != null and !businessAreaCd.equals("")'>
+			AND businessAreaCd = #{businessAreaCd}
+		</if>
+		<if test='destroyRequestUserCd != null and !destroyRequestUserCd.equals("")'>
+			AND destroyRequestUserCd = #{destroyRequestUserCd}
+		</if>
+	</select>
+
+	<select id="selectListCount" resultType="Integer">
+		SELECT COUNT(*) AS TOTAL_COUNT
+		FROM (
+		SELECT
+		A1.*
+		FROM (
+		SELECT
+		mapping.BUSINESS_TYPE_CD AS businessTypeCd,
+		FN_GET_CD_NM('businessTypeCd', mapping.BUSINESS_TYPE_CD, #{sessionLang}) AS businessTypeNm,
+		req.REQUEST_NO AS requestNo,
+		req.OBJECT_TYPE AS objectType,
+		FN_GET_CD_NM('objectTypeWithP', req.OBJECT_TYPE, #{sessionLang}) AS objectTypeNm,
+		mapping.OBJECT_NO AS objectNo,
+		mapping.OBJECT_ID AS objectId,
+		mapping.REV_NO AS revNo,
+		mapping.SW_VERSION_NO AS swVersionNo,
+		mapping.DOC_VERSION_NO AS docVersionNo,
+		mapping.OBJECT_NM AS objectNm,
+		mapping.CURRENT_PAGE_NO AS currentPageNo,
+		mapping.TOTAL_PAGE_NO AS totalPageNo,
+		mapping.ECN_NO AS ecnNo,
+		req.REQUEST_PURPOSE AS requestPurpose,
+		FN_GET_CD_NM('printRequestType', req.REQUEST_PURPOSE, #{sessionLang}) AS requestPurposeNm,
+		(SELECT USER_NM FROM DOCS_USER tmp WHERE tmp.USER_CD = req.INSERT_USER_CD) AS requestUserNm,
+		req.INSERT_USER_CD AS requestUserCd,
+		req.INSERT_DT AS requestDt,
+		fileInfo.PRINT_COUNT AS printCount,
+		TO_CHAR(fileInfo.USE_END_YMD::DATE, 'YYYY-MM-DD') AS useEndYmd,
+		CASE WHEN (CURRENT_DATE > fileInfo.USE_END_YMD::DATE) THEN 'Y' ELSE 'N' END AS useEndYmdYn,
+		TO_CHAR(req.DESTROY_TODO_YMD::DATE, 'YYYY-MM-DD') AS destroyTodoYmd,
+		mapping.STD_GAPP_DT AS stdGappDt,
+		mapping.CHANGE_GAPP_DT AS changeGappDt,
+		COALESCE(mapping.PRODUCT_CD, '') AS productNm,
+		mapping.PRODUCT_CD AS productCd,
+		mapping.BUSINESS_AREA_CD AS businessAreaCd,
+		FN_GET_CD_NM('businessAreaCd', mapping.BUSINESS_AREA_CD, #{sessionLang}) AS businessAreaNm,
+		mapping.PROTECT_YN AS protectYn,
+		reqDetail.REQUEST_DESC AS requestDesc,
+		destroyReq.INSERT_USER_CD AS destroyRequestUserCd,
+		(SELECT USER_NM FROM DOCS_USER tmp WHERE tmp.USER_CD = destroyReq.INSERT_USER_CD) AS destroyRequestUserNm,
+		destroyReq.APPROVAL_DT AS destroyApprovalDt,
+		destroyReq.DESTROY_STATUS_CD AS destroyStatusCd,
+		FN_GET_CD_NM('destroyStatusCd', destroyReq.DESTROY_STATUS_CD, #{sessionLang}) AS destroyStatusNm,
+		destroyReq.DESTROY_TYPE AS destroyType,
+		FN_GET_CD_NM('destroyType', destroyReq.DESTROY_TYPE, #{sessionLang}) AS destroyTypeNm,
+		approvalFile.DESTROY_DT AS destroyDt,
+		fileInfo.FILE_NO AS fileNo,
+		fileInfo.ORG_FILE_NM AS orgFileNm,
+		appDetail.ACTUAL_USER_CD AS approvalUserCd,
+		(SELECT USER_NM FROM DOCS_USER tmp WHERE tmp.USER_CD = appDetail.ACTUAL_USER_CD) AS approvalUserNm
+		FROM DOCS_REQUEST_FILE fileInfo
+		INNER JOIN DOCS_REQUEST_MAPPING mapping ON fileInfo.REQUEST_NO = mapping.REQUEST_NO AND fileInfo.OBJECT_ID = mapping.OBJECT_ID
+		INNER JOIN DOCS_REQUEST req ON mapping.REQUEST_NO = req.REQUEST_NO
+		INNER JOIN DOCS_REQUEST_DETAIL reqDetail ON reqDetail.REQUEST_NO = req.REQUEST_NO AND reqDetail.APPROVAL_STATUS_CD = 'REQUEST'
+		LEFT JOIN DOCS_APPROVAL_FILE approvalFile ON approvalFile.REQUEST_NO = mapping.REQUEST_NO AND approvalFile.OBJECT_ID = mapping.OBJECT_ID
+		LEFT JOIN DOCS_DESTROY_REQUEST_MAPPING destroyMapping ON destroyMapping.REQUEST_NO = mapping.REQUEST_NO AND destroyMapping.OBJECT_ID = mapping.OBJECT_ID
+		LEFT JOIN DOCS_DESTROY_REQUEST destroyReq ON destroyReq.DESTROY_REQUEST_NO = destroyMapping.DESTROY_REQUEST_NO
+		LEFT JOIN DOCS_DESTROY_REQUEST_DETAIL destroyReqDtl ON destroyReqDtl.DESTROY_REQUEST_NO = destroyReq.DESTROY_REQUEST_NO AND destroyReqDtl.APPROVAL_STATUS_CD = 'REQUEST'
+		LEFT JOIN DOCS_REQUEST_DETAIL appDetail ON appDetail.REQUEST_NO = req.REQUEST_NO AND appDetail.APPROVAL_STATUS_CD = 'APPROVAL'
+		WHERE req.REQUEST_TYPE = 'PRINT'
+		AND req.STATUS_CD = 'APPROVAL'
+		<if test='requestStartDt != null and !requestStartDt.equals("")'>
+			AND req.INSERT_DT BETWEEN TO_DATE(#{requestStartDt}, 'YYYY-MM-DD') AND TO_DATE(#{requestEndDt}, 'YYYY-MM-DD') + INTERVAL '1 DAY'
+		</if>
+		<if test='printTermYn != null and printTermYn.equals("Y")'>
+			AND fileInfo.USE_END_YMD >= TO_CHAR(CURRENT_DATE - (SELECT SYSTEM_CONFIG_VALUE::INTEGER FROM DOCS_SYSTEM_CONFIG t WHERE t.SYSTEM_CONFIG_GROUP = 'SYSTEM_CONFIG' AND t.SYSTEM_CONFIG_CD = 'VALID_TERM'), 'YYYYMMDD')
+			AND fileInfo.USE_END_YMD <![CDATA[ <= ]]> TO_CHAR(CURRENT_DATE, 'YYYYMMDD')
+		</if>
+		<if test='printDisposalTermYn != null and printDisposalTermYn.equals("Y")'>
+			AND req.DESTROY_TODO_YMD >= TO_CHAR(CURRENT_DATE - (SELECT SYSTEM_CONFIG_VALUE::INTEGER FROM DOCS_SYSTEM_CONFIG t WHERE t.SYSTEM_CONFIG_GROUP = 'SYSTEM_CONFIG' AND t.SYSTEM_CONFIG_CD = 'VALID_TERM'), 'YYYYMMDD')
+			AND req.DESTROY_TODO_YMD <![CDATA[ <= ]]> TO_CHAR(CURRENT_DATE, 'YYYYMMDD')
+		</if>
+		) A1
+		) B1
+		<if test='objectType != null and !objectType.equals("")'>
+			AND objectType = #{objectType}
+		</if>
+		<if test='requestUserCd != null and !requestUserCd.equals("")'>
+			AND requestUserCd = #{requestUserCd}
+		</if>
+		<if test='requestPurpose != null and !requestPurpose.equals("")'>
+			AND requestPurpose = #{requestPurpose}
+		</if>
+		<if test='destroyStatusCd != null and !destroyStatusCd.equals("")'>
+			AND destroyStatusCd = #{destroyStatusCd}
+		</if>
+		<if test='businessAreaCd != null and !businessAreaCd.equals("")'>
+			AND businessAreaCd = #{businessAreaCd}
+		</if>
+		<if test='destroyRequestUserCd != null and !destroyRequestUserCd.equals("")'>
+			AND destroyRequestUserCd = #{destroyRequestUserCd}
+		</if>
+	</select>
+
+	<insert id="inserDestoryRequest" parameterType="kr.esob.fdms.controller.inside.distribution.printhistory.DestroyRequestParam">
+		<selectKey keyProperty="destroyRequestNo" resultType="String" order="BEFORE">
+			SELECT
+			TO_CHAR(CURRENT_DATE, 'YYYYMMDD') || '-X' ||
+			LPAD(CAST(COALESCE(SUBSTRING(MAX(DESTROY_REQUEST_NO) FROM 11)::INTEGER, 0) + 1 AS TEXT), 4, '0')
+			AS DESTROY_REQUEST_NO
+			FROM DOCS_DESTROY_REQUEST
+			WHERE SUBSTRING(DESTROY_REQUEST_NO, 1, 10) = TO_CHAR(CURRENT_DATE, 'YYYYMMDD') || '-X';
+		</selectKey>
+		INSERT INTO DOCS_DESTROY_REQUEST
+		(DESTROY_REQUEST_NO, APPROVAL_LINE_ID, CURRENT_PROCESS_SEQ_NO, STATUS_CD, INSERT_USER_CD, INSERT_DT, DESTROY_TYPE, DESTROY_STATUS_CD, BUSINESS_AREA_CD, REQUEST_TYPE)
+		VALUES
+		(#{destroyRequestNo}, CAST(#{approvalLineId} AS INTEGER), CAST(#{currentProcessSeqNo} AS INTEGER), 'REQUEST', #{sessionUser.userCd}, CURRENT_TIMESTAMP, '6', '2', #{businessAreaCd}, 'PRINT')
+	</insert>
+
+	<select id="getDocsApprovalLineDetail" parameterType="kr.esob.fdms.controller.inside.distribution.printhistory.DestroyRequestParam" resultType="kr.esob.fdms.controller.inside.distribution.commonrequest.ApprovalLineDetailVO">
+		SELECT APPROVAL_STATUS_CD AS approvalStatusCd,
+			   APPROVAL_GRADE_CD AS approvalGradeCd
+		FROM DOCS_APPROVAL_LINE_DETAIL
+		WHERE APPROVAL_LINE_ID = CAST(#{approvalLineId} AS INTEGER)
+		ORDER BY PROCESS_SEQ_NO
+	</select>
+
+	<insert id="insertDocsDestroyRequestDetail" parameterType="kr.esob.fdms.controller.inside.distribution.printhistory.DestroyRequestParam">
+		/* 폐기 요청 상세 추가 */
+		INSERT INTO DOCS_DESTROY_REQUEST_DETAIL
+		(
+		DESTROY_REQUEST_NO,
+		PROCESS_SEQ,
+		APPROVAL_STATUS_CD,
+		APPROVAL_GRADE_CD
+		<if test='"REQUEST".equals(approvalStatusCd)'>
+			, REQUEST_DESC,
+			ACTION_DT,
+			ACTION_CD,
+			ORIGINAL_USER_CD,
+			ACTUAL_USER_CD
+		</if>
+		<if test='"APPROVAL".equals(approvalStatusCd) and "TL".equals(approvalGradeCd)'>
+			, ORIGINAL_USER_CD,
+			ACTUAL_USER_CD
+		</if>
+		<if test='"APPROVAL".equals(approvalStatusCd) and "DEF".equals(approvalGradeCd)'>
+			, ORIGINAL_USER_CD,
+			ACTUAL_USER_CD
+		</if>
+		)
+		VALUES
+		(
+		#{destroyRequestNo},
+		CAST(#{processSeq} AS INTEGER),
+		#{approvalStatusCd},
+		#{approvalGradeCd}
+		<if test='"REQUEST".equals(approvalStatusCd)'>
+			, #{requestDesc},
+			NOW(),
+			'REQUEST',
+			#{sessionUser.userCd},
+			#{sessionUser.userCd}
+		</if>
+		<if test='"APPROVAL".equals(approvalStatusCd) and "TL".equals(approvalGradeCd)'>
+			, (SELECT TEAM_LEADER_USER_CD
+			FROM DOCS_DEPT
+			WHERE DEPT_CD = #{sessionUser.deptCd}),
+			#{teamLeaderUid}
+		</if>
+		<if test='"APPROVAL".equals(approvalStatusCd) and "DEF".equals(approvalGradeCd)'>
+			<if test='"Development".equals(businessTypeCd)'>
+				, #{developmentProtectUserUid},
+				#{developmentProtectUserUid}
+			</if>
+			<if test='"Production".equals(businessTypeCd)'>
+				, #{productProtectUid},
+				#{productProtectUid}
+			</if>
+		</if>
+		)
+	</insert>
+
+
+
+	<insert id="insertDocsDestoryRequestMapping" parameterType="kr.esob.fdms.controller.inside.distribution.printhistory.DestroyRequestParam">
+		INSERT INTO DOCS_DESTROY_REQUEST_MAPPING
+			(REQUEST_NO, OBJECT_ID, DESTROY_REQUEST_NO, DEPLOY_USER_CD)
+		VALUES
+			(#{requestNo}, #{objectId}, #{destroyRequestNo}, #{sessionUser.userCd})
+	</insert>
+
+	<select id="getProtectUser" resultType="HashMap" parameterType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonDistributionRequestParam">
+		SELECT NULL AS BUSINESS_TYPE_CD, NULL AS USER_CD
+		WHERE 1 = 0
+	</select>
+
+	<update id="updateApprovalFile" parameterType="kr.esob.fdms.controller.inside.distribution.printhistory.DestroyRequestParam">
+		UPDATE DOCS_APPROVAL_FILE
+		SET LAST_DESTROY_REQUEST_NO = #{destroyRequestNo}
+		WHERE REQUEST_NO = #{requestNo}
+		  AND OBJECT_ID = #{objectId}
+	</update>
+</mapper>

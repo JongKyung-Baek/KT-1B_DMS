@@ -1,0 +1,496 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+
+<!--<mapper namespace="sql.ProductionDisposalApproval">-->
+
+<!--	<select id="selectList" resultType="kr.esob.fdms.controller.inside.production.disposalapproval.DisposalApprovalListVO">-->
+<!--		SELECT B1.*-->
+<!--		FROM-->
+<!--		(-->
+<!--			SELECT A1.*-->
+<!--				, ROWNUM AS PAGEINDEX-->
+<!--			FROM-->
+<!--			(-->
+<!--				SELECT dr.DESTROY_REQUEST_NO													AS destroyRequestNo-->
+<!--					, dr.STATUS_CD																AS statusCd-->
+<!--					, FN_GET_CD_NM('requestStatusCd', dr.STATUS_CD, 'ko') 						AS statusNm-->
+<!--					, dr.INSERT_USER_CD															AS destroyRequestUserCd-->
+<!--					, (SELECT USER_NM FROM DOCS_USER WHERE USER_CD = dr.INSERT_USER_CD)			AS destroyRequestUserNm-->
+<!--					, dr.BUSINESS_AREA_CD														AS businessAreaCd-->
+<!--					, FN_GET_CD_NM('businessAreaCd', dr.BUSINESS_AREA_CD, #{sessionLang})		AS businessAreaNm-->
+<!--					, rm.PRODUCT_CD																AS productCd-->
+<!--					, COALESCE(rm.PRODUCT_CD, '')			AS productNm-->
+<!--					, dr.INSERT_DT																AS destroyRequestDt-->
+<!--					, rm.OBJECT_ID																AS objectId-->
+<!--					, rm.OBJECT_NO																AS objectNo-->
+<!--					, rm.OBJECT_NM																AS objectNm-->
+<!--					, rm.REV_NO																	AS revNo-->
+<!--					, rm.APPLY_HOGI_NO															AS applyHogiNo-->
+<!--					, r.OBJECT_TYPE																AS objectType-->
+<!--					, FN_GET_CD_NM('objectType', r.OBJECT_TYPE, #{sessionLang})					AS objectTypeNm-->
+<!--				FROM DOCS_DESTROY_REQUEST dr-->
+<!--				INNER JOIN-->
+<!--				(-->
+<!--					SELECT OBJECT_ID-->
+<!--	                     , DESTROY_REQUEST_NO-->
+<!--	                     , REQUEST_NO-->
+<!--	                FROM  (SELECT DENSE_RANK() OVER (PARTITION BY DESTROY_REQUEST_NO ORDER BY OBJECT_ID, REQUEST_NO) AS PAGE_RANK-->
+<!--	                            , OBJECT_ID-->
+<!--	                            , DESTROY_REQUEST_NO-->
+<!--	                            , REQUEST_NO-->
+<!--	                         FROM DOCS_DESTROY_REQUEST_MAPPING-->
+<!--	                        WHERE DESTROY_REQUEST_NO IN (SELECT DESTROY_REQUEST_NO FROM DOCS_DESTROY_REQUEST WHERE STATUS_CD = 'REQUEST')-->
+<!--	                        GROUP BY OBJECT_ID, DESTROY_REQUEST_NO, REQUEST_NO-->
+<!--	                      )-->
+<!--	                WHERE PAGE_RANK = 1-->
+<!--				) drm-->
+<!--				ON dr.DESTROY_REQUEST_NO = drm.DESTROY_REQUEST_NO-->
+<!--				INNER JOIN DOCS_REQUEST_MAPPING rm ON drm.REQUEST_NO = rm.REQUEST_NO AND drm.OBJECT_ID = rm.OBJECT_ID-->
+<!--				INNER JOIN DOCS_DESTROY_REQUEST_DETAIL drd ON dr.DESTROY_REQUEST_NO = drd.DESTROY_REQUEST_NO AND drd.APPROVAL_STATUS_CD = 'APPROVAL'-->
+<!--				INNER JOIN DOCS_REQUEST r ON r.REQUEST_NO = drm.REQUEST_NO-->
+<!--				WHERE 1=1-->
+<!--				AND dr.REQUEST_TYPE = 'PRODUCT'-->
+<!--				AND dr.STATUS_CD = 'REQUEST'-->
+<!--				<if test='destroyRequestStartDt != null and !destroyRequestStartDt.equals("")'>-->
+<!--				AND dr.INSERT_DT BETWEEN TO_DATE(#{destroyRequestStartDt}, 'YYYY-MM-DD')-->
+<!--		        	AND TO_DATE(#{destroyRequestEndDt}, 'YYYY-MM-DD')+1-->
+<!--				</if>-->
+<!--				<if test='sortColumn == null or "".equals(sortColumn)'>-->
+<!--	        	ORDER BY destroyRequestDt desc, dr.DESTROY_REQUEST_NO desc-->
+<!--				</if>-->
+<!--		       	<if test='sortColumn != null and !"".equals(sortColumn)'>-->
+<!--	       		ORDER BY ${sortColumn} ${order}, dr.DESTROY_REQUEST_NO desc-->
+<!--		       	</if>-->
+<!--			) A1-->
+<!--			WHERE 1=1-->
+<!--			<if test='objectType != null and !objectType.equals("")'>-->
+<!--			AND objectType = #{objectType}-->
+<!--			</if>-->
+<!--	       	<if test='destroyRequestUserCd != null and !destroyRequestUserCd.equals("")'>-->
+<!--			AND destroyRequestUserCd = #{destroyRequestUserCd}-->
+<!--			</if>-->
+<!--			<if test='end != null and !end.equals("")'>-->
+<!--			AND ROWNUM <![CDATA[ <= ]]> #{end}-->
+<!--			</if>-->
+
+<!--		) B1-->
+<!--		<if test='start != null and !start.equals("")'>-->
+<!--		WHERE PAGEINDEX <![CDATA[ >= ]]>#{start}-->
+<!--		</if>-->
+
+<!--	</select>-->
+
+<!--	<select id="selectListCount" resultType="Integer">-->
+<!--		SELECT COUNT(destroyRequestNo) AS TOTAL_COUNT-->
+<!--		FROM-->
+<!--		(-->
+<!--			SELECT dr.DESTROY_REQUEST_NO													AS destroyRequestNo-->
+<!--				, dr.STATUS_CD																AS statusCd-->
+<!--				, FN_GET_CD_NM('requestStatusCd', dr.STATUS_CD, 'ko') 						AS statusNm-->
+<!--				, dr.INSERT_USER_CD															AS destroyRequestUserCd-->
+<!--				, (SELECT USER_NM FROM DOCS_USER WHERE USER_CD = dr.INSERT_USER_CD)			AS destroyRequestUserNm-->
+<!--				, dr.BUSINESS_AREA_CD														AS businessAreaCd-->
+<!--				, FN_GET_CD_NM('businessAreaCd', dr.BUSINESS_AREA_CD, #{sessionLang})		AS businessAreaNm-->
+<!--				, rm.PRODUCT_CD																AS productCd-->
+<!--				, COALESCE(rm.PRODUCT_CD, '')			AS productNm-->
+<!--				, dr.INSERT_DT																AS destroyRequestDt-->
+<!--				, rm.OBJECT_ID																AS objectId-->
+<!--				, rm.OBJECT_NO																AS objectNo-->
+<!--				, rm.OBJECT_NM																AS objectNm-->
+<!--				, rm.REV_NO																	AS revNo-->
+<!--				, rm.APPLY_HOGI_NO															AS applyHogiNo-->
+<!--				, r.OBJECT_TYPE																AS objectType-->
+<!--				, FN_GET_CD_NM('objectType', r.OBJECT_TYPE, #{sessionLang})					AS objectTypeNm-->
+<!--			FROM DOCS_DESTROY_REQUEST dr-->
+<!--			INNER JOIN-->
+<!--			(-->
+<!--				SELECT OBJECT_ID-->
+<!--                     , DESTROY_REQUEST_NO-->
+<!--                     , REQUEST_NO-->
+<!--                FROM  (SELECT DENSE_RANK() OVER (PARTITION BY DESTROY_REQUEST_NO ORDER BY OBJECT_ID, REQUEST_NO) AS PAGE_RANK-->
+<!--                            , OBJECT_ID-->
+<!--                            , DESTROY_REQUEST_NO-->
+<!--                            , REQUEST_NO-->
+<!--                         FROM DOCS_DESTROY_REQUEST_MAPPING-->
+<!--                        WHERE DESTROY_REQUEST_NO IN (SELECT DESTROY_REQUEST_NO FROM DOCS_DESTROY_REQUEST WHERE STATUS_CD = 'REQUEST')-->
+<!--                        GROUP BY OBJECT_ID, DESTROY_REQUEST_NO, REQUEST_NO-->
+<!--                      )-->
+<!--                WHERE PAGE_RANK = 1-->
+<!--			) drm-->
+<!--			ON dr.DESTROY_REQUEST_NO = drm.DESTROY_REQUEST_NO-->
+<!--			INNER JOIN DOCS_REQUEST_MAPPING rm ON drm.REQUEST_NO = rm.REQUEST_NO AND drm.OBJECT_ID = rm.OBJECT_ID-->
+<!--			INNER JOIN DOCS_DESTROY_REQUEST_DETAIL drd ON dr.DESTROY_REQUEST_NO = drd.DESTROY_REQUEST_NO AND drd.APPROVAL_STATUS_CD = 'APPROVAL'-->
+<!--			INNER JOIN DOCS_REQUEST r ON r.REQUEST_NO = drm.REQUEST_NO-->
+<!--			WHERE 1=1-->
+<!--			AND dr.REQUEST_TYPE = 'PRODUCT'-->
+<!--			AND dr.STATUS_CD = 'REQUEST'-->
+<!--			<if test='destroyRequestStartDt != null and !destroyRequestStartDt.equals("")'>-->
+<!--			AND dr.INSERT_DT BETWEEN TO_DATE(#{destroyRequestStartDt}, 'YYYY-MM-DD')-->
+<!--	        	AND TO_DATE(#{destroyRequestEndDt}, 'YYYY-MM-DD')+1-->
+<!--			</if>-->
+<!--		) A1-->
+<!--		WHERE 1=1-->
+<!--		<if test='objectType != null and !objectType.equals("")'>-->
+<!--		AND objectType = #{objectType}-->
+<!--		</if>-->
+<!--       	<if test='destroyRequestUserCd != null and !destroyRequestUserCd.equals("")'>-->
+<!--		AND destroyRequestUserCd = #{destroyRequestUserCd}-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	&lt;!&ndash; 폐기 요청 내용 조회 [2019.10.24(최금영)] &ndash;&gt;-->
+<!--	<select id="getDestroyRequestInfo" parameterType="kr.esob.fdms.controller.inside.production.disposalapproval.DisposalApprovalPopupParam" resultType="kr.esob.fdms.controller.inside.production.disposalapproval.DisposalApprovalPopupVO">-->
+<!--		/* 폐기 요청 내용 조회 */-->
+<!--		SELECT ( SELECT USER_NM-->
+<!--				 FROM DOCS_USER-->
+<!--				 WHERE USER_CD = destReq.INSERT_USER_CD) AS insertUserNm-->
+<!--			, destReqDtl.REQUEST_DESC					 AS requestDesc-->
+<!--			, destReq.DESTROY_REQUEST_NO				 AS destroyRequestNo-->
+<!--		FROM DOCS_DESTROY_REQUEST destReq-->
+<!--		JOIN DOCS_DESTROY_REQUEST_DETAIL destReqDtl-->
+<!--		ON destReq.DESTROY_REQUEST_NO = destReqDtl.DESTROY_REQUEST_NO AND destReqDtl.APPROVAL_STATUS_CD = 'REQUEST'-->
+<!--		WHERE destReq.DESTROY_REQUEST_NO = #{destroyRequestNo}-->
+<!--	</select>-->
+
+
+<!--	&lt;!&ndash; 현재 결재 라인 조회 [2019.10.24(최금영)] &ndash;&gt;-->
+<!--	<select id="getApprovalLineInfo" resultType="kr.esob.fdms.controller.inside.distribution.commonrequest.ApprovalLineDetailVO" parameterType="kr.esob.fdms.controller.inside.production.disposalapproval.DisposalApprovalPopupParam">-->
+<!--		/* 현재 결재 라인 조회  */-->
+<!--		SELECT APPROVAL_STATUS_CD AS approvalStatusCd-->
+<!--			, APPROVAL_GRADE_CD AS approvalGradeCd-->
+<!--		FROM DOCS_APPROVAL_LINE_DETAIL appDtl-->
+<!--		JOIN DOCS_DESTROY_REQUEST destReq-->
+<!--		ON appDtl.APPROVAL_LINE_ID = destReq.APPROVAL_LINE_ID AND appDtl.PROCESS_SEQ_NO = destReq.CURRENT_PROCESS_SEQ_NO-->
+<!--		WHERE destReq.DESTROY_REQUEST_NO = #{destroyRequestNo}-->
+<!--	</select>-->
+
+<!--	&lt;!&ndash; 폐기 요청 승인/반려 여부 수정 [2019.10.24(최금영)] &ndash;&gt;-->
+<!--	<update id="updateDestroyRequestInfo" parameterType="kr.esob.fdms.controller.inside.production.disposalapproval.DisposalApprovalPopupParam">-->
+<!--		/* 폐기 요청 승인/반려 여부 수정 */-->
+<!--		UPDATE DOCS_DESTROY_REQUEST-->
+<!--		SET STATUS_CD = #{statusCd}-->
+<!--		<if test='statusCd.equals("APPROVAL")'>-->
+<!--			, DESTROY_STATUS_CD = '2'			/* 폐기 완료 */-->
+<!--			, DESTROY_DT = SYSDATE-->
+<!--		</if>-->
+<!--		WHERE DESTROY_REQUEST_NO = #{destroyRequestNo}-->
+<!--	</update>-->
+
+<!--	&lt;!&ndash; 폐기 요청 상세정보 수정 [2019.10.24(최금영)] &ndash;&gt;-->
+<!--	<update id="updateDestroyRequestDetail" parameterType="kr.esob.fdms.controller.inside.production.disposalapproval.DisposalApprovalPopupParam">-->
+<!--		/* 폐기 요청 상세정보 수정 */-->
+<!--		UPDATE DOCS_DESTROY_REQUEST_DETAIL-->
+<!--		SET ACTION_CD = #{actionCd}-->
+<!--			, REQUEST_DESC = #{rejectDesc}-->
+<!--			, ACTION_DT = SYSDATE-->
+<!--		WHERE DESTROY_REQUEST_NO = #{destroyRequestNo}-->
+<!--		AND APPROVAL_STATUS_CD = #{approvalStatusCd}-->
+<!--		AND APPROVAL_GRADE_CD = #{approvalGradeCd}-->
+<!--	</update>-->
+<!--	&lt;!&ndash; 폐기 승인 시 해당 요청의 문서(접수자)의 아이템 전량 폐기 [2019.11.06(최금영)] &ndash;&gt;-->
+<!--	<update id="updateDestroyCount" parameterType="kr.esob.fdms.controller.inside.production.disposalapproval.DisposalApprovalPopupParam">-->
+<!--		/* 폐기 승인 시 해당 요청의 문서(접수자)의 아이템 전량 폐기 */-->
+<!--		UPDATE DOCS_DEPLOY_INFO-->
+<!--		SET DESTROY_STATUS_CD = 'ALL_DESTROY'	/* 종산폐기 */-->
+<!--		, DESTROY_COUNT = (DEPLOY_COUNT * COPY)-->
+<!--		WHERE REQUEST_NO = #{requestNo}-->
+<!--		AND DEPLOY_USER_CD = #{deployUserCd}-->
+<!--		AND OBJECT_ID = #{objectId}-->
+<!--	</update>-->
+<!--	&lt;!&ndash; 폐기할 내역 조회 [2019.11.06(최금영)]&ndash;&gt;-->
+<!--	<select id="selectDestroyList" parameterType="kr.esob.fdms.controller.inside.production.disposalapproval.DisposalApprovalPopupParam" resultType="kr.esob.fdms.controller.inside.production.disposalapproval.DisposalApprovalPopupVO">-->
+<!--		/* 폐기할 내역 조회 */-->
+<!--		SELECT REQUEST_NO AS requestNo-->
+<!--			, OBJECT_ID AS objectId-->
+<!--			, DEPLOY_USER_CD AS deployUserCd-->
+<!--			, OBJECT_NO AS objectNo-->
+<!--		FROM DOCS_DESTROY_REQUEST_MAPPING-->
+<!--		WHERE DESTROY_REQUEST_NO = #{destroyRequestNo}-->
+<!--	</select>-->
+
+
+<!--&lt;!&ndash; 	<update id="deleteProductStatus"> &ndash;&gt;-->
+<!--&lt;!&ndash; 		UPDATE DOCS_PRODUCT_STATUS &ndash;&gt;-->
+<!--&lt;!&ndash; 		SET CURRENT_COUNT = CURRENT_COUNT - DISPOSAL_REQUEST_COUNT &ndash;&gt;-->
+<!--&lt;!&ndash; 			, DISPOSAL_REQUEST_YN = 'N' &ndash;&gt;-->
+<!--&lt;!&ndash; 		WHERE (OBJECT_NO, USER_CD) IN &ndash;&gt;-->
+<!--&lt;!&ndash; 		( &ndash;&gt;-->
+<!--&lt;!&ndash; 			SELECT OBJECT_NO &ndash;&gt;-->
+<!--&lt;!&ndash; 				, DEPLOY_USER_CD &ndash;&gt;-->
+<!--&lt;!&ndash; 			FROM DOCS_DESTROY_REQUEST_MAPPING &ndash;&gt;-->
+<!--&lt;!&ndash; 			WHERE DESTROY_REQUEST_NO = #{destroyRequestNo} &ndash;&gt;-->
+<!--&lt;!&ndash; 			GROUP BY OBJECT_NO, DEPLOY_USER_CD &ndash;&gt;-->
+<!--&lt;!&ndash; 		) &ndash;&gt;-->
+<!--&lt;!&ndash; 		AND DISPOSAL_REQUEST_YN = 'Y' &ndash;&gt;-->
+<!--&lt;!&ndash; 	</update> &ndash;&gt;-->
+
+<!--	<delete id="deleteProductStatus">-->
+<!--		DELETE FROM DOCS_PRODUCT_STATUS-->
+<!--		WHERE (OBJECT_NO, USER_CD) IN-->
+<!--		(-->
+<!--			SELECT OBJECT_NO-->
+<!--				, DEPLOY_USER_CD-->
+<!--			FROM DOCS_DESTROY_REQUEST_MAPPING-->
+<!--			WHERE DESTROY_REQUEST_NO = #{destroyRequestNo}-->
+<!--			GROUP BY OBJECT_NO, DEPLOY_USER_CD-->
+<!--		)-->
+<!--		AND DISPOSAL_REQUEST_YN = 'Y'-->
+<!--	</delete>-->
+
+<!--	<update id="updateDisposalReject">-->
+<!--		UPDATE DOCS_PRODUCT_STATUS-->
+<!--		SET DISPOSAL_REQUEST_YN = 'N'-->
+<!--		WHERE OBJECT_NO = #{objectNo}-->
+<!--		AND USER_CD = #{deployUserCd}-->
+<!--	</update>-->
+<!--</mapper>-->
+
+
+
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+
+
+
+
+
+
+<mapper namespace="sql.ProductionDisposalApproval">
+
+<select id="selectList" resultType="kr.esob.fdms.controller.inside.production.disposalapproval.DisposalApprovalListVO">
+	SELECT B1.*
+	FROM
+	(
+	SELECT A1.*
+	, ROW_NUMBER() OVER() AS PAGEINDEX
+	FROM
+	(
+	SELECT dr.DESTROY_REQUEST_NO													AS destroyRequestNo
+	, dr.STATUS_CD																AS statusCd
+	, FN_GET_CD_NM('requestStatusCd', dr.STATUS_CD, 'ko') 						AS statusNm
+	, dr.INSERT_USER_CD															AS destroyRequestUserCd
+	, (SELECT USER_NM FROM DOCS_USER WHERE USER_CD = dr.INSERT_USER_CD)			AS destroyRequestUserNm
+	, dr.BUSINESS_AREA_CD														AS businessAreaCd
+	, FN_GET_CD_NM('businessAreaCd', dr.BUSINESS_AREA_CD, #{sessionLang})		AS businessAreaNm
+	, rm.PRODUCT_CD																AS productCd
+	, COALESCE(rm.PRODUCT_CD, '')			AS productNm
+	, dr.INSERT_DT																AS destroyRequestDt
+	, rm.OBJECT_ID																AS objectId
+	, rm.OBJECT_NO																AS objectNo
+	, rm.OBJECT_NM																AS objectNm
+	, rm.REV_NO																	AS revNo
+	, rm.APPLY_HOGI_NO															AS applyHogiNo
+	, r.OBJECT_TYPE																AS objectType
+	, FN_GET_CD_NM('objectType', r.OBJECT_TYPE, #{sessionLang})					AS objectTypeNm
+	FROM DOCS_DESTROY_REQUEST dr
+	INNER JOIN
+	(
+	SELECT OBJECT_ID
+	, DESTROY_REQUEST_NO
+	, REQUEST_NO
+	FROM  (SELECT DENSE_RANK() OVER (PARTITION BY DESTROY_REQUEST_NO ORDER BY OBJECT_ID, REQUEST_NO) AS PAGE_RANK
+	, OBJECT_ID
+	, DESTROY_REQUEST_NO
+	, REQUEST_NO
+	FROM DOCS_DESTROY_REQUEST_MAPPING
+	WHERE DESTROY_REQUEST_NO IN (SELECT DESTROY_REQUEST_NO FROM DOCS_DESTROY_REQUEST WHERE STATUS_CD = 'REQUEST')
+	GROUP BY OBJECT_ID, DESTROY_REQUEST_NO, REQUEST_NO
+	)
+	WHERE PAGE_RANK = 1
+	) drm
+	ON dr.DESTROY_REQUEST_NO = drm.DESTROY_REQUEST_NO
+	INNER JOIN DOCS_REQUEST_MAPPING rm ON drm.REQUEST_NO = rm.REQUEST_NO AND drm.OBJECT_ID = rm.OBJECT_ID
+	INNER JOIN DOCS_DESTROY_REQUEST_DETAIL drd ON dr.DESTROY_REQUEST_NO = drd.DESTROY_REQUEST_NO AND drd.APPROVAL_STATUS_CD = 'APPROVAL'
+	INNER JOIN DOCS_REQUEST r ON r.REQUEST_NO = drm.REQUEST_NO
+	WHERE 1=1
+	AND dr.REQUEST_TYPE = 'PRODUCT'
+	AND dr.STATUS_CD = 'REQUEST'
+	<if test='destroyRequestStartDt != null and !destroyRequestStartDt.equals("")'>
+		AND dr.INSERT_DT BETWEEN TO_DATE(#{destroyRequestStartDt}, 'YYYY-MM-DD')
+		AND TO_DATE(#{destroyRequestEndDt}, 'YYYY-MM-DD') + INTERVAL '1 DAY'
+	</if>
+	<if test='sortColumn == null or "".equals(sortColumn)'>
+		ORDER BY destroyRequestDt desc, dr.DESTROY_REQUEST_NO desc
+	</if>
+	<if test='sortColumn != null and !"".equals(sortColumn)'>
+		ORDER BY ${sortColumn} ${order}, dr.DESTROY_REQUEST_NO desc
+	</if>
+	) A1
+	WHERE 1=1
+	<if test='objectType != null and !objectType.equals("")'>
+		AND objectType = #{objectType}
+	</if>
+	<if test='destroyRequestUserCd != null and !destroyRequestUserCd.equals("")'>
+		AND destroyRequestUserCd = #{destroyRequestUserCd}
+	</if>
+	<if test='end != null and !end.equals("")'>
+		AND ROW_NUMBER() OVER() <![CDATA[ <= ]]> #{end}
+	</if>
+	) B1
+	<if test='start != null and !start.equals("")'>
+		WHERE PAGEINDEX >= #{start}
+	</if>
+</select>
+
+<select id="selectListCount" resultType="Integer">
+	SELECT COUNT(destroyRequestNo) AS TOTAL_COUNT
+	FROM
+	(
+	SELECT dr.DESTROY_REQUEST_NO													AS destroyRequestNo
+	, dr.STATUS_CD																AS statusCd
+	, FN_GET_CD_NM('requestStatusCd', dr.STATUS_CD, 'ko') 						AS statusNm
+	, dr.INSERT_USER_CD															AS destroyRequestUserCd
+	, (SELECT USER_NM FROM DOCS_USER WHERE USER_CD = dr.INSERT_USER_CD)			AS destroyRequestUserNm
+	, dr.BUSINESS_AREA_CD														AS businessAreaCd
+	, FN_GET_CD_NM('businessAreaCd', dr.BUSINESS_AREA_CD, #{sessionLang})		AS businessAreaNm
+	, rm.PRODUCT_CD																AS productCd
+	, COALESCE(rm.PRODUCT_CD, '')			AS productNm
+	, dr.INSERT_DT																AS destroyRequestDt
+	, rm.OBJECT_ID																AS objectId
+	, rm.OBJECT_NO																AS objectNo
+	, rm.OBJECT_NM																AS objectNm
+	, rm.REV_NO																	AS revNo
+	, rm.APPLY_HOGI_NO															AS applyHogiNo
+	, r.OBJECT_TYPE																AS objectType
+	, FN_GET_CD_NM('objectType', r.OBJECT_TYPE, #{sessionLang})					AS objectTypeNm
+	FROM DOCS_DESTROY_REQUEST dr
+	INNER JOIN
+	(
+	SELECT OBJECT_ID
+	, DESTROY_REQUEST_NO
+	, REQUEST_NO
+	FROM  (SELECT DENSE_RANK() OVER (PARTITION BY DESTROY_REQUEST_NO ORDER BY OBJECT_ID, REQUEST_NO) AS PAGE_RANK
+	, OBJECT_ID
+	, DESTROY_REQUEST_NO
+	, REQUEST_NO
+	FROM DOCS_DESTROY_REQUEST_MAPPING
+	WHERE DESTROY_REQUEST_NO IN (SELECT DESTROY_REQUEST_NO FROM DOCS_DESTROY_REQUEST WHERE STATUS_CD = 'REQUEST')
+	GROUP BY OBJECT_ID, DESTROY_REQUEST_NO, REQUEST_NO
+	)
+	WHERE PAGE_RANK = 1
+	) drm
+	ON dr.DESTROY_REQUEST_NO = drm.DESTROY_REQUEST_NO
+	INNER JOIN DOCS_REQUEST_MAPPING rm ON drm.REQUEST_NO = rm.REQUEST_NO AND drm.OBJECT_ID = rm.OBJECT_ID
+	INNER JOIN DOCS_DESTROY_REQUEST_DETAIL drd ON dr.DESTROY_REQUEST_NO = drd.DESTROY_REQUEST_NO AND drd.APPROVAL_STATUS_CD = 'APPROVAL'
+	INNER JOIN DOCS_REQUEST r ON r.REQUEST_NO = drm.REQUEST_NO
+	WHERE 1=1
+	AND dr.REQUEST_TYPE = 'PRODUCT'
+	AND dr.STATUS_CD = 'REQUEST'
+	<if test='destroyRequestStartDt != null and !destroyRequestStartDt.equals("")'>
+		AND dr.INSERT_DT BETWEEN TO_DATE(#{destroyRequestStartDt}, 'YYYY-MM-DD')
+		AND TO_DATE(#{destroyRequestEndDt}, 'YYYY-MM-DD') + INTERVAL '1 DAY'
+	</if>
+	) A1
+	WHERE 1=1
+	<if test='objectType != null and !objectType.equals("")'>
+		AND objectType = #{objectType}
+	</if>
+	<if test='destroyRequestUserCd != null and !destroyRequestUserCd.equals("")'>
+		AND destroyRequestUserCd = #{destroyRequestUserCd}
+	</if>
+</select>
+
+<!-- 폐기 요청 내용 조회 [2019.10.24(최금영)] -->
+<select id="getDestroyRequestInfo" parameterType="kr.esob.fdms.controller.inside.production.disposalapproval.DisposalApprovalPopupParam" resultType="kr.esob.fdms.controller.inside.production.disposalapproval.DisposalApprovalPopupVO">
+	/* 폐기 요청 내용 조회 */
+	SELECT ( SELECT USER_NM
+			 FROM DOCS_USER
+			 WHERE USER_CD = destReq.INSERT_USER_CD) AS insertUserNm
+		 , destReqDtl.REQUEST_DESC					 AS requestDesc
+		 , destReq.DESTROY_REQUEST_NO				 AS destroyRequestNo
+	FROM DOCS_DESTROY_REQUEST destReq
+			 JOIN DOCS_DESTROY_REQUEST_DETAIL destReqDtl
+				  ON destReq.DESTROY_REQUEST_NO = destReqDtl.DESTROY_REQUEST_NO AND destReqDtl.APPROVAL_STATUS_CD = 'REQUEST'
+	WHERE destReq.DESTROY_REQUEST_NO = #{destroyRequestNo}
+</select>
+
+
+<!-- 현재 결재 라인 조회 [2019.10.24(최금영)] -->
+<select id="getApprovalLineInfo" resultType="kr.esob.fdms.controller.inside.distribution.commonrequest.ApprovalLineDetailVO" parameterType="kr.esob.fdms.controller.inside.production.disposalapproval.DisposalApprovalPopupParam">
+	/* 현재 결재 라인 조회  */
+	SELECT APPROVAL_STATUS_CD AS approvalStatusCd
+		 , APPROVAL_GRADE_CD AS approvalGradeCd
+	FROM DOCS_APPROVAL_LINE_DETAIL appDtl
+			 JOIN DOCS_DESTROY_REQUEST destReq
+				  ON appDtl.APPROVAL_LINE_ID = destReq.APPROVAL_LINE_ID AND appDtl.PROCESS_SEQ_NO = destReq.CURRENT_PROCESS_SEQ_NO
+	WHERE destReq.DESTROY_REQUEST_NO = #{destroyRequestNo}
+</select>
+
+<!-- 폐기 요청 승인/반려 여부 수정 [2019.10.24(최금영)] -->
+<update id="updateDestroyRequestInfo" parameterType="kr.esob.fdms.controller.inside.production.disposalapproval.DisposalApprovalPopupParam">
+	/* 폐기 요청 승인/반려 여부 수정 */
+	UPDATE DOCS_DESTROY_REQUEST
+	SET STATUS_CD = #{statusCd}
+	<if test='statusCd.equals("APPROVAL")'>
+		, DESTROY_STATUS_CD = '2'			/* 폐기 완료 */
+		, DESTROY_DT = CURRENT_DATE
+	</if>
+	WHERE DESTROY_REQUEST_NO = #{destroyRequestNo}
+</update>
+
+<!-- 폐기 요청 상세정보 수정 [2019.10.24(최금영)] -->
+<update id="updateDestroyRequestDetail" parameterType="kr.esob.fdms.controller.inside.production.disposalapproval.DisposalApprovalPopupParam">
+	/* 폐기 요청 상세정보 수정 */
+	UPDATE DOCS_DESTROY_REQUEST_DETAIL
+	SET ACTION_CD = #{actionCd}
+	  , REQUEST_DESC = #{rejectDesc}
+	  , ACTION_DT = CURRENT_DATE
+	WHERE DESTROY_REQUEST_NO = #{destroyRequestNo}
+	  AND APPROVAL_STATUS_CD = #{approvalStatusCd}
+	  AND APPROVAL_GRADE_CD = #{approvalGradeCd}
+</update>
+
+<!-- 폐기 승인 시 해당 요청의 문서(접수자)의 아이템 전량 폐기 [2019.11.06(최금영)] -->
+<update id="updateDestroyCount" parameterType="kr.esob.fdms.controller.inside.production.disposalapproval.DisposalApprovalPopupParam">
+	/* 폐기 승인 시 해당 요청의 문서(접수자)의 아이템 전량 폐기 */
+	UPDATE DOCS_DEPLOY_INFO
+	SET DESTROY_STATUS_CD = 'ALL_DESTROY'	/* 종산폐기 */
+	  , DESTROY_COUNT = (DEPLOY_COUNT * COPY)
+	WHERE REQUEST_NO = #{requestNo}
+	  AND DEPLOY_USER_CD = #{deployUserCd}
+	  AND OBJECT_ID = #{objectId}
+</update>
+
+<!-- 폐기할 내역 조회 [2019.11.06(최금영)]-->
+<select id="selectDestroyList" parameterType="kr.esob.fdms.controller.inside.production.disposalapproval.DisposalApprovalPopupParam" resultType="kr.esob.fdms.controller.inside.production.disposalapproval.DisposalApprovalPopupVO">
+	/* 폐기할 내역 조회 */
+	SELECT REQUEST_NO AS requestNo
+		 , OBJECT_ID AS objectId
+		 , DEPLOY_USER_CD AS deployUserCd
+		 , OBJECT_NO AS objectNo
+	FROM DOCS_DESTROY_REQUEST_MAPPING
+	WHERE DESTROY_REQUEST_NO = #{destroyRequestNo}
+</select>
+
+<delete id="deleteProductStatus">
+	DELETE FROM DOCS_PRODUCT_STATUS
+	WHERE (OBJECT_NO, USER_CD) IN
+		  (
+			  SELECT OBJECT_NO
+				   , DEPLOY_USER_CD
+			  FROM DOCS_DESTROY_REQUEST_MAPPING
+			  WHERE DESTROY_REQUEST_NO = #{destroyRequestNo}
+			  GROUP BY OBJECT_NO, DEPLOY_USER_CD
+		  )
+	  AND DISPOSAL_REQUEST_YN = 'Y'
+</delete>
+
+<update id="updateDisposalReject">
+	UPDATE DOCS_PRODUCT_STATUS
+	SET DISPOSAL_REQUEST_YN = 'N'
+	WHERE OBJECT_NO = #{objectNo}
+	  AND USER_CD = #{deployUserCd}
+</update>
+</mapper>
+
+
+
+

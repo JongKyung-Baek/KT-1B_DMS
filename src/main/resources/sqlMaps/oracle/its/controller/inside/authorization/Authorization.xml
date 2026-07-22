@@ -1,0 +1,1855 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+
+<!--<mapper namespace="sql.Authorization">-->
+
+<!--	&lt;!&ndash; 구매 팀장 대결자 콤보 조회 [2019.09.10(최금영)]  &ndash;&gt;-->
+<!--	<select id="selectInstaedCombo" resultType="searchComboInfoVo">-->
+<!--		SELECT X.*-->
+<!--			 , ROW_NUMBER() OVER(ORDER BY text) AS pageindex-->
+<!--		  FROM (-->
+<!--			SELECT DOC_USER.USER_NM AS text-->
+<!--			     , INSTEAD.INSTEAD_USER_CD AS id-->
+<!--			  FROM DOCS_INSTEAD_USER INSTEAD-->
+<!--			  JOIN DOCS_USER DOC_USER-->
+<!--			    ON INSTEAD.INSTEAD_USER_CD = DOC_USER.USER_CD-->
+<!--			 WHERE INSTEAD.USER_CD = (-->
+<!--			 							SELECT TEAM_LEADER_USER_CD-->
+<!--			 					 		FROM DOCS_DEPT-->
+<!--			 							WHERE DEPT_CD = #{sessionUser.deptCd}-->
+<!--			 						 )-->
+<!--			<if test='term != null and !"".equals(term)'>-->
+<!--		       AND DOC_USER.USER_NM LIKE '%' || #{term} || '%'-->
+<!--		    </if>-->
+<!--			UNION-->
+<!--			SELECT DOC_USER.USER_NM AS text-->
+<!--			     , DOC_USER.USER_CD AS id-->
+<!--			  FROM DOCS_USER DOC_USER-->
+<!--			 WHERE DOC_USER.USER_CD = (-->
+<!--				 						SELECT TEAM_LEADER_USER_CD-->
+<!--				 					 	FROM DOCS_DEPT-->
+<!--				 						WHERE DEPT_CD = #{sessionUser.deptCd}-->
+<!--			 					  	  )-->
+<!--			 	 <if test='term != null and !"".equals(term)'>-->
+<!--		           AND DOC_USER.USER_NM LIKE '%' || #{term} || '%'-->
+<!--		         </if>-->
+<!--			 	 ) X-->
+<!--	</select>-->
+<!--	&lt;!&ndash; 팀장, 대결자 조회 콤보 &ndash;&gt;-->
+<!--	<select id="selectApprovalUserCombo" resultType="searchComboInfoVo">-->
+<!--		SELECT X.*-->
+<!--			 , ROW_NUMBER() OVER(ORDER BY text) AS pageindex-->
+<!--		  FROM (-->
+<!--			SELECT DOC_USER.USER_NM AS text-->
+<!--			     , INSTEAD.INSTEAD_USER_CD AS id-->
+<!--			  FROM DOCS_INSTEAD_USER INSTEAD-->
+<!--			  JOIN DOCS_USER DOC_USER-->
+<!--			    ON INSTEAD.INSTEAD_USER_CD = DOC_USER.USER_CD-->
+<!--			 WHERE INSTEAD.USER_CD IN (-->
+<!--			 							SELECT TEAM_LEADER_USER_CD-->
+<!--			 					 		FROM DOCS_DEPT-->
+<!--			 					 		WHERE TEAM_LEADER_USER_CD IS NOT NULL-->
+<!--&lt;!&ndash; 			 							WHERE DEPT_CD = #{sessionUser.deptCd} &ndash;&gt;-->
+<!--			 						 )-->
+<!--			<if test='term != null and !"".equals(term)'>-->
+<!--		       WHERE DOC_USER.USER_NM LIKE '%' || #{term} || '%'-->
+<!--		    </if>-->
+<!--			UNION-->
+<!--			SELECT DOC_USER.USER_NM AS text-->
+<!--			     , DOC_USER.USER_CD AS id-->
+<!--			  FROM DOCS_USER DOC_USER-->
+<!--			 WHERE DOC_USER.USER_CD IN (-->
+<!--				 						SELECT TEAM_LEADER_USER_CD-->
+<!--				 					 	FROM DOCS_DEPT-->
+<!--				 					 	WHERE TEAM_LEADER_USER_CD IS NOT NULL-->
+<!--&lt;!&ndash; 				 						WHERE DEPT_CD = #{sessionUser.deptCd} &ndash;&gt;-->
+<!--			 					  	  )-->
+<!--			 	 <if test='term != null and !"".equals(term)'>-->
+<!--		           WHERE DOC_USER.USER_NM LIKE '%' || #{term} || '%'-->
+<!--		         </if>-->
+<!--			 	 ) X-->
+<!--	</select>-->
+
+<!--	&lt;!&ndash; 배포 구매담당자 선택 &ndash;&gt;-->
+<!--	<select id="selectPurchaserCombo" resultType="comboInfoVo">-->
+<!--		SELECT 'purchaser' 						AS comboCd-->
+<!--			, USER_CD 							AS comboVal-->
+<!--			, USER_NM || '[' || USER_ID || ']'	AS comboLabel-->
+<!--			, USER_NM || '[' || USER_ID || ']' 	AS comboTooltip-->
+<!--			, (-->
+<!--				SELECT DIST_PURCHASER_USER_CD-->
+<!--				FROM DOCS_COMPANY_PURCHASER-->
+<!--				WHERE COMPANY_CD = #{sessionUser.companyCd}-->
+<!--				AND BUSINESS_AREA_CD = #{businessAreaCd}-->
+<!--			) 									AS selectedValue-->
+<!--		FROM DOCS_USER docsUser-->
+<!--		INNER JOIN DOCS_DEPT docsDept ON docsDept.DEPT_CD = docsUser.DEPT_CD-->
+<!--		WHERE docsDept.PURCHASE_YN = 'Y'	/* 구매팀 */-->
+<!--		AND docsUser.DEL_YN = 'N'-->
+<!--		AND docsUser.USE_YN = 'Y'-->
+<!--		AND docsUser.BUSINESS_AREA_CD = #{businessAreaCd}-->
+<!--		ORDER BY USER_NM-->
+<!--	</select>-->
+
+<!--	&lt;!&ndash; 배포 구매담당자 선택(1,2사업장 모두. 사용자 정보 등록 요청을 위해) &ndash;&gt;-->
+<!--	<select id="selectAllPurchaserCombo" resultType="comboInfoVo">-->
+<!--		SELECT 'purchaser' 												AS comboCd-->
+<!--			, purchaser.DIST_PURCHASER_USER_CD 							AS comboVal-->
+<!--			, docsUser.USER_NM || '[' || docsUser.USER_ID || ']'		AS comboLabel-->
+<!--			, docsUser.USER_NM || '[' || docsUser.USER_ID || ']' 		AS comboTooltip-->
+<!--		FROM DOCS_COMPANY_PURCHASER purchaser-->
+<!--		INNER JOIN DOCS_USER docsUser On purchaser.DIST_PURCHASER_USER_CD = docsUser.USER_CD-->
+<!--		WHERE purchaser.COMPANY_CD = #{sessionUser.companyCd}-->
+<!--		ORDER BY USER_NM-->
+<!--	</select>-->
+
+<!--	<select id="selectOneUserCombo" resultType="comboInfoVo">-->
+<!--		SELECT-->
+<!--			'teamLeaderList' 					AS comboCd-->
+<!--			, USER_CD 							AS comboVal-->
+<!--			, USER_NM || '[' || USER_ID || ']'	AS comboLabel-->
+<!--			, USER_NM || '[' || USER_ID || ']' 	AS comboTooltip-->
+<!--		FROM DOCS_USER-->
+<!--		WHERE USER_CD = #{userCd}-->
+<!--	</select>-->
+
+<!--	<select id="selectPurchaserNotSelectedCombo" resultType="comboInfoVo">-->
+<!--		SELECT 'purchaser' 						AS comboCd-->
+<!--			, USER_CD 							AS comboVal-->
+<!--			, USER_NM || '[' || USER_ID || ']'	AS comboLabel-->
+<!--			, USER_NM || '[' || USER_ID || ']' 	AS comboTooltip-->
+<!--		FROM DOCS_USER docsUser-->
+<!--		INNER JOIN DOCS_DEPT docsDept ON docsDept.DEPT_CD = docsUser.DEPT_CD-->
+<!--		WHERE docsDept.PURCHASE_YN = 'Y'	/* 구매팀 */-->
+<!--		AND docsUser.BUSINESS_AREA_CD = #{businessAreaCd}-->
+<!--		ORDER BY USER_NM-->
+<!--	</select>-->
+
+<!--	<select id="selectAllPurchaserIdCombo" resultType="comboInfoVo">-->
+<!--		/* 모든 구매담당자. 리스트 검색조건에서 사용하기 위함. - USER_ID 사용 */-->
+<!--		SELECT 'purchaser' 						AS comboCd-->
+<!--			, USER_ID 							AS comboVal-->
+<!--			, USER_NM || '[' || USER_ID || ']'	AS comboLabel-->
+<!--			, USER_NM || '[' || USER_ID || ']' 	AS comboTooltip-->
+<!--		FROM DOCS_USER docsUser-->
+<!--		INNER JOIN DOCS_DEPT docsDept ON docsDept.DEPT_CD = docsUser.DEPT_CD-->
+<!--		WHERE docsDept.PURCHASE_YN = 'Y'	/* 구매팀 */-->
+<!--		ORDER BY USER_NM-->
+<!--	</select>-->
+
+<!--	&lt;!&ndash; 배포 구매담당자 선택 (ID)&ndash;&gt;-->
+<!--	<select id="selectPurchaserComboById" resultType="comboInfoVo">-->
+<!--		SELECT 'purchaser' 						AS comboCd-->
+<!--			, USER_ID 							AS comboVal-->
+<!--			, USER_NM || '[' || USER_ID || ']'	AS comboLabel-->
+<!--			, USER_NM || '[' || USER_ID || ']' 	AS comboTooltip-->
+<!--			, (-->
+<!--				SELECT USER_ID-->
+<!--				FROM DOCS_USER-->
+<!--				WHERE USER_CD =-->
+<!--				(-->
+<!--					SELECT DIST_PURCHASER_USER_CD-->
+<!--					FROM DOCS_COMPANY_PURCHASER-->
+<!--					WHERE COMPANY_CD = #{sessionUser.companyCd}-->
+<!--					AND BUSINESS_AREA_CD = #{businessAreaCd}-->
+<!--				)-->
+<!--			)									AS selectedValue-->
+<!--		FROM DOCS_USER docsUser-->
+<!--		INNER JOIN DOCS_DEPT docsDept ON docsDept.DEPT_CD = docsUser.DEPT_CD-->
+<!--		WHERE docsDept.PURCHASE_YN = 'Y'	/* 구매팀 */-->
+<!--		AND docsUser.DEL_YN = 'N'-->
+<!--		AND docsUser.USE_YN = 'Y'-->
+<!--		AND docsUser.BUSINESS_AREA_CD = #{businessAreaCd}-->
+<!--		ORDER BY USER_NM-->
+<!--	</select>-->
+
+<!--	&lt;!&ndash; CR 구매담당자 선택 &ndash;&gt;-->
+<!--	<select id="selectCrPurchaserCombo" resultType="comboInfoVo">-->
+<!--		SELECT 'purchaser' 						AS comboCd-->
+<!--			, USER_CD 							AS comboVal-->
+<!--			, USER_NM || '[' || USER_ID || ']'	AS comboLabel-->
+<!--			, USER_NM || '[' || USER_ID || ']' 	AS comboTooltip-->
+<!--			, (-->
+<!--				SELECT CR_PURCHASER_USER_CD-->
+<!--				FROM DOCS_COMPANY_PURCHASER-->
+<!--				WHERE COMPANY_CD = #{sessionUser.companyCd}-->
+<!--				AND BUSINESS_AREA_CD = #{businessAreaCd}-->
+<!--			) 									AS selectedValue-->
+<!--		FROM DOCS_USER docsUser-->
+<!--		INNER JOIN DOCS_DEPT docsDept ON docsDept.DEPT_CD = docsUser.DEPT_CD-->
+<!--		WHERE docsDept.PURCHASE_YN = 'Y'	/* 구매팀 */-->
+<!--		AND docsUser.DEL_YN = 'N'-->
+<!--		AND docsUser.USE_YN = 'Y'-->
+<!--		AND docsUser.BUSINESS_AREA_CD = #{businessAreaCd}-->
+<!--		ORDER BY USER_NM-->
+<!--	</select>-->
+
+<!--	&lt;!&ndash; CR 구매담당자 선택 (ID) &ndash;&gt;-->
+<!--	<select id="selectCrPurchaserComboById" resultType="comboInfoVo">-->
+<!--		SELECT 'purchaser' 						AS comboCd-->
+<!--			, USER_ID 							AS comboVal-->
+<!--			, USER_NM || '[' || USER_ID || ']'	AS comboLabel-->
+<!--			, USER_NM || '[' || USER_ID || ']' 	AS comboTooltip-->
+<!--			, (-->
+<!--				SELECT USER_ID-->
+<!--				FROM DOCS_USER-->
+<!--				WHERE USER_CD =-->
+<!--				(-->
+<!--					SELECT CR_PURCHASER_USER_CD-->
+<!--					FROM DOCS_COMPANY_PURCHASER-->
+<!--					WHERE COMPANY_CD = #{sessionUser.companyCd}-->
+<!--					AND BUSINESS_AREA_CD = #{businessAreaCd}-->
+<!--				)-->
+<!--			)									AS selectedValue-->
+<!--		FROM DOCS_USER docsUser-->
+<!--		INNER JOIN DOCS_DEPT docsDept ON docsDept.DEPT_CD = docsUser.DEPT_CD-->
+<!--		WHERE docsDept.PURCHASE_YN = 'Y'	/* 구매팀 */-->
+<!--		AND docsUser.DEL_YN = 'N'-->
+<!--		AND docsUser.USE_YN = 'Y'-->
+<!--		AND docsUser.BUSINESS_AREA_CD = #{businessAreaCd}-->
+<!--		ORDER BY USER_NM-->
+<!--	</select>-->
+
+
+<!--	<select id="selectVendorUserCombo" resultType="comboInfoVo">-->
+<!--		SELECT 'vendorUser'			AS comboCd-->
+<!--			, USER_CD				AS comboVal-->
+<!--			, USER_NM				AS comboLabel-->
+<!--			, docsCompany.COMPANY_NM || '[' || USER_ID || ']' AS comboTooltip-->
+<!--		FROM DOCS_USER docsUser-->
+<!--		JOIN DOCS_COMPANY docsCompany-->
+<!--		ON docsUser.COMPANY_CD = docsCompany.COMPANY_CD-->
+<!--		WHERE docsUser.USE_YN = 'Y'-->
+<!--		AND docsUser.DEL_YN = 'N'-->
+<!--		AND docsCompany.COMPANY_CD = #{sessionUser.companyCd}-->
+<!--	</select>-->
+
+<!--	<select id="selectVendorUserComboById" resultType="comboInfoVo">-->
+<!--		SELECT 'vendorUser'			AS comboCd-->
+<!--			, USER_ID				AS comboVal-->
+<!--			, USER_NM				AS comboLabel-->
+<!--			, docsCompany.COMPANY_NM || '[' || USER_ID || ']' AS comboTooltip-->
+<!--		FROM DOCS_USER docsUser-->
+<!--		JOIN DOCS_COMPANY docsCompany-->
+<!--		ON docsUser.COMPANY_CD = docsCompany.COMPANY_CD-->
+<!--		/*WHERE docsUser.USE_YN = 'Y'-->
+<!--		AND docsUser.DEL_YN = 'N'*/-->
+<!--		WHERE docsCompany.COMPANY_CD = #{sessionUser.companyCd}-->
+<!--	</select>-->
+
+
+<!--	<select id="selectOutsideUserCombo"-->
+<!--			resultType="kr.esob.fdms.commonlogic.combo.SearchComboInfoVO">-->
+<!--		&lt;!&ndash; sql.sql.Authorization."selectOutsideUserCombo" 외부사용자목록combo &ndash;&gt;-->
+<!--		SELECT X.*-->
+<!--          FROM (-->
+<!--		        SELECT USER_CD AS id-->
+<!--		         	 , USER_NM || '[' || USER_ID || ']' AS text-->
+<!--		         	 , USER_NM || '[' || USER_ID || ']' AS title-->
+<!--		         	 , ROW_NUMBER() OVER(ORDER BY USER_NM) AS pageindex-->
+<!--		          FROM DOCS_USER-->
+<!--		         WHERE COMPANY_CD != #{companyCd} /* 로그인한 사용자의 companyCd*/-->
+<!--				 <if test='term != null and !"".equals(term)'>-->
+<!--		           AND USER_NM LIKE '%' || #{term} || '%'-->
+<!--		         </if>-->
+<!--		         AND DEL_YN = 'N'-->
+<!--				 AND USE_YN = 'Y'-->
+<!--          		) X-->
+<!--		<if test='page != null and !page.equals("")'>-->
+<!--			WHERE PAGEINDEX BETWEEN #{posStart}-->
+<!--			  AND #{count} * #{page}-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	<select id="selectInsideUserCombo"-->
+<!--			resultType="kr.esob.fdms.commonlogic.combo.SearchComboInfoVO">-->
+<!--		&lt;!&ndash; sql.sql.Authorization."selectOutsideUserCombo" 외부사용자목록combo &ndash;&gt;-->
+<!--		SELECT X.*-->
+<!--          FROM (-->
+<!--		        SELECT USER_CD AS id-->
+<!--		         	 , USER_NM || '[' || USER_ID || ']' AS text-->
+<!--		         	 , USER_NM || '[' || USER_ID || ']' AS title-->
+<!--		         	 , ROW_NUMBER() OVER(ORDER BY USER_NM) AS pageindex-->
+<!--		          FROM DOCS_USER-->
+<!--&lt;!&ndash; 		         WHERE COMPANY_CD != #{companyCd} /* 로그인한 사용자의 companyCd*/ &ndash;&gt;-->
+<!--		         WHERE COMPANY_CD = #{companyCd} /* 로그인한 사용자의 companyCd*/-->
+<!--				 <if test='term != null and !"".equals(term)'>-->
+<!--		           AND USER_NM LIKE '%' || #{term} || '%'-->
+<!--		         </if>-->
+<!--		         AND DEL_YN = 'N'-->
+<!--				 AND USE_YN = 'Y'-->
+<!--          		) X-->
+<!--		<if test='page != null and !page.equals("")'>-->
+<!--			WHERE PAGEINDEX BETWEEN #{posStart}-->
+<!--			  AND #{count} * #{page}-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	<select id="selectUserCombo"-->
+<!--			resultType="kr.esob.fdms.commonlogic.combo.SearchComboInfoVO">-->
+<!--		&lt;!&ndash; sql.sql.Authorization."selectOutsideUserCombo" 외부사용자목록combo &ndash;&gt;-->
+<!--		SELECT X.*-->
+<!--          FROM (-->
+<!--		        SELECT USER_CD AS id-->
+<!--		         	 , USER_NM || '[' || USER_ID || ']' AS text-->
+<!--		         	 , USER_NM || '[' || USER_ID || ']' AS title-->
+<!--		         	 , ROW_NUMBER() OVER(ORDER BY USER_NM) AS pageindex-->
+<!--		          FROM DOCS_USER-->
+<!--&lt;!&ndash; 		         WHERE COMPANY_CD != #{companyCd} /* 로그인한 사용자의 companyCd*/ &ndash;&gt;-->
+<!--		         WHERE 1=1-->
+<!--				 <if test='term != null and !"".equals(term)'>-->
+<!--		           AND USER_NM LIKE '%' || #{term} || '%'-->
+<!--		         </if>-->
+<!--		         &lt;!&ndash; AND DEL_YN = 'N' &ndash;&gt;-->
+<!--				 &lt;!&ndash; AND USE_YN = 'Y' &ndash;&gt;-->
+<!--          		) X-->
+<!--		<if test='page != null and !page.equals("")'>-->
+<!--			WHERE PAGEINDEX BETWEEN #{posStart}-->
+<!--			  AND #{count} * #{page}-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	&lt;!&ndash; 업체 리스트 콤보 [2019.09.17(최금영)]  &ndash;&gt;-->
+<!--	<select id="selectCompanyCombo" resultType="searchComboInfoVo">-->
+<!--		SELECT X.*-->
+<!--		  FROM (-->
+<!--			SELECT COMPANY.COMPANY_NM AS text-->
+<!--			     , COMPANY.COMPANY_CD AS id-->
+<!--			  FROM DOCS_COMPANY COMPANY-->
+<!--			 WHERE COMPANY_CD != 'COMP_0000000999'		/* 한화디펜스는 나오면 안됨. */-->
+<!--			<if test='term != null and !"".equals(term)'>-->
+<!--		       AND COMPANY.COMPANY_NM LIKE '%' || #{term} || '%'-->
+<!--		    </if>-->
+<!--		    AND DEL_YN = 'N'		/* 거래중단된 업체는 나오면 안됨 */-->
+<!--		    ORDER BY COMPANY.COMPANY_NM ASC-->
+<!--		 ) X-->
+<!--	     WHERE ROWNUM <![CDATA[ <= ]]> 10-->
+<!--	</select>-->
+
+
+<!--	&lt;!&ndash; 업체 사용자 콤보 [2019.09.17(최금영)]  &ndash;&gt;-->
+<!--	<select id="selectCompanyUserCombo" resultType="searchComboInfoVo">-->
+<!--		SELECT X.*-->
+<!--		  FROM (-->
+<!--			SELECT COMPANY_USER.USER_NM AS text-->
+<!--			     , COMPANY_USER.USER_CD AS id-->
+<!--			     , ROW_NUMBER() OVER(ORDER BY DISTRIBUTION_PERSON_YN DESC, USER_NM) AS pageindex-->
+<!--			  FROM DOCS_USER COMPANY_USER-->
+<!--			 WHERE 1=1-->
+<!--			<if test='companyCd != null and !"".equals(companyCd)'>-->
+<!--		       AND COMPANY_USER.COMPANY_CD = #{companyCd}-->
+<!--		    </if>-->
+<!--			<if test='term != null and !"".equals(term)'>-->
+<!--		       AND COMPANY_USER.USER_NM LIKE '%' || #{term} || '%'-->
+<!--		    </if>-->
+<!--		     AND COMPANY_USER.USE_YN = 'Y'-->
+<!--		     AND COMPANY_USER.DEL_YN = 'N'-->
+<!--			 ) X-->
+<!--			 <if test='page != null and !page.equals("")'>-->
+<!--			WHERE PAGEINDEX BETWEEN #{posStart}-->
+<!--			  AND #{count} * #{page}-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	<select id="selectDistributionCompanyUserCombo" resultType="searchComboInfoVo">-->
+<!--		SELECT X.*-->
+<!--		  FROM (-->
+<!--			SELECT COMPANY_USER.USER_NM AS text-->
+<!--			     , COMPANY_USER.USER_CD AS id-->
+<!--			     , ROW_NUMBER() OVER(ORDER BY DISTRIBUTION_PERSON_YN DESC, USER_NM) AS pageindex-->
+<!--			     , CASE DISTRIBUTION_PERSON_YN WHEN N'Y' THEN 1 ELSE 0 END AS selected-->
+<!--			  FROM DOCS_USER COMPANY_USER-->
+<!--			 WHERE 1=1-->
+<!--			<if test='companyCd != null and !"".equals(companyCd)'>-->
+<!--		       AND COMPANY_USER.COMPANY_CD = #{companyCd}-->
+<!--		    </if>-->
+<!--		     AND COMPANY_USER.USE_YN = 'Y'-->
+<!--		     AND COMPANY_USER.DEL_YN = 'N'-->
+<!--			 ) X-->
+<!--	</select>-->
+
+
+
+<!--	&lt;!&ndash; 구매팀 콤보 [2019.09.18(최금영)]  &ndash;&gt;-->
+<!--	<select id="selectPurchaseTeamCombo" resultType="searchComboInfoVo">-->
+<!--		SELECT X.*-->
+<!--			 , ROW_NUMBER() OVER(ORDER BY text) AS pageindex-->
+<!--		  FROM (-->
+<!--			SELECT DOC_USER.USER_NM || '[' || USER_ID || ']' AS text-->
+<!--			     , DOC_USER.USER_CD AS id-->
+<!--			  FROM DOCS_USER DOC_USER-->
+<!--			 WHERE 1=1-->
+<!--			<if test='deptCd != null and !"".equals(deptCd)'>-->
+<!--		       AND DOC_USER.DEPT_CD = #{deptCd}-->
+<!--		    </if>-->
+<!--			<if test='term != null and !"".equals(term)'>-->
+<!--		       AND DOC_USER.USER_NM LIKE '%' || #{term} || '%'-->
+<!--		    </if>-->
+<!--		     AND DOC_USER.DEL_YN = 'N'-->
+<!--		     AND DOC_USER.USE_YN = 'Y'-->
+<!--			 ) X-->
+<!--	</select>-->
+
+<!--	&lt;!&ndash; 업체 구매 담당자 조회 [2019.09.26(최금영)] &ndash;&gt;-->
+<!--	<select id="getPurchaseInfo" parameterType="kr.esob.fdms.controller.login.UserVO" resultType="kr.esob.fdms.controller.login.UserVO">-->
+<!--		SELECT *-->
+<!--		FROM DOCS_USER-->
+<!--		WHERE USER_CD = ( SELECT DIST_PURCHASER_USER_CD-->
+<!--		 				  FROM DOCS_COMPANY_PURCHASER-->
+<!--		 				  WHERE COMPANY_CD = #{companyCd}-->
+<!--		 				  AND BUSINESS_AREA_CD = #{businessAreaCd})-->
+<!--	</select>-->
+
+<!--	&lt;!&ndash; 로그인한 사용자의 팀장 조회 [2019.10.02(최금영)] &ndash;&gt;-->
+<!--	<select id="getTeamLeader" resultType="comboInfoVo" parameterType="kr.esob.fdms.commonlogic.abstractclass.CommonParam">-->
+<!--		/* 로그인한 사용자의 팀장 조회 */-->
+<!--		SELECT 'teamLeader' AS comboCd-->
+<!--			 , DOC_USER.USER_NM AS comboLabel-->
+<!--		     , DOC_USER.USER_CD AS comboVal-->
+<!--		  FROM DOCS_USER DOC_USER-->
+<!--		 WHERE DOC_USER.USER_CD = (-->
+<!--		 						SELECT CASE WHEN A.TEAM_LEADER_USER_CD IS NOT NULL THEN A.TEAM_LEADER_USER_CD-->
+<!--                                             ELSE (SELECT B.TEAM_LEADER_USER_CD-->
+<!--                                                     FROM DOCS_DEPT B-->
+<!--                                                    WHERE B.DEPT_CD = A.PARENT_DEPT_CD-->
+<!--                                                   )-->
+<!--                                        END TEAM_LEADER_USER_CD-->
+<!--                                   FROM DOCS_DEPT A-->
+<!--                                  WHERE A.DEPT_CD = #{sessionUser.deptCd}-->
+<!--		 			)-->
+<!--	</select>-->
+
+<!--	&lt;!&ndash; 방산 팀장 조회 [2019.10.02(최금영)] &ndash;&gt;-->
+<!--	<select id="getDefenseTeamLeaderUid" resultType="String">-->
+<!--		SELECT  DOC_USER.USER_CD-->
+<!--		  FROM DOCS_USER DOC_USER-->
+<!--		 WHERE DOC_USER.USER_CD = (-->
+<!--		 						SELECT TEAM_LEADER_USER_CD-->
+<!--			 					  FROM DOCS_DEPT-->
+<!--			 					 WHERE DEFENSE_TEAM_YN = 'Y'-->
+<!--		 			)-->
+<!--	</select>-->
+
+
+<!--	&lt;!&ndash; 결재자 조회 [2019.10.02(최금영)] &ndash;&gt;-->
+<!--	<select id="getTeamLeaderList" resultType="comboInfoVo" parameterType="kr.esob.fdms.commonlogic.abstractclass.CommonParam">-->
+<!--		/* 로그인한 사용자의 팀장 및 팀장의 대결자 조회 */-->
+<!--		SELECT 'teamLeaderList' AS comboCd-->
+<!--			 , DOC_USER.USER_NM || '[' || USER_ID || ']' AS comboLabel-->
+<!--		     , DOC_USER.USER_CD AS comboVal-->
+<!--		  FROM DOCS_USER DOC_USER-->
+<!--		 WHERE DOC_USER.USER_CD = (-->
+<!--			 						SELECT TEAM_LEADER_USER_CD-->
+<!--				 					  FROM DOCS_DEPT-->
+<!--				 					 WHERE DEPT_CD = #{sessionUser.deptCd}-->
+<!--		 						  )-->
+
+<!--	    UNION-->
+
+<!--		SELECT 'teamLeaderList' AS comboCd-->
+<!--			 , DOC_USER.USER_NM || '[' || DOC_USER.USER_ID || ']' AS comboLabel-->
+<!--			 , INSTEAD.INSTEAD_USER_CD AS comboVal-->
+<!--			  FROM DOCS_INSTEAD_USER INSTEAD-->
+<!--			  JOIN DOCS_USER DOC_USER-->
+<!--			    ON INSTEAD.INSTEAD_USER_CD = DOC_USER.USER_CD-->
+<!--			 WHERE INSTEAD.USER_CD = (-->
+<!--			 							SELECT TEAM_LEADER_USER_CD-->
+<!--			 					 		  FROM DOCS_DEPT-->
+<!--			 					 		 WHERE DEPT_CD = #{sessionUser.deptCd}-->
+<!--			 						 )-->
+<!--	</select>-->
+
+<!--	&lt;!&ndash; 결재자 조회 (ID로) [2019.10.18(육일)] &ndash;&gt;-->
+<!--	<select id="getTeamLeaderListById" resultType="comboInfoVo" parameterType="kr.esob.fdms.commonlogic.abstractclass.CommonParam">-->
+<!--		/* 로그인한 사용자의 팀장 및 팀장의 대결자 조회 */-->
+<!--		SELECT 'teamLeaderList' AS comboCd-->
+<!--			 , DOC_USER.USER_NM AS comboLabel-->
+<!--		     , DOC_USER.USER_ID AS comboVal-->
+<!--		  FROM DOCS_USER DOC_USER-->
+<!--		 WHERE DOC_USER.USER_CD = (-->
+<!--			 						SELECT TEAM_LEADER_USER_CD-->
+<!--				 					  FROM DOCS_DEPT-->
+<!--				 					 WHERE DEPT_CD = #{sessionUser.deptCd}-->
+<!--		 						  )-->
+
+<!--	    UNION-->
+
+<!--		SELECT 'teamLeaderList' AS comboCd-->
+<!--			 , DOC_USER.USER_NM AS comboLabel-->
+<!--			 , (SELECT USER_ID FROM DOCS_USER WHERE USER_CD = INSTEAD.INSTEAD_USER_CD) AS comboVal-->
+<!--			  FROM DOCS_INSTEAD_USER INSTEAD-->
+<!--			  JOIN DOCS_USER DOC_USER-->
+<!--			    ON INSTEAD.INSTEAD_USER_CD = DOC_USER.USER_CD-->
+<!--			 WHERE INSTEAD.USER_CD = (-->
+<!--			 							SELECT TEAM_LEADER_USER_CD-->
+<!--			 					 		  FROM DOCS_DEPT-->
+<!--			 					 		 WHERE DEPT_CD = #{sessionUser.deptCd}-->
+<!--			 						 )-->
+<!--	</select>-->
+
+
+
+
+<!--	&lt;!&ndash; 방산 기술 결재자 조회 [2019.10.02(최금영)] &ndash;&gt;-->
+<!--	<select id="selectDefenseTeamLeaderList" resultType="comboInfoVo">-->
+<!--		SELECT 'defTeamLaderList' AS comboCd-->
+<!--			 , DOC_USER.USER_NM AS comboLabel-->
+<!--		     , DOC_USER.USER_CD AS comboVal-->
+<!--		  FROM DOCS_USER DOC_USER-->
+<!--		 WHERE DOC_USER.USER_CD = (-->
+<!--			 						SELECT TEAM_LEADER_USER_CD-->
+<!--			 					  	  FROM DOCS_DEPT-->
+<!--			 					 	 WHERE DEFENSE_TEAM_YN = 'Y'-->
+<!--		 						  )-->
+
+<!--	    UNION-->
+
+<!--		SELECT 'defTeamLaderList' AS comboCd-->
+<!--			 , DOC_USER.USER_NM AS comboLabel-->
+<!--			 , INSTEAD.INSTEAD_USER_CD AS comboVal-->
+<!--			  FROM DOCS_DEF_INSTEAD_USER INSTEAD-->
+<!--			  JOIN DOCS_USER DOC_USER-->
+<!--			    ON INSTEAD.INSTEAD_USER_CD = DOC_USER.USER_CD-->
+<!--			 WHERE INSTEAD.USER_CD = (-->
+<!--			 							SELECT TEAM_LEADER_USER_CD-->
+<!--			 					  	  	  FROM DOCS_DEPT-->
+<!--			 					 	     WHERE DEFENSE_TEAM_YN = 'Y'-->
+<!--			 						 )-->
+<!--	</select>-->
+
+<!--	<select id="selectDeptComboListByBusinessArea" resultType="comboInfoVo">-->
+<!--		SELECT 'deptList' AS comboCd-->
+<!--			, docsDept.DEPT_CD AS comboVal-->
+<!--			, docsDept.DEPT_NM AS comboLabel-->
+<!--		FROM DOCS_DEPT docsDept-->
+<!--		JOIN DOCS_USER docsUser-->
+<!--		ON docsDept.DEPT_CD = docsUser.DEPT_CD-->
+<!--		WHERE docsUser.BUSINESS_AREA_CD = #{businessAreaCd}-->
+<!--	   <if test='businessAreaCd != null and "1310".equals(businessAreaCd)'>-->
+<!--         AND docsDept.DEPT_TYPE = '직'-->
+<!--       </if>-->
+<!--		AND docsDept.USE_YN = 'Y'-->
+<!--		AND docsDept.DEL_YN = 'N'-->
+<!--		GROUP BY docsDept.DEPT_CD, docsDept.DEPT_NM-->
+<!--        ORDER BY docsDept.DEPT_CD-->
+<!--	</select>-->
+
+<!--	<select id="selectJikUserComboList" resultType="kr.esob.fdms.commonlogic.combo.SearchComboInfoVO">-->
+<!--		/* 생산기술자료 요청 시 사용자 목록 */-->
+<!--		SELECT X.*-->
+<!--          FROM (-->
+<!--				SELECT-->
+<!--		          	'userList' AS comboCd-->
+<!--					, docsUser.USER_CD AS id-->
+<!--					, docsUser.USER_NM || '[' || docsUser.USER_ID || ']' AS text-->
+<!--					, docsUser.USER_NM || '[' || docsUser.USER_ID || ']' AS title-->
+<!--					, ROW_NUMBER() OVER(ORDER BY docsUser.USER_NM, docsUser.USER_ID) AS pageindex-->
+<!--		        FROM DOCS_USER docsUser-->
+<!--		        INNER JOIN DOCS_DEPT docsDept ON docsDept.DEPT_CD = docsUser.DEPT_CD-->
+<!--		        WHERE 1=1-->
+<!--		        <if test='businessAreaCd != null and !"".equals(businessAreaCd)'>-->
+<!--		        AND BUSINESS_AREA_CD = #{businessAreaCd}-->
+<!--		        </if>-->
+<!--		        <if test='term != null and !"".equals(term)'>-->
+<!--		           AND USER_NM LIKE '%' || #{term} || '%'-->
+<!--		         </if>-->
+<!--		        AND docsDept.USE_YN = 'Y'-->
+<!--		        AND docsDept.DEL_YN = 'N'-->
+<!--		        AND docsUser.USE_YN = 'Y'-->
+<!--		        AND docsUser.DEL_YN = 'N'-->
+<!--		) X-->
+<!--		WHERE PAGEINDEX BETWEEN 0 AND 50-->
+<!--	</select>-->
+
+<!--	<select id="selectInsideUserComboByDept"-->
+<!--			resultType="kr.esob.fdms.commonlogic.combo.SearchComboInfoVO">-->
+<!--		&lt;!&ndash; sql.sql.Authorization."selectOutsideUserCombo" 외부사용자목록combo &ndash;&gt;-->
+<!--		SELECT X.*-->
+<!--			 , ROW_NUMBER() OVER(ORDER BY text) AS pageindex-->
+<!--          FROM (-->
+<!--		        SELECT USER_CD AS id-->
+<!--		         	 , USER_NM || '[' || USER_ID || ']' AS text-->
+<!--		         	 , USER_NM || '[' || USER_ID || ']' AS title-->
+<!--		         	 , ROW_NUMBER() OVER(ORDER BY USER_NM) AS pageindex-->
+<!--		          FROM DOCS_USER-->
+<!--		         WHERE DEPT_CD = #{deptCd}-->
+<!--				 <if test='term != null and !"".equals(term)'>-->
+<!--		           AND USER_NM LIKE '%' || #{term} || '%'-->
+<!--		         </if>-->
+<!--		         AND USE_YN = 'Y'-->
+<!--				 AND DEL_YN = 'N'-->
+<!--          		) X-->
+<!--		<if test='page != null and !page.equals("")'>-->
+<!--			WHERE PAGEINDEX BETWEEN #{posStart}-->
+<!--			  AND #{count} * #{page}-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	&lt;!&ndash; 방산기술보호 결재자 리스트 조회(개발) [2019.10.29(최금영)] &ndash;&gt;-->
+<!--	<select id="selectProductProtectUserList" resultType="comboInfoVo" parameterType="String">-->
+<!--		/* 방산기술보호 결재자 리스트 조회(개발) */-->
+<!--		SELECT 'productProtectUserList' AS comboCd-->
+<!--			 , USER_NM || '[' || DEPT_NM || ']' AS comboLabel-->
+<!--		     , USER_CD AS comboVal-->
+<!--		  FROM DOCS_PROTECT_USER-->
+<!--		 WHERE BUSINESS_TYPE_CD = 'Production'-->
+<!--		 AND BUSINESS_AREA_CD = #{businessAreaCd}-->
+<!--	</select>-->
+
+
+<!--	&lt;!&ndash; 방산기술보호 결재자 리스트 조회(양산) [2019.10.29(최금영)] &ndash;&gt;-->
+<!--	<select id="selectDevelopmentProtectUserList" resultType="comboInfoVo">-->
+<!--		/* 방산기술보호 결재자 리스트 조회(양산) */-->
+<!--		SELECT 'developmentProtectUserList' AS comboCd-->
+<!--			 , USER_NM || '[' ||  DEPT_NM || ']' AS comboLabel-->
+<!--		     , USER_CD AS comboVal-->
+<!--		  FROM DOCS_PROTECT_USER-->
+<!--		 WHERE BUSINESS_TYPE_CD = 'Development'-->
+<!--	</select>-->
+
+<!--	&lt;!&ndash; 보안팀 리스트 조회(미등록자료 배포 요청 시 메일 참조용) [2019.10.30(육일)] &ndash;&gt;-->
+<!--	<select id="selectSecurityUserList" resultType="comboInfoVo">-->
+<!--        SELECT 'securityTeam' AS comboCd-->
+<!--            , USER_CD AS comboVal-->
+<!--            , USER_NM AS comboLabel-->
+<!--            , USER_NM || '[' || NVL((SELECT LANG_DESC FROM DOCS_LANG WHERE LANG_CD = combo.VALUE), combo.TEXT) || ']' AS comboTooltip-->
+<!--        FROM DOCS_USER docsUser-->
+<!--        INNER JOIN DOCS_COMBO combo-->
+<!--        ON docsUser.WORK_PLACE_CD = combo.VALUE-->
+<!--        AND combo.COMBO_CD = 'workPlaceCd'-->
+<!--        WHERE docsUser.DEPT_CD IN ('D1DV1C0', 'D1DC1C0', 'D1DJ1C0')-->
+<!--        AND docsUser.USE_YN = 'Y'-->
+<!--        AND docsUser.DEL_YN = 'N'-->
+<!--        ORDER BY docsUser.DEPT_CD-->
+<!--	</select>-->
+
+<!--	<select id="selectSecurityUserByBusinessArea" resultType="string">-->
+<!--		SELECT USER_CD-->
+<!--		FROM DOCS_USER-->
+<!--		WHERE BUSINESS_AREA_CD = #{sessionUser.businessAreaCd}-->
+<!--		AND WORK_PLACE_CD = #{sessionUser.workPlaceCd}-->
+<!--		AND DEPT_CD IN ('D1DV1C0', 'D1DC1C0', 'D1DJ1C0')-->
+<!--		AND USE_YN = 'Y'-->
+<!--        AND DEL_YN = 'N'-->
+<!--	</select>-->
+
+<!--	<select id="selectPurchaserTeamLeader" resultType="userVo">-->
+<!--		SELECT *-->
+<!--		FROM DOCS_USER-->
+<!--		WHERE USER_CD =-->
+<!--			(-->
+<!--			SELECT TEAM_LEADER_USER_CD-->
+<!--			FROM DOCS_DEPT-->
+<!--			WHERE DEPT_CD =-->
+<!--				(-->
+<!--				SELECT DEPT_CD-->
+<!--				FROM DOCS_USER-->
+<!--				WHERE USER_ID = #{purchaserUid}-->
+<!--				)-->
+<!--			)-->
+<!--		AND USE_YN = 'Y'-->
+<!--        AND DEL_YN = 'N'-->
+<!--	</select>-->
+
+<!--	<select id="selectPassTargetCombo" resultType="comboInfoVo">-->
+<!--		/* 방산자료 결재 이관 대상 */-->
+<!--		SELECT 'passTarget' 								AS comboCd-->
+<!--			, docsUser.USER_CD 								AS comboVal-->
+<!--			, docsUser.USER_NM 								AS comboLabel-->
+<!--        FROM DOCS_PROTECT_USER protectUser-->
+<!--        INNER JOIN DOCS_USER docsUser ON docsUser.USER_CD = protectUser.USER_CD-->
+<!--        WHERE protectUser.BUSINESS_TYPE_CD = 'Development'-->
+<!--        AND protectUser.USER_CD != #{sessionUser.userCd}-->
+<!--        AND docsUser.USE_YN = 'Y'-->
+<!--        AND docsUser.DEL_YN = 'N'-->
+<!--	</select>-->
+
+<!--	<select id="selectDeployDeptCombo" resultType="comboInfoVo">-->
+<!--		/* 배포부서 - 생산기술자료팀만 배포함 */-->
+<!--		SELECT-->
+<!--			'deployDept' 						AS comboCd-->
+<!--			, DEPT_CD 							AS comboVal-->
+<!--			, DEPT_NM 							AS comboLabel-->
+<!--		FROM DOCS_DEPT-->
+<!--		WHERE PRODUCT_TEAM_YN = 'Y'-->
+<!--		AND USE_YN='Y'-->
+<!--		AND DEL_YN='N'-->
+<!--		ORDER BY DEPT_NM-->
+<!--	</select>-->
+
+<!--	<select id="selectDeptCombo" resultType="searchComboInfoVo">-->
+<!--		/* 부서목록 */-->
+<!--		SELECT X.*-->
+<!--          FROM (-->
+<!--		        SELECT DEPT_CD AS id-->
+<!--		         	 , DEPT_NM AS text-->
+<!--		         	 , DEPT_NM || '[' || DEPT_SHORT_PATH || ']' AS title-->
+<!--		         	 , ROW_NUMBER() OVER(ORDER BY DEPT_NM) AS pageindex-->
+<!--		          FROM DOCS_DEPT-->
+<!--		         WHERE DEL_YN = 'N'-->
+<!--		         AND USE_YN = 'Y'-->
+<!--				 <if test='term != null and !"".equals(term)'>-->
+<!--		           AND DEPT_NM LIKE '%' || #{term} || '%'-->
+<!--		         </if>-->
+<!--          		) X-->
+<!--		<if test='page != null and !page.equals("")'>-->
+<!--			WHERE PAGEINDEX BETWEEN #{posStart}-->
+<!--			  AND #{count} * #{page}-->
+<!--		</if>-->
+<!--	</select>-->
+
+
+
+
+<!--	<select id="selectDeployUserCombo" resultType="comboInfoVo">-->
+<!--		/* 배포자 - 생산기술자료팀만 배포함 */-->
+<!--		SELECT-->
+<!--			'deployUser' 									AS comboCd-->
+<!--			, dUser.USER_CD 								AS comboVal-->
+<!--			, dUser.USER_NM || '[' || dUser.USER_ID || ']'	AS comboLabel-->
+<!--		FROM DOCS_DEPT dDept-->
+<!--		INNER JOIN DOCS_USER dUser ON dUser.DEPT_CD = dDept.DEPT_CD-->
+<!--		WHERE PRODUCT_TEAM_YN = 'Y'-->
+<!--		AND dUser.USE_YN='Y'-->
+<!--		AND dUser.DEL_YN='N'-->
+<!--		ORDER BY dUser.USER_NM-->
+<!--	</select>-->
+
+<!--	<select id="selectProductionAcceptDeptCombo" resultType="comboInfoVo">-->
+<!--		/* 생산기술자료 배포받을(접수할) 부서 - '직'만 접수함 */-->
+<!--		SELECT-->
+<!--			'deployDept' 						AS comboCd-->
+<!--			, DEPT_CD 							AS comboVal-->
+<!--			, DEPT_NM 							AS comboLabel-->
+<!--		FROM DOCS_DEPT-->
+<!--		WHERE DEPT_TYPE = '직'-->
+<!--		AND USE_YN='Y'-->
+<!--		AND DEL_YN='N'-->
+<!--		ORDER BY DEPT_NM-->
+<!--	</select>-->
+
+<!--	<select id="selectSearchProductUserComboList"-->
+<!--			resultType="kr.esob.fdms.commonlogic.combo.SearchComboInfoVO">-->
+<!--		/* 생산기술자료 배포 받을 수 있는 사용자 목록 (직) combo */-->
+<!--		SELECT X.*-->
+<!--          FROM (-->
+<!--		        SELECT-->
+<!--		        	USER_CD AS id-->
+<!--		         	, USER_NM || '[' || DEPT_NM || ']' AS text-->
+<!--		         	, USER_NM || '[' || DEPT_NM || ']' AS title-->
+<!--				FROM DOCS_USER dUser-->
+<!--				INNER JOIN DOCS_DEPT dDept ON dDept.DEPT_CD = dUser.DEPT_CD-->
+<!--				WHERE DEPT_TYPE = '직'-->
+<!--				 <if test='term != null and !"".equals(term)'>-->
+<!--		           AND USER_NM LIKE '%' || #{term} || '%'-->
+<!--		         </if>-->
+<!--		         AND dUser.USE_YN = 'Y'-->
+<!--		         AND dUser.DEL_YN = 'N'-->
+<!--		         ORDER BY USER_NM-->
+<!--          		) X-->
+<!--          	WHERE ROWNUM <![CDATA[ <= ]]> 10-->
+<!--	</select>-->
+
+<!--	<select id="selectSearchDeptList"-->
+<!--			resultType="kr.esob.fdms.commonlogic.combo.SearchComboInfoVO">-->
+<!--		/* 생산기술자료 배포 받을 수 있는 사용자 목록 (직) combo */-->
+<!--		SELECT X.*-->
+<!--          FROM (-->
+<!--		        SELECT-->
+<!--		        	DEPT_CD AS id-->
+<!--		         	, DEPT_NM AS text-->
+<!--		         	, DEPT_NM AS title-->
+<!--				FROM DOCS_DEPT-->
+<!--				WHERE 1=1-->
+<!--				 <if test='term != null and !"".equals(term)'>-->
+<!--		           AND DEPT_NM LIKE '%' || #{term} || '%'-->
+<!--		         </if>-->
+<!--		         AND USE_YN = 'Y'-->
+<!--		         AND DEL_YN = 'N'-->
+<!--		         ORDER BY DEPT_NM-->
+<!--          		) X-->
+<!--          	WHERE ROWNUM <![CDATA[ <= ]]> 10-->
+<!--	</select>-->
+
+
+<!--	&lt;!&ndash; 로그인한 사용자의 팀원 조회 [2019.11.06(최금영)] &ndash;&gt;-->
+<!--	<select id="selecTeamUserList" resultType="comboInfoVo" parameterType="kr.esob.fdms.commonlogic.abstractclass.CommonParam">-->
+<!--		SELECT USER_CD 					AS comboVal-->
+<!--			, USER_NM 					AS comboLabel-->
+<!--		FROM DOCS_USER-->
+<!--		WHERE DEPT_CD = #{sessionUser.deptCd}-->
+<!--		AND USE_YN = 'Y'-->
+<!--		AND DEL_YN = 'N'-->
+<!--	</select>-->
+
+<!--	<select id="selectVendorApprovalUser" resultType="comboInfoVo">-->
+<!--		SELECT docsUser.USER_CD			AS comboVal-->
+<!--			, docsUser.USER_NM			AS comboLabel-->
+<!--		FROM DOCS_USER docsUser-->
+<!--		INNER JOIN DOCS_COMPANY company-->
+<!--		ON docsUser.COMPANY_CD = company.COMPANY_CD-->
+<!--		WHERE company.COMPANY_CD = #{sessionUser.companyCd}-->
+<!--		AND docsUser.USE_YN = 'Y'-->
+<!--		AND docsUser.DEL_YN = 'N'-->
+<!--	</select>-->
+
+<!--	&lt;!&ndash; 결재자 리스트 조회. 자신을 제외한 팀원들 모두 조회 &ndash;&gt;-->
+<!--	<select id="selectApprovalUserList" resultType="comboInfoVo">-->
+<!--		SELECT docsUser.USER_CD		AS comboVal-->
+<!--			, docsUser.USER_NM		AS comboLabel-->
+<!--		FROM DOCS_USER docsUser-->
+<!--		WHERE (DEPT_CD = #{sessionUser.deptCd} OR DEPT_CD = 'D1DV1G0')-->
+<!--		AND USER_CD != #{sessionUser.userCd}-->
+<!--		AND docsUser.USE_YN = 'Y'-->
+<!--		AND docsUser.DEL_YN = 'N'-->
+<!--	</select>-->
+
+<!--	&lt;!&ndash; 결재자 리스트 조회. 사업장내 모든 사용자 조회 &ndash;&gt;-->
+<!--	<select id="selectApprovalUserAll" resultType="comboInfoVo">-->
+<!--		SELECT docsUser.USER_CD		AS comboVal-->
+<!--			, docsUser.USER_NM || '[' || docsUser.USER_ID || ']'   AS comboLabel-->
+<!--		FROM DOCS_USER docsUser-->
+<!--		WHERE USER_CD != #{sessionUser.userCd}-->
+<!--		AND docsUser.USE_YN = 'Y'-->
+<!--		AND docsUser.DEL_YN = 'N'-->
+<!--		AND docsUser.AUTH_SITE = 'I'-->
+<!--		AND docsUser.BUSINESS_AREA_CD = #{sessionUser.businessAreaCd}-->
+<!--	  ORDER BY docsUser.USER_NM-->
+<!--	</select>-->
+
+<!--	&lt;!&ndash; 모든 내부사용자 조회 &ndash;&gt;-->
+<!--	<select id="selectUserAll" resultType="comboInfoVo">-->
+<!--		SELECT docsUser.USER_CD		AS comboVal-->
+<!--		     , docsUser.USER_NM || '[' || docsDept.DEPT_NM || ']'   AS comboLabel-->
+<!--         FROM DOCS_USER docsUser-->
+<!--            , DOCS_DEPT docsDept-->
+<!--		WHERE docsUser.DEPT_CD = docsDept.DEPT_CD-->
+<!--		AND docsUser.USE_YN = 'Y'-->
+<!--		AND docsUser.DEL_YN = 'N'-->
+<!--		AND docsUser.AUTH_SITE = 'I'-->
+<!--		AND docsUser.Position_Cd IS NOT NULL-->
+<!--	  ORDER BY docsUser.USER_NM-->
+<!--	</select>-->
+<!--	<select id="selectProtectAuthCount" resultType="Integer">-->
+<!--		SELECT COUNT(*)-->
+<!--		<if test='objectType != null and "DRAWING".equals(objectType)'>-->
+<!--		FROM DOCS_DRAWING_MEMBER-->
+<!--		</if>-->
+<!--		<if test='objectType != null and "DOC".equals(objectType)'>-->
+<!--		FROM DOCS_DOCUMENT_MEMBER-->
+<!--		</if>-->
+<!--		<if test='objectType != null and "SW".equals(objectType)'>-->
+<!--		FROM DOCS_SW_MEMBER-->
+<!--		</if>-->
+<!--		WHERE OBJECT_ID = #{objectId}-->
+<!--		AND ACCESS_UID=#{sessionUser.userId}-->
+<!--	</select>-->
+
+<!--	<select id="selectVendorComboList" resultType="comboInfoVo">-->
+<!--		SELECT company.COMPANY_CD		AS comboVal-->
+<!--			, company.COMPANY_NM		AS comboLabel-->
+<!--		FROM DOCS_COMPANY_PURCHASER purchaser-->
+<!--		INNER JOIN DOCS_COMPANY company-->
+<!--		ON purchaser.COMPANY_CD = company.COMPANY_CD-->
+<!--&lt;!&ndash; 		WHERE BUSINESS_AREA_CD = #{sessionUser.businessAreaCd} &ndash;&gt;-->
+<!--		WHERE 1=1-->
+<!--		AND DIST_PURCHASER_USER_CD = #{sessionUser.userCd}-->
+<!--		AND company.USE_YN = 'Y'-->
+<!--		AND company.DEL_YN = 'N'-->
+<!--	</select>-->
+
+<!--	<select id="selectAllOutsideUserIdCombo"-->
+<!--			resultType="kr.esob.fdms.commonlogic.combo.SearchComboInfoVO">-->
+<!--		&lt;!&ndash; 외부 사용자목록combo - USER_ID를 ID로 사용 &ndash;&gt;-->
+<!--		SELECT X.*-->
+<!--          FROM (-->
+<!--		        SELECT USER_ID AS id-->
+<!--		         	 , USER_NM || '[' || USER_ID || ']' AS text-->
+<!--		         	 , USER_NM || '[' || USER_ID || ']' AS title-->
+<!--		         	 , ROW_NUMBER() OVER(ORDER BY USER_NM) AS pageindex-->
+<!--		          FROM DOCS_USER-->
+<!--		         WHERE AUTH_SITE='E'-->
+<!--		           AND USE_YN = 'Y'-->
+<!--				   AND DEL_YN = 'N'-->
+<!--				 <if test='term != null and !"".equals(term)'>-->
+<!--		           AND USER_NM LIKE '%' || #{term} || '%'-->
+<!--		         </if>-->
+<!--          		) X-->
+<!--		<if test='page != null and !page.equals("")'>-->
+<!--			WHERE PAGEINDEX BETWEEN #{posStart}-->
+<!--			  AND #{count} * #{page}-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	<select id="selectAllInsideUserIdCombo"-->
+<!--			resultType="kr.esob.fdms.commonlogic.combo.SearchComboInfoVO">-->
+<!--		&lt;!&ndash; 내부 사용자목록combo - USER_ID를 ID로 사용 &ndash;&gt;-->
+<!--		SELECT X.*-->
+<!--          FROM (-->
+<!--		        SELECT USER_ID AS id-->
+<!--		         	 , USER_NM || '[' || USER_ID || ']' AS text-->
+<!--		         	 , USER_NM || '[' || USER_ID || ']' AS title-->
+<!--		         	 , ROW_NUMBER() OVER(ORDER BY USER_NM) AS pageindex-->
+<!--		          FROM DOCS_USER-->
+<!--		         WHERE AUTH_SITE='I'-->
+<!--		           AND USE_YN = 'Y'-->
+<!--				   AND DEL_YN = 'N'-->
+<!--				 <if test='term != null and !"".equals(term)'>-->
+<!--		           AND USER_NM LIKE '%' || #{term} || '%'-->
+<!--		         </if>-->
+<!--          		) X-->
+<!--		<if test='page != null and !page.equals("")'>-->
+<!--			WHERE PAGEINDEX BETWEEN #{posStart}-->
+<!--			  AND #{count} * #{page}-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	<select id="selectDept" resultType="comboInfoVo">-->
+<!--		/* 사용자코드로 부서를 구한다.*/-->
+<!--		SELECT-->
+<!--			docsDept.DEPT_CD		AS comboVal-->
+<!--			, docsDept.DEPT_NM		AS comboLabel-->
+<!--		FROM DOCS_USER docsUser-->
+<!--		INNER JOIN DOCS_DEPT docsDept ON docsDept.DEPT_CD = docsUser.DEPT_CD-->
+<!--		WHERE USER_CD = #{userCd}-->
+<!--	</select>-->
+
+<!--	<select id="selectAllInsideUserCdCombo"-->
+<!--			resultType="kr.esob.fdms.commonlogic.combo.SearchComboInfoVO">-->
+<!--		&lt;!&ndash; 내부 사용자목록combo - USER_ID를 ID로 사용 &ndash;&gt;-->
+<!--		SELECT X.*-->
+<!--          FROM (-->
+<!--		        SELECT USER_CD AS id-->
+<!--		         	 , USER_NM || '[' || USER_ID || ']' AS text-->
+<!--		         	 , USER_NM || '[' || USER_ID || ']' AS title-->
+<!--		         	 , ROW_NUMBER() OVER(ORDER BY USER_NM) AS pageindex-->
+<!--		          FROM DOCS_USER-->
+<!--		         WHERE AUTH_SITE='I'-->
+<!--		           AND USE_YN = 'Y'-->
+<!--				   AND DEL_YN = 'N'-->
+<!--				 <if test='term != null and !"".equals(term)'>-->
+<!--		           AND USER_NM LIKE '%' || #{term} || '%'-->
+<!--		         </if>-->
+<!--          		) X-->
+<!--		<if test='page != null and !page.equals("")'>-->
+<!--			WHERE PAGEINDEX BETWEEN #{posStart}-->
+<!--			  AND #{count} * #{page}-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	<select id="selectPositionCombo" resultType="searchComboInfoVo">-->
+<!--		/* 직위목록 */-->
+<!--		SELECT X.*-->
+<!--		FROM (-->
+<!--		SELECT POSITION_CD AS id-->
+<!--		, POSITION_NM AS text-->
+<!--		, POSITION_NM AS title-->
+<!--		, ROW_NUMBER() OVER(ORDER BY POSITION_NM) AS pageindex-->
+<!--		FROM DOCS_POSITION-->
+<!--		WHERE DEL_YN = 'N'-->
+<!--		AND USE_YN = 'Y'-->
+<!--&lt;!&ndash;		<if test='term != null and !"".equals(term)'>&ndash;&gt;-->
+<!--&lt;!&ndash;			AND POSITION_NM LIKE '%' || #{term} || '%'&ndash;&gt;-->
+<!--&lt;!&ndash;		</if>&ndash;&gt;-->
+<!--		) X-->
+<!--		<if test='page != null and !page.equals("")'>-->
+<!--			WHERE PAGEINDEX BETWEEN #{posStart}-->
+<!--			AND #{count} * #{page}-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	<select id="selectRoleGroupCombo" resultType="searchComboInfoVo">-->
+<!--		/* 권한목록 */-->
+<!--		SELECT X.*-->
+<!--		FROM (-->
+<!--		SELECT GROUP_CODE AS id-->
+<!--		, GROUP_NM AS text-->
+<!--		, GROUP_NM  AS title-->
+<!--		, ROW_NUMBER() OVER(ORDER BY GROUP_NM) AS pageindex-->
+<!--		FROM DOCS_ROLE_GROUP-->
+<!--		WHERE USE_YN = 'Y'-->
+<!--&lt;!&ndash;		<if test='term != null and !"".equals(term)'>&ndash;&gt;-->
+<!--&lt;!&ndash;			AND DEPT_NM LIKE '%' || #{term} || '%'&ndash;&gt;-->
+<!--&lt;!&ndash;		</if>&ndash;&gt;-->
+<!--		) X-->
+<!--		<if test='page != null and !page.equals("")'>-->
+<!--			WHERE PAGEINDEX BETWEEN #{posStart}-->
+<!--			AND #{count} * #{page}-->
+<!--		</if>-->
+<!--	</select>-->
+
+
+<!--</mapper>-->
+
+
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+
+
+<mapper namespace="sql.Authorization">
+
+<!-- 구매 팀장 대결자 콤보 조회 [2019.09.10(최금영)] -->
+<select id="selectInstaedCombo" resultType="searchComboInfoVo">
+	SELECT X.*
+	, ROW_NUMBER() OVER(ORDER BY text) AS pageindex
+	FROM (
+	SELECT DOC_USER.USER_NM AS text
+	, DOC_USER.USER_CD AS id
+	FROM DOCS_USER DOC_USER
+	WHERE DOC_USER.USER_CD = (
+	SELECT TEAM_LEADER_USER_CD
+	FROM DOCS_DEPT
+	WHERE DEPT_CD = #{sessionUser.deptCd}
+	)
+	<if test='term != null and !"".equals(term)'>
+		AND DOC_USER.USER_NM LIKE '%' || #{term} || '%'
+	</if>
+	) X
+</select>
+
+<!-- 팀장, 대결자 조회 콤보 -->
+<select id="selectApprovalUserCombo" resultType="searchComboInfoVo">
+	SELECT X.*
+	, ROW_NUMBER() OVER(ORDER BY text) AS pageindex
+	FROM (
+	SELECT DOC_USER.USER_NM AS text
+	, DOC_USER.USER_CD AS id
+	FROM DOCS_USER DOC_USER
+	WHERE DOC_USER.USER_CD IN (
+	SELECT TEAM_LEADER_USER_CD
+	FROM DOCS_DEPT
+	WHERE TEAM_LEADER_USER_CD IS NOT NULL
+	)
+	<if test='term != null and !"".equals(term)'>
+		AND DOC_USER.USER_NM LIKE '%' || #{term} || '%'
+	</if>
+	) X
+</select>
+
+<!-- 배포 구매담당자 선택 -->
+<select id="selectPurchaserCombo" resultType="comboInfoVo">
+	SELECT 'purchaser'                        AS comboCd
+		 , USER_CD                             AS comboVal
+		 , USER_NM || '[' || USER_ID || ']'    AS comboLabel
+		 , USER_NM || '[' || USER_ID || ']'    AS comboTooltip
+		 , ''                                 AS selectedValue
+	FROM DOCS_USER docsUser
+			 INNER JOIN DOCS_DEPT docsDept ON docsDept.DEPT_CD = docsUser.DEPT_CD
+-- 	WHERE docsDept.PURCHASE_YN = 'Y'    /* 구매팀 */
+	WHERE docsUser.auth_approval_level = 1
+	  AND docsUser.DEL_YN = 'N'
+	  AND docsUser.USE_YN = 'Y'
+	  AND docsUser.BUSINESS_AREA_CD = #{businessAreaCd}
+	ORDER BY USER_NM
+</select>
+
+<!-- 배포 구매담당자 선택(1,2사업장 모두. 사용자 정보 등록 요청을 위해) -->
+<select id="selectAllPurchaserCombo" resultType="comboInfoVo">
+	SELECT 'purchaser'                                                 AS comboCd
+		 , purchaser.DIST_PURCHASER_USER_CD                             AS comboVal
+		 , docsUser.USER_NM || '[' || docsUser.USER_ID || ']'        AS comboLabel
+		 , docsUser.USER_NM || '[' || docsUser.USER_ID || ']'         AS comboTooltip
+	FROM DOCS_USER docsUser
+	WHERE 1=0
+	ORDER BY USER_NM
+</select>
+
+<select id="selectOneUserCombo" resultType="comboInfoVo">
+	SELECT
+		'teamLeaderList'                     AS comboCd
+		 , USER_CD                             AS comboVal
+		 , USER_NM || '[' || USER_ID || ']'    AS comboLabel
+		 , USER_NM || '[' || USER_ID || ']'    AS comboTooltip
+	FROM DOCS_USER
+	WHERE USER_CD = #{userCd}
+</select>
+
+<select id="selectPurchaserNotSelectedCombo" resultType="comboInfoVo">
+	SELECT 'purchaser'                        AS comboCd
+		 , USER_CD                             AS comboVal
+		 , USER_NM || '[' || USER_ID || ']'    AS comboLabel
+		 , USER_NM || '[' || USER_ID || ']'    AS comboTooltip
+	FROM DOCS_USER docsUser
+			 INNER JOIN DOCS_DEPT docsDept ON docsDept.DEPT_CD = docsUser.DEPT_CD
+-- 	WHERE docsDept.PURCHASE_YN = 'Y'    /* 구매팀 */
+	WHERE docsUser.auth_approval_level = 1
+	  AND docsUser.BUSINESS_AREA_CD = #{businessAreaCd}
+	ORDER BY USER_NM
+</select>
+
+<select id="selectAllPurchaserIdCombo" resultType="comboInfoVo">
+	/* 모든 구매담당자. 리스트 검색조건에서 사용하기 위함. - USER_ID 사용 */
+	SELECT 'purchaser'                        AS comboCd
+		 , USER_ID                             AS comboVal
+		 , USER_NM || '[' || USER_ID || ']'    AS comboLabel
+		 , USER_NM || '[' || USER_ID || ']'    AS comboTooltip
+	FROM DOCS_USER docsUser
+			 INNER JOIN DOCS_DEPT docsDept ON docsDept.DEPT_CD = docsUser.DEPT_CD
+	WHERE docsDept.PURCHASE_YN = 'Y'    /* 구매팀 */
+	ORDER BY USER_NM
+</select>
+
+<!-- 배포 구매담당자 선택 (ID)-->
+<select id="selectPurchaserComboById" resultType="comboInfoVo">
+	SELECT 'purchaser'                        AS comboCd
+		 , USER_ID                             AS comboVal
+		 , USER_NM || '[' || USER_ID || ']'    AS comboLabel
+		 , USER_NM || '[' || USER_ID || ']'    AS comboTooltip
+		 , ''                                 AS selectedValue
+	FROM DOCS_USER docsUser
+			 INNER JOIN DOCS_DEPT docsDept ON docsDept.DEPT_CD = docsUser.DEPT_CD
+-- 	WHERE docsDept.PURCHASE_YN = 'Y'    /* 구매팀 */
+	WHERE docsUser.auth_approval_level = 1
+	  AND docsUser.DEL_YN = 'N'
+	  AND docsUser.USE_YN = 'Y'
+	  AND docsUser.BUSINESS_AREA_CD = #{businessAreaCd}
+	ORDER BY USER_NM
+</select>
+
+<!-- CR 구매담당자 선택 -->
+<select id="selectCrPurchaserCombo" resultType="comboInfoVo">
+	SELECT 'purchaser'                        AS comboCd
+		 , USER_CD                             AS comboVal
+		 , USER_NM || '[' || USER_ID || ']'    AS comboLabel
+		 , USER_NM || '[' || USER_ID || ']'    AS comboTooltip
+		 , ''                                 AS selectedValue
+	FROM DOCS_USER docsUser
+			 INNER JOIN DOCS_DEPT docsDept ON docsDept.DEPT_CD = docsUser.DEPT_CD
+	WHERE docsDept.PURCHASE_YN = 'Y'    /* 구매팀 */
+	  AND docsUser.DEL_YN = 'N'
+	  AND docsUser.USE_YN = 'Y'
+	  AND docsUser.BUSINESS_AREA_CD = #{businessAreaCd}
+	ORDER BY USER_NM
+</select>
+
+<!-- CR 구매담당자 선택 (ID) -->
+<select id="selectCrPurchaserComboById" resultType="comboInfoVo">
+	SELECT 'purchaser'                        AS comboCd
+		 , USER_ID                             AS comboVal
+		 , USER_NM || '[' || USER_ID || ']'    AS comboLabel
+		 , USER_NM || '[' || USER_ID || ']'    AS comboTooltip
+		 , ''                                 AS selectedValue
+	FROM DOCS_USER docsUser
+			 INNER JOIN DOCS_DEPT docsDept ON docsDept.DEPT_CD = docsUser.DEPT_CD
+	WHERE docsDept.PURCHASE_YN = 'Y'    /* 구매팀 */
+	  AND docsUser.DEL_YN = 'N'
+	  AND docsUser.USE_YN = 'Y'
+	  AND docsUser.BUSINESS_AREA_CD = #{businessAreaCd}
+	ORDER BY USER_NM
+</select>
+
+<select id="selectVendorUserCombo" resultType="comboInfoVo">
+	SELECT 'vendorUser'            AS comboCd
+		 , USER_CD                AS comboVal
+		 , USER_NM                AS comboLabel
+		 , USER_NM || '[' || USER_ID || ']' AS comboTooltip
+	FROM DOCS_USER docsUser
+	WHERE docsUser.USE_YN = 'Y'
+	  AND docsUser.DEL_YN = 'N'
+	  AND docsUser.COMPANY_CD = #{sessionUser.companyCd}
+</select>
+
+<select id="selectVendorUserComboById" resultType="comboInfoVo">
+	SELECT 'vendorUser'            AS comboCd
+		 , USER_ID                AS comboVal
+		 , USER_NM                AS comboLabel
+		 , USER_NM || '[' || USER_ID || ']' AS comboTooltip
+	FROM DOCS_USER docsUser
+		/*WHERE docsUser.USE_YN = 'Y'
+        AND docsUser.DEL_YN = 'N'*/
+	WHERE docsUser.COMPANY_CD = #{sessionUser.companyCd}
+</select>
+
+<select id="selectOutsideUserCombo"
+		resultType="kr.esob.fdms.commonlogic.combo.SearchComboInfoVO">
+	<!-- sql.sql.Authorization."selectOutsideUserCombo" 외부사용자목록combo -->
+	SELECT X.*
+	FROM (
+	SELECT USER_CD AS id
+	, USER_NM || '[' || USER_ID || ']' AS text
+	, USER_NM || '[' || USER_ID || ']' AS title
+	, ROW_NUMBER() OVER(ORDER BY USER_NM) AS pageindex
+	FROM DOCS_USER
+	WHERE COMPANY_CD != #{companyCd} /* 로그인한 사용자의 companyCd*/
+	<if test='term != null and !"".equals(term)'>
+		AND USER_NM LIKE '%' || #{term} || '%'
+	</if>
+	AND DEL_YN = 'N'
+	AND USE_YN = 'Y'
+	) X
+	<if test='page != null and !page.equals("")'>
+		WHERE PAGEINDEX BETWEEN #{posStart}
+		AND #{count} * #{page}
+	</if>
+</select>
+
+<select id="selectInsideUserCombo"
+		resultType="kr.esob.fdms.commonlogic.combo.SearchComboInfoVO">
+	<!-- sql.sql.Authorization."selectOutsideUserCombo" 외부사용자목록combo -->
+	SELECT X.*
+	FROM (
+	SELECT USER_CD AS id
+	, USER_NM || '[' || USER_ID || ']' AS text
+	, USER_NM || '[' || USER_ID || ']' AS title
+	, ROW_NUMBER() OVER(ORDER BY USER_NM) AS pageindex
+	FROM DOCS_USER
+	WHERE COMPANY_CD = #{companyCd} /* 로그인한 사용자의 companyCd*/
+	<if test='term != null and !"".equals(term)'>
+		AND USER_NM LIKE '%' || #{term} || '%'
+	</if>
+	AND DEL_YN = 'N'
+	AND USE_YN = 'Y'
+	) X
+	<if test='page != null and !page.equals("")'>
+		WHERE PAGEINDEX BETWEEN #{posStart}
+		AND #{count} * #{page}
+	</if>
+</select>
+
+<select id="selectUserCombo"
+		resultType="kr.esob.fdms.commonlogic.combo.SearchComboInfoVO">
+	<!-- sql.sql.Authorization."selectOutsideUserCombo" 외부사용자목록combo -->
+	SELECT X.*
+	FROM (
+	SELECT USER_CD AS id
+	, USER_NM || '[' || USER_ID || ']' AS text
+	, USER_NM || '[' || USER_ID || ']' AS title
+	, ROW_NUMBER() OVER(ORDER BY USER_NM) AS pageindex
+	FROM DOCS_USER
+	WHERE 1=1
+	<if test='term != null and !"".equals(term)'>
+		AND USER_NM LIKE '%' || #{term} || '%'
+	</if>
+	<!-- AND DEL_YN = 'N' -->
+	<!-- AND USE_YN = 'Y' -->
+	) X
+	<if test='page != null and !page.equals("")'>
+		WHERE PAGEINDEX BETWEEN #{posStart}
+		AND #{count} * #{page}
+	</if>
+</select>
+
+<!-- 업체 리스트 콤보 [2019.09.17(최금영)] -->
+<select id="selectCompanyCombo" resultType="searchComboInfoVo">
+	SELECT X.*
+	FROM (
+	SELECT '' AS text
+	, '' AS id
+	WHERE 1=0
+	) X
+	LIMIT 10
+</select>
+
+<!-- 업체 사용자 콤보 [2019.09.17(최금영)] -->
+<select id="selectCompanyUserCombo" resultType="searchComboInfoVo">
+	SELECT X.*
+	FROM (
+	SELECT COMPANY_USER.USER_NM AS text
+	, COMPANY_USER.USER_CD AS id
+	, ROW_NUMBER() OVER(ORDER BY DISTRIBUTION_PERSON_YN DESC, USER_NM) AS pageindex
+	FROM DOCS_USER COMPANY_USER
+	WHERE 1=1
+	<if test='companyCd != null and !"".equals(companyCd)'>
+		AND COMPANY_USER.COMPANY_CD = #{companyCd}
+	</if>
+	<if test='term != null and !"".equals(term)'>
+		AND COMPANY_USER.USER_NM LIKE '%' || #{term} || '%'
+	</if>
+	AND COMPANY_USER.USE_YN = 'Y'
+	AND COMPANY_USER.DEL_YN = 'N'
+	) X
+	<if test='page != null and !page.equals("")'>
+		WHERE pageindex BETWEEN #{posStart}
+		AND #{count} * #{page}
+	</if>
+</select>
+
+<select id="selectDistributionCompanyUserCombo" resultType="searchComboInfoVo">
+	SELECT X.*
+	FROM (
+	SELECT COMPANY_USER.USER_NM AS text
+	, COMPANY_USER.USER_CD AS id
+	, ROW_NUMBER() OVER(ORDER BY DISTRIBUTION_PERSON_YN DESC, USER_NM) AS pageindex
+	, CASE DISTRIBUTION_PERSON_YN WHEN N'Y' THEN 1 ELSE 0 END AS selected
+	FROM DOCS_USER COMPANY_USER
+	WHERE 1=1
+	<if test='companyCd != null and !"".equals(companyCd)'>
+		AND COMPANY_USER.COMPANY_CD = #{companyCd}
+	</if>
+	AND COMPANY_USER.USE_YN = 'Y'
+	AND COMPANY_USER.DEL_YN = 'N'
+	) X
+</select>
+
+<!-- 구매팀 콤보 [2019.09.18(최금영)] -->
+<select id="selectPurchaseTeamCombo" resultType="searchComboInfoVo">
+	SELECT X.*
+	, ROW_NUMBER() OVER(ORDER BY text) AS pageindex
+	FROM (
+	SELECT DOC_USER.USER_NM || '[' || USER_ID || ']' AS text
+	, DOC_USER.USER_CD AS id
+	FROM DOCS_USER DOC_USER
+	WHERE 1=1
+	<if test='deptCd != null and !"".equals(deptCd)'>
+		AND DOC_USER.DEPT_CD = #{deptCd}
+	</if>
+	<if test='term != null and !"".equals(term)'>
+		AND DOC_USER.USER_NM LIKE '%' || #{term} || '%'
+	</if>
+	AND DOC_USER.DEL_YN = 'N'
+	AND DOC_USER.USE_YN = 'Y'
+	) X
+</select>
+
+<!-- 업체 구매 담당자 조회 [2019.09.26(최금영)] -->
+<select id="getPurchaseInfo" parameterType="kr.esob.fdms.controller.login.UserVO" resultType="kr.esob.fdms.controller.login.UserVO">
+	SELECT *
+	FROM DOCS_USER
+	WHERE 1=0
+</select>
+
+<!-- 로그인한 사용자의 팀장 조회 [2019.10.02(최금영)] -->
+<select id="getTeamLeader" resultType="comboInfoVo" parameterType="kr.esob.fdms.commonlogic.abstractclass.CommonParam">
+	/* 로그인한 사용자의 팀장 조회 */
+	SELECT 'teamLeader' AS comboCd
+		 , DOC_USER.USER_NM AS comboLabel
+		 , DOC_USER.USER_CD AS comboVal
+	FROM DOCS_USER DOC_USER
+	WHERE DOC_USER.USER_CD = (
+		SELECT CASE WHEN A.TEAM_LEADER_USER_CD IS NOT NULL THEN A.TEAM_LEADER_USER_CD
+					ELSE (SELECT B.TEAM_LEADER_USER_CD
+						  FROM DOCS_DEPT B
+						  WHERE B.DEPT_CD = A.PARENT_DEPT_CD
+					)
+				   END TEAM_LEADER_USER_CD
+		FROM DOCS_DEPT A
+		WHERE A.DEPT_CD = #{sessionUser.deptCd}
+	)
+</select>
+
+<!-- 방산 팀장 조회 [2019.10.02(최금영)] -->
+<select id="getDefenseTeamLeaderUid" resultType="String">
+	SELECT  DOC_USER.USER_CD
+	FROM DOCS_USER DOC_USER
+	WHERE DOC_USER.USER_CD = (
+		SELECT TEAM_LEADER_USER_CD
+		FROM DOCS_DEPT
+		WHERE DEFENSE_TEAM_YN = 'Y'
+	)
+</select>
+
+<!-- 결재자 조회 [2019.10.02(최금영)] -->
+<select id="getTeamLeaderList" resultType="comboInfoVo" parameterType="kr.esob.fdms.commonlogic.abstractclass.CommonParam">
+	/* 로그인한 사용자의 팀장 및 팀장의 대결자 조회 */
+	SELECT 'teamLeaderList' AS comboCd
+		 , DOC_USER.USER_NM || '[' || USER_ID || ']' AS comboLabel
+		 , DOC_USER.USER_CD AS comboVal
+	FROM DOCS_USER DOC_USER
+	WHERE DOC_USER.USER_CD = (
+		SELECT TEAM_LEADER_USER_CD
+		FROM DOCS_DEPT
+		WHERE DEPT_CD = #{sessionUser.deptCd}
+	)
+</select>
+
+<!-- 결재자 조회 (ID로) [2019.10.18(육일)] -->
+<select id="getTeamLeaderListById" resultType="comboInfoVo" parameterType="kr.esob.fdms.commonlogic.abstractclass.CommonParam">
+	/* 로그인한 사용자의 팀장 및 팀장의 대결자 조회 */
+	SELECT 'teamLeaderList' AS comboCd
+		 , DOC_USER.USER_NM AS comboLabel
+		 , DOC_USER.USER_ID AS comboVal
+	FROM DOCS_USER DOC_USER
+	WHERE DOC_USER.USER_CD = (
+		SELECT TEAM_LEADER_USER_CD
+		FROM DOCS_DEPT
+		WHERE DEPT_CD = #{sessionUser.deptCd}
+	)
+</select>
+
+<!-- 방산 기술 결재자 조회 [2019.10.02(최금영)] -->
+<select id="selectDefenseTeamLeaderList" resultType="comboInfoVo">
+	SELECT 'defTeamLaderList' AS comboCd
+		 , DOC_USER.USER_NM AS comboLabel
+		 , DOC_USER.USER_CD AS comboVal
+	FROM DOCS_USER DOC_USER
+	WHERE DOC_USER.USER_CD = (
+		SELECT TEAM_LEADER_USER_CD
+		FROM DOCS_DEPT
+		WHERE DEFENSE_TEAM_YN = 'Y'
+	)
+</select>
+
+<select id="selectDeptComboListByBusinessArea" resultType="comboInfoVo">
+	SELECT 'deptList' AS comboCd
+	, docsDept.DEPT_CD AS comboVal
+	, docsDept.DEPT_NM AS comboLabel
+	FROM DOCS_DEPT docsDept
+	JOIN DOCS_USER docsUser
+	ON docsDept.DEPT_CD = docsUser.DEPT_CD
+	WHERE docsUser.BUSINESS_AREA_CD = #{businessAreaCd}
+	<if test='businessAreaCd != null and "1310".equals(businessAreaCd)'>
+		AND docsDept.DEPT_TYPE = '직'
+	</if>
+	AND docsDept.USE_YN = 'Y'
+	AND docsDept.DEL_YN = 'N'
+	GROUP BY docsDept.DEPT_CD, docsDept.DEPT_NM
+	ORDER BY docsDept.DEPT_CD
+</select>
+
+<select id="selectJikUserComboList" resultType="kr.esob.fdms.commonlogic.combo.SearchComboInfoVO">
+	/* 생산기술자료 요청 시 사용자 목록 */
+	SELECT X.*
+	FROM (
+	SELECT
+	'userList' AS comboCd
+	, docsUser.USER_CD AS id
+	, docsUser.USER_NM || '[' || docsUser.USER_ID || ']' AS text
+	, docsUser.USER_NM || '[' || docsUser.USER_ID || ']' AS title
+	, ROW_NUMBER() OVER(ORDER BY docsUser.USER_NM, docsUser.USER_ID) AS pageindex
+	FROM DOCS_USER docsUser
+	INNER JOIN DOCS_DEPT docsDept ON docsDept.DEPT_CD = docsUser.DEPT_CD
+	WHERE 1=1
+	<if test='businessAreaCd != null and !"".equals(businessAreaCd)'>
+		AND BUSINESS_AREA_CD = #{businessAreaCd}
+	</if>
+	<if test='term != null and !"".equals(term)'>
+		AND USER_NM LIKE '%' || #{term} || '%'
+	</if>
+	AND docsDept.USE_YN = 'Y'
+	AND docsDept.DEL_YN = 'N'
+	AND docsUser.USE_YN = 'Y'
+	AND docsUser.DEL_YN = 'N'
+	) X
+	WHERE PAGEINDEX BETWEEN 0 AND 50
+</select>
+
+<select id="selectInsideUserComboByDept"
+		resultType="kr.esob.fdms.commonlogic.combo.SearchComboInfoVO">
+	<!-- sql.sql.Authorization."selectOutsideUserCombo" 외부사용자목록combo -->
+	SELECT X.*
+	, ROW_NUMBER() OVER(ORDER BY text) AS pageindex
+	FROM (
+	SELECT USER_CD AS id
+	, USER_NM || '[' || USER_ID || ']' AS text
+	, USER_NM || '[' || USER_ID || ']' AS title
+	, ROW_NUMBER() OVER(ORDER BY USER_NM) AS pageindex
+	FROM DOCS_USER
+	WHERE DEPT_CD = #{deptCd}
+	<if test='term != null and !"".equals(term)'>
+		AND USER_NM LIKE '%' || #{term} || '%'
+	</if>
+	AND USE_YN = 'Y'
+	AND DEL_YN = 'N'
+	) X
+	<if test='page != null and !page.equals("")'>
+		WHERE PAGEINDEX BETWEEN #{posStart}
+		AND #{count} * #{page}
+	</if>
+</select>
+
+<!-- 방산기술보호 결재자 리스트 조회(개발) [2019.10.29(최금영)] -->
+<select id="selectProductProtectUserList" resultType="comboInfoVo" parameterType="String">
+	/* 방산기술보호 결재자 리스트 조회(개발) */
+	SELECT 'productProtectUserList' AS comboCd
+		 , USER_NM || '[' || DEPT_NM || ']' AS comboLabel
+		 , USER_CD AS comboVal
+	FROM DOCS_USER
+	WHERE 1 = 0
+</select>
+
+<!-- 방산기술보호 결재자 리스트 조회(양산) [2019.10.29(최금영)] -->
+<select id="selectDevelopmentProtectUserList" resultType="comboInfoVo">
+	/* 방산기술보호 결재자 리스트 조회(양산) */
+	SELECT 'developmentProtectUserList' AS comboCd
+		 , USER_NM || '[' ||  DEPT_NM || ']' AS comboLabel
+		 , USER_CD AS comboVal
+	FROM DOCS_USER
+	WHERE 1 = 0
+</select>
+
+<!-- 보안팀 리스트 조회(미등록자료 배포 요청 시 메일 참조용) [2019.10.30(육일)] -->
+<select id="selectSecurityUserList" resultType="comboInfoVo">
+	SELECT 'securityTeam' AS comboCd
+		 , USER_CD AS comboVal
+		 , USER_NM AS comboLabel
+		 , USER_NM || '[' || NVL((SELECT LANG_DESC FROM DOCS_LANG WHERE LANG_CD = combo.VALUE), combo.TEXT) || ']' AS comboTooltip
+	FROM DOCS_USER docsUser
+			 INNER JOIN DOCS_COMBO combo
+						ON docsUser.WORK_PLACE_CD = combo.VALUE
+							AND combo.COMBO_CD = 'workPlaceCd'
+	WHERE docsUser.DEPT_CD IN ('D1DV1C0', 'D1DC1C0', 'D1DJ1C0')
+	  AND docsUser.USE_YN = 'Y'
+	  AND docsUser.DEL_YN = 'N'
+	ORDER BY docsUser.DEPT_CD
+</select>
+
+<select id="selectSecurityUserByBusinessArea" resultType="string">
+	SELECT USER_CD
+	FROM DOCS_USER
+	WHERE BUSINESS_AREA_CD = #{sessionUser.businessAreaCd}
+	  AND WORK_PLACE_CD = #{sessionUser.workPlaceCd}
+	  AND DEPT_CD IN ('D1DV1C0', 'D1DC1C0', 'D1DJ1C0')
+	  AND USE_YN = 'Y'
+	  AND DEL_YN = 'N'
+</select>
+
+<select id="selectPurchaserTeamLeader" resultType="userVo">
+	SELECT *
+	FROM DOCS_USER
+	WHERE USER_CD =
+		  (
+			  SELECT TEAM_LEADER_USER_CD
+			  FROM DOCS_DEPT
+			  WHERE DEPT_CD =
+					(
+						SELECT DEPT_CD
+						FROM DOCS_USER
+						WHERE USER_ID = #{purchaserUid}
+					)
+		  )
+	  AND USE_YN = 'Y'
+	  AND DEL_YN = 'N'
+</select>
+
+<select id="selectPassTargetCombo" resultType="comboInfoVo">
+	/* 방산자료 결재 이관 대상 */
+	SELECT 'passTarget'                                AS comboCd
+		 , docsUser.USER_CD                                AS comboVal
+		 , docsUser.USER_NM                                AS comboLabel
+	FROM DOCS_USER docsUser
+	WHERE 1 = 0
+</select>
+
+<select id="selectDeployDeptCombo" resultType="comboInfoVo">
+	/* 배포부서 - 생산기술자료팀만 배포함 */
+	SELECT
+		'deployDept'                        AS comboCd
+		 , DEPT_CD                            AS comboVal
+		 , DEPT_NM                            AS comboLabel
+	FROM DOCS_DEPT
+	WHERE PRODUCT_TEAM_YN = 'Y'
+	  AND USE_YN='Y'
+	  AND DEL_YN='N'
+	ORDER BY DEPT_NM
+</select>
+
+<select id="selectDeptCombo" resultType="searchComboInfoVo">
+	/* 부서목록 */
+	SELECT X.*
+	FROM (
+	SELECT DEPT_CD AS id
+	, DEPT_NM AS text
+	, DEPT_NM || '[' || DEPT_SHORT_PATH || ']' AS title
+	, ROW_NUMBER() OVER(ORDER BY DEPT_NM) AS pageindex
+	FROM DOCS_DEPT
+	WHERE DEL_YN = 'N'
+	AND USE_YN = 'Y'
+	<if test='term != null and !"".equals(term)'>
+		AND DEPT_NM LIKE '%' || #{term} || '%'
+	</if>
+	) X
+	<if test='page != null and !page.equals("")'>
+		WHERE PAGEINDEX BETWEEN #{posStart}
+		AND #{count} * #{page}
+	</if>
+</select>
+
+<select id="selectDeployUserCombo" resultType="comboInfoVo">
+	/* 배포자 - 생산기술자료팀만 배포함 */
+	SELECT
+		'deployUser'                                    AS comboCd
+		 , dUser.USER_CD                                AS comboVal
+		 , dUser.USER_NM || '[' || dUser.USER_ID || ']'    AS comboLabel
+	FROM DOCS_DEPT dDept
+			 INNER JOIN DOCS_USER dUser ON dUser.DEPT_CD = dDept.DEPT_CD
+	WHERE PRODUCT_TEAM_YN = 'Y'
+	  AND dUser.USE_YN='Y'
+	  AND dUser.DEL_YN='N'
+	ORDER BY dUser.USER_NM
+</select>
+
+<select id="selectProductionAcceptDeptCombo" resultType="comboInfoVo">
+	/* 생산기술자료 배포받을(접수할) 부서 - '직'만 접수함 */
+	SELECT
+		'deployDept'                        AS comboCd
+		 , DEPT_CD                            AS comboVal
+		 , DEPT_NM                            AS comboLabel
+	FROM DOCS_DEPT
+	WHERE DEPT_TYPE = '직'
+	  AND USE_YN='Y'
+	  AND DEL_YN='N'
+	ORDER BY DEPT_NM
+</select>
+
+<select id="selectSearchProductUserComboList"
+		resultType="kr.esob.fdms.commonlogic.combo.SearchComboInfoVO">
+	/* 생산기술자료 배포 받을 수 있는 사용자 목록 (직) combo */
+	SELECT X.*
+	FROM (
+	SELECT
+	USER_CD AS id
+	, USER_NM || '[' || DEPT_NM || ']' AS text
+	, USER_NM || '[' || DEPT_NM || ']' AS title
+	FROM DOCS_USER dUser
+	INNER JOIN DOCS_DEPT dDept ON dDept.DEPT_CD = dUser.DEPT_CD
+	WHERE DEPT_TYPE = '직'
+	<if test='term != null and !"".equals(term)'>
+		AND USER_NM LIKE '%' || #{term} || '%'
+	</if>
+	AND dUser.USE_YN = 'Y'
+	AND dUser.DEL_YN = 'N'
+	ORDER BY USER_NM
+	) X
+	LIMIT 10
+</select>
+
+<select id="selectSearchDeptList"
+		resultType="kr.esob.fdms.commonlogic.combo.SearchComboInfoVO">
+	/* 생산기술자료 배포 받을 수 있는 사용자 목록 (직) combo */
+	SELECT X.*
+	FROM (
+	SELECT
+	DEPT_CD AS id
+	, DEPT_NM AS text
+	, DEPT_NM AS title
+	FROM DOCS_DEPT
+	WHERE 1=1
+	<if test='term != null and !"".equals(term)'>
+		AND DEPT_NM LIKE '%' || #{term} || '%'
+	</if>
+	AND USE_YN = 'Y'
+	AND DEL_YN = 'N'
+	ORDER BY DEPT_NM
+	) X
+	LIMIT 10
+</select>
+
+<!-- 로그인한 사용자의 팀원 조회 [2019.11.06(최금영)] -->
+<select id="selecTeamUserList" resultType="comboInfoVo" parameterType="kr.esob.fdms.commonlogic.abstractclass.CommonParam">
+	SELECT USER_CD                     AS comboVal
+		 , USER_NM                     AS comboLabel
+	FROM DOCS_USER
+	WHERE DEPT_CD = #{sessionUser.deptCd}
+	  AND USE_YN = 'Y'
+	  AND DEL_YN = 'N'
+</select>
+
+<select id="selectVendorApprovalUser" resultType="comboInfoVo">
+	SELECT docsUser.USER_CD            AS comboVal
+		 , docsUser.USER_NM            AS comboLabel
+	FROM DOCS_USER docsUser
+	WHERE docsUser.COMPANY_CD = #{sessionUser.companyCd}
+	  AND docsUser.USE_YN = 'Y'
+	  AND docsUser.DEL_YN = 'N'
+</select>
+
+<!-- 결재자 리스트 조회. 자신을 제외한 팀원들 모두 조회 -->
+<select id="selectApprovalUserList" resultType="comboInfoVo">
+	SELECT docsUser.USER_CD        AS comboVal
+		 , docsUser.USER_NM        AS comboLabel
+	FROM DOCS_USER docsUser
+	WHERE (AUTH_APPROVAL_LEVEL = 2)
+	  AND USER_CD != #{sessionUser.userCd}
+	  AND docsUser.USE_YN = 'Y'
+	  AND docsUser.DEL_YN = 'N'
+</select>
+
+<!-- 결재자 리스트 조회. 사업장내 모든 사용자 조회 -->
+<select id="selectApprovalUserAll" resultType="comboInfoVo">
+	SELECT docsUser.USER_CD        AS comboVal
+		 , docsUser.USER_NM || '[' || docsUser.USER_ID || ']'   AS comboLabel
+	FROM DOCS_USER docsUser
+	WHERE USER_CD != #{sessionUser.userCd}
+	  AND docsUser.USE_YN = 'Y'
+	  AND docsUser.DEL_YN = 'N'
+	  AND docsUser.AUTH_SITE = 'I'
+	  AND docsUser.BUSINESS_AREA_CD = #{sessionUser.businessAreaCd}
+	ORDER BY docsUser.USER_NM
+</select>
+
+<!-- 모든 내부사용자 조회 -->
+<select id="selectUserAll" resultType="comboInfoVo">
+	SELECT docsUser.USER_CD        AS comboVal
+		 , docsUser.USER_NM || '[' || docsDept.DEPT_NM || ']'   AS comboLabel
+	FROM DOCS_USER docsUser
+	   , DOCS_DEPT docsDept
+	WHERE docsUser.DEPT_CD = docsDept.DEPT_CD
+	  AND docsUser.USE_YN = 'Y'
+	  AND docsUser.DEL_YN = 'N'
+	  AND docsUser.AUTH_SITE = 'I'
+	  AND docsUser.Position_Cd IS NOT NULL
+	ORDER BY docsUser.USER_NM
+</select>
+<select id="selectProtectAuthCount" resultType="Integer">
+	SELECT COUNT(*)
+	<if test='objectType != null and "DRAWING".equals(objectType)'>
+		FROM DOCS_DRAWING_MEMBER
+	</if>
+	<if test='objectType != null and "DOC".equals(objectType)'>
+		FROM DOCS_DOCUMENT_MEMBER
+	</if>
+	<if test='objectType != null and "SW".equals(objectType)'>
+		FROM DOCS_SW_MEMBER
+	</if>
+	WHERE OBJECT_ID = #{objectId}
+	AND ACCESS_UID=#{sessionUser.userId}
+</select>
+
+<select id="selectVendorComboList" resultType="comboInfoVo">
+	SELECT ''        AS comboVal
+	, ''             AS comboLabel
+	FROM DOCS_USER
+	WHERE 1=0
+</select>
+
+<select id="selectAllOutsideUserIdCombo"
+		resultType="kr.esob.fdms.commonlogic.combo.SearchComboInfoVO">
+	<!-- 외부 사용자목록combo - USER_ID를 ID로 사용 -->
+	SELECT X.*
+	FROM (
+	SELECT USER_ID AS id
+	, USER_NM || '[' || USER_ID || ']' AS text
+	, USER_NM || '[' || USER_ID || ']' AS title
+	, ROW_NUMBER() OVER(ORDER BY USER_NM) AS pageindex
+	FROM DOCS_USER
+	WHERE AUTH_SITE='E'
+	AND USE_YN = 'Y'
+	AND DEL_YN = 'N'
+	<if test='term != null and !"".equals(term)'>
+		AND USER_NM LIKE '%' || #{term} || '%'
+	</if>
+	) X
+	<if test='page != null and !page.equals("")'>
+		WHERE PAGEINDEX BETWEEN #{posStart}
+		AND #{count} * #{page}
+	</if>
+</select>
+
+<select id="selectAllInsideUserIdCombo"
+		resultType="kr.esob.fdms.commonlogic.combo.SearchComboInfoVO">
+	<!-- 내부 사용자목록combo - USER_ID를 ID로 사용 -->
+	SELECT X.*
+	FROM (
+	SELECT USER_ID AS id
+	, USER_NM || '[' || USER_ID || ']' AS text
+	, USER_NM || '[' || USER_ID || ']' AS title
+	, ROW_NUMBER() OVER(ORDER BY USER_NM) AS pageindex
+	FROM DOCS_USER
+	WHERE AUTH_SITE='I'
+	AND USE_YN = 'Y'
+	AND DEL_YN = 'N'
+	<if test='term != null and !"".equals(term)'>
+		AND USER_NM LIKE '%' || #{term} || '%'
+	</if>
+	) X
+	<if test='page != null and !page.equals("")'>
+		WHERE PAGEINDEX BETWEEN #{posStart}
+		AND #{count} * #{page}
+	</if>
+</select>
+
+<select id="selectDept" resultType="comboInfoVo">
+	/* 사용자코드로 부서를 구한다.*/
+	SELECT
+		docsDept.DEPT_CD        AS comboVal
+		 , docsDept.DEPT_NM        AS comboLabel
+	FROM DOCS_USER docsUser
+			 INNER JOIN DOCS_DEPT docsDept ON docsDept.DEPT_CD = docsUser.DEPT_CD
+	WHERE USER_CD = #{userCd}
+</select>
+
+<select id="selectAllInsideUserCdCombo"
+		resultType="kr.esob.fdms.commonlogic.combo.SearchComboInfoVO">
+	<!-- 내부 사용자목록combo - USER_ID를 ID로 사용 -->
+	SELECT X.*
+	FROM (
+	SELECT USER_CD AS id
+	, USER_NM || '[' || USER_ID || ']' AS text
+	, USER_NM || '[' || USER_ID || ']' AS title
+	, ROW_NUMBER() OVER(ORDER BY USER_NM) AS pageindex
+	FROM DOCS_USER
+	WHERE AUTH_SITE='I'
+	AND USE_YN = 'Y'
+	AND DEL_YN = 'N'
+	<if test='term != null and !"".equals(term)'>
+		AND USER_NM LIKE '%' || #{term} || '%'
+	</if>
+	) X
+	<if test='page != null and !page.equals("")'>
+		WHERE PAGEINDEX BETWEEN #{posStart}
+		AND #{count} * #{page}
+	</if>
+</select>
+
+<select id="selectPositionCombo" resultType="searchComboInfoVo">
+	/* 직위목록 */
+	SELECT X.*
+	FROM (
+	SELECT POSITION_CD AS id
+	, POSITION_NM AS text
+	, POSITION_NM AS title
+	, ROW_NUMBER() OVER(ORDER BY POSITION_NM) AS pageindex
+	FROM DOCS_POSITION
+	WHERE DEL_YN = 'N'
+	AND USE_YN = 'Y'
+	<!--        <if test='term != null and !"".equals(term)'>-->
+	<!--            AND POSITION_NM LIKE '%' || #{term} || '%'-->
+	<!--        </if>-->
+	) X
+	<if test='page != null and !page.equals("")'>
+		WHERE PAGEINDEX BETWEEN #{posStart}
+		AND #{count} * #{page}
+	</if>
+</select>
+
+<select id="selectRoleGroupCombo" resultType="searchComboInfoVo">
+	/* 권한목록 */
+	SELECT X.*
+	FROM (
+	SELECT GROUP_CODE AS id
+	, GROUP_NM AS text
+	, GROUP_NM  AS title
+	, ROW_NUMBER() OVER(ORDER BY GROUP_NM) AS pageindex
+	FROM DOCS_ROLE_GROUP
+	WHERE USE_YN = 'Y'
+	<!--        <if test='term != null and !"".equals(term)'>-->
+	<!--            AND DEPT_NM LIKE '%' || #{term} || '%'-->
+	<!--        </if>-->
+	) X
+	<if test='page != null and !page.equals("")'>
+		WHERE PAGEINDEX BETWEEN #{posStart}
+		AND #{count} * #{page}
+	</if>
+</select>
+
+<select id="selectDistributionAuthCombo" resultType="searchComboInfoVo">
+	/* 배포권한목록 */
+	SELECT X.*
+	FROM (
+	SELECT DISTRIBUTION_AUTH_CD AS id
+	, DISTRIBUTION_AUTH_NM AS text
+	, DISTRIBUTION_AUTH_NM  AS title
+	, ROW_NUMBER() OVER(ORDER BY DISTRIBUTION_AUTH_NM) AS pageindex
+	FROM DOCS_DISTRIBUTION_AUTH
+	WHERE USE_YN = 'Y'
+	<!--        <if test='term != null and !"".equals(term)'>-->
+	<!--            AND DEPT_NM LIKE '%' || #{term} || '%'-->
+	<!--        </if>-->
+	) X
+	<if test='page != null and !page.equals("")'>
+		WHERE PAGEINDEX BETWEEN #{posStart}
+		AND #{count} * #{page}
+	</if>
+</select>
+
+
+
+</mapper>

@@ -1,0 +1,1062 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+
+<!--<mapper namespace="sql.Main">-->
+<!--	<select id="selectHaveToAcceptProductionCount" resultType="Integer">-->
+<!--		/* 내가 접수 해야 할 수(생산기술 접수) */-->
+<!--		SELECT COUNT(*)-->
+<!--		FROM DOCS_REQUEST req-->
+<!--		INNER JOIN (-->
+<!--          SELECT tempMapping.REQUEST_NO, MAX(tempMapping.OBJECT_ID) AS OBJECT_ID-->
+<!--          FROM DOCS_REQUEST_MAPPING tempMapping-->
+<!--          WHERE 1=1-->
+<!--          GROUP BY REQUEST_NO-->
+<!--        ) tempMapping ON tempMapping.REQUEST_NO = req.REQUEST_NO-->
+<!--        INNER JOIN DOCS_REQUEST_MAPPING requestMapping-->
+<!--            ON requestMapping.REQUEST_NO = tempMapping.REQUEST_NO-->
+<!--            AND requestMapping.OBJECT_ID = tempMapping.OBJECT_ID-->
+<!--		JOIN DOCS_REQUEST_DEPLOY deploy-->
+<!--			ON req.REQUEST_NO = deploy.REQUEST_NO-->
+<!--		JOIN DOCS_REQUEST_DETAIL def-->
+<!--			ON req.REQUEST_NO = def.REQUEST_NO AND def.APPROVAL_STATUS_CD = 'REQUEST'-->
+<!--		WHERE deploy.DEPLOY_USER_CD = #{sessionUser.userCd}-->
+<!--		AND req.REQUEST_TYPE = 'PRODUCT'							/* 생산기술자료 */-->
+<!--		AND (deploy.ACCEPT_YN = 'N' OR deploy.ACCEPT_YN IS NULL)-->
+<!--		AND req.STATUS_CD = 'APPROVAL'-->
+<!--		<if test='startDt != null and !startDt.equals("")'>-->
+<!--		AND req.INSERT_DT BETWEEN TO_DATE(#{startDt}, 'YYYY-MM-DD')-->
+<!--	                         AND TO_DATE(#{endDt}, 'YYYY-MM-DD')+1-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	<select id="selectProtectUserCount" resultType="Integer">-->
+<!--		/* 로그인 한 사용자가 방산결재권한이 있는지 체크 */-->
+<!--		SELECT COUNT(*) FROM DOCS_PROTECT_USER WHERE USER_CD = #{sessionUser.userCd}-->
+<!--	</select>-->
+
+<!--	<select id="selectHaveToApprovalCrCount" resultType="Integer">-->
+<!--		/* CR 내가 승인해야 할 목록 */-->
+<!--		SELECT COUNT(*)-->
+<!--		FROM ITN_CR cr-->
+<!--			INNER JOIN DOCS_REQUEST_MAPPING reqMapping ON cr.CR_NO = reqMapping.OBJECT_ID-->
+<!--			INNER JOIN DOCS_REQUEST req ON req.REQUEST_NO = reqMapping.REQUEST_NO-->
+<!--			INNER JOIN DOCS_USER purchaser ON purchaser.USER_ID = cr.PURCHASER_UID-->
+<!--			INNER JOIN DOCS_REQUEST_DETAIL currDetail ON currDetail.REQUEST_NO = req.REQUEST_NO AND currDetail.PROCESS_SEQ = req.CURRENT_PROCESS_SEQ_NO-->
+<!--		WHERE currDetail.APPROVAL_STATUS_CD = 'APPROVAL'-->
+<!--		AND req.STATUS_CD = 'ACCEPT'-->
+<!--		AND currDetail.ACTUAL_USER_CD = #{sessionUser.userCd}/* 내가 승인해야 할 목록 */-->
+<!--		<if test='startDt != null and !startDt.equals("")'>-->
+<!--		AND req.INSERT_DT BETWEEN TO_DATE(#{startDt}, 'YYYY-MM-DD')-->
+<!--	                         AND TO_DATE(#{endDt}, 'YYYY-MM-DD')+1-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	<select id="selectHaveToAcceptCrCount" resultType="Integer">-->
+<!--		/* CR 내가 접수해야 할 목록 */-->
+<!--		SELECT COUNT(*)-->
+<!--		FROM ITN_CR cr-->
+<!--           INNER JOIN DOCS_REQUEST_MAPPING reqMapping ON cr.CR_NO = reqMapping.OBJECT_ID-->
+<!--           INNER JOIN DOCS_REQUEST req ON req.REQUEST_NO = reqMapping.REQUEST_NO-->
+<!--           INNER JOIN DOCS_USER purchaser ON purchaser.USER_ID = cr.PURCHASER_UID-->
+<!--           INNER JOIN DOCS_REQUEST_DETAIL currDetail ON currDetail.REQUEST_NO = req.REQUEST_NO AND currDetail.PROCESS_SEQ = req.CURRENT_PROCESS_SEQ_NO-->
+<!--		WHERE currDetail.APPROVAL_STATUS_CD = 'ACCEPT'-->
+<!--        AND cr.PURCHASER_UID = #{sessionUser.userId}/* 내가 접수 해야 할 목록 */-->
+<!--		<if test='startDt != null and !startDt.equals("")'>-->
+<!--		AND req.INSERT_DT BETWEEN TO_DATE(#{startDt}, 'YYYY-MM-DD')-->
+<!--	                         AND TO_DATE(#{endDt}, 'YYYY-MM-DD')+1-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	<select id="selectRejectCrCount" resultType="Integer">-->
+<!--		/* CR 내가 거절한 목록 */-->
+<!--		SELECT COUNT(*)-->
+<!--		FROM ITN_CR cr-->
+<!--			INNER JOIN DOCS_REQUEST_MAPPING reqMapping ON cr.CR_NO = reqMapping.OBJECT_ID-->
+<!--			INNER JOIN DOCS_REQUEST req ON req.REQUEST_NO = reqMapping.REQUEST_NO-->
+<!--			INNER JOIN DOCS_REQUEST_DETAIL detail ON detail.REQUEST_NO = req.REQUEST_NO AND detail.ACTION_CD = 'REJECT'-->
+<!--		WHERE req.STATUS_CD = 'REJECT'		/* 거절된것 */-->
+<!--		AND detail.ACTUAL_USER_CD = #{sessionUser.userCd} /* 내가 거절 */-->
+<!--		<if test='startDt != null and !startDt.equals("")'>-->
+<!--		AND req.INSERT_DT BETWEEN TO_DATE(#{startDt}, 'YYYY-MM-DD')-->
+<!--	                         AND TO_DATE(#{endDt}, 'YYYY-MM-DD')+1-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	<select id="selectHaveToPrintDisposalCount" resultType="Integer">-->
+<!--		/* 내가 승인해야 할 것 - 출력폐기 */-->
+<!--		SELECT COUNT(*)-->
+<!--		FROM DOCS_DESTROY_REQUEST destroyReq-->
+<!--			INNER JOIN DOCS_DESTROY_REQUEST_DETAIL destroyReqDtl ON destroyReqDtl.DESTROY_REQUEST_NO = destroyReq.DESTROY_REQUEST_NO AND destroyReqDtl.PROCESS_SEQ = destroyReq.CURRENT_PROCESS_SEQ_NO-->
+<!--		WHERE destroyReqDtl.APPROVAL_STATUS_CD = 'APPROVAL'-->
+<!--		AND destroyReqDtl.ACTUAL_USER_CD = #{sessionUser.userCd}-->
+<!--		AND destroyReq.STATUS_CD = 'REQUEST'-->
+<!--		AND destroyReq.REQUEST_TYPE = 'PRINT'-->
+<!--		<if test='startDt != null and !startDt.equals("")'>-->
+<!--		AND destroyReq.INSERT_DT BETWEEN TO_DATE(#{startDt}, 'YYYY-MM-DD')-->
+<!--	                         AND TO_DATE(#{endDt}, 'YYYY-MM-DD')+1-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	<select id="selectRejectPrintDisposalCount" resultType="Integer">-->
+<!--		/* 출력폐기 반려*/-->
+<!--		SELECT COUNT(*)-->
+<!--		FROM DOCS_DESTROY_REQUEST destroyReq-->
+<!--			INNER JOIN DOCS_DESTROY_REQUEST_DETAIL destroyReqDtl ON destroyReqDtl.DESTROY_REQUEST_NO = destroyReq.DESTROY_REQUEST_NO AND destroyReqDtl.PROCESS_SEQ = destroyReq.CURRENT_PROCESS_SEQ_NO-->
+<!--		WHERE destroyReq.STATUS_CD = 'REJECT'-->
+<!--		AND destroyReqDtl.ACTUAL_USER_CD = #{sessionUser.userCd}-->
+<!--		AND destroyReq.REQUEST_TYPE = 'PRINT'-->
+<!--		<if test='startDt != null and !startDt.equals("")'>-->
+<!--		AND destroyReq.INSERT_DT BETWEEN TO_DATE(#{startDt}, 'YYYY-MM-DD')-->
+<!--	                         AND TO_DATE(#{endDt}, 'YYYY-MM-DD')+1-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	<select id="selectHaveToProductionDisposalCount" resultType="Integer">-->
+<!--		/* 승인해야 할 내역 수 - 생산기술자료 폐기*/-->
+<!--		SELECT COUNT(*)-->
+<!--		FROM DOCS_DESTROY_REQUEST destroyRequest-->
+<!--			INNER JOIN DOCS_DESTROY_REQUEST_DETAIL detail ON detail.DESTROY_REQUEST_NO = destroyRequest.DESTROY_REQUEST_NO AND detail.PROCESS_SEQ = destroyRequest.CURRENT_PROCESS_SEQ_NO-->
+<!--		WHERE destroyRequest.REQUEST_TYPE = 'PRODUCT'-->
+<!--		AND detail.APPROVAL_STATUS_CD = 'APPROVAL'-->
+<!--		AND destroyRequest.STATUS_CD = 'REQUEST'-->
+<!--		AND detail.ACTUAL_USER_CD = #{sessionUser.userCd}-->
+<!--		<if test='startDt != null and !startDt.equals("")'>-->
+<!--		AND destroyRequest.INSERT_DT BETWEEN TO_DATE(#{startDt}, 'YYYY-MM-DD')-->
+<!--	                         AND TO_DATE(#{endDt}, 'YYYY-MM-DD')+1-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	<select id="selectRejectProductionDisposalCount" resultType="Integer">-->
+<!--		/* 거절한 내역 수 - 생산기술자료 폐기*/-->
+<!--		SELECT COUNT(*)-->
+<!--		FROM DOCS_DESTROY_REQUEST destroyRequest-->
+<!--			INNER JOIN DOCS_DESTROY_REQUEST_DETAIL detail ON detail.DESTROY_REQUEST_NO = destroyRequest.DESTROY_REQUEST_NO AND detail.PROCESS_SEQ = destroyRequest.CURRENT_PROCESS_SEQ_NO-->
+<!--		WHERE destroyRequest.REQUEST_TYPE = 'PRODUCTION'-->
+<!--		AND detail.ACTION_CD = 'REJECT'-->
+<!--		AND destroyRequest.STATUS_CD = 'REJECT'-->
+<!--		AND detail.ACTUAL_USER_CD = #{sessionUser.userCd}-->
+<!--		<if test='startDt != null and !startDt.equals("")'>-->
+<!--		AND destroyRequest.INSERT_DT BETWEEN TO_DATE(#{startDt}, 'YYYY-MM-DD')-->
+<!--	                         AND TO_DATE(#{endDt}, 'YYYY-MM-DD')+1-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	<select id="selectHaveToAcceptDistributionCount" resultType="Integer">-->
+<!--        /* 구매담당자 - 내가 접수 할 내역*/-->
+<!--		SELECT COUNT(*)-->
+<!--		FROM DOCS_REQUEST request-->
+<!--		INNER JOIN DOCS_REQUEST_DETAIL accDetail ON accDetail.REQUEST_NO = request.REQUEST_NO AND accDetail.APPROVAL_STATUS_CD = 'ACCEPT'-->
+<!--		INNER JOIN DOCS_USER insertUser ON insertUser.USER_CD = request.INSERT_USER_CD-->
+<!--                    AND (insertUser.AUTH_SITE ='E' OR-->
+<!--                        insertUser.DEPT_CD IN (SELECT DEPT_CD-->
+<!--                        FROM DOCS_INSA_DEPT_CD-->
+<!--                        WHERE COLUMN_NM = 'PRODUCT_TEAM_YN')-->
+<!--                    )-->
+<!--		WHERE request.CURRENT_PROCESS_SEQ_NO= '2'				/* 현재 상태가 '접수' 인것만 조회 */-->
+<!--		AND accDetail.ACTUAL_USER_CD = #{sessionUser.userCd} 	/* 지정된 접수자가 로그인한 사용자인 건을 조회 */-->
+<!--		AND request.REQUEST_TYPE = 'DISTRIBUTION'				/* 요청 유형이 배포, 생산기술자료인 것만 조회. 배포요청인 경우 도면,문서,SW,생기 모두 DISTRIBUTION임 */-->
+<!--		AND request.STATUS_CD = 'REQUEST'-->
+<!--		<if test='startDt != null and !startDt.equals("")'>-->
+<!--		AND request.INSERT_DT BETWEEN TO_DATE(#{startDt}, 'YYYY-MM-DD')-->
+<!--	                         AND TO_DATE(#{endDt}, 'YYYY-MM-DD')+1-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	<select id="selectRejectedCrCount" resultType="Integer">-->
+<!--		/* CR 거절된 목록 */-->
+<!--		SELECT COUNT(*)-->
+<!--		FROM ITN_CR cr-->
+<!--			INNER JOIN DOCS_REQUEST_MAPPING reqMapping ON cr.CR_NO = reqMapping.OBJECT_ID-->
+<!--			INNER JOIN DOCS_REQUEST req ON req.REQUEST_NO = reqMapping.REQUEST_NO-->
+<!--		WHERE req.STATUS_CD = 'REJECT'		/* 거절된것 */-->
+<!--		AND req.INSERT_USER_CD = #{sessionUser.userCd} /* 내가 요청 */-->
+<!--		<if test='startDt != null and !startDt.equals("")'>-->
+<!--		AND req.INSERT_DT BETWEEN TO_DATE(#{startDt}, 'YYYY-MM-DD')-->
+<!--	                    AND TO_DATE(#{endDt}, 'YYYY-MM-DD')+1-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	<select id="selectRejectedPrintDisposalCount" resultType="Integer">-->
+<!--		/* 거절 된 내역 - 출력폐기 */-->
+<!--		SELECT COUNT(*)-->
+<!--		FROM DOCS_DESTROY_REQUEST destroyReq-->
+<!--		WHERE STATUS_CD = 'REJECT'-->
+<!--		AND INSERT_USER_CD = #{sessionUser.userCd}	/* 내가 요청 */-->
+<!--		AND REQUEST_TYPE = 'PRINT'-->
+<!--		<if test='startDt != null and !startDt.equals("")'>-->
+<!--		AND INSERT_DT BETWEEN TO_DATE(#{startDt}, 'YYYY-MM-DD')-->
+<!--	                    AND TO_DATE(#{endDt}, 'YYYY-MM-DD')+1-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	<select id="selectRejectedProductionDisposalCount" resultType="Integer">-->
+<!--		/* 거절된 내역 수 - 생산기술자료 폐기*/-->
+<!--		SELECT COUNT(*)-->
+<!--		FROM DOCS_DESTROY_REQUEST destroyRequest-->
+<!--		WHERE REQUEST_TYPE = 'PRODUCTION'-->
+<!--		AND STATUS_CD = 'REJECT'-->
+<!--		AND INSERT_USER_CD = #{sessionUser.userCd}	/* 내가 요청 */-->
+<!--		<if test='startDt != null and !startDt.equals("")'>-->
+<!--		AND INSERT_DT BETWEEN TO_DATE(#{startDt}, 'YYYY-MM-DD')-->
+<!--	                    AND TO_DATE(#{endDt}, 'YYYY-MM-DD')+1-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	<select id="selectApprovedProductionDisposalCount" resultType="Integer">-->
+<!--		/* 승인된 수 - 생산기술자료 폐기*/-->
+<!--		SELECT COUNT(*)-->
+<!--		FROM DOCS_DESTROY_REQUEST destroyRequest-->
+<!--		WHERE REQUEST_TYPE = 'PRODUCTION'-->
+<!--		AND STATUS_CD = 'APPROVAL'-->
+<!--		AND INSERT_USER_CD = #{sessionUser.userCd} /* 내가 요청 */-->
+<!--		<if test='startDt != null and !startDt.equals("")'>-->
+<!--		AND destroyRequest.INSERT_DT BETWEEN TO_DATE(#{startDt}, 'YYYY-MM-DD')-->
+<!--	                         AND TO_DATE(#{endDt}, 'YYYY-MM-DD')+1-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	<select id="selectApprovedPrintDisposalCount" resultType="Integer">-->
+<!--		/* 승인 된 수 - 출력폐기 */-->
+<!--		SELECT COUNT(*)-->
+<!--		FROM DOCS_DESTROY_REQUEST destroyReq-->
+<!--		WHERE INSERT_USER_CD = #{sessionUser.userCd}-->
+<!--		AND STATUS_CD = 'APPROVAL'-->
+<!--		AND REQUEST_TYPE = 'PRINT'-->
+<!--		<if test='startDt != null and !startDt.equals("")'>-->
+<!--		AND destroyReq.INSERT_DT BETWEEN TO_DATE(#{startDt}, 'YYYY-MM-DD')-->
+<!--	                         AND TO_DATE(#{endDt}, 'YYYY-MM-DD')+1-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	<select id="selectRequestPrintDisposalCount" resultType="Integer">-->
+<!--		/* 요청한 수 - 출력폐기*/-->
+<!--		SELECT COUNT(*)-->
+<!--		FROM DOCS_DESTROY_REQUEST destroyReq-->
+<!--		WHERE INSERT_USER_CD = #{sessionUser.userCd}	/* 내가 요청 */-->
+<!--		AND REQUEST_TYPE = 'PRINT'-->
+<!--		<if test='startDt != null and !startDt.equals("")'>-->
+<!--		AND destroyReq.INSERT_DT BETWEEN TO_DATE(#{startDt}, 'YYYY-MM-DD')-->
+<!--	                         AND TO_DATE(#{endDt}, 'YYYY-MM-DD')+1-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	<select id="selectDocsRequestCount" resultType="Integer">-->
+<!--		/* DOCS_REQUEST 테이블에서 특정 상태값의 수를 가져온다.*/-->
+<!--		SELECT count(*)-->
+<!--		FROM DOCS_REQUEST request-->
+<!--		<if test='outUserYn.equals("Y") and statusCd.equals("APPROVAL")'>-->
+<!--		/* 외부사용자 이면서 상태가 승인이라면 아이템 단위로 보여줘야 함.*/-->
+<!--		INNER JOIN DOCS_REQUEST_MAPPING requestMapping-->
+<!--				ON requestMapping.REQUEST_NO = request.REQUEST_NO-->
+<!--		INNER JOIN DOCS_REQUEST_FILE fileInfo-->
+<!--				ON requestMapping.REQUEST_NO = fileInfo.REQUEST_NO-->
+<!--				AND requestMapping.OBJECT_ID = fileInfo.OBJECT_ID-->
+<!--		INNER JOIN DOCS_REQUEST_DEPLOY deployInfo-->
+<!--				ON deployInfo.REQUEST_NO = request.REQUEST_NO-->
+<!--		</if>-->
+<!--		WHERE 1=1-->
+<!--		<if test='statusCd != null and !statusCd.equals("")'>-->
+<!--		AND request.STATUS_CD = #{statusCd}-->
+<!--		</if>-->
+<!--		AND REQUEST_TYPE = #{requestType}-->
+<!--		<choose>-->
+<!--			<when test='outUserYn.equals("Y") and statusCd.equals("APPROVAL")'>-->
+<!--				/* 외부사용자이면서 승인이면 나한테 배포된 내역을 보여줌 */-->
+<!--				AND deployInfo.DEPLOY_USER_CD = #{sessionUser.userCd} /* 나한테 배포*/-->
+<!--			</when>-->
+<!--			<otherwise>-->
+<!--				AND request.INSERT_USER_CD = #{sessionUser.userCd} /* 내가 요청 */-->
+<!--			</otherwise>-->
+<!--		</choose>-->
+<!--		<choose>-->
+<!--			<when test='outUserYn != null and outUserYn.equals("Y")'>-->
+<!--			</when>-->
+<!--			<otherwise>-->
+<!--				AND request.BUSINESS_AREA_CD = #{sessionUser.businessAreaCd}		/* 내부사용자일 경우에만 사업장코드 추가*/-->
+<!--			</otherwise>-->
+<!--		</choose>-->
+<!--		<if test='objectType != null and !objectType.equals("")'>-->
+<!--		AND request.OBJECT_TYPE = #{objectType}-->
+<!--		</if>-->
+<!--		<if test='startDt != null and !startDt.equals("")'>-->
+<!--		AND request.INSERT_DT BETWEEN TO_DATE(#{startDt}, 'YYYY-MM-DD')-->
+<!--                         AND TO_DATE(#{endDt}, 'YYYY-MM-DD')+1-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	<select id="selectCrCount" resultType="Integer">-->
+<!--		/* CR  - 특정 상태 count */-->
+<!--		SELECT COUNT(*)-->
+<!--		FROM ITN_CR cr-->
+<!--			INNER JOIN DOCS_REQUEST_MAPPING reqMapping ON cr.CR_NO = reqMapping.OBJECT_ID-->
+<!--			INNER JOIN DOCS_REQUEST req ON req.REQUEST_NO = reqMapping.REQUEST_NO-->
+<!--			INNER JOIN DOCS_USER requestUser ON requestUser.USER_ID = cr.VENDOR_UID-->
+<!--		WHERE req.STATUS_CD = #{statusCd}-->
+<!--		AND requestUser.USER_CD = #{sessionUser.userCd} /* 내가 요청. 정확히는 요청자로 지정된 사람. */-->
+<!--		<if test='startDt != null and !startDt.equals("")'>-->
+<!--		AND req.INSERT_DT BETWEEN TO_DATE(#{startDt}, 'YYYY-MM-DD')-->
+<!--	                         AND TO_DATE(#{endDt}, 'YYYY-MM-DD')+1-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	<select id="selectRejectCount" resultType="Integer">-->
+<!--		/* 내가 거절한 내역 수 */-->
+<!--		SELECT count(*)-->
+<!--		FROM DOCS_REQUEST request-->
+<!--			INNER JOIN DOCS_REQUEST_DETAIL detail ON detail.REQUEST_NO = request.REQUEST_NO AND detail.ACTION_CD = 'REJECT'-->
+<!--		WHERE request.STATUS_CD = #{statusCd}-->
+<!--		AND request.REQUEST_TYPE = #{requestType}-->
+<!--		AND detail.ACTUAL_USER_CD = #{sessionUser.userCd}	/* 내가 거절 */-->
+<!--		<if test='startDt != null and !startDt.equals("")'>-->
+<!--		AND request.INSERT_DT BETWEEN TO_DATE(#{startDt}, 'YYYY-MM-DD')-->
+<!--	                         AND TO_DATE(#{endDt}, 'YYYY-MM-DD')+1-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	<select id="selectHaveToApprovalCount" resultType="Integer">-->
+<!--		/* 내가 승인해야 할 내역 수 */-->
+<!--		SELECT count(*)-->
+<!--		FROM DOCS_REQUEST request-->
+<!--			INNER JOIN DOCS_REQUEST_DETAIL currDetail ON currDetail.REQUEST_NO = request.REQUEST_NO AND currDetail.PROCESS_SEQ = request.CURRENT_PROCESS_SEQ_NO-->
+<!--			INNER JOIN DOCS_REQUEST_DETAIL reqDetail ON reqDetail.REQUEST_NO = request.REQUEST_NO AND reqDetail.APPROVAL_STATUS_CD = 'REQUEST'-->
+<!--            INNER JOIN DOCS_USER reqUser ON reqUser.USER_CD = reqDetail.ACTUAL_USER_CD-->
+<!--		WHERE currDetail.APPROVAL_STATUS_CD = 'APPROVAL'-->
+<!--		AND request.STATUS_CD NOT IN ('APPROVAL', 'REJECT')		/* 최종승인 아닌데이터만*/-->
+<!--		AND currDetail.ACTUAL_USER_CD = #{sessionUser.userCd}/* 내가 승인해야 할 목록 */-->
+<!--		AND request.REQUEST_TYPE = #{requestType}-->
+<!--		AND request.BUSINESS_AREA_CD = #{sessionUser.businessAreaCd}-->
+<!--		<if test='startDt != null and !startDt.equals("")'>-->
+<!--		AND request.INSERT_DT BETWEEN TO_DATE(#{startDt}, 'YYYY-MM-DD')-->
+<!--	                         AND TO_DATE(#{endDt}, 'YYYY-MM-DD')+1-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	<select id="selectValidEnd" resultType="kr.esob.fdms.controller.main.ValidEndListVO">-->
+<!--		/* 유효기간 임박 */-->
+<!--		SELECT-->
+<!--			TO_CHAR(TO_DATE(USE_END_YMD, 'YYYYMMDD'), 'YYYY-MM-DD')			AS useEndYmd			/* 유효기간(출력, 폐기기한) */-->
+<!--			, OBJECT_TYPE													AS objectType			/* 자료유형 */-->
+<!--			, FN_GET_CD_NM('objectTypeWithP', OBJECT_TYPE, #{sessionLang})	AS objectTypeNm			/* 자료유형명 */-->
+<!--			, info.OBJECT_NO												AS objectNo				/* 자료번호 */-->
+<!--			, FN_GET_CD_NM('', OBJECT_TYPE, #{sessionLang})					AS objectTypeNm			/* 자료유형명 */-->
+<!--			, TO_CHAR(request.INSERT_DT, 'YYYY-MM-DD')						AS requestDt			/* 요청일*/-->
+<!--			, CASE-->
+<!--				WHEN DEPLOY_NORMAL_YN = 'Y'-->
+<!--					THEN (SELECT LANG_DESC FROM DOCS_LANG lang WHERE lang.LANG_CD = 'combo.deployType.normalArea' AND lang.LANG_TYPE = #{sessionLang})-->
+<!--						WHEN DEPLOY_SPECIAL_YN = 'Y'-->
+<!--					THEN (SELECT LANG_DESC FROM DOCS_LANG lang WHERE lang.LANG_CD = 'combo.deployType.specialArea' AND lang.LANG_TYPE = #{sessionLang})-->
+<!--					ELSE (SELECT LANG_DESC FROM DOCS_LANG lang WHERE lang.LANG_CD = 'combo.deployType.viewing' AND lang.LANG_TYPE = #{sessionLang})-->
+<!--			END 														AS deployTypeNm 	/* 배포방식 */-->
+<!--		FROM DOCS_REQUEST request-->
+<!--		INNER JOIN (-->
+<!--			SELECT-->
+<!--				tempMapping.REQUEST_NO, MAX(tempMapping.OBJECT_ID) AS OBJECT_ID-->
+<!--			FROM DOCS_REQUEST_MAPPING tempMapping-->
+<!--			GROUP BY tempMapping.REQUEST_NO-->
+<!--		) requestMapping ON requestMapping.REQUEST_NO = request.REQUEST_NO-->
+<!--		INNER JOIN DOCS_REQUEST_MAPPING info ON info.OBJECT_ID = requestMapping.OBJECT_ID AND info.REQUEST_NO = request.REQUEST_NO-->
+<!--        WHERE STATUS_CD = 'APPROVAL'							/* 승인이 된것 중 */-->
+<!--        AND REQUEST_TYPE = #{requestType}-->
+
+<!--        /* 출력폐기기한은 내부 사용자용 */-->
+<!--        <if test='requestType.equals("PRINT")'>-->
+<!--        AND request.INSERT_USER_CD = #{sessionUser.userCd} 		/* 내가 요청 */-->
+<!--        </if>-->
+<!--        /* 배포폐기기한은 외부 사용자용 */-->
+<!--        <if test='requestType.equals("DISTRIBUTION")'>-->
+<!--        AND request.DEPLOY_COMPANY_CD = #{sessionUser.companyCd}	/* 로그인 한 사용자의 업체가 배포받을 것들 중.. */-->
+<!--        </if>-->
+<!--		AND request.USE_END_YMD <![CDATA[ >= ]]> TO_CHAR(SYSDATE-(SELECT SYSTEM_CONFIG_VALUE FROM DOCS_SYSTEM_CONFIG t WHERE t.SYSTEM_CONFIG_GROUP='SYSTEM_CONFIG' AND t.SYSTEM_CONFIG_CD='VALID_TERM'), 'YYYYMMDD')-->
+<!--		AND request.USE_END_YMD <![CDATA[ <= ]]> TO_CHAR(SYSDATE, 'YYYYMMDD')-->
+<!--        &lt;!&ndash; AND USE_END_YMD <![CDATA[ >= ]]> TO_CHAR(SYSDATE - 1, 'YYYYMMDD')-->
+<!--        AND USE_END_YMD <![CDATA[ <= ]]> TO_CHAR(SYSDATE, 'YYYYMMDD')	/* 유효기간 임박 ( 어제, 오늘 ) */ &ndash;&gt;-->
+<!--        ORDER BY INSERT_DT DESC-->
+<!--	</select>-->
+
+<!--	<select id="selectPrintDisposalValidEnd" resultType="kr.esob.fdms.controller.main.ValidEndListVO">-->
+<!--		/* 내가 요청한 것 중 출력물 폐기기한 임박 */-->
+<!--		SELECT-->
+<!--			TO_CHAR(TO_DATE(DESTROY_TODO_YMD, 'YYYYMMDD'), 'YYYY-MM-DD')		AS useEndYmd-->
+<!--			, OBJECT_TYPE														AS objectType			/* 자료유형 */-->
+<!--			, FN_GET_CD_NM('objectTypeWithP', OBJECT_TYPE, #{sessionLang})		AS objectTypeNm			/* 자료유형명 */-->
+<!--			, info.OBJECT_NO													AS objectNo				/* 자료번호 */-->
+<!--		FROM DOCS_REQUEST request-->
+<!--		INNER JOIN (-->
+<!--			SELECT-->
+<!--				tempMapping.REQUEST_NO, MAX(tempMapping.OBJECT_ID) AS OBJECT_ID-->
+<!--			FROM DOCS_REQUEST_MAPPING tempMapping-->
+<!--			GROUP BY tempMapping.REQUEST_NO-->
+<!--		) requestMapping ON requestMapping.REQUEST_NO = request.REQUEST_NO-->
+<!--		INNER JOIN DOCS_REQUEST_MAPPING info ON info.OBJECT_ID = requestMapping.OBJECT_ID AND info.REQUEST_NO = request.REQUEST_NO-->
+<!--		WHERE REQUEST_TYPE = 'PRINT'-->
+<!--		AND STATUS_CD = 'APPROVAL'							/* 승인이 된것 중 */-->
+<!--		AND request.INSERT_USER_CD = #{sessionUser.userCd} 		/* 내가 요청 */-->
+<!--		AND request.DESTROY_TODO_YMD <![CDATA[ >= ]]> TO_CHAR(SYSDATE-(SELECT SYSTEM_CONFIG_VALUE FROM DOCS_SYSTEM_CONFIG t WHERE t.SYSTEM_CONFIG_GROUP='SYSTEM_CONFIG' AND t.SYSTEM_CONFIG_CD='VALID_TERM'), 'YYYYMMDD')-->
+<!--		AND request.DESTROY_TODO_YMD <![CDATA[ <= ]]> TO_CHAR(SYSDATE, 'YYYYMMDD')-->
+<!--		ORDER BY DESTROY_TODO_YMD DESC-->
+<!--	</select>-->
+
+
+
+<!--</mapper>-->
+
+
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+
+
+
+
+
+
+<mapper namespace="sql.Main">
+<select id="selectHaveToAcceptProductionCount" resultType="Integer">
+	/* 내가 접수 해야 할 수(생산기술 접수) */
+	SELECT COUNT(*)
+	FROM DOCS_REQUEST req
+	INNER JOIN (
+	SELECT tempMapping.REQUEST_NO, MAX(tempMapping.OBJECT_ID) AS OBJECT_ID
+	FROM DOCS_REQUEST_MAPPING tempMapping
+	WHERE 1=1
+	GROUP BY REQUEST_NO
+	) tempMapping ON tempMapping.REQUEST_NO = req.REQUEST_NO
+	INNER JOIN DOCS_REQUEST_MAPPING requestMapping
+	ON requestMapping.REQUEST_NO = tempMapping.REQUEST_NO
+	AND requestMapping.OBJECT_ID = tempMapping.OBJECT_ID
+	JOIN DOCS_REQUEST_DEPLOY deploy
+	ON req.REQUEST_NO = deploy.REQUEST_NO
+	JOIN DOCS_REQUEST_DETAIL def
+	ON req.REQUEST_NO = def.REQUEST_NO AND def.APPROVAL_STATUS_CD = 'REQUEST'
+	WHERE deploy.DEPLOY_USER_CD = #{sessionUser.userCd}
+	AND req.REQUEST_TYPE = 'PRODUCT'                            /* 생산기술자료 */
+	AND (deploy.ACCEPT_YN = 'N' OR deploy.ACCEPT_YN IS NULL)
+	AND req.STATUS_CD = 'APPROVAL'
+	<if test='startDt != null and !startDt.equals("")'>
+		AND req.INSERT_DT BETWEEN TO_DATE(#{startDt}, 'YYYY-MM-DD')
+		AND TO_DATE(#{endDt}, 'YYYY-MM-DD') + INTERVAL '1 day'
+	</if>
+</select>
+
+<select id="selectProtectUserCount" resultType="Integer">
+	/* 로그인 한 사용자가 방산결재권한이 있는지 체크 */
+	SELECT 0
+</select>
+
+<select id="selectHaveToApprovalCrCount" resultType="Integer">
+	/* CR 내가 승인해야 할 목록 */
+	SELECT COUNT(*)
+	FROM ITN_CR cr
+	INNER JOIN DOCS_REQUEST_MAPPING reqMapping ON cr.CR_NO = reqMapping.OBJECT_ID
+	INNER JOIN DOCS_REQUEST req ON req.REQUEST_NO = reqMapping.REQUEST_NO
+	INNER JOIN DOCS_USER purchaser ON purchaser.USER_ID = cr.PURCHASER_UID
+	INNER JOIN DOCS_REQUEST_DETAIL currDetail ON currDetail.REQUEST_NO = req.REQUEST_NO AND currDetail.PROCESS_SEQ = req.CURRENT_PROCESS_SEQ_NO
+	WHERE currDetail.APPROVAL_STATUS_CD = 'APPROVAL'
+	AND req.STATUS_CD = 'ACCEPT'
+	AND currDetail.ACTUAL_USER_CD = #{sessionUser.userCd}/* 내가 승인해야 할 목록 */
+	<if test='startDt != null and !startDt.equals("")'>
+		AND req.INSERT_DT BETWEEN TO_DATE(#{startDt}, 'YYYY-MM-DD')
+		AND TO_DATE(#{endDt}, 'YYYY-MM-DD') + INTERVAL '1 day'
+	</if>
+</select>
+
+<select id="selectHaveToAcceptCrCount" resultType="Integer">
+	/* CR 내가 접수해야 할 목록 */
+	SELECT COUNT(*)
+	FROM ITN_CR cr
+	INNER JOIN DOCS_REQUEST_MAPPING reqMapping ON cr.CR_NO = reqMapping.OBJECT_ID
+	INNER JOIN DOCS_REQUEST req ON req.REQUEST_NO = reqMapping.REQUEST_NO
+	INNER JOIN DOCS_USER purchaser ON purchaser.USER_ID = cr.PURCHASER_UID
+	INNER JOIN DOCS_REQUEST_DETAIL currDetail ON currDetail.REQUEST_NO = req.REQUEST_NO AND currDetail.PROCESS_SEQ = req.CURRENT_PROCESS_SEQ_NO
+	WHERE currDetail.APPROVAL_STATUS_CD = 'ACCEPT'
+	AND cr.PURCHASER_UID = #{sessionUser.userId}/* 내가 접수 해야 할 목록 */
+	<if test='startDt != null and !startDt.equals("")'>
+		AND req.INSERT_DT BETWEEN TO_DATE(#{startDt}, 'YYYY-MM-DD')
+		AND TO_DATE(#{endDt}, 'YYYY-MM-DD') + INTERVAL '1 day'
+	</if>
+</select>
+
+<select id="selectRejectCrCount" resultType="Integer">
+	/* CR 내가 거절한 목록 */
+	SELECT COUNT(*)
+	FROM ITN_CR cr
+	INNER JOIN DOCS_REQUEST_MAPPING reqMapping ON cr.CR_NO = reqMapping.OBJECT_ID
+	INNER JOIN DOCS_REQUEST req ON req.REQUEST_NO = reqMapping.REQUEST_NO
+	INNER JOIN DOCS_REQUEST_DETAIL detail ON detail.REQUEST_NO = req.REQUEST_NO AND detail.ACTION_CD = 'REJECT'
+	WHERE req.STATUS_CD = 'REJECT'        /* 거절된것 */
+	AND detail.ACTUAL_USER_CD = #{sessionUser.userCd} /* 내가 거절 */
+	<if test='startDt != null and !startDt.equals("")'>
+		AND req.INSERT_DT BETWEEN TO_DATE(#{startDt}, 'YYYY-MM-DD')
+		AND TO_DATE(#{endDt}, 'YYYY-MM-DD') + INTERVAL '1 day'
+	</if>
+</select>
+
+<select id="selectHaveToPrintDisposalCount" resultType="Integer">
+	/* 내가 승인해야 할 것 - 출력폐기 */
+	SELECT COUNT(*)
+	FROM DOCS_DESTROY_REQUEST destroyReq
+	INNER JOIN DOCS_DESTROY_REQUEST_DETAIL destroyReqDtl ON destroyReqDtl.DESTROY_REQUEST_NO = destroyReq.DESTROY_REQUEST_NO AND destroyReqDtl.PROCESS_SEQ = destroyReq.CURRENT_PROCESS_SEQ_NO
+	WHERE destroyReqDtl.APPROVAL_STATUS_CD = 'APPROVAL'
+	AND destroyReqDtl.ACTUAL_USER_CD = #{sessionUser.userCd}
+	AND destroyReq.STATUS_CD = 'REQUEST'
+	AND destroyReq.REQUEST_TYPE = 'PRINT'
+	<if test='startDt != null and !startDt.equals("")'>
+		AND destroyReq.INSERT_DT BETWEEN TO_DATE(#{startDt}, 'YYYY-MM-DD')
+		AND TO_DATE(#{endDt}, 'YYYY-MM-DD') + INTERVAL '1 day'
+	</if>
+</select>
+
+<select id="selectRejectPrintDisposalCount" resultType="Integer">
+	/* 출력폐기 반려 */
+	SELECT COUNT(*)
+	FROM DOCS_DESTROY_REQUEST destroyReq
+	INNER JOIN DOCS_DESTROY_REQUEST_DETAIL destroyReqDtl ON destroyReqDtl.DESTROY_REQUEST_NO = destroyReq.DESTROY_REQUEST_NO AND destroyReqDtl.PROCESS_SEQ = destroyReq.CURRENT_PROCESS_SEQ_NO
+	WHERE destroyReq.STATUS_CD = 'REJECT'
+	AND destroyReqDtl.ACTUAL_USER_CD = #{sessionUser.userCd}
+	AND destroyReq.REQUEST_TYPE = 'PRINT'
+	<if test='startDt != null and !startDt.equals("")'>
+		AND destroyReq.INSERT_DT BETWEEN TO_DATE(#{startDt}, 'YYYY-MM-DD')
+		AND TO_DATE(#{endDt}, 'YYYY-MM-DD') + INTERVAL '1 day'
+	</if>
+</select>
+
+<select id="selectHaveToProductionDisposalCount" resultType="Integer">
+	/* 승인해야 할 내역 수 - 생산기술자료 폐기 */
+	SELECT COUNT(*)
+	FROM DOCS_DESTROY_REQUEST destroyRequest
+	INNER JOIN DOCS_DESTROY_REQUEST_DETAIL detail ON detail.DESTROY_REQUEST_NO = destroyRequest.DESTROY_REQUEST_NO AND detail.PROCESS_SEQ = destroyRequest.CURRENT_PROCESS_SEQ_NO
+	WHERE destroyRequest.REQUEST_TYPE = 'PRODUCT'
+	AND detail.APPROVAL_STATUS_CD = 'APPROVAL'
+	AND destroyRequest.STATUS_CD = 'REQUEST'
+	AND detail.ACTUAL_USER_CD = #{sessionUser.userCd}
+	<if test='startDt != null and !startDt.equals("")'>
+		AND destroyRequest.INSERT_DT BETWEEN TO_DATE(#{startDt}, 'YYYY-MM-DD')
+		AND TO_DATE(#{endDt}, 'YYYY-MM-DD') + INTERVAL '1 day'
+	</if>
+</select>
+
+<select id="selectRejectProductionDisposalCount" resultType="Integer">
+	/* 거절한 내역 수 - 생산기술자료 폐기 */
+	SELECT COUNT(*)
+	FROM DOCS_DESTROY_REQUEST destroyRequest
+	INNER JOIN DOCS_DESTROY_REQUEST_DETAIL detail ON detail.DESTROY_REQUEST_NO = destroyRequest.DESTROY_REQUEST_NO AND detail.PROCESS_SEQ = destroyRequest.CURRENT_PROCESS_SEQ_NO
+	WHERE destroyRequest.REQUEST_TYPE = 'PRODUCTION'
+	AND detail.ACTION_CD = 'REJECT'
+	AND destroyRequest.STATUS_CD = 'REJECT'
+	AND detail.ACTUAL_USER_CD = #{sessionUser.userCd}
+	<if test='startDt != null and !startDt.equals("")'>
+		AND destroyRequest.INSERT_DT BETWEEN TO_DATE(#{startDt}, 'YYYY-MM-DD')
+		AND TO_DATE(#{endDt}, 'YYYY-MM-DD') + INTERVAL '1 day'
+	</if>
+</select>
+
+<select id="selectHaveToAcceptDistributionCount" resultType="Integer">
+	/* 구매담당자 - 내가 접수 할 내역 */
+	SELECT COUNT(*)
+	FROM DOCS_REQUEST request
+	INNER JOIN DOCS_REQUEST_DETAIL accDetail ON accDetail.REQUEST_NO = request.REQUEST_NO AND accDetail.APPROVAL_STATUS_CD = 'ACCEPT'
+	INNER JOIN DOCS_USER insertUser ON insertUser.USER_CD = request.INSERT_USER_CD
+	AND (insertUser.AUTH_SITE = 'E' OR
+	insertUser.DEPT_CD IN (SELECT DEPT_CD
+	FROM DOCS_INSA_DEPT_CD
+	WHERE COLUMN_NM = 'PRODUCT_TEAM_YN')
+	)
+	WHERE request.CURRENT_PROCESS_SEQ_NO = '2'                /* 현재 상태가 '접수' 인것만 조회 */
+	AND accDetail.ACTUAL_USER_CD = #{sessionUser.userCd}     /* 지정된 접수자가 로그인한 사용자인 건을 조회 */
+	AND request.REQUEST_TYPE = 'DISTRIBUTION'                /* 요청 유형이 배포, 생산기술자료인 것만 조회. 배포요청인 경우 도면,문서,SW,생기 모두 DISTRIBUTION임 */
+	AND request.STATUS_CD = 'REQUEST'
+	<if test='startDt != null and !startDt.equals("")'>
+		AND request.INSERT_DT BETWEEN TO_DATE(#{startDt}, 'YYYY-MM-DD')
+		AND TO_DATE(#{endDt}, 'YYYY-MM-DD') + INTERVAL '1 day'
+	</if>
+</select>
+
+<select id="selectRejectedCrCount" resultType="Integer">
+	/* CR 거절된 목록 */
+	SELECT COUNT(*)
+	FROM ITN_CR cr
+	INNER JOIN DOCS_REQUEST_MAPPING reqMapping ON cr.CR_NO = reqMapping.OBJECT_ID
+	INNER JOIN DOCS_REQUEST req ON req.REQUEST_NO = reqMapping.REQUEST_NO
+	WHERE req.STATUS_CD = 'REJECT'        /* 거절된것 */
+	AND req.INSERT_USER_CD = #{sessionUser.userCd} /* 내가 요청 */
+	<if test='startDt != null and !startDt.equals("")'>
+		AND req.INSERT_DT BETWEEN TO_DATE(#{startDt}, 'YYYY-MM-DD')
+		AND TO_DATE(#{endDt}, 'YYYY-MM-DD') + INTERVAL '1 day'
+	</if>
+</select>
+
+<select id="selectRejectedPrintDisposalCount" resultType="Integer">
+	/* 거절 된 내역 - 출력폐기 */
+	SELECT COUNT(*)
+	FROM DOCS_DESTROY_REQUEST destroyReq
+	WHERE STATUS_CD = 'REJECT'
+	AND INSERT_USER_CD = #{sessionUser.userCd}    /* 내가 요청 */
+	AND REQUEST_TYPE = 'PRINT'
+	<if test='startDt != null and !startDt.equals("")'>
+		AND INSERT_DT BETWEEN TO_DATE(#{startDt}, 'YYYY-MM-DD')
+		AND TO_DATE(#{endDt}, 'YYYY-MM-DD') + INTERVAL '1 day'
+	</if>
+</select>
+
+<select id="selectRejectedProductionDisposalCount" resultType="Integer">
+	/* 거절된 내역 수 - 생산기술자료 폐기 */
+	SELECT COUNT(*)
+	FROM DOCS_DESTROY_REQUEST destroyRequest
+	WHERE REQUEST_TYPE = 'PRODUCTION'
+	AND STATUS_CD = 'REJECT'
+	AND INSERT_USER_CD = #{sessionUser.userCd}    /* 내가 요청 */
+	<if test='startDt != null and !startDt.equals("")'>
+		AND INSERT_DT BETWEEN TO_DATE(#{startDt}, 'YYYY-MM-DD')
+		AND TO_DATE(#{endDt}, 'YYYY-MM-DD') + INTERVAL '1 day'
+	</if>
+</select>
+
+<select id="selectApprovedProductionDisposalCount" resultType="Integer">
+	/* 승인된 수 - 생산기술자료 폐기 */
+	SELECT COUNT(*)
+	FROM DOCS_DESTROY_REQUEST destroyRequest
+	WHERE REQUEST_TYPE = 'PRODUCTION'
+	AND STATUS_CD = 'APPROVAL'
+	AND INSERT_USER_CD = #{sessionUser.userCd} /* 내가 요청 */
+	<if test='startDt != null and !startDt.equals("")'>
+		AND destroyRequest.INSERT_DT BETWEEN TO_DATE(#{startDt}, 'YYYY-MM-DD')
+		AND TO_DATE(#{endDt}, 'YYYY-MM-DD') + INTERVAL '1 day'
+	</if>
+</select>
+
+<select id="selectApprovedPrintDisposalCount" resultType="Integer">
+	/* 승인 된 수 - 출력폐기 */
+	SELECT COUNT(*)
+	FROM DOCS_DESTROY_REQUEST destroyReq
+	WHERE INSERT_USER_CD = #{sessionUser.userCd}
+	AND STATUS_CD = 'APPROVAL'
+	AND REQUEST_TYPE = 'PRINT'
+	<if test='startDt != null and !startDt.equals("")'>
+		AND destroyReq.INSERT_DT BETWEEN TO_DATE(#{startDt}, 'YYYY-MM-DD')
+		AND TO_DATE(#{endDt}, 'YYYY-MM-DD') + INTERVAL '1 day'
+	</if>
+</select>
+
+<select id="selectRequestPrintDisposalCount" resultType="Integer">
+	/* 요청한 수 - 출력폐기 */
+	SELECT COUNT(*)
+	FROM DOCS_DESTROY_REQUEST destroyReq
+	WHERE INSERT_USER_CD = #{sessionUser.userCd}    /* 내가 요청 */
+	AND REQUEST_TYPE = 'PRINT'
+	<if test='startDt != null and !startDt.equals("")'>
+		AND destroyReq.INSERT_DT BETWEEN TO_DATE(#{startDt}, 'YYYY-MM-DD')
+		AND TO_DATE(#{endDt}, 'YYYY-MM-DD') + INTERVAL '1 day'
+	</if>
+</select>
+
+<select id="selectDocsRequestCount" resultType="Integer">
+	/* DOCS_REQUEST 테이블에서 특정 상태값의 수를 가져온다. */
+	SELECT count(*)
+	FROM DOCS_REQUEST request
+	<if test='outUserYn.equals("Y") and statusCd.equals("APPROVAL")'>
+		/* 외부사용자 이면서 상태가 승인이라면 아이템 단위로 보여줘야 함. */
+		INNER JOIN DOCS_REQUEST_MAPPING requestMapping
+		ON requestMapping.REQUEST_NO = request.REQUEST_NO
+		INNER JOIN DOCS_REQUEST_FILE fileInfo
+		ON requestMapping.REQUEST_NO = fileInfo.REQUEST_NO
+		AND requestMapping.OBJECT_ID = fileInfo.OBJECT_ID
+		INNER JOIN DOCS_REQUEST_DEPLOY deployInfo
+		ON deployInfo.REQUEST_NO = request.REQUEST_NO
+	</if>
+	WHERE 1=1
+	<if test='statusCd != null and !statusCd.equals("")'>
+		AND request.STATUS_CD = #{statusCd}
+	</if>
+	AND REQUEST_TYPE = #{requestType}
+	<choose>
+		<when test='outUserYn.equals("Y") and statusCd.equals("APPROVAL")'>
+			/* 외부사용자이면서 승인이면 나한테 배포된 내역을 보여줌 */
+			AND deployInfo.DEPLOY_USER_CD = #{sessionUser.userCd} /* 나한테 배포 */
+		</when>
+		<otherwise>
+			AND request.INSERT_USER_CD = #{sessionUser.userCd} /* 내가 요청 */
+		</otherwise>
+	</choose>
+	<choose>
+		<when test='outUserYn != null and outUserYn.equals("Y")'>
+		</when>
+		<otherwise>
+			AND request.BUSINESS_AREA_CD = #{sessionUser.businessAreaCd}        /* 내부사용자일 경우에만 사업장코드 추가 */
+		</otherwise>
+	</choose>
+	<if test='objectType != null and !objectType.equals("")'>
+		AND request.OBJECT_TYPE = #{objectType}
+	</if>
+	<if test='startDt != null and !startDt.equals("")'>
+		AND request.INSERT_DT BETWEEN TO_DATE(#{startDt}, 'YYYY-MM-DD')
+		AND TO_DATE(#{endDt}, 'YYYY-MM-DD') + INTERVAL '1 day'
+	</if>
+</select>
+
+<select id="selectCrCount" resultType="Integer">
+	/* CR  - 특정 상태 count */
+	SELECT COUNT(*)
+	FROM ITN_CR cr
+	INNER JOIN DOCS_REQUEST_MAPPING reqMapping ON cr.CR_NO = reqMapping.OBJECT_ID
+	INNER JOIN DOCS_REQUEST req ON req.REQUEST_NO = reqMapping.REQUEST_NO
+	INNER JOIN DOCS_USER requestUser ON requestUser.USER_ID = cr.VENDOR_UID
+	WHERE req.STATUS_CD = #{statusCd}
+	AND requestUser.USER_CD = #{sessionUser.userCd} /* 내가 요청. 정확히는 요청자로 지정된 사람. */
+	<if test='startDt != null and !startDt.equals("")'>
+		AND req.INSERT_DT BETWEEN TO_DATE(#{startDt}, 'YYYY-MM-DD')
+		AND TO_DATE(#{endDt}, 'YYYY-MM-DD') + INTERVAL '1 day'
+	</if>
+</select>
+
+<select id="selectRejectCount" resultType="Integer">
+	/* 내가 거절한 내역 수 */
+	SELECT count(*)
+	FROM DOCS_REQUEST request
+	INNER JOIN DOCS_REQUEST_DETAIL detail ON detail.REQUEST_NO = request.REQUEST_NO AND detail.ACTION_CD = 'REJECT'
+	WHERE request.STATUS_CD = #{statusCd}
+	AND request.REQUEST_TYPE = #{requestType}
+	AND detail.ACTUAL_USER_CD = #{sessionUser.userCd}    /* 내가 거절 */
+	<if test='startDt != null and !startDt.equals("")'>
+		AND request.INSERT_DT BETWEEN TO_DATE(#{startDt}, 'YYYY-MM-DD')
+		AND TO_DATE(#{endDt}, 'YYYY-MM-DD') + INTERVAL '1 day'
+	</if>
+</select>
+
+<select id="selectHaveToApprovalCount" resultType="Integer">
+	/* 내가 승인해야 할 내역 수 */
+	SELECT count(*)
+	FROM DOCS_REQUEST request
+	INNER JOIN DOCS_REQUEST_DETAIL currDetail ON currDetail.REQUEST_NO = request.REQUEST_NO AND currDetail.PROCESS_SEQ = request.CURRENT_PROCESS_SEQ_NO
+	INNER JOIN DOCS_REQUEST_DETAIL reqDetail ON reqDetail.REQUEST_NO = request.REQUEST_NO AND reqDetail.APPROVAL_STATUS_CD = 'REQUEST'
+	INNER JOIN DOCS_USER reqUser ON reqUser.USER_CD = reqDetail.ACTUAL_USER_CD
+	WHERE currDetail.APPROVAL_STATUS_CD = 'APPROVAL'
+	AND request.STATUS_CD NOT IN ('APPROVAL', 'REJECT')        /* 최종승인 아닌데이터만 */
+	AND currDetail.ACTUAL_USER_CD = #{sessionUser.userCd}/* 내가 승인해야 할 목록 */
+	AND request.REQUEST_TYPE = #{requestType}
+	AND request.BUSINESS_AREA_CD = #{sessionUser.businessAreaCd}
+	<if test='startDt != null and !startDt.equals("")'>
+		AND request.INSERT_DT BETWEEN TO_DATE(#{startDt}, 'YYYY-MM-DD')
+		AND TO_DATE(#{endDt}, 'YYYY-MM-DD') + INTERVAL '1 day'
+	</if>
+</select>
+
+<select id="selectValidEnd" resultType="kr.esob.fdms.controller.main.ValidEndListVO">
+	SELECT
+		TO_CHAR(TO_DATE(USE_END_YMD, 'YYYYMMDD'), 'YYYY-MM-DD') AS useEndYmd, /* 유효기간(출력, 폐기기한) */
+		OBJECT_TYPE AS objectType, /* 자료유형 */
+		FN_GET_CD_NM('objectTypeWithP', OBJECT_TYPE, 'sessionLang') AS objectTypeNm, /* 자료유형명 */
+		info.OBJECT_NO AS objectNo, /* 자료번호 */
+		FN_GET_CD_NM('', OBJECT_TYPE, 'sessionLang') AS objectTypeNm, /* 자료유형명 */
+		TO_CHAR(request.INSERT_DT, 'YYYY-MM-DD') AS requestDt, /* 요청일 */
+		CASE
+			WHEN DEPLOY_NORMAL_YN = 'Y' THEN (SELECT LANG_DESC FROM DOCS_LANG lang WHERE lang.LANG_CD = 'combo.deployType.normalArea' AND lang.LANG_TYPE = 'sessionLang')
+			WHEN DEPLOY_SPECIAL_YN = 'Y' THEN (SELECT LANG_DESC FROM DOCS_LANG lang WHERE lang.LANG_CD = 'combo.deployType.specialArea' AND lang.LANG_TYPE = 'sessionLang')
+			ELSE (SELECT LANG_DESC FROM DOCS_LANG lang WHERE lang.LANG_CD = 'combo.deployType.viewing' AND lang.LANG_TYPE = 'sessionLang')
+		END AS deployTypeNm /* 배포방식 */
+	FROM DOCS_REQUEST request
+	INNER JOIN (
+		SELECT
+			tempMapping.REQUEST_NO, MAX(tempMapping.OBJECT_ID) AS OBJECT_ID
+		FROM DOCS_REQUEST_MAPPING tempMapping
+		GROUP BY tempMapping.REQUEST_NO
+	) requestMapping ON requestMapping.REQUEST_NO = request.REQUEST_NO
+	INNER JOIN DOCS_REQUEST_MAPPING info ON info.OBJECT_ID = requestMapping.OBJECT_ID AND info.REQUEST_NO = request.REQUEST_NO
+	WHERE STATUS_CD = 'APPROVAL' /* 승인이 된것 중 */
+	AND REQUEST_TYPE = 'requestType'
+
+	-- 출력폐기기한은 내부 사용자용
+	AND (CASE WHEN 'requestType' = 'PRINT' THEN request.INSERT_USER_CD = 'sessionUser.userCd' ELSE TRUE END)
+
+	-- 배포폐기기한은 외부 사용자용
+	AND (CASE WHEN 'requestType' = 'DISTRIBUTION' THEN request.DEPLOY_COMPANY_CD = 'sessionUser.companyCd' ELSE TRUE END)
+
+	AND request.USE_END_YMD >= TO_CHAR(CURRENT_DATE - INTERVAL '1 DAY' * (SELECT SYSTEM_CONFIG_VALUE::int FROM DOCS_SYSTEM_CONFIG t WHERE t.SYSTEM_CONFIG_GROUP = 'SYSTEM_CONFIG' AND t.SYSTEM_CONFIG_CD = 'VALID_TERM'), 'YYYYMMDD')
+	AND request.USE_END_YMD <![CDATA[ <= ]]> TO_CHAR(CURRENT_DATE, 'YYYYMMDD')
+	ORDER BY INSERT_DT DESC;
+</select>
+
+<select id="selectPrintDisposalValidEnd" resultType="kr.esob.fdms.controller.main.ValidEndListVO">
+	SELECT
+		TO_CHAR(TO_DATE(DESTROY_TODO_YMD, 'YYYYMMDD'), 'YYYY-MM-DD') AS useEndYmd, /* 유효기간(출력, 폐기기한) */
+		OBJECT_TYPE AS objectType, /* 자료유형 */
+		FN_GET_CD_NM('objectTypeWithP', OBJECT_TYPE, 'ko') AS objectTypeNm, /* 자료유형명 */
+		info.OBJECT_NO AS objectNo /* 자료번호 */
+	FROM DOCS_REQUEST request
+	INNER JOIN (
+		SELECT
+			tempMapping.REQUEST_NO, MAX(tempMapping.OBJECT_ID) AS OBJECT_ID
+		FROM DOCS_REQUEST_MAPPING tempMapping
+		GROUP BY tempMapping.REQUEST_NO
+	) requestMapping ON requestMapping.REQUEST_NO = request.REQUEST_NO
+	INNER JOIN DOCS_REQUEST_MAPPING info ON info.OBJECT_ID = requestMapping.OBJECT_ID AND info.REQUEST_NO = request.REQUEST_NO
+	WHERE REQUEST_TYPE = 'PRINT'
+	  AND STATUS_CD = 'APPROVAL' /* 승인이 된것 중 */
+	  AND request.INSERT_USER_CD = 'USER_0000000001' /* 내가 요청 */
+	  AND request.DESTROY_TODO_YMD >= TO_CHAR(CURRENT_DATE - INTERVAL '1 DAY' * (SELECT SYSTEM_CONFIG_VALUE::int FROM DOCS_SYSTEM_CONFIG t WHERE t.SYSTEM_CONFIG_GROUP = 'SYSTEM_CONFIG' AND t.SYSTEM_CONFIG_CD = 'VALID_TERM'), 'YYYYMMDD')
+	  AND request.DESTROY_TODO_YMD <![CDATA[ <= ]]> TO_CHAR(CURRENT_DATE, 'YYYYMMDD')
+	ORDER BY DESTROY_TODO_YMD DESC;
+</select>
+
+<select id="selectPendingApprovalList" resultType="kr.esob.fdms.controller.main.ValidEndListVO">
+	SELECT *
+	FROM (
+		SELECT TO_CHAR(info.insert_dt, 'YYYY-MM-DD') AS useEndYmd,
+			   'FC' AS objectType,
+			   'Documents' AS objectTypeNm,
+			   COALESCE(info.drawing_no, '-') AS objectNo,
+			   info.insert_dt AS sortDt
+		FROM docs_drawing info
+		WHERE COALESCE(info.deleted_yn, 'N') = 'N'
+		  AND COALESCE(info.status, '') IN ('승인진행중', 'APPROVAL')
+		  AND (
+			  EXISTS (
+				  SELECT 1
+				  FROM regexp_split_to_table(REPLACE(COALESCE(info.approver, ''), ' ', ''), ',') ap(token)
+				  WHERE (
+					  ap.token = REPLACE(COALESCE(#{sessionUser.userNm}, ''), ' ', '')
+					  OR ap.token LIKE REPLACE(COALESCE(#{sessionUser.userNm}, ''), ' ', '') || '|%'
+					  OR ap.token = REPLACE(COALESCE(#{sessionUser.userId}, ''), ' ', '')
+					  OR ap.token LIKE REPLACE(COALESCE(#{sessionUser.userId}, ''), ' ', '') || '|%'
+				  )
+				  AND NOT EXISTS (
+					  SELECT 1
+					  FROM regexp_split_to_table(REPLACE(COALESCE(info.approved_users, info.status, ''), ' ', ''), ',') au(token)
+					  WHERE split_part(TRIM(au.token), '|', 1) = ap.token
+				  )
+			  )
+			  OR EXISTS (
+				  SELECT 1
+				  FROM regexp_split_to_table(REPLACE(COALESCE(info.revieweruser, ''), ' ', ''), ',') rv(token)
+				  WHERE (
+					  rv.token = REPLACE(COALESCE(#{sessionUser.userNm}, ''), ' ', '')
+					  OR rv.token LIKE REPLACE(COALESCE(#{sessionUser.userNm}, ''), ' ', '') || '|%'
+					  OR rv.token = REPLACE(COALESCE(#{sessionUser.userId}, ''), ' ', '')
+					  OR rv.token LIKE REPLACE(COALESCE(#{sessionUser.userId}, ''), ' ', '') || '|%'
+				  )
+				  AND NOT EXISTS (
+					  SELECT 1
+					  FROM regexp_split_to_table(REPLACE(COALESCE(info.approved_users, info.status, ''), ' ', ''), ',') au(token)
+					  WHERE split_part(TRIM(au.token), '|', 1) = rv.token
+				  )
+			  )
+		  )
+		UNION ALL
+		SELECT TO_CHAR(info.insert_dt, 'YYYY-MM-DD') AS useEndYmd,
+			   'IOC' AS objectType,
+			   'IOC' AS objectTypeNm,
+			   COALESCE(info.document_no, '-') AS objectNo,
+			   info.insert_dt AS sortDt
+		FROM docs_document info
+		WHERE COALESCE(info.deleted_yn, 'N') = 'N'
+		  AND COALESCE(info.status, '') IN ('승인진행중', 'APPROVAL')
+		  AND (
+			  EXISTS (
+				  SELECT 1
+				  FROM regexp_split_to_table(REPLACE(COALESCE(info.approver, ''), ' ', ''), ',') ap(token)
+				  WHERE (
+					  ap.token = REPLACE(COALESCE(#{sessionUser.userNm}, ''), ' ', '')
+					  OR ap.token LIKE REPLACE(COALESCE(#{sessionUser.userNm}, ''), ' ', '') || '|%'
+					  OR ap.token = REPLACE(COALESCE(#{sessionUser.userId}, ''), ' ', '')
+					  OR ap.token LIKE REPLACE(COALESCE(#{sessionUser.userId}, ''), ' ', '') || '|%'
+				  )
+				  AND NOT EXISTS (
+					  SELECT 1
+					  FROM regexp_split_to_table(REPLACE(COALESCE(info.approved_users, info.status, ''), ' ', ''), ',') au(token)
+					  WHERE split_part(TRIM(au.token), '|', 1) = ap.token
+				  )
+			  )
+			  OR EXISTS (
+				  SELECT 1
+				  FROM regexp_split_to_table(REPLACE(COALESCE(info.revieweruser, ''), ' ', ''), ',') rv(token)
+				  WHERE (
+					  rv.token = REPLACE(COALESCE(#{sessionUser.userNm}, ''), ' ', '')
+					  OR rv.token LIKE REPLACE(COALESCE(#{sessionUser.userNm}, ''), ' ', '') || '|%'
+					  OR rv.token = REPLACE(COALESCE(#{sessionUser.userId}, ''), ' ', '')
+					  OR rv.token LIKE REPLACE(COALESCE(#{sessionUser.userId}, ''), ' ', '') || '|%'
+				  )
+				  AND NOT EXISTS (
+					  SELECT 1
+					  FROM regexp_split_to_table(REPLACE(COALESCE(info.approved_users, info.status, ''), ' ', ''), ',') au(token)
+					  WHERE split_part(TRIM(au.token), '|', 1) = rv.token
+				  )
+			  )
+		  )
+		UNION ALL
+		SELECT TO_CHAR(info.insert_dt, 'YYYY-MM-DD') AS useEndYmd,
+			   'CCB' AS objectType,
+			   'CCB' AS objectTypeNm,
+			   COALESCE(info.sw_no, '-') AS objectNo,
+			   info.insert_dt AS sortDt
+		FROM docs_sw info
+		WHERE COALESCE(info.deleted_yn, 'N') = 'N'
+		  AND COALESCE(info.status, '') IN ('승인진행중', 'APPROVAL')
+		  AND (
+			  EXISTS (
+				  SELECT 1
+				  FROM regexp_split_to_table(REPLACE(COALESCE(info.approver, ''), ' ', ''), ',') ap(token)
+				  WHERE (
+					  ap.token = REPLACE(COALESCE(#{sessionUser.userNm}, ''), ' ', '')
+					  OR ap.token LIKE REPLACE(COALESCE(#{sessionUser.userNm}, ''), ' ', '') || '|%'
+					  OR ap.token = REPLACE(COALESCE(#{sessionUser.userId}, ''), ' ', '')
+					  OR ap.token LIKE REPLACE(COALESCE(#{sessionUser.userId}, ''), ' ', '') || '|%'
+				  )
+				  AND NOT EXISTS (
+					  SELECT 1
+					  FROM regexp_split_to_table(REPLACE(COALESCE(info.approved_users, info.status, ''), ' ', ''), ',') au(token)
+					  WHERE split_part(TRIM(au.token), '|', 1) = ap.token
+				  )
+			  )
+			  OR EXISTS (
+				  SELECT 1
+				  FROM regexp_split_to_table(REPLACE(COALESCE(info.revieweruser, ''), ' ', ''), ',') rv(token)
+				  WHERE (
+					  rv.token = REPLACE(COALESCE(#{sessionUser.userNm}, ''), ' ', '')
+					  OR rv.token LIKE REPLACE(COALESCE(#{sessionUser.userNm}, ''), ' ', '') || '|%'
+					  OR rv.token = REPLACE(COALESCE(#{sessionUser.userId}, ''), ' ', '')
+					  OR rv.token LIKE REPLACE(COALESCE(#{sessionUser.userId}, ''), ' ', '') || '|%'
+				  )
+				  AND NOT EXISTS (
+					  SELECT 1
+					  FROM regexp_split_to_table(REPLACE(COALESCE(info.approved_users, info.status, ''), ' ', ''), ',') au(token)
+					  WHERE split_part(TRIM(au.token), '|', 1) = rv.token
+				  )
+			  )
+		  )
+		UNION ALL
+		SELECT TO_CHAR(info.insert_dt, 'YYYY-MM-DD') AS useEndYmd,
+			   'MRB' AS objectType,
+			   'MRB' AS objectTypeNm,
+			   COALESCE(info.document_no, '-') AS objectNo,
+			   info.insert_dt AS sortDt
+		FROM docs_product_document info
+		WHERE COALESCE(info.deleted_yn, 'N') = 'N'
+		  AND COALESCE(info.status, '') IN ('승인진행중', 'APPROVAL')
+		  AND (
+			  EXISTS (
+				  SELECT 1
+				  FROM regexp_split_to_table(REPLACE(COALESCE(info.approver, ''), ' ', ''), ',') ap(token)
+				  WHERE (
+					  ap.token = REPLACE(COALESCE(#{sessionUser.userNm}, ''), ' ', '')
+					  OR ap.token LIKE REPLACE(COALESCE(#{sessionUser.userNm}, ''), ' ', '') || '|%'
+					  OR ap.token = REPLACE(COALESCE(#{sessionUser.userId}, ''), ' ', '')
+					  OR ap.token LIKE REPLACE(COALESCE(#{sessionUser.userId}, ''), ' ', '') || '|%'
+				  )
+				  AND NOT EXISTS (
+					  SELECT 1
+					  FROM regexp_split_to_table(REPLACE(COALESCE(info.approved_users, info.status, ''), ' ', ''), ',') au(token)
+					  WHERE split_part(TRIM(au.token), '|', 1) = ap.token
+				  )
+			  )
+			  OR EXISTS (
+				  SELECT 1
+				  FROM regexp_split_to_table(REPLACE(COALESCE(info.revieweruser, ''), ' ', ''), ',') rv(token)
+				  WHERE (
+					  rv.token = REPLACE(COALESCE(#{sessionUser.userNm}, ''), ' ', '')
+					  OR rv.token LIKE REPLACE(COALESCE(#{sessionUser.userNm}, ''), ' ', '') || '|%'
+					  OR rv.token = REPLACE(COALESCE(#{sessionUser.userId}, ''), ' ', '')
+					  OR rv.token LIKE REPLACE(COALESCE(#{sessionUser.userId}, ''), ' ', '') || '|%'
+				  )
+				  AND NOT EXISTS (
+					  SELECT 1
+					  FROM regexp_split_to_table(REPLACE(COALESCE(info.approved_users, info.status, ''), ' ', ''), ',') au(token)
+					  WHERE split_part(TRIM(au.token), '|', 1) = rv.token
+				  )
+			  )
+		  )
+		UNION ALL
+		SELECT TO_CHAR(info.insert_dt, 'YYYY-MM-DD') AS useEndYmd,
+			   'PMPCB' AS objectType,
+			   'PMPCB' AS objectTypeNm,
+			   COALESCE(info.document_no, '-') AS objectNo,
+			   info.insert_dt AS sortDt
+		FROM docs_dxf_document info
+		WHERE COALESCE(info.deleted_yn, 'N') = 'N'
+		  AND COALESCE(info.status, '') IN ('승인진행중', 'APPROVAL')
+		  AND (
+			  EXISTS (
+				  SELECT 1
+				  FROM regexp_split_to_table(REPLACE(COALESCE(info.approver, ''), ' ', ''), ',') ap(token)
+				  WHERE (
+					  ap.token = REPLACE(COALESCE(#{sessionUser.userNm}, ''), ' ', '')
+					  OR ap.token LIKE REPLACE(COALESCE(#{sessionUser.userNm}, ''), ' ', '') || '|%'
+					  OR ap.token = REPLACE(COALESCE(#{sessionUser.userId}, ''), ' ', '')
+					  OR ap.token LIKE REPLACE(COALESCE(#{sessionUser.userId}, ''), ' ', '') || '|%'
+				  )
+				  AND NOT EXISTS (
+					  SELECT 1
+					  FROM regexp_split_to_table(REPLACE(COALESCE(info.approved_users, info.status, ''), ' ', ''), ',') au(token)
+					  WHERE split_part(TRIM(au.token), '|', 1) = ap.token
+				  )
+			  )
+			  OR EXISTS (
+				  SELECT 1
+				  FROM regexp_split_to_table(REPLACE(COALESCE(info.revieweruser, ''), ' ', ''), ',') rv(token)
+				  WHERE (
+					  rv.token = REPLACE(COALESCE(#{sessionUser.userNm}, ''), ' ', '')
+					  OR rv.token LIKE REPLACE(COALESCE(#{sessionUser.userNm}, ''), ' ', '') || '|%'
+					  OR rv.token = REPLACE(COALESCE(#{sessionUser.userId}, ''), ' ', '')
+					  OR rv.token LIKE REPLACE(COALESCE(#{sessionUser.userId}, ''), ' ', '') || '|%'
+				  )
+				  AND NOT EXISTS (
+					  SELECT 1
+					  FROM regexp_split_to_table(REPLACE(COALESCE(info.approved_users, info.status, ''), ' ', ''), ',') au(token)
+					  WHERE split_part(TRIM(au.token), '|', 1) = rv.token
+				  )
+			  )
+		  )
+	) t
+	ORDER BY t.sortDt DESC
+	LIMIT 10
+</select>
+
+<select id="selectPendingReviewList" resultType="kr.esob.fdms.controller.main.ValidEndListVO">
+	SELECT *
+	FROM (
+		SELECT TO_CHAR(info.insert_dt, 'YYYY-MM-DD') AS useEndYmd,
+			   'PEERREVIEW' AS objectType,
+			   'PeerReview' AS objectTypeNm,
+			   COALESCE(info.peerreview_no, '-') AS objectNo,
+			   info.insert_dt AS sortDt
+		FROM docs_peerreview info
+		WHERE COALESCE(info.deleted_yn, 'N') = 'N'
+		  AND COALESCE(info.status, '') IN ('승인진행중', 'APPROVAL')
+		  AND EXISTS (
+			  SELECT 1
+			  FROM regexp_split_to_table(REPLACE(COALESCE(info.approver, ''), ' ', ''), ',') ap(token)
+			  WHERE ap.token = REPLACE(COALESCE(#{sessionUser.userNm}, ''), ' ', '')
+				 OR ap.token LIKE REPLACE(COALESCE(#{sessionUser.userNm}, ''), ' ', '') || '|%'
+				 OR ap.token = REPLACE(COALESCE(#{sessionUser.userId}, ''), ' ', '')
+				 OR ap.token LIKE REPLACE(COALESCE(#{sessionUser.userId}, ''), ' ', '') || '|%'
+		  )
+	) t
+	ORDER BY t.sortDt DESC
+	LIMIT 10
+</select>
+
+<select id="selectSessionTime" resultType="Integer">
+	SELECT session_time
+	FROM session_config
+	WHERE id = 1
+</select>
+
+<update id="updateSessionTime">
+	UPDATE session_config
+	SET session_time = #{sessionTimeout}
+	WHERE id = 1
+</update>
+
+<select id="selectRoleGroupByUserCd" resultType="string">
+	SELECT role_group
+	FROM docs_user
+	WHERE user_cd = #{userCd}
+</select>
+
+
+</mapper>

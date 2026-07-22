@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+
+<!--<mapper namespace="sql.RoleAssign">-->
+<!--	<select id="selectRoleGroup" resultType="kr.esob.fdms.controller.inside.system.role.RoleGroupVO">-->
+<!--		SELECT-->
+<!--			GROUP_CODE AS groupCd-->
+<!--			, GROUP_NM AS groupNm-->
+<!--		FROM DOCS_ROLE_GROUP-->
+<!--		WHERE GROUP_CODE != 'RG_006'	/* 외부업체 */-->
+<!--		AND GROUP_CODE != 'RG_001'		/* 관리자 */-->
+<!--		AND USE_YN = 'Y'-->
+<!--		ORDER BY INSERT_ORDER-->
+<!--	</select>-->
+
+<!--	<select id="selectRoleGroupInfo" resultType="kr.esob.fdms.controller.inside.system.role.RoleGroupVO">-->
+<!--		SELECT-->
+<!--			GROUP_CODE AS groupCd-->
+<!--			, GROUP_NM AS groupNm-->
+<!--		FROM DOCS_ROLE_GROUP-->
+<!--		WHERE GROUP_CODE = #{groupCd}-->
+<!--	</select>-->
+
+<!--	<select id="selectRelRoleGroup" resultType="java.lang.String">-->
+<!--		/* 특정 그룹이 사용하는 메뉴목록 */-->
+<!--		SELECT-->
+<!--          MENU_CD-->
+<!--        FROM DOCS_REL_ROLE_GROUP rel-->
+<!--        INNER JOIN DOCS_MENU menu ON menu.ROLE_CD = rel.ROLE_CD-->
+<!--        WHERE GROUP_CD = #{groupCd}-->
+<!--        ORDER BY MENU_CD-->
+<!--	</select>-->
+
+<!--	<select id="selectRelRoleGroupCount" resultType="java.lang.Integer">-->
+<!--		/* INSERT하기 전에 이미 존재하는지 체크 */-->
+<!--		SELECT COUNT(*) FROM DOCS_REL_ROLE_GROUP WHERE GROUP_CD = #{groupCd} AND ROLE_CD = #{roleCd}-->
+<!--	</select>-->
+
+<!--	<insert id="insertRelRoleGroup">-->
+<!--		/* REL_ROLE_GROUP을 등록 */-->
+<!--		INSERT INTO DOCS_REL_ROLE_GROUP(GROUP_CD, ROLE_CD, INSERT_DT) VALUES(#{groupCd}, #{roleCd}, SYSDATE)-->
+<!--	</insert>-->
+
+<!--	<delete id="deleteRelRoleGroup">-->
+<!--		DELETE FROM DOCS_REL_ROLE_GROUP-->
+<!--		WHERE 1=1-->
+<!--		<if test='groupCd != null and !groupCd.equals("")'>-->
+<!--		AND GROUP_CD = #{groupCd}-->
+<!--		</if>-->
+<!--		<if test='roleCd != null and !roleCd.equals("")'>-->
+<!--		AND ROLE_CD = #{roleCd}-->
+<!--		</if>-->
+<!--	</delete>-->
+<!--</mapper>-->
+
+
+
+
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+
+
+
+<mapper namespace="sql.RoleAssign">
+
+<select id="selectRoleGroup" resultType="kr.esob.fdms.controller.inside.system.role.RoleGroupVO">
+	SELECT
+		GROUP_CODE AS groupCd,
+		GROUP_NM AS groupNm
+	FROM DOCS_ROLE_GROUP
+	WHERE GROUP_CODE NOT IN ('RG_006', 'RG_001')
+	  AND USE_YN = 'Y'
+	ORDER BY INSERT_ORDER
+</select>
+
+<select id="selectRoleGroupInfo" resultType="kr.esob.fdms.controller.inside.system.role.RoleGroupVO">
+	SELECT
+		GROUP_CODE AS groupCd,
+		GROUP_NM AS groupNm
+	FROM DOCS_ROLE_GROUP
+	WHERE GROUP_CODE = #{groupCd}
+</select>
+
+<select id="selectRelRoleGroup" resultType="java.lang.String">
+	/* 특정 그룹이 사용하는 메뉴목록 */
+	SELECT
+		MENU_CD
+	FROM DOCS_REL_ROLE_GROUP rel
+			 INNER JOIN DOCS_MENU menu ON menu.ROLE_CD = rel.ROLE_CD
+	WHERE GROUP_CD = #{groupCd}
+	ORDER BY MENU_CD
+</select>
+
+<select id="selectRelRoleGroupCount" resultType="java.lang.Integer">
+	/* INSERT하기 전에 이미 존재하는지 체크 */
+	SELECT COUNT(*)
+	FROM DOCS_REL_ROLE_GROUP
+	WHERE GROUP_CD = #{groupCd}
+	  AND ROLE_CD = #{roleCd}
+</select>
+
+<insert id="insertRelRoleGroup">
+	/* REL_ROLE_GROUP을 등록 */
+	INSERT INTO DOCS_REL_ROLE_GROUP (GROUP_CD, ROLE_CD, INSERT_DT)
+	VALUES (#{groupCd}, #{roleCd}, CURRENT_TIMESTAMP)
+</insert>
+
+<delete id="deleteRelRoleGroup">
+	DELETE FROM DOCS_REL_ROLE_GROUP
+	WHERE 1=1
+	<if test='groupCd != null and !groupCd.equals("")'>
+		AND GROUP_CD = #{groupCd}
+	</if>
+	<if test='roleCd != null and !roleCd.equals("")'>
+		AND ROLE_CD = #{roleCd}
+	</if>
+</delete>
+
+</mapper>

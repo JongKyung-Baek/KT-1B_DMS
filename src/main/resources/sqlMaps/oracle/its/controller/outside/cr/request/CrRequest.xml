@@ -1,0 +1,803 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+
+<!--<mapper namespace="sql.OutsideCrRequest">-->
+<!--	<select id="selectList" resultType="kr.esob.fdms.controller.outside.cr.request.RequestListVO">-->
+<!--		SELECT-->
+<!--			B1.*-->
+<!--		FROM-->
+<!--		(-->
+<!--			SELECT-->
+<!--				A1.*-->
+<!--				, ROWNUM AS PAGEINDEX-->
+<!--			FROM-->
+<!--			(-->
+<!--				SELECT-->
+<!--					cr.CR_NO 															AS crNo				/* cr번호 */-->
+<!--					, cr.DRAWING_NO 													AS drawingNo		/* 도번 */-->
+<!--					, cr.DRAWING_NM 													AS drawingNm		/* 도명 */-->
+<!--					, cr.REV_NO 														AS revNo			/* rev */-->
+<!--					, cr.CR_TITLE_NM 													AS crTitleNm		/* 제목 */-->
+<!--					, purchaser.USER_CD 												AS purchaserUserCd	/* 구매담당자 */-->
+<!--					, purchaser.USER_NM 												AS purchaserUserNm	/* 구매담당자 */-->
+<!--					, req.INSERT_DT														AS requestDt 		/* 요청일 */-->
+<!--					, req.APPROVAL_DT 													AS approvalDt		/* 승인일 */-->
+<!--					, req.STATUS_CD 													AS statusCd			/* 결재상태 */-->
+<!--					, cr.STATUS_CD 														AS crStatusCd		/* 진행상태 */-->
+<!--					, FN_GET_CD_NM('crStatusCd', cr.STATUS_CD, #{sessionLang}) 			AS crStatusNm		/* 진행상태 */-->
+<!--					, FN_GET_CD_NM('crRequestStatusCd', req.STATUS_CD, #{sessionLang}) 	AS statusNm			/* 결재상태 */-->
+<!--					, requestUser.USER_CD												AS companyUserCd	/* 업체담당자 */-->
+<!--					, requestUser.USER_NM 												AS companyUserNm	/* 업체담당자 */-->
+<!--					, companyApprovalUser.USER_CD										AS companyApprovalUserCd	/* 업체결재자 */-->
+<!--					, companyApprovalUser.USER_NM										AS companyApprovalUserNm	/* 업체결재자 */-->
+<!--					, cr.CR_TYPE_CD														AS crTypeCd			/* 제의사유 */-->
+<!--					, FN_GET_CD_NM('crTypeCd', cr.CR_TYPE_CD, #{sessionLang}) 			AS crTypeNm-->
+<!--					, cr.MATERIAL_NO    												AS materialNo		/* 자재코드*/-->
+<!--					, cr.PART_NO      													AS partNo			/* 규격화 품번*/-->
+<!--					, '' 																AS "comment"			/* 검토의견 */-->
+<!--					, #{sessionUser.approvalYn}											AS approvalYn-->
+<!--				FROM DOCS_REQUEST req-->
+<!--					INNER JOIN DOCS_REQUEST_MAPPING mapping ON mapping.REQUEST_NO = req.REQUEST_NO AND req.OBJECT_TYPE = 'CR'-->
+<!--					INNER JOIN DOCS_REQUEST_DETAIL requestDetail ON requestDetail.REQUEST_NO = req.REQUEST_NO AND APPROVAL_STATUS_CD = 'WAITING'	/* WAITING이 업체결재자*/-->
+<!--					INNER JOIN DOCS_USER companyApprovalUser ON companyApprovalUser.USER_CD = requestDetail.ACTUAL_USER_CD-->
+<!--					INNER JOIN ITN_CR cr ON cr.CR_NO = mapping.OBJECT_ID-->
+<!--					INNER JOIN DOCS_USER purchaser ON purchaser.USER_ID = cr.PURCHASER_UID-->
+<!--					INNER JOIN DOCS_USER requestUser ON requestUser.USER_ID = cr.VENDOR_UID-->
+<!--&lt;!&ndash; 					<if test='"Y".equals(sessionUser.approvalYn)'> &ndash;&gt;-->
+<!--					WHERE requestUser.COMPANY_CD = #{sessionUser.companyCd}-->
+<!--&lt;!&ndash; 					</if> &ndash;&gt;-->
+<!--&lt;!&ndash; 					<if test='"N".equals(sessionUser.approvalYn)'> &ndash;&gt;-->
+<!--&lt;!&ndash; 					WHERE requestUser.USER_CD = #{sessionUser.userCd} &ndash;&gt;-->
+<!--&lt;!&ndash; 					</if> &ndash;&gt;-->
+<!--					<if test='requestStartDt != null and !requestStartDt.equals("")'>-->
+<!--					AND req.INSERT_DT BETWEEN TO_DATE(#{requestStartDt}, 'YYYY-MM-DD')-->
+<!--			                         		AND TO_DATE(#{requestEndDt}, 'YYYY-MM-DD')+1-->
+<!--					</if>-->
+<!--					<if test='sortColumn == null or "".equals(sortColumn)'>-->
+<!--		           		ORDER BY requestDt desc-->
+<!--					</if>-->
+<!--		         	<if test='sortColumn != null and !"".equals(sortColumn)'>-->
+<!--		         		ORDER BY ${sortColumn} ${order}-->
+<!--		         	</if>-->
+<!--			) A1-->
+<!--			WHERE 1=1-->
+<!--			<if test='crNo != null and !crNo.equals("")'>-->
+<!--			AND crNo LIKE '%' || UPPER(TRIM(#{crNo})) || '%'-->
+<!--			</if>-->
+<!--			<if test='requestReason != null and !requestReason.equals("")'>-->
+<!--			AND requestReason = #{requestReason}-->
+<!--			</if>-->
+<!--			<if test='purchaserUserCd != null and !purchaserUserCd.equals("")'>-->
+<!--			AND purchaserUserCd = #{purchaserUserCd}-->
+<!--			</if>-->
+<!--			<if test='companyUserCd != null and !companyUserCd.equals("")'>-->
+<!--			AND companyUserCd = #{companyUserCd}-->
+<!--			</if>-->
+<!--			<if test='companyApprovalUserCd != null and !companyApprovalUserCd.equals("")'>-->
+<!--			AND companyApprovalUserCd = #{companyApprovalUserCd}-->
+<!--			</if>-->
+<!--			<if test='statusCd != null and !statusCd.equals("")'>-->
+<!--			AND statusCd = #{statusCd}-->
+<!--			</if>-->
+<!--			<if test='crStatusCd != null and !crStatusCd.equals("")'>-->
+<!--			AND crStatusCd = #{crStatusCd}-->
+<!--			</if>-->
+<!--			<if test='crTypeCd != null and !crTypeCd.equals("")'>-->
+<!--			AND crTypeCd = #{crTypeCd}-->
+<!--			</if>-->
+<!--			<if test='end != null and !end.equals("")'>-->
+<!--			AND ROWNUM <![CDATA[ <= ]]> #{end}-->
+<!--			</if>-->
+<!--		) B1-->
+<!--		<if test='start != null and !start.equals("")'>-->
+<!--		WHERE PAGEINDEX <![CDATA[ >= ]]>#{start}-->
+<!--		</if>-->
+<!--		</select>-->
+
+<!--	<select id="selectListCount" resultType="Integer">-->
+<!--		SELECT COUNT(*) AS TOTAL_COUNT-->
+<!--		FROM (-->
+<!--			SELECT-->
+<!--				B1.*-->
+<!--			FROM-->
+<!--			(-->
+<!--				SELECT-->
+<!--				A1.*-->
+<!--			FROM-->
+<!--			(-->
+<!--				SELECT-->
+<!--					cr.CR_NO 										AS crNo				/* cr번호 */-->
+<!--					, cr.DRAWING_NO 								AS drawingNo		/* 도번 */-->
+<!--					, cr.DRAWING_NM 								AS drawingNm		/* 도명 */-->
+<!--					, cr.REV_NO 									AS revNo			/* rev */-->
+<!--					, cr.CR_TITLE_NM 								AS crTitleNm		/* 제목 */-->
+<!--					, purchaser.USER_CD 							AS purchaserUserCd	/* 구매담당자 */-->
+<!--					, purchaser.USER_NM 							AS purchaserUserNm	/* 구매담당자 */-->
+<!--					, req.INSERT_DT									AS requestDt 		/* 요청일 */-->
+<!--					, req.APPROVAL_DT 								AS approvalDt		/* 승인일 */-->
+<!--					, req.STATUS_CD 								AS statusCd			/* 결재상태 */-->
+<!--					, cr.STATUS_CD 									AS crStatusCd		/* 진행상태 */-->
+<!--					, requestUser.USER_Cd 							AS companyUserCd	/* 업체담당자 */-->
+<!--					, requestUser.USER_NM 							AS companyUserNm	/* 업체담당자 */-->
+<!--					, companyApprovalUser.USER_CD					AS companyApprovalUserCd	/* 업체결재자 */-->
+<!--					, companyApprovalUser.USER_NM					AS companyApprovalUserNm	/* 업체결재자 */-->
+<!--					, cr.CR_TYPE_CD									AS crTypeCd			/* 제의사유 */-->
+<!--					, cr.MATERIAL_NO    							AS materialNo		/* 자재코드*/-->
+<!--					, cr.PART_NO      								AS partNo			/* 규격화 품번*/-->
+<!--					, '' 											AS "comment"			/* 검토의견 */-->
+<!--				FROM DOCS_REQUEST req-->
+<!--					INNER JOIN DOCS_REQUEST_MAPPING mapping ON mapping.REQUEST_NO = req.REQUEST_NO AND req.OBJECT_TYPE = 'CR'-->
+<!--					INNER JOIN DOCS_REQUEST_DETAIL requestDetail ON requestDetail.REQUEST_NO = req.REQUEST_NO AND APPROVAL_STATUS_CD = 'WAITING'	/* WAITING이 업체결재자*/-->
+<!--					INNER JOIN DOCS_USER companyApprovalUser ON companyApprovalUser.USER_CD = requestDetail.ACTUAL_USER_CD-->
+<!--					INNER JOIN ITN_CR cr ON cr.CR_NO = mapping.OBJECT_ID-->
+<!--					INNER JOIN DOCS_USER purchaser ON purchaser.USER_ID = cr.PURCHASER_UID-->
+<!--					INNER JOIN DOCS_USER requestUser ON requestUser.USER_ID = cr.VENDOR_UID-->
+<!--&lt;!&ndash; 					<if test='"Y".equals(sessionUser.approvalYn)'> &ndash;&gt;-->
+<!--					WHERE requestUser.COMPANY_CD = #{sessionUser.companyCd}-->
+<!--&lt;!&ndash; 					</if> &ndash;&gt;-->
+<!--&lt;!&ndash; 					<if test='"N".equals(sessionUser.approvalYn)'> &ndash;&gt;-->
+<!--&lt;!&ndash; 					WHERE requestUser.USER_CD = #{sessionUser.userCd} &ndash;&gt;-->
+<!--&lt;!&ndash; 					</if> &ndash;&gt;-->
+<!--					<if test='requestStartDt != null and !requestStartDt.equals("")'>-->
+<!--					AND req.INSERT_DT BETWEEN TO_DATE(#{requestStartDt}, 'YYYY-MM-DD')-->
+<!--			                         		AND TO_DATE(#{requestEndDt}, 'YYYY-MM-DD')+1-->
+<!--					</if>-->
+<!--			) A1-->
+<!--			WHERE 1=1-->
+<!--			<if test='crNo != null and !crNo.equals("")'>-->
+<!--			AND crNo LIKE '%' || UPPER(TRIM(#{crNo})) || '%'-->
+<!--			</if>-->
+<!--			<if test='requestReason != null and !requestReason.equals("")'>-->
+<!--			AND requestReason = #{requestReason}-->
+<!--			</if>-->
+<!--			<if test='purchaserUserCd != null and !purchaserUserCd.equals("")'>-->
+<!--			AND purchaserUserCd = #{purchaserUserCd}-->
+<!--			</if>-->
+<!--			<if test='companyUserCd != null and !companyUserCd.equals("")'>-->
+<!--			AND companyUserCd = #{companyUserCd}-->
+<!--			</if>-->
+<!--			<if test='companyApprovalUserCd != null and !companyApprovalUserCd.equals("")'>-->
+<!--			AND companyApprovalUserCd = #{companyApprovalUserCd}-->
+<!--			</if>-->
+<!--			<if test='statusCd != null and !statusCd.equals("")'>-->
+<!--			AND statusCd = #{statusCd}-->
+<!--			</if>-->
+<!--			<if test='crStatusCd != null and !crStatusCd.equals("")'>-->
+<!--			AND crStatusCd = #{crStatusCd}-->
+<!--			</if>-->
+<!--			<if test='crTypeCd != null and !crTypeCd.equals("")'>-->
+<!--			AND crTypeCd = #{crTypeCd}-->
+<!--			</if>-->
+<!--			) B1-->
+<!--		) C1-->
+<!--	</select>-->
+
+<!--	<select id="getDrawingInfo" resultType="kr.esob.fdms.controller.outside.drawing.request.DrawingInfoVO">-->
+<!--		SELECT item.WERKS AS businessAreaCd-->
+<!--			, item.MATNR AS materialsCd-->
+<!--			, item.C0003 AS drawingNo-->
+<!--			, item.C0001 AS productCd-->
+<!--			, item.CN_PDM_PART_NO AS partNo-->
+<!--			, (SELECT draw.DRAWING_NM-->
+<!--               FROM DOCS_DRAWING draw-->
+<!--               WHERE draw.DRAWING_NO = item.C0003-->
+<!--               AND draw.DRAWING_REV = item.C0004-->
+<!--               AND ROWNUM = 1-->
+<!--              ) AS drawingNm-->
+<!--            , item.C0008_1 || item.C0008_2 || item.C0008_3 AS partNm-->
+<!--            , item.C0037 AS insertDt-->
+<!--            , item.C0004 AS revNo-->
+<!--            , item.C0006 AS stdPartNo-->
+<!--		FROM DOCS_ITEM item-->
+<!--		WHERE item.WERKS = #{businessAreaCd}-->
+<!--		AND item.CN_PDM_PART_NO = #{partNo}-->
+<!--        AND item.CN_PART_REV  = ( SELECT MAX(CN_PART_REV)-->
+<!--                                                FROM DOCS_ITEM-->
+<!--                                                WHERE WERKS = #{businessAreaCd}-->
+<!--                                                AND CN_PDM_PART_NO = #{partNo}-->
+<!--                                              )-->
+<!--		AND ROWNUM <![CDATA[<=]]> 1-->
+<!--		ORDER BY C0004 DESC-->
+<!--	</select>-->
+
+<!--	<insert id="insertCrInfo">-->
+<!--	<selectKey resultType="int" keyProperty="cnSerial" order="BEFORE">-->
+<!--		SELECT NVL((MAX(CN_SERIAL)+1),1) AS cnSerial-->
+<!--        FROM ITN_CR-->
+<!--	</selectKey>-->
+<!--		INSERT INTO ITN_CR-->
+<!--		(-->
+<!--			CN_SERIAL-->
+<!--			, CR_NO-->
+<!--			, BUSINESS_AREA_CD-->
+<!--			, BUSINESS_TYPE_CD-->
+<!--			, PRODUCT_NO-->
+<!--			, DRAWING_NO-->
+<!--			, REV_NO-->
+<!--			, DRAWING_NM-->
+<!--			, CR_TITLE_NM-->
+<!--			, MATERIAL_NO-->
+<!--			, PART_NO-->
+<!--			, PURCHASER_UID-->
+<!--			, PURCHASER_TL_UID-->
+<!--			, CR_TYPE_CD-->
+<!--			, DRAWING_INSERT_DT-->
+<!--			, AS_IS_DESC-->
+<!--			, TO_BE_DESC-->
+<!--			, VENDOR_NM-->
+<!--			, VENDOR_NO-->
+<!--			, VENDOR_UID-->
+<!--			, VENDOR_UID_NM-->
+<!--			, VENDOR_EMAIL_NM-->
+<!--			, STATUS_CD-->
+<!--			, INSERT_UID-->
+<!--			, INSERT_DT-->
+<!--			, DEVICE_NM-->
+<!--		)-->
+<!--		VALUES-->
+<!--		(-->
+<!--			#{cnSerial}-->
+<!--			, #{crNo}-->
+<!--			, #{businessAreaCd}-->
+<!--			, #{businessTypeCd}-->
+<!--			, #{productNo}-->
+<!--			, #{drawingNo}-->
+<!--			, #{revNo}-->
+<!--			, #{drawingNm}-->
+<!--			, #{crTitleNm}-->
+<!--			, #{materialNo}-->
+<!--			, #{partNo}-->
+<!--			, #{purchaserUid}-->
+<!--			, #{purchaserTlUid}-->
+<!--			, #{crTypeCd}-->
+<!--			, #{insertDt}-->
+<!--			, #{asIsDesc}-->
+<!--			, #{toBeDesc}-->
+<!--			, #{sessionUser.companyNm}-->
+<!--			, #{sessionUser.bizNo}-->
+<!--			, #{vendorUid}-->
+<!--			, #{vendorUidNm}-->
+<!--			, #{vendorEmailNm}-->
+<!--			, #{statusCd}-->
+<!--			, #{sessionUser.userCd}-->
+<!--			, SYSDATE-->
+<!--			, #{deviceNm}-->
+<!--		)-->
+<!--	</insert>-->
+
+<!--	<insert id="insertCrFile">-->
+<!--		INSERT INTO ITN_CR_FILE-->
+<!--		(-->
+<!--			CN_SERIAL-->
+<!--			, DOCS_FILE_PATH_NM-->
+<!--			, CR_NO-->
+<!--			, FILE_NM-->
+<!--			, FILE_SIZE-->
+<!--			, FILE_NO-->
+<!--			, ORG_FILE_NM-->
+<!--		)-->
+<!--		VALUES-->
+<!--		(-->
+<!--			#{cnSerial}-->
+<!--			, #{filePathNm}-->
+<!--			, #{crNo}-->
+<!--			, #{fileNm}-->
+<!--			, #{fileSize}-->
+<!--			, #{fileNo}-->
+<!--			, #{orgFileNm}-->
+<!--		)-->
+<!--	</insert>-->
+
+<!--	<insert id="insertRequestFile">-->
+<!--		INSERT INTO DOCS_REQUEST_FILE-->
+<!--		(-->
+<!--			REQUEST_NO-->
+<!--			, OBJECT_ID-->
+<!--			, FILE_PATH_NM-->
+<!--			, ORG_FILE_NM-->
+<!--			, FILE_NM-->
+<!--			, FILE_SIZE-->
+<!--			, FILE_NO-->
+<!--		)-->
+<!--		VALUES-->
+<!--		(-->
+<!--			#{requestNo}-->
+<!--			, #{objectId}-->
+<!--			, #{filePathNm}-->
+<!--			, #{orgFileNm}-->
+<!--			, #{fileNm}-->
+<!--			, #{fileSize}-->
+<!--			, #{fileNo}-->
+<!--		)-->
+<!--	</insert>-->
+
+<!--	<select id="selectCrNo" resultType="string">-->
+<!--		SELECT 'CR' || TO_CHAR(SYSDATE,'YYYY')||'-'||LPAD(NVL(SUBSTR(MAX(CR_NO),8),0)+1,4,0) AS CR_NO-->
+<!--        FROM ITN_CR-->
+<!--        WHERE SUBSTR(CR_NO,3,4) = TO_CHAR(SYSDATE,'YYYY')-->
+<!--	</select>-->
+
+<!--	<select id="getCrRequestInfo" parameterType="kr.esob.fdms.controller.outside.cr.request.CrRequestParam" resultType="kr.esob.fdms.controller.outside.cr.request.RequestStatusPopupVO">-->
+<!--		SELECT cr.CR_NO                                                   				AS crNo-->
+<!--			, ( SELECT USER_NM-->
+<!--		      	FROM DOCS_USER-->
+<!--		      	WHERE USER_ID = cr.VENDOR_UID-->
+<!--		      	AND ROWNUM = 1 )                                            			AS vendorUserNm      /* 업체 담당자 */-->
+<!--		  	, ( SELECT USER_NM-->
+<!--		      	FROM DOCS_USER-->
+<!--		      	WHERE USER_CD = reqDtl.ACTUAL_USER_CD-->
+<!--		      	AND ROWNUM = 1 )                                            			AS approvalUser      /* 결재자 */-->
+<!--		    , reqDtl.ACTUAL_USER_CD														AS approvalUserCd-->
+<!--		  	, FN_GET_CD_NM('businessAreaCd', reqMap.BUSINESS_AREA_CD, #{sessionLang}) 	AS  businessAreaNm-->
+<!--		  	, ( SELECT USER_NM-->
+<!--		      	FROM DOCS_USER-->
+<!--		     	WHERE USER_ID = cr.PURCHASER_UID-->
+<!--		      	AND ROWNUM = 1 )                                            			AS purchaserUserNm   /* 구매담당자 */-->
+<!--		  	, reqMap.OBJECT_NO                                              			AS drawingNo-->
+<!--		  	, FN_GET_CD_NM('crTypeCd', cr.CR_TYPE_CD, #{sessionLang})                 	AS crTypeCd-->
+<!--		  	, (SELECT CN_CD || ' ' || CN_CD_DESC-->
+<!--		     	FROM (SELECT DISTINCT PRODUCT_CD AS CN_CD, PRODUCT_CD AS CN_CD_DESC FROM DOCS_REQUEST_MAPPING WHERE PRODUCT_CD IS NOT NULL) PROD_SRC-->
+<!--		     	WHERE CN_CD = cr.PRODUCT_NO )                               			AS productNm-->
+<!--		  	, cr.MATERIAL_NO                                                			AS materialNo-->
+<!--		  	, reqMap.OBJECT_NM                                              			AS drawingNm-->
+<!--		  	, reqMap.REV_NO                                                 			AS revNo-->
+<!--		  	, cr.PART_NO                                                    			AS partNo-->
+<!--		  	, cr.INSERT_DT                                                 				AS insertDt-->
+<!--		  	, cr.AS_IS_DESC                                                 			AS asIsDesc-->
+<!--		  	, cr.TO_BE_DESC                                                 			AS toBeDesc-->
+<!--		  	, cr.CR_TITLE_NM															AS crTitleNm-->
+<!--		  	, req.STATUS_CD																AS statusCd-->
+<!--		  	, rejDtl.REQUEST_DESC                                                       AS rejectDesc-->
+<!--		  	, cr.DEVICE_NM																AS deviceNm-->
+<!--		FROM DOCS_REQUEST_MAPPING reqMap-->
+<!--		JOIN ITN_CR cr-->
+<!--		ON reqMap.OBJECT_ID = cr.CR_NO-->
+<!--		JOIN DOCS_REQUEST_DETAIL reqDtl-->
+<!--		ON reqMap.REQUEST_NO = reqDtl.REQUEST_NO AND reqDtl.APPROVAL_STATUS_CD = 'WAITING'-->
+<!--		JOIN DOCS_REQUEST req-->
+<!--        ON req.REQUEST_NO =  reqMap.REQUEST_NO-->
+<!--        LEFT JOIN DOCS_REQUEST_DETAIL rejDtl-->
+<!--        ON reqMap.REQUEST_NO = rejDtl.REQUEST_NO AND rejDtl.ACTION_CD = 'REJECT'-->
+<!--		WHERE cr.CR_NO = #{crNo}-->
+<!--	</select>-->
+
+<!--	&lt;!&ndash; CR 외부사용자 승인 [2019.11.20(최금영)] &ndash;&gt;-->
+<!--	<update id="updateRequest">-->
+<!--		/* CR 외부사용자 승인 */-->
+<!--		UPDATE DOCS_REQUEST-->
+<!--		SET STATUS_CD = #{reqStatusCd}-->
+<!--			, UPDATE_DT = SYSDATE-->
+<!--			, UPDATE_USER_CD = #{sessionUser.userCd}-->
+<!--			<if test="'REQUEST'.equals(reqStatusCd)">-->
+<!--			, CURRENT_PROCESS_SEQ_NO = 3-->
+<!--			</if>-->
+<!--		WHERE REQUEST_NO = (SELECT REQUEST_NO FROM DOCS_REQUEST_MAPPING WHERE OBJECT_ID = #{crNo} AND ROWNUM <![CDATA[<=1]]>)-->
+<!--	</update>-->
+
+<!--	&lt;!&ndash; CR 외부사용자 승인 상세정보 수정 [2019.11.20(최금영)] &ndash;&gt;-->
+<!--	<update id="updateRequestDetail">-->
+<!--		/* CR 외부사용자 승인 상세정보 수정 */-->
+<!--		UPDATE DOCS_REQUEST_DETAIL-->
+<!--		SET ACTION_DT = SYSDATE-->
+<!--			, ACTION_CD = #{actionCd}-->
+<!--			, REQUEST_DESC = #{rejectDesc}-->
+<!--		WHERE REQUEST_NO = (SELECT REQUEST_NO FROM DOCS_REQUEST_MAPPING WHERE OBJECT_ID = #{crNo} AND ROWNUM <![CDATA[<=1]]>)-->
+<!--		AND APPROVAL_STATUS_CD = 'WAITING'-->
+<!--	</update>-->
+
+<!--	<update id="updateCr">-->
+<!--		/* 외부업체 팀장 - 승인/반려 */-->
+<!--		UPDATE ITN_CR-->
+<!--		SET REJECT_REASON = #{rejectDesc}-->
+<!--			, STATUS_CD = #{statusCd}-->
+<!--		WHERE CR_NO = #{crNo}-->
+<!--	</update>-->
+<!--</mapper>-->
+
+
+
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+
+
+
+
+
+<mapper namespace="sql.OutsideCrRequest">
+<select id="selectList" resultType="kr.esob.fdms.controller.outside.cr.request.RequestListVO">
+	SELECT
+	B1.*
+	FROM
+	(
+	SELECT
+	A1.*
+	, ROW_NUMBER() OVER () AS PAGEINDEX
+	FROM
+	(
+	SELECT
+	cr.CR_NO 															AS crNo				/* cr번호 */
+	, cr.DRAWING_NO 													AS drawingNo		/* 도번 */
+	, cr.DRAWING_NM 													AS drawingNm		/* 도명 */
+	, cr.REV_NO 														AS revNo			/* rev */
+	, cr.CR_TITLE_NM 													AS crTitleNm		/* 제목 */
+	, purchaser.USER_CD 												AS purchaserUserCd	/* 구매담당자 */
+	, purchaser.USER_NM 												AS purchaserUserNm	/* 구매담당자 */
+	, req.INSERT_DT														AS requestDt 		/* 요청일 */
+	, req.APPROVAL_DT 													AS approvalDt		/* 승인일 */
+	, req.STATUS_CD 													AS statusCd			/* 결재상태 */
+	, cr.STATUS_CD 														AS crStatusCd		/* 진행상태 */
+	, FN_GET_CD_NM('crStatusCd', cr.STATUS_CD, #{sessionLang}) 			AS crStatusNm		/* 진행상태 */
+	, FN_GET_CD_NM('crRequestStatusCd', req.STATUS_CD, #{sessionLang}) 	AS statusNm			/* 결재상태 */
+	, requestUser.USER_CD												AS companyUserCd	/* 업체담당자 */
+	, requestUser.USER_NM 												AS companyUserNm	/* 업체담당자 */
+	, companyApprovalUser.USER_CD										AS companyApprovalUserCd	/* 업체결재자 */
+	, companyApprovalUser.USER_NM										AS companyApprovalUserNm	/* 업체결재자 */
+	, cr.CR_TYPE_CD														AS crTypeCd			/* 제의사유 */
+	, FN_GET_CD_NM('crTypeCd', cr.CR_TYPE_CD, #{sessionLang}) 			AS crTypeNm
+	, cr.MATERIAL_NO    												AS materialNo		/* 자재코드*/
+	, cr.PART_NO      													AS partNo			/* 규격화 품번*/
+	, '' 																AS "comment"			/* 검토의견 */
+	, #{sessionUser.approvalYn}											AS approvalYn
+	FROM DOCS_REQUEST req
+	INNER JOIN DOCS_REQUEST_MAPPING mapping ON mapping.REQUEST_NO = req.REQUEST_NO AND req.OBJECT_TYPE = 'CR'
+	INNER JOIN DOCS_REQUEST_DETAIL requestDetail ON requestDetail.REQUEST_NO = req.REQUEST_NO AND APPROVAL_STATUS_CD = 'WAITING'	/* WAITING이 업체결재자*/
+	INNER JOIN DOCS_USER companyApprovalUser ON companyApprovalUser.USER_CD = requestDetail.ACTUAL_USER_CD
+	INNER JOIN ITN_CR cr ON cr.CR_NO = mapping.OBJECT_ID
+	INNER JOIN DOCS_USER purchaser ON purchaser.USER_ID = cr.PURCHASER_UID
+	INNER JOIN DOCS_USER requestUser ON requestUser.USER_ID = cr.VENDOR_UID
+	<!-- 					<if test='"Y".equals(sessionUser.approvalYn)'> -->
+	WHERE requestUser.COMPANY_CD = #{sessionUser.companyCd}
+	<!-- 					</if> -->
+	<!-- 					<if test='"N".equals(sessionUser.approvalYn)'> -->
+	<!-- 					WHERE requestUser.USER_CD = #{sessionUser.userCd} -->
+	<!-- 					</if> -->
+	<if test='requestStartDt != null and !requestStartDt.equals("")'>
+		AND req.INSERT_DT BETWEEN TO_DATE(#{requestStartDt}, 'YYYY-MM-DD')
+		AND TO_DATE(#{requestEndDt}, 'YYYY-MM-DD')+1
+	</if>
+	<if test='sortColumn == null or "".equals(sortColumn)'>
+		ORDER BY requestDt desc
+	</if>
+	<if test='sortColumn != null and !"".equals(sortColumn)'>
+		ORDER BY ${sortColumn} ${order}
+	</if>
+	) A1
+	WHERE 1=1
+	<if test='crNo != null and !crNo.equals("")'>
+		AND crNo LIKE '%' || UPPER(TRIM(#{crNo})) || '%'
+	</if>
+	<if test='requestReason != null and !requestReason.equals("")'>
+		AND requestReason = #{requestReason}
+	</if>
+	<if test='purchaserUserCd != null and !purchaserUserCd.equals("")'>
+		AND purchaserUserCd = #{purchaserUserCd}
+	</if>
+	<if test='companyUserCd != null and !companyUserCd.equals("")'>
+		AND companyUserCd = #{companyUserCd}
+	</if>
+	<if test='companyApprovalUserCd != null and !companyApprovalUserCd.equals("")'>
+		AND companyApprovalUserCd = #{companyApprovalUserCd}
+	</if>
+	<if test='statusCd != null and !statusCd.equals("")'>
+		AND statusCd = #{statusCd}
+	</if>
+	<if test='crStatusCd != null and !crStatusCd.equals("")'>
+		AND crStatusCd = #{crStatusCd}
+	</if>
+	<if test='crTypeCd != null and !crTypeCd.equals("")'>
+		AND crTypeCd = #{crTypeCd}
+	</if>
+	<if test='end != null and !end.equals("")'>
+		AND ROWNUM <![CDATA[ <= ]]> #{end}
+	</if>
+	) B1
+	<if test='start != null and !start.equals("")'>
+		WHERE PAGEINDEX >= #{start}
+	</if>
+</select>
+
+<select id="selectListCount" resultType="Integer">
+	SELECT COUNT(*) AS TOTAL_COUNT
+	FROM (
+	SELECT
+	B1.*
+	FROM
+	(
+	SELECT
+	A1.*
+	FROM
+	(
+	SELECT
+	cr.CR_NO 										AS crNo				/* cr번호 */
+	, cr.DRAWING_NO 								AS drawingNo		/* 도번 */
+	, cr.DRAWING_NM 								AS drawingNm		/* 도명 */
+	, cr.REV_NO 									AS revNo			/* rev */
+	, cr.CR_TITLE_NM 								AS crTitleNm		/* 제목 */
+	, purchaser.USER_CD 							AS purchaserUserCd	/* 구매담당자 */
+	, purchaser.USER_NM 							AS purchaserUserNm	/* 구매담당자 */
+	, req.INSERT_DT									AS requestDt 		/* 요청일 */
+	, req.APPROVAL_DT 								AS approvalDt		/* 승인일 */
+	, req.STATUS_CD 								AS statusCd			/* 결재상태 */
+	, cr.STATUS_CD 									AS crStatusCd		/* 진행상태 */
+	, requestUser.USER_Cd 							AS companyUserCd	/* 업체담당자 */
+	, requestUser.USER_NM 							AS companyUserNm	/* 업체담당자 */
+	, companyApprovalUser.USER_CD					AS companyApprovalUserCd	/* 업체결재자 */
+	, companyApprovalUser.USER_NM					AS companyApprovalUserNm	/* 업체결재자 */
+	, cr.CR_TYPE_CD									AS crTypeCd			/* 제의사유 */
+	, cr.MATERIAL_NO    							AS materialNo		/* 자재코드*/
+	, cr.PART_NO      								AS partNo			/* 규격화 품번*/
+	, '' 											AS "comment"			/* 검토의견 */
+	FROM DOCS_REQUEST req
+	INNER JOIN DOCS_REQUEST_MAPPING mapping ON mapping.REQUEST_NO = req.REQUEST_NO AND req.OBJECT_TYPE = 'CR'
+	INNER JOIN DOCS_REQUEST_DETAIL requestDetail ON requestDetail.REQUEST_NO = req.REQUEST_NO AND APPROVAL_STATUS_CD = 'WAITING'	/* WAITING이 업체결재자*/
+	INNER JOIN DOCS_USER companyApprovalUser ON companyApprovalUser.USER_CD = requestDetail.ACTUAL_USER_CD
+	INNER JOIN ITN_CR cr ON cr.CR_NO = mapping.OBJECT_ID
+	INNER JOIN DOCS_USER purchaser ON purchaser.USER_ID = cr.PURCHASER_UID
+	INNER JOIN DOCS_USER requestUser ON requestUser.USER_ID = cr.VENDOR_UID
+	<!-- 					<if test='"Y".equals(sessionUser.approvalYn)'> -->
+	WHERE requestUser.COMPANY_CD = #{sessionUser.companyCd}
+	<!-- 					</if> -->
+	<!-- 					<if test='"N".equals(sessionUser.approvalYn)'> -->
+	<!-- 					WHERE requestUser.USER_CD = #{sessionUser.userCd} -->
+	<!-- 					</if> -->
+	<if test='requestStartDt != null and !requestStartDt.equals("")'>
+		AND req.INSERT_DT BETWEEN TO_DATE(#{requestStartDt}, 'YYYY-MM-DD')
+		AND TO_DATE(#{requestEndDt}, 'YYYY-MM-DD')+1
+	</if>
+	) A1
+	WHERE 1=1
+	<if test='crNo != null and !crNo.equals("")'>
+		AND crNo LIKE '%' || UPPER(TRIM(#{crNo})) || '%'
+	</if>
+	<if test='requestReason != null and !requestReason.equals("")'>
+		AND requestReason = #{requestReason}
+	</if>
+	<if test='purchaserUserCd != null and !purchaserUserCd.equals("")'>
+		AND purchaserUserCd = #{purchaserUserCd}
+	</if>
+	<if test='companyUserCd != null and !companyUserCd.equals("")'>
+		AND companyUserCd = #{companyUserCd}
+	</if>
+	<if test='companyApprovalUserCd != null and !companyApprovalUserCd.equals("")'>
+		AND companyApprovalUserCd = #{companyApprovalUserCd}
+	</if>
+	<if test='statusCd != null and !statusCd.equals("")'>
+		AND statusCd = #{statusCd}
+	</if>
+	<if test='crStatusCd != null and !crStatusCd.equals("")'>
+		AND crStatusCd = #{crStatusCd}
+	</if>
+	<if test='crTypeCd != null and !crTypeCd.equals("")'>
+		AND crTypeCd = #{crTypeCd}
+	</if>
+	) B1
+	) C1
+</select>
+
+<select id="getDrawingInfo" resultType="kr.esob.fdms.controller.outside.drawing.request.DrawingInfoVO">
+	SELECT item.WERKS AS businessAreaCd
+		 , item.MATNR AS materialsCd
+		 , item.C0003 AS drawingNo
+		 , item.C0001 AS productCd
+		 , item.CN_PDM_PART_NO AS partNo
+		 , (SELECT draw.DRAWING_NM
+			FROM DOCS_DRAWING draw
+			WHERE draw.DRAWING_NO = item.C0003
+			  AND draw.DRAWING_REV = item.C0004
+				LIMIT 1
+	) AS drawingNm
+		 , item.C0008_1 || item.C0008_2 || item.C0008_3 AS partNm
+		 , item.C0037 AS insertDt
+		 , item.C0004 AS revNo
+		 , item.C0006 AS stdPartNo
+	FROM DOCS_ITEM item
+	WHERE item.WERKS = #{businessAreaCd}
+	  AND item.CN_PDM_PART_NO = #{partNo}
+	  AND item.CN_PART_REV  = ( SELECT MAX(CN_PART_REV)
+								FROM DOCS_ITEM
+								WHERE WERKS = #{businessAreaCd}
+								  AND CN_PDM_PART_NO = #{partNo}
+	)
+	ORDER BY C0004 DESC
+		LIMIT 1
+</select>
+
+<insert id="insertCrInfo">
+	<selectKey resultType="int" keyProperty="cnSerial" order="BEFORE">
+		SELECT COALESCE((MAX(CN_SERIAL)+1),1) AS cnSerial
+		FROM ITN_CR
+	</selectKey>
+	INSERT INTO ITN_CR
+	(
+	CN_SERIAL
+	, CR_NO
+	, BUSINESS_AREA_CD
+	, BUSINESS_TYPE_CD
+	, PRODUCT_NO
+	, DRAWING_NO
+	, REV_NO
+	, DRAWING_NM
+	, CR_TITLE_NM
+	, MATERIAL_NO
+	, PART_NO
+	, PURCHASER_UID
+	, PURCHASER_TL_UID
+	, CR_TYPE_CD
+	, DRAWING_INSERT_DT
+	, AS_IS_DESC
+	, TO_BE_DESC
+	, VENDOR_NM
+	, VENDOR_NO
+	, VENDOR_UID
+	, VENDOR_UID_NM
+	, VENDOR_EMAIL_NM
+	, STATUS_CD
+	, INSERT_UID
+	, INSERT_DT
+	, DEVICE_NM
+	)
+	VALUES
+	(
+	#{cnSerial}
+	, #{crNo}
+	, #{businessAreaCd}
+	, #{businessTypeCd}
+	, #{productNo}
+	, #{drawingNo}
+	, #{revNo}
+	, #{drawingNm}
+	, #{crTitleNm}
+	, #{materialNo}
+	, #{partNo}
+	, #{purchaserUid}
+	, #{purchaserTlUid}
+	, #{crTypeCd}
+	, #{insertDt}
+	, #{asIsDesc}
+	, #{toBeDesc}
+	, #{sessionUser.companyNm}
+	, #{sessionUser.bizNo}
+	, #{vendorUid}
+	, #{vendorUidNm}
+	, #{vendorEmailNm}
+	, #{statusCd}
+	, #{sessionUser.userCd}
+	, CURRENT_TIMESTAMP
+	, #{deviceNm}
+	)
+</insert>
+
+<insert id="insertCrFile">
+	INSERT INTO ITN_CR_FILE
+	(
+		CN_SERIAL
+	, DOCS_FILE_PATH_NM
+	, CR_NO
+	, FILE_NM
+	, FILE_SIZE
+	, FILE_NO
+	, ORG_FILE_NM
+	)
+	VALUES
+		(
+			#{cnSerial}
+		, #{filePathNm}
+		, #{crNo}
+		, #{fileNm}
+		, #{fileSize}
+		, #{fileNo}
+		, #{orgFileNm}
+		)
+</insert>
+
+<insert id="insertRequestFile">
+	INSERT INTO DOCS_REQUEST_FILE
+	(
+		REQUEST_NO
+	, OBJECT_ID
+	, FILE_PATH_NM
+	, ORG_FILE_NM
+	, FILE_NM
+	, FILE_SIZE
+	, FILE_NO
+	)
+	VALUES
+		(
+			#{requestNo}
+		, #{objectId}
+		, #{filePathNm}
+		, #{orgFileNm}
+		, #{fileNm}
+		, #{fileSize}
+		, #{fileNo}
+		)
+</insert>
+
+<select id="selectCrNo" resultType="string">
+	SELECT 'CR' || TO_CHAR(CURRENT_DATE,'YYYY')||'-'||LPAD(COALESCE(SUBSTRING(MAX(CR_NO),8)::INTEGER,0)+1,4,'0') AS CR_NO
+	FROM ITN_CR
+	WHERE SUBSTRING(CR_NO,3,4) = TO_CHAR(CURRENT_DATE,'YYYY')
+</select>
+
+<select id="getCrRequestInfo" parameterType="kr.esob.fdms.controller.outside.cr.request.CrRequestParam" resultType="kr.esob.fdms.controller.outside.cr.request.RequestStatusPopupVO">
+	SELECT cr.CR_NO                                                   				AS crNo
+		 , ( SELECT USER_NM
+			 FROM DOCS_USER
+			 WHERE USER_ID = cr.VENDOR_UID
+				 LIMIT 1 )                                            			AS vendorUserNm      /* 업체 담당자 */
+		 , ( SELECT USER_NM
+			 FROM DOCS_USER
+			 WHERE USER_CD = reqDtl.ACTUAL_USER_CD
+				 LIMIT 1 )                                            			AS approvalUser      /* 결재자 */
+		 , reqDtl.ACTUAL_USER_CD														AS approvalUserCd
+		 , FN_GET_CD_NM('businessAreaCd', reqMap.BUSINESS_AREA_CD, #{sessionLang}) 	AS  businessAreaNm
+		 , ( SELECT USER_NM
+			 FROM DOCS_USER
+			 WHERE USER_ID = cr.PURCHASER_UID
+				 LIMIT 1 )                                            			AS purchaserUserNm   /* 구매담당자 */
+		 , reqMap.OBJECT_NO                                              			AS drawingNo
+		 , FN_GET_CD_NM('crTypeCd', cr.CR_TYPE_CD, #{sessionLang})                 	AS crTypeCd
+		 , COALESCE(cr.PRODUCT_NO, '')                               			AS productNm
+		 , cr.MATERIAL_NO                                                			AS materialNo
+		 , reqMap.OBJECT_NM                                              			AS drawingNm
+		 , reqMap.REV_NO                                                 			AS revNo
+		 , cr.PART_NO                                                    			AS partNo
+		 , cr.INSERT_DT                                                 				AS insertDt
+		 , cr.AS_IS_DESC                                                 			AS asIsDesc
+		 , cr.TO_BE_DESC                                                 			AS toBeDesc
+		 , cr.CR_TITLE_NM															AS crTitleNm
+		 , req.STATUS_CD																AS statusCd
+		 , rejDtl.REQUEST_DESC                                                       AS rejectDesc
+		 , cr.DEVICE_NM																AS deviceNm
+	FROM DOCS_REQUEST_MAPPING reqMap
+			 JOIN ITN_CR cr
+				  ON reqMap.OBJECT_ID = cr.CR_NO
+			 JOIN DOCS_REQUEST_DETAIL reqDtl
+				  ON reqMap.REQUEST_NO = reqDtl.REQUEST_NO AND reqDtl.APPROVAL_STATUS_CD = 'WAITING'
+			 JOIN DOCS_REQUEST req
+				  ON req.REQUEST_NO =  reqMap.REQUEST_NO
+			 LEFT JOIN DOCS_REQUEST_DETAIL rejDtl
+					   ON reqMap.REQUEST_NO = rejDtl.REQUEST_NO AND rejDtl.ACTION_CD = 'REJECT'
+	WHERE cr.CR_NO = #{crNo}
+</select>
+
+<!-- CR 외부사용자 승인 [2019.11.20(최금영)] -->
+<update id="updateRequest">
+	/* CR 외부사용자 승인 */
+	UPDATE DOCS_REQUEST
+	SET STATUS_CD = #{reqStatusCd}
+	, UPDATE_DT = CURRENT_TIMESTAMP
+	, UPDATE_USER_CD = #{sessionUser.userCd}
+	<if test="'REQUEST'.equals(reqStatusCd)">
+		, CURRENT_PROCESS_SEQ_NO = 3
+	</if>
+	WHERE REQUEST_NO = (SELECT REQUEST_NO FROM DOCS_REQUEST_MAPPING WHERE OBJECT_ID = #{crNo} LIMIT 1)
+</update>
+
+<!-- CR 외부사용자 승인 상세정보 수정 [2019.11.20(최금영)] -->
+<update id="updateRequestDetail">
+	/* CR 외부사용자 승인 상세정보 수정 */
+	UPDATE DOCS_REQUEST_DETAIL
+	SET ACTION_DT = CURRENT_TIMESTAMP
+	  , ACTION_CD = #{actionCd}
+	  , REQUEST_DESC = #{rejectDesc}
+	WHERE REQUEST_NO = (SELECT REQUEST_NO FROM DOCS_REQUEST_MAPPING WHERE OBJECT_ID = #{crNo} LIMIT 1)
+	  AND APPROVAL_STATUS_CD = 'WAITING'
+</update>
+
+<update id="updateCr">
+	/* 외부업체 팀장 - 승인/반려 */
+	UPDATE ITN_CR
+	SET REJECT_REASON = #{rejectDesc}
+	  , STATUS_CD = #{statusCd}
+	WHERE CR_NO = #{crNo}
+</update>
+</mapper>

@@ -1,0 +1,340 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--<mapper namespace="sql.DestroyRequest">-->
+<!--	&lt;!&ndash; 폐기 등록된 파일 정보 추가 &ndash;&gt;-->
+<!--	<insert id="insertDestroyFile" parameterType="kr.esob.fdms.controller.inside.distribution.history.DestroyPopupParam">-->
+<!--		INSERT INTO DOCS_DESTROY_FILE-->
+<!--			( DESTROY_NO-->
+<!--			, DESTROY_FILE_SEQ-->
+<!--			, FILE_PATH-->
+<!--			, FILE_NM-->
+<!--			, FILE_PATH_INSIDE-->
+<!--			)-->
+<!--		VALUES-->
+<!--			( #{destroyNo}-->
+<!--			, #{destroyFileSeq}-->
+<!--			, #{filePath}-->
+<!--			, #{fileNm}-->
+<!--			, #{filePathInside}-->
+<!--			)-->
+<!--	</insert>-->
+
+<!--	&lt;!&ndash; 폐기 등록 &ndash;&gt;-->
+<!--	<insert id="insertDestroyInfo" parameterType="kr.esob.fdms.controller.inside.distribution.history.DestroyPopupParam" useGeneratedKeys="true" keyProperty="destroyNo">-->
+<!--		<selectKey keyProperty="destroyNo" resultType="String" order="BEFORE">-->
+<!--            SELECT DOCS_DESTROY_SEQ.NEXTVAL-->
+<!--              FROM DUAL-->
+<!--        </selectKey>-->
+<!--        INSERT INTO DOCS_DESTROY-->
+<!--        	( DESTROY_NO )-->
+<!--        VALUES-->
+<!--        	( #{destroyNo} )-->
+<!--	</insert>-->
+
+<!--	<insert id="insertDestroyRequest" parameterType="kr.esob.fdms.controller.inside.distribution.history.DestroyPopupParam">-->
+<!--		/* 폐기요청 등록 2019.12.04.윤정훈 */-->
+<!--		<selectKey keyProperty="destroyRequestNo" resultType="String" order="BEFORE">-->
+<!--            SELECT TO_CHAR(SYSDATE,'YYYYMMDD')||'-X'||LPAD(NVL(SUBSTR(MAX(DESTROY_REQUEST_NO),11),0)+1,4,0) AS DESTROY_REQUEST_NO-->
+<!--              FROM DOCS_DESTROY_REQUEST-->
+<!--             WHERE SUBSTR(DESTROY_REQUEST_NO,1,10) = TO_CHAR(SYSDATE,'YYYYMMDD')||'-X'-->
+<!--        </selectKey>-->
+
+<!--		INSERT INTO DOCS_DESTROY_REQUEST-->
+<!--		(-->
+<!--			DESTROY_REQUEST_NO-->
+<!--			, REQUEST_TYPE-->
+<!--			, APPROVAL_LINE_ID-->
+<!--			, CURRENT_PROCESS_SEQ_NO-->
+<!--			, STATUS_CD-->
+<!--			, DESTROY_TYPE-->
+<!--			, DESTROY_STATUS_CD-->
+<!--			, INSERT_USER_CD-->
+<!--			, INSERT_DT-->
+<!--			, BUSINESS_AREA_CD-->
+<!--			, DESTROY_NO-->
+<!--			, COMPANY_CD-->
+<!--		)-->
+<!--		VALUES-->
+<!--		(-->
+<!--			#{destroyRequestNo}-->
+<!--			, #{requestType}-->
+<!--			, #{approvalLineId}-->
+<!--			, '2'-->
+<!--			, 'REQUEST'-->
+<!--			, #{destroyType}-->
+<!--			, '1'-->
+<!--			, #{sessionUser.userCd}-->
+<!--			, SYSDATE-->
+<!--			, #{businessAreaCd}-->
+<!--			, #{destroyNo}-->
+<!--			, #{sessionUser.companyCd}-->
+<!--		)-->
+<!--	</insert>-->
+
+<!--	<insert id="insertDestroyRequestDetail" parameterType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonApprovalParam">-->
+<!--		INSERT INTO DOCS_DESTROY_REQUEST_DETAIL-->
+<!--			( DESTROY_REQUEST_NO-->
+<!--			, PROCESS_SEQ-->
+<!--			, APPROVAL_STATUS_CD-->
+<!--			, ACTION_CD-->
+<!--			, ORIGINAL_USER_CD-->
+<!--			, ACTUAL_USER_CD-->
+<!--			, ACTION_DT-->
+<!--			)-->
+<!--		VALUES-->
+<!--			( #{destroyRequestNo}-->
+<!--			, #{processSeq}-->
+<!--			, #{approvalStatusCd}-->
+<!--			, #{actionCd}-->
+<!--			<if test="'REQUEST'.equals(approvalStatusCd)"> &lt;!&ndash; 요청일때는 현재 사용자 &ndash;&gt;-->
+<!--			, #{sessionUser.userCd}-->
+<!--			, #{sessionUser.userCd}-->
+<!--			</if>-->
+<!--			<if test="'APPROVAL'.equals(approvalStatusCd)">&lt;!&ndash; 결재일때는 구매담당자 &ndash;&gt;-->
+<!--			, #{approvalUser}-->
+<!--			, #{approvalUser}-->
+<!--			</if>-->
+<!--			, SYSDATE-->
+<!--			)-->
+<!--	</insert>-->
+
+<!--	<insert id="insertDestroyRequestMapping">-->
+<!--		INSERT INTO DOCS_DESTROY_REQUEST_MAPPING-->
+<!--			(-->
+<!--				REQUEST_NO-->
+<!--				, OBJECT_ID-->
+<!--				, DESTROY_REQUEST_NO-->
+<!--				, DEPLOY_USER_CD-->
+<!--				, FILE_NO-->
+<!--				, BUSINESS_AREA_CD-->
+<!--				, OBJECT_NO-->
+<!--			)-->
+<!--		VALUES-->
+<!--			(-->
+<!--				#{requestNo}-->
+<!--				, #{objectId}-->
+<!--				, #{destroyRequestNo}-->
+<!--				, #{sessionUser.userCd}-->
+<!--				, #{fileNo}-->
+<!--				, #{businessAreaCd}-->
+<!--				, #{objectNo}-->
+<!--			)-->
+<!--	</insert>-->
+
+<!--	&lt;!&ndash; 폐기 사유 등록&ndash;&gt;-->
+<!--	<update id="updateDestroyRequestDesc" parameterType="kr.esob.fdms.controller.inside.distribution.history.DestroyPopupParam">-->
+<!--		UPDATE DOCS_DESTROY_REQUEST_DETAIL-->
+<!--		SET REQUEST_DESC = #{destroyDesc}-->
+<!--		WHERE DESTROY_REQUEST_NO = #{destroyRequestNo}-->
+<!--		AND APPROVAL_STATUS_CD = 'REQUEST'-->
+<!--	</update>-->
+
+<!--	<update id="updateRequestFileDestroy">-->
+<!--		UPDATE DOCS_REQUEST_FILE-->
+<!--		SET DESTROY_STATUS_CD = '2'-->
+<!--		WHERE REQUEST_NO = #{requestNo}-->
+<!--		AND OBJECT_ID = #{objectId}-->
+<!--		AND FILE_NO = #{fileNo}-->
+<!--	</update>-->
+
+<!--	<update id="updateApprovalFile">-->
+<!--		UPDATE DOCS_APPROVAL_FILE-->
+<!--		SET DESTROY_NO = #{destroyNo}-->
+<!--			, DESTROY_TYPE = #{destroyType}-->
+<!--			, DESTROY_STATUS_CD = '2'-->
+<!--			, LAST_DESTROY_REQUEST_NO = #{destroyRequestNo}-->
+<!--		WHERE REQUEST_NO = #{requestNo}-->
+<!--		AND OBJECT_ID = #{objectId}-->
+<!--		AND FILE_NO = #{fileNo}-->
+<!--	</update>-->
+<!--	-->
+<!--	<update id="updateUnderDestroy">-->
+<!--		UPDATE DOCS_REQUEST_FILE-->
+<!--		SET DESTROY_TYPE = '5'-->
+<!--			, DESTROY_STATUS_CD = '1'-->
+<!--		WHERE REQUEST_NO = #{requestNo}-->
+<!--		AND OBJECT_ID = #{objectId}-->
+<!--		AND FILE_NO = #{fileNo}-->
+<!--	</update>-->
+<!--	-->
+<!--</mapper>-->
+
+
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+
+
+
+
+<mapper namespace="sql.DestroyRequest">
+<!-- 폐기 등록된 파일 정보 추가 -->
+<insert id="insertDestroyFile" parameterType="kr.esob.fdms.controller.inside.distribution.history.DestroyPopupParam">
+	INSERT INTO DOCS_DESTROY_FILE
+	( DESTROY_NO
+	, DESTROY_FILE_SEQ
+	, FILE_PATH
+	, FILE_NM
+	, FILE_PATH_INSIDE
+	)
+	VALUES
+		( #{destroyNo}
+		, #{destroyFileSeq}
+		, #{filePath}
+		, #{fileNm}
+		, #{filePathInside}
+		)
+</insert>
+
+<!-- 폐기 등록 -->
+<insert id="insertDestroyInfo" parameterType="kr.esob.fdms.controller.inside.distribution.history.DestroyPopupParam" useGeneratedKeys="true" keyProperty="destroyNo">
+	<selectKey keyProperty="destroyNo" resultType="String" order="BEFORE">
+		SELECT nextval('DOCS_DESTROY_SEQ')
+	</selectKey>
+	INSERT INTO DOCS_DESTROY
+	( DESTROY_NO )
+	VALUES
+	( CAST(#{destroyNo} AS INTEGER) )
+</insert>
+
+<insert id="insertDestroyRequest" parameterType="kr.esob.fdms.controller.inside.distribution.history.DestroyPopupParam">
+	/* 폐기요청 등록 2019.12.04.윤정훈 */
+	<selectKey keyProperty="destroyRequestNo" resultType="String" order="BEFORE">
+		SELECT to_char(CURRENT_DATE, 'YYYYMMDD') || '-X' || LPAD((COALESCE(MAX(SUBSTRING(DESTROY_REQUEST_NO, 11)::INTEGER), 0) + 1)::TEXT, 4, '0') AS DESTROY_REQUEST_NO
+		FROM DOCS_DESTROY_REQUEST
+		WHERE SUBSTRING(DESTROY_REQUEST_NO, 1, 10) = to_char(CURRENT_DATE, 'YYYYMMDD') || '-X'
+	</selectKey>
+
+	INSERT INTO DOCS_DESTROY_REQUEST
+	(
+	DESTROY_REQUEST_NO
+	, REQUEST_TYPE
+	, APPROVAL_LINE_ID
+	, CURRENT_PROCESS_SEQ_NO
+	, STATUS_CD
+	, DESTROY_TYPE
+	, DESTROY_STATUS_CD
+	, INSERT_USER_CD
+	, INSERT_DT
+	, BUSINESS_AREA_CD
+	, DESTROY_NO
+	, COMPANY_CD
+	)
+	VALUES
+	(
+	#{destroyRequestNo}
+	, #{requestType}
+	, CAST(#{approvalLineId} AS INTEGER)
+	, '2'
+	, 'REQUEST'
+	, #{destroyType}
+	, '1'
+	, #{sessionUser.userCd}
+	, CURRENT_TIMESTAMP
+	, #{businessAreaCd}
+	, CAST(#{destroyNo} AS INTEGER)
+	, #{sessionUser.companyCd}
+	)
+</insert>
+
+<insert id="insertDestroyRequestDetail" parameterType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonApprovalParam">
+	INSERT INTO DOCS_DESTROY_REQUEST_DETAIL
+	( DESTROY_REQUEST_NO
+	, PROCESS_SEQ
+	, APPROVAL_STATUS_CD
+	, ACTION_CD
+	, ORIGINAL_USER_CD
+	, ACTUAL_USER_CD
+	, ACTION_DT
+	)
+	VALUES
+	( #{destroyRequestNo}
+	, CAST(#{processSeq} AS INTEGER)
+	, #{approvalStatusCd}
+	, #{actionCd}
+	<if test="'REQUEST'.equals(approvalStatusCd)"> <!-- 요청일때는 현재 사용자 -->
+		, #{sessionUser.userCd}
+		, #{sessionUser.userCd}
+	</if>
+	<if test="'APPROVAL'.equals(approvalStatusCd)"><!-- 결재일때는 구매담당자 -->
+		, #{approvalUser}
+		, #{approvalUser}
+	</if>
+	, CURRENT_TIMESTAMP
+	)
+</insert>
+
+<insert id="insertDestroyRequestMapping">
+	INSERT INTO DOCS_DESTROY_REQUEST_MAPPING
+	(
+		REQUEST_NO
+	, OBJECT_ID
+	, DESTROY_REQUEST_NO
+	, DEPLOY_USER_CD
+	, FILE_NO
+	, BUSINESS_AREA_CD
+	, OBJECT_NO
+	)
+	VALUES
+		(
+			#{requestNo}
+		, #{objectId}
+		, #{destroyRequestNo}
+		, #{sessionUser.userCd}
+		, #{fileNo}
+		, #{businessAreaCd}
+		, #{objectNo}
+		)
+</insert>
+
+<!-- 폐기 사유 등록-->
+<update id="updateDestroyRequestDesc" parameterType="kr.esob.fdms.controller.inside.distribution.history.DestroyPopupParam">
+	UPDATE DOCS_DESTROY_REQUEST_DETAIL
+	SET REQUEST_DESC = #{destroyDesc}
+	WHERE DESTROY_REQUEST_NO = #{destroyRequestNo}
+	  AND APPROVAL_STATUS_CD = 'REQUEST'
+</update>
+
+<!--<update id="updateRequestFileDestroy">-->
+<!--	UPDATE DOCS_REQUEST_FILE-->
+<!--	SET DESTROY_STATUS_CD = '2'-->
+<!--	WHERE REQUEST_NO = #{requestNo}-->
+<!--	  AND OBJECT_ID = #{objectId}-->
+<!--	  AND FILE_NO = #{fileNo}-->
+<!--</update>-->
+
+<update id="updateRequestFileDestroy">
+	UPDATE DOCS_REQUEST_FILE
+	SET DESTROY_STATUS_CD = '2'
+	WHERE REQUEST_NO = #{requestNo}
+	  AND OBJECT_ID = #{objectId}
+	  AND FILE_NO::integer = #{fileNo}
+</update>
+
+	<update id="updateApprovalFile">
+		UPDATE DOCS_APPROVAL_FILE
+		SET DESTROY_NO = CAST(#{destroyNo} AS INTEGER),
+			DESTROY_TYPE = #{destroyType},
+			DESTROY_STATUS_CD = '2',
+			LAST_DESTROY_REQUEST_NO = #{destroyRequestNo}
+		WHERE REQUEST_NO = #{requestNo}
+		  AND OBJECT_ID = #{objectId}
+		  AND FILE_NO::integer = #{fileNo}
+	</update>
+
+<update id="updateUnderDestroy">
+	UPDATE DOCS_REQUEST_FILE
+	SET DESTROY_TYPE = '5'
+	  , DESTROY_STATUS_CD = '1'
+	WHERE REQUEST_NO = #{requestNo}
+	  AND OBJECT_ID = #{objectId}
+	  AND FILE_NO = #{fileNo}
+</update>
+
+</mapper>

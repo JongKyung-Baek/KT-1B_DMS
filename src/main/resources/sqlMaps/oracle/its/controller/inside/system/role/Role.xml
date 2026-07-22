@@ -1,0 +1,383 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+
+<!--<mapper namespace="sql.Role">-->
+<!--	<select id="selectDept" resultType="kr.esob.fdms.controller.login.DeptVO">-->
+<!--		SELECT-->
+<!--			B1.*-->
+<!--		FROM-->
+<!--		(-->
+<!--			SELECT-->
+<!--				A1.*-->
+<!--				, ROWNUM AS PAGEINDEX-->
+<!--			FROM (-->
+<!--				SELECT-->
+<!--				  DEPT_CD			AS deptCd-->
+<!--				  ,DEPT_NM			AS deptNm-->
+<!--				  ,DEPT_SHORT_PATH	AS deptShortPath-->
+<!--				FROM DOCS_DEPT-->
+<!--				WHERE USE_YN = 'Y'-->
+<!--				AND DEL_YN = 'N'-->
+<!--				<if test='deptNm != null and !deptNm.equals("")'>-->
+<!--				AND DEPT_NM LIKE '%' || #{deptNm} || '%'-->
+<!--				</if>-->
+<!--				ORDER BY DEPT_NM-->
+
+<!--			) A1-->
+<!--			<if test='end != null and !end.equals("")'>-->
+<!--			WHERE ROWNUM <![CDATA[ <= ]]> #{end}-->
+<!--			</if>-->
+<!--		) B1-->
+<!--		<if test='start != null and !start.equals("")'>-->
+<!--		WHERE PAGEINDEX <![CDATA[ >= ]]>#{start}-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	<select id="selectDeptCount" resultType="java.lang.Integer">-->
+<!--		SELECT-->
+<!--			COUNT(*) AS TOTAL_COUNT-->
+<!--		FROM-->
+<!--		(-->
+<!--			SELECT-->
+<!--				A1.*-->
+<!--				, ROWNUM AS PAGEINDEX-->
+<!--			FROM (-->
+<!--				SELECT-->
+<!--				  DEPT_CD			AS deptCd-->
+<!--				  ,DEPT_NM			AS deptNm-->
+<!--				  ,DEPT_SHORT_PATH	AS deptShortPath-->
+<!--				FROM DOCS_DEPT-->
+<!--				WHERE USE_YN = 'Y'-->
+<!--				AND DEL_YN = 'N'-->
+<!--				<if test='deptNm != null and !deptNm.equals("")'>-->
+<!--				AND DEPT_NM LIKE '%' || #{deptNm} || '%'-->
+<!--				</if>-->
+<!--			) A1-->
+<!--		) B1-->
+<!--	</select>-->
+
+<!--	<select id="selectUser" resultType="kr.esob.fdms.controller.login.UserVO">-->
+<!--		SELECT-->
+<!--			B1.*-->
+<!--		FROM-->
+<!--		(-->
+<!--			SELECT-->
+<!--				A1.*-->
+<!--				, ROWNUM AS PAGEINDEX-->
+<!--			FROM (-->
+<!--				SELECT-->
+<!--				  docsUser.USER_CD				AS userCd-->
+<!--				  ,docsUser.USER_ID				AS userId-->
+<!--				  ,docsUser.USER_NM				AS userNm-->
+<!--				  ,docsDept.DEPT_SHORT_PATH		AS deptShortPath-->
+<!--				FROM DOCS_USER docsUser-->
+<!--				INNER JOIN DOCS_DEPT docsDept ON docsUser.DEPT_CD = docsDept.DEPT_CD-->
+<!--				WHERE docsUser.USE_YN = 'Y'-->
+<!--				AND docsUser.DEL_YN = 'N'-->
+<!--				<if test='userNm != null and !userNm.equals("")'>-->
+<!--				AND USER_NM LIKE '%' || #{userNm} || '%'-->
+<!--				</if>-->
+<!--				ORDER BY USER_NM-->
+
+<!--			) A1-->
+<!--			<if test='end != null and !end.equals("")'>-->
+<!--			WHERE ROWNUM <![CDATA[ <= ]]> #{end}-->
+<!--			</if>-->
+<!--		) B1-->
+<!--		<if test='start != null and !start.equals("")'>-->
+<!--		WHERE PAGEINDEX <![CDATA[ >= ]]>#{start}-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	<select id="selectUserCount" resultType="java.lang.Integer">-->
+<!--		SELECT-->
+<!--			COUNT(*) AS TOTAL_COUNT-->
+<!--		FROM-->
+<!--		(-->
+<!--			SELECT-->
+<!--				A1.*-->
+<!--				, ROWNUM AS PAGEINDEX-->
+<!--			FROM (-->
+<!--				SELECT-->
+<!--				  docsUser.USER_CD				AS userCd-->
+<!--				  ,docsUser.USER_ID				AS userId-->
+<!--				  ,docsUser.USER_NM				AS userNm-->
+<!--				  ,docsDept.DEPT_SHORT_PATH		AS deptShortPath-->
+<!--				FROM DOCS_USER docsUser-->
+<!--				INNER JOIN DOCS_DEPT docsDept ON docsUser.DEPT_CD = docsDept.DEPT_CD-->
+<!--				WHERE docsUser.USE_YN = 'Y'-->
+<!--				AND docsUser.DEL_YN = 'N'-->
+<!--				<if test='userNm != null and !userNm.equals("")'>-->
+<!--				AND USER_NM LIKE '%' || #{userNm} || '%'-->
+<!--				</if>-->
+<!--			) A1-->
+<!--		) B1-->
+<!--	</select>-->
+
+
+<!--	<select id="selectGroupMemberInUser" resultType="kr.esob.fdms.controller.login.UserVO">-->
+<!--		SELECT-->
+<!--			docsUser.USER_ID		AS userId-->
+<!--            , docsUser.USER_CD		AS userCd-->
+<!--            , docsUser.USER_NM		AS userNm-->
+<!--            , (SELECT DEPT_SHORT_PATH FROM DOCS_DEPT t WHERE t.DEPT_CD = docsUser.DEPT_CD) AS deptShortPath-->
+<!--        FROM DOCS_ROLE_GROUP_MEMBER member-->
+<!--          INNER JOIN DOCS_USER docsUser ON docsUser.USER_CD = member.MEMBER_CD-->
+<!--        WHERE GROUP_CODE = #{groupCd}-->
+<!--        AND GROUP_TYPE = 'USER'-->
+<!--	</select>-->
+
+<!--	<select id="selectGroupMemberInDept" resultType="kr.esob.fdms.controller.login.DeptVO">-->
+<!--		SELECT-->
+<!--            docsDept.DEPT_CD		AS deptCd-->
+<!--            , docsDept.DEPT_NM		AS DEPT_NM-->
+<!--            , DEPT_SHORT_PATH		AS deptShortPath-->
+<!--        FROM DOCS_ROLE_GROUP_MEMBER member-->
+<!--          INNER JOIN DOCS_DEPT docsDept ON docsDept.DEPT_CD = member.MEMBER_CD-->
+<!--        WHERE GROUP_CODE = #{groupCd}-->
+<!--        AND GROUP_TYPE = 'DEPT'-->
+<!--	</select>-->
+
+<!--	<insert id="insertRoleGroup">-->
+<!--		<selectKey resultType="string" keyProperty="groupCd" order="BEFORE">-->
+<!--			SELECT CONCAT('RG_' , LPAD( NVL(MAX(TO_NUMBER(SUBSTR(GROUP_CODE,4,3))),0)+1 ,3,'0')) FROM DOCS_ROLE_GROUP-->
+<!--		</selectKey>-->
+<!--		INSERT INTO DOCS_ROLE_GROUP(GROUP_CODE, GROUP_NM, GROUP_TYPE, USE_YN)-->
+<!--		VALUES(#{groupCd}, #{groupNm}, 'USER', 'Y')-->
+<!--	</insert>-->
+
+<!--	<update id="updateRoleGroup">-->
+<!--		UPDATE DOCS_ROLE_GROUP-->
+<!--		SET GROUP_NM = #{groupNm}-->
+<!--		WHERE GROUP_CODE = #{groupCd}-->
+<!--	</update>-->
+
+<!--	<update id="deleteRoleGroup">-->
+<!--		UPDATE DOCS_ROLE_GROUP-->
+<!--		SET USE_YN = 'N'-->
+<!--		WHERE GROUP_CODE = #{value}-->
+<!--	</update>-->
+
+<!--	<select id="selectRoleGroupInfo" resultType="kr.esob.fdms.controller.inside.system.role.RoleGroupVO">-->
+<!--		SELECT-->
+<!--			GROUP_CODE 	AS groupCd-->
+<!--			,GROUP_NM	AS groupNm-->
+<!--		FROM DOCS_ROLE_GROUP-->
+<!--		WHERE GROUP_CODE = #{groupCd}-->
+<!--	</select>-->
+
+<!--	<delete id="deleteRoleGroupMember">-->
+<!--		DELETE FROM DOCS_ROLE_GROUP_MEMBER WHERE GROUP_CODE = #{value}-->
+<!--	</delete>-->
+
+<!--	<insert id="insertRoleGroupMember">-->
+<!--		INSERT INTO DOCS_ROLE_GROUP_MEMBER(GROUP_CODE, MEMBER_CD, GROUP_TYPE)-->
+<!--		VALUES(#{groupCd}, #{memberCd}, #{groupType})-->
+<!--	</insert>-->
+
+<!--	<select id="selectRoleGroup" resultType="kr.esob.fdms.controller.inside.system.role.RoleGroupVO">-->
+<!--		SELECT-->
+<!--			GROUP_CODE AS groupCd-->
+<!--			, GROUP_NM AS groupNm-->
+<!--		FROM DOCS_ROLE_GROUP-->
+<!--		WHERE GROUP_CODE != 'RG_006'	/* 외부업체 */-->
+<!--		AND GROUP_CODE != 'RG_001'		/* 관리자 */-->
+<!--		AND GROUP_CODE != 'RG_009'		/* 일반사용자 */-->
+<!--		AND USE_YN = 'Y'-->
+<!--		ORDER BY INSERT_ORDER-->
+<!--	</select>-->
+<!--</mapper>-->
+
+
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+
+
+
+
+
+<mapper namespace="sql.Role">
+
+<select id="selectDept" resultType="kr.esob.fdms.controller.login.DeptVO">
+	SELECT B1.*
+	FROM (
+	SELECT A1.*, ROW_NUMBER() OVER (ORDER BY deptNm) AS PAGEINDEX
+	FROM (
+	SELECT
+	DEPT_CD AS deptCd,
+	DEPT_NM AS deptNm,
+	DEPT_SHORT_PATH AS deptShortPath
+	FROM DOCS_DEPT
+	WHERE USE_YN = 'Y'
+	AND DEL_YN = 'N'
+	<if test="deptNm != null and !deptNm.equals('')">
+		AND DEPT_NM LIKE '%' || #{deptNm} || '%'
+	</if>
+	) A1
+	) B1
+	<if test="start != null and !start.equals('')">
+		WHERE PAGEINDEX >= #{start}
+	</if>
+	<if test="end != null and !end.equals('')">
+		AND PAGEINDEX <![CDATA[ <= ]]> #{end}
+	</if>
+</select>
+
+<select id="selectDeptCount" resultType="java.lang.Integer">
+	SELECT COUNT(*) AS TOTAL_COUNT
+	FROM DOCS_DEPT
+	WHERE USE_YN = 'Y'
+	AND DEL_YN = 'N'
+	<if test="deptNm != null and !deptNm.equals('')">
+		AND DEPT_NM LIKE '%' || #{deptNm} || '%'
+	</if>
+</select>
+
+<select id="selectUser" resultType="kr.esob.fdms.controller.login.UserVO">
+	SELECT B1.*
+	FROM (
+	SELECT A1.*, ROW_NUMBER() OVER (ORDER BY userNm) AS PAGEINDEX
+	FROM (
+	SELECT
+	docsUser.USER_CD AS userCd,
+	docsUser.USER_ID AS userId,
+	docsUser.USER_NM AS userNm,
+	docsDept.DEPT_SHORT_PATH AS deptShortPath
+	FROM DOCS_USER docsUser
+	INNER JOIN DOCS_DEPT docsDept ON docsUser.DEPT_CD = docsDept.DEPT_CD
+	WHERE docsUser.USE_YN = 'Y'
+	AND docsUser.DEL_YN = 'N'
+	<if test="userNm != null and !userNm.equals('')">
+		AND USER_NM LIKE '%' || #{userNm} || '%'
+	</if>
+	) A1
+	) B1
+	<if test="start != null and !start.equals('')">
+		WHERE PAGEINDEX >= #{start}
+	</if>
+	<if test="end != null and !end.equals('')">
+		AND PAGEINDEX <![CDATA[ <= ]]> #{end}
+	</if>
+</select>
+
+<select id="selectUserCount" resultType="java.lang.Integer">
+	SELECT COUNT(*) AS TOTAL_COUNT
+	FROM DOCS_USER docsUser
+	INNER JOIN DOCS_DEPT docsDept ON docsUser.DEPT_CD = docsDept.DEPT_CD
+	WHERE docsUser.USE_YN = 'Y'
+	AND docsUser.DEL_YN = 'N'
+	<if test="userNm != null and !userNm.equals('')">
+		AND USER_NM LIKE '%' || #{userNm} || '%'
+	</if>
+</select>
+
+<select id="selectGroupMemberInUser" resultType="kr.esob.fdms.controller.login.UserVO">
+	SELECT DISTINCT
+		docsUser.USER_ID AS userId,
+		docsUser.USER_CD AS userCd,
+		docsUser.USER_NM AS userNm,
+		(SELECT DEPT_SHORT_PATH FROM DOCS_DEPT t WHERE t.DEPT_CD = docsUser.DEPT_CD) AS deptShortPath
+	FROM DOCS_ROLE_GROUP_MEMBER member
+			 INNER JOIN DOCS_USER docsUser ON docsUser.USER_CD = member.MEMBER_CD
+	WHERE
+	    GROUP_CODE = #{groupCd}
+	  AND GROUP_TYPE = 'USER'
+</select>
+
+<select id="selectGroupMemberInDept" resultType="kr.esob.fdms.controller.login.DeptVO">
+	SELECT
+		docsDept.DEPT_CD AS deptCd,
+		docsDept.DEPT_NM AS deptNm,
+		DEPT_SHORT_PATH AS deptShortPath
+	FROM DOCS_ROLE_GROUP_MEMBER member
+			 INNER JOIN DOCS_DEPT docsDept ON docsDept.DEPT_CD = member.MEMBER_CD
+	WHERE GROUP_CODE = #{groupCd}
+	  AND GROUP_TYPE = 'DEPT'
+</select>
+
+<insert id="insertRoleGroup">
+	<selectKey resultType="string" keyProperty="groupCd" order="BEFORE">
+		SELECT 'RG_' || LPAD(CAST(COALESCE(MAX(CAST(SUBSTR(GROUP_CODE, 4) AS INTEGER)), 0) + 1 AS TEXT), 3, '0')
+		FROM DOCS_ROLE_GROUP
+	</selectKey>
+	INSERT INTO DOCS_ROLE_GROUP (GROUP_CODE, GROUP_NM, GROUP_TYPE, USE_YN)
+	VALUES (#{groupCd}, #{groupNm}, 'USER', 'Y')
+</insert>
+
+
+<update id="updateRoleGroup">
+	UPDATE DOCS_ROLE_GROUP
+	SET GROUP_NM = #{groupNm}
+	WHERE GROUP_CODE = #{groupCd}
+</update>
+
+<update id="deleteRoleGroup">
+	UPDATE DOCS_ROLE_GROUP
+	SET USE_YN = 'N'
+	WHERE GROUP_CODE = #{value}
+</update>
+
+<select id="selectRoleGroupInfo" resultType="kr.esob.fdms.controller.inside.system.role.RoleGroupVO">
+	SELECT
+		GROUP_CODE AS groupCd,
+		GROUP_NM AS groupNm
+	FROM DOCS_ROLE_GROUP
+	WHERE GROUP_CODE = #{groupCd}
+</select>
+
+<delete id="deleteRoleGroupMember">
+	DELETE FROM DOCS_ROLE_GROUP_MEMBER WHERE GROUP_CODE = #{value}
+</delete>
+
+	<delete id="deleteRoleGroupMemberUserCd">
+		DELETE FROM DOCS_ROLE_GROUP_MEMBER
+		WHERE MEMBER_CD IN
+		<foreach item="item" collection="list" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</delete>
+
+
+	<insert id="insertRoleGroupMember">
+		INSERT INTO DOCS_ROLE_GROUP_MEMBER (GROUP_CODE, MEMBER_CD, GROUP_TYPE)
+		SELECT #{groupCd}, #{memberCd}, #{groupType}
+			WHERE NOT EXISTS (
+        SELECT 1
+        FROM DOCS_ROLE_GROUP_MEMBER
+        WHERE GROUP_CODE = #{groupCd}
+				AND MEMBER_CD = #{memberCd}
+				AND GROUP_TYPE = #{groupType}
+				)
+	</insert>
+
+
+<select id="selectRoleGroup" resultType="kr.esob.fdms.controller.inside.system.role.RoleGroupVO">
+	SELECT
+		GROUP_CODE AS groupCd,
+		GROUP_NM AS groupNm
+	FROM DOCS_ROLE_GROUP
+	WHERE GROUP_CODE NOT IN ('RG_006')
+	  AND USE_YN = 'Y'
+	ORDER BY INSERT_ORDER
+</select>
+
+	<select id="checkDuplicatedRoleInsert" resultType="java.lang.Boolean">
+		SELECT EXISTS (	
+			SELECT 1
+			FROM DOCS_ROLE_GROUP_MEMBER member
+			WHERE member.MEMBER_CD = #{memberCd}
+		)
+	</select>
+
+
+
+
+</mapper>

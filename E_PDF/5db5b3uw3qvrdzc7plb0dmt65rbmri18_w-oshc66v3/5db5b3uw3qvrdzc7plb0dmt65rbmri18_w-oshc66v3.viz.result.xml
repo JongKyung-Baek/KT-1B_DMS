@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<ShxBomXmlGenExecution Result="Success">
+<StartTime>2023.05.10 14:22:32</StartTime>
+<EndTime>2023.05.10 14:22:43</EndTime>
+<ElapsedTime>11</ElapsedTime>
+<SourceCADFileInfo>
+<SourceSystem>CATIA V5</SourceSystem>
+<SystemVersion>CATIAV6R421</SystemVersion>
+<DocumentType>Part</DocumentType>
+</SourceCADFileInfo>
+<ResultMessage>CAD to Web 변환 성공</ResultMessage>
+</ShxBomXmlGenExecution>

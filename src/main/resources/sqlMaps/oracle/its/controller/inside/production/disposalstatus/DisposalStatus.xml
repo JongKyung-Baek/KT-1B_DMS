@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+
+<!--<mapper namespace="sql.ProductionDisposalStatus">-->
+
+<!--	<select id="selectList" resultType="kr.esob.fdms.controller.inside.production.disposalstatus.DisposalStatusListVO">-->
+<!--		SELECT B1.*-->
+<!--		FROM-->
+<!--		(-->
+<!--			SELECT A1.*-->
+<!--				, ROWNUM AS PAGEINDEX-->
+<!--			FROM-->
+<!--				(-->
+<!--				SELECT req.REQUEST_NO                   AS requestNo-->
+<!--				     , reqMapping.OBJECT_NO             AS objectNo-->
+<!--				     , req.OBJECT_TYPE                  AS objectType-->
+<!--				     , FN_GET_CD_NM('productionObjectType', req.OBJECT_TYPE, 'ko') AS objectTypeNm-->
+<!--				     , reqMapping.REV_NO                AS revNo-->
+<!--				     , reqMapping.OBJECT_CLASS_CD2      AS objectClassCd2-->
+<!--				     , reqMapping.OBJECT_CLASS_NM2      AS objectClassNm2-->
+<!--				     , reqMapping.PRODUCT_CD            AS productCd-->
+<!--				     ,(-->
+<!--				         SELECT CN_CD || ' ' || CN_CD_DESC-->
+<!--				           FROM (SELECT DISTINCT PRODUCT_CD AS CN_CD, PRODUCT_CD AS CN_CD_DESC FROM DOCS_REQUEST_MAPPING WHERE PRODUCT_CD IS NOT NULL) PROD_SRC-->
+<!--				          WHERE CN_CD = reqMapping.PRODUCT_CD-->
+<!--				       )                                AS productNm-->
+<!--				      , reqMapping.Object_Nm            AS objectNm-->
+<!--				      , req.business_area_cd            AS businessAreaCd-->
+<!--				      , FN_GET_CD_NM('businessAreaCd', req.business_area_cd, 'ko') AS businessAreaNm-->
+<!--				      , req.INSERT_USER_CD              AS requestUserCd-->
+<!--				      , (SELECT USER_NM-->
+<!--				           FROM DOCS_USER-->
+<!--				          WHERE USER_CD = req.INSERT_USER_CD) AS requestUserNm-->
+<!--				      , destroyReqDetail.ACTUAL_USER_CD    AS destroyRequestUserCd-->
+<!--				      , (SELECT USER_NM-->
+<!--				           FROM DOCS_USER-->
+<!--				          WHERE USER_CD = destroyReqDetail.ACTUAL_USER_CD) AS destroyRequestUserNm-->
+<!--				      , destroyAppDetail.ACTUAL_USER_CD    AS destroyApprovalUserCd-->
+<!--				      , (SELECT USER_NM-->
+<!--				           FROM DOCS_USER-->
+<!--				          WHERE USER_CD = destroyAppDetail.ACTUAL_USER_CD) AS destroyApprovalUserNm-->
+<!--				       , destroyAppDetail.ACTION_DT         AS destroyApprovalDt-->
+<!--				       , destroyMapping.CURRENT_COUNT       AS currentCount-->
+<!--				  FROM DOCS_REQUEST req-->
+<!--				       INNER JOIN DOCS_REQUEST_MAPPING reqMapping ON reqMapping.REQUEST_NO = req.REQUEST_NO-->
+<!--				       INNER JOIN-->
+<!--                        (-->
+<!--                          SELECT OBJECT_ID-->
+<!--                               , DESTROY_REQUEST_NO-->
+<!--                               , REQUEST_NO-->
+<!--                               , CURRENT_COUNT-->
+<!--                          FROM  (SELECT DENSE_RANK() OVER (PARTITION BY OBJECT_ID, DESTROY_REQUEST_NO ORDER BY OBJECT_ID, REQUEST_NO DESC) AS PAGE_RANK-->
+<!--                                      , OBJECT_ID-->
+<!--                                      , DESTROY_REQUEST_NO-->
+<!--                                      , REQUEST_NO-->
+<!--                                      , CURRENT_COUNT-->
+<!--                                   FROM DOCS_DESTROY_REQUEST_MAPPING-->
+<!--                                  WHERE DESTROY_REQUEST_NO IN (SELECT DESTROY_REQUEST_NO FROM DOCS_DESTROY_REQUEST WHERE STATUS_CD = 'APPROVAL')-->
+<!--                                  GROUP BY OBJECT_ID, DESTROY_REQUEST_NO, REQUEST_NO, CURRENT_COUNT-->
+<!--                                )-->
+<!--                          WHERE PAGE_RANK = 1-->
+<!--                        ) destroyMapping ON reqMapping.REQUEST_NO = destroyMapping.REQUEST_NO AND reqMapping.OBJECT_ID = destroyMapping.OBJECT_ID-->
+<!--				       INNER JOIN DOCS_DESTROY_REQUEST destroy ON destroy.DESTROY_REQUEST_NO = destroyMapping.DESTROY_REQUEST_NO-->
+<!--				       INNER JOIN DOCS_DESTROY_REQUEST_DETAIL destroyReqDetail ON destroyReqDetail.DESTROY_REQUEST_NO = destroy.DESTROY_REQUEST_NO AND destroyReqDetail.APPROVAL_STATUS_CD = 'REQUEST'-->
+<!--				       INNER JOIN DOCS_DESTROY_REQUEST_DETAIL destroyAppDetail ON destroyAppDetail.DESTROY_REQUEST_NO = destroy.DESTROY_REQUEST_NO AND destroyAppDetail.APPROVAL_STATUS_CD = 'APPROVAL'-->
+<!--				  WHERE req.REQUEST_TYPE = 'PRODUCT'-->
+<!--				    AND destroy.STATUS_CD = 'APPROVAL'-->
+
+<!--					<if test='objectNo != null and !objectNo.equals("")'>-->
+<!--					AND reqMapping.OBJECT_NO LIKE '%' || UPPER(TRIM(#{objectNo})) || '%'-->
+<!--					</if>-->
+<!--					<if test='objectType != null and !objectType.equals("")'>-->
+<!--					AND req.OBJECT_TYPE = #{objectType}-->
+<!--					</if>-->
+<!--					<if test='objectClassCd2 != null and !objectClassCd2.equals("")'>-->
+<!--					AND reqMapping.OBJECT_CLASS_CD2 = #{objectClassCd2}-->
+<!--					</if>-->
+<!--					<if test='destroyRequestUserCd != null and !destroyRequestUserCd.equals("")'>-->
+<!--					AND destroyReqDetail.ACTUAL_USER_CD = #{destroyRequestUserCd}-->
+<!--					</if>-->
+<!--					<if test='disposalStartDt != null and !disposalStartDt.equals("")'>-->
+<!--					AND destroyAppDetail.ACTION_DT BETWEEN TO_DATE(#{disposalStartDt}, 'YYYY-MM-DD')-->
+<!--	                                                   AND TO_DATE(#{disposalEndDt}, 'YYYY-MM-DD')+1-->
+<!--					</if>-->
+<!--					<if test='sortColumn == null or "".equals(sortColumn)'>-->
+<!--			        	ORDER BY destroyAppDetail.ACTION_DT DESC, reqMapping.OBJECT_NO-->
+<!--					</if>-->
+<!--			       	<if test='sortColumn != null and !"".equals(sortColumn)'>-->
+<!--			       		ORDER BY ${sortColumn} ${order}-->
+<!--			       	</if>-->
+<!--				) A1-->
+<!--			WHERE 1=1-->
+<!--			<if test='end != null and !end.equals("")'>-->
+<!--			AND ROWNUM <![CDATA[<=]]> #{end}-->
+<!--			</if>-->
+<!--		) B1-->
+<!--		<if test='start != null and !start.equals("")'>-->
+<!--		WHERE PAGEINDEX <![CDATA[>=]]> #{start}-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	<select id="selectListCount" resultType="Integer">-->
+<!--		SELECT COUNT(objectNo) AS TOTAL_COUNT-->
+<!--		FROM-->
+<!--			(-->
+<!--			    SELECT req.REQUEST_NO                   AS requestNo-->
+<!--				     , reqMapping.OBJECT_NO             AS objectNo-->
+<!--				     , req.OBJECT_TYPE                  AS objectType-->
+<!--				     , FN_GET_CD_NM('productionObjectType', req.OBJECT_TYPE, 'ko') AS objectTypeNm-->
+<!--				     , reqMapping.REV_NO                AS revNo-->
+<!--				     , reqMapping.OBJECT_CLASS_CD2      AS objectClassCd2-->
+<!--				     , reqMapping.OBJECT_CLASS_NM2      AS objectClassNm2-->
+<!--				     , reqMapping.PRODUCT_CD            AS productCd-->
+<!--				     ,(-->
+<!--				         SELECT CN_CD || ' ' || CN_CD_DESC-->
+<!--				           FROM (SELECT DISTINCT PRODUCT_CD AS CN_CD, PRODUCT_CD AS CN_CD_DESC FROM DOCS_REQUEST_MAPPING WHERE PRODUCT_CD IS NOT NULL) PROD_SRC-->
+<!--				          WHERE CN_CD = reqMapping.PRODUCT_CD-->
+<!--				       )                                AS productNm-->
+<!--				      , reqMapping.Object_Nm            AS objectNm-->
+<!--				      , req.business_area_cd            AS businessAreaCd-->
+<!--				      , FN_GET_CD_NM('businessAreaCd', req.business_area_cd, 'ko') AS businessAreaNm-->
+<!--				      , req.INSERT_USER_CD              AS requestUserCd-->
+<!--				      , (SELECT USER_NM-->
+<!--				           FROM DOCS_USER-->
+<!--				          WHERE USER_CD = req.INSERT_USER_CD) AS requestUserNm-->
+<!--				      , destroyReqDetail.ACTUAL_USER_CD    AS destroyRequestUserCd-->
+<!--				      , (SELECT USER_NM-->
+<!--				           FROM DOCS_USER-->
+<!--				          WHERE USER_CD = destroyReqDetail.ACTUAL_USER_CD) AS destroyRequestUserNm-->
+<!--				      , destroyAppDetail.ACTUAL_USER_CD    AS destroyApprovalUserCd-->
+<!--				      , (SELECT USER_NM-->
+<!--				           FROM DOCS_USER-->
+<!--				          WHERE USER_CD = destroyAppDetail.ACTUAL_USER_CD) AS destroyApprovalUserNm-->
+<!--				       , destroyAppDetail.ACTION_DT         AS destroyApprovalDt-->
+<!--				       , destroyMapping.CURRENT_COUNT       AS currentCount-->
+<!--				  FROM DOCS_REQUEST req-->
+<!--				       INNER JOIN DOCS_REQUEST_MAPPING reqMapping ON reqMapping.REQUEST_NO = req.REQUEST_NO-->
+<!--				       INNER JOIN-->
+<!--                        (-->
+<!--                          SELECT OBJECT_ID-->
+<!--                               , DESTROY_REQUEST_NO-->
+<!--                               , REQUEST_NO-->
+<!--                               , CURRENT_COUNT-->
+<!--                          FROM  (SELECT DENSE_RANK() OVER (PARTITION BY OBJECT_ID, DESTROY_REQUEST_NO ORDER BY OBJECT_ID, REQUEST_NO DESC) AS PAGE_RANK-->
+<!--                                      , OBJECT_ID-->
+<!--                                      , DESTROY_REQUEST_NO-->
+<!--                                      , REQUEST_NO-->
+<!--                                      , CURRENT_COUNT-->
+<!--                                   FROM DOCS_DESTROY_REQUEST_MAPPING-->
+<!--                                  WHERE DESTROY_REQUEST_NO IN (SELECT DESTROY_REQUEST_NO FROM DOCS_DESTROY_REQUEST WHERE STATUS_CD = 'APPROVAL')-->
+<!--                                  GROUP BY OBJECT_ID, DESTROY_REQUEST_NO, REQUEST_NO, CURRENT_COUNT-->
+<!--                                )-->
+<!--                          WHERE PAGE_RANK = 1-->
+<!--                        ) destroyMapping ON reqMapping.REQUEST_NO = destroyMapping.REQUEST_NO AND reqMapping.OBJECT_ID = destroyMapping.OBJECT_ID-->
+<!--				       INNER JOIN DOCS_DESTROY_REQUEST destroy ON destroy.DESTROY_REQUEST_NO = destroyMapping.DESTROY_REQUEST_NO-->
+<!--				       INNER JOIN DOCS_DESTROY_REQUEST_DETAIL destroyReqDetail ON destroyReqDetail.DESTROY_REQUEST_NO = destroy.DESTROY_REQUEST_NO AND destroyReqDetail.APPROVAL_STATUS_CD = 'REQUEST'-->
+<!--				       INNER JOIN DOCS_DESTROY_REQUEST_DETAIL destroyAppDetail ON destroyAppDetail.DESTROY_REQUEST_NO = destroy.DESTROY_REQUEST_NO AND destroyAppDetail.APPROVAL_STATUS_CD = 'APPROVAL'-->
+<!--				  WHERE req.REQUEST_TYPE = 'PRODUCT'-->
+<!--				    AND destroy.STATUS_CD = 'APPROVAL'-->
+
+<!--					<if test='objectNo != null and !objectNo.equals("")'>-->
+<!--					AND reqMapping.OBJECT_NO LIKE '%' || UPPER(TRIM(#{objectNo})) || '%'-->
+<!--					</if>-->
+<!--					<if test='objectType != null and !objectType.equals("")'>-->
+<!--					AND req.OBJECT_TYPE = #{objectType}-->
+<!--					</if>-->
+<!--					<if test='objectClassCd2 != null and !objectClassCd2.equals("")'>-->
+<!--					AND reqMapping.OBJECT_CLASS_CD2 = #{objectClassCd2}-->
+<!--					</if>-->
+<!--					<if test='destroyRequestUserCd != null and !destroyRequestUserCd.equals("")'>-->
+<!--					AND destroyReqDetail.ACTUAL_USER_CD = #{destroyRequestUserCd}-->
+<!--					</if>-->
+<!--					<if test='disposalStartDt != null and !disposalStartDt.equals("")'>-->
+<!--					AND destroyAppDetail.ACTION_DT BETWEEN TO_DATE(#{disposalStartDt}, 'YYYY-MM-DD')-->
+<!--	                                                   AND TO_DATE(#{disposalEndDt}, 'YYYY-MM-DD')+1-->
+<!--					</if>-->
+<!--			) A1-->
+<!--	</select>-->
+
+<!--</mapper>-->
+
+
+
+
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+
+
+
+<mapper namespace="sql.ProductionDisposalStatus">
+
+<select id="selectList" resultType="kr.esob.fdms.controller.inside.production.disposalstatus.DisposalStatusListVO">
+	SELECT B1.*
+	FROM (
+	SELECT A1.*
+	, ROW_NUMBER() OVER(ORDER BY A1.destroyApprovalDt DESC, A1.objectNo) AS PAGEINDEX
+	FROM (
+	SELECT req.REQUEST_NO AS requestNo
+	, reqMapping.OBJECT_NO AS objectNo
+	, req.OBJECT_TYPE AS objectType
+	, FN_GET_CD_NM('productionObjectType', req.OBJECT_TYPE, 'ko') AS objectTypeNm
+	, reqMapping.REV_NO AS revNo
+	, reqMapping.OBJECT_CLASS_CD2 AS objectClassCd2
+	, reqMapping.OBJECT_CLASS_NM2 AS objectClassNm2
+	, reqMapping.PRODUCT_CD AS productCd
+	, COALESCE(reqMapping.PRODUCT_CD, '') AS productNm
+	, reqMapping.Object_Nm AS objectNm
+	, req.business_area_cd AS businessAreaCd
+	, FN_GET_CD_NM('businessAreaCd', req.business_area_cd, 'ko') AS businessAreaNm
+	, req.INSERT_USER_CD AS requestUserCd
+	, (SELECT USER_NM FROM DOCS_USER WHERE USER_CD = req.INSERT_USER_CD) AS requestUserNm
+	, destroyReqDetail.ACTUAL_USER_CD AS destroyRequestUserCd
+	, (SELECT USER_NM FROM DOCS_USER WHERE USER_CD = destroyReqDetail.ACTUAL_USER_CD) AS destroyRequestUserNm
+	, destroyAppDetail.ACTUAL_USER_CD AS destroyApprovalUserCd
+	, (SELECT USER_NM FROM DOCS_USER WHERE USER_CD = destroyAppDetail.ACTUAL_USER_CD) AS destroyApprovalUserNm
+	, destroyAppDetail.ACTION_DT AS destroyApprovalDt
+	, destroyMapping.CURRENT_COUNT AS currentCount
+	FROM DOCS_REQUEST req
+	INNER JOIN DOCS_REQUEST_MAPPING reqMapping ON reqMapping.REQUEST_NO = req.REQUEST_NO
+	INNER JOIN (
+	SELECT DISTINCT ON (OBJECT_ID, DESTROY_REQUEST_NO) OBJECT_ID, DESTROY_REQUEST_NO, REQUEST_NO, CURRENT_COUNT
+	FROM DOCS_DESTROY_REQUEST_MAPPING
+	WHERE DESTROY_REQUEST_NO IN (SELECT DESTROY_REQUEST_NO FROM DOCS_DESTROY_REQUEST WHERE STATUS_CD = 'APPROVAL')
+	ORDER BY OBJECT_ID, DESTROY_REQUEST_NO, REQUEST_NO DESC
+	) destroyMapping ON reqMapping.REQUEST_NO = destroyMapping.REQUEST_NO AND reqMapping.OBJECT_ID = destroyMapping.OBJECT_ID
+	INNER JOIN DOCS_DESTROY_REQUEST destroy ON destroy.DESTROY_REQUEST_NO = destroyMapping.DESTROY_REQUEST_NO
+	INNER JOIN DOCS_DESTROY_REQUEST_DETAIL destroyReqDetail ON destroyReqDetail.DESTROY_REQUEST_NO = destroy.DESTROY_REQUEST_NO AND destroyReqDetail.APPROVAL_STATUS_CD = 'REQUEST'
+	INNER JOIN DOCS_DESTROY_REQUEST_DETAIL destroyAppDetail ON destroyAppDetail.DESTROY_REQUEST_NO = destroy.DESTROY_REQUEST_NO AND destroyAppDetail.APPROVAL_STATUS_CD = 'APPROVAL'
+	WHERE req.REQUEST_TYPE = 'PRODUCT'
+	AND destroy.STATUS_CD = 'APPROVAL'
+	<if test='objectNo != null and !objectNo.equals("")'>
+		AND reqMapping.OBJECT_NO LIKE '%' || UPPER(TRIM(#{objectNo})) || '%'
+	</if>
+	<if test='objectType != null and !objectType.equals("")'>
+		AND req.OBJECT_TYPE = #{objectType}
+	</if>
+	<if test='objectClassCd2 != null and !objectClassCd2.equals("")'>
+		AND reqMapping.OBJECT_CLASS_CD2 = #{objectClassCd2}
+	</if>
+	<if test='destroyRequestUserCd != null and !destroyRequestUserCd.equals("")'>
+		AND destroyReqDetail.ACTUAL_USER_CD = #{destroyRequestUserCd}
+	</if>
+	<if test='disposalStartDt != null and !disposalStartDt.equals("")'>
+		AND destroyAppDetail.ACTION_DT BETWEEN TO_DATE(#{disposalStartDt}, 'YYYY-MM-DD')
+		AND TO_DATE(#{disposalEndDt}, 'YYYY-MM-DD') + INTERVAL '1 DAY'
+	</if>
+	<if test='sortColumn == null or "".equals(sortColumn)'>
+		ORDER BY destroyAppDetail.ACTION_DT DESC, reqMapping.OBJECT_NO
+	</if>
+	<if test='sortColumn != null and !"".equals(sortColumn)'>
+		ORDER BY ${sortColumn} ${order}
+	</if>
+	) A1
+	WHERE 1=1
+	<if test='end != null and !end.equals("")'>
+		AND PAGEINDEX <![CDATA[ <= ]]> #{end}
+	</if>
+	) B1
+	<if test='start != null and !start.equals("")'>
+		WHERE PAGEINDEX >= #{start}
+	</if>
+</select>
+
+<select id="selectListCount" resultType="Integer">
+	SELECT COUNT(objectNo) AS TOTAL_COUNT
+	FROM (
+	SELECT req.REQUEST_NO AS requestNo
+	, reqMapping.OBJECT_NO AS objectNo
+	, req.OBJECT_TYPE AS objectType
+	, FN_GET_CD_NM('productionObjectType', req.OBJECT_TYPE, 'ko') AS objectTypeNm
+	, reqMapping.REV_NO AS revNo
+	, reqMapping.OBJECT_CLASS_CD2 AS objectClassCd2
+	, reqMapping.OBJECT_CLASS_NM2 AS objectClassNm2
+	, reqMapping.PRODUCT_CD AS productCd
+	, COALESCE(reqMapping.PRODUCT_CD, '') AS productNm
+	, reqMapping.Object_Nm AS objectNm
+	, req.business_area_cd AS businessAreaCd
+	, FN_GET_CD_NM('businessAreaCd', req.business_area_cd, 'ko') AS businessAreaNm
+	, req.INSERT_USER_CD AS requestUserCd
+	, (SELECT USER_NM FROM DOCS_USER WHERE USER_CD = req.INSERT_USER_CD) AS requestUserNm
+	, destroyReqDetail.ACTUAL_USER_CD AS destroyRequestUserCd
+	, (SELECT USER_NM FROM DOCS_USER WHERE USER_CD = destroyReqDetail.ACTUAL_USER_CD) AS destroyRequestUserNm
+	, destroyAppDetail.ACTUAL_USER_CD AS destroyApprovalUserCd
+	, (SELECT USER_NM FROM DOCS_USER WHERE USER_CD = destroyAppDetail.ACTUAL_USER_CD) AS destroyApprovalUserNm
+	, destroyAppDetail.ACTION_DT AS destroyApprovalDt
+	, destroyMapping.CURRENT_COUNT AS currentCount
+	FROM DOCS_REQUEST req
+	INNER JOIN DOCS_REQUEST_MAPPING reqMapping ON reqMapping.REQUEST_NO = req.REQUEST_NO
+	INNER JOIN (
+	SELECT DISTINCT ON (OBJECT_ID, DESTROY_REQUEST_NO) OBJECT_ID, DESTROY_REQUEST_NO, REQUEST_NO, CURRENT_COUNT
+	FROM DOCS_DESTROY_REQUEST_MAPPING
+	WHERE DESTROY_REQUEST_NO IN (SELECT DESTROY_REQUEST_NO FROM DOCS_DESTROY_REQUEST WHERE STATUS_CD = 'APPROVAL')
+	ORDER BY OBJECT_ID, DESTROY_REQUEST_NO, REQUEST_NO DESC
+	) destroyMapping ON reqMapping.REQUEST_NO = destroyMapping.REQUEST_NO AND reqMapping.OBJECT_ID = destroyMapping.OBJECT_ID
+	INNER JOIN DOCS_DESTROY_REQUEST destroy ON destroy.DESTROY_REQUEST_NO = destroyMapping.DESTROY_REQUEST_NO
+	INNER JOIN DOCS_DESTROY_REQUEST_DETAIL destroyReqDetail ON destroyReqDetail.DESTROY_REQUEST_NO = destroy.DESTROY_REQUEST_NO AND destroyReqDetail.APPROVAL_STATUS_CD = 'REQUEST'
+	INNER JOIN DOCS_DESTROY_REQUEST_DETAIL destroyAppDetail ON destroyAppDetail.DESTROY_REQUEST_NO = destroy.DESTROY_REQUEST_NO AND destroyAppDetail.APPROVAL_STATUS_CD = 'APPROVAL'
+	WHERE req.REQUEST_TYPE = 'PRODUCT'
+	AND destroy.STATUS_CD = 'APPROVAL'
+	<if test='objectNo != null and !objectNo.equals("")'>
+		AND reqMapping.OBJECT_NO LIKE '%' || UPPER(TRIM(#{objectNo})) || '%'
+	</if>
+	<if test='objectType != null and !objectType.equals("")'>
+		AND req.OBJECT_TYPE = #{objectType}
+	</if>
+	<if test='objectClassCd2 != null and !objectClassCd2.equals("")'>
+		AND reqMapping.OBJECT_CLASS_CD2 = #{objectClassCd2}
+	</if>
+	<if test='destroyRequestUserCd != null and !destroyRequestUserCd.equals("")'>
+		AND destroyReqDetail.ACTUAL_USER_CD = #{destroyRequestUserCd}
+	</if>
+	<if test='disposalStartDt != null and !disposalStartDt.equals("")'>
+		AND destroyAppDetail.ACTION_DT BETWEEN TO_DATE(#{disposalStartDt}, 'YYYY-MM-DD')
+		AND TO_DATE(#{disposalEndDt}, 'YYYY-MM-DD') + INTERVAL '1 DAY'
+	</if>
+	) A1
+</select>
+
+</mapper>

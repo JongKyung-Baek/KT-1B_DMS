@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="sql.CommonUpdown">
+
+<select id="getUpdownConfig" resultType="java.util.Map">
+    WITH CONFIG AS (
+        SELECT SYSTEM_CONFIG_CD, SYSTEM_CONFIG_VALUE
+        FROM DOCS_SYSTEM_CONFIG
+        WHERE SYSTEM_CONFIG_CD LIKE 'UPDOWN%'
+    )
+    SELECT
+        MAX(SYSTEM_CONFIG_VALUE) FILTER (WHERE SYSTEM_CONFIG_CD = 'UPDOWN_CAB_URL') AS "updownCabUrl",
+            MAX(SYSTEM_CONFIG_VALUE) FILTER (WHERE SYSTEM_CONFIG_CD = 'UPDOWN_CAB_URL_OUT') AS "updownCabUrlOut",
+            MAX(SYSTEM_CONFIG_VALUE) FILTER (WHERE SYSTEM_CONFIG_CD = 'UPDOWN_SERVER_IP') AS "updownServerIp",
+            MAX(SYSTEM_CONFIG_VALUE) FILTER (WHERE SYSTEM_CONFIG_CD = 'UPDOWN_SERVER_IP_OUT') AS "updownOutServerIp",
+            MAX(SYSTEM_CONFIG_VALUE) FILTER (WHERE SYSTEM_CONFIG_CD = 'UPDOWN_SERVER_PORT') AS "updownServerPort",
+            MAX(SYSTEM_CONFIG_VALUE) FILTER (WHERE SYSTEM_CONFIG_CD = 'UPDOWN_LANG_CODE') AS "updownLangCode",
+            MAX(SYSTEM_CONFIG_VALUE) FILTER (WHERE SYSTEM_CONFIG_CD = 'UPDOWN_SECRET_KEY') AS "updownSecretKey",
+            MAX(SYSTEM_CONFIG_VALUE) FILTER (WHERE SYSTEM_CONFIG_CD = 'UPDOWN_IS_SECURITY') AS "updownIsSecurity",
+            MAX(SYSTEM_CONFIG_VALUE) FILTER (WHERE SYSTEM_CONFIG_CD = 'UPDOWN_USER_AUTH') AS "updownUserAuth"
+    FROM CONFIG;
+</select>
+
+<select id="selectList" parameterType="kr.esob.fdms.commonlogic.updown.CommonUpdownParam" resultType="kr.esob.fdms.commonlogic.updown.CommonUpdownFileVO">
+    SELECT FILE_PATH_NM 	AS filePathNm
+    , ORG_FILE_NM		AS orgFileNm
+    , FILE_NM			AS fileNm
+    , FILE_SIZE			AS fileSize
+    , USE_END_YMD		AS endDate
+    , OBJECT_ID         AS objectId
+    , REQUEST_NO        AS requestNo
+    FROM DOCS_REQUEST_FILE
+    <foreach collection="list" open="WHERE 1=1 AND (" close=")" separator="OR" item="list">
+        ( OBJECT_ID = #{list.objectId, jdbcType=VARCHAR} AND REQUEST_NO = #{list.requestNo, jdbcType=VARCHAR} AND FILE_NO::text = #{list.fileNo, jdbcType=VARCHAR})
+    </foreach>
+</select>
+
+<select id="getDownloadCount" resultType="int">
+    SELECT DOWNLOAD_COUNT
+    FROM DOCS_REQUEST_FILE
+    WHERE FILE_PATH_NM = #{orgFilePath}
+      AND DESTROY_TYPE IS NULL
+</select>
+
+<update id="plusDownloadCount">
+    UPDATE DOCS_REQUEST_FILE
+    SET DOWNLOAD_COUNT = DOWNLOAD_COUNT + 1
+    WHERE FILE_PATH_NM = #{orgFilePath}
+      AND DESTROY_TYPE IS NULL
+</update>
+
+<insert id="addToDownHistory">
+    INSERT INTO DOCS_DOWN_HISTORY (REQUEST_NO, OBJECT_ID, DOWN_COUNT, OBJECT_NO, OBJECT_NM, USER_NM, DOWN_DATE, DOWNLOADED_NAME)
+    VALUES (#{requestNo}, #{objectId} ,#{downCount}, #{objectNo}, #{objectNm}, #{userNm}, #{downDate}, #{downloadedName})
+</insert>
+
+<select id="getObjectNoObjectNm" parameterType="map" resultType="map">
+    SELECT OBJECT_NO as "objectNo", OBJECT_NM as "objectNm"
+    FROM DOCS_REQUEST_MAPPING
+    WHERE REQUEST_NO = #{requestNo} AND OBJECT_ID = #{objectId}
+</select>
+
+<insert id="insertLog" parameterType="kr.esob.fdms.commonlogic.updown.DownloadedFileActLogDto">
+    INSERT INTO DOCS_DOCUMENT_ACT_LOG (ACT_TYPE, ACT_TIME, PATH, UUID, OBJECT_ID, POLICY)
+    VALUES (
+               #{act_type},
+               #{act_time},
+               #{path},
+               #{uuid},
+               (SELECT OBJECT_ID FROM DOCS_DOWN_HISTORY WHERE DOWNLOADED_NAME = #{uuid}),
+               #{policy}
+           )
+</insert>
+</mapper>
+
+
+

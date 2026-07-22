@@ -1,0 +1,613 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--<mapper namespace="sql.OrganizationmanageInsideuser">-->
+<!--	<select id="selectList" resultType="kr.esob.fdms.controller.inside.organizationmanage.insideuser.InsideuserListVO">-->
+<!--	SELECT-->
+<!--		B1.*-->
+<!--	FROM-->
+<!--	(-->
+<!--		SELECT-->
+<!--			A1.*-->
+<!--			, ROWNUM AS PAGEINDEX-->
+<!--		FROM-->
+<!--		(-->
+<!--			  SELECT userInfo.USER_ID 		AS userId			    /*사용자계정*/-->
+<!--			        ,userInfo.USER_CD   	AS userCd-->
+<!--					,userInfo.USER_NM 		    AS userNm			    /*사용자성명*/-->
+<!--					,userInfo.DEPT_CD           AS deptCd              /*부서코드*/-->
+<!--					,docsDept.DEPT_NM 		AS deptNm			    /*부서이름*/-->
+<!--					,dPostion.POSITION_NM 	AS positionNm		    /*직위*/-->
+<!--					,userInfo.LAST_LOGIN_DT AS lastLoginDt		    /*최종로그인*/-->
+<!--					,userInfo.LOCK_YN 		    AS accountLockYn	/*계정잠금여부*/-->
+<!--					,userInfo.LOGIN_COUNT 	AS loginCount		    /*비밀번호틀린회수*/-->
+<!--					,userInfo.USE_YN            AS useYn               /*재직구분*/-->
+<!--					,dRoleGroup.GROUP_NM    AS roleGroup          /*사용자권한*/-->
+<!--			  FROM DOCS_USER userInfo-->
+<!--			  LEFT JOIN DOCS_DEPT docsDept-->
+<!--			  ON  userInfo.DEPT_CD = docsDept.DEPT_CD-->
+<!--			  LEFT JOIN DOCS_POSITION dPostion-->
+<!--			  ON  userInfo.POSITION_CD = dPostion.POSITION_CD-->
+<!--			  LEFT JOIN DOCS_ROLE_GROUP dRoleGroup-->
+<!--			  ON userInfo.ROLE_GROUP = dRoleGroup.GROUP_CODE-->
+<!--			  WHERE AUTH_SITE IN ('I', 'B')-->
+<!--			) A1-->
+<!--			WHERE 1=1-->
+<!--			<if test='userId != null and !userId.equals("")'>-->
+<!--			AND userId LIKE '%' || #{userId} || '%'-->
+<!--			</if>-->
+<!--			<if test='userNm != null and !userNm.equals("")'>-->
+<!--			AND userNm LIKE '%' || #{userNm} || '%'-->
+<!--			</if>-->
+<!--			<if test='deptCd != null and !deptCd.equals("")'>-->
+<!--			AND deptCd = #{deptCd}-->
+<!--			</if>-->
+<!--			<if test='useYn != null and !useYn.equals("")'>-->
+<!--			AND useYn = #{useYn}-->
+<!--			</if>-->
+<!--			<if test='end != null and !end.equals("")'>-->
+<!--			AND ROWNUM <![CDATA[ <= ]]> #{end}-->
+<!--			</if>-->
+<!--	) B1-->
+<!--	<if test='start != null and !start.equals("")'>-->
+<!--	WHERE PAGEINDEX <![CDATA[ >= ]]>#{start}-->
+<!--	</if>-->
+<!--	</select>-->
+
+<!--	<select id="selectListCount" resultType="Integer">-->
+<!--	  SELECT COUNT(userInfo.USER_ID) AS TOTAL_COUNT-->
+<!--	  FROM DOCS_USER userInfo-->
+<!--	  LEFT JOIN DOCS_DEPT docsDept-->
+<!--      ON  userInfo.DEPT_CD = docsDept.DEPT_CD-->
+<!--      LEFT JOIN DOCS_POSITION dPostion-->
+<!--      ON  userInfo.POSITION_CD = dPostion.POSITION_CD-->
+<!--  		WHERE 1=1-->
+<!--  		AND AUTH_SITE IN ('I', 'B')-->
+<!--		<if test='userId != null and !userId.equals("")'>-->
+<!--		AND userInfo.user_Id LIKE '%' || #{userId} || '%'-->
+<!--		</if>-->
+<!--		<if test='userNm != null and !userNm.equals("")'>-->
+<!--		AND userInfo.user_Nm LIKE '%' || #{userNm} || '%'-->
+<!--		</if>-->
+<!--		<if test='deptCd != null and !deptCd.equals("")'>-->
+<!--		AND userInfo.dept_Cd = #{deptCd}-->
+<!--		</if>-->
+<!--		<if test='useYn != null and !useYn.equals("")'>-->
+<!--		AND userInfo.use_Yn = #{useYn}-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	<update id="updateUnlock">-->
+<!--		UPDATE DOCS_USER-->
+<!--		SET LAST_LOGIN_DT = SYSDATE-->
+<!--			, LOCK_YN = 'N'-->
+<!--		WHERE USER_NM = #{userNm}-->
+<!--	</update>-->
+
+<!--	<select id="selectPurchaserCombo"-->
+<!--			resultType="kr.esob.fdms.commonlogic.combo.ComboInfoVO">-->
+<!--		&lt;!&ndash; sql.OrganizationmanageInsideuser.selectPurchaserCombo 구매팀 user 목록 &ndash;&gt;-->
+<!--		SELECT-->
+<!--			'purchaser' 						AS comboCd-->
+<!--			, USER_CD 							AS comboVal-->
+<!--			, USER_NM || '[' || USER_ID || ']'	AS comboLabel-->
+<!--			, USER_NM || '[' || USER_ID || ']' 	AS comboTooltip-->
+<!--		FROM DOCS_USER docsUser-->
+<!--		INNER JOIN DOCS_DEPT docsDept ON docsDept.DEPT_CD = docsUser.DEPT_CD-->
+<!--		WHERE docsDept.PURCHASE_YN = 'Y'	/* 구매팀 */-->
+<!--		AND docsUser.USE_YN = 'Y'-->
+<!--		AND docsUser.DEL_YN = 'N'-->
+<!--		ORDER BY USER_NM-->
+<!--	</select>-->
+
+<!--	<select id="selectPurchaserComboById"-->
+<!--			resultType="kr.esob.fdms.commonlogic.combo.ComboInfoVO">-->
+<!--		&lt;!&ndash; sql.OrganizationmanageInsideuser.selectPurchaserCombo 구매팀 user 목록 &ndash;&gt;-->
+<!--		SELECT-->
+<!--			'purchaser' 						AS comboCd-->
+<!--			, USER_Id 							AS comboVal-->
+<!--			, USER_NM || '[' || USER_ID || ']'	AS comboLabel-->
+<!--			, USER_NM || '[' || USER_ID || ']' 	AS comboTooltip-->
+<!--		FROM DOCS_USER docsUser-->
+<!--		INNER JOIN DOCS_DEPT docsDept ON docsDept.DEPT_CD = docsUser.DEPT_CD-->
+<!--		WHERE docsDept.PURCHASE_YN = 'Y'	/* 구매팀 */-->
+<!--		AND docsUser.USE_YN = 'Y'-->
+<!--		AND docsUser.DEL_YN = 'N'-->
+<!--		ORDER BY USER_NM-->
+<!--	</select>-->
+
+<!--	<select id="selectCompanyCombo"-->
+<!--			resultType="kr.esob.fdms.commonlogic.combo.ComboInfoVO">-->
+<!--		&lt;!&ndash; sql.OrganizationmanageInsideuser.selectCompanyCombo 업체목록combo &ndash;&gt;-->
+<!--		SELECT-->
+<!--			'company'							AS comboCd-->
+<!--			, COMPANY_CD						AS comboVal-->
+<!--			, COMPANY_NM 						AS comboLabel-->
+<!--		FROM DOCS_COMPANY-->
+<!--		WHERE DEL_YN='N'	/* 거래중단된 업체는 가져오지 않음 */-->
+<!--		ORDER BY COMPANY_NM-->
+<!--	</select>-->
+
+<!--	<select id="selectUserCombo"-->
+<!--			resultType="kr.esob.fdms.commonlogic.combo.SearchComboInfoVO">-->
+<!--		&lt;!&ndash; sql.OrganizationmanageInsideuser.selectUserCombo 사용자목록combo - 한화에서 ID를 쓰기 때문에 USER_ID를 ID로 사용 &ndash;&gt;-->
+<!--		SELECT X.*-->
+<!--          FROM (-->
+<!--		        SELECT USER_ID AS id-->
+<!--		         	 , USER_NM || '[' || USER_ID || ']' AS text-->
+<!--		         	 , USER_NM || '[' || USER_ID || ']' AS title-->
+<!--		         	 , ROW_NUMBER() OVER(ORDER BY USER_NM) AS pageindex-->
+<!--		          FROM DOCS_USER-->
+<!--		         WHERE 1=1-->
+<!--		           AND USE_YN = 'Y'-->
+<!--				   AND DEL_YN = 'N'-->
+<!--				 <if test='term != null and !"".equals(term)'>-->
+<!--		           AND USER_NM LIKE '%' || #{term} || '%'-->
+<!--		         </if>-->
+<!--          		) X-->
+<!--		<if test='page != null and !page.equals("")'>-->
+<!--			WHERE PAGEINDEX BETWEEN #{posStart}-->
+<!--			  AND #{count} * #{page}-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	<select id="selectUserComboUserCd"-->
+<!--			resultType="kr.esob.fdms.commonlogic.combo.SearchComboInfoVO">-->
+<!--		&lt;!&ndash; sql.OrganizationmanageInsideuser.selectUserCombo 사용자목록combo - &ndash;&gt;-->
+<!--		SELECT X.*-->
+<!--          FROM (-->
+<!--		        SELECT USER_CD AS id-->
+<!--		         	 , USER_NM || '[' || USER_ID || ']' AS text-->
+<!--		         	 , USER_NM || '[' || USER_ID || ']' AS title-->
+<!--		         	 , ROW_NUMBER() OVER(ORDER BY USER_NM) AS pageindex-->
+<!--		          FROM DOCS_USER-->
+<!--		         WHERE 1=1-->
+<!--		           AND USE_YN = 'Y'-->
+<!--				   AND DEL_YN = 'N'-->
+<!--				 <if test='term != null and !"".equals(term)'>-->
+<!--		           AND USER_NM LIKE '%' || #{term} || '%'-->
+<!--		         </if>-->
+<!--          		) X-->
+<!--		<if test='page != null and !page.equals("")'>-->
+<!--			WHERE PAGEINDEX BETWEEN #{posStart}-->
+<!--			  AND #{count} * #{page}-->
+<!--		</if>-->
+<!--	</select>-->
+
+<!--	<select id="selectVendorCombo"-->
+<!--			resultType="kr.esob.fdms.commonlogic.combo.ComboInfoVO">-->
+<!--		&lt;!&ndash; sql.OrganizationmanageInsideuser.selectVendorCombo 벤더목록combo(cd : biz_no) &ndash;&gt;-->
+<!--		SELECT-->
+<!--			'company'							AS comboCd-->
+<!--			, BIZ_NO							AS comboVal-->
+<!--			, COMPANY_NM 						AS comboLabel-->
+<!--		FROM DOCS_COMPANY-->
+<!--		ORDER BY COMPANY_NM-->
+<!--	</select>-->
+
+<!--	<insert id="insertRegisterUserInfo" parameterType="kr.esob.fdms.controller.inside.organizationmanage.insideuser.UserPopupParam">-->
+<!--		<selectKey keyProperty="userCd" resultType="kr.esob.fdms.controller.inside.organizationmanage.insideuser.UserPopupParam" order="BEFORE">-->
+<!--			/* */-->
+<!--			SELECT 'USER_' || LPAD(TO_NUMBER(SUBSTR(MAX(USER_CD), 6)) + 1, 10, '0') AS userCd-->
+<!--			FROM DOCS_USER-->
+
+<!--		</selectKey>-->
+<!--		/* DOCS_USER 추가 */-->
+<!--		INSERT INTO DOCS_USER-->
+<!--		( USER_CD-->
+<!--		, USER_ID-->
+<!--		, USER_PWD-->
+<!--		, USER_NM-->
+<!--		, DEPT_CD-->
+<!--		, POSITION_CD-->
+<!--		, ROLE_GROUP-->
+<!--		, EMAIL-->
+<!--		, AUTH_SITE-->
+<!--		, USE_YN-->
+<!--		, DEL_YN-->
+<!--		, PROTECT_YN-->
+<!--		, LOCK_YN-->
+<!--		)-->
+
+<!--		VALUES-->
+<!--		( #{userCd}-->
+<!--		, #{userId}-->
+<!--		, #{userPwd}-->
+<!--		, #{userNm}-->
+<!--		, #{deptCd}-->
+<!--		, #{positionCd}-->
+<!--		, #{roleGroupCd}-->
+<!--		, #{email}-->
+<!--		, #{authSite}-->
+<!--		, #{useYn}-->
+<!--		, #{delYn}-->
+<!--		, #{protectYn}-->
+<!--		, #{lockYn}-->
+<!--		)-->
+<!--	</insert>-->
+
+
+<!--	<select id="checkUserId" resultType="string">-->
+<!--		SELECT USER_ID-->
+<!--		FROM DOCS_USER-->
+<!--		WHERE USER_ID = #{userId}-->
+<!--	</select>-->
+
+<!--	<select id="checkUserNm" resultType="string">-->
+<!--		SELECT USER_NM-->
+<!--		FROM DOCS_USER-->
+<!--		WHERE USER_NM = #{userNm}-->
+<!--	</select>-->
+
+<!--	<select id="checkEmail" resultType="string">-->
+<!--		SELECT EMAIL-->
+<!--		FROM DOCS_USER-->
+<!--		WHERE EMAIL = #{email}-->
+<!--	</select>-->
+
+
+<!--	<select id="selectUser" resultType="kr.esob.fdms.controller.inside.organizationmanage.insideuser.UserListVO">-->
+<!--		SELECT-->
+<!--				a.USER_ID AS userId-->
+<!--			 , a.USER_CD AS userCd-->
+<!--			 , a.EMAIL AS email-->
+<!--			 , a.USER_PWD AS userPwd-->
+<!--			 , a.COMPANY_CD AS companyCd-->
+<!--			 , (SELECT b1.COMPANY_NM FROM DOCS_COMPANY b1 WHERE b1.COMPANY_CD = a.COMPANY_CD) AS companyNm-->
+<!--			 , a.USER_NM AS userNm-->
+<!--		     , a.DEPT_CD AS deptCd-->
+<!--		     , (SELECT d1.DEPT_NM FROM DOCS_DEPT d1 WHERE d1.DEPT_CD = a.DEPT_CD ) AS deptNm-->
+<!--		     , a.POSITION_CD AS positionCd-->
+<!--		     , (SELECT p1.POSITION_NM FROM DOCS_POSITION p1 WHERE p1.POSITION_CD = a.POSITION_CD) AS positionNm-->
+<!--		     , a.ROLE_GROUP AS roleGroupCd-->
+<!--		     , (SELECT rg1.GROUP_NM FROM DOCS_ROLE_GROUP rg1 WHERE rg1.GROUP_CODE = a.ROLE_GROUP) AS roleGroupNm-->
+<!--			 , CASE WHEN a.PROTECT_YN IS NULL THEN 'N'-->
+<!--					ELSE a.PROTECT_YN-->
+<!--			END AS protectYn-->
+<!--&lt;!&ndash;			 , CASE WHEN b.APPROVAL_USER_CD IS NULL THEN 'N'-->
+<!--					ELSE 'Y'-->
+<!--			END AS crYn-->
+<!--			 , NVL(DISTRIBUTION_PERSON_YN, 'N') AS distributionYn &ndash;&gt;-->
+<!--		FROM DOCS_USER a-->
+<!--		WHERE USER_CD = #{userCd}-->
+
+<!--	</select>-->
+
+
+<!--	<select id="getUserInfoByUserCd" resultType="kr.esob.fdms.controller.inside.organizationmanage.insideuser.UserListVO">-->
+<!--		SELECT-->
+<!--		a.USER_ID AS userId-->
+<!--		, a.USER_CD AS userCd-->
+<!--		, a.EMAIL AS email-->
+<!--		, a.USER_PWD AS userPwd-->
+<!--		, a.COMPANY_CD AS companyCd-->
+<!--		, (SELECT b1.COMPANY_NM FROM DOCS_COMPANY b1 WHERE b1.COMPANY_CD = a.COMPANY_CD) AS companyNm-->
+<!--		, a.USER_NM AS userNm-->
+<!--		, a.DEPT_CD AS deptCd-->
+<!--		, (SELECT d1.DEPT_NM FROM DOCS_DEPT d1 WHERE d1.DEPT_CD = a.DEPT_CD ) AS deptNm-->
+<!--		, a.POSITION_CD AS positionCd-->
+<!--		, (SELECT p1.POSITION_NM FROM DOCS_POSITION p1 WHERE p1.POSITION_CD = a.POSITION_CD) AS positionNm-->
+<!--		, a.ROLE_GROUP AS roleGroupCd-->
+<!--		, (SELECT rg1.GROUP_NM FROM DOCS_ROLE_GROUP rg1 WHERE rg1.GROUP_CODE = a.ROLE_GROUP) AS roleGroupNm-->
+<!--		, CASE WHEN a.PROTECT_YN IS NULL THEN 'N'-->
+<!--		ELSE a.PROTECT_YN-->
+<!--		END AS protectYn-->
+
+<!--		FROM DOCS_USER a-->
+<!--		WHERE USER_CD = #{userCd}-->
+
+<!--	</select>-->
+
+<!--	<update id="editUserInfo" parameterType="kr.esob.fdms.controller.inside.organizationmanage.insideuser.UserPopupParam">-->
+<!--		/* DOCS_USER 추가 */-->
+
+<!--		UPDATE DOCS_USER-->
+<!--		SET USER_ID = #{userId},-->
+<!--		    USER_PWD = #{userPwd},-->
+<!--		    USER_NM = #{userNm},-->
+<!--		    DEPT_CD = #{deptCd},-->
+<!--		    POSITION_CD = #{positionCd},-->
+<!--		    ROLE_GROUP = #{roleGroupCd},-->
+<!--			EMAIL= #{email},-->
+<!--			AUTH_SITE = #{authSite},-->
+<!--			USE_YN = #{useYn},-->
+<!--			DEL_YN = #{delYn},-->
+<!--			PROTECT_YN = #{protectYn},-->
+<!--			LOCK_YN = #{lockYn}-->
+
+<!--		WHERE USER_CD = #{userCd}-->
+<!--	</update>-->
+<!--</mapper>-->
+
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+
+
+
+
+
+<mapper namespace="sql.OrganizationmanageInsidedept">
+
+<select id="selectDeptInfo" resultType="kr.esob.fdms.controller.inside.organizationmanage.insidedept.InsidedeptListVO">
+	SELECT
+		(SELECT MAX(DEPT_CD) FROM DOCS_DEPT WHERE DEPT_CD ~ '^[A-Z0-9]*\d+$') AS deptCd,
+		STRING_AGG(DEPT_NM, ',') AS allDeptNms
+	FROM DOCS_DEPT;
+</select>
+
+	<select id="selectList" resultType="kr.esob.fdms.controller.inside.organizationmanage.insidedept.InsidedeptListVO">
+		SELECT
+		B1.*
+		FROM
+		(
+		SELECT
+		A1.*,
+		ROW_NUMBER() OVER () AS pageIndex
+		FROM
+		(
+		SELECT deptInfo.DEPT_CD        AS deptCd,          /* 사용자계정 */
+		deptInfo.DEPT_NM        AS deptNm,
+		deptInfo.USE_YN        AS useYn,          /* 사용자성명 */
+		deptInfo.DEL_YN        AS delYn          /* 부서코드 */
+		FROM DOCS_DEPT deptInfo
+		<if test='sortColumn != null and !"".equals(sortColumn)'>
+			ORDER BY ${sortColumn} ${order}
+		</if>
+		) A1
+		WHERE 1=1
+		<if test='deptCd != null and !deptCd.equals("")'>
+			AND A1.deptCd LIKE CONCAT('%', #{deptCd}, '%')
+		</if>
+		<if test='deptNm != null and !deptNm.equals("")'>
+			AND A1.deptNm LIKE CONCAT('%', #{deptNm}, '%')
+		</if>
+		<if test='useYn != null and !useYn.equals("")'>
+			AND A1.useYnad = #{useYn}
+		</if>
+		) B1
+		WHERE 1=1
+		<if test='end != null and !end.equals("")'>
+			AND B1.pageIndex <![CDATA[ <= ]]> #{end}
+		</if>
+		<if test='start != null and !start.equals("")'>
+			AND B1.pageIndex >= #{start}
+		</if>
+	</select>
+
+<select id="selectListCount" resultType="Integer">
+	SELECT COUNT(deptInfo.DEPT_CD) AS TOTAL_COUNT
+	FROM DOCS_DEPT deptInfo
+	WHERE 1=1
+	<if test='deptCd != null and !deptCd.equals("")'>
+		AND deptInfo.DEPT_CD = #{deptCd}
+	</if>
+	<if test='useYn != null and !useYn.equals("")'>
+		AND deptInfo.USE_YN = #{useYn}
+	</if>
+</select>
+
+<update id="updateUnlock">
+	UPDATE DOCS_USER
+	SET LAST_LOGIN_DT = CURRENT_TIMESTAMP
+	  , LOCK_YN = 'N'
+	WHERE USER_NM = #{userNm}
+</update>
+
+<update id="resetPwd">
+	UPDATE DOCS_USER
+	SET USER_PWD = #{userPwd}
+	WHERE USER_CD = #{userCd}
+</update>
+
+
+<select id="selectPurchaserCombo" resultType="kr.esob.fdms.commonlogic.combo.ComboInfoVO">
+	SELECT
+		'purchaser' AS comboCd
+		 , USER_CD AS comboVal
+		 , USER_NM || '[' || USER_ID || ']' AS comboLabel
+		 , USER_NM || '[' || USER_ID || ']' AS comboTooltip
+	FROM DOCS_USER docsUser
+			 INNER JOIN DOCS_DEPT docsDept ON docsDept.DEPT_CD = docsUser.DEPT_CD
+	WHERE docsDept.PURCHASE_YN = 'Y'
+	  AND docsUser.USE_YN = 'Y'
+	  AND docsUser.DEL_YN = 'N'
+	ORDER BY USER_NM
+</select>
+
+<select id="selectPurchaserComboById" resultType="kr.esob.fdms.commonlogic.combo.ComboInfoVO">
+	SELECT
+		'purchaser' AS comboCd
+		 , USER_ID AS comboVal
+		 , USER_NM || '[' || USER_ID || ']' AS comboLabel
+		 , USER_NM || '[' || USER_ID || ']' AS comboTooltip
+	FROM DOCS_USER docsUser
+			 INNER JOIN DOCS_DEPT docsDept ON docsDept.DEPT_CD = docsUser.DEPT_CD
+	WHERE docsDept.PURCHASE_YN = 'Y'
+	  AND docsUser.USE_YN = 'Y'
+	  AND docsUser.DEL_YN = 'N'
+	ORDER BY USER_NM
+</select>
+
+<select id="selectCompanyCombo" resultType="kr.esob.fdms.commonlogic.combo.ComboInfoVO">
+	SELECT
+		'company' AS comboCd
+		 , '' AS comboVal
+		 , '' AS comboLabel
+	WHERE 1=0
+</select>
+
+<select id="selectUserCombo" resultType="kr.esob.fdms.commonlogic.combo.SearchComboInfoVO">
+	SELECT X.*
+	FROM (
+	SELECT USER_ID AS id
+	, USER_NM || '[' || USER_ID || ']' AS text
+	, USER_NM || '[' || USER_ID || ']' AS title
+	, ROW_NUMBER() OVER (ORDER BY USER_NM) AS pageindex
+	FROM DOCS_USER
+	WHERE 1=1
+	AND USE_YN = 'Y'
+	AND DEL_YN = 'N'
+	<if test='term != null and !"".equals(term)'>
+		AND USER_NM LIKE '%' || #{term} || '%'
+	</if>
+	) X
+	<if test='page != null and !page.equals("")'>
+		WHERE PAGEINDEX BETWEEN #{posStart} AND #{count} * #{page}
+	</if>
+</select>
+
+<select id="selectUserComboUserCd" resultType="kr.esob.fdms.commonlogic.combo.SearchComboInfoVO">
+	SELECT X.*
+	FROM (
+	SELECT USER_CD AS id
+	, USER_NM || '[' || USER_ID || ']' AS text
+	, USER_NM || '[' || USER_ID || ']' AS title
+	, ROW_NUMBER() OVER (ORDER BY USER_NM) AS pageindex
+	FROM DOCS_USER
+	WHERE 1=1
+	AND USE_YN = 'Y'
+	AND DEL_YN = 'N'
+	<if test='term != null and !"".equals(term)'>
+		AND USER_NM LIKE '%' || #{term} || '%'
+	</if>
+	) X
+	<if test='page != null and !page.equals("")'>
+		WHERE PAGEINDEX BETWEEN #{posStart} AND #{count} * #{page}
+	</if>
+</select>
+
+<select id="selectVendorCombo" resultType="kr.esob.fdms.commonlogic.combo.ComboInfoVO">
+	SELECT
+		'company' AS comboCd
+		 , '' AS comboVal
+		 , '' AS comboLabel
+	WHERE 1=0
+</select>
+
+	<insert id="insertRegisterDeptInfo" parameterType="kr.esob.fdms.controller.inside.organizationmanage.insidedept.DeptPopupParam">
+
+		INSERT INTO DOCS_DEPT
+		(
+		DEPT_CD,
+		DEPT_NM,
+		DEPT_SHORT_PATH,
+		USE_YN,
+		DEL_YN,
+		SORT_SEQ,
+		COMPANY_CD
+		)
+		VALUES
+		(
+		#{deptCd},
+		#{deptNm},
+		#{deptNm},
+		#{useYn},
+		#{delYn},
+		#{sortSeq},
+	    'COMP_0000000999'
+		)
+	</insert>
+
+<insert id="insertRegisterUserGroup" parameterType="kr.esob.fdms.controller.inside.organizationmanage.insideuser.UserPopupParam">
+	INSERT INTO DOCS_ROLE_GROUP_MEMBER
+	VALUES
+	(
+		#{roleGroupCd},
+		#{userCd},
+		'USER'
+	)
+</insert>
+<insert id="insertRegisterDeptGroup" parameterType="kr.esob.fdms.controller.inside.organizationmanage.insideuser.UserPopupParam">
+	INSERT INTO DOCS_ROLE_GROUP_MEMBER
+	VALUES
+	(
+		#{roleGroupCd},
+		#{deptCd},
+		'DEPT'
+	)
+	ON CONFLICT (group_code, member_cd) DO NOTHING
+</insert>
+
+	<select id="checkUserId" resultType="string">
+	SELECT USER_ID
+	FROM DOCS_USER
+	WHERE USER_ID = #{userId}
+</select>
+
+<select id="checkUserNm" resultType="string">
+	SELECT USER_NM
+	FROM DOCS_USER
+	WHERE USER_NM = #{userNm}
+</select>
+
+<select id="checkEmail" resultType="string">
+	SELECT EMAIL
+	FROM DOCS_USER
+	WHERE EMAIL = #{email}
+</select>
+
+<select id="selectDept" resultType="kr.esob.fdms.controller.inside.organizationmanage.insidedept.DeptListVO">
+	SELECT
+		a.DEPT_CD AS deptCd
+	  , a.DEPT_NM AS deptNm
+	  , a.USE_YN  AS useYn
+	  , a.DEL_YN  AS delYn
+	FROM DOCS_DEPT a
+	WHERE DEPT_CD = #{deptCd}
+</select>
+
+<select id="getUserInfoByUserCd" resultType="kr.esob.fdms.controller.inside.organizationmanage.insideuser.UserListVO">
+	SELECT
+		a.USER_ID AS userId
+		 , a.USER_CD AS userCd
+		 , a.EMAIL AS email
+		 , a.USER_PWD AS userPwd
+		 , a.COMPANY_CD AS companyCd
+		 , '' AS companyNm
+		 , a.USER_NM AS userNm
+		 , a.DEPT_CD AS deptCd
+		 , (SELECT d1.DEPT_NM FROM DOCS_DEPT d1 WHERE d1.DEPT_CD = a.DEPT_CD) AS deptNm
+		 , a.POSITION_CD AS positionCd
+		 , (SELECT p1.POSITION_NM FROM DOCS_POSITION p1 WHERE p1.POSITION_CD = a.POSITION_CD) AS positionNm
+		 , a.ROLE_GROUP AS roleGroupCd
+		 , (SELECT rg1.GROUP_NM FROM DOCS_ROLE_GROUP rg1 WHERE rg1.GROUP_CODE = a.ROLE_GROUP) AS roleGroupNm
+		 , CASE WHEN a.PROTECT_YN IS NULL THEN 'N' ELSE a.PROTECT_YN END AS protectYn
+	FROM DOCS_USER a
+	WHERE USER_CD = #{userCd}
+</select>
+
+	<update id="editDeptInfo" parameterType="kr.esob.fdms.controller.inside.organizationmanage.insidedept.DeptPopupParam">
+		UPDATE DOCS_DEPT
+		<set>
+			DEPT_CD = #{deptCd},
+			DEPT_NM = #{deptNm},
+			DEPT_SHORT_PATH = #{deptNm},
+			USE_YN = #{useYn},
+			DEL_YN = #{delYn},
+			SORT_SEQ = #{sortSeq}
+		</set>
+		WHERE DEPT_CD = #{deptCd}
+	</update>
+
+	<update id="editUserInfo_resetPwd" parameterType="kr.esob.fdms.controller.inside.organizationmanage.insideuser.UserPopupParam">
+		UPDATE DOCS_USER
+		<set>
+		    USER_PWD = #{userPwd}
+		</set>
+		WHERE USER_CD = #{userCd}
+	</update>
+
+	<select id="countUsersByDeptCd" resultType="int"  parameterType="kr.esob.fdms.controller.inside.organizationmanage.insidedept.DeptPopupParam">
+		SELECT COUNT(*)
+		FROM docs_user
+		WHERE dept_cd = #{deptCd}
+	</select>
+
+
+</mapper>

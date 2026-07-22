@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="sql.seq">
+
+<update id="updateSeq">
+	UPDATE DOCS_SEQ_TABLE
+	SET SEQ = #{seq}
+	WHERE TABLE_NM = #{tableNm}
+</update>
+
+<insert id="insertSeq">
+	INSERT INTO DOCS_SEQ_TABLE(TABLE_NM, SEQ) VALUES(#{tableNm}, #{seq})
+</insert>
+
+<select id="getSeq" resultType="Long">
+	SELECT SEQ FROM DOCS_SEQ_TABLE WHERE TABLE_NM = #{tableNm}
+</select>
+
+</mapper>

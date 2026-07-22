@@ -1,0 +1,528 @@
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+
+<!--<mapper namespace="sql.organizationmanageApproval">-->
+
+<!--	<select id="selectList" resultType="kr.esob.fdms.controller.inside.organizationmanage.approval.ApprovalListParam">-->
+<!--	SELECT-->
+<!--		B1.*-->
+<!--	FROM-->
+<!--	(-->
+<!--		SELECT-->
+<!--			A1.*-->
+<!--			, ROWNUM AS PAGEINDEX-->
+<!--		FROM-->
+<!--		(-->
+<!--		    SELECT-->
+<!--			     a.REQUEST_NO         as requestNo-->
+<!--			    , c.COMPANY_NM      as insertCompanyNm-->
+<!--			    , d.TEXT              as requestNm-->
+<!--			    , a.USER_NM           as requestUserNm-->
+<!--			    , b.USER_NM          as insertUserNm-->
+<!--			    , a.INSERT_DT          as insertDt-->
+<!--			    , b2.USER_NM           as approvalUserNm-->
+<!--			    , a.APPROVAL_DT        as approvalDt-->
+<!--			    , FN_GET_CD_NM('requestStatusCd', a.STATUS_CD, #{sessionLang}) as statusNm-->
+<!--			    , a.STATUS_CD          as statusCd-->
+<!--			    , a.REQUEST_REASON      as requestReason-->
+<!--			    , a.REJECT_REASON      as rejectReason-->
+<!--		    FROM DOCS_USER_REQUEST a-->
+<!--			    left join docs_user b on a.insert_user_cd = b.user_cd-->
+<!--			    left join docs_user b2 on a.approval_user_cd = b2.user_cd-->
+<!--			    left join docs_company c on b.company_cd = c.company_cd-->
+<!--			    left join DOCS_COMBO d on a.REQUEST_TYPE = d.VALUE-->
+<!--		      		and d.combo_cd='userRequestType'-->
+<!--		    where 1=1-->
+<!--		    	AND a.approval_user_cd = #{sessionUser.userCd}-->
+<!--		    <if test='approvalUserCd != null and !approvalUserCd.equals("")'>-->
+<!--				AND a.APPROVAL_USER_CD = #{approvalUserCd}-->
+<!--			</if>-->
+<!--		    <if test='companyCd != null and !companyCd.equals("")'>-->
+<!--				AND b.company_cd = #{companyCd}-->
+<!--			</if>-->
+<!--		    <if test='requestType != null and !requestType.equals("")'>-->
+<!--				AND a.REQUEST_TYPE = #{requestType}-->
+<!--			</if>-->
+<!--			<if test='statusCd != null and !statusCd.equals("")'>-->
+<!--				AND a.STATUS_CD = #{statusCd}-->
+<!--			</if>-->
+<!--			<if test='requestStartDt != null and !requestStartDt.equals("")'>-->
+<!--				AND a.INSERT_DT BETWEEN TO_DATE(#{requestStartDt}, 'YYYY-MM-DD')-->
+<!--		                        AND TO_DATE(#{requestEndDt}, 'YYYY-MM-DD')+1-->
+<!--			<if test='sortColumn == null or "".equals(sortColumn)'>-->
+<!--           		ORDER BY a.REQUEST_NO desc-->
+<!--			</if>-->
+<!--         	<if test='sortColumn != null and !"".equals(sortColumn)'>-->
+<!--         		ORDER BY ${sortColumn} ${order}-->
+<!--         	</if>-->
+<!--			</if>-->
+<!--		) A1-->
+<!--		WHERE 1=1-->
+<!--			<if test='end != null and !end.equals("")'>-->
+<!--			AND ROWNUM <![CDATA[ <= ]]> #{end}-->
+<!--			</if>-->
+<!--	) B1-->
+<!--	WHERE 1=1-->
+<!--		<if test='start != null and !start.equals("")'>-->
+<!--		AND PAGEINDEX <![CDATA[ >= ]]>#{start}-->
+<!--		</if>-->
+
+<!--  </select>-->
+
+<!--  <select id="selectListCount" resultType="Integer">-->
+<!--    select-->
+<!--    COUNT(*) AS TOTAL_COUNT-->
+<!--    FROM DOCS_USER_REQUEST a-->
+<!--    <if test='companyCd != null and !companyCd.equals("")'>-->
+<!--	left join docs_user b on a.insert_user_cd = b.user_cd-->
+<!--	</if>-->
+<!--    where 1=1-->
+<!--    <if test='approvalUserCd != null and !approvalUserCd.equals("")'>-->
+<!--		AND a.APPROVAL_USER_CD = #{approvalUserCd}-->
+<!--	</if>-->
+<!--    <if test='companyCd != null and !companyCd.equals("")'>-->
+<!--		AND b.company_cd = #{companyCd}-->
+<!--	</if>-->
+<!--    <if test='requestType != null and !requestType.equals("")'>-->
+<!--		AND a.REQUEST_TYPE = #{requestType}-->
+<!--	</if>-->
+<!--	<if test='statusCd != null and !statusCd.equals("")'>-->
+<!--		AND a.STATUS_CD = #{statusCd}-->
+<!--	</if>-->
+<!--	<if test='requestStartDt != null and !requestStartDt.equals("")'>-->
+<!--		AND a.INSERT_DT BETWEEN TO_DATE(#{requestStartDt}, 'YYYY-MM-DD')-->
+<!--                        AND TO_DATE(#{requestEndDt}, 'YYYY-MM-DD')+1-->
+<!--	</if>-->
+<!--  </select>-->
+
+<!--  <select id="selectDetailInfo" resultType="kr.esob.fdms.controller.inside.organizationmanage.approval.ApprovalListParam">-->
+<!--    select-->
+<!--    a.REQUEST_NO		as requestNo-->
+<!--	, a.USER_NM			as userNm-->
+<!--	, b.COMPANY_NM		as companyNm-->
+<!--	, a.EMAIL			as email-->
+<!--	, CASE WHEN a.PROTECT_YN IS NULL THEN 'N'-->
+<!--	   	ELSE a.PROTECT_YN	END	as protectYn-->
+<!--	, CASE WHEN a.CR_YN IS NULL THEN 'N'-->
+<!--	   	ELSE a.CR_YN	END	as crYn-->
+<!--	, a.REQUEST_REASON	as requestReason-->
+<!--	, d.TEXT			as requestNm-->
+<!--	, a.REQUEST_TYPE	as requestType-->
+<!--	, a.TARGET_USER_CD	as targetUserCd-->
+<!--	, c.COMPANY_CD		as companyCd-->
+<!--	, a.USER_PWD		as userPwd-->
+<!--	from docs_user_request a-->
+<!--	left join docs_company b on a.company_cd = b.company_cd-->
+<!--	left join docs_user c on a.insert_user_cd = c.user_cd-->
+<!--	left join DOCS_COMBO d on a.REQUEST_TYPE = d.VALUE-->
+<!--	      and d.combo_cd='userRequestType'-->
+<!--	where a.request_no = #{requestNo}-->
+<!--	order by a.REQUEST_NO desc-->
+<!--  </select>-->
+
+<!--  <update id="updateReqeust">-->
+<!--		UPDATE DOCS_USER_REQUEST SET-->
+<!--			STATUS_CD = #{statusCd}-->
+<!--			, REJECT_REASON = #{rejectReason}-->
+<!--			, APPROVAL_DT	= SYSDATE-->
+<!--			, APPROVAL_USER_CD	= #{sessionUser.userCd}-->
+<!--		WHERE-->
+<!--			REQUEST_NO = #{requestNo}-->
+<!--	</update>-->
+
+<!--	<update id="updateUserInfo">-->
+<!--		UPDATE DOCS_USER SET-->
+<!--			USER_NM		= #{userNm}-->
+<!--			<if test='userPwd != null and !userPwd.equals("")'>-->
+<!--			,USER_PWD	= #{userPwd}-->
+<!--			</if>-->
+<!--			,EMAIL		= #{email}-->
+<!--		WHERE-->
+<!--			USER_CD = #{targetUserCd}-->
+<!--	</update>-->
+
+<!--	<update id="deleteUserInfo">-->
+<!--		UPDATE DOCS_USER SET-->
+<!--			USE_YN = 'N',-->
+<!--			DEL_YN = 'Y',-->
+<!--			LOCK_YN = 'Y'-->
+<!--		WHERE-->
+<!--			USER_CD = #{targetUserCd}-->
+<!--	</update>-->
+
+<!--	<update id="updateUserProtectN">-->
+<!--		UPDATE DOCS_USER SET-->
+<!--			PROTECT_YN = 'N'-->
+<!--		WHERE-->
+<!--			USE_YN = 'Y'-->
+<!--			AND DEL_YN = 'N'-->
+<!--			AND PROTECT_YN = 'Y'-->
+<!--			AND COMPANY_CD = #{companyCd}-->
+<!--	</update>-->
+
+<!--	<update id="updateUserProtectY">-->
+<!--		UPDATE DOCS_USER SET-->
+<!--			PROTECT_YN = 'Y'-->
+<!--		WHERE-->
+<!--			USE_YN = 'Y'-->
+<!--			AND DEL_YN = 'N'-->
+<!--			AND user_cd = #{targetUserCd}-->
+<!--	</update>-->
+
+<!--	<update id="updateUserCr">-->
+<!--		UPDATE DOCS_COMPANY SET-->
+<!--			APPROVAL_USER_CD = #{targetUserCd}-->
+<!--		WHERE-->
+<!--			COMPANY_CD = #{companyCd}-->
+<!--	</update>-->
+
+<!--	<insert id="insertUser">-->
+<!--    <selectKey keyProperty="targetUserCd" resultType="String" order="BEFORE">-->
+<!--      select 'USER_'||LPAD(NVL(SUBSTR(MAX(user_cd),6), 0)+1,10,0)  AS TARGET_USER_CD-->
+<!--      from DOCS_USER-->
+<!--    </selectKey>-->
+<!--    INSERT INTO DOCS_USER-->
+<!--    (-->
+<!--    USER_CD-->
+<!--    , USER_ID-->
+<!--	, USER_NM-->
+<!--	, USER_PWD-->
+<!--	, COMPANY_CD-->
+<!--	, EMAIL-->
+<!--	, USE_YN-->
+<!--	, DEL_YN-->
+<!--	, LOCK_YN-->
+<!--	, ROLE_GROUP-->
+<!--	, LOGIN_COUNT-->
+<!--	, AUTH_SITE-->
+<!--	, INSERT_UID-->
+<!--	, INSERT_DT-->
+<!--	, UPDATE_UID-->
+<!--	, UPDATE_DT-->
+<!--	, PWD_UPDATE_DT-->
+<!--    )-->
+<!--    VALUES-->
+<!--    (-->
+<!--    #{targetUserCd}-->
+<!--    , (SELECT NVL(MAX(TO_NUMBER(USER_ID)),0)+1-->
+<!--	     FROM DOCS_USER-->
+<!--	    WHERE AUTH_SITE = 'E'-->
+<!--	      AND REGEXP_INSTR(USER_ID,'[^0-9]') = 0-->
+<!--	  )-->
+<!--    , #{userNm}-->
+<!--	, #{userPwd}-->
+<!--	, #{companyCd}-->
+<!--	, #{email}-->
+<!--	, 'Y'-->
+<!--	, 'N'-->
+<!--	, 'N'-->
+<!--	, 'RG_006'-->
+<!--	, 0-->
+<!--	, 'E'-->
+<!--	, #{sessionUser.userCd}-->
+<!--	, SYSDATE-->
+<!--	, #{sessionUser.userCd}-->
+<!--	, SYSDATE-->
+<!--	, SYSDATE-->
+<!--    )-->
+<!--  </insert>-->
+
+
+<!--  <select id="selectVendorCombo" resultType="comboInfoVo">-->
+<!--		SELECT 'companyCd'			AS comboCd-->
+<!--			, a.COMPANY_CD as comboVal-->
+<!--            , b.COMPANY_nm as comboLabel-->
+<!--			, b.COMPANY_nm AS comboTooltip-->
+<!--		from docs_user_request a-->
+<!--    	inner join DOCS_COMPANY b on a.COMPANY_CD = b.COMPANY_CD-->
+<!--    	and USE_YN='Y'-->
+<!--    	group by a.COMPANY_CD, b.COMPANY_nm-->
+<!--	</select>-->
+
+<!--  <select id="selectVendorUserCombo" resultType="comboInfoVo">-->
+<!--	select-->
+<!--	      'approvalUserCd'			AS comboCd-->
+<!--	      , a.approval_user_cd as comboVal-->
+<!--	      , b.user_nm  as comboLabel-->
+<!--	      , b.user_nm AS comboTooltip-->
+<!--	  from-->
+<!--	      docs_user_request a-->
+<!--	  inner join docs_user b on a.approval_user_cd = b.user_cd-->
+<!--	  group by-->
+<!--	      a.approval_user_cd-->
+<!--	      , b.user_nm-->
+<!--	</select>-->
+
+<!--	<select id="venderUser" resultType="comboInfoVo">-->
+<!--	select-->
+<!--	    'venderUserCd'			AS comboCd-->
+<!--	    , user_cd as comboVal-->
+<!--	    , user_nm  as comboLabel-->
+<!--	    , user_nm AS comboTooltip-->
+<!--	from-->
+<!--	    docs_user-->
+<!--	where-->
+<!--	    company_cd= #{companyCd}-->
+<!--	</select>-->
+
+<!--</mapper>-->
+
+
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+
+
+
+<mapper namespace="sql.organizationmanageApproval">
+
+	<select id="selectList" resultType="kr.esob.fdms.controller.inside.organizationmanage.approval.ApprovalListParam">
+		WITH ranked_data AS (
+		SELECT
+		a.REQUEST_NO AS requestNo,
+		c.COMPANY_NM AS insertCompanyNm,
+		d.TEXT AS requestNm,
+		a.USER_NM AS requestUserNm,
+		b.USER_NM AS insertUserNm,
+		a.INSERT_DT AS insertDt,
+		b2.USER_NM AS approvalUserNm,
+		a.APPROVAL_DT AS approvalDt,
+		FN_GET_CD_NM('requestStatusCd', a.STATUS_CD, #{sessionLang}) AS statusNm,
+		a.STATUS_CD AS statusCd,
+		a.REQUEST_REASON AS requestReason,
+		a.REJECT_REASON AS rejectReason,
+		ROW_NUMBER() OVER (
+		) AS PAGEINDEX
+		FROM DOCS_USER_REQUEST a
+		LEFT JOIN docs_user b ON a.insert_user_cd = b.user_cd
+		LEFT JOIN docs_user b2 ON a.approval_user_cd = b2.user_cd
+		LEFT JOIN docs_company c ON b.company_cd = c.company_cd
+		LEFT JOIN DOCS_COMBO d ON a.REQUEST_TYPE = d.VALUE AND d.combo_cd = 'userRequestType'
+		WHERE 1=1
+		AND a.approval_user_cd = #{sessionUser.userCd}
+		<if test='approvalUserCd != null and !approvalUserCd.equals("")'>
+			AND a.APPROVAL_USER_CD = #{approvalUserCd}
+		</if>
+		<if test='companyCd != null and !companyCd.equals("")'>
+			AND b.company_cd = #{companyCd}
+		</if>
+		<if test='requestType != null and !requestType.equals("")'>
+			AND a.REQUEST_TYPE = #{requestType}
+		</if>
+		<if test='statusCd != null and !statusCd.equals("")'>
+			AND a.STATUS_CD = #{statusCd}
+		</if>
+		<if test='requestStartDt != null and !requestStartDt.equals("")'>
+			AND a.INSERT_DT BETWEEN TO_DATE(#{requestStartDt}, 'YYYY-MM-DD') AND TO_DATE(#{requestEndDt}, 'YYYY-MM-DD') + INTERVAL '1 day'
+		</if>
+		)
+		SELECT
+		*
+		FROM
+		ranked_data
+		WHERE 1=1
+		<if test='start != null and !start.equals("")'>
+			AND PAGEINDEX >= #{start}
+		</if>
+		<if test='end != null and !end.equals("")'>
+			AND PAGEINDEX <![CDATA[ <= ]]> #{end}
+		</if>
+		ORDER BY PAGEINDEX
+	</select>
+
+
+
+<select id="selectListCount" resultType="Integer">
+	SELECT COUNT(*) AS TOTAL_COUNT
+	FROM DOCS_USER_REQUEST a
+	<if test='companyCd != null and !companyCd.equals("")'>
+		LEFT JOIN docs_user b ON a.insert_user_cd = b.user_cd
+	</if>
+	WHERE 1=1
+	<if test='approvalUserCd != null and !approvalUserCd.equals("")'>
+		AND a.APPROVAL_USER_CD = #{approvalUserCd}
+	</if>
+	<if test='companyCd != null and !companyCd.equals("")'>
+		AND b.company_cd = #{companyCd}
+	</if>
+	<if test='requestType != null and !requestType.equals("")'>
+		AND a.REQUEST_TYPE = #{requestType}
+	</if>
+	<if test='statusCd != null and !statusCd.equals("")'>
+		AND a.STATUS_CD = #{statusCd}
+	</if>
+	<if test='requestStartDt != null and !requestStartDt.equals("")'>
+		AND a.INSERT_DT BETWEEN TO_DATE(#{requestStartDt}, 'YYYY-MM-DD') AND TO_DATE(#{requestEndDt}, 'YYYY-MM-DD') + 1
+	</if>
+</select>
+
+<select id="selectDetailInfo" resultType="kr.esob.fdms.controller.inside.organizationmanage.approval.ApprovalListParam">
+	SELECT
+		a.REQUEST_NO AS requestNo,
+		a.USER_NM AS userNm,
+		b.COMPANY_NM AS companyNm,
+		a.EMAIL AS email,
+		CASE WHEN a.PROTECT_YN IS NULL THEN 'N' ELSE a.PROTECT_YN END AS protectYn,
+		CASE WHEN a.CR_YN IS NULL THEN 'N' ELSE a.CR_YN END AS crYn,
+		a.REQUEST_REASON AS requestReason,
+		d.TEXT AS requestNm,
+		a.REQUEST_TYPE AS requestType,
+		a.TARGET_USER_CD AS targetUserCd,
+		c.COMPANY_CD AS companyCd,
+		a.USER_PWD AS userPwd
+	FROM docs_user_request a
+			 LEFT JOIN docs_company b ON a.company_cd = b.company_cd
+			 LEFT JOIN docs_user c ON a.insert_user_cd = c.user_cd
+			 LEFT JOIN DOCS_COMBO d ON a.REQUEST_TYPE = d.VALUE AND d.combo_cd = 'userRequestType'
+	WHERE a.request_no = #{requestNo}
+	ORDER BY a.REQUEST_NO DESC
+</select>
+
+<update id="updateReqeust">
+	UPDATE DOCS_USER_REQUEST
+	SET
+		STATUS_CD = #{statusCd},
+		REJECT_REASON = #{rejectReason},
+		APPROVAL_DT = SYSDATE,
+		APPROVAL_USER_CD = #{sessionUser.userCd}
+	WHERE
+		REQUEST_NO = #{requestNo}
+</update>
+
+<update id="updateUserInfo">
+	UPDATE DOCS_USER
+	SET
+	USER_NM = #{userNm},
+	<if test='userPwd != null and !userPwd.equals("")'>
+		USER_PWD = #{userPwd},
+	</if>
+	EMAIL = #{email}
+	WHERE
+	USER_CD = #{targetUserCd}
+</update>
+
+<update id="deleteUserInfo">
+	UPDATE DOCS_USER
+	SET
+		USE_YN = 'N',
+		DEL_YN = 'Y',
+		LOCK_YN = 'Y'
+	WHERE
+		USER_CD = #{targetUserCd}
+</update>
+
+<update id="updateUserProtectN">
+	UPDATE DOCS_USER
+	SET
+		PROTECT_YN = 'N'
+	WHERE
+		USE_YN = 'Y'
+	  AND DEL_YN = 'N'
+	  AND PROTECT_YN = 'Y'
+	  AND COMPANY_CD = #{companyCd}
+</update>
+
+<update id="updateUserProtectY">
+	UPDATE DOCS_USER
+	SET
+		PROTECT_YN = 'Y'
+	WHERE
+		USE_YN = 'Y'
+	  AND DEL_YN = 'N'
+	  AND USER_CD = #{targetUserCd}
+</update>
+
+<update id="updateUserCr">
+	UPDATE DOCS_COMPANY
+	SET
+		APPROVAL_USER_CD = #{targetUserCd}
+	WHERE
+		COMPANY_CD = #{companyCd}
+</update>
+
+<insert id="insertUser">
+	<selectKey keyProperty="targetUserCd" resultType="String" order="BEFORE">
+		SELECT 'USER_' || LPAD(NVL(SUBSTR(MAX(user_cd), 6), 0) + 1, 10, 0) AS TARGET_USER_CD
+		FROM DOCS_USER
+	</selectKey>
+	INSERT INTO DOCS_USER
+	(
+	USER_CD,
+	USER_ID,
+	USER_NM,
+	USER_PWD,
+	COMPANY_CD,
+	EMAIL,
+	USE_YN,
+	DEL_YN,
+	LOCK_YN,
+	ROLE_GROUP,
+	LOGIN_COUNT,
+	AUTH_SITE,
+	INSERT_UID,
+	INSERT_DT,
+	UPDATE_UID,
+	UPDATE_DT,
+	PWD_UPDATE_DT
+	)
+	VALUES
+	(
+	#{targetUserCd},
+	(SELECT NVL(MAX(TO_NUMBER(USER_ID)), 0) + 1 FROM DOCS_USER WHERE AUTH_SITE = 'E' AND REGEXP_INSTR(USER_ID, '[^0-9]') = 0),
+	#{userNm},
+	#{userPwd},
+	#{companyCd},
+	#{email},
+	'Y',
+	'N',
+	'N',
+	'RG_006',
+	0,
+	'E',
+	#{sessionUser.userCd},
+	SYSDATE,
+	#{sessionUser.userCd},
+	SYSDATE,
+	SYSDATE
+	)
+</insert>
+
+<select id="selectVendorCombo" resultType="comboInfoVo">
+	SELECT
+		'companyCd' AS comboCd,
+		a.COMPANY_CD AS comboVal,
+		b.COMPANY_NM AS comboLabel,
+		b.COMPANY_NM AS comboTooltip
+	FROM docs_user_request a
+			 INNER JOIN DOCS_COMPANY b ON a.COMPANY_CD = b.COMPANY_CD AND USE_YN = 'Y'
+	GROUP BY a.COMPANY_CD, b.COMPANY_NM
+</select>
+
+<select id="selectVendorUserCombo" resultType="comboInfoVo">
+	SELECT
+		'approvalUserCd' AS comboCd,
+		a.approval_user_cd AS comboVal,
+		b.user_nm AS comboLabel,
+		b.user_nm AS comboTooltip
+	FROM docs_user_request a
+			 INNER JOIN docs_user b ON a.approval_user_cd = b.user_cd
+	GROUP BY a.approval_user_cd, b.user_nm
+</select>
+
+<select id="venderUser" resultType="comboInfoVo">
+	SELECT
+		'venderUserCd' AS comboCd,
+		user_cd AS comboVal,
+		user_nm AS comboLabel,
+		user_nm AS comboTooltip
+	FROM docs_user
+	WHERE company_cd = #{companyCd}
+</select>
+
+</mapper>

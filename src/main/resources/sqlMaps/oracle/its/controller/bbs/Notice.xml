@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="sql.notice">
+
+	<select id="selectMainList" resultType="kr.esob.fdms.controller.bbs.notice.BbsNoticeListVO">
+		/* 메인화면용 공지사항 list*/
+		SELECT
+			A1.*
+		FROM (
+				 SELECT
+					 NOTICE_CD   AS noticeCd
+					  , TITLE     AS title
+				 FROM DOCS_NOTICE
+				 WHERE DEL_YN = 'N'
+				 ORDER BY NOTICE_CD DESC
+			 ) A1
+			LIMIT 10
+	</select>
+
+	<select id="selectList"
+			resultType="kr.esob.fdms.controller.bbs.notice.BbsNoticeListVO">
+		SELECT
+		B1.*
+		FROM
+		(
+		SELECT
+		A1.*
+		, ROW_NUMBER() OVER () AS PAGEINDEX
+		FROM (
+		SELECT
+		request.TITLE     AS title /* 제목명*/
+		, (
+		SELECT USER_NM
+		FROM
+		DOCS_USER tmp
+		WHERE tmp.USER_ID = request.INSERT_UID
+		)                           AS insertUserNm
+		, request.INSERT_DT AS insertDt /* 등록일 */
+		, request.HIT_COUNT AS hitCount  /*조회수*/
+		, request.NOTICE_CD AS noticeCd /* 글번호 */
+		, request.START_DT  AS startDt   /* 개시 시작일*/
+		, request.END_DT    AS endDt     /* 개시 종료일 */
+		FROM DOCS_NOTICE request
+		WHERE 1 = 1
+		<if test='insertStartDt != null and !insertStartDt.equals("")'>
+			AND request.INSERT_DT BETWEEN TO_DATE(#{insertStartDt}, 'YYYY-MM-DD')
+			AND TO_DATE(#{insertEndDt}, 'YYYY-MM-DD') + INTERVAL '1 day'
+		</if>
+		AND DEL_YN = 'N'
+		<if test='title != null and !title.equals("")'>
+			AND TITLE LIKE '%' || #{title} || '%'
+		</if>
+		<if test='insertUserNm != null and !insertUserNm.equals("")'>
+			AND INSERT_UID = #{insertUserNm}
+		</if>
+		<if test='sortColumn == null or "".equals(sortColumn)'>
+			ORDER BY insertDt DESC
+		</if>
+		<if test='sortColumn != null and !"".equals(sortColumn)'>
+			ORDER BY ${sortColumn} ${order}
+		</if>
+		) A1
+		WHERE 1=1
+		<if test='end != null and !end.equals("")'>
+			LIMIT #{end}
+		</if>
+		) B1
+		<if test='start != null and !start.equals("")'>
+			WHERE PAGEINDEX >= #{start}
+		</if>
+	</select>
+
+	<select id="selectListCount" resultType="Integer">
+		SELECT
+		COUNT(*) AS
+		TOTAL_COUNT
+		FROM DOCS_NOTICE request
+		WHERE 1 = 1
+		<if test='insertStartDt != null and !insertStartDt.equals("")'>
+			AND request.INSERT_DT BETWEEN TO_DATE(#{insertStartDt}, 'YYYY-MM-DD')
+			AND TO_DATE(#{insertEndDt}, 'YYYY-MM-DD') + INTERVAL '1 day'
+		</if>
+		AND DEL_YN = 'N'
+		<if test='title != null and !title.equals("")'>
+			AND TITLE LIKE '%' || #{title} || '%'
+		</if>
+		<if test='insertUserNm != null and !insertUserNm.equals("")'>
+			AND INSERT_UID = #{insertUserNm}
+		</if>
+	</select>
+
+	<select id="getRequestInfo" resultType="kr.esob.fdms.controller.bbs.notice.BbsNoticePopupVO" parameterType="kr.esob.fdms.controller.bbs.notice.BbsNoticePopupParam">
+		SELECT req.NOTICE_CD                                      AS noticeCd
+			 ,req.TITLE                                                AS noticeTitle
+			 ,req.CONTENTS                                             AS contents
+			 ,req.HIT_COUNT                                            AS hitCount
+			 ,req.START_DT                                             AS startDt
+			 ,req.END_DT                                               AS endDt
+			 ,(
+			SELECT USER_NM
+			FROM
+				DOCS_USER tmp
+			WHERE tmp.USER_ID = req.INSERT_UID
+		)                                                         AS insertUserNm
+		FROM DOCS_NOTICE req
+		WHERE req.NOTICE_CD = #{noticeCd}
+		  AND DEL_YN = 'N'
+	</select>
+
+	<update id="updateHitCount" parameterType="kr.esob.fdms.controller.bbs.notice.BbsNoticePopupParam">
+		UPDATE DOCS_NOTICE
+		SET HIT_COUNT = COALESCE(HIT_COUNT,0) + 1
+		WHERE NOTICE_CD = #{noticeCd}
+	</update>
+
+	<insert id="insertNoticeInfo" parameterType="kr.esob.fdms.controller.bbs.notice.BbsNoticeAddParam">
+		<selectKey keyProperty="noticeCd" resultType="kr.esob.fdms.controller.bbs.notice.BbsNoticeAddParam" order="BEFORE">
+			SELECT COALESCE(MAX(NOTICE_CD),1)+1 AS noticeCd
+			FROM DOCS_NOTICE
+		</selectKey>
+		INSERT INTO DOCS_NOTICE
+		(
+		NOTICE_CD
+		, TITLE
+		, INSERT_UID
+		, CONTENTS
+		,INSERT_DT
+		,DEL_YN
+		,START_DT
+		,END_DT
+		)
+		VALUES
+		(
+		#{noticeCd}
+		, #{noticeTitle}
+		, #{sessionUser.userId}
+		, #{contents}
+		, CURRENT_TIMESTAMP
+		,'N'
+		,replace(#{startDt}, '-', '')
+		,replace(#{endDt}, '-', '')
+		)
+	</insert>
+
+	<update id="updateNoticeInfo">
+		UPDATE DOCS_NOTICE
+		SET TITLE = #{noticeTitle}
+		  , CONTENTS = #{contents}
+		  , UPDATE_UID = #{sessionUser.userId}
+		  , UPDATE_DT = CURRENT_TIMESTAMP
+		  , START_DT = replace(#{startDt}, '-', '')
+		  , END_DT = replace(#{endDt}, '-', '')
+		WHERE NOTICE_CD = #{noticeCd}
+	</update>
+
+	<select id="selectNoticeInfo" resultType="kr.esob.fdms.controller.bbs.notice.BbsNoticePopupParam">
+		SELECT req.NOTICE_CD                                      AS noticeCd
+			 ,req.TITLE                                                AS title
+			 ,req.INSERT_UID                                           AS insertUserNm
+		FROM DOCS_NOTICE req
+		WHERE req.NOTICE_CD = #{noticeCd}
+	</select>
+
+	<update id="deleteNotice" parameterType="kr.esob.fdms.controller.bbs.notice.BbsNoticePopupParam">
+		UPDATE DOCS_NOTICE
+		SET DEL_YN = 'Y'
+		WHERE NOTICE_CD = #{noticeCd}
+	</update>
+
+	<select id="addNoticeInfo" resultType="kr.esob.fdms.controller.bbs.notice.BbsNoticePopupVO" parameterType="kr.esob.fdms.controller.bbs.notice.BbsNoticeAddParam">
+		SELECT req.INSERT_UID      AS insertUserNm
+		FROM DOCS_NOTICE req where req.NOTICE_CD = 1
+	</select>
+
+	<select id="selectFileInfo" resultType="kr.esob.fdms.controller.bbs.notice.BbsNoticeFileVO">
+		SELECT NOTICE_CD
+			 , FILE_NO
+			 , FILE_PATH
+			 , SUBSTRING(FILE_PATH FROM POSITION('\\' IN FILE_PATH) + 1) AS fileNm
+		FROM DOCS_NOTICE_FILE
+		WHERE NOTICE_CD = #{noticeCd}
+	</select>
+
+	<delete id="deleteNoticeFile">
+		/* 현재 파일은 하나만 업로드 가능하므로 새로운 파일이 업로드 되면 기존 모든 파일을 삭제 해야 함.*/
+		DELETE FROM DOCS_NOTICE_FILE WHERE NOTICE_CD = #{noticeCd}
+	</delete>
+
+	<insert id="insertNoticeFile" parameterType="kr.esob.fdms.controller.bbs.notice.BbsNoticeFileVO">
+		<selectKey keyProperty="fileNo" resultType="kr.esob.fdms.controller.bbs.notice.BbsNoticeAddParam" order="BEFORE">
+			SELECT COALESCE(MAX(CAST(FILE_NO AS INTEGER)),0)+1 AS fileNo
+			FROM DOCS_NOTICE_FILE
+		</selectKey>
+		INSERT INTO DOCS_NOTICE_FILE
+		( NOTICE_CD
+		, FILE_NO
+		, FILE_NM
+		, FILE_PATH
+		, FILE_PATH_OUTSIDE
+		, FILE_SIZE
+		, UPLOAD_USER_CD
+		, UPLOAD_DT
+		, DEL_YN
+		, UPLOAD_FILE_NM
+		)
+		VALUES
+		(
+		#{noticeCd}
+		, CAST(#{fileNo} AS INTEGER)
+		, #{fileNm}
+		, #{filePath}
+		, #{filePathOutside}
+		, CAST(#{fileSize} AS INTEGER)
+		, #{sessionUser.userCd}
+		, CURRENT_TIMESTAMP
+		, 'N'
+		, #{fileNm}
+		)
+	</insert>
+
+	<select id="selectFilePath" resultType="kr.esob.fdms.controller.bbs.notice.BbsNoticeFileVO">
+		SELECT *
+		FROM DOCS_NOTICE_FILE
+		WHERE NOTICE_CD = #{noticeCd}
+		  AND FILE_NO = CAST(#{fileNo} AS INTEGER)
+	</select>
+
+	<select id="selectNoticeFileList" resultType="kr.esob.fdms.controller.bbs.notice.BbsNoticeFileVO">
+		SELECT *
+		FROM DOCS_NOTICE_FILE
+		WHERE NOTICE_CD = #{noticeCd}
+	</select>
+
+	<select id="selectNoticePopupInfo" resultType="kr.esob.fdms.controller.bbs.notice.BbsNoticePopupVO">
+		SELECT req.NOTICE_CD                                      AS noticeCd
+			 ,req.TITLE                                                AS title
+			 ,req.INSERT_UID                                           AS insertUserNm
+			 ,req.START_DT                                             AS startDt
+			 ,req.END_DT                                               AS endDt
+		FROM DOCS_NOTICE req
+		WHERE req.NOTICE_CD = #{noticeCd}
+	</select>
+
+	<select id="getUser"
+			resultType="kr.esob.fdms.controller.login.UserVO"
+			parameterType="string">
+		SELECT
+			docsUser.*
+			 , company.COMPANY_NM
+			 , company.BIZ_NO
+			 , company.DIST_PURCHASER_USER_CD AS purchaserUid
+			 , dept.TEAM_LEADER_USER_CD AS teamLeaderUid
+			 , 'N' AS passUseYn
+		FROM DOCS_USER docsUser
+				 LEFT JOIN DOCS_COMPANY company
+						   ON docsUser.COMPANY_CD = company.COMPANY_CD
+				 LEFT JOIN DOCS_DEPT dept
+						   ON docsUser.DEPT_CD = dept.DEPT_CD
+		WHERE docsUser.USER_ID = #{userId}
+	</select>
+
+	<select id="getRoleCodeList"
+			resultType="kr.esob.fdms.controller.login.RoleVO">
+		SELECT rel.ROLE_CODE AS roleCd
+			 , menu.MENU_TYPE
+		FROM ITS_REL_ROLE_GROUP rel
+				 JOIN DOCS_MENU menu
+					  ON rel.ROLE_CODE = menu.ROLE_CD
+		WHERE GROUP_CODE = #{roleGroup}
+	</select>
+
+	<select id="selectAlertNotice" resultType="kr.esob.fdms.controller.bbs.notice.BbsNoticePopupVO">
+<![CDATA[
+		SELECT *
+		FROM (
+				 SELECT
+					 TITLE           AS noticeTitle,
+					 CONTENTS        AS contents,
+					 NOTICE_CD       AS noticeCd
+				 FROM DOCS_NOTICE
+				 WHERE START_DT <= TO_CHAR(CURRENT_DATE, 'YYYYMMDD')
+				   AND END_DT >= TO_CHAR(CURRENT_DATE, 'YYYYMMDD')
+				 ORDER BY INSERT_DT DESC
+					 LIMIT 1
+			 ) AS sub
+		]]>
+</select>
+</mapper>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="sql.FormInfo">
+
+<select id="selectList" resultType="kr.esob.fdms.commonlogic.form.FormInfoVO">
+    SELECT
+        FORM_ID                 AS formId,
+        COLUMN_ID                AS columnId,
+        COLUMN_TYPE              AS columnType,
+        COALESCE(lang.LANG_DESC, form.COLUMN_NM) AS columnName,
+        COLUMN_SEQ               AS columnSort,
+        COLUMN_SIZE              AS columnSize,
+        COLUMN_ALIGN             AS columnAlign,
+        SYSTEM_CLASS_GROUP       AS systemClassGroup,
+        USE_YN                   AS useYn,
+        MAX_LENGTH               AS maxLength,
+        CALL_FUNC                AS callFunc,
+        DEFAULT_TEXT             AS defaultText,
+        MIN_DATE                 AS minDate,
+        MAX_DATE                 AS maxDate,
+        DEFAULT_VALUE            AS defaultValue,
+        FORMATTER                AS formatter,
+        DETAIL_YN                AS detailYn,
+        QUERY_ID                 AS queryId,
+        SEARCH_URL               AS searchUrl,
+        COLUMN_HIDDEN            AS columnHidden
+    FROM DOCS_FORM_INFO form
+    LEFT JOIN DOCS_LANG lang ON lang.LANG_CD = form.LANG_CD AND lang.LANG_TYPE = #{sessionLang}
+    WHERE FORM_ID = #{formId}
+      AND USE_YN = 'Y'
+    ORDER BY COLUMN_SEQ
+</select>
+
+
+</mapper>

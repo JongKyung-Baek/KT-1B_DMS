@@ -1,0 +1,1 @@
+class Configuration{constructor(a,b){let c=this;this['Main']=a,this['LockControl']=function(d){c['Main']['Configuration']['Control']['Lock']=d;},this['Object3DSelectionOption']=function(d){c['Main']['Configuration']['Model']['Selection']['Mode']=d;};}}export default Configuration;

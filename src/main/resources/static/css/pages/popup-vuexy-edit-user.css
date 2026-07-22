@@ -1,0 +1,238 @@
+/* Vuexy-like popup skin scoped to specific dialogs only */
+.ui-dialog.popup-vx-edit-user {
+  border: 0;
+  border-radius: 0.75rem;
+  box-shadow: 0 0.5rem 1.5rem rgba(67, 89, 113, 0.2);
+}
+
+/* Popup top titlebar sizing disabled.
+.ui-dialog.popup-vx-edit-user .ui-dialog-titlebar {
+  background: transparent;
+  border: 0;
+  height: 16px;
+  min-height: 16px;
+  padding: 0 1.5rem;
+  box-sizing: border-box;
+}
+
+.ui-dialog.popup-vx-edit-user .ui-dialog-title {
+  display: none;
+  color: #566a7f;
+  font-size: 0;
+  line-height: 0;
+  font-weight: 600;
+}
+*/
+
+/* Popup close button style disabled.
+.ui-dialog.popup-vx-edit-user .ui-dialog-titlebar-close {
+  top: 0.9rem;
+  right: 1rem;
+  border: 0;
+}
+*/
+
+.ui-dialog.popup-vx-edit-user .dialogContent {
+  height: calc(100% - 72px);
+  padding: 0 1.5rem 1rem;
+  border: 0;
+  overflow: auto;
+}
+
+.ui-dialog.popup-vx-edit-user .swRegisterPopup .popupHero {
+  margin: 0 0 1rem;
+  text-align: center;
+}
+
+.ui-dialog.popup-vx-edit-user .swRegisterPopup .popupHero h4 {
+  margin: 0 0 0.3rem;
+  color: #566a7f;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.ui-dialog.popup-vx-edit-user .swRegisterPopup .popupHero p {
+  margin: 0;
+  color: #a1acb8;
+  font-size: 0.875rem;
+}
+
+.ui-dialog.popup-vx-edit-user .swRegisterPopup .popupCard {
+  margin: 0;
+  padding: 1rem;
+  border: 1px solid #eceef1;
+  border-radius: 0.5rem;
+  background: #fff;
+}
+
+.ui-dialog.popup-vx-edit-user .swRegisterPopup .popupCard + .popupCard {
+  margin-top: 0.75rem;
+}
+
+.ui-dialog.popup-vx-edit-user .swRegisterPopup .popupFormGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem 1rem;
+}
+
+.ui-dialog.popup-vx-edit-user .swRegisterPopup .popupFormGrid > li {
+  margin: 0;
+  padding: 0;
+}
+
+.ui-dialog.popup-vx-edit-user .swRegisterPopup .popupFormGrid > li.full {
+  grid-column: 1 / -1;
+}
+
+.ui-dialog.popup-vx-edit-user .swRegisterPopup .popupFormGrid > li:hover {
+  background: transparent;
+}
+
+.ui-dialog.popup-vx-edit-user .swRegisterPopup .popupFormGrid > li > label:not(.ui-controlgroup-item) {
+  display: block;
+  margin: 0 0 0.375rem;
+  padding: 0;
+  color: #566a7f;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.ui-dialog.popup-vx-edit-user .swRegisterPopup .popupFormGrid > li > label:not(.ui-controlgroup-item) + div {
+  display: block;
+  width: 100%;
+}
+
+.ui-dialog.popup-vx-edit-user .swRegisterPopup input[type="text"],
+.ui-dialog.popup-vx-edit-user .swRegisterPopup input[type="password"],
+.ui-dialog.popup-vx-edit-user .swRegisterPopup select,
+.ui-dialog.popup-vx-edit-user .swRegisterPopup textarea {
+  width: 100% !important;
+  min-height: 2.375rem;
+  padding: 0.4375rem 0.75rem;
+  border: 1px solid #d9dee3;
+  border-radius: 0.375rem;
+  background: #fff;
+  color: #697a8d;
+  font-size: 0.875rem;
+  box-sizing: border-box;
+}
+
+.ui-dialog.popup-vx-edit-user .swRegisterPopup .select2-container {
+  width: 100% !important;
+}
+
+.ui-dialog.popup-vx-edit-user .swRegisterPopup .select2-container--default .select2-selection--single {
+  height: 2.375rem !important;
+  border: 1px solid #d9dee3 !important;
+  border-radius: 0.375rem !important;
+  padding: 0 !important;
+}
+
+.ui-dialog.popup-vx-edit-user .swRegisterPopup .select2-container--default .select2-selection--single .select2-selection__rendered {
+  line-height: 2.25rem !important;
+  padding-left: 0.75rem !important;
+  color: #697a8d !important;
+  font-size: 0.875rem !important;
+}
+
+.ui-dialog.popup-vx-edit-user .swRegisterPopup .select2-container--default .select2-selection--single .select2-selection__arrow {
+  height: 2.25rem !important;
+}
+
+.ui-dialog.popup-vx-edit-user .swRegisterPopup .select2-container--default .select2-selection--multiple {
+  min-height: 2.375rem !important;
+  border: 1px solid #d9dee3 !important;
+  border-radius: 0.375rem !important;
+  padding: 0.2rem 0.5rem !important;
+}
+
+.ui-dialog.popup-vx-edit-user .swRegisterPopup .singleFileUpload .uploadLine {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ui-dialog.popup-vx-edit-user .swRegisterPopup .singleFileUpload #fileName {
+  flex: 1 1 auto;
+}
+
+.ui-dialog.popup-vx-edit-user .swRegisterPopup .singleFileUpload .fileUploadBtn {
+  width: 2.375rem;
+  min-width: 2.375rem;
+  height: 2.375rem;
+  border-radius: 0.375rem;
+}
+
+.ui-dialog.popup-vx-edit-user .dialogBtnSet {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 1.5rem 1.25rem;
+  border-top: 1px solid #eceef1;
+}
+
+.ui-dialog.popup-vx-edit-user .dialogBtnSet .left {
+  display: none;
+}
+
+.ui-dialog.popup-vx-edit-user .dialogBtnSet .right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: auto;
+}
+
+.ui-dialog.popup-vx-edit-user .bottomBtn {
+  min-width: 88px;
+  height: 2.375rem;
+  margin: 0;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.ui-dialog.popup-vx-edit-user #save {
+  background: #696cff;
+  border: 1px solid #696cff;
+  color: #fff;
+}
+
+.ui-dialog.popup-vx-edit-user #save:hover {
+  background: #5f62e8;
+  border-color: #5f62e8;
+}
+
+.ui-dialog.popup-vx-edit-user #close {
+  background: #f2f3f5;
+  border: 1px solid #e7e7ff;
+  color: #8592a3;
+}
+
+.ui-dialog.popup-vx-edit-user #close:hover {
+  background: #e8eaed;
+}
+
+.ui-dialog.popup-vx-edit-user .select2-container--default .select2-results__option--highlighted[aria-selected="false"],
+.ui-dialog.popup-vx-edit-user .select2-container--default .select2-results__option--highlighted {
+  background: rgba(105, 108, 255, 0.12);
+  color: #566a7f;
+}
+
+.ui-dialog.popup-vx-edit-user .select2-container--default .select2-results__option[aria-selected="true"] {
+  background: rgba(105, 108, 255, 0.18);
+  color: #566a7f;
+}
+
+@media (max-width: 900px) {
+  .ui-dialog.popup-vx-edit-user .dialogContent {
+    padding: 0 1rem 0.75rem;
+  }
+
+  .ui-dialog.popup-vx-edit-user .swRegisterPopup .popupFormGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .ui-dialog.popup-vx-edit-user .dialogBtnSet {
+    padding: 0 1rem 1rem;
+  }
+}

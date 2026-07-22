@@ -1,0 +1,78 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!-- 배포요청 팝업(요청번호 상세보기) -->
+<script>
+	$(function() {
+		$("#jqGridD1").jqGrid({
+			datatype: "local",
+			colNames:['문서번호','문서명','REV','문서유형','자료등록일','방산기술'],
+			colModel:[
+				{name:'col1', index:'col1', width: "100"},
+				{name:'col2', index:'col2', width: "100"},
+				{name:'col3', index:'col3', width: "50"},
+				{name:'col4', index:'col4', width: "90"},
+				{name:'col5', index:'col5', width: "90"},
+				{name:'col6', index:'col6', width: "130"},
+			],
+			width : null,
+			height : null,
+			autoheight : true,
+			shrinkToFit : false,
+			rowNum : 15,
+			rownumbers : true,
+			multiselect : true,
+			caption : false,
+			loadtext : /*'<img src=''/>'*/ 'loading~~',
+            viewsortcols : [ false, 'horizontal', true ],
+		    viewrecords: true
+		});
+		var mydata = [
+			{col1:"QAR70022401",col2:"",col3:"A",col4:"1",col5:"1",col6:"Y"},
+			{col1:"QAR70022401",col2:"",col3:"A",col4:"1",col5:"1",col6:"N"},
+			];
+		for(var i=0;i<=mydata.length;i++){
+			$("#jqGridD1").jqGrid('addRowData',i+1,mydata[i]);
+		}
+	});
+</script>
+<div class="dialogContent">
+	<ul class="section">
+		<li class="half">
+			<label for="">요청번호</label>
+			<div><input type="text" id="" disabled="disabled" value="자동채번"></div>
+			<label for="">용도</label>
+			<div><select id="" disabled><option>선택</option></select></div>
+		</li>
+		<li class="half">
+			<label for="">업체명/담당자</label>
+			<div><select id="" disabled><option>전체</option></select></div>
+			<label for="">Email</label>
+			<div><input type="text" id="" placeholder="로그인 사용자 Email" disabled></div>
+		</li>
+		<li class="half">
+			<label for="">구매담당자</label>
+			<div><select id="" disabled><option>전체</option></select></div>
+		</li>
+		<li>
+			<label for="">요청사유</label>
+			<div><textarea id="" rows="3" disabled></textarea></div>
+		</li>
+	</ul>
+	<div class="section">
+		<div class="dialogToolbar">
+			<div class="left">
+				<span class="sectTitle">문서목록</span><span class="listCount">2</span>
+			</div>
+			<div class="right"></div>
+		</div>
+		<div class="gridContainer">
+			<table id=jqGridD1></table>
+		</div>
+	</div>
+</div>
+<div class="dialogBtnSet">
+	<div class="left"></div>
+	<div class="right">
+		<button class="ui-button ui-corner-all bottomBtn">닫기</button>
+	</div>
+</div>

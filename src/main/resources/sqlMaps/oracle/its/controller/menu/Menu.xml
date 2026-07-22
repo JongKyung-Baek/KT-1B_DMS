@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="sql.Menu">
+
+<select id="getMenuList" resultType="kr.esob.fdms.commonlogic.menu.MenuVO">
+    SELECT *
+    FROM DOCS_MENU
+    ORDER BY MENU_CD
+</select>
+
+<select id="getUrlCount" resultType="Integer">
+    SELECT count(*)
+    FROM DOCS_MENU menu
+    JOIN DOCS_REL_ROLE_GROUP roleGroup
+    ON menu.ROLE_CD = roleGroup.ROLE_CD
+    WHERE menu.USE_YN = 'Y'
+    AND menu.DEL_YN = 'N'
+    AND roleGroup.GROUP_CD = #{roleGroup}
+    AND MENU_URL = #{url}
+</select>
+
+<select id="getMenuTopList" resultType="kr.esob.fdms.commonlogic.menu.MenuVO">
+    SELECT menu.MENU_CD AS menuCd,
+           menu.PARENT_MENU_CD AS parentMenuCd,
+           COALESCE(lang.LANG_DESC, menu.MENU_NM) AS menuNm,
+           menu.MESSAGE_CD AS messageCd,
+           menu.MENU_LEVEL AS menuLevel,
+           menu.MENU_TYPE AS menuType,
+           menu.MENU_URL AS menuUrl,
+           menu.SORT_SEQ AS sortSeq,
+           menu.TREE_TYPE AS treeType,
+           menu.DEL_YN AS delYn,
+           menu.USE_YN AS useYn,
+           menu.TOOLTIP AS tooltip,
+           menu.MENU_DESC AS menuDesc,
+           menu.ROLE_CD AS roleCd,
+           menu.MENU_ICON AS menuIcon
+    FROM DOCS_MENU menu
+    JOIN DOCS_REL_ROLE_GROUP role
+    ON menu.ROLE_CD = role.ROLE_CD
+    LEFT JOIN DOCS_LANG lang
+    ON lang.LANG_CD = menu.MESSAGE_CD
+    AND lang.LANG_TYPE = #{sessionLang}
+    WHERE menu.TREE_TYPE = 'root'
+    AND menu.MENU_TYPE != 'H'
+    AND menu.AUTH_SITE IN (#{url_type}, 'B')
+    AND role.GROUP_CD = #{roleGroup}
+    AND DEL_YN = 'N'
+    AND USE_YN = 'Y'
+    ORDER BY SORT_SEQ
+</select>
+
+<select id="getMenuSubList" resultType="kr.esob.fdms.commonlogic.menu.MenuVO">
+    WITH RECURSIVE parent (MENU_CD, PARENT_MENU_CD, MENU_NM, MESSAGE_CD, MENU_LEVEL, MENU_TYPE, MENU_URL, SORT_SEQ, TREE_TYPE, DEL_YN, USE_YN, TOOLTIP, MENU_DESC, ROLE_CD, MENU_PATH_CD, MENU_PATH, MAIN_CD) AS (
+        SELECT menu.MENU_CD,
+               menu.PARENT_MENU_CD,
+               COALESCE(lang.LANG_DESC, menu.MENU_NM) AS MENU_NM,
+               menu.MESSAGE_CD,
+               1 AS MENU_LEVEL,
+               menu.MENU_TYPE,
+               menu.MENU_URL,
+               menu.SORT_SEQ,
+               CASE
+                   WHEN (SELECT COUNT(*) FROM DOCS_MENU T WHERE T.PARENT_MENU_CD = menu.MENU_CD AND T.MENU_TYPE = 'M') > 0 THEN 'branch'
+                   ELSE 'leaf'
+               END TREE_TYPE,
+               menu.DEL_YN,
+               menu.USE_YN,
+               menu.TOOLTIP,
+               menu.MENU_DESC,
+               menu.ROLE_CD,
+               CAST(menu.MENU_CD AS VARCHAR) AS MENU_PATH_CD,
+               CAST(COALESCE(lang.LANG_DESC, menu.MENU_NM) AS VARCHAR) AS MENU_PATH,
+               menu.MENU_CD AS MAIN_CD
+        FROM DOCS_MENU menu
+        JOIN DOCS_REL_ROLE_GROUP roleGroup ON menu.ROLE_CD = roleGroup.ROLE_CD
+        LEFT JOIN DOCS_LANG lang
+        ON lang.LANG_CD = menu.MESSAGE_CD
+        AND lang.LANG_TYPE = #{sessionLang}
+        WHERE AUTH_SITE IN (#{url_type}, 'B')
+        AND MENU.TREE_TYPE = 'root'
+        AND MENU.USE_YN = 'Y'
+        AND MENU.DEL_YN = 'N'
+        AND roleGroup.GROUP_CD = #{roleGroup}
+        UNION ALL
+        SELECT menu.MENU_CD,
+               menu.PARENT_MENU_CD,
+               COALESCE(lang.LANG_DESC, menu.MENU_NM) AS MENU_NM,
+               menu.MESSAGE_CD,
+               parent.MENU_LEVEL + 1 AS MENU_LEVEL,
+               menu.MENU_TYPE,
+               menu.MENU_URL,
+               menu.SORT_SEQ,
+               CASE
+                   WHEN (SELECT COUNT(*) FROM DOCS_MENU T WHERE T.PARENT_MENU_CD = menu.MENU_CD AND T.MENU_TYPE = 'M') > 0 THEN 'branch'
+                   ELSE 'leaf'
+               END TREE_TYPE,
+               menu.DEL_YN,
+               menu.USE_YN,
+               menu.TOOLTIP,
+               menu.MENU_DESC,
+               menu.ROLE_CD,
+               parent.MENU_PATH_CD || ' > ' || MENU.MENU_CD AS MENU_PATH_CD,
+               parent.MENU_PATH || ' > ' || COALESCE(lang.LANG_DESC, menu.MENU_NM) AS MENU_PATH,
+               parent.MAIN_CD AS MAIN_CD
+        FROM DOCS_MENU menu
+        JOIN parent ON menu.PARENT_MENU_CD = parent.MENU_CD
+        JOIN DOCS_REL_ROLE_GROUP roleGroup ON menu.ROLE_CD = roleGroup.ROLE_CD
+        LEFT JOIN DOCS_LANG lang
+        ON lang.LANG_CD = menu.MESSAGE_CD
+        AND lang.LANG_TYPE = #{sessionLang}
+        WHERE menu.USE_YN = 'Y'
+        AND menu.DEL_YN = 'N'
+        AND roleGroup.GROUP_CD = #{roleGroup}
+    )
+    SELECT *
+    FROM parent T
+    ORDER BY SORT_SEQ
+</select>
+
+<select id="getMenuCombo" resultType="kr.esob.fdms.commonlogic.combo.SearchComboInfoVO" parameterType="String">
+    WITH RECURSIVE PARENT (MENU_CD, PARENT_MENU_CD, MENU_NM, MENU_URL, MENU_LEVEL, MENU_TYPE, MAIN_CODE) AS (
+        SELECT MENU_CD,
+               PARENT_MENU_CD,
+               MENU_NM AS MENU_NM,
+               MENU_URL AS MENU_URL,
+               1 AS MENU_LEVEL,
+               MENU_TYPE,
+               MENU_CD AS MAIN_CODE
+        FROM DOCS_MENU
+        WHERE PARENT_MENU_CD IN ('I', 'B', 'O')
+        UNION ALL
+        SELECT MENU.MENU_CD,
+               MENU.PARENT_MENU_CD,
+               PARENT.MENU_NM || ' > ' || MENU.MENU_NM AS MENU_NM,
+               MENU.MENU_URL,
+               PARENT.MENU_LEVEL + 1 AS MENU_LEVEL,
+               MENU.MENU_TYPE,
+               PARENT.MAIN_CODE AS MAIN_CODE
+        FROM DOCS_MENU MENU
+        JOIN PARENT ON MENU.PARENT_MENU_CD = PARENT.MENU_CD
+    )
+    SELECT MENU_CD AS id,
+           MENU_NM AS text
+    FROM PARENT T
+    WHERE MENU_NM LIKE '%' || UPPER(#{value}) || '%'
+    ORDER BY MAIN_CODE, MENU_CD
+</select>
+
+<select id="getParentMenuInfo" resultType="kr.esob.fdms.commonlogic.menu.MenuVO">
+    SELECT *
+    FROM DOCS_MENU
+    WHERE MENU_CD = #{parentMenuCd}
+    UNION ALL
+    SELECT *
+    FROM DOCS_MENU
+    WHERE PARENT_MENU_CD = #{parentMenuCd}
+    AND MENU_TYPE IN ('R', 'D', 'E')
+</select>
+
+<select id="getMenuNm" resultType="String" parameterType="String">
+    SELECT MENU_NM
+    FROM DOCS_MENU
+    WHERE MENU_URL = #{value}
+    LIMIT 1
+</select>
+
+<select id="selectTree" resultType="kr.esob.fdms.commonlogic.tree.TreeVO">
+    SELECT
+        'MENU_000' AS id,
+        CASE
+            WHEN #{auth} = 'I' THEN '내부메뉴'
+            WHEN #{auth} = 'E' THEN '외부메뉴'
+        END AS text,
+        '#' AS parent,
+        '0' AS "level",
+        0 AS sort,
+        'R' AS type,
+        'Y' AS useYn,
+        '' AS roleCd
+    UNION ALL
+    SELECT
+        MENU_CD AS id,
+        MENU_NM AS text,
+        CASE PARENT_MENU_CD
+            WHEN 'I' THEN 'MENU_000'
+            WHEN 'E' THEN 'MENU_000'
+            WHEN 'B' THEN 'MENU_000'
+            ELSE PARENT_MENU_CD
+        END AS parent,
+        MENU_LEVEL AS "level",
+        SORT_SEQ AS sort,
+        MENU_TYPE AS type,
+        USE_YN AS useYn,
+        ROLE_CD AS roleCd
+    FROM DOCS_MENU
+    WHERE DEL_YN = 'N'
+    <if test='auth != null and auth.equals("I")'>
+        AND MENU_TYPE IN ('T', 'M', 'P')
+        AND AUTH_SITE IN ('I', 'B')
+    </if>
+    <if test='auth != null and auth.equals("E")'>
+        AND MENU_TYPE IN ('T', 'M', 'P')
+        AND AUTH_SITE IN ('E', 'B')
+    </if>
+    ORDER BY sort
+</select>
+
+<update id="updateMenu">
+    UPDATE DOCS_MENU
+    SET MENU_NM = #{menuNm},
+        MENU_URL = #{menuUrl},
+        AUTH_SITE = #{authSite},
+        USE_YN = #{useYn},
+        MENU_TYPE = #{menuType},
+        MENU_ICON = #{menuIcon}
+    WHERE MENU_CD = #{menuCd}
+</update>
+
+<select id="selectMenuInfo" resultType="kr.esob.fdms.controller.inside.system.menu.MenuVO">
+    SELECT MENU_CD AS menuCd,
+           MENU_NM AS menuNm,
+           PARENT_MENU_CD AS parentMenuCd,
+           (SELECT MENU_NM FROM DOCS_MENU t WHERE t.MENU_CD = menu.PARENT_MENU_CD) AS parentMenuNm,
+           CASE MENU_TYPE WHEN 'P' THEN 'Y' ELSE 'N' END AS popupYn,
+           MENU_URL AS menuUrl,
+           USE_YN AS useYn,
+           AUTH_SITE AS authSite,
+           MENU_LEVEL AS menuLevel,
+           MENU_ICON AS menuIcon
+    FROM DOCS_MENU menu
+    WHERE MENU_CD = #{menuCd}
+    AND DEL_YN = 'N'
+</select>
+
+<insert id="insertMenu">
+    <selectKey resultType="string" keyProperty="menuCd" order="BEFORE">
+        SELECT 'MENU_' || LPAD((COALESCE(MAX(CAST(SUBSTRING(MENU_CD, 6) AS INTEGER)), 0) + 1)::TEXT, 3, '0')
+        FROM DOCS_MENU;
+    </selectKey>
+
+    INSERT INTO DOCS_MENU(
+        MENU_CD, PARENT_MENU_CD, MENU_NM, MENU_LEVEL, MENU_TYPE, MENU_URL, SORT_SEQ, TREE_TYPE, DEL_YN, USE_YN, ROLE_CD, AUTH_SITE, MENU_ICON
+    )
+    VALUES(
+        #{menuCd}, #{parentMenuCd}, #{menuNm}, #{menuLevel}, #{menuType}, #{menuUrl},
+        (SELECT COALESCE(MAX(SORT_SEQ), 0) + 1 FROM DOCS_MENU), #{treeType}, 'N', #{useYn}, 'ROLE_' || #{menuCd}, #{authSite}, #{menuIcon}
+    )
+</insert>
+
+<update id="deleteMenu">
+	UPDATE DOCS_MENU
+	SET DEL_YN = 'Y'
+	WHERE MENU_CD = #{menuCd}
+</update>
+
+    <update id="updateMenuSort">
+        UPDATE DOCS_MENU
+        <trim prefix="SET" suffixOverrides=",">
+            SORT_SEQ = #{sortSeq},
+            PARENT_MENU_CD = #{parent},
+            <if test="menuType != null and !menuType.equals('')">
+                MENU_TYPE = #{menuType},
+            </if>
+            <if test="treeType != null and !treeType.equals('')">
+                TREE_TYPE = #{treeType}
+            </if>
+        </trim>
+        WHERE MENU_CD = #{id}
+    </update>
+
+
+
+</mapper>

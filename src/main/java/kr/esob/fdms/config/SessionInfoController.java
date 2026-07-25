@@ -1,8 +1,6 @@
 package kr.esob.fdms.config;
 
-import kr.esob.fdms.controller.main.MainService;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -15,9 +13,6 @@ import java.util.Map;
 @Log4j2
 @RestController
 public class SessionInfoController {
-
-    @Autowired
-    private MainService service;
 
     @GetMapping("/getRemainingSessionTime")
     @ResponseBody

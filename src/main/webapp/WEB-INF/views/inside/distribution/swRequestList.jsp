@@ -14,7 +14,7 @@
 		.ch-badge-done{background:#e7f7ec;color:#1d6b3a}
 		.ch-badge-fail{background:#fdeaea;color:#a12828}
 	</style>
-	<link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/distribution-invoice.css?v=20260724.1" media="screen" />
+	<link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/distribution-invoice.css?v=20260726.1" media="screen" />
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common_tree.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/views/inside/distribution/acceptance/common-form-vuexy.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/views/inside/distribution/swRequestList.js"></script>
@@ -55,6 +55,40 @@
 			return '<font color="red">' + rtn + '</font>';
 		}
 
+		function escapeSwGridHtml(value) {
+			return String(value === undefined || value === null ? "" : value)
+				.replace(/&/g, "&amp;")
+				.replace(/</g, "&lt;")
+				.replace(/>/g, "&gt;")
+				.replace(/"/g, "&quot;")
+				.replace(/'/g, "&#39;");
+		}
+
+		function resolveDocumentGradeTone(rowdata, gradeName) {
+			var level = parseInt(rowdata && rowdata.gradeLevel, 10);
+			var code = String(rowdata && rowdata.gradeCd || "").toUpperCase();
+			if (!gradeName) return "unassigned";
+			if ((!isNaN(level) && level >= 40) || code === "CONFIDENTIAL") return "confidential";
+			if ((!isNaN(level) && level >= 30) || code === "RESTRICTED") return "restricted";
+			if ((!isNaN(level) && level >= 20) || code === "INTERNAL") return "internal";
+			return "general";
+		}
+
+		function formatDocumentGrade(cellValue, options, rowdata) {
+			var row = rowdata || {};
+			var gradeName = $.trim(String(cellValue || row.gradeNm || ""));
+			var gradeCode = $.trim(String(row.gradeCd || ""));
+			var gradeLevel = $.trim(String(row.gradeLevel === undefined || row.gradeLevel === null ? "" : row.gradeLevel));
+			var displayName = gradeName || "미지정";
+			var tone = resolveDocumentGradeTone(row, gradeName);
+			var detail = gradeName
+				? "문서등급: " + gradeName + (gradeCode ? " (" + gradeCode + (gradeLevel ? ", " + gradeLevel : "") + ")" : "")
+				: "문서등급이 지정되지 않았습니다.";
+			return '<span class="document-grade-badge document-grade-badge--' + tone
+				+ '" title="' + escapeSwGridHtml(detail) + '">'
+				+ escapeSwGridHtml(displayName) + '</span>';
+		}
+
 		function formatViewFile(cellValue, options, rowdata, action) {
 			return '<a onclick="openDialogPopup(\'/inside/distribution/swRequest/swFilePopup\', { objectId: \'' + rowdata["objectId"] + '\', swNo: \'' + rowdata["swNo"] + '\', requestNo: \'' + rowdata["requestNo"] + '\' }, \'popupDialog\', \'l\', 720, true, \'popup-common popup-sw-file\')">' + cellValue + '</a>';
 		}
@@ -70,6 +104,10 @@
 
 					function openDialog(objectId) {
 						openDialogPopup("/inside/distribution/commonRequest/protectPopup", { objectId: objectId, objectType: "SW" }, "popupDialog", 'm', 360, true, 'popup-common popup-protect');
+					}
+
+					function openTechnicalDashboard() {
+						location.href = "${pageContext.request.contextPath}/inside/distribution/swRequest/dashboard";
 					}
 
 					// 2023.07.24 기범추가 ( 등록 버튼 생성 )

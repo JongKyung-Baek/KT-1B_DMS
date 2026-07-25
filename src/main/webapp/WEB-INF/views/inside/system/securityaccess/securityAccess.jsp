@@ -13,14 +13,14 @@
     <link type="text/css" rel="stylesheet"
           href="${pageContext.request.contextPath}/resources/css/pages/distribution-invoice.css" media="screen">
     <link type="text/css" rel="stylesheet"
-          href="${pageContext.request.contextPath}/resources/css/inside/system/securityaccess/securityAccess.css?v=20260724.4" media="screen">
+          href="${pageContext.request.contextPath}/resources/css/inside/system/securityaccess/securityAccess.css?v=20260726.2" media="screen">
     <script>
         window.securityAccessConfig = {
             contextPath: '${pageContext.request.contextPath}'
         };
     </script>
     <script type="text/javascript"
-            src="${pageContext.request.contextPath}/resources/js/inside/system/securityaccess/securityAccess.js?v=20260724.4"></script>
+            src="${pageContext.request.contextPath}/resources/js/inside/system/securityaccess/securityAccess.js?v=20260726.2"></script>
 </head>
 <body>
 <main class="security-access-page" aria-labelledby="securityAccessTitle">
@@ -59,9 +59,9 @@
         </nav>
 
         <section id="gradePanel" class="sa-tab-panel is-active" role="tabpanel" aria-labelledby="gradeTab">
-            <div class="sa-layout sa-layout--form-list">
+            <div class="sa-layout sa-layout--form-list sa-layout--balanced">
                 <article class="sa-card">
-                    <div class="sa-card-header">
+                    <div class="sa-card-header sa-card-header--stack-mobile">
                         <div>
                             <h2>등급 정보</h2>
                             <p>숫자가 클수록 높은 보안등급입니다.</p>
@@ -70,7 +70,7 @@
                     </div>
                     <form id="gradeForm" class="sa-form" autocomplete="off">
                         <input type="hidden" id="gradeOriginalCd" value="">
-                        <div class="sa-form-grid">
+                        <div class="sa-form-grid sa-form-grid--grade">
                             <label class="sa-field">
                                 <span>등급 코드 <em>*</em></span>
                                 <input type="text" id="gradeCd" maxlength="30" placeholder="예: CONFIDENTIAL" required>
@@ -107,7 +107,7 @@
                 </article>
 
                 <article class="sa-card sa-card--table">
-                    <div class="sa-card-header">
+                    <div class="sa-card-header sa-card-header--stack-mobile">
                         <div>
                             <h2>등록된 보안등급</h2>
                             <p>행을 선택하면 왼쪽에서 수정할 수 있습니다.</p>
@@ -135,13 +135,15 @@
         </section>
 
         <section id="userPanel" class="sa-tab-panel" role="tabpanel" aria-labelledby="userTab" hidden>
-            <div class="sa-layout sa-layout--split">
+            <div class="sa-layout sa-layout--split sa-layout--balanced">
                 <article class="sa-card sa-card--table">
-                    <div class="sa-card-header sa-card-header--stack-mobile">
+                    <div class="sa-card-header">
                         <div>
                             <h2>사용자 선택</h2>
                             <p>사용자를 선택해 최대 인가등급과 행위권한을 설정합니다.</p>
                         </div>
+                    </div>
+                    <div class="sa-list-toolbar">
                         <form id="userSearchForm" class="sa-search" role="search">
                             <label class="sa-sr-only" for="userKeyword">사용자 검색어</label>
                             <input type="search" id="userKeyword" maxlength="100" placeholder="계정, 이름, 부서 검색">

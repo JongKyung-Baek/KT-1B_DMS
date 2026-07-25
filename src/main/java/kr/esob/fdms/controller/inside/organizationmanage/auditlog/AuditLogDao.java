@@ -4,6 +4,7 @@ import kr.esob.fdms.commonlogic.abstractclass.AbstractDao;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Map;
 
 @Repository
 public class AuditLogDao extends AbstractDao {
@@ -17,6 +18,11 @@ public class AuditLogDao extends AbstractDao {
 
     public Integer selectListCount(Object param) {
         return (Integer) obj(prefix + "selectListCount", param);
+    }
+
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> selectSummary() {
+        return (Map<String, Object>) obj(prefix + "selectSummary", null);
     }
 
     public void insertAuditLog(Object param) {

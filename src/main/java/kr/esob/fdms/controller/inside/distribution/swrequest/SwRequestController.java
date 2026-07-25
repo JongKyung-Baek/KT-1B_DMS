@@ -85,6 +85,20 @@ public class SwRequestController extends AbstractController {
 		return "/inside/distribution/swRequestList";
 	}
 
+	@GetMapping("/dashboard")
+	public String dashboard(Model model, CommonHomeParam param) {
+		setHomeParam(model, param);
+		UserVO currentUser = securityAclService.requireCurrentUser();
+		String userCd = currentUser.getUserCd();
+
+		model.addAttribute("dashboardSummary", service.selectDashboardSummary(userCd));
+		model.addAttribute("gradeDistribution", service.selectDashboardGradeDistribution(userCd));
+		model.addAttribute("statusDistribution", service.selectDashboardStatusDistribution(userCd));
+		model.addAttribute("recentDocuments", service.selectDashboardRecentDocuments(userCd));
+		model.addAttribute("recentActivities", service.selectDashboardRecentActivities(userCd));
+		return "/inside/distribution/swDashboard";
+	}
+
 	@RequestMapping("/selectList")
 	public @ResponseBody GridResultVO selectList(SwRequestParam param) throws Exception {
 		service.setSearchAllParam(param);

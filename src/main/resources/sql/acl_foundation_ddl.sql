@@ -495,18 +495,50 @@ CREATE TABLE IF NOT EXISTS docs_access_audit_log (
     reason_cd      varchar(50),
     result_message varchar(1000),
     actor_user_cd  varchar(20),
-    actor_user_id  varchar(20),
+    actor_user_id  varchar(100),
     actor_user_nm  varchar(256),
+    menu_cd        varchar(64),
+    menu_nm        varchar(256),
+    menu_url       varchar(512),
     object_type    varchar(30),
     object_id      varchar(60),
     file_no        varchar(60),
     request_no     varchar(100),
     grade_cd       varchar(30),
+    action_nm      varchar(256),
     client_ip      varchar(64),
     session_id     varchar(128),
     correlation_id varchar(128),
+    request_uri    varchar(1000),
+    http_method    varchar(10),
+    http_status    integer,
+    duration_ms    bigint,
     detail_json    jsonb NOT NULL DEFAULT '{}'::jsonb
 );
+ALTER TABLE docs_access_audit_log ADD COLUMN IF NOT EXISTS menu_cd varchar(64);
+ALTER TABLE docs_access_audit_log ADD COLUMN IF NOT EXISTS menu_nm varchar(256);
+ALTER TABLE docs_access_audit_log ADD COLUMN IF NOT EXISTS menu_url varchar(512);
+ALTER TABLE docs_access_audit_log ADD COLUMN IF NOT EXISTS action_nm varchar(256);
+ALTER TABLE docs_access_audit_log ADD COLUMN IF NOT EXISTS request_uri varchar(1000);
+ALTER TABLE docs_access_audit_log ADD COLUMN IF NOT EXISTS http_method varchar(10);
+ALTER TABLE docs_access_audit_log ADD COLUMN IF NOT EXISTS http_status integer;
+ALTER TABLE docs_access_audit_log ADD COLUMN IF NOT EXISTS duration_ms bigint;
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1
+          FROM information_schema.columns
+         WHERE table_schema = current_schema()
+           AND table_name = 'docs_access_audit_log'
+           AND column_name = 'actor_user_id'
+           AND character_maximum_length IS NOT NULL
+           AND character_maximum_length < 100
+    ) THEN
+        ALTER TABLE docs_access_audit_log
+            ALTER COLUMN actor_user_id TYPE varchar(100);
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
 CREATE INDEX IF NOT EXISTS idx_access_audit_time
     ON docs_access_audit_log (occurred_at DESC);
 CREATE INDEX IF NOT EXISTS idx_access_audit_actor
@@ -515,6 +547,14 @@ CREATE INDEX IF NOT EXISTS idx_access_audit_object
     ON docs_access_audit_log (object_type, object_id, file_no, occurred_at DESC);
 CREATE INDEX IF NOT EXISTS idx_access_audit_request
     ON docs_access_audit_log (request_no, occurred_at DESC);
+CREATE INDEX IF NOT EXISTS idx_access_audit_menu_time
+    ON docs_access_audit_log (menu_cd, occurred_at DESC)
+    WHERE menu_cd IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_access_audit_event_result_time
+    ON docs_access_audit_log (event_type, action_type, result_cd, occurred_at DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_access_audit_legacy_correlation
+    ON docs_access_audit_log (correlation_id)
+    WHERE correlation_id LIKE 'LEGACY-AUDIT-%';
 
 CREATE OR REPLACE FUNCTION fn_block_access_audit_mutation()
 RETURNS trigger AS $$
@@ -611,5 +651,91 @@ INSERT INTO docs_rel_role_group
 VALUES
     ('RG_001', 'ROLE_MENU_222', 'SYSTEM', 'SYSTEM', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 ON CONFLICT (group_cd, role_cd) DO NOTHING;
+
+-- Technical-data list: expose the effective document security grade.
+UPDATE docs_grid_info
+   SET column_nm = '문서등급',
+       column_seq = 52,
+       column_size = 90,
+       column_type = 'ro',
+       column_align = 'center',
+       column_format = 'str',
+       column_hidden = 'N',
+       sort_yn = 'N',
+       formatter = 'formatDocumentGrade',
+       column_editable = 'N'
+ WHERE grid_id = 'gridSwRequestList'
+   AND column_id = 'gradeNm';
+
+INSERT INTO docs_grid_info (
+    grid_id, column_id, column_nm, column_seq, column_size,
+    column_type, column_align, column_format, column_hidden,
+    sort_yn, formatter, column_editable
+)
+SELECT
+    'gridSwRequestList', 'gradeNm', '문서등급', 52, 90,
+    'ro', 'center', 'str', 'N',
+    'N', 'formatDocumentGrade', 'N'
+WHERE NOT EXISTS (
+    SELECT 1
+      FROM docs_grid_info
+     WHERE grid_id = 'gridSwRequestList'
+       AND column_id = 'gradeNm'
+);
+
+INSERT INTO docs_grid_info (
+    grid_id, column_id, column_nm, column_seq, column_size,
+    column_type, column_align, column_format, column_hidden,
+    sort_yn, column_editable
+)
+SELECT
+    'gridSwRequestList', 'gradeCd', 'gradeCd', 212, 0,
+    'ro', 'center', 'str', 'Y',
+    'N', 'N'
+WHERE NOT EXISTS (
+    SELECT 1
+      FROM docs_grid_info
+     WHERE grid_id = 'gridSwRequestList'
+       AND column_id = 'gradeCd'
+);
+
+INSERT INTO docs_grid_info (
+    grid_id, column_id, column_nm, column_seq, column_size,
+    column_type, column_align, column_format, column_hidden,
+    sort_yn, column_editable
+)
+SELECT
+    'gridSwRequestList', 'gradeLevel', 'gradeLevel', 213, 0,
+    'ro', 'center', 'str', 'Y',
+    'N', 'N'
+WHERE NOT EXISTS (
+    SELECT 1
+      FROM docs_grid_info
+     WHERE grid_id = 'gridSwRequestList'
+       AND column_id = 'gradeLevel'
+);
+
+-- Technical-data list: provide a direct route back to the new dashboard.
+INSERT INTO docs_toolbar_info (
+    toolbar_id, button_id, button_seq, button_label, button_img,
+    button_align, call_func, use_yn, lang_cd, button_type,
+    system_class_group, role_cd
+)
+VALUES (
+    'toolbarSwRequest', 'btnDashboard', 5, '대시보드', '',
+    'left', 'openTechnicalDashboard()', 'Y', '', 'dashboard',
+    '', NULL
+)
+ON CONFLICT (toolbar_id, button_id) DO UPDATE SET
+    button_seq = EXCLUDED.button_seq,
+    button_label = EXCLUDED.button_label,
+    button_img = EXCLUDED.button_img,
+    button_align = EXCLUDED.button_align,
+    call_func = EXCLUDED.call_func,
+    use_yn = 'Y',
+    lang_cd = EXCLUDED.lang_cd,
+    button_type = EXCLUDED.button_type,
+    system_class_group = EXCLUDED.system_class_group,
+    role_cd = NULL;
 
 COMMIT;

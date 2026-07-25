@@ -39,6 +39,52 @@
   --tree-toggle-boardno-icon: url("/resources/images/depth3.png");
 }
 
+.document-grade-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 56px;
+  min-height: 22px;
+  padding: 2px 8px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.document-grade-badge--general {
+  border-color: #b9dfc9;
+  background: #e8f6ee;
+  color: #17663b;
+}
+
+.document-grade-badge--internal {
+  border-color: #b8d7f0;
+  background: #eaf4fc;
+  color: #07568f;
+}
+
+.document-grade-badge--restricted {
+  border-color: #efd49a;
+  background: #fff5dc;
+  color: #8a5a00;
+}
+
+.document-grade-badge--confidential {
+  border-color: #efbbb5;
+  background: #fdeceb;
+  color: #a22a22;
+}
+
+.document-grade-badge--unassigned {
+  border-color: #c6cdd5;
+  border-style: dashed;
+  background: #f3f5f7;
+  color: #687481;
+}
+
 .distribution-invoice-page .distribution-filter-card .card-body {
   padding: 1rem 1.25rem;
 }

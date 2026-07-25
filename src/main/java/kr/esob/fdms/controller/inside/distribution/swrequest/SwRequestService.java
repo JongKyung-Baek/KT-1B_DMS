@@ -1377,5 +1377,25 @@ public class SwRequestService implements CommonService{
 		return nextNo == null ? 1 : nextNo;
 	}
 
+	public Map<String, Object> selectDashboardSummary(String userCd) {
+		return dao.selectDashboardSummary(userCd);
+	}
+
+	public List<Map<String, Object>> selectDashboardGradeDistribution(String userCd) {
+		return dao.selectDashboardGradeDistribution(userCd);
+	}
+
+	public List<Map<String, Object>> selectDashboardStatusDistribution(String userCd) {
+		return dao.selectDashboardStatusDistribution(userCd);
+	}
+
+	public List<Map<String, Object>> selectDashboardRecentDocuments(String userCd) {
+		return dao.selectDashboardRecentDocuments(userCd);
+	}
+
+	public List<Map<String, Object>> selectDashboardRecentActivities(String userCd) {
+		return dao.selectDashboardRecentActivities(userCd);
+	}
+
 }
 

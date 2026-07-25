@@ -21,6 +21,14 @@ public class AccessAuditEventVO {
     private String fileNo;
     private String requestNo;
     private String gradeCd;
+    private String menuCd;
+    private String menuNm;
+    private String menuUrl;
+    private String actionNm;
+    private String requestUri;
+    private String httpMethod;
+    private Integer httpStatus;
+    private Long durationMs;
     private String clientIp;
     private String sessionId;
     private String correlationId;

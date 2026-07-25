@@ -19,6 +19,46 @@
 			.replace(/>/g, "&gt;");
 	}
 
+	function getSwGradePresentation(cellValue, rowdata) {
+		var row = rowdata || {};
+		var gradeName = $.trim(String(cellValue || row.gradeNm || ""));
+		var gradeCode = $.trim(String(row.gradeCd || ""));
+		var levelText = $.trim(String(row.gradeLevel === undefined || row.gradeLevel === null ? "" : row.gradeLevel));
+		var level = parseInt(levelText, 10);
+		var normalizedCode = gradeCode.toUpperCase();
+		var tone = "general";
+		if (!gradeName) {
+			tone = "unassigned";
+		} else if ((!isNaN(level) && level >= 40) || normalizedCode === "CONFIDENTIAL") {
+			tone = "confidential";
+		} else if ((!isNaN(level) && level >= 30) || normalizedCode === "RESTRICTED") {
+			tone = "restricted";
+		} else if ((!isNaN(level) && level >= 20) || normalizedCode === "INTERNAL") {
+			tone = "internal";
+		}
+		return {
+			name: gradeName || "미지정",
+			tone: tone,
+			title: gradeName
+				? "적용등급: " + gradeName + (gradeCode ? " (" + gradeCode + (levelText ? ", " + levelText : "") + ")" : "")
+				: "적용할 문서등급이 지정되지 않았습니다."
+		};
+	}
+
+	function formatSwFileGrade(cellValue, options, rowdata) {
+		var grade = getSwGradePresentation(cellValue, rowdata);
+		return '<span class="document-grade-badge document-grade-badge--' + grade.tone
+			+ '" title="' + escapeAttr(grade.title) + '">' + escapeAttr(grade.name) + '</span>';
+	}
+
+	function renderSwDocumentGrade(rowdata) {
+		var grade = getSwGradePresentation(rowdata && rowdata.gradeNm, rowdata);
+		$("#swPopupDocumentGrade")
+			.attr("class", "document-grade-badge document-grade-badge--" + grade.tone)
+			.attr("title", grade.title)
+			.text(grade.name);
+	}
+
 	function openSwFileViewer(objectId, fileNo) {
 		if (!objectId) {
 			alertMessage("파일 정보를 찾을 수 없습니다.");
@@ -68,9 +108,17 @@
 			colModel: [
 				{ name: "fileNo", label: "파일순번", width: 90, align: "center", sortable: false },
 				{
+					name: "gradeNm",
+					label: "적용등급",
+					width: 110,
+					align: "center",
+					sortable: false,
+					formatter: formatSwFileGrade
+				},
+				{
 					name: "orgFileNm",
 					label: "파일명",
-					width: 900,
+					width: 790,
 					sortable: false,
 					formatter: function (cellValue, options, rowdata) {
 						return formatSwFileName(cellValue, rowdata || {}, useSubFileNo);
@@ -335,7 +383,10 @@
 			fileNo: "",
 			orgFileNm: "파일 등록중입니다.",
 			fileSize: "",
-			objectId: ""
+			objectId: "",
+			gradeCd: list[0].gradeCd || "",
+			gradeNm: list[0].gradeNm || "",
+			gradeLevel: list[0].gradeLevel
 		}];
 	}
 
@@ -344,6 +395,7 @@
 		if (mainFileRows.length && mainFileRows[0].orgFileNm === "파일 등록중입니다.") {
 			subFileRows = [];
 		}
+		renderSwDocumentGrade(mainFileRows[0] || {});
 		loadApprovalStatus();
 		initSwFileGrid("gridSwMainFile", mainFileRows);
 		initSwFileGrid("gridSwSubFile", subFileRows);
@@ -373,6 +425,16 @@
 		margin: 6px 0 14px;
 		font-size: 14px;
 		color: #2f3a55;
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 8px 20px;
+	}
+
+	.sw-file-popup .popupMetaItem {
+		display: inline-flex;
+		align-items: center;
+		gap: 7px;
 	}
 
 	.sw-file-popup .sectionBlock {
@@ -491,7 +553,12 @@
 	</div>
 
 	<div class="popupMeta">
-		문서번호: <strong>${swNo}</strong>
+		<span class="popupMetaItem">문서번호: <strong>${swNo}</strong></span>
+		<span class="popupMetaItem">
+			문서등급:
+			<span id="swPopupDocumentGrade"
+				  class="document-grade-badge document-grade-badge--unassigned">미지정</span>
+		</span>
 	</div>
 
 	<!-- <div class="section popupCard sectionBlock">

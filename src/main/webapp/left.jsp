@@ -71,7 +71,7 @@
 			<i class="icon-base ti tabler-x d-block d-xl-none"></i>
 		</a> -->
 					<!-- <a href="${pageContext.request.contextPath}/main" class="app-brand-link"> -->
-						<a href="${pageContext.request.contextPath}/inside/distribution/swRequest/" class="app-brand-link">
+						<a href="${pageContext.request.contextPath}/inside/distribution/swRequest/dashboard" class="app-brand-link">
 						<img src="${pageContext.request.contextPath}/resources/images/KAI/KAI-logo.png"
 							alt="KAI" style="max-height: 40px; width: auto;"/> </a>
 						<a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">

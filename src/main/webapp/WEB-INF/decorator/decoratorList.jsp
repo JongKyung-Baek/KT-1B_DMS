@@ -51,7 +51,7 @@
 	<link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/js/jqGrid-master/css/ui.jqgrid.css" media="screen"/>
 	<link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/jquery-ui-1.12.1.custom/jquery-ui.css" media="screen" />
 	<link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/js/select2-master/dist/css/select2.css" media="screen" />
-	<link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/style.css" media="screen" />
+	<link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/style.css?v=20260726.1" media="screen" />
 	<link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/popup-common.css" media="screen" />
 	<link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/custom-font.css" media="screen" />
 	<link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/popup-vuexy-edit-user.css" media="screen" />
@@ -77,7 +77,7 @@
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/esapi/Base.esapi.properties.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common_util.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common_validation.js"></script>
-	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common_dialog.js"></script>
+	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common_dialog.js?v=20260726.1"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common_form.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common_toolbar.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common_grid.js"></script>

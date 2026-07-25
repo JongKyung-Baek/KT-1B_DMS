@@ -67,14 +67,23 @@ function initDialogPopup(dialogId, width, height) {
 // }
 
 // 원래 코드
-function openDialogPopup(url, param, dialogId, width, height, modal, extraDialogClass) {
+function openDialogPopup(url, param, dialogId, width, height, modal, extraDialogClass, loadOptions) {
 	if(undefined == modal){
 		modal = true;
 	}
 	if(undefined == extraDialogClass){
 		extraDialogClass = "";
 	}
+	loadOptions = loadOptions || {};
 	var isNoticeAddPopup = url === "/configurationmanage/notice/addPopup";
+	var isTechnicalDataDetailPopup =
+		url === "/inside/distribution/swRequest/swFilePopup";
+	var useLoadProgress =
+		loadOptions.progress === true || isTechnicalDataDetailPopup;
+	var loadProgressText =
+		loadOptions.progressText || "상세정보를 불러오는 중입니다.";
+	var loadProgressDescription =
+		loadOptions.progressDescription || "파일 및 권한 정보를 확인하고 있습니다.";
 	var isDialogMinHeightException =
 		url === "/inside/distribution/commonRequest/commonPrintRequestPopup" ||
 		url === "/inside/distribution/commonRequest/drawingRevisionUpdatePopup" ||
@@ -119,6 +128,37 @@ function openDialogPopup(url, param, dialogId, width, height, modal, extraDialog
 			var requestedDialogWidth = isApprovalStatusPopup ? 380 : 1000;
 		var dialogClassName = widthSize;
 		var cloneId = dialogId + 'a';
+		var dialogLoadStates = window.dialogPopupLoadStates =
+			window.dialogPopupLoadStates || {};
+		var existingLoadToken = dialogLoadStates[cloneId];
+
+		if(useLoadProgress && existingLoadToken){
+			var $pendingDialog = $('#' + cloneId);
+			if($pendingDialog.length && $pendingDialog.hasClass('ui-dialog-content')){
+				try{
+					$pendingDialog.dialog('moveToTop');
+				}
+				catch(e){ }
+			}
+			return;
+		}
+
+		var loadToken = useLoadProgress
+			? String(new Date().getTime()) + '-' + String(Math.random()).slice(2)
+			: "";
+		var dialogInitialized = false;
+		var $loadTrigger = useLoadProgress
+			? $(document.activeElement).filter('a, button, [role="button"], [role="tab"]')
+			: $();
+		var triggerState = {
+			disabled: $loadTrigger.is(':disabled'),
+			ariaBusy: $loadTrigger.attr('aria-busy'),
+			ariaDisabled: $loadTrigger.attr('aria-disabled')
+		};
+
+		if(useLoadProgress){
+			dialogLoadStates[cloneId] = loadToken;
+		}
 		if($.trim(extraDialogClass) !== ""){
 			dialogClassName += " " + $.trim(extraDialogClass);
 		}
@@ -131,26 +171,99 @@ function openDialogPopup(url, param, dialogId, width, height, modal, extraDialog
 			clone.appendTo('body');
 		clone.data('requestedDialogHeight', parsedHeight);
 		clone.data('requestedDialogWidth', requestedDialogWidth);
-		callAjax({menuUrl : url}, CONTEXT_PATH + "/menu/getMenuNm", function(response) {
-				clone.load(url, param, function(responseText, textStatus, response){
-					if(response.status == 403){
-						$(this).dialog('destroy').remove();
-						alertMessage(g_msg("msg.accessDenied"));
-						return;
-					}
-					setTimeout(function() {
-						var syncDialogLayer = clone.data('syncDialogLayer');
-						if(typeof syncDialogLayer === 'function') {
-							syncDialogLayer();
-							if(isDeferredInitialLayoutPopup){
-								var $widget = clone.dialog('widget');
-								if($widget.length){
-									$widget[0].style.setProperty('visibility', 'visible', 'important');
-								}
-							}
-						}
-					}, 0);
-				}).dialog({
+
+		function isCurrentLoad() {
+			return !useLoadProgress || dialogLoadStates[cloneId] === loadToken;
+		}
+
+		function setLoadTriggerState(isLoading) {
+			if(!$loadTrigger.length){
+				return;
+			}
+			if(isLoading){
+				$loadTrigger
+					.addClass('dialog-load-trigger--pending')
+					.attr('aria-busy', 'true')
+					.attr('aria-disabled', 'true');
+				if($loadTrigger.is('button, input')){
+					$loadTrigger.prop('disabled', true);
+				}
+				return;
+			}
+
+			$loadTrigger.removeClass('dialog-load-trigger--pending');
+			if(triggerState.ariaBusy === undefined){
+				$loadTrigger.removeAttr('aria-busy');
+			}
+			else{
+				$loadTrigger.attr('aria-busy', triggerState.ariaBusy);
+			}
+			if(triggerState.ariaDisabled === undefined){
+				$loadTrigger.removeAttr('aria-disabled');
+			}
+			else{
+				$loadTrigger.attr('aria-disabled', triggerState.ariaDisabled);
+			}
+			if($loadTrigger.is('button, input')){
+				$loadTrigger.prop('disabled', triggerState.disabled);
+			}
+		}
+
+		function finishLoadProgress() {
+			if(useLoadProgress && dialogLoadStates[cloneId] === loadToken){
+				delete dialogLoadStates[cloneId];
+			}
+			clone.attr('aria-busy', 'false');
+			setLoadTriggerState(false);
+		}
+
+		function renderLoadFailure(message) {
+			if(!clone.length){
+				return;
+			}
+			clone
+				.attr('aria-busy', 'false')
+				.empty()
+				.append(
+					$('<div>', {
+						'class': 'dialog-load-state dialog-load-state--error',
+						'role': 'alert'
+					})
+						.append($('<div>', {
+							'class': 'dialog-load-state__error-icon',
+							'aria-hidden': 'true',
+							'text': '!'
+						}))
+						.append($('<strong>', {
+							'class': 'dialog-load-state__title',
+							'text': message
+						}))
+						.append($('<span>', {
+							'class': 'dialog-load-state__description',
+							'text': '창을 닫은 뒤 다시 시도해 주세요.'
+						}))
+						.append(
+							$('<button>', {
+								'type': 'button',
+								'class': 'ui-button ui-corner-all bottomBtn',
+								'text': '닫기'
+							}).on('click', function(){
+								clone.dialog('close');
+							})
+						)
+				);
+			var syncDialogLayer = clone.data('syncDialogLayer');
+			if(typeof syncDialogLayer === 'function'){
+				syncDialogLayer();
+			}
+		}
+
+		function initializeDialog() {
+			if(dialogInitialized || !clone.length){
+				return;
+			}
+			dialogInitialized = true;
+			clone.dialog({
 				appendTo: 'body',
 				dialogClass:dialogClassName,
 				modal:modal,
@@ -280,12 +393,131 @@ function openDialogPopup(url, param, dialogId, width, height, modal, extraDialog
 			},
 				close:function(ev,ui){
 					$(window).off('.popupRecenter-' + $(this).attr('id'));
+					finishLoadProgress();
 					$('body').css({"overflow":"auto"});
 					$(this).dialog('destroy').remove();
 				}
 			});
-		$('body').css({"overflow":"hidden"});
-	});
+			$('body').css({"overflow":"hidden"});
+		}
+
+		function syncLoadedDialog() {
+			setTimeout(function() {
+				var syncDialogLayer = clone.data('syncDialogLayer');
+				if(typeof syncDialogLayer === 'function') {
+					syncDialogLayer();
+					if(isDeferredInitialLayoutPopup){
+						var $widget = clone.dialog('widget');
+						if($widget.length){
+							$widget[0].style.setProperty('visibility', 'visible', 'important');
+						}
+					}
+				}
+			}, 0);
+		}
+
+		function loadPopupContent() {
+			if(!isCurrentLoad()){
+				return;
+			}
+
+			clone.load(url, param, function(responseText, textStatus, response){
+				if(!isCurrentLoad()){
+					return;
+				}
+
+				var responseStatus = response && response.status;
+				if(responseStatus === 403){
+					finishLoadProgress();
+					$(this).dialog('close');
+					alertMessage(g_msg("msg.accessDenied"));
+					return;
+				}
+				if(textStatus === 'error' || !responseStatus || responseStatus < 200 || responseStatus >= 400){
+					finishLoadProgress();
+					renderLoadFailure("상세정보를 불러오지 못했습니다.");
+					return;
+				}
+
+				finishLoadProgress();
+				syncLoadedDialog();
+			});
+
+			if(!useLoadProgress){
+				initializeDialog();
+			}
+		}
+
+		if(useLoadProgress){
+			setLoadTriggerState(true);
+			clone
+				.attr('aria-busy', 'true')
+				.empty()
+				.append(
+					$('<div>', {
+						'class': 'dialog-load-state',
+						'role': 'status',
+						'aria-live': 'polite',
+						'aria-atomic': 'true'
+					})
+						.append($('<div>', {
+							'class': 'dialog-load-state__spinner',
+							'aria-hidden': 'true'
+						}))
+						.append($('<strong>', {
+							'class': 'dialog-load-state__title',
+							'text': loadProgressText
+						}))
+						.append($('<span>', {
+							'class': 'dialog-load-state__description',
+							'text': loadProgressDescription
+						}))
+						.append(
+							$('<div>', {
+								'class': 'dialog-load-state__track',
+								'aria-hidden': 'true'
+							}).append($('<span>', {
+								'class': 'dialog-load-state__bar'
+							}))
+						)
+				);
+			initializeDialog();
+		}
+
+		if(useLoadProgress){
+			$.ajax({
+				url: CONTEXT_PATH + "/menu/getMenuNm",
+				type: "POST",
+				cache: false,
+				dataType: "json",
+				contentType: "application/json",
+				data: JSON.stringify({menuUrl: url})
+			})
+				.done(function(){
+					loadPopupContent();
+				})
+				.fail(function(response){
+					if(!isCurrentLoad()){
+						return;
+					}
+					finishLoadProgress();
+					if(response && response.status === 401){
+						parent.parent.location.href = "/login/loginPage";
+						return;
+					}
+					if(response && response.status === 403){
+						clone.dialog('close');
+						alertMessage(g_msg("msg.accessDenied"));
+						return;
+					}
+					renderLoadFailure("상세정보를 불러오지 못했습니다.");
+				});
+		}
+		else{
+			callAjax({menuUrl : url}, CONTEXT_PATH + "/menu/getMenuNm", function() {
+				loadPopupContent();
+			});
+		}
 }
 
 // 수정 코드

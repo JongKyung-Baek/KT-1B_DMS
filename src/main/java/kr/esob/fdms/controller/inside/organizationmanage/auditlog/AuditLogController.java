@@ -26,6 +26,7 @@ public class AuditLogController extends AbstractController {
         model.addAttribute("formInfo", JSONArray.fromObject(formService.selectFormInfo("formInsideAuditLog")));
         model.addAttribute("toolbarInfo", JSONArray.fromObject(toolbarService.selectToolbarInfo("toolbarInsideAuditLog")));
         model.addAttribute("gridInfo", JSONArray.fromObject(gridService.selectGridInfo("gridInsideAuditLogList")));
+        model.addAttribute("dashboardSummary", service.selectSummary());
 
         return "inside/organizationmanage/auditlog/auditlogList";
     }

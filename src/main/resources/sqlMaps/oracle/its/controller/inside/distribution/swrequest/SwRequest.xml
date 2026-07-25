@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper
 		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
@@ -25,11 +25,11 @@
 <!--				<when test='lastRevisionYn != null and !lastRevisionYn.equals("") and lastRevisionYn.equals("Y")'>-->
 <!--				FROM (-->
 <!--					SELECT info.BUSINESS_TYPE_CD													        AS businessTypeCd-->
-<!--					, FN_GET_CD_NM('businessTypeCd', info.BUSINESS_TYPE_CD, #{sessionLang}) 				AS businessTypeNm-->
+<!--					, FN_GET_CD_NM('businessTypeCd', info.BUSINESS_TYPE_CD, #{sessionLang})				AS businessTypeNm-->
 <!--					, info.SW_TYPE_CD																		AS swTypeCd-->
-<!--					, FN_GET_CD_NM('swClassCd1', info.SW_TYPE_CD, #{sessionLang}) 							AS swTypeNm-->
+<!--					, FN_GET_CD_NM('swClassCd1', info.SW_TYPE_CD, #{sessionLang})							AS swTypeNm-->
 <!--					, info.DISTRIBUTE_TYPE_CD															    AS distributeTypeCd-->
-<!--					, FN_GET_CD_NM('distributeTypeCd', info.DISTRIBUTE_TYPE_CD, #{sessionLang}) 			AS distributeTypeNm-->
+<!--					, FN_GET_CD_NM('distributeTypeCd', info.DISTRIBUTE_TYPE_CD, #{sessionLang})			AS distributeTypeNm-->
 <!--					, info.SW_NO																			AS swNo-->
 <!--					, info.SW_NM																			AS swNm-->
 <!--					, info.SW_VERSION_No																	AS swVersionNo-->
@@ -39,13 +39,13 @@
 <!--			        , info.UPDATE_UID																		AS updateUid-->
 <!--			        , info.ecn_insert_uid                                                                   AS ecn_insert_uid-->
 <!--					, info.REGISTER_USER																	AS registerUser-->
-<!--&lt;!&ndash; 					, insertUser.USER_NM																	AS insertUserNm &ndash;&gt;-->
+<!--&lt;!&ndash;					, insertUser.USER_NM																	AS insertUserNm &ndash;&gt;-->
 <!--					, info.INSERT_DEPT_NM																	AS insertDeptNm-->
 <!--					, info.STD_GAPP_DT																		AS stdGappDt-->
 <!--					, info.CHANGE_GAPP_DT																	AS changeGappDt-->
 <!--					, info.ECN_NO																			AS ecnNo-->
 <!--					, info.BUSINESS_AREA_CD																    AS businessAreaCd-->
-<!--					, FN_GET_CD_NM('businessAreaCdAll', info.BUSINESS_AREA_CD, #{sessionLang}) 				AS businessAreaNm-->
+<!--					, FN_GET_CD_NM('businessAreaCdAll', info.BUSINESS_AREA_CD, #{sessionLang})				AS businessAreaNm-->
 <!--					, info.PROTECT_YN																	    AS protectYn-->
 <!--					, info.PROTECT_YN                                                                       AS protectYnView-->
 <!--					, info.UPDATE_DT																	    AS updateDt-->
@@ -58,7 +58,7 @@
 <!--						FROM DOCS_SW_FILE swFile-->
 <!--						WHERE swFile.OBJECT_ID = info.OBJECT_ID-->
 <!--					)																						AS fileCount-->
-<!--					, DENSE_RANK() OVER (PARTITION BY SW_NO ORDER BY REV_NO DESC) 							AS rnk-->
+<!--					, DENSE_RANK() OVER (PARTITION BY SW_NO ORDER BY REV_NO DESC)							AS rnk-->
 <!--					, fileInfo.FILE_NO																		AS fileNo-->
 <!--					, fileInfo.ORG_FILE_NM																	AS fileViewNm-->
 <!--					, fileInfo.FILE_NM																		AS fileNm-->
@@ -73,11 +73,11 @@
 <!--				<otherwise>-->
 <!--				FROM (-->
 <!--					SELECT info.BUSINESS_TYPE_CD														    AS businessTypeCd-->
-<!--					, FN_GET_CD_NM('businessTypeCd', info.BUSINESS_TYPE_CD, #{sessionLang}) 				AS businessTypeNm-->
+<!--					, FN_GET_CD_NM('businessTypeCd', info.BUSINESS_TYPE_CD, #{sessionLang})				AS businessTypeNm-->
 <!--					, info.SW_TYPE_CD																		AS swTypeCd-->
-<!--					, FN_GET_CD_NM('swClassCd1', info.SW_TYPE_CD, #{sessionLang}) 		                    AS swTypeNm-->
+<!--					, FN_GET_CD_NM('swClassCd1', info.SW_TYPE_CD, #{sessionLang})		                    AS swTypeNm-->
 <!--					, info.DISTRIBUTE_TYPE_CD																AS distributeTypeCd-->
-<!--					, FN_GET_CD_NM('distributeTypeCd', info.DISTRIBUTE_TYPE_CD, #{sessionLang}) 			AS distributeTypeNm-->
+<!--					, FN_GET_CD_NM('distributeTypeCd', info.DISTRIBUTE_TYPE_CD, #{sessionLang})			AS distributeTypeNm-->
 <!--					, info.SW_NO																			AS swNo-->
 <!--					, info.SW_NM																			AS swNm-->
 <!--					, info.SW_VERSION_No																	AS swVersionNo-->
@@ -87,13 +87,13 @@
 <!--					, info.UPDATE_UID																	    AS updateUid-->
 <!--					, info.ecn_insert_uid                                                                   AS ecn_insert_uid-->
 <!--					, info.REGISTER_USER																	AS registerUser-->
-<!--&lt;!&ndash; 					, insertUser.USER_NM																	AS insertUserNm &ndash;&gt;-->
+<!--&lt;!&ndash;					, insertUser.USER_NM																	AS insertUserNm &ndash;&gt;-->
 <!--					, info.INSERT_DEPT_NM																	AS insertDeptNm-->
 <!--					, info.STD_GAPP_DT																		AS stdGappDt-->
 <!--					, info.CHANGE_GAPP_DT																	AS changeGappDt-->
 <!--					, info.ECN_NO																		    AS ecnNo-->
 <!--					, info.BUSINESS_AREA_CD																    AS businessAreaCd-->
-<!--					, FN_GET_CD_NM('businessAreaCdAll', info.BUSINESS_AREA_CD, #{sessionLang}) 				AS businessAreaNm-->
+<!--					, FN_GET_CD_NM('businessAreaCdAll', info.BUSINESS_AREA_CD, #{sessionLang})				AS businessAreaNm-->
 <!--					, info.PROTECT_YN																		AS protectYn-->
 <!--					, info.PROTECT_YN                                                                       AS protectYnView-->
 <!--					, info.UPDATE_DT																		AS updateDt-->
@@ -105,7 +105,7 @@
 <!--						SELECT COUNT(*)-->
 <!--						FROM DOCS_SW_FILE swFile-->
 <!--						WHERE swFile.OBJECT_ID = info.OBJECT_ID-->
-<!--					) 																						AS fileCount-->
+<!--					)																						AS fileCount-->
 <!--					, fileInfo.FILE_NO																		AS fileNo-->
 <!--					, fileInfo.ORG_FILE_NM																	AS fileViewNm-->
 <!--					, fileInfo.FILE_NM																		AS fileNm-->
@@ -190,11 +190,11 @@
 <!--				</if>-->
 
 <!--				<if test='sortColumn == null or "".equals(sortColumn)'>-->
-<!--	           		ORDER BY  insertDT DESC, swNo, revNo DESC, fileNo-->
+<!--			ORDER BY  insertDT DESC, swNo, revNo DESC, fileNo-->
 <!--				</if>-->
-<!--	         	<if test='sortColumn != null and !"".equals(sortColumn)'>-->
-<!--	         		ORDER BY ${sortColumn} ${order}-->
-<!--	         	</if>-->
+<!--		<if test='sortColumn != null and !"".equals(sortColumn)'>-->
+<!--			ORDER BY ${sortColumn} ${order}-->
+<!--		</if>-->
 <!--			) A1-->
 <!--			<if test='end != null and !end.equals("")'>-->
 <!--			WHERE ROWNUM <![CDATA[ <= ]]> #{end}-->
@@ -221,11 +221,11 @@
 <!--						<when test='lastRevisionYn != null and !lastRevisionYn.equals("") and lastRevisionYn.equals("Y")'>-->
 <!--						FROM (-->
 <!--							SELECT info.BUSINESS_TYPE_CD													        AS businessTypeCd-->
-<!--							, FN_GET_CD_NM('businessTypeCd', info.BUSINESS_TYPE_CD, #{sessionLang}) 				AS businessTypeNm-->
+<!--							, FN_GET_CD_NM('businessTypeCd', info.BUSINESS_TYPE_CD, #{sessionLang})				AS businessTypeNm-->
 <!--							, info.SW_TYPE_CD																		AS swTypeCd-->
-<!--							, FN_GET_CD_NM('swTypeCd', info.SW_TYPE_CD, #{sessionLang}) 							AS swTypeNm-->
+<!--							, FN_GET_CD_NM('swTypeCd', info.SW_TYPE_CD, #{sessionLang})							AS swTypeNm-->
 <!--							, info.DISTRIBUTE_TYPE_CD															    AS distributeTypeCd-->
-<!--							, FN_GET_CD_NM('distributeTypeCd', info.DISTRIBUTE_TYPE_CD, #{sessionLang}) 			AS distributeTypeNm-->
+<!--							, FN_GET_CD_NM('distributeTypeCd', info.DISTRIBUTE_TYPE_CD, #{sessionLang})			AS distributeTypeNm-->
 <!--							, info.SW_NO																			AS swNo-->
 <!--							, info.SW_NM																			AS swNm-->
 <!--							, info.SW_VERSION_No																	AS swVersionNo-->
@@ -234,13 +234,13 @@
 <!--							, info.INSERT_UID																		AS insertUid-->
 <!--					        , info.UPDATE_UID																		AS updateUid-->
 <!--					        , info.ecn_insert_uid                                                                   AS ecn_insert_uid-->
-<!--		&lt;!&ndash; 					, insertUser.USER_NM																	AS insertUserNm &ndash;&gt;-->
+<!--		&lt;!&ndash;					, insertUser.USER_NM																	AS insertUserNm &ndash;&gt;-->
 <!--							, info.INSERT_DEPT_NM																	AS insertDeptNm-->
 <!--							, info.STD_GAPP_DT																		AS stdGappDt-->
 <!--							, info.CHANGE_GAPP_DT																	AS changeGappDt-->
 <!--							, info.ECN_NO																			AS ecnNo-->
 <!--							, info.BUSINESS_AREA_CD																    AS businessAreaCd-->
-<!--							, FN_GET_CD_NM('businessAreaCdAll', info.BUSINESS_AREA_CD, #{sessionLang}) 				AS businessAreaNm-->
+<!--							, FN_GET_CD_NM('businessAreaCdAll', info.BUSINESS_AREA_CD, #{sessionLang})				AS businessAreaNm-->
 <!--							, info.PROTECT_YN																	    AS protectYn-->
 <!--							, info.PROTECT_YN                                                                       AS protectYnView-->
 <!--							, info.UPDATE_DT																	    AS updateDt-->
@@ -253,7 +253,7 @@
 <!--								FROM DOCS_SW_FILE swFile-->
 <!--								WHERE swFile.OBJECT_ID = info.OBJECT_ID-->
 <!--							)																						AS fileCount-->
-<!--							, DENSE_RANK() OVER (PARTITION BY SW_NO ORDER BY REV_NO DESC) 							AS rnk-->
+<!--							, DENSE_RANK() OVER (PARTITION BY SW_NO ORDER BY REV_NO DESC)							AS rnk-->
 <!--							, fileInfo.FILE_NO																		AS fileNo-->
 <!--							, fileInfo.ORG_FILE_NM																	AS fileViewNm-->
 <!--							, fileInfo.FILE_NM																		AS fileNm-->
@@ -268,11 +268,11 @@
 <!--						<otherwise>-->
 <!--						FROM (-->
 <!--							SELECT info.BUSINESS_TYPE_CD														    AS businessTypeCd-->
-<!--							, FN_GET_CD_NM('businessTypeCd', info.BUSINESS_TYPE_CD, #{sessionLang}) 				AS businessTypeNm-->
+<!--							, FN_GET_CD_NM('businessTypeCd', info.BUSINESS_TYPE_CD, #{sessionLang})				AS businessTypeNm-->
 <!--							, info.SW_TYPE_CD																		AS swTypeCd-->
-<!--							, FN_GET_CD_NM('swTypeCd', info.SW_TYPE_CD, #{sessionLang}) 		AS swTypeNm-->
+<!--							, FN_GET_CD_NM('swTypeCd', info.SW_TYPE_CD, #{sessionLang})		AS swTypeNm-->
 <!--							, info.DISTRIBUTE_TYPE_CD																AS distributeTypeCd-->
-<!--							, FN_GET_CD_NM('distributeTypeCd', info.DISTRIBUTE_TYPE_CD, #{sessionLang}) 			AS distributeTypeNm-->
+<!--							, FN_GET_CD_NM('distributeTypeCd', info.DISTRIBUTE_TYPE_CD, #{sessionLang})			AS distributeTypeNm-->
 <!--							, info.SW_NO																			AS swNo-->
 <!--							, info.SW_NM																			AS swNm-->
 <!--							, info.SW_VERSION_No																	AS swVersionNo-->
@@ -281,13 +281,13 @@
 <!--							, info.INSERT_UID																		AS insertUid-->
 <!--							, info.UPDATE_UID																	    AS updateUid-->
 <!--							, info.ecn_insert_uid                                                                   AS ecn_insert_uid-->
-<!--		&lt;!&ndash; 					, insertUser.USER_NM																	AS insertUserNm &ndash;&gt;-->
+<!--		&lt;!&ndash;					, insertUser.USER_NM																	AS insertUserNm &ndash;&gt;-->
 <!--							, info.INSERT_DEPT_NM																	AS insertDeptNm-->
 <!--							, info.STD_GAPP_DT																		AS stdGappDt-->
 <!--							, info.CHANGE_GAPP_DT																	AS changeGappDt-->
 <!--							, info.ECN_NO																		    AS ecnNo-->
 <!--							, info.BUSINESS_AREA_CD																    AS businessAreaCd-->
-<!--							, FN_GET_CD_NM('businessAreaCdAll', info.BUSINESS_AREA_CD, #{sessionLang}) 				AS businessAreaNm-->
+<!--							, FN_GET_CD_NM('businessAreaCdAll', info.BUSINESS_AREA_CD, #{sessionLang})				AS businessAreaNm-->
 <!--							, info.PROTECT_YN																		AS protectYn-->
 <!--							, info.PROTECT_YN                                                                       AS protectYnView-->
 <!--							, info.UPDATE_DT																		AS updateDt-->
@@ -299,7 +299,7 @@
 <!--								SELECT COUNT(*)-->
 <!--								FROM DOCS_SW_FILE swFile-->
 <!--								WHERE swFile.OBJECT_ID = info.OBJECT_ID-->
-<!--							) 																						AS fileCount-->
+<!--							)																						AS fileCount-->
 <!--							, fileInfo.FILE_NO																		AS fileNo-->
 <!--							, fileInfo.ORG_FILE_NM																	AS fileViewNm-->
 <!--							, fileInfo.FILE_NM																		AS fileNm-->
@@ -579,6 +579,9 @@
 		FROM (
 		SELECT
 		info.*,
+		securityGrade.grade_cd AS gradeCd,
+		securityGrade.grade_nm AS gradeNm,
+		securityGrade.grade_level AS gradeLevel,
 		insertUser.USER_NM AS insertUserNm,
 		updateUser.USER_NM AS updateUserNm,
 		ecnInsert.USER_NM AS ecnUserNm
@@ -591,7 +594,7 @@
 				info.SW_TYPE_CD AS swTypeCd,
 				FN_GET_CD_NM('swClassCd1', info.SW_TYPE_CD, 'ko') AS swTypeNm,
 				info.DISTRIBUTE_TYPE_CD AS distributeTypeCd,
--- 				FN_GET_CD_NM('distributeTypeCd', info.DISTRIBUTE_TYPE_CD, 'ko') AS distributeTypeNm,
+--				FN_GET_CD_NM('distributeTypeCd', info.DISTRIBUTE_TYPE_CD, 'ko') AS distributeTypeNm,
 				info.DISTRIBUTE_TYPE_NAME AS distributeTypeNm,
 				info.SW_NO AS swNo,
 				info.SW_NM AS swNm,
@@ -659,7 +662,7 @@
 				info.SW_TYPE_CD AS swTypeCd,
 				FN_GET_CD_NM('swClassCd1', info.SW_TYPE_CD, 'ko') AS swTypeNm,
 				info.DISTRIBUTE_TYPE_CD AS distributeTypeCd,
--- 				FN_GET_CD_NM('distributeTypeCd', info.DISTRIBUTE_TYPE_CD, 'ko') AS distributeTypeNm,
+--				FN_GET_CD_NM('distributeTypeCd', info.DISTRIBUTE_TYPE_CD, 'ko') AS distributeTypeNm,
 				info.DISTRIBUTE_TYPE_NAME AS distributeTypeNm,
 				info.SW_NO AS swNo,
 				info.SW_NM AS swNm,
@@ -808,6 +811,19 @@
 		LEFT JOIN DOCS_USER insertUser ON insertUser.USER_ID = info.insertUid
 		LEFT JOIN DOCS_USER updateUser ON updateUser.USER_ID = info.updateUid
 		LEFT JOIN DOCS_USER ecnInsert ON ecnInsert.USER_ID = info.ecn_insert_uid
+		LEFT JOIN LATERAL (
+			SELECT label.grade_cd,
+			       grade.grade_nm,
+			       grade.grade_level
+			FROM docs_file_security_label label
+			LEFT JOIN docs_security_grade grade ON grade.grade_cd = label.grade_cd
+			WHERE label.object_type = 'SW'
+			  AND label.object_id = info.objectId
+			  AND label.file_no IN (CAST(info.fileNo AS TEXT), '*')
+			ORDER BY grade.grade_level DESC NULLS LAST,
+			         CASE WHEN label.file_no = CAST(info.fileNo AS TEXT) THEN 0 ELSE 1 END
+			LIMIT 1
+		) securityGrade ON TRUE
 		<if test='lastRevisionYn != null and !lastRevisionYn.equals("") and lastRevisionYn.equals("Y")'>
 			WHERE rnk = 1
 		</if>
@@ -848,7 +864,7 @@
 				info.SW_TYPE_CD AS swTypeCd,
 				FN_GET_CD_NM('swTypeCd', info.SW_TYPE_CD, 'ko') AS swTypeNm,
 				info.DISTRIBUTE_TYPE_CD AS distributeTypeCd,
--- 				FN_GET_CD_NM('distributeTypeCd', info.DISTRIBUTE_TYPE_CD, 'ko') AS distributeTypeNm,
+--				FN_GET_CD_NM('distributeTypeCd', info.DISTRIBUTE_TYPE_CD, 'ko') AS distributeTypeNm,
 				info.DISTRIBUTE_TYPE_NAME AS distributeTypeNm,
 				info.SW_NO AS swNo,
 				info.SW_NM AS swNm,
@@ -892,7 +908,7 @@
 				info.SW_TYPE_CD AS swTypeCd,
 				FN_GET_CD_NM('swTypeCd', info.SW_TYPE_CD, 'ko') AS swTypeNm,
 				info.DISTRIBUTE_TYPE_CD AS distributeTypeCd,
--- 				FN_GET_CD_NM('distributeTypeCd', info.DISTRIBUTE_TYPE_CD, 'ko') AS distributeTypeNm,
+--				FN_GET_CD_NM('distributeTypeCd', info.DISTRIBUTE_TYPE_CD, 'ko') AS distributeTypeNm,
 				info.DISTRIBUTE_TYPE_NAME AS distributeTypeNm,
 				info.SW_NO AS swNo,
 				info.SW_NM AS swNm,
@@ -1203,10 +1219,26 @@
 		       fileInfo.FILE_NO AS "fileNo",
 		       fileInfo.ORG_FILE_NM AS "orgFileNm",
 		       fileInfo.FILE_SIZE AS "fileSize",
+		       securityGrade.grade_cd AS "gradeCd",
+		       securityGrade.grade_nm AS "gradeNm",
+		       securityGrade.grade_level AS "gradeLevel",
 		       COALESCE(fileInfo.PROCESSING_STATUS, '') AS "processingStatus",
 		       fileInfo.FILE_PATH_NM AS "filePath"
 		FROM DOCS_SW sw
 		JOIN DOCS_SW_FILE fileInfo ON fileInfo.OBJECT_ID = sw.OBJECT_ID
+		LEFT JOIN LATERAL (
+			SELECT label.grade_cd,
+			       grade.grade_nm,
+			       grade.grade_level
+			FROM docs_file_security_label label
+			LEFT JOIN docs_security_grade grade ON grade.grade_cd = label.grade_cd
+			WHERE label.object_type = 'SW'
+			  AND label.object_id = sw.OBJECT_ID
+			  AND label.file_no IN (CAST(fileInfo.FILE_NO AS TEXT), '*')
+			ORDER BY grade.grade_level DESC NULLS LAST,
+			         CASE WHEN label.file_no = CAST(fileInfo.FILE_NO AS TEXT) THEN 0 ELSE 1 END
+			LIMIT 1
+		) securityGrade ON TRUE
 		WHERE sw.OBJECT_ID = #{objectId}
 		  AND COALESCE(sw.DELETED_YN, 'N') = 'N'
 		  AND CAST(fileInfo.FILE_NO AS INTEGER) = 1
@@ -1219,8 +1251,32 @@
 		       fileInfo.FILE_NO AS "fileNo",
 		       fileInfo.ORG_FILE_NM AS "orgFileNm",
 		       fileInfo.FILE_SIZE AS "fileSize",
+		       securityGrade.grade_cd AS "gradeCd",
+		       securityGrade.grade_nm AS "gradeNm",
+		       securityGrade.grade_level AS "gradeLevel",
 		       fileInfo.FILE_PATH_NM AS "filePath"
 		FROM DOCS_SW_SUB_FILE fileInfo
+		LEFT JOIN LATERAL (
+			SELECT label.grade_cd,
+			       grade.grade_nm,
+			       grade.grade_level
+			FROM docs_file_security_label label
+			LEFT JOIN docs_security_grade grade ON grade.grade_cd = label.grade_cd
+			WHERE label.object_id = fileInfo.PARENT_OBJECT_ID
+			  AND (
+				      (label.object_type = 'SW_SUB'
+				       AND label.file_no IN (CAST(fileInfo.FILE_NO AS TEXT), '*'))
+				   OR (label.object_type = 'SW' AND label.file_no = '*')
+			  )
+			ORDER BY grade.grade_level DESC NULLS LAST,
+			         CASE
+				         WHEN label.object_type = 'SW_SUB'
+				          AND label.file_no = CAST(fileInfo.FILE_NO AS TEXT) THEN 0
+				         WHEN label.object_type = 'SW_SUB' AND label.file_no = '*' THEN 1
+				         ELSE 2
+			         END
+			LIMIT 1
+		) securityGrade ON TRUE
 		WHERE fileInfo.PARENT_OBJECT_ID = #{objectId}
 		  AND COALESCE(fileInfo.USE_YN, 'Y') = 'Y'
 		ORDER BY CAST(fileInfo.FILE_NO AS INTEGER)
@@ -1299,6 +1355,385 @@
 		<foreach collection="names" item="name" open="(" separator="," close=")">
 			#{name}
 		</foreach>)
+	</select>
+
+	<sql id="dashboardCommonCtes">
+		actor_context AS (
+			SELECT userInfo.USER_CD AS user_cd,
+			       userInfo.USER_ID AS user_id,
+			       currentClearance.GRADE_CD AS user_grade_cd,
+			       currentClearance.GRADE_NM AS user_grade_nm,
+			       COALESCE(currentClearance.GRADE_LEVEL, -1) AS user_grade_level,
+			       currentClearance.VALID_FROM AS user_grade_valid_from,
+			       currentClearance.VALID_TO AS user_grade_valid_to,
+			       CASE WHEN EXISTS (
+					SELECT 1
+					FROM DOCS_USER_ACTION_PERMISSION listPermission
+					WHERE listPermission.USER_CD = userInfo.USER_CD
+					  AND listPermission.ACTION_CD = 'LIST'
+					  AND listPermission.ALLOW_YN = 'Y'
+			       ) THEN 'Y' ELSE 'N' END AS list_yn,
+			       CASE WHEN EXISTS (
+					SELECT 1
+					FROM DOCS_USER_ACTION_PERMISSION viewPermission
+					WHERE viewPermission.USER_CD = userInfo.USER_CD
+					  AND viewPermission.ACTION_CD = 'VIEW'
+					  AND viewPermission.ALLOW_YN = 'Y'
+			       ) THEN 'Y' ELSE 'N' END AS view_yn,
+			       CASE WHEN EXISTS (
+					SELECT 1
+					FROM DOCS_USER_ACTION_PERMISSION downloadPermission
+					WHERE downloadPermission.USER_CD = userInfo.USER_CD
+					  AND downloadPermission.ACTION_CD = 'DOWNLOAD_ORIGINAL'
+					  AND downloadPermission.ALLOW_YN = 'Y'
+			       ) THEN 'Y' ELSE 'N' END AS download_original_yn,
+			       CASE WHEN EXISTS (
+					SELECT 1
+					FROM DOCS_USER_ACTION_PERMISSION printPermission
+					WHERE printPermission.USER_CD = userInfo.USER_CD
+					  AND printPermission.ACTION_CD = 'PRINT'
+					  AND printPermission.ALLOW_YN = 'Y'
+			       ) THEN 'Y' ELSE 'N' END AS print_yn
+			FROM DOCS_USER userInfo
+			LEFT JOIN LATERAL (
+				SELECT userGrade.GRADE_CD,
+				       userGrade.GRADE_NM,
+				       userGrade.GRADE_LEVEL,
+				       clearance.VALID_FROM,
+				       clearance.VALID_TO
+				FROM DOCS_USER_SECURITY_CLEARANCE clearance
+				JOIN DOCS_SECURITY_GRADE userGrade
+				  ON userGrade.GRADE_CD = clearance.GRADE_CD
+				 AND userGrade.USE_YN = 'Y'
+				WHERE clearance.USER_CD = userInfo.USER_CD
+				  AND clearance.VALID_FROM &lt;= CURRENT_TIMESTAMP
+				  AND (clearance.VALID_TO IS NULL OR clearance.VALID_TO &gt; CURRENT_TIMESTAMP)
+				ORDER BY userGrade.GRADE_LEVEL DESC,
+				         clearance.VALID_TO DESC NULLS FIRST,
+				         clearance.VALID_FROM DESC
+				LIMIT 1
+			) currentClearance ON TRUE
+			WHERE userInfo.USER_CD = #{userCd}
+			  AND userInfo.USE_YN = 'Y'
+			  AND userInfo.DEL_YN = 'N'
+			  AND COALESCE(userInfo.LOCK_YN, 'N') != 'Y'
+		),
+		latest_sw AS (
+			SELECT DISTINCT ON (sw.OBJECT_ID) sw.*
+			FROM DOCS_SW sw
+			WHERE COALESCE(sw.DELETED_YN, 'N') != 'Y'
+			  AND sw.OBJECT_ID IS NOT NULL
+			ORDER BY sw.OBJECT_ID,
+			         COALESCE(sw.INTERFACE_DT, sw.UPDATE_DT, sw.INSERT_DT, sw.CREATE_DT) DESC NULLS LAST,
+			         sw.CN_SERIAL DESC NULLS LAST
+		),
+		document_scope AS (
+			SELECT sw.*,
+			       fileGrade.GRADE_CD AS dashboard_grade_cd,
+			       fileGrade.GRADE_NM AS dashboard_grade_nm,
+			       fileGrade.GRADE_LEVEL AS dashboard_grade_level
+			FROM latest_sw sw
+			CROSS JOIN actor_context actor
+			LEFT JOIN LATERAL (
+				SELECT securityLabel.GRADE_CD
+				FROM DOCS_FILE_SECURITY_LABEL securityLabel
+				LEFT JOIN DOCS_SECURITY_GRADE candidateGrade
+				  ON candidateGrade.GRADE_CD = securityLabel.GRADE_CD
+				WHERE securityLabel.OBJECT_TYPE = 'SW'
+				  AND securityLabel.OBJECT_ID = sw.OBJECT_ID
+				  AND securityLabel.FILE_NO = '*'
+				ORDER BY candidateGrade.GRADE_LEVEL DESC NULLS LAST,
+				         securityLabel.LABEL_ID DESC
+				LIMIT 1
+			) effectiveLabel ON TRUE
+			LEFT JOIN DOCS_SECURITY_GRADE fileGrade
+			  ON fileGrade.GRADE_CD = effectiveLabel.GRADE_CD
+			 AND fileGrade.USE_YN = 'Y'
+			WHERE fileGrade.GRADE_CD IS NOT NULL
+			  AND actor.user_grade_level &gt;= fileGrade.GRADE_LEVEL
+			  AND EXISTS (
+					SELECT 1
+					FROM DOCS_USER_ACTION_PERMISSION actionPermission
+					WHERE actionPermission.USER_CD = actor.user_cd
+					  AND actionPermission.ACTION_CD = 'LIST'
+					  AND actionPermission.ALLOW_YN = 'Y'
+			  )
+			  AND EXISTS (
+					SELECT 1
+					FROM DOCS_OBJECT_USER_PERMISSION objectPermission
+					WHERE objectPermission.OBJECT_TYPE = 'SW'
+					  AND objectPermission.OBJECT_ID = sw.OBJECT_ID
+					  AND objectPermission.USER_CD = actor.user_cd
+					  AND objectPermission.ACTION_CD = 'LIST'
+					  AND objectPermission.ALLOW_YN = 'Y'
+			  )
+		)
+	</sql>
+
+	<select id="selectDashboardSummary" resultType="hashmap">
+		WITH
+		<include refid="dashboardCommonCtes"/>
+		SELECT scopeCount.total_document_count AS "totalDocumentCount",
+		       scopeCount.total_document_count AS "accessibleDocumentCount",
+		       scopeCount.approved_document_count AS "approvedDocumentCount",
+		       scopeCount.approval_pending_count AS "approvalPendingCount",
+		       scopeCount.recent_document_count AS "recentDocumentCount",
+		       COALESCE(actor.user_grade_cd, 'UNASSIGNED') AS "userGradeCd",
+		       COALESCE(actor.user_grade_nm, '미인가') AS "userGradeNm",
+		       actor.user_grade_level::integer AS "userGradeLevel",
+		       TO_CHAR(
+			actor.user_grade_valid_from AT TIME ZONE 'Asia/Seoul',
+			'YYYY-MM-DD'
+		       ) AS "clearanceValidFrom",
+		       TO_CHAR(
+			actor.user_grade_valid_to AT TIME ZONE 'Asia/Seoul',
+			'YYYY-MM-DD'
+		       ) AS "clearanceValidTo",
+		       actor.list_yn AS "listAllowedYn",
+		       actor.view_yn AS "viewAllowedYn",
+		       actor.download_original_yn AS "downloadAllowedYn",
+		       actor.print_yn AS "printAllowedYn",
+		       (
+			SELECT COUNT(*)::integer
+			FROM DOCS_ACCESS_AUDIT_LOG auditLog
+			WHERE auditLog.OCCURRED_AT &gt;= CURRENT_TIMESTAMP - INTERVAL '7 days'
+			  AND auditLog.RESULT_CD = 'DENY'
+			  AND auditLog.OBJECT_TYPE IN ('SW', 'SW_SUB')
+			  AND auditLog.ACTOR_USER_CD = actor.user_cd
+		       ) AS "recentDeniedCount",
+		       (
+			SELECT COUNT(DISTINCT failedFile.OBJECT_ID)::integer
+			FROM (
+				SELECT mainFile.OBJECT_ID
+				FROM DOCS_SW_FILE mainFile
+				WHERE UPPER(COALESCE(mainFile.PROCESSING_STATUS, '')) = 'FAIL'
+				UNION ALL
+				SELECT subFile.PARENT_OBJECT_ID AS OBJECT_ID
+				FROM DOCS_SW_SUB_FILE subFile
+				WHERE UPPER(COALESCE(subFile.PROCESSING_STATUS, '')) = 'FAIL'
+			) failedFile
+			JOIN document_scope scopedDocument
+			  ON scopedDocument.OBJECT_ID = failedFile.OBJECT_ID
+		       ) AS "processingFailureCount",
+		       (
+			SELECT COUNT(*)::integer
+			FROM DOCS_HISTORY viewHistory
+			WHERE viewHistory.INSERT_DATE &gt;= CURRENT_TIMESTAMP - INTERVAL '30 days'
+			  AND viewHistory.DISTRIBUTION_TYPE = 'CCB'
+			  AND viewHistory.LOG_TYPE = 'VIEWING'
+			  AND viewHistory.USER_ID = actor.user_id
+		       ) AS "viewCount30Days",
+		       (
+			SELECT COUNT(*)::integer
+			FROM DOCS_ACCESS_AUDIT_LOG auditLog
+			WHERE auditLog.OCCURRED_AT &gt;= CURRENT_TIMESTAMP - INTERVAL '30 days'
+			  AND auditLog.EVENT_TYPE = 'DOWNLOAD_RESULT'
+			  AND auditLog.ACTION_TYPE = 'DOWNLOAD_ORIGINAL'
+			  AND auditLog.RESULT_CD = 'SUCCESS'
+			  AND auditLog.OBJECT_TYPE IN ('SW', 'SW_SUB')
+			  AND auditLog.ACTOR_USER_CD = actor.user_cd
+		       ) AS "downloadCount30Days",
+		       (
+			SELECT COUNT(DISTINCT printJob.PRINT_JOB_ID)::integer
+			FROM DOCS_PRINT_JOB printJob
+			JOIN DOCS_PRINT_JOB_ITEM printItem
+			  ON printItem.PRINT_JOB_ID = printJob.PRINT_JOB_ID
+			WHERE printJob.COMPLETED_AT &gt;= CURRENT_TIMESTAMP - INTERVAL '30 days'
+			  AND printJob.STATUS_CD = 'SUCCESS'
+			  AND printItem.OBJECT_TYPE IN ('SW', 'SW_SUB')
+			  AND printJob.ACTOR_USER_CD = actor.user_cd
+		       ) AS "printCount30Days",
+		       TO_CHAR(CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul', 'YYYY-MM-DD HH24:MI') AS "generatedAt"
+		FROM actor_context actor
+		CROSS JOIN (
+			SELECT COUNT(*)::integer AS total_document_count,
+			       COUNT(*) FILTER (
+				WHERE documentInfo.STATUS = '승인완료'
+				   OR COALESCE(documentInfo.STATUS_CD, '') IN ('APPROVAL', 'ACCEPT', 'COMPLETE')
+			       )::integer AS approved_document_count,
+			       COUNT(*) FILTER (
+				WHERE COALESCE(documentInfo.STATUS, '') != '승인완료'
+				  AND COALESCE(documentInfo.STATUS_CD, '') NOT IN ('APPROVAL', 'ACCEPT', 'COMPLETE')
+			       )::integer AS approval_pending_count,
+			       COUNT(*) FILTER (
+				WHERE COALESCE(documentInfo.CREATE_DT, documentInfo.INSERT_DT, documentInfo.INPUT_DATE)
+				      &gt;= CURRENT_DATE - INTERVAL '30 days'
+			       )::integer AS recent_document_count
+			FROM document_scope documentInfo
+		) scopeCount
+	</select>
+
+	<select id="selectDashboardGradeDistribution" resultType="hashmap">
+		WITH
+		<include refid="dashboardCommonCtes"/>,
+		grade_catalog AS (
+			SELECT grade.GRADE_CD,
+			       grade.GRADE_NM,
+			       grade.GRADE_LEVEL,
+			       grade.GRADE_LEVEL AS sort_level
+			FROM DOCS_SECURITY_GRADE grade
+			WHERE grade.USE_YN = 'Y'
+			UNION ALL
+			SELECT 'UNASSIGNED', '미지정', 0, 2147483647
+		),
+		grade_count AS (
+			SELECT COALESCE(documentInfo.dashboard_grade_cd, 'UNASSIGNED') AS grade_cd,
+			       COUNT(*)::integer AS document_count
+			FROM document_scope documentInfo
+			GROUP BY COALESCE(documentInfo.dashboard_grade_cd, 'UNASSIGNED')
+		),
+		document_total AS (
+			SELECT COUNT(*)::numeric AS total_count
+			FROM document_scope
+		)
+		SELECT gradeCatalog.GRADE_CD AS "gradeCd",
+		       gradeCatalog.GRADE_NM AS "gradeNm",
+		       gradeCatalog.GRADE_LEVEL::integer AS "gradeLevel",
+		       COALESCE(gradeCount.document_count, 0)::integer AS "documentCount",
+		       CASE WHEN documentTotal.total_count = 0 THEN 0
+		            ELSE ROUND(
+			COALESCE(gradeCount.document_count, 0) * 100.0
+			/ documentTotal.total_count
+		            )::integer
+		       END AS "percentage"
+		FROM grade_catalog gradeCatalog
+		CROSS JOIN document_total documentTotal
+		LEFT JOIN grade_count gradeCount
+		  ON gradeCount.grade_cd = gradeCatalog.GRADE_CD
+		ORDER BY gradeCatalog.sort_level, gradeCatalog.GRADE_CD
+	</select>
+
+	<select id="selectDashboardStatusDistribution" resultType="hashmap">
+		WITH
+		<include refid="dashboardCommonCtes"/>
+		SELECT COALESCE(NULLIF(TRIM(documentInfo.STATUS), ''), '상태 미지정') AS "statusNm",
+		       COUNT(*)::integer AS "documentCount",
+		       ROUND(
+			COUNT(*) * 100.0 / NULLIF(SUM(COUNT(*)) OVER (), 0)
+		       )::integer AS "percentage"
+		FROM document_scope documentInfo
+		GROUP BY COALESCE(NULLIF(TRIM(documentInfo.STATUS), ''), '상태 미지정')
+		ORDER BY COUNT(*) DESC, "statusNm"
+	</select>
+
+	<select id="selectDashboardRecentDocuments" resultType="hashmap">
+		WITH
+		<include refid="dashboardCommonCtes"/>
+		SELECT documentInfo.OBJECT_ID AS "objectId",
+		       COALESCE(NULLIF(documentInfo.SW_NO, ''), '-') AS "swNo",
+		       COALESCE(
+			NULLIF(documentInfo.SW_NM, ''),
+			NULLIF(documentInfo.DRAWING_TITLE, ''),
+			NULLIF(documentInfo.ORG_FILE_NAME, ''),
+			NULLIF(documentInfo.FILE_NAME, ''),
+			'제목 없음'
+		       ) AS "documentName",
+		       COALESCE(NULLIF(documentInfo.STATUS, ''), '상태 미지정') AS "statusNm",
+		       COALESCE(documentInfo.dashboard_grade_cd, 'UNASSIGNED') AS "gradeCd",
+		       COALESCE(documentInfo.dashboard_grade_nm, '미지정') AS "gradeNm",
+		       COALESCE(documentInfo.dashboard_grade_level, 0)::integer AS "gradeLevel",
+		       COALESCE(NULLIF(documentInfo.REGISTER_USER, ''), NULLIF(documentInfo.INSERT_UID, ''), '-') AS "registerUser",
+		       COALESCE(documentInfo.REQUESTED_NO, '') AS "requestNo",
+		       TO_CHAR(
+			COALESCE(documentInfo.CREATE_DT, documentInfo.INSERT_DT, documentInfo.INPUT_DATE),
+			'YYYY-MM-DD'
+		       ) AS "registeredAt",
+		       (
+			SELECT COUNT(*)::integer
+			FROM DOCS_SW_FILE fileInfo
+			WHERE fileInfo.OBJECT_ID = documentInfo.OBJECT_ID
+		       ) AS "fileCount"
+		FROM document_scope documentInfo
+		ORDER BY COALESCE(documentInfo.CREATE_DT, documentInfo.INSERT_DT, documentInfo.INPUT_DATE) DESC NULLS LAST,
+		         documentInfo.OBJECT_ID
+		LIMIT 6
+	</select>
+
+	<select id="selectDashboardRecentActivities" resultType="hashmap">
+		WITH
+		<include refid="dashboardCommonCtes"/>,
+		activity_event AS (
+			SELECT ('VIEW-' || ROW_NUMBER() OVER (
+				ORDER BY viewHistory.INSERT_DATE, viewHistory.OBJECT_ID
+			)) AS event_id,
+			       viewHistory.INSERT_DATE AS occurred_at,
+			       'VIEW' AS action_type,
+			       'ALLOW' AS result_cd,
+			       'VIEWING_HISTORY' AS reason_cd,
+			       COALESCE(NULLIF(viewHistory.USER_NM, ''), NULLIF(viewHistory.USER_ID, ''), '-') AS actor_name,
+			       viewHistory.USER_ID AS actor_user_id,
+			       NULL::varchar AS actor_user_cd,
+			       'SW' AS object_type,
+			       viewHistory.OBJECT_ID AS object_id
+			FROM DOCS_HISTORY viewHistory
+			WHERE viewHistory.DISTRIBUTION_TYPE = 'CCB'
+			  AND viewHistory.LOG_TYPE = 'VIEWING'
+			UNION ALL
+			SELECT ('AUDIT-' || auditLog.EVENT_ID) AS event_id,
+			       auditLog.OCCURRED_AT AT TIME ZONE 'Asia/Seoul' AS occurred_at,
+			       auditLog.ACTION_TYPE AS action_type,
+			       auditLog.RESULT_CD AS result_cd,
+			       auditLog.REASON_CD AS reason_cd,
+			       COALESCE(NULLIF(auditLog.ACTOR_USER_NM, ''), NULLIF(auditLog.ACTOR_USER_ID, ''), '-') AS actor_name,
+			       auditLog.ACTOR_USER_ID AS actor_user_id,
+			       auditLog.ACTOR_USER_CD AS actor_user_cd,
+			       auditLog.OBJECT_TYPE AS object_type,
+			       auditLog.OBJECT_ID AS object_id
+			FROM DOCS_ACCESS_AUDIT_LOG auditLog
+			WHERE (
+				auditLog.EVENT_TYPE = 'DOWNLOAD_RESULT'
+				AND auditLog.ACTION_TYPE = 'DOWNLOAD_ORIGINAL'
+			)
+			   OR (
+				auditLog.EVENT_TYPE = 'FILE_ACCESS'
+				AND auditLog.ACTION_TYPE = 'VIEW'
+				AND auditLog.RESULT_CD = 'DENY'
+			)
+			UNION ALL
+			SELECT ('PRINT-' || printJob.PRINT_JOB_ID) AS event_id,
+			       printJob.COMPLETED_AT AT TIME ZONE 'Asia/Seoul' AS occurred_at,
+			       'PRINT' AS action_type,
+			       CASE WHEN printJob.STATUS_CD = 'SUCCESS' THEN 'ALLOW' ELSE 'DENY' END AS result_cd,
+			       printJob.STATUS_CD AS reason_cd,
+			       COALESCE(NULLIF(printJob.ACTOR_USER_NM, ''), NULLIF(printJob.ACTOR_USER_ID, ''), '-') AS actor_name,
+			       printJob.ACTOR_USER_ID AS actor_user_id,
+			       printJob.ACTOR_USER_CD AS actor_user_cd,
+			       printItem.OBJECT_TYPE AS object_type,
+			       printItem.OBJECT_ID AS object_id
+			FROM DOCS_PRINT_JOB printJob
+			JOIN DOCS_PRINT_JOB_ITEM printItem
+			  ON printItem.PRINT_JOB_ID = printJob.PRINT_JOB_ID
+			WHERE printJob.COMPLETED_AT IS NOT NULL
+			  AND printItem.OBJECT_TYPE IN ('SW', 'SW_SUB')
+		)
+		SELECT activityEvent.event_id AS "eventId",
+		       TO_CHAR(activityEvent.occurred_at, 'MM-DD HH24:MI') AS "occurredAt",
+		       activityEvent.action_type AS "actionType",
+		       activityEvent.result_cd AS "resultCd",
+		       activityEvent.reason_cd AS "reasonCd",
+		       activityEvent.actor_name AS "actorName",
+		       activityEvent.object_type AS "objectType",
+		       activityEvent.object_id AS "objectId",
+		       COALESCE(NULLIF(documentInfo.SW_NO, ''), '-') AS "swNo",
+		       COALESCE(
+			NULLIF(documentInfo.SW_NM, ''),
+			NULLIF(documentInfo.DRAWING_TITLE, ''),
+			NULLIF(documentInfo.ORG_FILE_NAME, ''),
+			NULLIF(documentInfo.FILE_NAME, ''),
+			'제목 없음'
+		       ) AS "documentName",
+		       COALESCE(documentInfo.dashboard_grade_cd, 'UNASSIGNED') AS "gradeCd"
+		FROM activity_event activityEvent
+		JOIN document_scope documentInfo
+		  ON documentInfo.OBJECT_ID = activityEvent.object_id
+		CROSS JOIN actor_context actor
+		WHERE activityEvent.actor_user_cd = actor.user_cd
+		   OR (
+				activityEvent.actor_user_cd IS NULL
+				AND activityEvent.actor_user_id = actor.user_id
+		   )
+		ORDER BY activityEvent.occurred_at DESC, activityEvent.event_id DESC
+		LIMIT 8
 	</select>
 
 </mapper>

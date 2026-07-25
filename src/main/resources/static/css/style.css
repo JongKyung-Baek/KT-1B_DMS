@@ -1126,6 +1126,85 @@
 	.ui-widget-overlay.pageLoader{background:none; opacity:1; z-index:500;}
 	.ui-widget-overlay.pageLoader .loading{background:transparent; width:100px; height:100px; margin:-50px 0 0 -50px; border-width:15px; border-color:transparent; border-right-color: #0051a2; border-top-color: #0051a2; position:absolute;}
 
+	.dialog-load-trigger--pending{pointer-events:none; cursor:wait !important; opacity:.72;}
+	.dialog-load-state{
+		box-sizing:border-box;
+		width:100%;
+		min-height:clamp(240px, 42vh, 420px);
+		padding:48px 32px;
+		display:flex;
+		flex-direction:column;
+		align-items:center;
+		justify-content:center;
+		gap:12px;
+		background:#fff;
+		color:#2f3a55;
+		text-align:center;
+	}
+	.dialog-load-state__spinner{
+		box-sizing:border-box;
+		width:54px;
+		height:54px;
+		margin-bottom:4px;
+		border:6px solid #e6edf7;
+		border-top-color:#0051a2;
+		border-right-color:#007faf;
+		border-radius:50%;
+		-webkit-animation:spin 750ms infinite linear;
+		animation:spin 750ms infinite linear;
+	}
+	.dialog-load-state__title{font-size:17px; line-height:1.45; font-weight:700; color:#26334d;}
+	.dialog-load-state__description{font-size:13px; line-height:1.5; color:#6b778c;}
+	.dialog-load-state__track{
+		position:relative;
+		width:min(320px, 72%);
+		height:5px;
+		margin-top:10px;
+		overflow:hidden;
+		border-radius:999px;
+		background:#e8edf5;
+	}
+	.dialog-load-state__bar{
+		position:absolute;
+		top:0;
+		bottom:0;
+		left:-42%;
+		width:42%;
+		border-radius:inherit;
+		background:linear-gradient(90deg, #0051a2, #00a7c4);
+		-webkit-animation:dialog-load-progress 1.2s ease-in-out infinite;
+		animation:dialog-load-progress 1.2s ease-in-out infinite;
+	}
+	.dialog-load-state--error{gap:14px;}
+	.dialog-load-state__error-icon{
+		width:48px;
+		height:48px;
+		display:flex;
+		align-items:center;
+		justify-content:center;
+		border-radius:50%;
+		background:#fff0ef;
+		color:#c23b32;
+		font-size:26px;
+		font-weight:800;
+	}
+	.dialog-load-state--error .bottomBtn{min-width:90px; margin-top:8px;}
+	@-webkit-keyframes dialog-load-progress{
+		0%{left:-42%;}
+		100%{left:100%;}
+	}
+	@keyframes dialog-load-progress{
+		0%{left:-42%;}
+		100%{left:100%;}
+	}
+	@media (prefers-reduced-motion: reduce){
+		.dialog-load-state__spinner,
+		.dialog-load-state__bar{
+			-webkit-animation-duration:2.4s;
+			animation-duration:2.4s;
+		}
+	}
+
 	/* outside/cr/request/ td color */
 	td span.tdBlue{color:#007ce6;}
 

@@ -774,11 +774,15 @@
             event_type, action_type, result_cd, reason_cd, result_message,
             actor_user_cd, actor_user_id, actor_user_nm,
             object_type, object_id, file_no, request_no, grade_cd,
+            menu_cd, menu_nm, menu_url, action_nm,
+            request_uri, http_method, http_status, duration_ms,
             client_ip, session_id, correlation_id, detail_json
         ) VALUES (
             #{eventType}, #{actionType}, #{resultCd}, #{reasonCd}, #{resultMessage},
             #{actorUserCd}, #{actorUserId}, #{actorUserNm},
             #{objectType}, #{objectId}, #{fileNo}, #{requestNo}, #{gradeCd},
+            #{menuCd}, #{menuNm}, #{menuUrl}, #{actionNm},
+            #{requestUri}, #{httpMethod}, #{httpStatus}, #{durationMs},
             #{clientIp}, #{sessionId}, #{correlationId},
             CAST(COALESCE(NULLIF(#{detailJson}, ''), '{}') AS jsonb)
         )
@@ -790,12 +794,19 @@
                event_type, action_type, result_cd, reason_cd, result_message,
                actor_user_cd, actor_user_id, actor_user_nm,
                object_type, object_id, file_no, request_no, grade_cd,
+               menu_cd, menu_nm, menu_url, action_nm,
+               request_uri, http_method, http_status, duration_ms,
                client_ip, session_id, correlation_id, detail_json::text AS detail_json
           FROM docs_access_audit_log
          WHERE 1 = 1
-        <if test="eventType != null and eventType != ''">
-           AND event_type = #{eventType}
-        </if>
+        <choose>
+            <when test="eventType != null and eventType != ''">
+               AND event_type = #{eventType}
+            </when>
+            <otherwise>
+               AND event_type NOT IN ('MENU_ACTION', 'AUTH')
+            </otherwise>
+        </choose>
         <if test="resultCd != null and resultCd != ''">
            AND result_cd = #{resultCd}
         </if>

@@ -101,8 +101,10 @@ public class LoginSuccess implements AuthenticationSuccessHandler {
 		UserVO userVo = (UserVO) authentication.getPrincipal();
 		HttpSession session = request.getSession();
 
-		auditLogService.setSessionAuditInfo(session, userVo.getUserId(), userVo.getUserNm(), request);
-		auditLogService.insertAuditLog("logIn", userVo.getUserId(), userVo.getUserNm(), request);
+		auditLogService.setSessionAuditInfo(
+				session, userVo.getUserCd(), userVo.getUserId(), userVo.getUserNm(), request);
+		auditLogService.insertAuditLog(
+				"logIn", userVo.getUserCd(), userVo.getUserId(), userVo.getUserNm(), request);
 
 		String userPwd = userVo.getUserPwd();
 		// 비밀번호가 '0000'라면 비밀번호 초기화 기능 수행
@@ -117,7 +119,6 @@ public class LoginSuccess implements AuthenticationSuccessHandler {
 		}
 
 		userVo.setUrl_type(urlType);
-//		String roleGroup = mainService.selectRoleGroupByUserCd(userVo);
 //		userVo.setRoleGroup(roleGroup);
 		SessionValue sessionValue = provider.get();
 		String sessionLang = resolveBrowserLanguage(request.getLocale());

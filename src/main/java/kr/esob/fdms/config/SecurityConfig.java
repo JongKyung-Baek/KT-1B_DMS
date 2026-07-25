@@ -1,10 +1,12 @@
 package kr.esob.fdms.config;
 
+import kr.esob.fdms.commonlogic.audit.RequestAuditFilter;
 import kr.esob.fdms.commonlogic.menu.MenuDao;
 import kr.esob.fdms.commonlogic.menu.MenuVO;
 import kr.esob.fdms.controller.inside.organizationmanage.auditlog.AuditLogSessionListener;
 import kr.esob.fdms.controller.login.*;
 import lombok.AllArgsConstructor;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.boot.web.servlet.ServletListenerRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,6 +21,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.access.intercept.FilterSecurityInterceptor;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
@@ -41,6 +44,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 
 	@Inject
 	CustomAuthenticationProvider authProvider;
+
+	@Inject
+	RequestAuditFilter requestAuditFilter;
 
 	@Override
 	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
@@ -148,7 +154,21 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 		// shared JSP fragment. External callbacks remain denied until their
 		// signed interface contract is implemented.
 		http.csrf();
+		http.addFilterBefore(requestAuditFilter, FilterSecurityInterceptor.class);
 
+	}
+
+	/**
+	 * The request audit filter belongs only to the Spring Security chain.
+	 * Disabling servlet-container auto registration prevents duplicate events.
+	 */
+	@Bean
+	public FilterRegistrationBean<RequestAuditFilter> requestAuditFilterRegistration(
+			RequestAuditFilter filter) {
+		FilterRegistrationBean<RequestAuditFilter> registration =
+				new FilterRegistrationBean<RequestAuditFilter>(filter);
+		registration.setEnabled(false);
+		return registration;
 	}
 
 	@Bean

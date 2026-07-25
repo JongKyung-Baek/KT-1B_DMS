@@ -108,4 +108,25 @@ public class SwRequestDao extends AbstractDao {
 	public Integer selectNextSwRegisterNo(Map<String, Object> param) {
 		return (Integer) obj(prefix + "selectNextSwRegisterNo", param);
 	}
+
+	@SuppressWarnings("unchecked")
+	public Map<String, Object> selectDashboardSummary(String userCd) {
+		return (Map<String, Object>) obj(prefix + "selectDashboardSummary", userCd);
+	}
+
+	public List<Map<String, Object>> selectDashboardGradeDistribution(String userCd) {
+		return list(prefix + "selectDashboardGradeDistribution", userCd);
+	}
+
+	public List<Map<String, Object>> selectDashboardStatusDistribution(String userCd) {
+		return list(prefix + "selectDashboardStatusDistribution", userCd);
+	}
+
+	public List<Map<String, Object>> selectDashboardRecentDocuments(String userCd) {
+		return list(prefix + "selectDashboardRecentDocuments", userCd);
+	}
+
+	public List<Map<String, Object>> selectDashboardRecentActivities(String userCd) {
+		return list(prefix + "selectDashboardRecentActivities", userCd);
+	}
 }

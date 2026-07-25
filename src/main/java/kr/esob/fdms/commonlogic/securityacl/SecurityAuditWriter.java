@@ -1,8 +1,10 @@
 package kr.esob.fdms.commonlogic.securityacl;
 
+import java.util.Locale;
 import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -10,6 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import kr.esob.fdms.commonlogic.audit.AuditMenuContext;
+import kr.esob.fdms.commonlogic.audit.AuditRequestSanitizer;
 import kr.esob.fdms.controller.login.UserVO;
 
 /**
@@ -18,6 +22,9 @@ import kr.esob.fdms.controller.login.UserVO;
  */
 @Service
 public class SecurityAuditWriter {
+    public static final String CORRELATION_ID_REQUEST_ATTRIBUTE =
+            SecurityAuditWriter.class.getName() + ".correlationId";
+
     private final SecurityAclDao dao;
 
     public SecurityAuditWriter(SecurityAclDao dao) {
@@ -28,8 +35,8 @@ public class SecurityAuditWriter {
     public void write(UserVO actor, String eventType, String actionType, String resultCd,
                       String reasonCd, String message, String objectType, String objectId,
                       String fileNo, String requestNo, String gradeCd, String detailJson) {
-        persist(actor, eventType, actionType, resultCd, reasonCd, message, objectType, objectId,
-            fileNo, requestNo, gradeCd, detailJson);
+        persist(actor, eventType, actionType, resolveActionName(actionType), resultCd, reasonCd, message,
+                objectType, objectId, fileNo, requestNo, gradeCd, null, null, detailJson, null);
     }
 
     /**
@@ -40,42 +47,166 @@ public class SecurityAuditWriter {
     public void writeInCurrentTransaction(UserVO actor, String eventType, String actionType, String resultCd,
                                           String reasonCd, String message, String objectType, String objectId,
                                           String fileNo, String requestNo, String gradeCd, String detailJson) {
-        persist(actor, eventType, actionType, resultCd, reasonCd, message, objectType, objectId,
-            fileNo, requestNo, gradeCd, detailJson);
+        persist(actor, eventType, actionType, resolveActionName(actionType), resultCd, reasonCd, message,
+                objectType, objectId, fileNo, requestNo, gradeCd, null, null, detailJson, null);
     }
 
-    private void persist(UserVO actor, String eventType, String actionType, String resultCd,
-                         String reasonCd, String message, String objectType, String objectId,
-                         String fileNo, String requestNo, String gradeCd, String detailJson) {
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void writeMenuAction(UserVO actor, AuditMenuContext menu,
+                                String actionType, String actionNm, String resultCd,
+                                String reasonCd, String message, Integer httpStatus,
+                                Long durationMs, String detailJson) {
+        persist(actor, "MENU_ACTION", actionType, actionNm, resultCd, reasonCd, message,
+                "MENU", menu == null ? null : menu.getMenuCd(),
+                null, null, null, httpStatus, durationMs, detailJson, menu);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void writeAuthentication(UserVO actor, String actionType, String actionNm,
+                                    String resultCd, String reasonCd, String message,
+                                    String fallbackClientIp, String fallbackSessionId) {
+        writeAuthentication(actor, actionType, actionNm, resultCd, reasonCd, message,
+                fallbackClientIp, fallbackSessionId, null);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void writeAuthentication(UserVO actor, String actionType, String actionNm,
+                                    String resultCd, String reasonCd, String message,
+                                    String fallbackClientIp, String fallbackSessionId,
+                                    String targetUserIdentifier) {
+        AuditMenuContext authenticationArea =
+                new AuditMenuContext("AUTH", "인증 / 계정", "/login/**", 0);
+        String target = isBlank(targetUserIdentifier)
+                ? actor == null ? null : actor.getUserId()
+                : targetUserIdentifier;
+        persist(actor, "AUTH", actionType, actionNm, resultCd, reasonCd, message,
+                "USER_ACCOUNT", target, null, null, null,
+                null, null, "{}", authenticationArea, fallbackClientIp, fallbackSessionId);
+    }
+
+    private void persist(UserVO actor, String eventType, String actionType, String actionNm,
+                         String resultCd, String reasonCd, String message,
+                         String objectType, String objectId, String fileNo,
+                         String requestNo, String gradeCd, Integer httpStatus,
+                         Long durationMs, String detailJson, AuditMenuContext menu) {
+        persist(actor, eventType, actionType, actionNm, resultCd, reasonCd, message,
+                objectType, objectId, fileNo, requestNo, gradeCd, httpStatus,
+                durationMs, detailJson, menu, null, null);
+    }
+
+    private void persist(UserVO actor, String eventType, String actionType, String actionNm,
+                         String resultCd, String reasonCd, String message,
+                         String objectType, String objectId, String fileNo,
+                         String requestNo, String gradeCd, Integer httpStatus,
+                         Long durationMs, String detailJson, AuditMenuContext menu,
+                         String fallbackClientIp, String fallbackSessionId) {
         AccessAuditEventVO event = new AccessAuditEventVO();
         event.setEventType(limit(eventType, 40));
         event.setActionType(limit(actionType, 30));
+        event.setActionNm(limit(actionNm, 256));
         event.setResultCd(limit(resultCd, 20));
         event.setReasonCd(limit(reasonCd, 50));
         event.setResultMessage(limit(message, 1000));
         event.setActorUserCd(limit(actor == null ? null : actor.getUserCd(), 20));
-        event.setActorUserId(limit(actor == null ? null : actor.getUserId(), 20));
+        event.setActorUserId(limit(actor == null ? null : actor.getUserId(), 100));
         event.setActorUserNm(limit(actor == null ? null : actor.getUserNm(), 256));
         event.setObjectType(limit(objectType, 30));
         event.setObjectId(limit(objectId, 60));
         event.setFileNo(limit(fileNo, 60));
         event.setRequestNo(limit(requestNo, 100));
         event.setGradeCd(limit(gradeCd, 30));
+        event.setHttpStatus(httpStatus);
+        event.setDurationMs(durationMs);
         event.setDetailJson(isBlank(detailJson) ? "{}" : detailJson);
+        enrichMenu(event, menu);
 
         HttpServletRequest request = currentHttpRequest();
         if (request != null) {
+            enrichMenu(event, request);
+            event.setRequestUri(limit(AuditRequestSanitizer.safeRequestUri(request), 1000));
+            event.setHttpMethod(limit(request.getMethod(), 10));
             event.setClientIp(limit(resolveClientIp(request), 64));
-            event.setSessionId(limit(request.getSession(false) == null
-                    ? null : request.getSession(false).getId(), 128));
-            String correlationId = trim(request.getHeader("X-Correlation-ID"));
-            event.setCorrelationId(limit(isBlank(correlationId)
-                    ? UUID.randomUUID().toString() : correlationId, 128));
+            HttpSession session = request.getSession(false);
+            event.setSessionId(limit(session == null ? fallbackSessionId : session.getId(), 128));
+            event.setCorrelationId(resolveCorrelationId(request));
         } else {
+            event.setClientIp(limit(fallbackClientIp, 64));
+            event.setSessionId(limit(fallbackSessionId, 128));
             event.setCorrelationId(UUID.randomUUID().toString());
         }
         if (dao.insertAudit(event) != 1) {
             throw new IllegalStateException("Security audit event was not persisted.");
+        }
+    }
+
+    private void enrichMenu(AccessAuditEventVO event, HttpServletRequest request) {
+        if (!isBlank(event.getMenuCd())) {
+            return;
+        }
+        Object context = request.getAttribute(AuditMenuContext.REQUEST_ATTRIBUTE);
+        if (!(context instanceof AuditMenuContext)) {
+            return;
+        }
+        enrichMenu(event, (AuditMenuContext) context);
+    }
+
+    private void enrichMenu(AccessAuditEventVO event, AuditMenuContext menu) {
+        if (menu == null) {
+            return;
+        }
+        event.setMenuCd(limit(menu.getMenuCd(), 64));
+        event.setMenuNm(limit(menu.getMenuNm(), 256));
+        event.setMenuUrl(limit(menu.getMenuUrl(), 512));
+    }
+
+    private String resolveCorrelationId(HttpServletRequest request) {
+        Object existing = request.getAttribute(CORRELATION_ID_REQUEST_ATTRIBUTE);
+        String correlationId = existing == null ? null : trim(existing.toString());
+        if (!isAllowedCorrelationId(correlationId)) {
+            correlationId = trim(request.getHeader("X-Correlation-ID"));
+        }
+        if (!isAllowedCorrelationId(correlationId)) {
+            correlationId = UUID.randomUUID().toString();
+        }
+        request.setAttribute(CORRELATION_ID_REQUEST_ATTRIBUTE, correlationId);
+        return correlationId;
+    }
+
+    private boolean isAllowedCorrelationId(String correlationId) {
+        if (isBlank(correlationId) || correlationId.length() > 128) {
+            return false;
+        }
+        if (correlationId.toUpperCase(Locale.ROOT).startsWith("LEGACY-AUDIT-")) {
+            return false;
+        }
+        return correlationId.matches("[A-Za-z0-9._:-]+");
+    }
+
+    private String resolveActionName(String actionType) {
+        String normalized = trim(actionType).toUpperCase(Locale.ROOT);
+        switch (normalized) {
+            case "MANAGE_GRADE":
+                return "보안등급 관리";
+            case "MANAGE_CLEARANCE":
+                return "사용자 인가 관리";
+            case "MANAGE_FILE_LABEL":
+                return "문서등급 관리";
+            case "MANAGE_DOCUMENT_PERMISSION":
+                return "문서 권한 관리";
+            case "MANAGE_ACL":
+                return "ACL 관리";
+            case "LIST":
+                return "목록";
+            case "DETAIL":
+                return "상세";
+            case "VIEW":
+                return "열람";
+            case "DOWNLOAD_ORIGINAL":
+                return "원본 다운로드";
+            case "PRINT":
+                return "출력";
+            default:
+                return actionType;
         }
     }
 

@@ -25,16 +25,8 @@ public class DocPdfLinkRequestDao extends AbstractDao {
 
 	@SuppressWarnings("unchecked")
 	public String selectFilePathNmDrawing(Map<String, Object> param) {
-		//System.out.println("====" );
-		//System.out.println("param = " +param);
-		//System.out.println("====" );
 		//return (String) objNotUseSession(prefix + "selectFilePathNmDrawing");
 		return (String) obj(prefix + "selectFilePathNmDrawing", param);
-	}
-
-	@SuppressWarnings("unchecked")
-	public String selectFilePathNmVideo(Map<String, Object> param) {
-		return (String) obj(prefix + "selectFilePathNmVideo", param);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -43,24 +35,15 @@ public class DocPdfLinkRequestDao extends AbstractDao {
 	}
 
 	public String selectSwFile(Map<String, Object> param) {
-		//System.out.println("====" );
-		//System.out.println("param = " +param);
-		//System.out.println("====" );
 		//return (String) objNotUseSession(prefix + "selectFilePathNmDrawing");
 		return (String) obj(prefix + "selectSwFile", param);
 	}
 
 	public String selectProduction(Map<String, Object> param) {
-		//System.out.println("====" );
-		//System.out.println("param = " +param);
-		//System.out.println("====" );
 		//return (String) objNotUseSession(prefix + "selectFilePathNmDrawing");
 		return (String) obj(prefix + "selectProduction", param);
 	}
 	public String selectDxf(Map<String, Object> param) {
-		//System.out.println("====" );
-		//System.out.println("param = " +param);
-		//System.out.println("====" );
 		//return (String) objNotUseSession(prefix + "selectFilePathNmDrawing");
 		return (String) obj(prefix + "selectDxf", param);
 	}

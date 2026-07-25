@@ -80,8 +80,6 @@ public class RoleService {
 //		boolean deptCheck = checkRoleGroupMember(param.getGroupCd(), "DEPT", param.getAssignedDept());
 //		boolean userCheck = checkRoleGroupMember(param.getGroupCd(), "USER", param.getAssignedUser());
 //
-//		System.out.println("deptCheck = " + deptCheck);
-//		System.out.println("userCheck = " + userCheck);
 //
 //		if(deptCheck) {
 //			result.setMessage("msg.duplicateRoleDept");
@@ -139,7 +137,6 @@ public class RoleService {
 
 			for(String memberCd : list) {
 				memberVo.setMemberCd(memberCd);
-				System.out.println("memberCd = " + memberCd);
 				boolean result = dao.checkDuplicatedRoleInsert(memberVo);
 				if(!result) totalResult = false;
 			}
@@ -147,7 +144,6 @@ public class RoleService {
 		else{
 			totalResult = false;
 		}
-		System.out.println("totalResult : " + totalResult);
 		return totalResult;
 	}
 

@@ -700,7 +700,9 @@
 		SELECT OBJECT_ID AS "objectId",
 		       '1' AS "fileNo",
 		       ORG_FILE_NM AS "orgFileNm",
-		       FILE_PATH_NM AS "filePath"
+		       FILE_PATH_NM AS "filePath",
+		       'DRAWING' AS "aclObjectType",
+		       OBJECT_ID AS "aclObjectId"
 		FROM DOCS_DRAWING
 		WHERE OBJECT_ID = #{objectId}
 		  AND COALESCE(DELETED_YN, 'N') = 'N'
@@ -711,7 +713,9 @@
 		SELECT OBJECT_ID AS "objectId",
 		       CAST(FILE_NO AS TEXT) AS "fileNo",
 		       ORG_FILE_NM AS "orgFileNm",
-		       FILE_PATH_NM AS "filePath"
+		       FILE_PATH_NM AS "filePath",
+		       'DRAWING_SUB' AS "aclObjectType",
+		       PARENT_OBJECT_ID AS "aclObjectId"
 		FROM DOCS_DRAWING_SUB_FILE
 		WHERE OBJECT_ID = #{objectId}
 		  AND COALESCE(USE_YN, 'Y') = 'Y'

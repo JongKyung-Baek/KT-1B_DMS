@@ -6,6 +6,7 @@ import org.apache.commons.beanutils.BeanUtils;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -65,7 +66,7 @@ public class RequestStatusController extends AbstractController {
 		return result;
 	}
 	
-	@RequestMapping("/deleteRequestNo")
+	@PostMapping("/deleteRequestNo")
 	public @ResponseBody ResultVO deleteRequestNo(@RequestBody RequestStatusPopupParam param) throws Exception {
 		return service.deleteRequestNo(param);
 	}

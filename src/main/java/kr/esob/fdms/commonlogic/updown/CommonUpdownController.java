@@ -24,6 +24,7 @@ import java.util.Map;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.apache.http.HttpEntity;
@@ -35,6 +36,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -54,11 +56,9 @@ public class CommonUpdownController extends AbstractController {
 	@Inject
 	CommonUpdownService service;
 
-	@RequestMapping(value="/downloadData")
+	@PostMapping(value="/downloadData")
 	public @ResponseBody Map<String, Object> downloadData(@RequestBody CommonUpdownParam param) throws Exception {
 		Map<String, Object> map = new HashMap<String, Object>();
-
-		map.put("config", service.getUploadConfig());
 
 		if("NORMAL".equals(param.getDistributeTypeCd())) {
 			map.put("downloadVolume", "R");
@@ -77,26 +77,15 @@ public class CommonUpdownController extends AbstractController {
 	}
 
 	@RequestMapping(value="/openFileDownPopup")
-	public String openFileListPopup(CommonUpdownParam param, Model model) throws JsonProcessingException {
-		model.addAttribute("config", service.getUploadConfig());
-		if("NORMAL".equals(param.getDistributeTypeCd())) {
-			model.addAttribute("downloadVolume", "R");
-		}else {
-			model.addAttribute("downloadVolume", "S");
-		}
-		model.addAttribute("gridId", param.getGridId());
-		model.addAttribute("reqType", param.getReqType());
-		//		List<CommonUpdownParam> list = JSONArray.toList(JSONArray.fromObject(request.getParameter("list")), CommonUpdownParam.class);
-		//		param.setList(list);
-		//		List<CommonUpdownFileVO> result = service.selectFileInfo(param);
-		//		model.addAttribute("arrFileInfo", result);
-		return "updown/commonFileDownPopup";
+	public String openFileListPopup(CommonUpdownParam param, Model model, HttpServletResponse response) throws JsonProcessingException {
+		response.setStatus(HttpServletResponse.SC_GONE);
+		return null;
 	}
 
 	@RequestMapping("/selectList")
-	public @ResponseBody List selectList(@RequestBody CommonUpdownParam param) throws Exception {
-		//		public @ResponseBody List<CommonUpdownFileVO> selectList(CommonUpdownParam param) throws Exception {
-		return service.selectList(param);
+	public @ResponseBody List selectList(@RequestBody CommonUpdownParam param, HttpServletResponse response) throws Exception {
+		response.setStatus(HttpServletResponse.SC_GONE);
+		return java.util.Collections.emptyList();
 	}
 
 	@RequestMapping(value="/downloadProgressPopup")

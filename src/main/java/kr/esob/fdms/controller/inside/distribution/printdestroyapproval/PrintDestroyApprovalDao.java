@@ -29,13 +29,12 @@ public class PrintDestroyApprovalDao extends AbstractDao {
 		return list(prefix + "selectSearchInfo", param);
 	}
 
-	public void updatePrintDestroyRequestInfo(PrintDestroyApprovalPopupParam param) {
-		update(prefix + "updatePrintDestroyRequestInfo", param);
-
+	public int updatePrintDestroyRequestInfo(PrintDestroyApprovalPopupParam param) {
+		return update(prefix + "updatePrintDestroyRequestInfo", param);
 	}
 
-	public void updatePrintDestroyRequestDetail(PrintDestroyApprovalPopupParam param) {
-		update(prefix + "updatePrintDestroyRequestDetail", param);
+	public int updatePrintDestroyRequestDetail(PrintDestroyApprovalPopupParam param) {
+		return update(prefix + "updatePrintDestroyRequestDetail", param);
 	}
 
 	public PrintDestroyApprovalPopupParam getDestroyRequestInfo(PrintDestroyApprovalPopupParam param) {
@@ -47,8 +46,8 @@ public class PrintDestroyApprovalDao extends AbstractDao {
 		return list(prefix + "selectDestroyItemList", param);
 	}
 
-	public void updateRequestMapping(PrintDestroyApprovalPopupParam param) {
-		update(prefix + "updateRequestMapping", param);
+	public int updateRequestMapping(PrintDestroyApprovalPopupParam param) {
+		return update(prefix + "updateRequestMapping", param);
 	}
 
 	public PrintDestroyItemListVO getDestroyRequest(String destroyRequestNo) {

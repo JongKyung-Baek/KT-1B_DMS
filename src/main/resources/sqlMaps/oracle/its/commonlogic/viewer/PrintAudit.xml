@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="sql.PrintAudit">
+
+    <insert id="insertJob">
+        INSERT INTO docs_print_job (
+            print_job_id, status_cd, actor_user_cd, actor_user_id, actor_user_nm,
+            object_type, object_id, file_no, request_no, client_ip
+        ) VALUES (
+            #{job.printJobId}, 'STARTED', #{actor.userCd}, #{actor.userId}, #{actor.userNm},
+            #{job.objectType}, #{job.objectId}, #{job.fileNo}, #{job.requestNo}, #{clientIp}
+        )
+    </insert>
+
+    <insert id="insertItem">
+        INSERT INTO docs_print_job_item (
+            print_job_id, item_seq, object_type, object_id, file_no, request_no,
+            request_type, count_required_yn
+        ) VALUES (
+            #{printJobId}, #{itemSeq}, #{objectType}, #{objectId}, #{fileNo}, #{requestNo},
+            #{requestType}, #{countRequiredYn}
+        )
+    </insert>
+
+    <select id="selectJobForUpdate" resultType="kr.esob.fdms.commonlogic.viewer.PrintJobVO">
+        SELECT print_job_id, status_cd, actor_user_cd, object_type, object_id,
+               file_no, request_no, count_applied_yn
+          FROM docs_print_job
+         WHERE print_job_id = #{value}
+         FOR UPDATE
+    </select>
+
+    <select id="selectItems" resultType="kr.esob.fdms.commonlogic.viewer.PrintJobItemVO">
+        SELECT print_job_id, item_seq, object_type, object_id, file_no, request_no,
+               request_type, count_required_yn
+          FROM docs_print_job_item
+         WHERE print_job_id = #{value}
+         ORDER BY item_seq
+    </select>
+
+    <update id="completeJob">
+        UPDATE docs_print_job
+           SET status_cd = #{result.statusCd},
+               page_count = #{result.pageCount},
+               copy_count = #{result.copyCount},
+               printer_nm = #{result.printerNm},
+               device_id = #{result.deviceId},
+               error_message = #{result.errorMessage},
+               completed_at = CURRENT_TIMESTAMP
+         WHERE print_job_id = #{result.printJobId}
+           AND actor_user_cd = #{actorUserCd}
+           AND status_cd = 'STARTED'
+    </update>
+
+    <update id="markCountApplied">
+        UPDATE docs_print_job
+           SET count_applied_yn = 'Y'
+         WHERE print_job_id = #{printJobId}
+           AND actor_user_cd = #{actorUserCd}
+           AND status_cd = 'SUCCESS'
+           AND count_applied_yn = 'N'
+    </update>
+
+</mapper>

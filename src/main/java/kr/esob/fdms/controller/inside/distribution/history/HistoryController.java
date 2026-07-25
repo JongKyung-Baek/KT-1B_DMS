@@ -7,6 +7,7 @@ import org.apache.commons.beanutils.BeanUtils;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
@@ -78,7 +79,7 @@ public class HistoryController extends AbstractController {
 	/*
 	 * 폐기중
 	 */
-	@RequestMapping(value="/underDestroy")
+	@PostMapping(value="/underDestroy")
 	public @ResponseBody ResultVO underDestroy(@RequestBody HistoryListVO param) throws Exception {
 		return service.updateUnderDestroy(param);
 	}
@@ -99,12 +100,12 @@ public class HistoryController extends AbstractController {
 		return result;
 	}
 
-	@RequestMapping("/deleteCompany")
+	@PostMapping("/deleteCompany")
 	public @ResponseBody ResultVO deleteCompany(@RequestBody CompanyListVO param) throws Exception {
 		return service.deleteCompany(param);
 	}
 
-	@RequestMapping(value="/destory")
+	@PostMapping(value="/destory")
 	public @ResponseBody ResultVO crRequest(MultipartHttpServletRequest request) throws Exception {
 		return service.insertDestory(request);
 	}

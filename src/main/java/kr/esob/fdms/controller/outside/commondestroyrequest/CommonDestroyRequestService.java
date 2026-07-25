@@ -1,6 +1,7 @@
 package kr.esob.fdms.controller.outside.commondestroyrequest;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -9,6 +10,7 @@ import java.util.Map;
 import javax.inject.Inject;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -35,6 +37,7 @@ import kr.esob.fdms.controller.outside.cr.request.OutsideCrParam;
 import kr.esob.fdms.controller.outside.user.information.InformationListParam;
 import kr.esob.fdms.util.FileUtil;
 import kr.esob.fdms.util.ObjectUtil;
+import kr.esob.fdms.util.StoragePathUtils;
 import net.sf.json.JSONObject;
 
 @Service
@@ -48,16 +51,12 @@ public class CommonDestroyRequestService {
 	DocsMailService mailService;
 	
 	@SuppressWarnings("unchecked")
+	@Transactional(rollbackFor = Exception.class)
 	public ResultVO insertDestory(MultipartHttpServletRequest request) throws Exception {
 
 		ResultVO resultVo = new ResultVO();
 //		List<DestroyPopupParam> destroyList = new Gson().fromJson(request.getParameter("list"), new TypeToken<List<DestroyPopupParam>>() {}.getType());
 		List<DestroyPopupParam> destroyList = (List<DestroyPopupParam>) ObjectUtil.jsonArrToList(request.getParameter("list"), DestroyPopupParam.class);
-
-		System.out.println("destroyList 크기: " + destroyList.size());
-		for(DestroyPopupParam destroyPopupParam : destroyList){
-			System.out.println("destroyPopupParam : " + destroyPopupParam);
-		}
 
 		DestroyPopupParam param = (DestroyPopupParam) ObjectUtil.jsonToObj(request.getParameter("destroyParam"), DestroyPopupParam.class);
 //		param.setDestroyDesc(request.getParameter("destroyDesc"));
@@ -66,8 +65,9 @@ public class CommonDestroyRequestService {
 		dao.insertDestroyInfo(param);
 		//폐기 첨부파일 저장
 		Iterator<String> itr = request.getFileNames();
-		String filePathNm = SystemConfig.getSystemConfigValue("DESTROY_FILE_PATH") + param.getDestroyNo() + "\\";
-		File filePath = new File(filePathNm);
+		File filePath = StoragePathUtils.resolve(
+				SystemConfig.getSystemConfigValue("DESTROY_FILE_PATH"),
+				param.getDestroyNo()).toFile();
 		if(!filePath.exists())filePath.mkdirs();
 //		param.setFilePath(filePathNm);
 		if(itr.hasNext()) {
@@ -76,23 +76,22 @@ public class CommonDestroyRequestService {
 			int i = 1;			// FILE SEQUENCE
 			for(MultipartFile multipartFile : list) {
 				param.setDestroyFileSeq(i);
-				String orgName = multipartFile.getOriginalFilename();
-				if(orgName.contains("\\")) {
-					orgName = orgName.substring(orgName.lastIndexOf("\\")+1, orgName.length());
-				}
-				File file = new File(filePathNm + orgName);
+				String orgName = StoragePathUtils.fileName(multipartFile.getOriginalFilename());
+				File file = StoragePathUtils.resolve(filePath.getPath(), orgName).toFile();
 				param.setFileNm(orgName);
-				param.setFilePath(filePathNm + orgName);
+				param.setFilePath(file.getPath());
 //				File file = new File(filePathNm + multipartFile.getOriginalFilename());
 				multipartFile.transferTo(file);
 				
 				JSONObject result = FileUtil.callSender( 
-						SystemConfig.getSystemConfigValue("SERVER_URL_OUTSIDE")
-						,SystemConfig.getSystemConfigValue("SERVER_URL_INSIDE")
-						,filePathNm + orgName
-						,SystemConfig.getSystemConfigValue("DESTROY_FILE_PATH") + param.getDestroyNo() + "\\"
-						, orgName);
-				param.setFilePathInside(SystemConfig.getSystemConfigValue("DESTROY_FILE_PATH") + param.getDestroyNo() + "\\" + result.getString("fileNm"));
+						FileUtil.encryptTransferArgument(SystemConfig.getSystemConfigValue("SERVER_URL_OUTSIDE"))
+						,FileUtil.encryptTransferArgument(SystemConfig.getSystemConfigValue("SERVER_URL_INSIDE"))
+						,FileUtil.encryptTransferArgument(file.getPath())
+						,FileUtil.encryptTransferArgument(filePath.getPath())
+						,FileUtil.encryptTransferArgument(orgName));
+				String transferredFileName = FileUtil.requireSuccessfulTransferFileName(result);
+				param.setFilePathInside(
+						StoragePathUtils.resolve(filePath.getPath(), transferredFileName).toString());
 				dao.insertDestroyFile(param);
 				i++;
 			}
@@ -105,15 +104,8 @@ public class CommonDestroyRequestService {
 		dao.insertDestroyRequest(param);
 
 		List<ApprovalLineDetailVO> appLinedDetail = commonApprovalDao.getDocsApprovalLineDetail(approvalLineId);
-
-		if (appLinedDetail != null && !appLinedDetail.isEmpty()) {
-			for (ApprovalLineDetailVO detail : appLinedDetail) {
-				// 각 ApprovalLineDetailVO 객체의 필드 값 출력
-				System.out.println("Approval Status Code: " + detail.getApprovalStatusCd());
-				System.out.println("Approval Grade Code: " + detail.getApprovalGradeCd());
-			}
-		} else {
-			System.out.println("Approval Line Detail list is empty or null.");
+		if (appLinedDetail == null) {
+			appLinedDetail = Collections.emptyList();
 		}
 
 		// 결재 라인 조회
@@ -145,7 +137,7 @@ public class CommonDestroyRequestService {
 		try {
 			sendMail(param);
 		}catch(Exception e) {
-			e.printStackTrace();
+			
 		}
 		resultVo.setSuccess(true);
 		return resultVo;

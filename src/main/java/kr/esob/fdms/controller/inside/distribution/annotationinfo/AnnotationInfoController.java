@@ -88,7 +88,6 @@ public class AnnotationInfoController extends AbstractController {
                 // json형식 아닌 일반 노말 데이터
                 processedItem.setTimestamp(originalItem.getTimestamp());
                 processedItem.setUsername(originalItem.getUserNm());
-                System.out.println("사용자 이름(Nm)" + originalItem.getUserNm());
 
                 processedList.add(processedItem);
             }
@@ -117,7 +116,6 @@ public class AnnotationInfoController extends AbstractController {
 //    @RequestMapping(value="/annotationInfoPopup")
 //    public String annotationInfoPopup(AnnotationInfoPopupParam param, Model model) throws JsonProcessingException {
 //
-//        System.out.println(" 테스트1  ");
 //
 //        model.addAttribute("gridInfo", JSONArray.fromObject(gridService.selectGridInfo("gridAnnotationInfoPopup")));
 ////		model.addAttribute("listCount", service.selectPopupListCount(param));
@@ -131,7 +129,6 @@ public class AnnotationInfoController extends AbstractController {
 //    @RequestMapping("/annotationInfoPopupList")
 //    public @ResponseBody GridResultVO annotationInfoPopupList(AnnotationInfoPopupParam param) throws Exception {
 //        GridResultVO result = new GridResultVO();
-//        System.out.println(" 테스트 2 ");
 //        result.setContents(service.annotationInfoPopupList(param));
 //        BeanUtils.setProperty(result, "page", BeanUtils.getProperty(param, "page"));
 //        BeanUtils.setProperty(result, "size", BeanUtils.getProperty(param, "size"));

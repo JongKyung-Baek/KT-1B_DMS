@@ -5,7 +5,9 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -16,7 +18,7 @@ import kr.esob.fdms.commonlogic.abstractclass.CommonHomeParam;
 import kr.esob.fdms.commonlogic.grid.GridResultVO;
 import kr.esob.fdms.commonlogic.value.ApprovalStatusPopupInfo;
 import kr.esob.fdms.controller.outside.commondestroystatus.CommonDestroyStatusService;
-import kr.esob.fdms.controller.outside.commondestroystatus.DestroyFileVO;
+import kr.esob.fdms.controller.outside.commondestroystatus.DestroyFileDownloadParam;
 import kr.esob.fdms.controller.outside.commondestroystatus.DestroyStatusParam;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
@@ -54,8 +56,13 @@ public class ApprovalStatusController extends AbstractController {
 
 	}
 
-	@RequestMapping(value="/destroyFileDown")
-	public void destroyFileDown(DestroyFileVO param, HttpServletResponse response) throws Exception{
+	@GetMapping(value="/destroyFileDown")
+	public void destroyFileDown(@RequestParam String destroyRequestNo,
+								@RequestParam int destroyFileSeq,
+								HttpServletResponse response) throws Exception {
+		DestroyFileDownloadParam param = new DestroyFileDownloadParam();
+		param.setDestroyRequestNo(destroyRequestNo);
+		param.setDestroyFileSeq(destroyFileSeq);
 		commonDestroyStatusService.destroyFileDown(param, response);
 	}
 }

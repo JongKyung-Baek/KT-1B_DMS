@@ -17,6 +17,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
@@ -24,13 +25,12 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 import kr.esob.fdms.commonlogic.abstractclass.CommonService;
 import kr.esob.fdms.commonlogic.result.ResultVO;
 import kr.esob.fdms.commonlogic.systemconfig.SystemConfig;
-import kr.esob.fdms.commonlogic.value.Constant;
 import kr.esob.fdms.controller.login.UserVO;
 import kr.esob.fdms.util.DateUtil;
 import kr.esob.fdms.util.FileUtil;
 import kr.esob.fdms.util.ObjectUtil;
 import kr.esob.fdms.util.StringUtil;
-import kr.esob.fdms.util.seed.seed.Seed128Cipher;
+import kr.esob.fdms.util.StoragePathUtils;
 import net.sf.json.JSONObject;
 
 @Service
@@ -71,6 +71,7 @@ public class BbsNoticeService implements CommonService{
 		return dao.updateHitCount(param);
 	}
 
+	@Transactional(rollbackFor = Exception.class)
 	public ResultVO insertBbsNotice(MultipartHttpServletRequest request) throws IllegalStateException, IOException {
 		ResultVO resultVo = new ResultVO();
 		BbsNoticePopupParam bbsParam = (BbsNoticePopupParam) ObjectUtil.jsonToObj(request.getParameter("bbsParam"), BbsNoticePopupParam.class);
@@ -82,33 +83,29 @@ public class BbsNoticeService implements CommonService{
 
 		Iterator<String> itr = request.getFileNames();
 		MultipartFile mf = request.getFile("file");
-		String filePathNm = SystemConfig.getSystemConfigValue("NOTICE_FILE_PATH") + bbsParam.getNoticeCd() + "\\";
-		File filePath = new File(filePathNm);
+		File filePath = StoragePathUtils.resolve(
+				SystemConfig.getSystemConfigValue("NOTICE_FILE_PATH"),
+				String.valueOf(bbsParam.getNoticeCd())).toFile();
 		if(!filePath.exists())filePath.mkdirs();
 		if(itr.hasNext()) {
-			bbsParam.setFilePath(filePathNm);
-			String orgName = mf.getOriginalFilename();
-			if(orgName.contains(File.separator)) {
-				orgName = orgName.substring(orgName.lastIndexOf(File.separator)+1, orgName.length());
-			}
-			orgName = StringUtil.replaceLfiPath(orgName);
-			String path = filePathNm + orgName;
-			path = StringUtil.replaceLfiPath(path);
-			File file = new File(path);
-			bbsParam.setFilePath(path);
+			bbsParam.setFilePath(filePath.getPath());
+			String orgName = StoragePathUtils.fileName(mf.getOriginalFilename());
+			File file = StoragePathUtils.resolve(filePath.getPath(), orgName).toFile();
+			bbsParam.setFilePath(file.getPath());
 			bbsParam.setFileNm(orgName);
 			bbsParam.setFileSize(String.valueOf(mf.getSize()));
 			mf.transferTo(file);
 
 			@SuppressWarnings("deprecation")
 			JSONObject result = FileUtil.callSender(
-					Seed128Cipher.encrypt(SystemConfig.getSystemConfigValue("SERVER_URL_INSIDE"), Constant.SEED_KEY.getBytes(), Constant.SEED_ENCODING)
-					,Seed128Cipher.encrypt(SystemConfig.getSystemConfigValue("SERVER_URL_OUTSIDE"), Constant.SEED_KEY.getBytes(), Constant.SEED_ENCODING)
-					,Seed128Cipher.encrypt(filePathNm + orgName, Constant.SEED_KEY.getBytes(), Constant.SEED_ENCODING)
-					,Seed128Cipher.encrypt(SystemConfig.getSystemConfigValue("NOTICE_FILE_PATH") + bbsParam.getNoticeCd() + "\\", Constant.SEED_KEY.getBytes(), Constant.SEED_ENCODING)
-					,Seed128Cipher.encrypt(orgName, Constant.SEED_KEY.getBytes(), Constant.SEED_ENCODING));
-			
-			bbsParam.setFilePathOutside(SystemConfig.getSystemConfigValue("NOTICE_FILE_PATH") + bbsParam.getNoticeCd() + "\\" + result.getString("fileNm"));
+					FileUtil.encryptTransferArgument(SystemConfig.getSystemConfigValue("SERVER_URL_INSIDE"))
+					,FileUtil.encryptTransferArgument(SystemConfig.getSystemConfigValue("SERVER_URL_OUTSIDE"))
+					,FileUtil.encryptTransferArgument(file.getPath())
+					,FileUtil.encryptTransferArgument(filePath.getPath())
+					,FileUtil.encryptTransferArgument(orgName));
+			String transferredFileName = FileUtil.requireSuccessfulTransferFileName(result);
+			bbsParam.setFilePathOutside(
+					StoragePathUtils.resolve(filePath.getPath(), transferredFileName).toString());
 			dao.insertNoticeFile(bbsParam);
 		}
 		resultVo.setSuccess(true);
@@ -151,6 +148,7 @@ public class BbsNoticeService implements CommonService{
 		dao.deleteNoticeFile(param);
 	}
 
+	@Transactional(rollbackFor = Exception.class)
 	public ResultVO updateNoticeInfo(MultipartHttpServletRequest request) throws IllegalStateException, IOException {
 		ResultVO resultVo = new ResultVO();
 		BbsNoticePopupParam bbsParam = (BbsNoticePopupParam) ObjectUtil.jsonToObj(request.getParameter("bbsParam"), BbsNoticePopupParam.class);
@@ -162,39 +160,36 @@ public class BbsNoticeService implements CommonService{
 
 		Iterator<String> itr = request.getFileNames();
 		MultipartFile mf = request.getFile("file");
-		String filePathNm = SystemConfig.getSystemConfigValue("NOTICE_FILE_PATH") + bbsParam.getNoticeCd() + "\\";
+		File filePath = StoragePathUtils.resolve(
+				SystemConfig.getSystemConfigValue("NOTICE_FILE_PATH"),
+				String.valueOf(bbsParam.getNoticeCd())).toFile();
 //		"NOTICE_FILE_PATH" = C:\DOCS\NOTICE\
 		
-		File filePath = new File(filePathNm);
 		if(!filePath.exists())filePath.mkdirs();
 		if(itr.hasNext()) {
-			// 기존 파일 삭제
-			deleteNoticeFile(bbsParam);
-
-			bbsParam.setFilePath(filePathNm);
-			String orgName = mf.getOriginalFilename();
-			
-			if(orgName.contains(File.separator)) {
-				orgName = orgName.substring(orgName.lastIndexOf(File.separator)+1, orgName.length());
-			}
-			orgName = StringUtil.replaceLfiPath(orgName);
-			String path = filePathNm + orgName;
-			path = StringUtil.replaceLfiPath(path);
-			
-			File file = new File(path);
-			bbsParam.setFilePath(path);
+			bbsParam.setFilePath(filePath.getPath());
+			String orgName = StoragePathUtils.fileName(mf.getOriginalFilename());
+			File file = StoragePathUtils.resolve(filePath.getPath(), orgName).toFile();
+			bbsParam.setFilePath(file.getPath());
 			
 			bbsParam.setFileNm(orgName);
 			bbsParam.setFileSize(String.valueOf(mf.getSize()));
 			mf.transferTo(file);
 
 			JSONObject result = FileUtil.callSender(
-					Seed128Cipher.encrypt(SystemConfig.getSystemConfigValue("SERVER_URL_INSIDE"), Constant.SEED_KEY.getBytes(), Constant.SEED_ENCODING)
-					,Seed128Cipher.encrypt(SystemConfig.getSystemConfigValue("SERVER_URL_OUTSIDE"), Constant.SEED_KEY.getBytes(), Constant.SEED_ENCODING)
-					,Seed128Cipher.encrypt(path, Constant.SEED_KEY.getBytes(), Constant.SEED_ENCODING)
-					,Seed128Cipher.encrypt(SystemConfig.getSystemConfigValue("NOTICE_FILE_PATH") + bbsParam.getNoticeCd() + "\\", Constant.SEED_KEY.getBytes(), Constant.SEED_ENCODING)
-					,Seed128Cipher.encrypt(orgName, Constant.SEED_KEY.getBytes(), Constant.SEED_ENCODING));
-			bbsParam.setFilePathOutside(SystemConfig.getSystemConfigValue("NOTICE_FILE_PATH") + bbsParam.getNoticeCd() + "\\" + result.getString("fileNm"));
+					FileUtil.encryptTransferArgument(SystemConfig.getSystemConfigValue("SERVER_URL_INSIDE"))
+					,FileUtil.encryptTransferArgument(SystemConfig.getSystemConfigValue("SERVER_URL_OUTSIDE"))
+					,FileUtil.encryptTransferArgument(file.getPath())
+					,FileUtil.encryptTransferArgument(filePath.getPath())
+					,FileUtil.encryptTransferArgument(orgName));
+			String transferredFileName = FileUtil.requireSuccessfulTransferFileName(result);
+			bbsParam.setFilePathOutside(
+					StoragePathUtils.resolve(filePath.getPath(), transferredFileName).toString());
+			// Delete only the old DB row after the replacement has reached the
+			// remote server. Physical cleanup cannot participate in the DB
+			// transaction and is intentionally deferred to avoid losing the old
+			// file when transfer validation fails.
+			dao.deleteNoticeFile(bbsParam);
 			dao.insertNoticeFile(bbsParam);
 		}
 		

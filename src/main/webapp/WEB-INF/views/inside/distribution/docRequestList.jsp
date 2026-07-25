@@ -13,7 +13,7 @@
 		.ch-badge-done{background:#e7f7ec;color:#1d6b3a}
 		.ch-badge-fail{background:#fdeaea;color:#a12828}
 	</style>
-	<link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/distribution-invoice.css" media="screen" />
+	<link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/distribution-invoice.css?v=20260724.1" media="screen" />
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common_tree.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/views/inside/distribution/acceptance/common-form-vuexy.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/views/inside/distribution/docRequestList.js"></script>

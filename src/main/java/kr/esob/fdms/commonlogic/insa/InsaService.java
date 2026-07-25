@@ -13,9 +13,11 @@ import kr.esob.fdms.commonlogic.abstractclass.CommonService;
 import kr.esob.fdms.controller.inside.cr.CommonCrDao;
 import kr.esob.fdms.controller.inside.cr.CrInfoVO;
 import kr.esob.fdms.controller.inside.cr.CrParam;
+import lombok.extern.slf4j.Slf4j;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
+@Slf4j
 @Service
 public class InsaService implements CommonService{
 
@@ -54,8 +56,7 @@ public class InsaService implements CommonService{
 			processRoleGroupUser();
 		}
 		catch(Exception e) {
-			System.out.println(e.getMessage());
-			e.printStackTrace();
+			log.warn("Personnel synchronization failed. cause={}", e.getClass().getSimpleName());
 		}
 	}
 
@@ -99,7 +100,7 @@ public class InsaService implements CommonService{
 			List<Map<String, Object>> itnUserList = dao.selectItnUser(itnParamMap);
 
 			for(Map<String, Object> itnUser : itnUserList) {
-				System.out.println((page + "/" + totalPage) + " 번째 페이지 진행 중");
+				
 				//	index++;
 				Map<String, Object> docsUser = dao.selectDocsUser(itnUser);
 
@@ -111,7 +112,7 @@ public class InsaService implements CommonService{
 					String key = a.next();
 					String value = itnUser.get(key).toString();
 
-					System.out.println(key + " : " + value + ", " + value.length());
+					
 
 				}
 

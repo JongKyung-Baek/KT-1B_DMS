@@ -17,7 +17,7 @@
 							.ch-badge-fail{background:#fdeaea;color:#a12828}
 						</style>
 						<link type="text/css" rel="stylesheet"
-							href="${pageContext.request.contextPath}/resources/css/pages/distribution-invoice.css"
+							href="${pageContext.request.contextPath}/resources/css/pages/distribution-invoice.css?v=20260724.1"
 							media="screen" />
 						<script type="text/javascript"
 							src="${pageContext.request.contextPath}/resources/js/common_tree.js"></script>

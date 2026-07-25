@@ -179,7 +179,7 @@ public class CreateExcelService {
 	@SuppressWarnings({ "unchecked" })
 	public void makeCreateExcelDuanzongPdm(Map<String, String> paramMap, String excelFilePath, int totalCount, CommonParam param) throws Exception{
 		// 엑셀파일을 생성할 경로 지정
-		System.out.println("excel export 경로 : " + rootAbsolutePath.toString() + excelFilePath);
+		
 		FileOutputStream out = new FileOutputStream(rootAbsolutePath.toString() + excelFilePath);
 		List<GridInfoVO> columns = new ArrayList<GridInfoVO>();
 
@@ -318,7 +318,7 @@ public class CreateExcelService {
 	@SuppressWarnings({ "unchecked" })
 	private void makeExcel(Map<String, String> paramMap, String excelFilePath, int totalCount)throws Exception{
 		// 엑셀파일을 생성할 경로 지정
-		System.out.println("excel export 경로 : " + rootAbsolutePath.toString() + excelFilePath);
+		
 		FileOutputStream out = new FileOutputStream(rootAbsolutePath.toString() + excelFilePath);
 		List<GridInfoVO> columns = new ArrayList<GridInfoVO>();
 
@@ -393,7 +393,7 @@ public class CreateExcelService {
 							for(int k=0;k<methods.length;k++){
 								if(("get"+methodString).equals(methods[k].getName())){
 									value = String.valueOf(methods[k].invoke(data));
-									System.out.println(" ------- 액셀 몇번째 : " + k +  " --- 데이터 정보 :" + value);
+									
 									if(null == value || "null".equals(value)) { value = ""; }
 									
 									c.setCellValue(value);
@@ -447,14 +447,14 @@ public class CreateExcelService {
 
 	private void makeExcelLocal(LocalParam param, String excelFilePath)throws Exception{
 		// 엑셀파일을 생성할 경로 지정
-		System.out.println("excel export 경로 : " + rootAbsolutePath.toString() + excelFilePath);
+		
 		FileOutputStream out = new FileOutputStream(rootAbsolutePath.toString() + excelFilePath);
 
 //		List<GridInfoVO> columns = new ArrayList<GridInfoVO>();
 		List<ColModel> columns = param.getColModels();
 
-		System.out.println(JSONObject.fromObject(param).toString());
-		System.out.println(JSONArray.fromObject(columns).toString());
+		
+		
 
 		// Excel을 그리기 위해 Grid의 정보를 구함.
 //		columns = dao.selectGridInfo(paramMap);
@@ -504,7 +504,7 @@ public class CreateExcelService {
 			for(int i = 0; i<datas.size(); i++) {
 				ListParam data = datas.get(i);
 
-				System.out.println(JSONObject.fromObject(data));
+				
 
 				Method[] methods = data.getClass().getDeclaredMethods();
 				r = s.createRow(rowidx++);

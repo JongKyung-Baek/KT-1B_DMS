@@ -13,6 +13,12 @@ public class DownloadRuntimeState {
     private String originalFileName;
     private String savedFileName;
     private boolean actLogSaved;
+    private String ownerUserCd;
+    private String ownerUserId;
+    private String ownerUserNm;
+    private String ownerSessionId;
+    private boolean downloadClaimed;
+    private LocalDateTime claimedAt;
 
     private String restSequence;       // DB 조회한 REST 요청용 시퀀스
     private String tempFilePath;       // 임시파일 경로
@@ -29,7 +35,9 @@ public class DownloadRuntimeState {
 
     public static DownloadRuntimeState createQueued(String wsSeq, String requestNo, String docSeq, String fileNo, String fileSeq,
                                                     String downloadRequestKey, String requestType, String objectType,
-                                                    String originalFileName, long ttlMinutes){
+                                                    String originalFileName, String ownerUserCd, String ownerUserId,
+                                                    String ownerUserNm,
+                                                    String ownerSessionId, long ttlMinutes){
         LocalDateTime now = LocalDateTime.now();
         DownloadRuntimeState s = new DownloadRuntimeState();
         s.wsSeq = wsSeq;
@@ -41,6 +49,10 @@ public class DownloadRuntimeState {
         s.requestType = requestType;
         s.objectType = objectType;
         s.originalFileName = originalFileName;
+        s.ownerUserCd = ownerUserCd;
+        s.ownerUserId = ownerUserId;
+        s.ownerUserNm = ownerUserNm;
+        s.ownerSessionId = ownerSessionId;
         s.status = DownloadRuntimeStatus.QUEUED;
         s.createdAt = now;
         s.updatedAt = now;
@@ -96,7 +108,22 @@ public class DownloadRuntimeState {
         touch();
     }
 
-    public boolean isExpired(LocalDateTime now) { return expireAt != null && expireAt.isBefore(now); }
+    public synchronized boolean claimDownload() {
+        if (downloadClaimed) return false;
+        downloadClaimed = true;
+        claimedAt = LocalDateTime.now();
+        touch();
+        return true;
+    }
+
+    public boolean isOwnedBy(String userCd, String sessionId) {
+        return ownerUserCd != null && ownerUserCd.equals(userCd)
+            && ownerSessionId != null && ownerSessionId.equals(sessionId);
+    }
+
+    public boolean isExpired(LocalDateTime now) {
+        return expireAt != null && now != null && !expireAt.isAfter(now);
+    }
 
     public void extendTtl(long ttlMinutes) {
         this.expireAt = LocalDateTime.now().plusMinutes(ttlMinutes);
@@ -114,6 +141,12 @@ public class DownloadRuntimeState {
     public String getOriginalFileName() { return originalFileName; }
     public String getSavedFileName() { return savedFileName; }
     public boolean isActLogSaved() { return actLogSaved; }
+    public String getOwnerUserCd() { return ownerUserCd; }
+    public String getOwnerUserId() { return ownerUserId; }
+    public String getOwnerUserNm() { return ownerUserNm; }
+    public String getOwnerSessionId() { return ownerSessionId; }
+    public boolean isDownloadClaimed() { return downloadClaimed; }
+    public LocalDateTime getClaimedAt() { return claimedAt; }
     public String getRestSequence() { return restSequence; }
     public String getTempFilePath() { return tempFilePath; }
     public DownloadRuntimeStatus getStatus() { return status; }
@@ -123,5 +156,69 @@ public class DownloadRuntimeState {
     public LocalDateTime getSentToWsAt() { return sentToWsAt; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public LocalDateTime getExpireAt() { return expireAt; }    
+    public LocalDateTime getExpireAt() { return expireAt; }
+
+    // MyBatis hydration and persistence-copy setters.
+    public void setWsSeq(String wsSeq) { this.wsSeq = wsSeq; }
+    public void setRequestNo(String requestNo) { this.requestNo = requestNo; }
+    public void setDocSeq(String docSeq) { this.docSeq = docSeq; }
+    public void setFileNo(String fileNo) { this.fileNo = fileNo; }
+    public void setFileSeq(String fileSeq) { this.fileSeq = fileSeq; }
+    public void setDownloadRequestKey(String downloadRequestKey) { this.downloadRequestKey = downloadRequestKey; }
+    public void setRequestType(String requestType) { this.requestType = requestType; }
+    public void setObjectType(String objectType) { this.objectType = objectType; }
+    public void setOriginalFileName(String originalFileName) { this.originalFileName = originalFileName; }
+    public void setSavedFileName(String savedFileName) { this.savedFileName = savedFileName; }
+    public void setActLogSaved(boolean actLogSaved) { this.actLogSaved = actLogSaved; }
+    public void setOwnerUserCd(String ownerUserCd) { this.ownerUserCd = ownerUserCd; }
+    public void setOwnerUserId(String ownerUserId) { this.ownerUserId = ownerUserId; }
+    public void setOwnerUserNm(String ownerUserNm) { this.ownerUserNm = ownerUserNm; }
+    public void setOwnerSessionId(String ownerSessionId) { this.ownerSessionId = ownerSessionId; }
+    public void setDownloadClaimed(boolean downloadClaimed) { this.downloadClaimed = downloadClaimed; }
+    public void setClaimedAt(LocalDateTime claimedAt) { this.claimedAt = claimedAt; }
+    public void setRestSequence(String restSequence) { this.restSequence = restSequence; }
+    public void setTempFilePath(String tempFilePath) { this.tempFilePath = tempFilePath; }
+    public void setStatus(DownloadRuntimeStatus status) { this.status = status; }
+    public void setResultCode(String resultCode) { this.resultCode = resultCode; }
+    public void setOptionalData(String optionalData) { this.optionalData = optionalData; }
+    public void setErrorMessage(String errorMessage) { this.errorMessage = errorMessage; }
+    public void setSentToWsAt(LocalDateTime sentToWsAt) { this.sentToWsAt = sentToWsAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public void setExpireAt(LocalDateTime expireAt) { this.expireAt = expireAt; }
+
+    public static DownloadRuntimeState copyOf(DownloadRuntimeState source) {
+        if (source == null) {
+            return null;
+        }
+        DownloadRuntimeState copy = new DownloadRuntimeState();
+        copy.wsSeq = source.wsSeq;
+        copy.requestNo = source.requestNo;
+        copy.docSeq = source.docSeq;
+        copy.fileNo = source.fileNo;
+        copy.fileSeq = source.fileSeq;
+        copy.downloadRequestKey = source.downloadRequestKey;
+        copy.requestType = source.requestType;
+        copy.objectType = source.objectType;
+        copy.originalFileName = source.originalFileName;
+        copy.savedFileName = source.savedFileName;
+        copy.actLogSaved = source.actLogSaved;
+        copy.ownerUserCd = source.ownerUserCd;
+        copy.ownerUserId = source.ownerUserId;
+        copy.ownerUserNm = source.ownerUserNm;
+        copy.ownerSessionId = source.ownerSessionId;
+        copy.downloadClaimed = source.downloadClaimed;
+        copy.claimedAt = source.claimedAt;
+        copy.restSequence = source.restSequence;
+        copy.tempFilePath = source.tempFilePath;
+        copy.status = source.status;
+        copy.resultCode = source.resultCode;
+        copy.optionalData = source.optionalData;
+        copy.errorMessage = source.errorMessage;
+        copy.sentToWsAt = source.sentToWsAt;
+        copy.createdAt = source.createdAt;
+        copy.updatedAt = source.updatedAt;
+        copy.expireAt = source.expireAt;
+        return copy;
+    }
 }

@@ -39,9 +39,12 @@ public class CommonFileReceiverController extends AbstractController {
 	 */
 	@RequestMapping("/common/fileTransfer/receiver")
 	public @ResponseBody String receiver(HttpServletRequest request, HttpServletResponse response) throws UnsupportedEncodingException {
-		String orgFileNm = Seed128Cipher.decrypt(request.getParameter("orgFileNm"), Constant.SEED_KEY.getBytes(), Constant.SEED_ENCODING);
-		String dstFilePath = Seed128Cipher.decrypt(request.getParameter("dstFilePath"), Constant.SEED_KEY.getBytes(), Constant.SEED_ENCODING);
-		String dstFileNm = Seed128Cipher.decrypt(request.getParameter("dstFileNm"), Constant.SEED_KEY.getBytes(), Constant.SEED_ENCODING);
+		response.setStatus(HttpServletResponse.SC_GONE);
+		return "{\"result\":false,\"msg\":\"legacy file transfer is disabled\"}";
+		/*
+		String orgFileNm = Seed128Cipher.decrypt(request.getParameter("orgFileNm"), Constant.legacyCryptoKeyBytes(), Constant.SEED_ENCODING);
+		String dstFilePath = Seed128Cipher.decrypt(request.getParameter("dstFilePath"), Constant.legacyCryptoKeyBytes(), Constant.SEED_ENCODING);
+		String dstFileNm = Seed128Cipher.decrypt(request.getParameter("dstFileNm"), Constant.legacyCryptoKeyBytes(), Constant.SEED_ENCODING);
 		String ext = FilenameUtils.getExtension(dstFileNm);
 		String uuid = FileUtil.getFileUuid() + ("".equals(ext) ? "" : "." + FilenameUtils.getExtension(dstFileNm));
 		JSONObject resultObj = new JSONObject();
@@ -96,6 +99,6 @@ public class CommonFileReceiverController extends AbstractController {
 
 		log.info(resultObj.toString());
 
-		return resultObj.toString();
+		return resultObj.toString(); */
 	}
 }

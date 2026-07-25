@@ -5,8 +5,6 @@ import java.util.List;
 import org.springframework.stereotype.Repository;
 
 import kr.esob.fdms.commonlogic.abstractclass.AbstractDao;
-import kr.esob.fdms.commonlogic.combo.ComboInfoVO;
-import kr.esob.fdms.commonlogic.grid.GridResultVO;
 
 @Repository
 public class AcceptanceDao extends AbstractDao {
@@ -30,8 +28,12 @@ public class AcceptanceDao extends AbstractDao {
 		return (Integer) obj(prefix + "selectPopupListCount", param);
 	}
 
-	public void updateAcceptance(AcceptancePopupParam param) {
-		update(prefix + "updateAcceptance", param);
+	public AcceptancePopupParam selectAcceptanceTargetForUpdate(AcceptancePopupParam param) {
+		return (AcceptancePopupParam) obj(prefix + "selectAcceptanceTargetForUpdate", param);
+	}
+
+	public int updateAcceptance(AcceptancePopupParam param) {
+		return update(prefix + "updateAcceptance", param);
 	}
 
 }

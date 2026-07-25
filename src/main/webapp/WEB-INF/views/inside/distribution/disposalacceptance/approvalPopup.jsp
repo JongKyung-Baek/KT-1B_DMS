@@ -42,12 +42,13 @@ function formatAddMonth(cellValue, options, rowdata, action){
 	}
 }
 
-function fileDownload(destroyNo, destroyFileSeq){
-	$("form[name=tmpForm]")
-	.attr("action","/inside/distribution/disposalacceptance/fileDownload?destroyNo="+destroyNo+"&destroyFileSeq="+destroyFileSeq)
-	.attr("target", "hiddenFrame")
-	.attr("method", "post")
-	.submit();
+function fileDownload(destroyRequestNo, destroyFileSeq){
+	var frame = document.querySelector("iframe[name='hiddenFrame']");
+	if (frame) {
+		frame.src = "/inside/distribution/disposalacceptance/fileDownload?destroyRequestNo="
+			+ encodeURIComponent(destroyRequestNo)
+			+ "&destroyFileSeq=" + encodeURIComponent(destroyFileSeq);
+	}
 }
 
 function saveApproval(flag){
@@ -111,8 +112,8 @@ function saveApproval(flag){
 				<label>첨부파일</label>
 				<div class="fileDownload">
 					<c:forEach items="${fileList}" var="fileInfo">
-						<button type="button" class="ui-button ui-corner-all fileDownBtn" onclick='fileDownload(${fileInfo.destroyNo}, ${fileInfo.destroyFileSeq })'>
-							<span>${fileInfo.fileName }</span>
+						<button type="button" class="ui-button ui-corner-all fileDownBtn" onclick='fileDownload("${fileInfo.destroyRequestNo}", ${fileInfo.destroyFileSeq})'>
+							<span><c:out value="${fileInfo.fileName}"/></span>
 						</button>
 					</c:forEach>
 				</div>

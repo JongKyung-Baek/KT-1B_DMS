@@ -3,17 +3,10 @@
 <%@ taglib prefix="custom" tagdir="/WEB-INF/tags" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags"%>
-<script type="text/javascript" src="/resources/js/views/outside/outregisted/request/registerPopup.js"></script>
 <!-- 등록 및 배포요청 팝업(자료등록 버튼) -->
 <script>
 var emptyArray2 = [];
 var bUploadCheck = false;
-
-$(document).ready(function() {
-	$("#uploadActiveX")[0].InitializationUpload();
-//	console.log("----------")
-});
-
 
 var curSendIndex = 0
 
@@ -36,16 +29,8 @@ function isValidationX(){
 
 
 function saveX() {
-	if(!isValidationX()){
-		return;
-	}
-
-	for(var i=0; i<emptyArray2.length; i++) {
-		emptyArray2[i].dataName  = $('#dataName').val();
-	}
-
-	curSendIndex = 0
-	callAjax( { paramList : emptyArray2 }, "/outside/outregisted/request/saveUnregisterFileX", requestCrXCallback);
+	alertMessage('외부 업로드 연계 기능은 현재 비활성 상태입니다.');
+	return false;
 }
 
 function requestCrXCallback(response){
@@ -124,6 +109,16 @@ function fnUploadSuccess(){
 }
 </script>
 <style>
+	.upload-integration-disabled {
+		box-sizing: border-box;
+		width: 100%;
+		padding: 24px;
+		border: 1px solid #d8dee8;
+		border-radius: 4px;
+		background: #f7f8fa;
+		color: #4b5563;
+		text-align: center;
+	}
 </style>
 <div class="dialogContent">
 	<form id="formUnRegisterPopup">
@@ -139,35 +134,9 @@ function fnUploadSuccess(){
 		</ul>
 	</form>
 	<div class="section">
-		<!--
-		<li class="singleFileUpload">
-			<%--  파일추가 --%>
-			<label><spring:message code="form.fileUpload"/></label>
-			<div>
-				<form id="fileForm" name="fileForm" enctype="multipart/form-data">
-					<input type="file" id="unregFile" name="unregFile" onchange="fileChange()" style="display: none;"/>
-				</form>
-				<input type="text" name="fileName" id="fileName"/>
-				<button class="ui-button ui-corner-all fileUploadBtn" onclick="fileUpload()"><spring:message code="btn.fileUpload"/></button>
-			</div>
-		</li>
-		 -->
-		<OBJECT ID="uploadActiveX" CODEBASE="${updownCabUrl }" CLASSID="CLSID:2D77F2E4-1C6F-475C-B83E-29EFEF9D1659" width="670" height="320" style="margin: auto;"> 
-<%--            <OBJECT ID="uploadActiveX" CODEBASE="https://localhost:8080/resources/install/ExtUpDown.cab#version=1,2015,527,1" CLASSID="CLSID:2D77F2E4-1C6F-475C-B83E-29EFEF9D1659" width="680" height="320" style="">--%>
-                <%-- <PARAM NAME="uploadServerIp"       VALUE="${updownCabUrl }"> --%>
-                <PARAM NAME="uploadServerIp"       VALUE="${updownServerIp }">
-                <PARAM NAME="uploadServerPort"     VALUE="${updownServerPort }">
-                <%--<PARAM NAME="uploadServerPath"     VALUE="${updownPath }"> --%>
-                <PARAM NAME="uploadServerPath"     VALUE="D:/FDMS/OUTREG">
-                <PARAM NAME="uploadSecretKey"      VALUE="${updownSecretKey }">
-                <PARAM NAME="uploadLangCode"       VALUE="${updownLangCode }">
-                <PARAM NAME="uploadIsSecurity"     VALUE="${updownIsSecurity }">
-                <PARAM NAME="userUploadSize"       VALUE="2050846883.84">
-                <PARAM NAME="userUploadUseSize"    VALUE="0">
-                <PARAM NAME="userUploadRemainSize" VALUE="2050846883.84">
-                <PARAM NAME="useExtension"         VALUE="${updownExtension }">
-                <PARAM NAME="revision"         	   VALUE="FALSE">
-            </OBJECT>
+		<div class="upload-integration-disabled" role="status">
+			외부 파일 업로드 연계는 후속 개발 단계에서 제공됩니다. 현재는 사용할 수 없습니다.
+		</div>
 	</div>
 
 </div>
@@ -175,7 +144,10 @@ function fnUploadSuccess(){
 	<div class="left"></div>
 	<div class="right">
 		<!-- 등록 -->
-		<custom:popupButton function="saveX()" name="save" label="btn.register" id="save"/>
+		<button type="button" class="ui-button ui-corner-all bottomBtn" name="save" id="save"
+				disabled="disabled" aria-disabled="true" title="외부 업로드 연계 준비 중">
+			<spring:message code="btn.register"/>
+		</button>
 		<custom:popupButton function="closePopup('popupDialog')" name="close" label="btn.close" id="close"/>
 	</div>
 </div>

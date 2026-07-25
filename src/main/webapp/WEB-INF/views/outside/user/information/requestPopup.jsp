@@ -139,10 +139,10 @@ function setGridParam(){
 		<c:if test="${userCd == ''}">
 			<ul class="section popupCard popupFormGrid popup-grid-3">
 		<li>
-			<custom:popupInputPwd name="userPwd" label="form.pwd" value="${DetailInfo.userPwd}"  id="userPwd" />
+			<custom:popupInputPwd name="userPwd" label="form.pwd" value="" id="userPwd" />
 		</li>
 		<li>
-			<custom:popupInputPwd name="userPwdConfirm" label="form.pwdConfirm" value="${DetailInfo.userPwd}" id="userPwdConfirm" />
+			<custom:popupInputPwd name="userPwdConfirm" label="form.pwdConfirm" value="" id="userPwdConfirm" />
 		</li>
 		</ul>
 		</c:if>

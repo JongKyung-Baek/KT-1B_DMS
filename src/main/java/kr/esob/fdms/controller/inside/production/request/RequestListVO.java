@@ -57,7 +57,6 @@ public class RequestListVO {
 	private String standardizationApprovalDate;
 	private String technologyChangeApprovalDate;
 	private String modelCode;
-	private String check3DFile;
 	private String inputDate;
 	private String revision;
 	private String connectionId;

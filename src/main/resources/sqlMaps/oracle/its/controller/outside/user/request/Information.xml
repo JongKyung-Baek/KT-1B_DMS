@@ -273,11 +273,33 @@
 	  and approval_user_cd is not null
 </select>
 
+<select id="selectCompanyApprover" resultType="String">
+	SELECT APPROVAL_USER_CD
+	FROM DOCS_COMPANY
+	WHERE COMPANY_CD = #{sessionUser.companyCd}
+	  AND USE_YN = 'Y'
+	  AND COALESCE(DEL_YN, 'N') = 'N'
+	  AND APPROVAL_USER_CD IS NOT NULL
+</select>
+
+<select id="selectCompanyUserCount" resultType="Integer">
+	SELECT COUNT(*)
+	FROM DOCS_USER
+	WHERE USER_CD = #{userCd}
+	  AND COMPANY_CD = #{sessionUser.companyCd}
+	  AND USE_YN = 'Y'
+	  AND DEL_YN = 'N'
+</select>
+
 <insert id="insertInfo">
 	<selectKey keyProperty="requestNo" resultType="String" order="BEFORE">
-		SELECT TO_CHAR(CURRENT_TIMESTAMP,'YYYYMMDD')||'-U'||LPAD(COALESCE(SUBSTR(MAX(REQUEST_NO),11)::INTEGER,0)+1,4,'0') AS REQUEST_NO
-		FROM DOCS_USER_REQUEST
-		WHERE SUBSTR(REQUEST_NO,1,10) = TO_CHAR(CURRENT_TIMESTAMP,'YYYYMMDD')||'-U'
+		INSERT INTO DOCS_USER_REQUEST_NUMBER (REQUEST_DATE, LAST_VALUE)
+		VALUES (CURRENT_DATE, 1)
+		ON CONFLICT (REQUEST_DATE)
+		DO UPDATE
+		SET LAST_VALUE = DOCS_USER_REQUEST_NUMBER.LAST_VALUE + 1
+		RETURNING TO_CHAR(REQUEST_DATE, 'YYYYMMDD') || '-U' ||
+		          LPAD(LAST_VALUE::TEXT, 4, '0') AS REQUEST_NO
 	</selectKey>
 	INSERT INTO DOCS_USER_REQUEST
 	(
@@ -300,7 +322,7 @@
 	(
 	#{requestNo}
 	, #{requestType}
-	, #{userCd}
+	, NULLIF(#{userCd}, '')
 	, #{userNm}
 	, #{userPwd}
 	, #{email}
@@ -309,18 +331,18 @@
 	, #{requestReason}
 	, #{sessionUser.userCd}
 	, #{sessionUser.companyCd}
-	<!--     , #{approvalUserCd} -->
-	, (SELECT USER_CD FROM DOCS_USER WHERE USER_ID = 'i0155285')
+	, #{approvalUserCd}
 	, CURRENT_TIMESTAMP
 	, 'REQUEST'
 	)
 </insert>
 
-<select id="checkPwd" resultType="Integer">
-	select
-		COUNT(*) AS TOTAL_COUNT
+<select id="selectPasswordHash" resultType="String">
+	SELECT USER_PWD
 	FROM DOCS_USER
-	where user_cd = #{userCd} and user_pwd = #{userPwd}
+	WHERE USER_CD = #{userCd}
+	  AND USE_YN = 'Y'
+	  AND DEL_YN = 'N'
 </select>
 
 <update id="updateUser">

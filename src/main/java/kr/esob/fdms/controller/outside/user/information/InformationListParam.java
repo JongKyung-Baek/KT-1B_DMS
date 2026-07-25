@@ -1,5 +1,6 @@
 package kr.esob.fdms.controller.outside.user.information;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import kr.esob.fdms.commonlogic.abstractclass.CommonParam;
 import lombok.Getter;
 import lombok.Setter;
@@ -17,7 +18,9 @@ public class InformationListParam extends CommonParam {
 	private String loginCount;
 
 	private String email;
+	@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
 	private String userPwd;
+	@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
 	private String userNewPwd;
 	private String requestReason;
 	private String requestType;

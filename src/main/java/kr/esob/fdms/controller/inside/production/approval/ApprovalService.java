@@ -5,24 +5,22 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import kr.esob.fdms.commonlogic.abstractclass.CommonService;
 import kr.esob.fdms.commonlogic.mail.DocsMailEnum;
 import kr.esob.fdms.commonlogic.mail.DocsMailService;
 import kr.esob.fdms.commonlogic.mail.MailInfoVO;
 import kr.esob.fdms.commonlogic.result.ResultVO;
-import kr.esob.fdms.controller.bbs.notice.BbsNoticePopupParam;
-import kr.esob.fdms.controller.inside.distribution.commonrequest.CommonApprovalParam;
 import kr.esob.fdms.controller.inside.production.acceptance.AcceptancePopupParam;
 import kr.esob.fdms.controller.inside.production.common.DeployInfoVO;
 import kr.esob.fdms.controller.inside.production.common.ProductStatusVO;
 import kr.esob.fdms.controller.inside.production.productionstatus.ProductionStatusService;
+import kr.esob.fdms.controller.login.UserVO;
 
 @Service
 public class ApprovalService implements CommonService{
@@ -32,9 +30,6 @@ public class ApprovalService implements CommonService{
 
 	@Inject
 	ProductionStatusService productionStatusService;
-
-	@Inject
-	PlatformTransactionManager transactionManager;
 
 	@Inject
 	DocsMailService mailService;
@@ -74,27 +69,23 @@ public class ApprovalService implements CommonService{
 	}
 
 	@SuppressWarnings("unchecked")
-	@Transactional
+	@Transactional(rollbackFor = Exception.class)
 	public ResultVO approval(ApprovalPopupParam param) {
 		ResultVO result = new ResultVO();
-		TransactionDefinition transactionDefinition = new DefaultTransactionDefinition(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
-        TransactionStatus transactionStatus = transactionManager.getTransaction(transactionDefinition);
 		List<DeployInfoVO> deployList = new ArrayList<DeployInfoVO>();
 		//DISPOSAL_REQUEST_YN이 Y인 리스트를 조회하여 해당 리스트의 OBJECT_NO, DEPLOY_USER_CD가 겹치는 대상을 찾는다.
 
-		CommonApprovalParam approveParam = dao.getCurrentApprovalInfo(param.getRequestNo());
-		if(param.getList() == null) {
-			List<ApprovalPopupVO> list = dao.selectObjectList(param);
-			List<ApprovalPopupParam> tempList = new ArrayList<ApprovalPopupParam>();
-			for(ApprovalPopupVO vo : list) {
-				ApprovalPopupParam temp = new ApprovalPopupParam();
-				temp.setObjectId(vo.getObjectId());
-				temp.setObjectNo(vo.getObjectNo());
-				tempList.add(temp);
-			}
-			param.setList(tempList);
+		ApprovalPopupParam approveParam = loadApprovalTarget(param, "NEW");
+		List<ApprovalPopupVO> list = dao.selectObjectList(param);
+		List<ApprovalPopupParam> tempList = new ArrayList<ApprovalPopupParam>();
+		for(ApprovalPopupVO vo : list) {
+			ApprovalPopupParam temp = new ApprovalPopupParam();
+			temp.setObjectId(vo.getObjectId());
+			temp.setObjectNo(vo.getObjectNo());
+			tempList.add(temp);
 		}
-		if(param.getApprovalPopupList() == null)param.setApprovalPopupList(dao.selectRequestUserList(param));
+		param.setList(tempList);
+		param.setApprovalPopupList(dao.selectRequestUserList(param));
 		param.setApprovalStatusCd(approveParam.getApprovalStatusCd());
 		param.setApprovalGradeCd(approveParam.getApprovalGradeCd());
 		if( "A".equals(param.getSaveType()) ) {			//승인
@@ -104,35 +95,34 @@ public class ApprovalService implements CommonService{
 			//배포접수 단계에서 실행하기 위해 주석 처리
 			//updateProductStatus(param);
 
-			dao.updateRequestInfo(param);
+			requireSingleRow(dao.updateRequestInfo(param), "approve production request");
 			//최종승인인 경우 파일 결재 정보 테이블(DOCS_APPROVAL_FILE)에 각 아이템 추가
 			for(ApprovalPopupParam itemParam : param.getList()) {
 				for(ApprovalPopupVO userVo : param.getApprovalPopupList()) {
 					DeployInfoVO deployInfo = new DeployInfoVO();
 					ApprovalPopupParam tempParam = new ApprovalPopupParam();
+					tempParam.setSessionUser(param.getSessionUser());
 					tempParam.setRequestNo(param.getRequestNo());
 					tempParam.setObjectId(itemParam.getObjectId());
 					tempParam.setDeployUserCd(userVo.getUserCd());
 					deployInfo.setDeployUserCd(userVo.getUserCd());
 					deployInfo.setObjectNo(itemParam.getObjectNo());
 					deployList.add(deployInfo);
-					dao.insertApprovalFile(tempParam);
+					requireSingleRow(dao.insertApprovalFile(tempParam), "record approved production file");
 				}
 			}
 			param.setDeployInfoList(deployList);
 			result = productionStatusService.selectDisposalRequestObject(param);
 			if(!result.isSuccess()) {
-				transactionManager.rollback(transactionStatus);
-				return result;
+				throw new IllegalStateException("Unable to apply production approval");
 			}
 		}else if( "R".equals(param.getSaveType()) ) {	//반려
 			param.setActionCd("REJECT");
 			param.setStatusCd("REJECT");
-			dao.updateDeployInfoReject(param); //배포접수 상태변경
+			requireAffectedRows(dao.updateDeployInfoReject(param), "reject production deployment");
+			requireSingleRow(dao.updateRequestInfo(param), "reject production request");
 		}
-		dao.updateRequestInfo(param);
-		dao.updateRequestDetail(param);
-		transactionManager.commit(transactionStatus);
+		requireSingleRow(dao.updateRequestDetail(param), "complete production approval step");
 		result.setSuccess(true);
 		if(param.getSendEmailYn().isBooleanValue()) {
 			sendMail(param);
@@ -155,14 +145,12 @@ public class ApprovalService implements CommonService{
 	}
 
 	@SuppressWarnings("unchecked")
-	@Transactional
+	@Transactional(rollbackFor = Exception.class)
 	public ResultVO replaceApproval(ApprovalPopupParam param) {
 		ResultVO result = new ResultVO();
-		TransactionDefinition transactionDefinition = new DefaultTransactionDefinition(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
-        TransactionStatus transactionStatus = transactionManager.getTransaction(transactionDefinition);
 		List<DeployInfoVO> deployList = new ArrayList<DeployInfoVO>();
-		CommonApprovalParam approveParam = dao.getCurrentApprovalInfo(param.getRequestNo());
-		if(param.getApprovalPopupList() == null)param.setApprovalPopupList(dao.selectReplaceRequestList(param));
+		ApprovalPopupParam approveParam = loadApprovalTarget(param, "REPLACE");
+		param.setApprovalPopupList(dao.selectReplaceRequestList(param));
 		param.setApprovalStatusCd(approveParam.getApprovalStatusCd());
 		param.setApprovalGradeCd(approveParam.getApprovalGradeCd());
 		if( "A".equals(param.getSaveType()) ) {			//승인
@@ -172,11 +160,12 @@ public class ApprovalService implements CommonService{
 			//배포접수 단계에서 실행하기 위해 주석 처리
 			//updateProductStatus(param);
 
-			dao.updateRequestInfo(param);
+			requireSingleRow(dao.updateRequestInfo(param), "approve replacement request");
 			//최종승인인 경우 파일 결재 정보 테이블(DOCS_APPROVAL_FILE)에 각 아이템 추가
 			for(ApprovalPopupVO itemParam : param.getApprovalPopupList()) {
 				DeployInfoVO deployInfo = new DeployInfoVO();
 				ApprovalPopupParam tempParam = new ApprovalPopupParam();
+				tempParam.setSessionUser(param.getSessionUser());
 				tempParam.setRequestNo(param.getRequestNo());
 				tempParam.setDeployUserCd(itemParam.getUserCd());
 				tempParam.setObjectId(itemParam.getObjectId());
@@ -184,13 +173,12 @@ public class ApprovalService implements CommonService{
 				deployInfo.setDeployUserCd(itemParam.getUserCd());
 				deployInfo.setObjectNo(itemParam.getObjectNo());
 				deployList.add(deployInfo);
-				dao.insertApprovalFile(tempParam);
+				requireSingleRow(dao.insertApprovalFile(tempParam), "record approved replacement file");
 			}
 			param.setDeployInfoList(deployList);
 			result = productionStatusService.selectDisposalRequestObject(param);
 			if(!result.isSuccess()) {
-				transactionManager.rollback(transactionStatus);
-				return result;
+				throw new IllegalStateException("Unable to apply replacement approval");
 			}
 			if(param.getSendEmailYn().isBooleanValue()) {
 				sendMail(param);
@@ -198,11 +186,10 @@ public class ApprovalService implements CommonService{
 		}else if( "R".equals(param.getSaveType()) ) {	//반려
 			param.setActionCd("REJECT");
 			param.setStatusCd("REJECT");
-			dao.updateDeployInfoReject(param); //배포접수 상태변경
+			requireAffectedRows(dao.updateDeployInfoReject(param), "reject replacement deployment");
+			requireSingleRow(dao.updateRequestInfo(param), "reject replacement request");
 		}
-		dao.updateRequestInfo(param);
-		dao.updateRequestDetail(param);
-		transactionManager.commit(transactionStatus);
+		requireSingleRow(dao.updateRequestDetail(param), "complete replacement approval step");
 		result.setSuccess(true);
 		return result;
 	}
@@ -215,39 +202,69 @@ public class ApprovalService implements CommonService{
 		return dao.selectPrintApprovalrList(param);
 	}
 	
+	@Transactional(rollbackFor = Exception.class)
 	public void updateProductStatus(AcceptancePopupParam param) {
-		for(AcceptancePopupParam data : param.getList()) {
-			List<DeployInfoVO> deployInfoVoList = dao.selectDeployInfoUserList(data);
-//			for(DeployInfoVO vo : deployInfoVoList) {
-//				if(dao.selectProductStatusCount(vo) > 0) {
-//					dao.updateProductStatus(vo);
-//				}else {
-//					dao.insertProductStatus(vo);
-//				}
-//			}
-			for(DeployInfoVO vo : deployInfoVoList) {
-				ProductStatusVO productStatusVo = dao.selectProductionStatus(vo);
-				int currentCount = (vo.getDeployCount() * vo.getCopy()) - vo.getDestroyCount();
-				if(null != productStatusVo) {
-					productStatusVo.setLastRequestNo(param.getRequestNo());
-					productStatusVo.setCurrentCount(currentCount + productStatusVo.getCurrentCount());
-					productStatusVo.setUserCd(vo.getDeployUserCd());
-					productStatusVo.setLastDeployRevNo(vo.getRevNo());
-					dao.updateProductionStatus(productStatusVo);
-				}else {
-					productStatusVo = new ProductStatusVO();
-					productStatusVo.setObjectNo(vo.getObjectNo());
-					productStatusVo.setLastRequestNo(param.getRequestNo());
-					productStatusVo.setObjectType(param.getObjectType());
-					productStatusVo.setDeptCd(vo.getDeployDeptCd());
-					productStatusVo.setUserCd(vo.getDeployUserCd());
-					productStatusVo.setCurrentCount(currentCount);
-					productStatusVo.setLastDeployRevNo(vo.getRevNo());
-					dao.insertProductionStatus(productStatusVo);
-				}
-				
-				dao.updateDeployInfo(vo); //배포접수 상태변경
+		if (param == null || isBlank(param.getRequestNo())
+				|| (!"DOC".equals(param.getObjectType()) && !"SW".equals(param.getObjectType()))) {
+			throw new IllegalArgumentException("Invalid production acceptance target");
+		}
+
+		UserVO actor = requireAuthenticatedActor();
+		param.setSessionUser(actor);
+		param.setDeployUserCd(actor.getUserCd());
+
+		// Load every pending deployment row from the locked request. The client list is ignored.
+		List<DeployInfoVO> deployInfoVoList = dao.selectDeployInfoUserList(param);
+		if (deployInfoVoList == null || deployInfoVoList.isEmpty()) {
+			throw new IllegalStateException("No pending production deployment exists");
+		}
+
+		for (DeployInfoVO vo : deployInfoVoList) {
+			if (vo == null || isBlank(vo.getObjectId()) || isBlank(vo.getObjectNo())
+					|| isBlank(vo.getDeployDeptCd())
+					|| !actor.getUserCd().equals(vo.getDeployUserCd())) {
+				throw new IllegalStateException("Invalid production deployment row");
 			}
+			vo.setRequestNo(param.getRequestNo());
+			vo.setObjectType(param.getObjectType());
+			vo.setDeployUserCd(actor.getUserCd());
+			vo.setSessionUser(actor);
+
+			ProductStatusVO productStatusVo = dao.selectProductionStatus(vo);
+			int acceptedCount = Math.subtractExact(
+					Math.multiplyExact(vo.getDeployCount(), vo.getCopy()),
+					vo.getDestroyCount());
+			if (productStatusVo != null) {
+				productStatusVo.setRequestNo(param.getRequestNo());
+				productStatusVo.setObjectId(vo.getObjectId());
+				productStatusVo.setObjectNo(vo.getObjectNo());
+				productStatusVo.setDeptCd(vo.getDeployDeptCd());
+				productStatusVo.setUserCd(actor.getUserCd());
+				productStatusVo.setSessionUser(actor);
+				productStatusVo.setLastRequestNo(param.getRequestNo());
+				productStatusVo.setObjectType(param.getObjectType());
+				productStatusVo.setCurrentCount(
+						Math.addExact(acceptedCount, productStatusVo.getCurrentCount()));
+				productStatusVo.setLastDeployRevNo(vo.getRevNo());
+				requireSingleRow(dao.updateProductionStatus(productStatusVo),
+						"update production status");
+			} else {
+				productStatusVo = new ProductStatusVO();
+				productStatusVo.setRequestNo(param.getRequestNo());
+				productStatusVo.setObjectId(vo.getObjectId());
+				productStatusVo.setObjectNo(vo.getObjectNo());
+				productStatusVo.setLastRequestNo(param.getRequestNo());
+				productStatusVo.setObjectType(param.getObjectType());
+				productStatusVo.setDeptCd(vo.getDeployDeptCd());
+				productStatusVo.setUserCd(actor.getUserCd());
+				productStatusVo.setSessionUser(actor);
+				productStatusVo.setCurrentCount(acceptedCount);
+				productStatusVo.setLastDeployRevNo(vo.getRevNo());
+				requireSingleRow(dao.insertProductionStatus(productStatusVo),
+						"insert production status");
+			}
+
+			requireSingleRow(dao.updateDeployInfo(vo), "complete production deployment");
 		}
 	}
 
@@ -256,13 +273,13 @@ public class ApprovalService implements CommonService{
 	}
 
 
+	@Transactional(rollbackFor = Exception.class)
 	public ResultVO printApproval(ApprovalPopupParam param) {
 		ResultVO result = new ResultVO();
 
-//		CommonApprovalParam approveParam = dao.getCurrentApprovalInfo(param.getRequestNo());
-
-		param.setApprovalStatusCd("APPROVAL");
-		param.setApprovalGradeCd("TL");
+		ApprovalPopupParam approveParam = loadApprovalTarget(param, "PRINT");
+		param.setApprovalStatusCd(approveParam.getApprovalStatusCd());
+		param.setApprovalGradeCd(approveParam.getApprovalGradeCd());
 		if( "A".equals(param.getSaveType()) ) {			//승인
 			param.setActionCd("APPROVAL");
 			param.setStatusCd("APPROVAL");
@@ -273,8 +290,8 @@ public class ApprovalService implements CommonService{
 		}
 
 		//승인, 반려 정보 업데이트
-		dao.updateRequestInfo(param);
-		dao.updateRequestDetail(param);
+		requireSingleRow(dao.updateRequestInfo(param), "complete print approval request");
+		requireSingleRow(dao.updateRequestDetail(param), "complete print approval step");
 
 		result.setSuccess(true);
 		try {
@@ -284,8 +301,49 @@ public class ApprovalService implements CommonService{
 				mailService.sendDocsMail(mailInfoVo);
 			}
 		}catch(Exception e) {
-			e.printStackTrace();
 		}
 		return result;
+	}
+
+	private ApprovalPopupParam loadApprovalTarget(ApprovalPopupParam param, String expectedRequestPurpose) {
+		if (param == null || isBlank(param.getRequestNo())
+				|| (!"A".equals(param.getSaveType()) && !"R".equals(param.getSaveType()))) {
+			throw new IllegalArgumentException("Invalid production approval request");
+		}
+		param.setRequestNo(param.getRequestNo().trim());
+		param.setSessionUser(requireAuthenticatedActor());
+		ApprovalPopupParam approvalTarget = dao.getCurrentApprovalInfo(param);
+		if (approvalTarget == null || !expectedRequestPurpose.equals(approvalTarget.getRequestPurpose())) {
+			throw new AccessDeniedException("Production approval request is not accessible");
+		}
+		param.setRequestPurpose(approvalTarget.getRequestPurpose());
+		param.setObjectType(approvalTarget.getObjectType());
+		return approvalTarget;
+	}
+
+	private UserVO requireAuthenticatedActor() {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		if (authentication == null || !authentication.isAuthenticated()
+				|| !(authentication.getPrincipal() instanceof UserVO)
+				|| isBlank(((UserVO) authentication.getPrincipal()).getUserCd())) {
+			throw new AccessDeniedException("Authenticated user is required");
+		}
+		return (UserVO) authentication.getPrincipal();
+	}
+
+	private void requireSingleRow(int affectedRows, String operation) {
+		if (affectedRows != 1) {
+			throw new IllegalStateException("Unable to " + operation);
+		}
+	}
+
+	private void requireAffectedRows(int affectedRows, String operation) {
+		if (affectedRows < 1) {
+			throw new IllegalStateException("Unable to " + operation);
+		}
+	}
+
+	private boolean isBlank(String value) {
+		return value == null || value.trim().isEmpty();
 	}
 }

@@ -49,7 +49,7 @@ public class AuditLogService implements CommonService {
         try {
             return dao.selectList(param);
         } catch (Exception e) {
-            log.warn("Audit log list query is not ready yet. Returning empty list.", e);
+            log.warn("Audit log list query failed. cause={}", e.getClass().getSimpleName());
             return Collections.emptyList();
         }
     }
@@ -60,7 +60,7 @@ public class AuditLogService implements CommonService {
             Integer count = dao.selectListCount(obj);
             return count == null ? 0 : count;
         } catch (Exception e) {
-            log.warn("Audit log count query is not ready yet. Returning zero.", e);
+            log.warn("Audit log count query failed. cause={}", e.getClass().getSimpleName());
             return 0;
         }
     }
@@ -147,7 +147,8 @@ public class AuditLogService implements CommonService {
         try {
             dao.insertAuditLog(param);
         } catch (Exception e) {
-            log.warn("Failed to insert audit log. actionType={}, userId={}, userName={}", actionType, userId, userName, e);
+            log.warn("Failed to insert audit log. actionType={}, cause={}",
+                    actionType, e.getClass().getSimpleName());
         }
     }
 

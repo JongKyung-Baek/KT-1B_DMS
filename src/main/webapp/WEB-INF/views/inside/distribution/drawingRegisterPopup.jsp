@@ -500,7 +500,6 @@
             // var customerRevision = document.getElementById("customerRevision").value;
 
             let protectYn = document.querySelector('input[name="protectYn"]:checked') ? document.querySelector('input[name="protectYn"]:checked').value : "N";
-            let drawingType = document.querySelector('input[name="drawingType"]:checked') ? document.querySelector('input[name="drawingType"]:checked').value : "2D";
             var drawingNo = $popupField("#drawingNo").val();
             var treeCd = $popupField("#treeCd").val();
             var registerUser = $popupField("#registerUser").val();
@@ -525,7 +524,7 @@
             formData.append("reviewerUser", reviewerUser);
             formData.append("approver", approver);
             formData.append("protectYn", protectYn);
-            formData.append("drawingType", drawingType);
+            formData.append("drawingType", "2D");
             formData.append("drawingNo", drawingNo);
             formData.append("treeCd", treeCd);
             formData.append("registerUser", registerUser);

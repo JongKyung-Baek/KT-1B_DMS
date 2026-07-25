@@ -5,7 +5,6 @@ import java.util.List;
 import org.springframework.stereotype.Repository;
 
 import kr.esob.fdms.commonlogic.abstractclass.AbstractDao;
-import kr.esob.fdms.commonlogic.mail.MailInfoVO;
 import kr.esob.fdms.controller.inside.cr.CrInfoVO;
 import kr.esob.fdms.controller.inside.cr.CrParam;
 
@@ -27,20 +26,24 @@ public class AcceptanceDao extends AbstractDao {
 		return (CrInfoVO) obj(prefix + "selectAcceptanceInfo", param);
 	}
 
-	public void updateAcceptance(CrParam param) {
-		update(prefix + "updateAcceptance", param);
+	public String selectAcceptanceTargetForUpdate(CrParam param) {
+		return (String) obj(prefix + "selectAcceptanceTargetForUpdate", param);
 	}
 
-	public void updateAproval(CrParam param) {
-		update(prefix + "updateAproval", param);
+	public int updateAcceptance(CrParam param) {
+		return update(prefix + "updateAcceptance", param);
 	}
 
-	public void updateRequest(CrParam param) {
-		update(prefix + "updateRequest", param);
+	public int updateApproval(CrParam param) {
+		return update(prefix + "updateApproval", param);
 	}
 
-	public void updateCr(CrParam param) {
-		update(prefix + "updateCr", param);
+	public int updateRequest(CrParam param) {
+		return update(prefix + "updateRequest", param);
+	}
+
+	public int updateCr(CrParam param) {
+		return update(prefix + "updateCr", param);
 	}
 
 }

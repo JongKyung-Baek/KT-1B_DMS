@@ -13,7 +13,6 @@ public class CommonViewerVO extends ResultVO{
 	private String fileNm;
 	private String fileOrgNm;
 	private String failType;
-	private String viewerCabUrl;
 	private String objectId;
 	private String requestNo;
 	private String fileNo;
@@ -23,6 +22,7 @@ public class CommonViewerVO extends ResultVO{
 	private String requestType;
     private String objectType;
 	private String authLevel;
+	private String printJobId;
 	private String destroyStatusCd;		// 폐기상태
 	private String destroyType;			// 폐기구분
     //private String extName;			// 확장자

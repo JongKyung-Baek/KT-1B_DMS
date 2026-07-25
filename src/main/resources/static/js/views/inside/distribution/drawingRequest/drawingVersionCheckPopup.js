@@ -24,11 +24,6 @@ function compareImageInside() {
     console.log("dataA: ", dataA);
     console.log("dataB: ", dataB);
 
-    if(dataA.drawingType==="3D" || dataB.drawingType==="3D"){
-        alertMessage(g_msg('msg.choose2DDrawing'));
-        return;
-    }
-
     // 총 페이지가 다르다면 비교 불가(총 페이지를 크게 신경쓰지 않으므로 비활성화)
     // if(dataA.totalPageNo !== dataB.totalPageNo) {
     //     alertMessage(g_msg('msg.differentTotalPageNo'));
@@ -90,11 +85,6 @@ function compareImageOutside() {
     var dataB = $('#' + popupGridId).jqGrid('getRowData', selrow[1]);
     console.log("dataA: ", dataA);
     console.log("dataB: ", dataB);
-
-    if(dataA.drawingType==="3D" || dataB.drawingType==="3D"){
-        alertMessage(g_msg('msg.choose2DDrawing'));
-        return;
-    }
 
     // 도면이 폐기 단계에 있으면 이미지 비교 불가(총 페이지를 크게 신경쓰지 않으므로 비활성화)
     // if (dataA.destroyStatusCd !== "" || dataB.destroyStatusCd !== "") {

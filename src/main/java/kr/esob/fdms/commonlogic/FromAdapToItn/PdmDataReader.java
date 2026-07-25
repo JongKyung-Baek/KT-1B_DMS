@@ -5,6 +5,7 @@ import javax.sql.DataSource;
 import org.springframework.stereotype.Service;
 
 import kr.esob.fdms.commonlogic.distributionDept.DistributionDeptVO;
+import lombok.extern.slf4j.Slf4j;
 
 import java.sql.Connection;
   import java.sql.PreparedStatement;
@@ -16,6 +17,7 @@ import java.sql.Connection;
   import java.util.List;
   import java.util.Map;
 
+  @Slf4j
   @Service
   public class PdmDataReader {
     //[KAI]
@@ -71,7 +73,6 @@ import java.sql.Connection;
                       row.put("obsolete_status", rs.getString("obsoletestatus"));
                       row.put("obsolete_classification", rs.getString("obsoleteclassification"));
                       row.put("attachment_count", rs.getInt("attachmentcount"));
-                      row.put("check_3dfile", rs.getString("check3dfile"));
                       row.put("create_date", rs.getTimestamp("inputdate"));
                       row.put("input_date", rs.getTimestamp("inputdate"));
                       row.put("edit_date", rs.getTimestamp("editdate"));
@@ -86,8 +87,8 @@ import java.sql.Connection;
                       row.put("connection_id", rs.getString("connectionid"));
                   }
               }
-          } catch (SQLException e) {
-              e.printStackTrace();
+          } catch (SQLException e) { log.warn("PDM database operation failed. cause={}", e.getClass().getSimpleName());
+              
           }
       }
 
@@ -110,8 +111,8 @@ import java.sql.Connection;
                       distributionDeptList.add(distributionDept);
                   }
               }
-          } catch (SQLException e) {
-              e.printStackTrace();
+          } catch (SQLException e) { log.warn("PDM database operation failed. cause={}", e.getClass().getSimpleName());
+              
           }
 
           return distributionDeptList;
@@ -136,8 +137,8 @@ import java.sql.Connection;
 
                   distributionDept.setDistributionType(distributionTypes);
               }
-          } catch (SQLException e) {
-              e.printStackTrace();
+          } catch (SQLException e) { log.warn("PDM database operation failed. cause={}", e.getClass().getSimpleName());
+              
           }
       }
 
@@ -204,7 +205,6 @@ import java.sql.Connection;
                 row.put("obsolete_status", rs.getString("obsoletestatus"));
                 row.put("obsolete_classification", rs.getString("obsoleteclassification"));
                 row.put("attachment_count", rs.getInt("attachmentcount"));
-                row.put("check_3dfile", rs.getString("check3dfile"));
                 row.put("create_date", rs.getTimestamp("inputdate"));
                 row.put("input_date", rs.getTimestamp("inputdate"));
                 row.put("edit_date", rs.getTimestamp("editdate"));

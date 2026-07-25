@@ -3,6 +3,9 @@ package kr.esob.fdms.config;
 import java.io.IOException;
 import java.util.Properties;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class Property {
 	private Properties configFile;
 
@@ -12,8 +15,7 @@ public class Property {
 		try {
 			configFile.load(this.getClass().getClassLoader().getResourceAsStream("docs.properties"));
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.warn("Legacy property loading failed. cause={}", e.getClass().getSimpleName());
 		}
 	}
 

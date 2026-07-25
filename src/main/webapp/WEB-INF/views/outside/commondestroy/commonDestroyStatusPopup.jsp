@@ -25,7 +25,7 @@ var popupInfo = ${popupInfo};
 			<label for=""><spring:message code="form.uploadFileList" /></label>
 			<div class="fileDownloadList">
 				<c:forEach items="${info.fileList }" var="fileInfo">
-					<div class="fileDownload"><button type="button" class="ui-button ui-corner-all fileDownBtn" onclick='fileDownload( ${fileInfo.destroyNo}, ${fileInfo.destroyFileSeq }, "${fileInfo.fileName }")' ><span>${fileInfo.fileName }</span></button></div>
+					<div class="fileDownload"><button type="button" class="ui-button ui-corner-all fileDownBtn" onclick='fileDownload("${fileInfo.destroyRequestNo}", ${fileInfo.destroyFileSeq})' ><span><c:out value="${fileInfo.fileName}"/></span></button></div>
 				</c:forEach>
 			</div>
 		</li>

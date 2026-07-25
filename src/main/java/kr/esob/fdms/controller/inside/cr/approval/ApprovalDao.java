@@ -27,16 +27,20 @@ public class ApprovalDao extends AbstractDao {
 		return (CrInfoVO) obj(prefix + "selectApprovalInfo", param);
 	}
 
-	public void updateRequestDetail(CrParam param) {
-		update(prefix + "updateRequestDetail", param);
+	public String selectApprovalTargetForUpdate(CrParam param) {
+		return (String) obj(prefix + "selectApprovalTargetForUpdate", param);
 	}
 
-	public void updateRequest(CrParam param) {
-		update(prefix + "updateRequest", param);
+	public int updateRequestDetail(CrParam param) {
+		return update(prefix + "updateRequestDetail", param);
 	}
 
-	public void updateCr(CrParam param) {
-		update(prefix + "updateCr", param);
+	public int updateRequest(CrParam param) {
+		return update(prefix + "updateRequest", param);
+	}
+
+	public int updateCr(CrParam param) {
+		return update(prefix + "updateCr", param);
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -44,7 +48,7 @@ public class ApprovalDao extends AbstractDao {
 		return list(prefix + "selectFileList", param);
 	}
 	
-	public void updateCrFile(CrFileVO param) {
-		update(prefix + "updateCrFile", param);
+	public int updateCrFile(CrFileVO param) {
+		return update(prefix + "updateCrFile", param);
 	}
 }

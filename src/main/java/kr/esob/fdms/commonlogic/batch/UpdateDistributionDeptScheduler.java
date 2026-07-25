@@ -14,7 +14,7 @@ import javax.annotation.PostConstruct;
 @ConditionalOnProperty(
         name = "update.distribution.scheduler.enabled",
         havingValue = "true",
-        matchIfMissing = true  // 설정이 없으면 기본적으로 활성화
+        matchIfMissing = false
 )
 public class UpdateDistributionDeptScheduler {
 

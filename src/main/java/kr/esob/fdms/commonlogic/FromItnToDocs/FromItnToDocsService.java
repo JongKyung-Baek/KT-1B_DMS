@@ -135,8 +135,8 @@ public class FromItnToDocsService implements CommonService{
 			*/
 		}
 		catch(Exception e) {
-			log.error(e.getMessage());
-			e.printStackTrace();
+			log.warn("ITN-to-DOCS transfer failed. cause={}", e.getClass().getSimpleName());
+			
 		}
 	}
 
@@ -172,7 +172,7 @@ public class FromItnToDocsService implements CommonService{
 				}
  				result = true;
 			}catch (Exception e) {
-				e.printStackTrace();
+				log.warn("ITN-to-DOCS file stream copy failed. cause={}", e.getClass().getSimpleName());
 			}finally {
 				try {
 					if(bout != null) {
@@ -225,7 +225,7 @@ public class FromItnToDocsService implements CommonService{
 				for(Map<String, Object> itnNew : itnNewList) {
 					//Docs 에 해당 Object ID가 이미 존재 하는지 조회
 					temp++;
-					log.debug("######################### " + temp.toString() + " #################### ");
+					log.debug("ITN-to-DOCS batch item prepared");
 
 					boolean success = true;
 					boolean needToChangeFilePath = false;
@@ -289,15 +289,15 @@ public class FromItnToDocsService implements CommonService{
 						}
 					}catch(Exception e) {
 						//dao.insertError(objectType,itnNew , e.getMessage());
-						e.printStackTrace();
+						
 						success = false;
 					}
    					dao.updateFileMoveResult(objectType, itnNew, success);
 				}
 				transactionManager.commit(transactionStatus);
 			}catch(Exception e) {
-				log.error(e.getMessage());
-				e.printStackTrace();
+				log.warn("ITN-to-DOCS file copy failed. cause={}", e.getClass().getSimpleName());
+				
 				transactionManager.rollback(transactionStatus);
 			}
 			break;
@@ -338,7 +338,7 @@ public class FromItnToDocsService implements CommonService{
 	        //ITN에 새로운 Data가 있는지 조희
 	        List<Map<String, Object>> itnNewList = dao.selectNewDataFromItn(objectType, UNIT);
 
-	        log.debug("TABLE NAME : " + objectType.getItnTableName() + "   NEW DATA : " + itnNewList.size());
+	        log.debug("ITN-to-DOCS new row count={}", itnNewList.size());
 	        
 			if(itnNewList.size() == 0) {
 				//새로운 Data가 없으면, break 하고 return
@@ -352,7 +352,7 @@ public class FromItnToDocsService implements CommonService{
 				for(Map<String, Object> itnNew : itnNewList) {
 
 					temp++; //log용
-					log.debug("######################### " + temp.toString() + " ####################");
+					log.debug("ITN-to-DOCS batch item prepared");
 					//Docs 에 해당 Object ID가 이미 존재 하는지 조회
 					// 각 Table에 설정된 Primary key로 조희.
 					Boolean exist = (dao.selectDocsObjectCount(objectType,itnNew) > 0);
@@ -405,7 +405,7 @@ public class FromItnToDocsService implements CommonService{
 										//Directory가 없으면 Dir 생성
 										if((mkdir = dir.mkdirs()) == false) {
 											//Dir 생성 실패
-											log.error("FAIL TO MAKE DIR : " + destDir);
+											log.error("ITN-to-DOCS target directory creation failed");
 										};
 									}else {
 										//이미 폴더에 같은 이름의 파일이 있을경우 {index} 를 파일명에 추가 시킴.
@@ -446,12 +446,12 @@ public class FromItnToDocsService implements CommonService{
 									}else {
 										//File 이동 실패
 										//dao.insertError(objectType,itnNew , "FAIL_TO_MOVE_FILE");
-										log.error("FAIL TO COPY : " + surceFileFullPath);
+										log.error("ITN-to-DOCS source copy failed");
 										success = false;
 									}
 								}catch(Exception e) {
 									//dao.insertError(objectType,itnNew , e.getMessage());
-									e.printStackTrace();
+									
 									success = false;
 								}
 							} else {
@@ -699,8 +699,8 @@ public class FromItnToDocsService implements CommonService{
 				//해당 UNIT만큼 Data 처리후 Commit
 				transactionManager.commit(transactionStatus);
 			}catch(Exception e) {
-				System.out.println(e.getMessage());
-				e.printStackTrace();
+				
+				
 				transactionManager.rollback(transactionStatus);
 			}
 			//Migration시 WAS 죽는 문제가 있다 해서, Break 처리.

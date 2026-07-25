@@ -6,6 +6,7 @@ import javax.inject.Inject;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -53,7 +54,7 @@ public class CommonRequestController extends AbstractController {
 		return authorizationDao.comboList("sql.Authorization.selectPurchaserCombo", param);
 	}
 
-	@RequestMapping(value="/vendorAccept")
+	@PostMapping(value="/vendorAccept")
 	public @ResponseBody ResultVO vendorAccept(@RequestBody RequestParam param) throws Exception {
 		return service.updateVendorAccept(param);
 	}

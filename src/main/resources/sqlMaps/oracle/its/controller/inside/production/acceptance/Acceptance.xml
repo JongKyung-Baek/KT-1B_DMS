@@ -686,6 +686,29 @@
 </select>
 
 <!-- 접수 시 배포 내용 수정 [2019.10.23(최금영)] -->
+<!-- Login-scoped current production acceptance target. -->
+<select id="selectAcceptanceTargetForUpdate"
+		parameterType="kr.esob.fdms.controller.inside.production.acceptance.AcceptancePopupParam"
+		resultType="kr.esob.fdms.controller.inside.production.acceptance.AcceptancePopupParam">
+	SELECT req.REQUEST_NO AS requestNo
+		 , req.OBJECT_TYPE AS objectType
+		 , deploy.DEPLOY_USER_CD AS deployUserCd
+	FROM DOCS_REQUEST req
+	JOIN DOCS_REQUEST_DEPLOY deploy
+	  ON deploy.REQUEST_NO = req.REQUEST_NO
+	JOIN DOCS_REQUEST_DETAIL currDetail
+	  ON currDetail.REQUEST_NO = req.REQUEST_NO
+	 AND currDetail.PROCESS_SEQ = req.CURRENT_PROCESS_SEQ_NO
+	WHERE req.REQUEST_NO = #{requestNo}
+	  AND req.REQUEST_TYPE = 'PRODUCT'
+	  AND req.STATUS_CD = 'APPROVAL'
+	  AND deploy.DEPLOY_USER_CD = #{sessionUser.userCd}
+	  AND (deploy.ACCEPT_YN = 'N' OR deploy.ACCEPT_YN IS NULL)
+	  AND currDetail.APPROVAL_STATUS_CD = 'APPROVAL'
+	  AND currDetail.ACTION_CD = 'APPROVAL'
+	FOR UPDATE OF req, deploy, currDetail
+</select>
+
 <update id="updateAcceptance" parameterType="kr.esob.fdms.controller.inside.production.acceptance.AcceptancePopupParam">
 	UPDATE DOCS_REQUEST_DEPLOY
 	SET ACCEPT_YN = 'Y'
@@ -695,10 +718,28 @@
 	, DEPLOY_RESULT = #{deployResult}
 	, DESTROY_INFO = #{destroyInfo}
 	, ACCEPT_DT = CURRENT_TIMESTAMP
-	WHERE 1=1
-	<foreach collection="list" open="AND (" close=")" separator="OR" item="item">
-		(REQUEST_NO = #{item.requestNo} AND DEPLOY_USER_CD= #{item.deployUserCd})
-	</foreach>
+	WHERE REQUEST_NO = #{requestNo}
+	  AND DEPLOY_USER_CD = #{sessionUser.userCd}
+	  AND (ACCEPT_YN = 'N' OR ACCEPT_YN IS NULL)
+	  AND NOT EXISTS (
+		  SELECT 1
+		  FROM DOCS_DEPLOY_INFO pendingInfo
+		  WHERE pendingInfo.REQUEST_NO = DOCS_REQUEST_DEPLOY.REQUEST_NO
+		    AND pendingInfo.DEPLOY_USER_CD = DOCS_REQUEST_DEPLOY.DEPLOY_USER_CD
+		    AND (pendingInfo.DEPLOY_ACCEPT_YN = 'N' OR pendingInfo.DEPLOY_ACCEPT_YN IS NULL)
+	  )
+	  AND EXISTS (
+		  SELECT 1
+		  FROM DOCS_REQUEST req
+		  JOIN DOCS_REQUEST_DETAIL currDetail
+		    ON currDetail.REQUEST_NO = req.REQUEST_NO
+		   AND currDetail.PROCESS_SEQ = req.CURRENT_PROCESS_SEQ_NO
+		  WHERE req.REQUEST_NO = DOCS_REQUEST_DEPLOY.REQUEST_NO
+		    AND req.REQUEST_TYPE = 'PRODUCT'
+		    AND req.STATUS_CD = 'APPROVAL'
+		    AND currDetail.APPROVAL_STATUS_CD = 'APPROVAL'
+		    AND currDetail.ACTION_CD = 'APPROVAL'
+	  )
 </update>
 
 </mapper>

@@ -14,21 +14,12 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.nio.file.Files;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
 import java.util.UUID;
-
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
-import java.security.cert.X509Certificate;
 
 import org.springframework.stereotype.Service;
 
@@ -42,46 +33,6 @@ import net.sf.json.JSONObject;
 public class FileUtil {
 	private static String charset = "UTF-8";
 	private static final int DEFAULT_BUFFER_SIZE = 1024 * 8;
-
-	static {
-		disableSslVerification();
-	}
-
-	private static void disableSslVerification() {
-		try
-		{
-			// Create a trust manager that does not validate certificate chains
-			TrustManager[] trustAllCerts = new TrustManager[] {new X509TrustManager() {
-				public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-					return null;
-				}
-				public void checkClientTrusted(X509Certificate[] certs, String authType) {
-				}
-				public void checkServerTrusted(X509Certificate[] certs, String authType) {
-				}
-			}
-			};
-
-			// Install the all-trusting trust manager
-			SSLContext sc = SSLContext.getInstance("SSL");
-			sc.init(null, trustAllCerts, new java.security.SecureRandom());
-			HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
-
-			// Create all-trusting host name verifier
-			HostnameVerifier allHostsValid = new HostnameVerifier() {
-				public boolean verify(String hostname, SSLSession session) {
-					return true;
-				}
-			};
-
-			// Install the all-trusting host verifier
-			HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
-		} catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
-		} catch (KeyManagementException e) {
-			e.printStackTrace();
-		}
-	}
 
 	public static void mkdir(String dir) {
 		File folder= new File(dir);
@@ -122,8 +73,7 @@ public class FileUtil {
 				}
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
-			System.out.println(e.getMessage());
+			log.warn("File copy failed. cause={}", e.getClass().getSimpleName());
 			ret = false;
 		}
 		return ret;
@@ -146,16 +96,25 @@ public class FileUtil {
 		DataOutputStream osw = null;
 		BufferedReader br = null;
 		
-		srcUrl = Seed128Cipher.decrypt(srcUrl, Constant.SEED_KEY.getBytes(), Constant.SEED_ENCODING);
+		srcUrl = requireHttpsTransferBaseUrl(
+				decryptRequiredTransferArgument(srcUrl, "source URL"), "source URL");
 		srcUrl += "common/fileTransfer/sender";
 		
-		dstUrl = Seed128Cipher.decrypt(dstUrl, Constant.SEED_KEY.getBytes(), Constant.SEED_ENCODING);
+		dstUrl = requireHttpsTransferBaseUrl(
+				decryptRequiredTransferArgument(dstUrl, "destination URL"), "destination URL");
 		dstUrl += "common/fileTransfer/receiver";
-		dstUrl = Seed128Cipher.encrypt(dstUrl, Constant.SEED_KEY.getBytes(), Constant.SEED_ENCODING);
+		dstUrl = Seed128Cipher.encrypt(dstUrl, Constant.legacyCryptoKeyBytes(), Constant.SEED_ENCODING);
+		// The sender endpoint decrypts these three values. Decrypt a copy here
+		// only to reject plaintext, malformed ciphertext and encrypted blanks.
+		decryptRequiredTransferArgument(srcFilePath, "source file path");
+		decryptRequiredTransferArgument(dstFilePath, "destination file path");
+		decryptRequiredTransferArgument(dstFileNm, "destination file name");
 		
 		try {
 			URLConnection connection = new URL(srcUrl).openConnection();
 			connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded;charset=" + charset);
+			connection.setConnectTimeout(10000);
+			connection.setReadTimeout(30000);
 
 			connection.setUseCaches(false);
 			connection.setDoInput(true);
@@ -201,7 +160,7 @@ public class FileUtil {
 			}
 		}
 		catch(Exception e) {
-			e.printStackTrace();
+			log.warn("Legacy file transfer failed. cause={}", e.getClass().getSimpleName());
 		}
 		finally {
 			if(osw != null) { try { osw.close(); } catch (IOException e) { } }
@@ -219,6 +178,89 @@ public class FileUtil {
 		return result;
 	}
 
+	private static String requireHttpsTransferBaseUrl(String value, String fieldName) {
+		try {
+			URI uri = new URI(value == null ? "" : value.trim());
+			if (!"https".equalsIgnoreCase(uri.getScheme()) || uri.getHost() == null
+					|| uri.getUserInfo() != null || uri.getQuery() != null || uri.getFragment() != null) {
+				throw new IllegalArgumentException(
+						"Legacy file-transfer " + fieldName + " must be an HTTPS base URL.");
+			}
+			String normalized = uri.toString();
+			return normalized.endsWith("/") ? normalized : normalized + "/";
+		} catch (java.net.URISyntaxException exception) {
+			throw new IllegalArgumentException(
+					"Legacy file-transfer " + fieldName + " must be an HTTPS base URL.", exception);
+		}
+	}
+
+	private static String decryptRequiredTransferArgument(String encryptedValue, String fieldName)
+			throws UnsupportedEncodingException {
+		if (encryptedValue == null || encryptedValue.trim().isEmpty()) {
+			throw new IllegalArgumentException("Legacy file-transfer " + fieldName + " is required.");
+		}
+		try {
+			String plaintext = Seed128Cipher.decrypt(
+					encryptedValue, Constant.legacyCryptoKeyBytes(), Constant.SEED_ENCODING);
+			if (plaintext == null || plaintext.trim().isEmpty()) {
+				throw new IllegalArgumentException("Legacy file-transfer " + fieldName + " is blank.");
+			}
+			String canonicalCiphertext = Seed128Cipher.encrypt(
+					plaintext, Constant.legacyCryptoKeyBytes(), Constant.SEED_ENCODING);
+			if (!encryptedValue.equals(canonicalCiphertext)) {
+				throw new IllegalArgumentException(
+						"Legacy file-transfer " + fieldName + " is not valid ciphertext.");
+			}
+			return plaintext;
+		} catch (IllegalArgumentException exception) {
+			throw exception;
+		} catch (RuntimeException exception) {
+			throw new IllegalArgumentException(
+					"Legacy file-transfer " + fieldName + " is not valid ciphertext.", exception);
+		}
+	}
+
+	/**
+	 * Encrypts one argument for the legacy file-transfer contract.
+	 *
+	 * All five {@link #callSender(String, String, String, String, String)}
+	 * arguments are ciphertext. Keeping this conversion in one place makes a
+	 * plaintext call site easy to detect and prevents blank configuration values
+	 * from being sent to the transfer server.
+	 */
+	public static String encryptTransferArgument(String value) throws UnsupportedEncodingException {
+		if (value == null || value.trim().isEmpty()) {
+			throw new IllegalArgumentException("Legacy file-transfer argument is required.");
+		}
+		return Seed128Cipher.encrypt(value, Constant.legacyCryptoKeyBytes(), Constant.SEED_ENCODING);
+	}
+
+	/**
+	 * Validates the sender/receiver response before a caller persists a remote
+	 * path or marks its database work successful.
+	 */
+	public static String requireSuccessfulTransferFileName(JSONObject result) {
+		if (result == null || !result.containsKey("result")
+				|| !Boolean.parseBoolean(String.valueOf(result.get("result")))) {
+			throw new IllegalStateException("Legacy file transfer was not completed.");
+		}
+
+		Object rawFileName = result.get("fileNm");
+		String fileName = rawFileName == null ? "" : String.valueOf(rawFileName).trim();
+		if (!isSafeTransferFileName(fileName)) {
+			throw new IllegalStateException("Legacy file transfer returned an invalid file name.");
+		}
+		return fileName;
+	}
+
+	private static boolean isSafeTransferFileName(String fileName) {
+		if (fileName == null || fileName.isEmpty() || fileName.length() > 255
+				|| ".".equals(fileName) || "..".equals(fileName) || fileName.contains("..")) {
+			return false;
+		}
+		return fileName.matches("[A-Za-z0-9][A-Za-z0-9._-]{0,254}");
+	}
+
 
 	public static JSONObject sendFile(String dstUrl, String srcFilePath, String dstFilePath, String dstFileNm) throws UnsupportedEncodingException {
 		//		String url = "http://localhost:8080/common/upload/receiver";
@@ -229,8 +271,8 @@ public class FileUtil {
 		String boundary = Long.toHexString(System.currentTimeMillis()); // Just generate some unique random value.
 		//		File textFile = new File("/path/to/file.txt");
 
-		dstUrl = Seed128Cipher.decrypt(dstUrl, Constant.SEED_KEY.getBytes(), Constant.SEED_ENCODING);
-		srcFilePath = Seed128Cipher.decrypt(srcFilePath, Constant.SEED_KEY.getBytes(), Constant.SEED_ENCODING);
+		dstUrl = Seed128Cipher.decrypt(dstUrl, Constant.legacyCryptoKeyBytes(), Constant.SEED_ENCODING);
+		srcFilePath = Seed128Cipher.decrypt(srcFilePath, Constant.legacyCryptoKeyBytes(), Constant.SEED_ENCODING);
 		
 		try {
 			File binaryFile = new File(srcFilePath);
@@ -255,7 +297,7 @@ public class FileUtil {
 			writer.append("--" + boundary).append(CRLF);
 			writer.append("Content-Disposition: form-data; name=\"orgFileNm\"").append(CRLF);
 			writer.append("Content-Type: text/plain; charset=" + charset).append(CRLF);
-			writer.append(CRLF).append(Seed128Cipher.encrypt(binaryFile.getName(), Constant.SEED_KEY.getBytes(), Constant.SEED_ENCODING)).append(CRLF).flush();
+			writer.append(CRLF).append(Seed128Cipher.encrypt(binaryFile.getName(), Constant.legacyCryptoKeyBytes(), Constant.SEED_ENCODING)).append(CRLF).flush();
 
 			writer.append("--" + boundary).append(CRLF);
 			writer.append("Content-Disposition: form-data; name=\"dstFilePath\"").append(CRLF);
@@ -304,7 +346,7 @@ public class FileUtil {
 			}
 		}
 		catch(Exception e) {
-			e.printStackTrace();
+			log.warn("Legacy multipart transfer failed. cause={}", e.getClass().getSimpleName());
 		}
 
 		if(200 == responseCode) {
@@ -316,17 +358,6 @@ public class FileUtil {
 
 			return result;
 		}
-	}
-
-	public static String filePath(String fileName){
-		int dotIndex = fileName.lastIndexOf(".");
-		String fileNameWithoutExtension = dotIndex == -1 ? fileName : fileName.substring(0, dotIndex);
-		return fileNameWithoutExtension;
-	}
-	public static String fileName(String fileName){
-		int dotIndex = fileName.lastIndexOf(".");
-		String fileNameWithoutExtension = dotIndex == -1 ? fileName : fileName.substring(0, dotIndex);
-		return fileNameWithoutExtension+"_wh.vizw";
 	}
 
 	//	public static JSONObject sendFile(String dstUrl, String srcFilePath, String dstFilePath) throws MalformedURLException, IOException {

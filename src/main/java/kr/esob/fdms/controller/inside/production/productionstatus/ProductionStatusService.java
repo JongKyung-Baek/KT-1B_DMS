@@ -100,7 +100,6 @@ public class ProductionStatusService implements CommonService{
 				mailService.sendDocsMail(mailInfoVo);
 			}
 		}catch(Exception e) {
-			e.printStackTrace();
 		}
 		return resultVo;
 	}

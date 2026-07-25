@@ -15,8 +15,11 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
@@ -32,7 +35,7 @@ import kr.esob.fdms.commonlogic.systemconfig.SystemConfig;
 import kr.esob.fdms.commonlogic.value.RootAbsolutePath;
 import kr.esob.fdms.controller.inside.authorization.AuthorizationDao;
 import kr.esob.fdms.controller.inside.cr.CommonCrService;
-import kr.esob.fdms.controller.inside.cr.CrFileVO;
+import kr.esob.fdms.controller.inside.cr.CrFileDownloadParam;
 import kr.esob.fdms.controller.inside.cr.CrParam;
 import kr.esob.fdms.controller.login.UserVO;
 import kr.esob.fdms.controller.outside.commonrequest.CommonRequestService;
@@ -118,7 +121,7 @@ public class RequestController extends AbstractController {
 		}
 	}
 
-	@RequestMapping(value="/crRequest")
+	@PostMapping(value="/crRequest")
 	public @ResponseBody ResultVO crRequest(MultipartHttpServletRequest request) throws Exception {
 		return service.insertCrRequest(request);
 	}
@@ -146,17 +149,21 @@ public class RequestController extends AbstractController {
 		return "/outside/cr/request/requestStatusPopup";
 	}
 
-	@RequestMapping(value="/crFileDownload")
-	public void crFileDownload(CrFileVO param, HttpServletResponse response) throws Exception {
-		commonCrService.crFileDownload(commonCrService.selectOutsideFilePath(param), response);
+	@GetMapping(value="/crFileDownload")
+	public void crFileDownload(@RequestParam String crNo, @RequestParam int fileNo,
+							   HttpServletResponse response) throws Exception {
+		CrFileDownloadParam param = new CrFileDownloadParam();
+		param.setCrNo(crNo);
+		param.setFileNo(fileNo);
+		commonCrService.downloadOutside(param, response);
 	}
 
-	@RequestMapping(value="/approve")
+	@PostMapping(value="/approve")
 	public @ResponseBody ResultVO approve(@RequestBody OutsideCrParam param) throws IOException {
 		return service.approve(param);
 	}
 
-	@RequestMapping(value="/approvalReject")
+	@PostMapping(value="/approvalReject")
 	public @ResponseBody ResultVO approvalReject(@RequestBody OutsideCrParam param) {
 		return service.approvalReject(param);
 	}

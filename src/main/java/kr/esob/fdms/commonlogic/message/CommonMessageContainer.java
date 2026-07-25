@@ -35,7 +35,15 @@ public class CommonMessageContainer {
 	@SuppressWarnings({ "rawtypes" })
 	@PostConstruct
 	public void init() throws Exception {
-		rootAbsolutePath.setRootAbsolutePath(webApplicationContext.getServletContext().getRealPath("/"));
+		String webRoot = webApplicationContext.getServletContext().getRealPath("/");
+		if (webRoot == null || webRoot.trim().isEmpty()) {
+			webRoot = new File(System.getProperty("java.io.tmpdir"), "kt1b-webroot").getAbsolutePath();
+		}
+		File messageDir = new File(webRoot, "messages");
+		if (!messageDir.exists() && !messageDir.mkdirs()) {
+			throw new IllegalStateException("메시지 디렉터리를 생성할 수 없습니다: " + messageDir.getAbsolutePath());
+		}
+		rootAbsolutePath.setRootAbsolutePath(new File(webRoot).getAbsolutePath() + File.separator);
 		//생성 및 초기화
 		messageList = new ArrayList<Map<String, String>>();
 
@@ -64,14 +72,20 @@ public class CommonMessageContainer {
 			}
 		}
 //		props.store(new OutputStreamWriter(new FileOutputStream(new File(rootAbsolutePath.toString()+"/messages/message.properties")), "UTF-8"), "message comment");
-		propsKo.store(new OutputStreamWriter(new FileOutputStream(new File(rootAbsolutePath.toString()+"/messages/message.properties")),"UTF-8"), "message comment");
-		propsKo.store(new OutputStreamWriter(new FileOutputStream(new File(rootAbsolutePath.toString()+"/messages/message_ko.properties")),"UTF-8"), "message comment");
-		propsKo.store(new OutputStreamWriter(new FileOutputStream(new File(rootAbsolutePath.toString()+"/messages/message_ko_KR.properties")),"UTF-8"), "message comment");
-		propsEn.store(new OutputStreamWriter(new FileOutputStream(new File(rootAbsolutePath.toString()+"/messages/message_en.properties")), "UTF-8"), "message comment");
-		propsJa.store(new OutputStreamWriter(new FileOutputStream(new File(rootAbsolutePath.toString()+"/messages/message_ja.properties")), "UTF-8"), "message comment");
-		propsZh.store(new OutputStreamWriter(new FileOutputStream(new File(rootAbsolutePath.toString()+"/messages/message_zh.properties")), "UTF-8"), "message comment");
+		store(propsKo, new File(messageDir, "message.properties"));
+		store(propsKo, new File(messageDir, "message_ko.properties"));
+		store(propsKo, new File(messageDir, "message_ko_KR.properties"));
+		store(propsEn, new File(messageDir, "message_en.properties"));
+		store(propsJa, new File(messageDir, "message_ja.properties"));
+		store(propsZh, new File(messageDir, "message_zh.properties"));
 
 
+	}
+
+	private void store(Properties properties, File target) throws Exception {
+		try (OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(target), "UTF-8")) {
+			properties.store(writer, "message comment");
+		}
 	}
 
 	/**

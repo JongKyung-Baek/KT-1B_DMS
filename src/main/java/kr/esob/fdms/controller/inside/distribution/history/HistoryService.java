@@ -25,6 +25,7 @@ import kr.esob.fdms.controller.outside.doc.request.DocInfoVO;
 import kr.esob.fdms.controller.outside.drawing.request.DrawingInfoVO;
 import kr.esob.fdms.controller.outside.sw.request.SwInfoVO;
 import kr.esob.fdms.util.ObjectUtil;
+import kr.esob.fdms.util.StoragePathUtils;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
@@ -95,8 +96,9 @@ public class HistoryService implements CommonService{
 
 		//폐기 첨부파일 저장
 		Iterator<String> itr = request.getFileNames();
-		String filePathNm = SystemConfig.getSystemConfigValue("DESTROY_FILE_PATH") + param.getDestroyNo() + "\\";
-		File filePath = new File(filePathNm);
+		File filePath = StoragePathUtils.resolve(
+				SystemConfig.getSystemConfigValue("DESTROY_FILE_PATH"),
+				param.getDestroyNo()).toFile();
 		if(!filePath.exists())filePath.mkdirs();
 //		param.setFilePath(filePathNm);
 		if(itr.hasNext()) {
@@ -105,12 +107,9 @@ public class HistoryService implements CommonService{
 			int i = 1;			// FILE SEQUENCE
 			for(MultipartFile multipartFile : list) {
 				param.setDestroyFileSeq(i);
-				String orgName = multipartFile.getOriginalFilename();
-				if(orgName.contains("\\")) {
-					orgName = orgName.substring(orgName.lastIndexOf("\\")+1, orgName.length());
-				}
-				File file = new File(filePathNm + orgName);
-				param.setFilePath(filePathNm + orgName);
+				String orgName = StoragePathUtils.fileName(multipartFile.getOriginalFilename());
+				File file = StoragePathUtils.resolve(filePath.getPath(), orgName).toFile();
+				param.setFilePath(file.getPath());
 //				File file = new File(filePathNm + multipartFile.getOriginalFilename());
 				multipartFile.transferTo(file);
 				dao.insertDestroyFile(param);

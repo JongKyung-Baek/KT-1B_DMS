@@ -106,7 +106,6 @@ public class RequestService implements CommonService{
 				mailService.sendDocsMail(mailInfoVo);
 			}
 		}catch(Exception e) {
-			e.printStackTrace();
 		}
 		return resultVo;
 	}
@@ -173,7 +172,6 @@ public class RequestService implements CommonService{
 				mailService.sendDocsMail(mailInfoVo);
 			}
 		}catch(Exception e) {
-			e.printStackTrace();
 		}
 		return result;
 	}

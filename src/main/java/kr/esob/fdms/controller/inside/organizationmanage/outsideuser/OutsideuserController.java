@@ -118,7 +118,6 @@ public class OutsideuserController extends AbstractController {
 		tempCompanyCombo.setComboCd("informationDistribution");
 		model.addAttribute("informationDistribution", comboService.selectComboList(tempCompanyCombo));
 
-		System.out.println("param.getUserCd() >>>>>>>>>>>>>>>>> " +  param.getUserCd());
 
 		if(null == param.getUserCd()) {
 			info = new UserListVO();
@@ -135,7 +134,7 @@ public class OutsideuserController extends AbstractController {
 		return "inside/organizationmanage/outsideuser/userPopup";
 	}
 
-	@RequestMapping(value="/saveUser")
+	@PostMapping("/saveUser")
 	public @ResponseBody ResultVO saveUser(@RequestBody UserPopupParam param, Model model) throws JsonProcessingException {
 		ResultVO resultVo = new ResultVO();
 
@@ -176,12 +175,12 @@ public class OutsideuserController extends AbstractController {
 		return companyService.selectCompanyCheck(param);
 	}
 
-	@RequestMapping(value="/saveCompany")
+	@PostMapping("/saveCompany")
 	public @ResponseBody ResultVO saveCompany(@RequestBody CompanyPopupParam param, Model model) throws JsonProcessingException {
 		return companyService.saveCompany(param);
 	}
 
-	@RequestMapping(value="/unlockAccount")
+	@PostMapping("/unlockAccount")
 	public @ResponseBody ResultVO unlockAccount(@RequestBody UserPopupParam param, Model model) throws JsonProcessingException {
 		return userService.updateUnlockAccount(param);
 	}

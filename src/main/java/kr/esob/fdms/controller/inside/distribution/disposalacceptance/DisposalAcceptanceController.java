@@ -6,7 +6,10 @@ import javax.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -18,7 +21,7 @@ import kr.esob.fdms.commonlogic.grid.GridResultVO;
 import kr.esob.fdms.commonlogic.result.ResultVO;
 import kr.esob.fdms.controller.inside.authorization.AuthorizationDao;
 import kr.esob.fdms.controller.inside.authorization.AuthorizationService;
-import kr.esob.fdms.controller.outside.commondestroystatus.DestroyFileVO;
+import kr.esob.fdms.controller.outside.commondestroystatus.DestroyFileDownloadParam;
 import net.sf.json.JSONArray;
 
 @Controller
@@ -56,9 +59,10 @@ public class DisposalAcceptanceController extends AbstractController {
 
 	@RequestMapping("/approvalPopup")
 	public String approvalPopup(Model model, DisposalAcceptanceParam param) {
+		DisposalAcceptancePopupVO info = service.selectDisposalInfo(param);
 		model.addAttribute("gridInfo", JSONArray.fromObject(gridService.selectGridInfo("gridDisposalAcceptancePopup")));
 		model.addAttribute("fileList", service.selectDisposalFileList(param));
-		model.addAttribute("formData", service.selectDisposalInfo(param));
+		model.addAttribute("formData", info);
 		return "inside/distribution/disposalacceptance/approvalPopup";
 	}
 
@@ -69,12 +73,17 @@ public class DisposalAcceptanceController extends AbstractController {
 		return result;
 	}
 
-	@RequestMapping("/fileDownload")
-	public void fileDownload(DestroyFileVO param, HttpServletResponse response) throws Exception {
+	@GetMapping("/fileDownload")
+	public void fileDownload(@RequestParam String destroyRequestNo,
+							 @RequestParam int destroyFileSeq,
+							 HttpServletResponse response) throws Exception {
+		DestroyFileDownloadParam param = new DestroyFileDownloadParam();
+		param.setDestroyRequestNo(destroyRequestNo);
+		param.setDestroyFileSeq(destroyFileSeq);
 		service.fileDownload(param, response);
 	}
 
-	@RequestMapping("/saveApproval")
+	@PostMapping("/saveApproval")
 	public @ResponseBody ResultVO saveApproval(@RequestBody DisposalAcceptanceParam param) {
 		ResultVO resultVo = service.saveApproval(param);
 		return resultVo;

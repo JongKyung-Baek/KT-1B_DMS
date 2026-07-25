@@ -5,33 +5,124 @@
 
 <mapper namespace="sql.CommonCr">
 
-<select id="selectInsideFilePath" resultType="crFileVO">
-	SELECT *
-	FROM ITN_CR_FILE
-	WHERE CN_SERIAL = #{cnSerial}
-	  AND FILE_NO = #{fileNo}
+<select id="selectInsideDownloadResource" resultType="crFileVO">
+	SELECT crFile.CN_SERIAL,
+		   crFile.CR_NO,
+		   crFile.FILE_NO,
+		   crFile.DOCS_FILE_PATH_NM,
+		   crFile.ORG_FILE_NM,
+		   request.REQUEST_NO,
+		   'DRAWING' AS aclObjectType,
+		   drawing.OBJECT_ID AS aclObjectId,
+		   CAST(crFile.FILE_NO AS TEXT) AS aclFileNo
+	  FROM ITN_CR_FILE crFile
+	  JOIN ITN_CR cr ON cr.CR_NO = crFile.CR_NO
+	  JOIN DOCS_REQUEST_MAPPING requestMapping ON requestMapping.OBJECT_ID = cr.CR_NO
+	  JOIN DOCS_REQUEST request ON request.REQUEST_NO = requestMapping.REQUEST_NO
+	  JOIN LATERAL (
+			SELECT docsDrawing.OBJECT_ID
+			  FROM DOCS_DRAWING docsDrawing
+			 WHERE docsDrawing.DRAWING_NO = cr.DRAWING_NO
+			   AND (NULLIF(cr.REV_NO, '') IS NULL OR docsDrawing.DRAWING_REV = cr.REV_NO)
+			 ORDER BY docsDrawing.INTERFACE_DT DESC NULLS LAST
+			 LIMIT 1
+	  ) drawing ON TRUE
+	 WHERE crFile.CR_NO = #{crNo}
+	   AND crFile.FILE_NO = #{fileNo}
+	   AND (
+			request.INSERT_USER_CD = #{sessionUser.userCd}
+			OR EXISTS (
+				SELECT 1 FROM DOCS_REQUEST_DETAIL accessDetail
+				 WHERE accessDetail.REQUEST_NO = request.REQUEST_NO
+				   AND (accessDetail.ORIGINAL_USER_CD = #{sessionUser.userCd}
+						OR accessDetail.ACTUAL_USER_CD = #{sessionUser.userCd})
+			)
+	   )
+	 ORDER BY request.REQUEST_NO
+	 LIMIT 1
 </select>
 
-<select id="selectOutsideFilePath" resultType="crFileVO">
-	SELECT FILE_PATH_NM AS docsFilePathNm
-		 , ORG_FILE_NM AS orgFileNm
-	FROM DOCS_REQUEST_FILE
-	WHERE OBJECT_ID = #{crNo}
-	  AND FILE_NO = #{fileNo}
+<select id="selectOutsideDownloadResource" resultType="crFileVO">
+	SELECT requestFile.OBJECT_ID AS crNo,
+		   requestFile.FILE_NO,
+		   requestFile.FILE_PATH_NM AS docsFilePathNm,
+		   requestFile.ORG_FILE_NM AS orgFileNm,
+		   request.REQUEST_NO,
+		   'DRAWING' AS aclObjectType,
+		   drawing.OBJECT_ID AS aclObjectId,
+		   CAST(requestFile.FILE_NO AS TEXT) AS aclFileNo
+	  FROM DOCS_REQUEST_FILE requestFile
+	  JOIN DOCS_REQUEST_MAPPING requestMapping
+	    ON requestMapping.REQUEST_NO = requestFile.REQUEST_NO
+	   AND requestMapping.OBJECT_ID = requestFile.OBJECT_ID
+	  JOIN DOCS_REQUEST request ON request.REQUEST_NO = requestFile.REQUEST_NO
+	  JOIN DOCS_USER actor ON actor.USER_CD = #{sessionUser.userCd}
+	  JOIN DOCS_USER ownerUser ON ownerUser.USER_CD = request.INSERT_USER_CD
+	  JOIN LATERAL (
+			SELECT docsDrawing.OBJECT_ID
+			  FROM DOCS_DRAWING docsDrawing
+			 WHERE docsDrawing.DRAWING_NO = requestMapping.OBJECT_NO
+			   AND (NULLIF(requestMapping.REV_NO, '') IS NULL OR docsDrawing.DRAWING_REV = requestMapping.REV_NO)
+			 ORDER BY docsDrawing.INTERFACE_DT DESC NULLS LAST
+			 LIMIT 1
+	  ) drawing ON TRUE
+	 WHERE requestFile.OBJECT_ID = #{crNo}
+	   AND requestFile.FILE_NO = CAST(#{fileNo} AS TEXT)
+	   AND (
+			ownerUser.COMPANY_CD = actor.COMPANY_CD
+			OR EXISTS (
+				SELECT 1 FROM DOCS_REQUEST_DETAIL accessDetail
+				 WHERE accessDetail.REQUEST_NO = request.REQUEST_NO
+				   AND (accessDetail.ORIGINAL_USER_CD = actor.USER_CD
+						OR accessDetail.ACTUAL_USER_CD = actor.USER_CD)
+			)
+	   )
+	 ORDER BY request.REQUEST_NO
+	 LIMIT 1
 </select>
 
 <select id="selectInsideFileList" resultType="crFileVO">
-	SELECT *
-	FROM ITN_CR_FILE
-	WHERE CR_NO = #{crNo}
+	SELECT crFile.CN_SERIAL,
+		   crFile.CR_NO,
+		   crFile.FILE_NM,
+		   crFile.FILE_SIZE,
+		   crFile.FILE_NO,
+		   crFile.ORG_FILE_NM
+	  FROM ITN_CR_FILE crFile
+	  JOIN DOCS_REQUEST_MAPPING requestMapping ON requestMapping.OBJECT_ID = crFile.CR_NO
+	  JOIN DOCS_REQUEST request ON request.REQUEST_NO = requestMapping.REQUEST_NO
+	 WHERE crFile.CR_NO = #{crNo}
+	   AND (
+			request.INSERT_USER_CD = #{sessionUser.userCd}
+			OR EXISTS (
+				SELECT 1 FROM DOCS_REQUEST_DETAIL accessDetail
+				 WHERE accessDetail.REQUEST_NO = request.REQUEST_NO
+				   AND (accessDetail.ORIGINAL_USER_CD = #{sessionUser.userCd}
+						OR accessDetail.ACTUAL_USER_CD = #{sessionUser.userCd})
+			)
+	   )
+	 ORDER BY crFile.FILE_NO
 </select>
 
 <select id="selectOutsideFileList" resultType="crFileVO">
-	SELECT OBJECT_ID AS crNo
-		 , FILE_NO AS fileNo
-		 , ORG_FILE_NM AS orgFileNm
-	FROM DOCS_REQUEST_FILE
-	WHERE OBJECT_ID = #{crNo}
+	SELECT requestFile.OBJECT_ID AS crNo,
+		   requestFile.FILE_NO AS fileNo,
+		   requestFile.ORG_FILE_NM AS orgFileNm
+	  FROM DOCS_REQUEST_FILE requestFile
+	  JOIN DOCS_REQUEST request ON request.REQUEST_NO = requestFile.REQUEST_NO
+	  JOIN DOCS_USER actor ON actor.USER_CD = #{sessionUser.userCd}
+	  JOIN DOCS_USER ownerUser ON ownerUser.USER_CD = request.INSERT_USER_CD
+	 WHERE requestFile.OBJECT_ID = #{crNo}
+	   AND (
+			ownerUser.COMPANY_CD = actor.COMPANY_CD
+			OR EXISTS (
+				SELECT 1 FROM DOCS_REQUEST_DETAIL accessDetail
+				 WHERE accessDetail.REQUEST_NO = request.REQUEST_NO
+				   AND (accessDetail.ORIGINAL_USER_CD = actor.USER_CD
+						OR accessDetail.ACTUAL_USER_CD = actor.USER_CD)
+			)
+	   )
+	 ORDER BY requestFile.FILE_NO
 </select>
 
 </mapper>

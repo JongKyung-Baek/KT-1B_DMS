@@ -18,6 +18,8 @@ import java.time.format.DateTimeFormatter;
 import javax.inject.Inject;
 
 import org.apache.commons.io.FilenameUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpEntity;
@@ -46,11 +48,13 @@ import kr.esob.fdms.controller.inside.distribution.approvaldetail.DistributionAp
 import kr.esob.fdms.controller.login.UserVO;
 import kr.esob.fdms.controller.outside.doc.request.DocInfoVO;
 import kr.esob.fdms.util.RandomStringGenerator;
+import kr.esob.fdms.util.StoragePathUtils;
 import kr.esob.fdms.util.StringUtil;
 
 @Service
 public class DocRequestService implements CommonService {
 	private static final String IOC_OBJECT_TYPE = "IOC";
+	private static final Logger log = LoggerFactory.getLogger(DocRequestService.class);
 
 	@Inject
 	DocRequestDao dao;
@@ -104,14 +108,10 @@ public class DocRequestService implements CommonService {
 	// 2020.07.24 기범추가( 등록 )
 	public ResultVO saveDocRegisterFileX2(MultipartHttpServletRequest request) throws Exception {
 		ResultVO resultVo = new ResultVO();
-		System.out.println("[IOC_COVER] enter saveDocRegisterFileX2");
-		System.out.println("들어오는지 체크 = " + request.getParameterMap());
-		System.out.println("들어오는지 체크 = " + request.getParameter("fileName"));
-		System.out.println("objectType -> " + request.getParameter("objectType"));
+		log.debug("[DOC_REGISTER] request received");
 		MultipartFile file = request.getFile("file");
 		List<MultipartFile> subFiles = request.getFiles("subFiles");
 
-		System.out.println("protectYn 잘 들어오나 " + request.getParameter("protectYn"));
 
 		String objectId = RandomStringGenerator.generateRandomString(32);
 		String treeCd = request.getParameter("treeCd");
@@ -120,8 +120,9 @@ public class DocRequestService implements CommonService {
 		String fileTypeParam = request.getParameter("fileType");
 
 		String revNo = resolveRevisionNo(request.getParameter("versionNo"), "0");
-		String filePathNm = SystemConfig.getSystemConfigValue("DOCUMENT_PATH") + "\\" + objectId + "."
-				+ FilenameUtils.getExtension(request.getParameter("orgFileNm"));
+		String filePathNm = StoragePathUtils.resolve(
+				SystemConfig.getSystemConfigValue("DOCUMENT_PATH"),
+				objectId + "." + FilenameUtils.getExtension(request.getParameter("orgFileNm"))).toString();
 
 		// DocRegisterPopupParam 객체 만들어서 저장
 		DocRegisterPopupParam docRegisterPopupParam = DocRegisterPopupParam.builder()
@@ -183,15 +184,13 @@ public class DocRequestService implements CommonService {
 			String registeredAt
 	) {
 		try {
-			System.out.println("[DOC_REGISTER_MAIL] targetUsersCsv=" + targetUsersCsv);
+			log.debug("[DOC_REGISTER_MAIL] dispatch started");
 			for (String token : splitCsv(targetUsersCsv)) {
-				System.out.println("[DOC_REGISTER_MAIL] token=" + token);
 				MailInfoVO mailInfoVo = mailService.selectReceiveUser(token);
 				if (mailInfoVo == null) {
-					System.out.println("[DOC_REGISTER_MAIL] selectReceiveUser is null. token=" + token);
+					log.warn("[DOC_REGISTER_MAIL] recipient not resolved");
 					continue;
 				}
-				System.out.println("[DOC_REGISTER_MAIL] toUserId=" + mailInfoVo.getToUserId() + ", toMail=" + mailInfoVo.getToMail());
 				mailInfoVo.setMailEnum(mailEnum);
 				mailInfoVo.setContent(buildRegistrationMailContent(
 						mailInfoVo,
@@ -202,10 +201,10 @@ public class DocRequestService implements CommonService {
 						registeredAt
 				));
 				ResultVO mailResult = mailService.sendDocsMail(mailInfoVo);
-				System.out.println("[DOC_REGISTER_MAIL] sendDocsMail success=" + (mailResult != null && mailResult.isSuccess()));
+				log.info("[DOC_REGISTER_MAIL] success={}", mailResult != null && mailResult.isSuccess());
 			}
 		} catch (Exception e) {
-			System.out.println("[DOC_REGISTER_MAIL] skip: " + e.getMessage());
+			log.warn("[DOC_REGISTER_MAIL] skipped type={}", e.getClass().getSimpleName());
 		}
 	}
 
@@ -264,7 +263,7 @@ public class DocRequestService implements CommonService {
 		path = StringUtil.replaceLfiPath(path);
 		File file = new File(path);
 		param.setFilePath(path);
-		System.out.println("파일 경로 : " + path);
+		log.debug("[DOC_REGISTER] file stored");
 
 		param.setFileNm(orgName);
 		param.setFileSize(String.valueOf(mf.getSize()));
@@ -434,7 +433,7 @@ public class DocRequestService implements CommonService {
 		if (updated > 0) {
 			updateDistributionApprovalDetail(objectId, IOC_OBJECT_TYPE, userCd, userNm);
 			boolean detailFinalApprove = isDistributionApprovalDetailCompleted(objectId, IOC_OBJECT_TYPE);
-			System.out.println("[IOC_APPROVAL] objectId=" + objectId + ", stringFinal=" + isFinalApprove + ", detailFinal=" + detailFinalApprove);
+			log.info("[IOC_APPROVAL] stringFinal={}, detailFinal={}", isFinalApprove, detailFinalApprove);
 			if (isFinalApprove || detailFinalApprove) {
 				mergeIocCoverAfterApproval(objectId);
 			}
@@ -616,7 +615,7 @@ public class DocRequestService implements CommonService {
 		detail.put("userId", safeString(userCd));
 		detail.put("userNm", safeString(userNm));
 		int updated = approvalDetailDao.updateApprovalDetailApproved(detail);
-		System.out.println("[" + objectType + "_APPROVAL_DETAIL] approved rows=" + updated + ", objectId=" + objectId);
+		log.info("[{}_APPROVAL_DETAIL] approved rows={}", objectType, updated);
 	}
 
 	private boolean isDistributionApprovalDetailCompleted(String objectId, String objectType) {
@@ -749,7 +748,7 @@ public class DocRequestService implements CommonService {
 		convertedUpdateParam.put("orgFileNm", toPdfFileName(safeString(param.getOrgFileNm()), safeString(param.getFileNm())));
 		convertedUpdateParam.put("fileSize", String.valueOf(convertedMain.length()));
 		int updated = dao.updateMainFileAfterCoverMerge(convertedUpdateParam);
-		System.out.println("[IOC_CONVERT] register main update rows=" + updated + ", filePath=" + inputPdfPath);
+		log.info("[IOC_CONVERT] register main update rows={}", updated);
 	}
 
 	private void markMainFileProcessingFail(String objectId, String errorMessage, String logTag) {
@@ -759,9 +758,9 @@ public class DocRequestService implements CommonService {
 			failParam.put("processingStatus", "FAIL");
 			failParam.put("errorMessage", safeString(errorMessage));
 			dao.updateMainFileProcessingFail(failParam);
-			System.out.println("[" + logTag + "] processing status updated to FAIL: " + errorMessage);
+			log.warn("[{}] processing status updated to FAIL", logTag);
 		} catch (Exception e) {
-			System.out.println("[" + logTag + "] fail status update exception: " + e.getMessage());
+			log.warn("[{}] fail status update exception type={}", logTag, e.getClass().getSimpleName());
 		}
 	}
 
@@ -791,7 +790,7 @@ public class DocRequestService implements CommonService {
 			String objectId = safeString(param.getObjectId());
 			String inputPdfPath = ensureConvertedPdfForCover(sourceFilePath, objectId, "IOC_COVER");
 			if (inputPdfPath.isEmpty()) {
-				System.out.println("[IOC_COVER] skip: inputPdfPath is empty");
+				log.warn("[IOC_COVER] skipped: input missing");
 				return;
 			}
 			if (!inputPdfPath.equals(sourceFilePath) && inputPdfPath.toLowerCase().endsWith(".pdf")) {
@@ -803,7 +802,7 @@ public class DocRequestService implements CommonService {
 					convertedUpdateParam.put("orgFileNm", toPdfFileName(safeString(param.getOrgFileNm()), safeString(param.getFileNm())));
 					convertedUpdateParam.put("fileSize", String.valueOf(convertedMain.length()));
 					int updated = dao.updateMainFileAfterCoverMerge(convertedUpdateParam);
-					System.out.println("[IOC_COVER] pre-merge main update rows=" + updated + ", filePath=" + inputPdfPath);
+					log.info("[IOC_COVER] pre-merge main update rows={}", updated);
 				}
 			}
 			String outputFileName = "cover_" + objectId + ".pdf";
@@ -871,15 +870,12 @@ public class DocRequestService implements CommonService {
 			if (endpoint.isEmpty()) {
 				endpoint = "http://localhost:7442/cover_merge_pdf";
 			}
-			System.out.println("[IOC_COVER] endpoint=" + endpoint);
-			System.out.println("[IOC_COVER] templatePdfPath=" + templatePdfPath);
-			System.out.println("[IOC_COVER] inputPdfPath=" + inputPdfPath + ", outputFileName=" + outputFileName);
-			System.out.println("[IOC_COVER] cover_from_user=" + safeString(fromUserName) + ", cover_from_position=" + (fromPositions.isEmpty() ? "" : safeString(fromPositions.get(0))));
+			log.debug("[IOC_COVER] request prepared");
 
 			RestTemplate restTemplate = new RestTemplate();
 			ResponseEntity<String> response = restTemplate.postForEntity(endpoint, entity, String.class);
 			String responseBody = response.getBody();
-			System.out.println("[IOC_COVER] responseStatus=" + response.getStatusCodeValue() + ", body=" + responseBody);
+			log.info("[IOC_COVER] response status={}", response.getStatusCodeValue());
 
 			if (responseBody != null && !responseBody.trim().isEmpty()) {
 				Map<String, Object> responseMap = new Gson().fromJson(responseBody, new TypeToken<Map<String, Object>>() {}.getType());
@@ -895,24 +891,23 @@ public class DocRequestService implements CommonService {
 						updateParam.put("fileSize", String.valueOf(mergedFile.length()));
 						int updated = dao.updateMainFileAfterCoverMerge(updateParam);
 						copyMergedPdfToViewerCache(outputPdfPath, objectId, "IOC_COVER");
-						System.out.println("[IOC_COVER] post-merge main update rows=" + updated + ", filePath=" + inputPdfPath);
-						System.out.println("[IOC_COVER] overwrite source file with merged cover: " + inputPdfPath);
+						log.info("[IOC_COVER] merge applied rows={}", updated);
 					}
 				}
 			}
 		} catch (Exception e) {
-			System.out.println("[IOC_COVER] exception: " + e.getMessage());
+			log.warn("[IOC_COVER] merge failed type={}", e.getClass().getSimpleName());
 			try {
 				Map<String, Object> failParam = new HashMap<>();
 				failParam.put("objectId", safeString(param.getObjectId()));
-				String errorMessage = safeString(e.getMessage());
+				String errorMessage = "cover_merge_failed:" + e.getClass().getSimpleName();
 				if (errorMessage.length() > 1000) {
 					errorMessage = errorMessage.substring(0, 1000);
 				}
 				failParam.put("errorMessage", errorMessage);
 				dao.updateMainFileProcessingFail(failParam);
 			} catch (Exception ignore) {
-				System.out.println("[IOC_COVER] fail status update exception: " + ignore.getMessage());
+				log.warn("[IOC_COVER] fail status update exception type={}", ignore.getClass().getSimpleName());
 			}
 		}
 	}
@@ -1060,9 +1055,9 @@ public class DocRequestService implements CommonService {
 	private String buildDocumentSavedPath(String objectId, String extension) {
 		String basePath = SystemConfig.getSystemConfigValue("DOCUMENT_PATH");
 		if (extension == null || extension.trim().isEmpty()) {
-			return basePath + "\\" + objectId;
+			return StoragePathUtils.resolve(basePath, objectId).toString();
 		}
-		return basePath + "\\" + objectId + "." + extension;
+		return StoragePathUtils.resolve(basePath, objectId + "." + extension).toString();
 	}
 
 	private String ensureConvertedPdfForCover(String sourceFilePath, String objectId, String logTag) {
@@ -1087,7 +1082,7 @@ public class DocRequestService implements CommonService {
 			requestFactory.setReadTimeout(60000);
 			RestTemplate restTemplate = new RestTemplate(requestFactory);
 			ResponseEntity<String> response = restTemplate.postForEntity(endpoint, new HttpEntity<>(body, headers), String.class);
-			System.out.println("[" + logTag + "] convert status=" + response.getStatusCodeValue() + ", body=" + response.getBody());
+			log.info("[{}] convert status={}", logTag, response.getStatusCodeValue());
 			if (!response.getStatusCode().is2xxSuccessful()) {
 				return "";
 			}
@@ -1106,12 +1101,12 @@ public class DocRequestService implements CommonService {
 					}
 				}
 				if (latest != null) {
-					System.out.println("[" + logTag + "] convertedPdfPath=" + latest.getAbsolutePath());
+					log.info("[{}] converted output found", logTag);
 					return latest.getAbsolutePath();
 				}
 			}
 		} catch (Exception e) {
-			System.out.println("[" + logTag + "] convert exception: " + e.getMessage());
+			log.warn("[{}] convert failed type={}", logTag, e.getClass().getSimpleName());
 		}
 		return "";
 	}
@@ -1135,12 +1130,12 @@ public class DocRequestService implements CommonService {
 		try {
 			String adapPdfPath = safeString(SystemConfig.getSystemConfigValue("ADAP_PDF_PATH"));
 			if (adapPdfPath.isEmpty()) {
-				System.out.println("[" + logTag + "] viewer cache skip: ADAP_PDF_PATH is empty");
+				log.warn("[{}] viewer cache skipped: root not configured", logTag);
 				return;
 			}
 			File source = new File(safeString(mergedPdfPath));
 			if (!source.isFile()) {
-				System.out.println("[" + logTag + "] viewer cache skip: merged file not found: " + mergedPdfPath);
+				log.warn("[{}] viewer cache skipped: merged file missing", logTag);
 				return;
 			}
 			File targetDir = new File(adapPdfPath);
@@ -1149,9 +1144,9 @@ public class DocRequestService implements CommonService {
 			}
 			File target = new File(targetDir, safeString(objectId) + ".pdf");
 			Files.copy(source.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
-			System.out.println("[" + logTag + "] viewer cache updated: " + target.getAbsolutePath());
+			log.info("[{}] viewer cache updated", logTag);
 		} catch (Exception e) {
-			System.out.println("[" + logTag + "] viewer cache update failed: " + e.getMessage());
+			log.warn("[{}] viewer cache update failed type={}", logTag, e.getClass().getSimpleName());
 		}
 	}
 

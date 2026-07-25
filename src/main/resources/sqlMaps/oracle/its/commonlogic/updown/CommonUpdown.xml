@@ -12,44 +12,70 @@
         WHERE SYSTEM_CONFIG_CD LIKE 'UPDOWN%'
     )
     SELECT
-        MAX(SYSTEM_CONFIG_VALUE) FILTER (WHERE SYSTEM_CONFIG_CD = 'UPDOWN_CAB_URL') AS "updownCabUrl",
-            MAX(SYSTEM_CONFIG_VALUE) FILTER (WHERE SYSTEM_CONFIG_CD = 'UPDOWN_CAB_URL_OUT') AS "updownCabUrlOut",
-            MAX(SYSTEM_CONFIG_VALUE) FILTER (WHERE SYSTEM_CONFIG_CD = 'UPDOWN_SERVER_IP') AS "updownServerIp",
+        MAX(SYSTEM_CONFIG_VALUE) FILTER (WHERE SYSTEM_CONFIG_CD = 'UPDOWN_SERVER_IP') AS "updownServerIp",
             MAX(SYSTEM_CONFIG_VALUE) FILTER (WHERE SYSTEM_CONFIG_CD = 'UPDOWN_SERVER_IP_OUT') AS "updownOutServerIp",
             MAX(SYSTEM_CONFIG_VALUE) FILTER (WHERE SYSTEM_CONFIG_CD = 'UPDOWN_SERVER_PORT') AS "updownServerPort",
             MAX(SYSTEM_CONFIG_VALUE) FILTER (WHERE SYSTEM_CONFIG_CD = 'UPDOWN_LANG_CODE') AS "updownLangCode",
-            MAX(SYSTEM_CONFIG_VALUE) FILTER (WHERE SYSTEM_CONFIG_CD = 'UPDOWN_SECRET_KEY') AS "updownSecretKey",
             MAX(SYSTEM_CONFIG_VALUE) FILTER (WHERE SYSTEM_CONFIG_CD = 'UPDOWN_IS_SECURITY') AS "updownIsSecurity",
             MAX(SYSTEM_CONFIG_VALUE) FILTER (WHERE SYSTEM_CONFIG_CD = 'UPDOWN_USER_AUTH') AS "updownUserAuth"
     FROM CONFIG;
 </select>
 
 <select id="selectList" parameterType="kr.esob.fdms.commonlogic.updown.CommonUpdownParam" resultType="kr.esob.fdms.commonlogic.updown.CommonUpdownFileVO">
-    SELECT FILE_PATH_NM 	AS filePathNm
-    , ORG_FILE_NM		AS orgFileNm
-    , FILE_NM			AS fileNm
-    , FILE_SIZE			AS fileSize
-    , USE_END_YMD		AS endDate
-    , OBJECT_ID         AS objectId
-    , REQUEST_NO        AS requestNo
-    FROM DOCS_REQUEST_FILE
+    SELECT rf.FILE_PATH_NM 	AS filePathNm
+    , rf.ORG_FILE_NM		AS orgFileNm
+    , rf.FILE_NM			AS fileNm
+    , rf.FILE_SIZE			AS fileSize
+    , rf.USE_END_YMD		AS endDate
+    , rf.OBJECT_ID         AS objectId
+    , rf.OBJECT_ID         AS docSeq
+    , rf.FILE_NO::text     AS fileNo
+    , rf.REQUEST_NO        AS requestNo
+    , r.OBJECT_TYPE        AS objectType
+    FROM DOCS_REQUEST_FILE rf
+    JOIN DOCS_REQUEST r ON r.REQUEST_NO = rf.REQUEST_NO
     <foreach collection="list" open="WHERE 1=1 AND (" close=")" separator="OR" item="list">
-        ( OBJECT_ID = #{list.objectId, jdbcType=VARCHAR} AND REQUEST_NO = #{list.requestNo, jdbcType=VARCHAR} AND FILE_NO::text = #{list.fileNo, jdbcType=VARCHAR})
+        ( rf.OBJECT_ID = COALESCE(NULLIF(#{list.objectId, jdbcType=VARCHAR}, ''), #{list.docSeq, jdbcType=VARCHAR})
+          AND rf.REQUEST_NO = #{list.requestNo, jdbcType=VARCHAR}
+          AND rf.FILE_NO::text = #{list.fileNo, jdbcType=VARCHAR})
     </foreach>
 </select>
 
-<select id="getDownloadCount" resultType="int">
-    SELECT DOWNLOAD_COUNT
+<select id="selectDownloadResource" parameterType="map" resultType="kr.esob.fdms.commonlogic.updown.CommonUpdownFileVO">
+    SELECT rf.FILE_PATH_NM AS filePathNm,
+           rf.ORG_FILE_NM AS orgFileNm,
+           rf.FILE_NM AS fileNm,
+           rf.FILE_SIZE AS fileSize,
+           rf.USE_END_YMD AS endDate,
+           rf.OBJECT_ID AS objectId,
+           rf.OBJECT_ID AS docSeq,
+           rf.FILE_NO::text AS fileNo,
+           rf.REQUEST_NO AS requestNo,
+           r.OBJECT_TYPE AS objectType
+      FROM DOCS_REQUEST_FILE rf
+      JOIN DOCS_REQUEST r ON r.REQUEST_NO = rf.REQUEST_NO
+     WHERE rf.REQUEST_NO = #{requestNo}
+       AND rf.OBJECT_ID = #{objectId}
+       AND rf.FILE_NO::text = #{fileNo}
+</select>
+
+<select id="getDownloadCount" parameterType="map" resultType="int">
+    SELECT COALESCE(DOWNLOAD_COUNT, 0)
     FROM DOCS_REQUEST_FILE
-    WHERE FILE_PATH_NM = #{orgFilePath}
+    WHERE REQUEST_NO = #{requestNo}
+      AND OBJECT_ID = #{objectId}
+      AND FILE_NO::text = #{fileNo}
       AND DESTROY_TYPE IS NULL
 </select>
 
-<update id="plusDownloadCount">
+<update id="plusDownloadCount" parameterType="map">
     UPDATE DOCS_REQUEST_FILE
-    SET DOWNLOAD_COUNT = DOWNLOAD_COUNT + 1
-    WHERE FILE_PATH_NM = #{orgFilePath}
+    SET DOWNLOAD_COUNT = COALESCE(DOWNLOAD_COUNT, 0) + 1
+    WHERE REQUEST_NO = #{requestNo}
+      AND OBJECT_ID = #{objectId}
+      AND FILE_NO::text = #{fileNo}
       AND DESTROY_TYPE IS NULL
+      AND COALESCE(DOWNLOAD_COUNT, 0) &lt; 3
 </update>
 
 <insert id="addToDownHistory">
@@ -74,6 +100,113 @@
                #{policy}
            )
 </insert>
+
+<select id="selectDocFileSeqByDocSeq" resultType="string">
+    SELECT FILE_NO::text
+      FROM DOCS_REQUEST_FILE
+     WHERE REQUEST_NO = #{requestNo}
+       AND OBJECT_ID = #{docSeq}
+     ORDER BY FILE_NO
+     LIMIT 1
+</select>
+
+<select id="selectDrawingFileSeqByDocSeq" resultType="string">
+    SELECT FILE_NO::text
+      FROM DOCS_REQUEST_FILE
+     WHERE REQUEST_NO = #{requestNo}
+       AND OBJECT_ID = #{docSeq}
+     ORDER BY FILE_NO
+     LIMIT 1
+</select>
+
+<select id="selectDocPdfFileSeqByDocSeq" resultType="string">
+    SELECT FILE_NO::text
+      FROM DOCS_REQUEST_FILE
+     WHERE REQUEST_NO = #{requestNo}
+       AND OBJECT_ID = #{docSeq}
+     ORDER BY FILE_NO
+     LIMIT 1
+</select>
+
+<select id="selectDrawingPdfFileSeqByDocSeq" resultType="string">
+    SELECT FILE_NO::text
+      FROM DOCS_REQUEST_FILE
+     WHERE REQUEST_NO = #{requestNo}
+       AND OBJECT_ID = #{docSeq}
+     ORDER BY FILE_NO
+     LIMIT 1
+</select>
+
+<select id="selectDocSeqByDataNo" resultType="string">
+    SELECT OBJECT_ID
+      FROM DOCS_REQUEST_MAPPING
+     WHERE REQUEST_NO = #{requestNo}
+       AND OBJECT_NO = #{dataNo}
+     ORDER BY OBJECT_ID
+     LIMIT 1
+</select>
+
+<select id="selectDrawingDocSeqByDataNo" resultType="string">
+    SELECT OBJECT_ID
+      FROM DOCS_REQUEST_MAPPING
+     WHERE REQUEST_NO = #{requestNo}
+       AND OBJECT_NO = #{dataNo}
+     ORDER BY OBJECT_ID
+     LIMIT 1
+</select>
+
+<select id="selectObjectIdByDataNo" resultType="string">
+    SELECT OBJECT_ID
+      FROM DOCS_REQUEST_MAPPING
+     WHERE REQUEST_NO = #{requestNo}
+       AND OBJECT_NO = #{dataNo}
+     ORDER BY OBJECT_ID
+     LIMIT 1
+</select>
+
+<select id="selectOutsideDistributionActLogBase" resultType="map">
+    SELECT rf.REQUEST_NO AS "requestNo",
+           r.REQUEST_TYPE AS "requestType",
+           rf.OBJECT_ID AS "objectId",
+           rf.FILE_NO::text AS "fileNo",
+           r.OBJECT_TYPE AS "objectType",
+           COALESCE(r.PROTECT_YN, 'N') AS "protectYn",
+           rf.ORG_FILE_NM AS "orgFileNm",
+           rm.OBJECT_NO AS "objectNo",
+           rm.OBJECT_NM AS "objectNm"
+      FROM DOCS_REQUEST_FILE rf
+      JOIN DOCS_REQUEST r ON r.REQUEST_NO = rf.REQUEST_NO
+      LEFT JOIN DOCS_REQUEST_MAPPING rm
+        ON rm.REQUEST_NO = rf.REQUEST_NO AND rm.OBJECT_ID = rf.OBJECT_ID
+     WHERE rf.REQUEST_NO = #{requestNo}
+       AND rf.OBJECT_ID = #{docSeq}
+       AND (NULLIF(#{fileSeq}, '') IS NULL OR rf.FILE_NO::text = #{fileSeq})
+     ORDER BY rf.FILE_NO
+     LIMIT 1
+</select>
+
+<select id="countDownloadBusinessAccess" resultType="int">
+    SELECT COUNT(*)
+      FROM DOCS_REQUEST_FILE rf
+      JOIN DOCS_REQUEST r ON r.REQUEST_NO = rf.REQUEST_NO
+     WHERE rf.REQUEST_NO = #{requestNo}
+       AND rf.OBJECT_ID = #{objectId}
+       AND (NULLIF(#{fileNo}, '') IS NULL OR rf.FILE_NO::text = #{fileNo})
+       AND (
+            r.INSERT_USER_CD = #{userCd}
+            OR EXISTS (
+                SELECT 1 FROM DOCS_REQUEST_DEPLOY rd
+                 WHERE rd.REQUEST_NO = r.REQUEST_NO
+                   AND rd.DEPLOY_USER_CD = #{userCd}
+            )
+            OR EXISTS (
+                SELECT 1 FROM DOCS_ROLE_GROUP_MEMBER rgm
+                 WHERE rgm.GROUP_CODE = 'RG_001'
+                   AND rgm.GROUP_TYPE = 'USER'
+                   AND rgm.MEMBER_CD = #{userCd}
+            )
+       )
+</select>
 </mapper>
 
 

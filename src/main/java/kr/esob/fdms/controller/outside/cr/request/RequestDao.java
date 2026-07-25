@@ -44,19 +44,23 @@ public class RequestDao extends AbstractDao{
 		return (RequestStatusPopupVO) obj(prefix + "getCrRequestInfo", param);
 	}
 
-	public void updateRequest(OutsideCrParam param) {
-		update(prefix + "updateRequest", param);
+	public String selectApprovalTargetForUpdate(OutsideCrParam param) {
+		return (String) obj(prefix + "selectApprovalTargetForUpdate", param);
 	}
 
-	public void updateRequestDetail(OutsideCrParam param) {
-		update(prefix + "updateRequestDetail", param);
+	public int updateRequest(OutsideCrParam param) {
+		return update(prefix + "updateRequest", param);
+	}
+
+	public int updateRequestDetail(OutsideCrParam param) {
+		return update(prefix + "updateRequestDetail", param);
 	}
 
 	/**
 	 * 외부업체팀장 승인/반려
 	 * @param param
 	 */
-	public void updateCr(OutsideCrParam param) {
-		update(prefix + "updateCr", param);
+	public int updateCr(OutsideCrParam param) {
+		return update(prefix + "updateCr", param);
 	}
 }

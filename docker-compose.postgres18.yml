@@ -1,0 +1,28 @@
+services:
+  postgres18:
+    image: postgres:18
+    container_name: kt1b-postgres18
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5433:5432"
+    environment:
+      POSTGRES_DB: "${KT1B_PG18_DATABASE:-kt1b}"
+      POSTGRES_USER: "${KT1B_PG18_USERNAME:-myuser}"
+      POSTGRES_PASSWORD: "${KT1B_PG18_PASSWORD:?KT1B_PG18_PASSWORD must be set}"
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=en_US.utf8"
+      TZ: "${KT1B_PG18_TIMEZONE:-Etc/UTC}"
+      PGTZ: "${KT1B_PG18_TIMEZONE:-Etc/UTC}"
+    volumes:
+      - kt1b_postgres18_data:/var/lib/postgresql
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}" -h 127.0.0.1
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+volumes:
+  kt1b_postgres18_data:
+    name: kt1b_postgres18_data

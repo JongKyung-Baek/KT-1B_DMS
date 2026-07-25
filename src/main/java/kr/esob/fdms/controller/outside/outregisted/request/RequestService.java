@@ -9,6 +9,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
@@ -23,7 +24,7 @@ import kr.esob.fdms.controller.outside.commonrequest.CommonRequestService;
 import kr.esob.fdms.util.DateUtil;
 import kr.esob.fdms.util.FileUtil;
 import kr.esob.fdms.util.ObjectUtil;
-import kr.esob.fdms.util.StringUtil;
+import kr.esob.fdms.util.StoragePathUtils;
 import net.sf.json.JSONObject;
 
 @Service
@@ -61,22 +62,15 @@ public class RequestService implements CommonService {
 		dao.insertUnregisterInfo(param);
 		//미등록 자료 파일 등록
 		MultipartFile mf = request.getFile("file");
-		String filePathNm = SystemConfig.getSystemConfigValue("UNREG_FILE_PATH") + param.getObjectNo() + "\\";
-		File filePath = new File(filePathNm);
+		File filePath = StoragePathUtils.resolve(
+				SystemConfig.getSystemConfigValue("UNREG_FILE_PATH"),
+				param.getObjectNo()).toFile();
 		if(!filePath.exists())filePath.mkdirs();
-		param.setFilePath(filePathNm);
-		String orgName = mf.getOriginalFilename();
-		if(orgName.contains(File.separator)) {
-			orgName = orgName.substring(orgName.lastIndexOf(File.separator)+1, orgName.length());
-		}
-		
-		orgName = StringUtil.replaceLfiPath(orgName);
-		String path = filePathNm + orgName;
-		path = StringUtil.replaceLfiPath(path);
-		
-		File file = new File(path);
+		param.setFilePath(filePath.getPath());
+		String orgName = StoragePathUtils.fileName(mf.getOriginalFilename());
+		File file = StoragePathUtils.resolve(filePath.getPath(), orgName).toFile();
 		param.setFileNm(orgName);
-		param.setFilePath(path);
+		param.setFilePath(file.getPath());
 		param.setFileSize(String.valueOf(mf.getSize()));
 		mf.transferTo(file);
 		dao.insertUnregisterFile(param);
@@ -100,6 +94,7 @@ public class RequestService implements CommonService {
 		return resultVo;
 	}
 
+	@Transactional(rollbackFor = Exception.class)
 	public ResultVO distributionRequest(DistributionRequestPopupParam param) throws UnsupportedEncodingException {
 		ResultVO resultVo = new ResultVO();
 		List<DistributionRequestPopupParam> arrNonProtect = new ArrayList<DistributionRequestPopupParam>();
@@ -146,13 +141,17 @@ public class RequestService implements CommonService {
 			}
 			
 			vo.setOrgFileNm(vo.getFileNm());
-			JSONObject result = FileUtil.callSender(SystemConfig.getSystemConfigValue("SERVER_URL_OUTSIDE")
-					, SystemConfig.getSystemConfigValue("SERVER_URL_INSIDE")
-					, vo.getFilePath().replaceAll("/", "\\\\")
-					, SystemConfig.getSystemConfigValue("OUTREG_FILE_PATH")
-					, vo.getFileNm());
-			vo.setFilePath(SystemConfig.getSystemConfigValue("OUTREG_FILE_PATH") + result.getString("fileNm"));
-			vo.setFileNm(result.getString("fileNm"));
+			JSONObject result = FileUtil.callSender(
+					FileUtil.encryptTransferArgument(SystemConfig.getSystemConfigValue("SERVER_URL_OUTSIDE"))
+					, FileUtil.encryptTransferArgument(SystemConfig.getSystemConfigValue("SERVER_URL_INSIDE"))
+					, FileUtil.encryptTransferArgument(StoragePathUtils.toPath(vo.getFilePath()).toString())
+					, FileUtil.encryptTransferArgument(SystemConfig.getSystemConfigValue("OUTREG_FILE_PATH"))
+					, FileUtil.encryptTransferArgument(vo.getFileNm()));
+			String transferredFileName = FileUtil.requireSuccessfulTransferFileName(result);
+			vo.setFilePath(StoragePathUtils.resolve(
+					SystemConfig.getSystemConfigValue("OUTREG_FILE_PATH"),
+					transferredFileName).toString());
+			vo.setFileNm(transferredFileName);
 			
 			dao.insertDocsRequestFile(vo);
 		}
@@ -165,7 +164,6 @@ public class RequestService implements CommonService {
 				mailService.sendDocsMail(mailInfoVo);
 			}
 		}catch(Exception e) {
-			e.printStackTrace();
 		}
 		
 		return resultVo;

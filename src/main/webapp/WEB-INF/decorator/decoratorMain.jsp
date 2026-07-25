@@ -10,12 +10,17 @@
 <%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
 <sec:authentication property="principal" var="sessionUser" />
 <!doctype html>
-<html lang="kr" class="layout-menu-fixed layout-compact" dir="ltr" data-skin="default" data-bs-theme="light">
+<html lang="kr" class="layout-menu-fixed layout-compact" dir="ltr"
+	data-skin="default"
+	data-bs-theme="light"
+	data-template="vertical-menu-template"
+	data-assets-path="${pageContext.request.contextPath}/vuexy/assets/">
 <head>
 	<meta charset="UTF-8">
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<%@ include file="/WEB-INF/jspf/csrf-meta.jspf" %>
 	<!-- <link rel="shortcut icon" type="image/x-icon" href="${pageContext.request.contextPath}/resources/images/main/favicon.ico" /> -->
 
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/vuexy/assets/vendor/fonts/iconify-icons.css" />
@@ -47,7 +52,6 @@
 	</style>
 
 	<script src="${pageContext.request.contextPath}/vuexy/assets/vendor/js/helpers.js"></script>
-	<script src="${pageContext.request.contextPath}/vuexy/assets/vendor/js/template-customizer.js"></script>
 	<script src="${pageContext.request.contextPath}/vuexy/assets/js/config.js"></script>
 
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/jquery-3.4.1.min.js"></script>

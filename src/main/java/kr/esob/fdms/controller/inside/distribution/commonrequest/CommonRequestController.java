@@ -166,7 +166,6 @@ public class CommonRequestController extends AbstractController {
 			int proectUserCnt= 0;
 			if("Y".equals(param.getProductProtectYn())){	//양산
 				proectUserCnt++;
-				System.out.println(param.getSessionUser().getBusinessAreaCd());
 				list = authService.selectProductProtectUserList(param.getSessionUser().getBusinessAreaCd());
 				for(ComboInfoVO tempVo : list) {
 					defaultUserList.add(tempVo.getComboVal());
@@ -254,7 +253,6 @@ public class CommonRequestController extends AbstractController {
 	 */
 	@RequestMapping(value="/approvalRequest", method = RequestMethod.POST)
 	public @ResponseBody ResultVO approvalRequest(@RequestBody CommonDistributionRequestParam param) {
-		System.out.println("approvalRequest");System.out.println("approvalRequest");System.out.println("approvalRequest");
 		ResultVO resultVo = service.saveApprovalRequest(param);
 		return resultVo;
 	}
@@ -312,7 +310,6 @@ public class CommonRequestController extends AbstractController {
 			int proectUserCnt= 0;
 			if("Y".equals(param.getProductProtectYn())){	//양산
 				proectUserCnt++;
-				System.out.println(param.getSessionUser().getBusinessAreaCd());
 				list = authService.selectProductProtectUserList(param.getSessionUser().getBusinessAreaCd());
 				for(ComboInfoVO tempVo : list) {
 					defaultUserList.add(tempVo.getComboVal());
@@ -437,12 +434,10 @@ public class CommonRequestController extends AbstractController {
 		model.addAttribute("updownServerIp", SystemConfig.getSystemConfigValue("UPDOWN_SERVER_IP"));
 		model.addAttribute("updownServerPort", SystemConfig.getSystemConfigValue("UPDOWN_SERVER_PORT"));
 		model.addAttribute("updownPath", SystemConfig.getSystemConfigValue("UPDOWN_PATH"));
-		model.addAttribute("updownSecretKey", SystemConfig.getSystemConfigValue("UPDOWN_SECRET_KEY"));
 		model.addAttribute("updownLangCode", SystemConfig.getSystemConfigValue("UPDOWN_LANG_CODE"));
 		model.addAttribute("updownIsSecurity", SystemConfig.getSystemConfigValue("UPDOWN_IS_SECURITY"));
 		model.addAttribute("updownExtension", SystemConfig.getSystemConfigValue("UPDOWN_EXTENSION"));
 
-		System.out.println("uri: " + uri);
 		if (uri.contains("drawingRevisionUpdatePopup")) {
 			return "inside/distribution/drawingRevisionUpdatePopup";
 		} else if(uri.contains("productionRevisionUpdatePopup")){

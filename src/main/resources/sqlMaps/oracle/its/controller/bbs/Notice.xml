@@ -179,7 +179,7 @@
 		SELECT NOTICE_CD
 			 , FILE_NO
 			 , FILE_PATH
-			 , SUBSTRING(FILE_PATH FROM POSITION('\\' IN FILE_PATH) + 1) AS fileNm
+			 , REGEXP_REPLACE(FILE_PATH, '^.*[\\/]', '') AS fileNm
 		FROM DOCS_NOTICE_FILE
 		WHERE NOTICE_CD = #{noticeCd}
 	</select>

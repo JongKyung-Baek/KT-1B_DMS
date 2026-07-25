@@ -12,6 +12,7 @@
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<%@ include file="/WEB-INF/jspf/csrf-meta.jspf" %>
 	<link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/bootstrap/css/bootstrap-combined.min.css" media="screen" /> <!-- -->
 	<link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/bootstrap/css/bootstrap-datetimepicker.min.css" media="screen" />
 	<link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/jquery-ui-1.12.1.custom/jquery-ui.css" media="screen" />
@@ -41,11 +42,6 @@
 
 	<sitemesh:write property='head'/>
 </head>
-<OBJECT
-      classid="clsid:9E93A6E5-4247-416D-BA9C-7485ED08B23A"
-      codebase="http://10.33.130.159:9001/EDIActiveXT(NSU-8-99-5-0).cab#Version=8,99,5,0"
-      id="EDIActiveXT">
-</OBJECT>
 <body>
 	<form>
 		<div class="dialogContainer">

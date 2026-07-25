@@ -41,7 +41,6 @@ public class ProductionRegisterPopupParam extends CommonParam {
     private String modelCode;   // 기종
     private String customerRevision;   // 고객 리비전
     private String changeActionNo;   // CA 번호
-    private String check3DFile;   // 3D 여부
     private String approver;
     private String reviewerUser;
 

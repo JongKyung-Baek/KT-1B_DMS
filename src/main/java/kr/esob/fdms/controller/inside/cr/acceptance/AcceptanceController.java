@@ -8,7 +8,10 @@ import javax.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -23,7 +26,7 @@ import kr.esob.fdms.commonlogic.result.ResultVO;
 import kr.esob.fdms.controller.inside.authorization.AuthorizationDao;
 import kr.esob.fdms.controller.inside.authorization.AuthorizationService;
 import kr.esob.fdms.controller.inside.cr.CommonCrService;
-import kr.esob.fdms.controller.inside.cr.CrFileVO;
+import kr.esob.fdms.controller.inside.cr.CrFileDownloadParam;
 import kr.esob.fdms.controller.inside.cr.CrParam;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
@@ -76,17 +79,21 @@ public class AcceptanceController extends AbstractController {
 		return "inside/cr/commonInsideCrPopup";
 	}
 
-	@RequestMapping(value="/crFileDownload")
-	public void crFileDownload(CrFileVO param, HttpServletResponse response) throws Exception {
-		commonCrService.crFileDownload(commonCrService.selectInsideFilePath(param), response);
+	@GetMapping(value="/crFileDownload")
+	public void crFileDownload(@RequestParam String crNo, @RequestParam int fileNo,
+							   HttpServletResponse response) throws Exception {
+		CrFileDownloadParam param = new CrFileDownloadParam();
+		param.setCrNo(crNo);
+		param.setFileNo(fileNo);
+		commonCrService.downloadInside(param, response);
 	}
 
-	@RequestMapping(value="/approvalRequest")
+	@PostMapping(value="/approvalRequest")
 	public @ResponseBody ResultVO approvalRequest(@RequestBody CrParam param) {
 		return service.approvalRequest(param);
 	}
 
-	@RequestMapping(value="/acceptanceReject")
+	@PostMapping(value="/acceptanceReject")
 	public @ResponseBody ResultVO acceptanceReject(@RequestBody CrParam param) {
 		return service.acceptanceReject(param);
 	}

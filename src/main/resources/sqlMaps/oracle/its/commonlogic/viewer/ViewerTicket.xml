@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="sql.ViewerTicket">
+
+    <delete id="deleteExpired">
+        DELETE FROM docs_viewer_key
+         WHERE delete_at &lt;= CURRENT_TIMESTAMP
+            OR revoked_yn = 'Y'
+    </delete>
+
+    <insert id="insertTicket">
+        INSERT INTO docs_viewer_key (
+            disposable_key, object_type, object_id, file_no, file_name,
+            user_cd, session_id, delete_at
+        ) VALUES (
+            #{disposableKey}, #{objectType}, #{objectId}, #{fileNo}, #{fileName},
+            #{userCd}, #{sessionId}, CURRENT_TIMESTAMP + INTERVAL '15 minutes'
+        )
+    </insert>
+
+    <select id="selectValid" resultType="kr.esob.fdms.commonlogic.viewer.ViewerTicketVO">
+        SELECT disposable_key, object_type, object_id, file_no, file_name, user_cd, session_id
+          FROM docs_viewer_key
+         WHERE disposable_key = #{key}
+           AND user_cd = #{userCd}
+           AND session_id = #{sessionId}
+           AND revoked_yn = 'N'
+           AND used_at IS NULL
+           AND delete_at &gt; CURRENT_TIMESTAMP
+    </select>
+
+    <update id="markUsed">
+        UPDATE docs_viewer_key
+           SET used_at = CURRENT_TIMESTAMP
+         WHERE disposable_key = #{key}
+           AND user_cd = #{userCd}
+           AND session_id = #{sessionId}
+           AND revoked_yn = 'N'
+           AND used_at IS NULL
+           AND delete_at &gt; CURRENT_TIMESTAMP
+    </update>
+
+</mapper>

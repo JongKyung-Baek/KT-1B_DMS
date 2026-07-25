@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
@@ -49,17 +50,13 @@ public class CommonDestroyRequestController extends AbstractController {
 		return "outside/commondestroy/commonDestroyRequestPopup";
 	}
 
-	@RequestMapping(value="/underDestroy")
+	@PostMapping(value="/underDestroy")
 	public @ResponseBody ResultVO underDestroy(@RequestBody DestroyRequestParam param) throws Exception {
 		return destroyRequestService.updateUnderDestroy(param);
 	}
 	
-	@RequestMapping(value="/destoryRequest")
+	@PostMapping(value="/destoryRequest")
 	public @ResponseBody ResultVO destoryRequest(MultipartHttpServletRequest request) throws Exception {
-
-		// 임시 코드
-		String destroyParamStr = request.getParameter("destroyParam");
-		System.out.println("destroyParam 입력 값: " + destroyParamStr);
 
 		return destroyRequestService.insertDestory(request);
 	}

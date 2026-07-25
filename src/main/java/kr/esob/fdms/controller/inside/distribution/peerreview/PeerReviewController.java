@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -38,8 +39,11 @@ import kr.esob.fdms.commonlogic.abstractclass.CommonHomeParam;
 import kr.esob.fdms.commonlogic.combo.ComboService;
 import kr.esob.fdms.commonlogic.grid.GridResultVO;
 import kr.esob.fdms.commonlogic.result.ResultVO;
+import kr.esob.fdms.commonlogic.securityacl.FileAccessRequest;
+import kr.esob.fdms.commonlogic.securityacl.SecurityAclService;
 import kr.esob.fdms.commonlogic.systemconfig.SystemConfig;
 import kr.esob.fdms.controller.login.UserVO;
+import kr.esob.fdms.util.StoragePathUtils;
 import net.sf.json.JSONArray;
 
 @Controller
@@ -48,6 +52,9 @@ public class PeerReviewController extends AbstractController {
 
     @Inject
     PeerReviewService peerReviewService;
+
+    @Inject
+    SecurityAclService securityAclService;
 
     @Inject
     ComboService comboService;
@@ -98,18 +105,76 @@ public class PeerReviewController extends AbstractController {
 
     @RequestMapping("/peerReviewFilePopup")
     public String peerReviewFilePopup(PeerReviewSaveParam param, Model model) {
-        String peerReviewNo = param.getPeerreviewNo();
-        if (peerReviewNo == null || peerReviewNo.trim().isEmpty()) {
-            peerReviewNo = param.getRequestNo();
+        String requestedPeerReviewNo = param.getPeerreviewNo();
+        if (requestedPeerReviewNo == null || requestedPeerReviewNo.trim().isEmpty()) {
+            requestedPeerReviewNo = param.getRequestNo();
         }
 
-        String objectId = peerReviewService.resolveObjectId(param.getObjectId(), peerReviewNo);
-        List<Map<String, Object>> mainFileList = peerReviewService.selectMainFileInfo(objectId, peerReviewNo);
-        model.addAttribute("objectId", objectId);
-        model.addAttribute("peerReviewNo", peerReviewNo);
+        Map<String, Object> popupResource = peerReviewService.getPeerReviewFileDownloadInfo(param.getObjectId(), null);
+        if ((popupResource == null || popupResource.isEmpty())
+                && requestedPeerReviewNo != null && !requestedPeerReviewNo.trim().isEmpty()) {
+            popupResource = peerReviewService.getPeerReviewFileDownloadInfoByPeerReviewNo(requestedPeerReviewNo);
+        }
+        String resolvedObjectId = requirePopupViewAccess(popupResource, "PEER_REVIEW");
+        String resolvedPeerReviewNo = peerReviewService.resolvePeerReviewNoByObjectId(resolvedObjectId);
+        List<Map<String, Object>> mainFileList = filterAccessiblePopupRows(
+                peerReviewService.selectMainFileInfo(resolvedObjectId, resolvedPeerReviewNo), "PEER_REVIEW");
+        model.addAttribute("objectId", resolvedObjectId);
+        model.addAttribute("peerReviewNo", resolvedPeerReviewNo);
         model.addAttribute("mainFileList", mainFileList);
         model.addAttribute("mainFileJson", JSONArray.fromObject(mainFileList));
         return "inside/distribution/peerReview/peerReviewFilePopup";
+    }
+
+    private String requirePopupViewAccess(Map<String, Object> resource, String defaultObjectType) {
+        if (resource == null || resource.isEmpty()) {
+            throw new AccessDeniedException("File resource was not resolved from the database.");
+        }
+        String objectId = getMapString(resource, "aclObjectId", "ACLOBJECTID", "objectId", "OBJECTID");
+        if (objectId.isEmpty()) {
+            throw new AccessDeniedException("File resource identifier is missing.");
+        }
+        String objectType = getMapString(resource, "aclObjectType", "ACLOBJECTTYPE");
+        String fileNo = getMapString(resource, "fileNo", "FILENO", "file_no", "FILE_NO");
+        FileAccessRequest access = new FileAccessRequest();
+        access.setActionCd(SecurityAclService.VIEW);
+        access.setObjectType(objectType.isEmpty() ? defaultObjectType : objectType);
+        access.setObjectId(objectId);
+        access.setFileNo(fileNo.isEmpty() ? "*" : fileNo);
+        securityAclService.requireAccess(access);
+        return objectId;
+    }
+
+    private List<Map<String, Object>> filterAccessiblePopupRows(List<Map<String, Object>> rows, String objectType) {
+        List<Map<String, Object>> safeRows = new java.util.ArrayList<>();
+        if (rows == null) return safeRows;
+        for (Map<String, Object> row : rows) {
+            if (row == null) continue;
+            String objectId = getMapString(row, "objectId", "OBJECTID", "object_id", "OBJECT_ID");
+            if (objectId.isEmpty()) continue;
+            String fileNo = getMapString(row, "fileNo", "FILENO", "file_no", "FILE_NO");
+            FileAccessRequest access = new FileAccessRequest();
+            access.setActionCd(SecurityAclService.VIEW);
+            access.setObjectType(objectType);
+            access.setObjectId(objectId);
+            access.setFileNo(fileNo.isEmpty() ? "*" : fileNo);
+            if (securityAclService.checkAccess(access).isAllowed()) {
+                safeRows.add(withoutServerPath(row));
+            }
+        }
+        return safeRows;
+    }
+
+    private Map<String, Object> withoutServerPath(Map<String, Object> row) {
+        Map<String, Object> safe = new LinkedHashMap<>();
+        for (Map.Entry<String, Object> entry : row.entrySet()) {
+            String key = entry.getKey() == null ? "" : entry.getKey().replace("_", "").replace("-", "").toLowerCase();
+            if (!"filepath".equals(key) && !"filepathnm".equals(key)
+                    && !"fullpath".equals(key) && !"physicalpath".equals(key) && !"storagepath".equals(key)) {
+                safe.put(entry.getKey(), entry.getValue());
+            }
+        }
+        return safe;
     }
 
     @PostMapping(value = "/uploadPeerReviewRegisFile", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
@@ -160,33 +225,31 @@ public class PeerReviewController extends AbstractController {
             }
         }
         if (fileInfo == null || fileInfo.isEmpty()) {
-            System.out.println("[PEERREVIEW_DOWNLOAD] not found: fileInfo empty, objectId=" + objectId + ", fileNo=" + fileNo + ", peerReviewNo=" + effectivePeerReviewNo);
+            recordDirectDownloadResult(fileInfo, "PEER_REVIEW", objectId, fileNo,
+                    "FAIL", "RESOURCE_NOT_FOUND", "Direct download resource was not found.");
             return ResponseEntity.notFound().build();
         }
+        requireDownloadAccess(fileInfo, "PEER_REVIEW", objectId, fileNo);
         String rawFilePath = getMapString(fileInfo, "filePath", "filepath", "FILEPATH", "file_path_nm", "FILE_PATH_NM");
         String filePath = normalizePath(rawFilePath);
         String orgFileNm = getMapString(fileInfo, "orgFileNm", "orgfilenm", "ORGFILENM", "org_file_nm", "ORG_FILE_NM");
         if (orgFileNm.isEmpty()) {
             orgFileNm = "download.bin";
         }
-        System.out.println("[PEERREVIEW_DOWNLOAD] db rawFilePath=[" + rawFilePath + "], normalizedFilePath=[" + filePath + "], rawLen=" + rawFilePath.length() + ", normalizedLen=" + filePath.length() + ", orgFileNm=" + orgFileNm);
 
         if ((filePath.isEmpty() || !Files.exists(Paths.get(filePath))) && !effectivePeerReviewNo.isEmpty()) {
             Map<String, Object> fallbackByNo = peerReviewService.getPeerReviewFileDownloadInfoByPeerReviewNo(effectivePeerReviewNo);
             if (fallbackByNo != null && !fallbackByNo.isEmpty()) {
                 String fallbackRawPathByNo = getMapString(fallbackByNo, "filePath", "filepath", "FILEPATH", "file_path_nm", "FILE_PATH_NM");
                 String fallbackPathByNo = normalizePath(fallbackRawPathByNo);
-                System.out.println("[PEERREVIEW_DOWNLOAD] fallbackByNo rawPath=[" + fallbackRawPathByNo + "], normalizedPath=[" + fallbackPathByNo + "], len=" + fallbackPathByNo.length());
                 if (!fallbackPathByNo.isEmpty()) {
                     fileInfo = fallbackByNo;
+                    requireDownloadAccess(fileInfo, "PEER_REVIEW", objectId, fileNo);
                     filePath = fallbackPathByNo;
                     String fallbackOrgFileNmByNo = getMapString(fallbackByNo, "orgFileNm", "orgfilenm", "ORGFILENM", "org_file_nm", "ORG_FILE_NM");
                     if (!fallbackOrgFileNmByNo.isEmpty()) {
                         orgFileNm = fallbackOrgFileNmByNo;
                     }
-                }
-                if (!fallbackPathByNo.isEmpty() && Files.exists(Paths.get(fallbackPathByNo))) {
-                    System.out.println("[PEERREVIEW_DOWNLOAD] fallback success by peerReviewNo direct query. filePath=" + filePath);
                 }
             }
         }
@@ -198,42 +261,77 @@ public class PeerReviewController extends AbstractController {
                 if (fallbackFileInfo != null && !fallbackFileInfo.isEmpty()) {
                     String fallbackRawPath = getMapString(fallbackFileInfo, "filePath", "filepath", "FILEPATH", "file_path_nm", "FILE_PATH_NM");
                     String fallbackPath = normalizePath(fallbackRawPath);
-                    System.out.println("[PEERREVIEW_DOWNLOAD] fallbackByResolvedObject rawPath=[" + fallbackRawPath + "], normalizedPath=[" + fallbackPath + "], len=" + fallbackPath.length());
                     if (!fallbackPath.isEmpty()) {
                         fileInfo = fallbackFileInfo;
+                        requireDownloadAccess(fileInfo, "PEER_REVIEW", objectId, fileNo);
                         filePath = fallbackPath;
                         String fallbackOrgFileNm = getMapString(fallbackFileInfo, "orgFileNm", "orgfilenm", "ORGFILENM", "org_file_nm", "ORG_FILE_NM");
                         if (!fallbackOrgFileNm.isEmpty()) {
                             orgFileNm = fallbackOrgFileNm;
                         }
                     }
-                    if (!fallbackPath.isEmpty() && Files.exists(Paths.get(fallbackPath))) {
-                        System.out.println("[PEERREVIEW_DOWNLOAD] fallback success by peerReviewNo. objectId=" + resolvedObjectId + ", filePath=" + filePath);
-                    }
                 }
             }
         }
         if (filePath.isEmpty() || !Files.exists(Paths.get(filePath))) {
-            System.out.println("[PEERREVIEW_DOWNLOAD] not found on disk: " + filePath);
+            recordDirectDownloadResult(fileInfo, "PEER_REVIEW", objectId, fileNo,
+                    "FAIL", "FILE_NOT_FOUND", "Direct download file was not found.");
             return ResponseEntity.notFound().build();
         }
         if (!isPdfFilePath(filePath) && !isAdminRole(authentication)) {
+            recordDirectDownloadResult(fileInfo, "PEER_REVIEW", objectId, fileNo,
+                    "FAIL", "FILE_TYPE_DENIED", "Direct download file type was denied.");
             return ResponseEntity.status(403).build();
         }
-        byte[] bytes = null;
-        if ("Y".equalsIgnoreCase(watermarkYn)) {
-            bytes = requestWatermarkPdf(filePath, orgFileNm, authentication);
-        }
-        if (bytes == null || bytes.length == 0) {
-            bytes = Files.readAllBytes(Paths.get(filePath));
+        byte[] bytes;
+        try {
+            bytes = "Y".equalsIgnoreCase(watermarkYn)
+                    ? requestWatermarkPdf(filePath, orgFileNm, authentication) : null;
+            if (bytes == null || bytes.length == 0) {
+                bytes = Files.readAllBytes(Paths.get(filePath));
+            }
+        } catch (Exception exception) {
+            recordDirectDownloadResult(fileInfo, "PEER_REVIEW", objectId, fileNo,
+                    "FAIL", "READ_ERROR", "Direct download response preparation failed.");
+            throw exception;
         }
         String downloadFileName = buildDownloadFileName(filePath, orgFileNm);
         String encodedFileName = URLEncoder.encode(downloadFileName, "UTF-8").replaceAll("\\+", "%20");
+        recordDirectDownloadResult(fileInfo, "PEER_REVIEW", objectId, fileNo,
+                "SUCCESS", null, "Direct download response prepared.");
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .header("Content-Disposition", "attachment; filename*=UTF-8''" + encodedFileName)
                 .contentLength(bytes.length)
                 .body(bytes);
+    }
+
+    private void requireDownloadAccess(Map<String, Object> fileInfo, String defaultObjectType,
+            String requestedObjectId, String requestedFileNo) {
+        FileAccessRequest access = new FileAccessRequest();
+        access.setActionCd(SecurityAclService.DOWNLOAD_ORIGINAL);
+        String objectType = getMapString(fileInfo, "aclObjectType", "ACLOBJECTTYPE");
+        String objectId = getMapString(fileInfo, "aclObjectId", "ACLOBJECTID", "objectId", "OBJECTID");
+        String fileNo = getMapString(fileInfo, "fileNo", "FILENO", "file_no", "FILE_NO");
+        access.setObjectType(objectType.isEmpty() ? defaultObjectType : objectType);
+        access.setObjectId(objectId.isEmpty() ? requestedObjectId : objectId);
+        access.setFileNo(fileNo.isEmpty() ? requestedFileNo : fileNo);
+        securityAclService.requireAccess(access);
+    }
+
+    private void recordDirectDownloadResult(Map<String, Object> fileInfo, String defaultObjectType,
+            String requestedObjectId, String requestedFileNo, String resultCd, String reasonCd,
+            String message) {
+        String objectType = getMapString(fileInfo, "aclObjectType", "ACLOBJECTTYPE");
+        String objectId = getMapString(fileInfo, "aclObjectId", "ACLOBJECTID", "objectId", "OBJECTID");
+        String fileNo = getMapString(fileInfo, "fileNo", "FILENO", "file_no", "FILE_NO");
+        String requestNo = getMapString(fileInfo, "requestNo", "REQUESTNO", "request_no", "REQUEST_NO");
+        securityAclService.recordDownloadResult(null, resultCd, reasonCd,
+                objectType.isEmpty() ? defaultObjectType : objectType,
+                objectId.isEmpty() ? requestedObjectId : objectId,
+                fileNo.isEmpty() ? requestedFileNo : fileNo,
+                requestNo,
+                message);
     }
 
     private boolean isAdminRole(Authentication authentication) {
@@ -341,7 +439,7 @@ public class PeerReviewController extends AbstractController {
         return userNm + " / " + positionNm + " / " + now;
     }
 
-    @RequestMapping("/delete")
+    @PostMapping("/delete")
     @ResponseBody
     public Map<String, Object> deletePeerReview(@RequestBody Map<String, List<Map<String, String>>> param, Authentication authentication) {
         Map<String, Object> result = new HashMap<>();
@@ -379,7 +477,7 @@ public class PeerReviewController extends AbstractController {
         return result;
     }
 
-    @RequestMapping("/approve")
+    @PostMapping("/approve")
     @ResponseBody
     public Map<String, Object> approvePeerReview(@RequestBody Map<String, List<Map<String, String>>> param, Authentication authentication) {
         Map<String, Object> result = new HashMap<>();
@@ -459,8 +557,7 @@ public class PeerReviewController extends AbstractController {
         if (path.startsWith("\"") && path.endsWith("\"") && path.length() > 1) {
             path = path.substring(1, path.length() - 1).trim();
         }
-        path = path.replace('/', '\\');
-        return path;
+        return StoragePathUtils.toPath(path).toString();
     }
 
     private String getMapString(Map<String, Object> map, String... keys) {

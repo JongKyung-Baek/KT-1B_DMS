@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
@@ -16,6 +17,8 @@ import org.springframework.stereotype.Service;
 import kr.esob.fdms.commonlogic.updown.runtime.DownloadRuntimeState;
 import kr.esob.fdms.commonlogic.filecache.ExternalFileApiClient;
 import kr.esob.fdms.commonlogic.systemconfig.SystemConfig;
+import kr.esob.fdms.commonlogic.securityacl.SecurityAclService;
+import kr.esob.fdms.controller.login.UserVO;
 /* import kr.esob.fdms.controller.outside.secp.request.SecpRequestService;
 import kr.esob.fdms.controller.outside.sw.request.RequestService; */
 import lombok.extern.slf4j.Slf4j;
@@ -29,75 +32,78 @@ public class CommonUpdownV2Service {
 /*     @Inject private SecpRequestService secpRequestService;
     @Inject private DistributionActLogDao distActLogDao; */
     @Inject private OutsideDistributionDeliveryConfirmService outsideDistributionDeliveryConfirmService;
+    @Inject private SecurityAclService securityAclService;
 
-    public RestSeqResolveResult resolveRestRequestSeq(CommonUpdownV2StartParam param) {
-        if (param == null) {throw new IllegalArgumentException("param is null"); }
-
-        String objectType = nvl(param.getObjectType()).toUpperCase(); // DOC | DRAWING
-        String requestNo  = nvl(param.getRequestNo());                 // SERIAL_NO
-        String dataNo     = nvl(param.getDataNo());                    // 문서는 DATA_OFFER_DOC_SEQ, 일부 구기능은 DATA_NO
-        String docSeqParam = nvl(param.getDocSeq());                   // *_DOC_SEQ
-        String fileSeqParam = nvl(param.getFileSeq());                 // FILE_SEQ
-
-        if (objectType.isEmpty()) {
-            throw new IllegalArgumentException("objectType is required");
+    public ResolvedDownloadResource resolveAuthorizedResource(CommonUpdownV2StartParam param, UserVO actor) {
+        if (param == null || actor == null) {
+            throw new IllegalArgumentException("다운로드 요청자와 자료정보는 필수입니다.");
+        }
+        String requestNo = nvl(param.getRequestNo());
+        String objectId = nvl(param.getDocSeq());
+        if (isBlank(objectId) && !isBlank(param.getDataNo())) {
+            objectId = commonUpdownDao.selectObjectIdByDataNo(requestNo, nvl(param.getDataNo()));
+        }
+        String fileKey = isBlank(param.getFileNo()) ? nvl(param.getFileSeq()) : nvl(param.getFileNo());
+        if (isBlank(requestNo) || isBlank(objectId) || isBlank(fileKey)) {
+            throw new IllegalArgumentException("requestNo, 자료 식별자와 파일 번호는 필수입니다.");
         }
 
-        if (!isBlank(fileSeqParam)) {
-            RestSeqResolveResult result = new RestSeqResolveResult();
-            result.setRestSeq(fileSeqParam);
-            result.setRestSeqType("FILE_SEQ");
-            return result;
+        CommonUpdownFileVO dbResource = commonUpdownDao.selectDownloadResource(requestNo, objectId, fileKey);
+        if (dbResource == null) {
+            throw new IllegalArgumentException("요청에 포함된 다운로드 파일을 찾을 수 없습니다.");
         }
 
-        if (requestNo.isEmpty()) {
-            throw new IllegalArgumentException("requestNo is required when fileSeq is empty");
+        String resolvedObjectType = normalizeDbObjectType(dbResource.getObjectType());
+        String resolvedObjectId = nvl(dbResource.getObjectId());
+        String resolvedFileNo = nvl(dbResource.getFileNo());
+        String resolvedRequestNo = nvl(dbResource.getRequestNo());
+        if (isBlank(resolvedObjectId) || isBlank(resolvedFileNo) || isBlank(resolvedRequestNo)) {
+            throw new IllegalArgumentException("다운로드 자료 메타정보가 올바르지 않습니다.");
+        }
+        if (commonUpdownDao.countDownloadBusinessAccess(
+            resolvedRequestNo, resolvedObjectId, resolvedFileNo, actor.getUserCd()) == 0) {
+            throw new org.springframework.security.access.AccessDeniedException("배포 대상 또는 요청자가 아닌 자료입니다.");
+        }
+        ResolvedDownloadResource resource = new ResolvedDownloadResource();
+        resource.setObjectType(resolvedObjectType);
+        resource.setObjectId(resolvedObjectId);
+        resource.setFileNo(resolvedFileNo);
+        resource.setRequestNo(resolvedRequestNo);
+        return resource;
+    }
+
+    public RestSeqResolveResult resolveRestRequestSeq(ResolvedDownloadResource resource) {
+        if (resource == null || isBlank(resource.getRequestNo())
+            || isBlank(resource.getObjectId()) || isBlank(resource.getFileNo())) {
+            throw new IllegalArgumentException("검증된 다운로드 자료 식별자가 필요합니다.");
         }
 
-        String docSeq;
-        String fileSeq;
-        if ("DOC".equals(objectType)) {
-            if (!isBlank(docSeqParam)) {
-                docSeq = docSeqParam;
-            } else {
-//            } else if (!isBlank(dataNo)) {
-//                docSeq = commonUpdownDao.selectDocSeqByDataNo(requestNo, dataNo); // 기존 DATA_NO 기반 해석
-//                if (isBlank(docSeq)) { throw new IllegalStateException("DATA_OFFER_DOC_SEQ not found by requestNo+docSeq"); }
-//            } else {
-                throw new IllegalArgumentException("docSeq is required");
-            }
-            fileSeq = commonUpdownDao.selectDocFileSeqByDocSeq(requestNo, docSeq);
-        } else if ("DRAWING".equals(objectType)) {
-            if (!isBlank(dataNo)) {
-                docSeq = commonUpdownDao.selectDrawingDocSeqByDataNo(requestNo, dataNo);
-                if (isBlank(docSeq)) { throw new IllegalStateException("DELVY_CNFIRM_DOC_SEQ not found by requestNo+dataNo"); }
-            } else if (!isBlank(docSeqParam)) {
-                docSeq = docSeqParam;
-            } else {
-                throw new IllegalArgumentException("dataNo or docSeq is required");
-            }
-            fileSeq = commonUpdownDao.selectDrawingFileSeqByDocSeq(requestNo, docSeq);
-        } else {
-            throw new IllegalArgumentException("unsupported objectType: " + objectType);
-        }
-
-        if (fileSeq == null || fileSeq.trim().isEmpty()) {throw new IllegalStateException("FILE_SEQ not found"); }
-
+        // PostgreSQL dump의 DOCS_REQUEST_FILE.FILE_NO가 원격 파일 API의 FILE_SEQ다.
+        // 요청 본문의 fileSeq는 신뢰하지 않고, 앞 단계에서 requestNo/objectId/fileNo로
+        // 조회한 DB 값만 사용해야 다른 자료의 파일을 대리 조회하는 것을 막을 수 있다.
         RestSeqResolveResult result = new RestSeqResolveResult();
-        result.setRestSeq(fileSeq);         // REST API로 보낼 실제 seq = FILE_SEQ
-        result.setRestSeqType("FILE_SEQ");  // 명시적으로 타입 고정
+        result.setRestSeq(resource.getFileNo());
+        result.setRestSeqType("FILE_SEQ");
         return result;
     }
 
-    public TempDownloadResult fetchAndSaveTempFile(String objectType, String restSeq, String originalFileName, String fileExt) throws Exception {
+    public TempDownloadResult fetchAndSaveTempFile(
+            String objectType, String restSeq, String originalFileName,
+            String fileExt, TempPathRegistrar tempPathRegistrar) throws Exception {
+        if (tempPathRegistrar == null) {
+            throw new IllegalArgumentException(
+                "Durable temp path registrar is required.");
+        }
         File localSource = resolveLocalSourceFile(objectType, restSeq);
         if (localSource != null && localSource.exists() && localSource.isFile()) {
-            log.info("[V2-LOCAL][HIT] objectType={}, restSeq={}, sourcePath={}, sourceLength={}",
-                objectType, restSeq, localSource.getAbsolutePath(), localSource.length());
-            return copyLocalFileToTemp(objectType, restSeq, originalFileName, fileExt, localSource);
+            log.info("[V2-LOCAL][HIT] objectType={}, sourceLength={}",
+                objectType, localSource.length());
+            return copyLocalFileToTemp(
+                objectType, restSeq, originalFileName, fileExt,
+                localSource, tempPathRegistrar);
         }
 
-        log.info("[V2-LOCAL][MISS] objectType={}, restSeq={}, fallback=REST", objectType, restSeq);
+        log.info("[V2-LOCAL][MISS] objectType={}, fallback=REST", objectType);
         String apiUrl = SystemConfig.getSystemConfigValue("KAI_DOWNLOAD");
         if (isBlank(apiUrl)) { apiUrl = SystemConfig.getSystemConfigValue("REST_DELIVERY_FILE_DOWNLOAD_URL"); }
         if (isBlank(apiUrl)) { throw new IllegalStateException("KAI_DOWNLOAD API URL is empty."); }
@@ -123,6 +129,7 @@ public class CommonUpdownV2Service {
         if (!dir.exists() && !dir.mkdirs()) { throw new IllegalStateException("Failed to create temp directory: " + rootPath); }
 
         File target = new File(dir, storedFileName);
+        tempPathRegistrar.register(target.getAbsolutePath(), storedFileName);
         try (FileOutputStream fos = new FileOutputStream(target)) {
             fos.write(bytes);
             fos.flush();
@@ -151,7 +158,10 @@ public class CommonUpdownV2Service {
         return null;
     }
 
-    private TempDownloadResult copyLocalFileToTemp(String objectType, String restSeq, String originalFileName, String fileExt, File sourceFile) throws Exception {
+    private TempDownloadResult copyLocalFileToTemp(
+            String objectType, String restSeq, String originalFileName,
+            String fileExt, File sourceFile,
+            TempPathRegistrar tempPathRegistrar) throws Exception {
         String rootPath = SystemConfig.getSystemConfigValue("UPDOWN_PATH");
         if (isBlank(rootPath)) { rootPath = System.getProperty("java.io.tmpdir"); }
 
@@ -173,6 +183,7 @@ public class CommonUpdownV2Service {
         if (!dir.exists() && !dir.mkdirs()) { throw new IllegalStateException("Failed to create temp directory: " + rootPath); }
 
         File target = new File(dir, storedFileName);
+        tempPathRegistrar.register(target.getAbsolutePath(), storedFileName);
         Files.copy(sourceFile.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
 
         TempDownloadResult out = new TempDownloadResult();
@@ -197,70 +208,38 @@ public class CommonUpdownV2Service {
         while (normalized.startsWith(".")) {
             normalized = normalized.substring(1);
         }
-        return normalized.trim().toLowerCase();
+        normalized = normalized.trim().toLowerCase(Locale.ROOT);
+        return normalized.length() <= 16 && normalized.matches("[a-z0-9]+")
+            ? normalized : "";
     }
 
     private boolean isBlank(String s) { return s == null || s.trim().isEmpty(); }
 
-    public void saveOutsideDistributionDownloadActLog(Object userObj, DownloadRuntimeState state, String status, String errorMessage) {
+    public boolean saveOutsideDistributionDownloadActLog(Object userObj, DownloadRuntimeState state, String status, String errorMessage) {
         try {
             if (!(userObj instanceof kr.esob.fdms.controller.login.UserVO)) {
-                return;
+                return false;
             }
             kr.esob.fdms.controller.login.UserVO userVo = (kr.esob.fdms.controller.login.UserVO) userObj;
             if (userVo == null || state == null) {
-                return;
-            }
-
-            String requestType = nvl(state.getRequestType()).toUpperCase();
-            String objectType = nvl(state.getObjectType()).toUpperCase();
-            if (!"DISTRIBUTION".equals(requestType)) {
-                return;
-            }
-            if (!"DOC".equals(objectType) && !"DRAWING".equals(objectType)) {
-                return;
+                return false;
             }
             if (state.isActLogSaved()) {
-                return;
+                return true;
             }
-
-            Map<String, Object> base = commonUpdownDao.selectOutsideDistributionActLogBase(
-                state.getRequestNo(),
-                state.getDocSeq(),
-                objectType,
-                isBlank(state.getFileSeq()) ? state.getFileNo() : state.getFileSeq()
-            );
-            if (base == null) {
-                return;
-            }
-
-           /*  DistributionActLogParam logParam = new DistributionActLogParam();
-            logParam.setRequestNo(readMapString(base, "requestNo"));
-            logParam.setRequestType(readMapString(base, "requestType"));
-            logParam.setObjectId(readMapString(base, "objectId"));
-            logParam.setFileNo(readMapString(base, "fileNo"));
-            logParam.setObjectType(readMapString(base, "objectType"));
-            logParam.setProtectYn(readMapString(base, "protectYn"));
-            logParam.setActType("DOWNLOAD");
-            logParam.setActResultCd("COMPLETED".equalsIgnoreCase(status) ? "SUCCESS" : "FAIL");
-            logParam.setActResultMsg(trimToNull(errorMessage));
-            logParam.setOrgFileNm(readMapString(base, "orgFileNm"));
-            logParam.setActionUserCd(userVo.getUserCd());
-            logParam.setActionUserNm(userVo.getUserNm());
-            logParam.setCompanyCd(userVo.getCompanyCd());
-            logParam.setCompanyNm(userVo.getCompanyNm());
-            logParam.setProjectNm(readMapString(base, "projectNm"));
-            logParam.setSourceType(readMapString(base, "sourceType"));
-            logParam.setSourceKey(readMapString(base, "sourceKey"));
-            logParam.setInsertUid(userVo.getUserCd());
-            distActLogDao.insertActLog(logParam); */
+            boolean success = "COMPLETED".equalsIgnoreCase(status) || "SUCCESS".equalsIgnoreCase(status);
+            String normalizedStatus = nvl(status).toUpperCase(Locale.ROOT);
+            securityAclService.recordDownloadResult(userVo, success ? "SUCCESS" : "FAIL",
+                success ? null : "DOWNLOAD_" + normalizedStatus,
+                state.getObjectType(), state.getDocSeq(), state.getFileNo(), state.getRequestNo(),
+                success ? "Download completed." : "Download failed. status=" + normalizedStatus);
+            return true;
         } catch (Exception e) {
-            log.warn("[DOWNLOAD-ACT-LOG][SKIP] requestNo={}, docSeq={}, objectType={}, status={}, reason={}",
-                state == null ? null : state.getRequestNo(),
-                state == null ? null : state.getDocSeq(),
+            log.warn("[DOWNLOAD-ACT-LOG][SKIP] objectType={}, status={}, cause={}",
                 state == null ? null : state.getObjectType(),
                 status,
-                e.getMessage());
+                e.getClass().getSimpleName());
+            return false;
         }
     }
 
@@ -269,31 +248,33 @@ public class CommonUpdownV2Service {
             if (state == null) { return; }
 
             String requestType = nvl(state.getRequestType()).toUpperCase();
-            String objectType = nvl(state.getObjectType()).toUpperCase();
+            String objectType = nvl(state.getObjectType()).toUpperCase(Locale.ROOT);
             if (!"DISTRIBUTION".equals(requestType)) { return; }
-            if (!"DOC".equals(objectType) && !"DRAWING".equals(objectType)) { return; }
+            if (!"DOCUMENT".equals(objectType) && !"DRAWING".equals(objectType)) { return; }
             if (!"COMPLETED".equalsIgnoreCase(status)) { return; }
 
             outsideDistributionDeliveryConfirmService.markConfirmed(
                 state.getRequestNo(),
                 state.getDocSeq(),
-                objectType,
+                "DOCUMENT".equals(objectType) ? "DOC" : objectType,
                 isBlank(state.getFileSeq()) ? state.getFileNo() : state.getFileSeq()
             );
         } catch (Exception e) {
-            log.warn("[DELIVERY-CONFIRM][DOWNLOAD][SKIP] requestNo={}, docSeq={}, objectType={}, status={}, reason={}",
-                state == null ? null : state.getRequestNo(),
-                state == null ? null : state.getDocSeq(),
+            log.warn("[DELIVERY-CONFIRM][DOWNLOAD][SKIP] objectType={}, status={}, cause={}",
                 state == null ? null : state.getObjectType(),
                 status,
-                e.getMessage());
+                e.getClass().getSimpleName());
         }
     }
 
-    private String trimToNull(String value) {
-        if (value == null) { return null; }
-        String trimmed = value.trim();
-        return trimmed.isEmpty() ? null : trimmed;
+    private String normalizeDbObjectType(String objectType) {
+        String normalized = nvl(objectType).toUpperCase(Locale.ROOT);
+        if ("PRODUCT_DOC".equals(normalized)) {
+            normalized = "PRODUCT_DOCUMENT";
+        } else if ("PEERREVIEW".equals(normalized)) {
+            normalized = "PEER_REVIEW";
+        }
+        return securityAclService.normalizeObjectType(normalized);
     }
 
     private String readMapString(Map<String, Object> source, String key) {
@@ -333,6 +314,11 @@ public class CommonUpdownV2Service {
         public void setFileSize(long fileSize) { this.fileSize = fileSize; }
     }    
 
+    @FunctionalInterface
+    public interface TempPathRegistrar {
+        void register(String tempFilePath, String savedFileName) throws Exception;
+    }
+
 
     private String nvl(String s) { return s == null ? "" : s.trim(); }
 
@@ -345,5 +331,21 @@ public class CommonUpdownV2Service {
 
         public String getRestSeqType() { return restSeqType; }
         public void setRestSeqType(String restSeqType) { this.restSeqType = restSeqType; }
+    }
+
+    public static class ResolvedDownloadResource {
+        private String objectType;
+        private String objectId;
+        private String fileNo;
+        private String requestNo;
+
+        public String getObjectType() { return objectType; }
+        public void setObjectType(String objectType) { this.objectType = objectType; }
+        public String getObjectId() { return objectId; }
+        public void setObjectId(String objectId) { this.objectId = objectId; }
+        public String getFileNo() { return fileNo; }
+        public void setFileNo(String fileNo) { this.fileNo = fileNo; }
+        public String getRequestNo() { return requestNo; }
+        public void setRequestNo(String requestNo) { this.requestNo = requestNo; }
     }
 }

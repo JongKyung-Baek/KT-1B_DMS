@@ -15,11 +15,12 @@ public class CommonDestroyStatusDao extends AbstractDao {
 	}
 
 	@SuppressWarnings("unchecked")
-	public List<DestroyFileVO> selectDestroyFileList(DestroyStatusInfoVO param){
+	public List<DestroyFileVO> selectDestroyFileList(DestroyStatusParam param){
 		return list(prefix + "selectDestroyFileList", param);
 	}
 
-	public DestroyFileVO selectFilePath(DestroyFileVO param) {
-		return (DestroyFileVO) obj(prefix + "selectFilePath", param);
+	@SuppressWarnings("unchecked")
+	public List<DestroyFileVO> selectAuthorizedDownloadTargets(DestroyFileDownloadParam param) {
+		return list(prefix + "selectAuthorizedDownloadTargets", param);
 	}
 }

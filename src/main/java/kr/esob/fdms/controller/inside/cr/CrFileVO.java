@@ -17,6 +17,10 @@ public class CrFileVO {
 	private int fileNo;
 	private String orgFileNm;
 	private String docsFilePathNm;
+	private String requestNo;
+	private String aclObjectType;
+	private String aclObjectId;
+	private String aclFileNo;
 
 
 }

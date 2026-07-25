@@ -27,6 +27,7 @@ function setPopupGridParam(){
 <div class="dialogContent">
 	<div class="sbr">
 			<form id="loginForm" name="loginForm" action="/login/loginProcess" method="POST">
+			<input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
 			<ul class="ibx">
 				<li>
 					<%-- 업체명 --%>

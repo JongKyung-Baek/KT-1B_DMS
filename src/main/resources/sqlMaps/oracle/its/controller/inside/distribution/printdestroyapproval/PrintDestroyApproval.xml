@@ -545,6 +545,18 @@
             , APPROVAL_DT = NOW()
         </if>
         WHERE DESTROY_REQUEST_NO = #{destroyRequestNo}
+          AND STATUS_CD = 'REQUEST'
+          AND REQUEST_TYPE = 'PRINT'
+          AND CURRENT_PROCESS_SEQ_NO = CAST(#{processSeq} AS INTEGER)
+          AND EXISTS (
+              SELECT 1
+              FROM DOCS_DESTROY_REQUEST_DETAIL currDetail
+              WHERE currDetail.DESTROY_REQUEST_NO = DOCS_DESTROY_REQUEST.DESTROY_REQUEST_NO
+                AND currDetail.PROCESS_SEQ = DOCS_DESTROY_REQUEST.CURRENT_PROCESS_SEQ_NO
+                AND currDetail.APPROVAL_STATUS_CD = #{approvalStatusCd}
+                AND currDetail.ACTUAL_USER_CD = #{sessionUser.userCd}
+                AND currDetail.ACTION_CD = 'REQUEST'
+          )
     </update>
 
 
@@ -556,8 +568,11 @@
             , REQUEST_DESC = #{rejectDesc}
         </if>
         , ACTION_DT = NOW()
-        WHERE APPROVAL_STATUS_CD = #{approvalStatusCd}
-        AND APPROVAL_GRADE_CD = #{approvalGradeCd}
+        WHERE DESTROY_REQUEST_NO = #{destroyRequestNo}
+          AND PROCESS_SEQ = CAST(#{processSeq} AS INTEGER)
+          AND APPROVAL_STATUS_CD = #{approvalStatusCd}
+          AND ACTUAL_USER_CD = #{sessionUser.userCd}
+          AND ACTION_CD = 'REQUEST'
     </update>
 
     <!-- 폐기 요청 정보 조회 [2019.10.07(최금영)] -->
@@ -567,12 +582,21 @@
              , destRequest.CURRENT_PROCESS_SEQ_NO	AS currentProcessSeqNo
              , appLine.APPROVAL_STATUS_CD 			AS approvalStatusCd
              , appLine.APPROVAL_GRADE_CD 			AS approvalGradeCd
-             , #{saveType}							AS saveType
-             , #{rejectDesc}							AS rejectDesc
+             , destRequest.CURRENT_PROCESS_SEQ_NO	AS processSeq
         FROM DOCS_DESTROY_REQUEST destRequest
                  JOIN DOCS_APPROVAL_LINE_DETAIL appLine
                       ON destRequest.APPROVAL_LINE_ID = appLine.APPROVAL_LINE_ID AND appLine.PROCESS_SEQ_NO = destRequest.CURRENT_PROCESS_SEQ_NO
-        WHERE DESTROY_REQUEST_NO = #{destroyRequestNo}
+                 JOIN DOCS_DESTROY_REQUEST_DETAIL currDetail
+                      ON currDetail.DESTROY_REQUEST_NO = destRequest.DESTROY_REQUEST_NO
+                     AND currDetail.PROCESS_SEQ = destRequest.CURRENT_PROCESS_SEQ_NO
+                     AND currDetail.APPROVAL_STATUS_CD = appLine.APPROVAL_STATUS_CD
+        WHERE destRequest.DESTROY_REQUEST_NO = #{destroyRequestNo}
+          AND destRequest.STATUS_CD = 'REQUEST'
+          AND destRequest.REQUEST_TYPE = 'PRINT'
+          AND appLine.APPROVAL_STATUS_CD = 'APPROVAL'
+          AND currDetail.ACTUAL_USER_CD = #{sessionUser.userCd}
+          AND currDetail.ACTION_CD = 'REQUEST'
+        FOR UPDATE OF destRequest, currDetail
     </select>
 
     <!-- 폐기할 아이템 조회 [2019.10.07(최금영)] -->
@@ -589,6 +613,19 @@
         SET USE_YN = 'N'
         WHERE REQUEST_NO = #{requestNo}
           AND OBJECT_ID = #{objectId}
+          AND EXISTS (
+              SELECT 1
+              FROM DOCS_DESTROY_REQUEST_MAPPING destroyMapping
+              JOIN DOCS_DESTROY_REQUEST_DETAIL currDetail
+                ON currDetail.DESTROY_REQUEST_NO = destroyMapping.DESTROY_REQUEST_NO
+               AND currDetail.PROCESS_SEQ = CAST(#{processSeq} AS INTEGER)
+              WHERE destroyMapping.DESTROY_REQUEST_NO = #{destroyRequestNo}
+                AND destroyMapping.REQUEST_NO = DOCS_REQUEST_MAPPING.REQUEST_NO
+                AND destroyMapping.OBJECT_ID = DOCS_REQUEST_MAPPING.OBJECT_ID
+                AND currDetail.APPROVAL_STATUS_CD = #{approvalStatusCd}
+                AND currDetail.ACTUAL_USER_CD = #{sessionUser.userCd}
+                AND currDetail.ACTION_CD = 'REQUEST'
+          )
     </update>
 
     <!-- 폐기 요청 정보 조회 [2019.10.07(최금영)] -->

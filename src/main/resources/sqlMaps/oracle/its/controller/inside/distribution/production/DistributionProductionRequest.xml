@@ -1243,7 +1243,6 @@
 		info.standardizationApprovalDate ,
 		info.technologyChangeApprovalDate ,
 		info.modelCode ,
-		info.check3DFile,
 		info.inputDate,
 		info.revision ,
 		info.connectionId,
@@ -1333,7 +1332,6 @@
 				info.standardization_approval_date AS standardizationApprovalDate,
 				info.technology_change_approval_date AS technologyChangeApprovalDate,
 				info.model_code AS modelCode,
-				info.check_3dfile AS check3DFile,
 				info.input_date AS inputDate,
 				info.revision AS revision,
 				info.connection_id AS connectionId,
@@ -1563,7 +1561,6 @@
 						info.standardization_approval_date AS standardizationApprovalDate,
 						info.technology_change_approval_date AS technologyChangeApprovalDate,
 						info.model_code AS modelCode,
-						info.check_3dfile AS check3DFile,
 						info.input_date AS inputDate,
 						info.revision AS revision,
 						info.connection_id AS connectionId,
@@ -1620,7 +1617,6 @@
 						info.standardization_approval_date AS standardizationApprovalDate,
 						info.technology_change_approval_date AS technologyChangeApprovalDate,
 						info.model_code AS modelCode,
-						info.check_3dfile AS check3DFile,
 						info.input_date AS inputDate,
 						info.revision AS revision,
 						info.connection_id AS connectionId,
@@ -1923,7 +1919,9 @@
 		SELECT mainFile.OBJECT_ID AS "objectId",
 		       CAST(mainFile.FILE_NO AS TEXT) AS "fileNo",
 		       mainFile.ORG_FILE_NM AS "orgFileNm",
-		       mainFile.FILE_PATH_NM AS "filePath"
+		       mainFile.FILE_PATH_NM AS "filePath",
+		       'PRODUCT_DOCUMENT' AS "aclObjectType",
+		       mainFile.OBJECT_ID AS "aclObjectId"
 		FROM DOCS_PRODUCT_DOCUMENT_FILE mainFile
 		JOIN DOCS_PRODUCT_DOCUMENT doc ON doc.OBJECT_ID = mainFile.OBJECT_ID
 		WHERE mainFile.OBJECT_ID = #{objectId}
@@ -1936,7 +1934,9 @@
 		SELECT subFile.OBJECT_ID AS "objectId",
 		       CAST(subFile.FILE_NO AS TEXT) AS "fileNo",
 		       subFile.ORG_FILE_NM AS "orgFileNm",
-		       subFile.FILE_PATH_NM AS "filePath"
+		       subFile.FILE_PATH_NM AS "filePath",
+		       'PRODUCT_DOCUMENT_SUB' AS "aclObjectType",
+		       subFile.PARENT_OBJECT_ID AS "aclObjectId"
 		FROM DOCS_PRODUCTION_SUB_FILE subFile
 		WHERE subFile.OBJECT_ID = #{objectId}
 		  AND COALESCE(subFile.USE_YN, 'Y') = 'Y'

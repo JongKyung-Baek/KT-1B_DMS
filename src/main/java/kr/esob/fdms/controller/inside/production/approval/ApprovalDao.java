@@ -5,7 +5,6 @@ import java.util.List;
 import org.springframework.stereotype.Repository;
 
 import kr.esob.fdms.commonlogic.abstractclass.AbstractDao;
-import kr.esob.fdms.controller.inside.distribution.commonrequest.CommonApprovalParam;
 import kr.esob.fdms.controller.inside.production.acceptance.AcceptancePopupParam;
 import kr.esob.fdms.controller.inside.production.common.DeployInfoVO;
 import kr.esob.fdms.controller.inside.production.common.ProductStatusVO;
@@ -46,16 +45,16 @@ public class ApprovalDao extends AbstractDao {
 		return (Integer) obj(prefix + "selectObjectListCount", param);
 	}
 
-	public CommonApprovalParam getCurrentApprovalInfo(String requestNo) {
-		return (CommonApprovalParam) obj(prefix + "getCurrentApprovalInfo", requestNo);
+	public ApprovalPopupParam getCurrentApprovalInfo(ApprovalPopupParam param) {
+		return (ApprovalPopupParam) obj(prefix + "getCurrentApprovalInfo", param);
 	}
 
-	public void updateRequestInfo(ApprovalPopupParam param) {
-		update(prefix + "updateRequestInfo", param);
+	public int updateRequestInfo(ApprovalPopupParam param) {
+		return update(prefix + "updateRequestInfo", param);
 	}
 
-	public void updateRequestDetail(ApprovalPopupParam param) {
-		update(prefix + "updateRequestDetail", param);
+	public int updateRequestDetail(ApprovalPopupParam param) {
+		return update(prefix + "updateRequestDetail", param);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -84,12 +83,12 @@ public class ApprovalDao extends AbstractDao {
 		return (ProductStatusVO) obj(prefix + "selectProductionStatus", param);
 	}
 
-	public void updateProductionStatus(ProductStatusVO param) {
-		update(prefix + "updateProductionStatus", param);
+	public int updateProductionStatus(ProductStatusVO param) {
+		return update(prefix + "updateProductionStatus", param);
 	}
 
-	public void insertProductionStatus(ProductStatusVO param) {
-		insert(prefix + "insertProductionStatus", param);
+	public int insertProductionStatus(ProductStatusVO param) {
+		return (Integer) insert(prefix + "insertProductionStatus", param);
 	}
 
 	public printApprovalVO getPrintRequestInfo(ApprovalPopupParam param) {
@@ -105,16 +104,15 @@ public class ApprovalDao extends AbstractDao {
 		return (ApprovalPopupVO) obj(prefix + "getRequestInfo", param);
 	}
 
-	public void insertApprovalFile(ApprovalPopupParam param) {
-		insert(prefix + "insertApprovalFile", param);
-
+	public int insertApprovalFile(ApprovalPopupParam param) {
+		return (Integer) insert(prefix + "insertApprovalFile", param);
 	}
 	
-	public void updateDeployInfoReject(ApprovalPopupParam param) {
-		update(prefix + "updateDeployInfoReject", param);
+	public int updateDeployInfoReject(ApprovalPopupParam param) {
+		return update(prefix + "updateDeployInfoReject", param);
 	}
 	
-	public void updateDeployInfo(DeployInfoVO param) {
-		update(prefix + "updateDeployInfo", param);
+	public int updateDeployInfo(DeployInfoVO param) {
+		return update(prefix + "updateDeployInfo", param);
 	}
 }

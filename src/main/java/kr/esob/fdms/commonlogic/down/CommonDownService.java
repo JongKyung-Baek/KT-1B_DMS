@@ -12,10 +12,8 @@ import org.springframework.stereotype.Service;
 import kr.esob.fdms.commonlogic.abstractclass.CommonService;
 import kr.esob.fdms.commonlogic.systemconfig.SystemConfig;
 import kr.esob.fdms.util.FileUtil;
+import kr.esob.fdms.util.StoragePathUtils;
 import lombok.extern.slf4j.Slf4j;
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
-
 import org.springframework.util.FileCopyUtils;
 
 @Slf4j
@@ -32,15 +30,16 @@ public class CommonDownService implements CommonService{
 		List<CommonDownFileVO> tempList = dao.selectList(obj);
 		
 		String orgPath = SystemConfig.getSystemConfigValue("VIEWER_NETWORK_PATH") ;
-		String tarPath = SystemConfig.getSystemConfigValue("UPDOWN_PATH").replaceAll("/", "\\\\");
+		String tarPath = StoragePathUtils.toPath(
+				SystemConfig.getSystemConfigValue("UPDOWN_PATH")).toString();
 		String srcFileName = "";
 		String tarFileName = "";
 
 		for(CommonDownFileVO tempVO : tempList) {
 			
 			try {
-				srcFileName = orgPath + tempVO.getFilePathNm().replaceAll("/", "\\\\");
-				tarFileName = tarPath + tempVO.getFileNm();
+				srcFileName = StoragePathUtils.resolve(orgPath, tempVO.getFilePathNm()).toString();
+				tarFileName = StoragePathUtils.resolve(tarPath, tempVO.getFileNm()).toString();
 
 				File in = new File(srcFileName);
 				File out = new File(tarFileName);
@@ -51,12 +50,11 @@ public class CommonDownService implements CommonService{
 				rtnList.add(tempVO);
 				
 			}catch(Exception e) {
-				e.printStackTrace();
+				log.warn("Failed to prepare a legacy download file. cause={}",
+					e.getClass().getSimpleName());
 			
 			}
 		}
-
-		log.info(JSONArray.fromObject(rtnList).toString());
 
 		return rtnList;
 	}

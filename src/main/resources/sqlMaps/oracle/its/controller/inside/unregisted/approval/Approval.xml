@@ -542,6 +542,22 @@
 	WHERE reqMap.REQUEST_NO = #{requestNo}
 </select>
 
+<select id="selectApprovalTargetForUpdate" parameterType="kr.esob.fdms.controller.inside.unregisted.approval.ApprovalPopupParam" resultType="kr.esob.fdms.controller.inside.unregisted.approval.ApprovalPopupParam">
+	SELECT currDetail.APPROVAL_STATUS_CD AS approvalStatusCd
+	FROM DOCS_REQUEST req
+			 JOIN DOCS_REQUEST_DETAIL currDetail
+				  ON currDetail.REQUEST_NO = req.REQUEST_NO
+					 AND currDetail.PROCESS_SEQ = req.CURRENT_PROCESS_SEQ_NO
+	WHERE req.REQUEST_NO = #{requestNo}
+	  AND req.REQUEST_TYPE = 'NO-REG'
+	  AND req.STATUS_CD = 'REQUEST'
+	  AND currDetail.APPROVAL_STATUS_CD = 'APPROVAL'
+	  AND currDetail.APPROVAL_GRADE_CD = 'TL'
+	  AND currDetail.ACTUAL_USER_CD = #{sessionUser.userCd}
+	  AND currDetail.ACTION_CD = 'REQUEST'
+	FOR UPDATE OF req, currDetail
+</select>
+
 <!-- 배포 승인 결과 수정 [2019.10.17(최금영)] -->
 <update id="updateRequestInfo" parameterType="kr.esob.fdms.controller.inside.unregisted.approval.ApprovalPopupParam">
 	UPDATE DOCS_REQUEST
@@ -550,6 +566,15 @@
 		, APPROVAL_DT = CURRENT_TIMESTAMP
 	</if>
 	WHERE REQUEST_NO = #{requestNo}
+	  AND REQUEST_TYPE = 'NO-REG'
+	  AND STATUS_CD = 'REQUEST'
+	  AND EXISTS (
+		SELECT 1 FROM DOCS_REQUEST_DETAIL currDetail
+		WHERE currDetail.REQUEST_NO = DOCS_REQUEST.REQUEST_NO
+		  AND currDetail.PROCESS_SEQ = DOCS_REQUEST.CURRENT_PROCESS_SEQ_NO
+		  AND currDetail.ACTUAL_USER_CD = #{sessionUser.userCd}
+		  AND currDetail.ACTION_CD = 'REQUEST'
+	  )
 </update>
 
 <!-- 최종 승인 데이터에 입력할 아이템 리스트 조회 [2019.10.17(최금영)] -->
@@ -600,6 +625,11 @@
 	WHERE REQUEST_NO = #{requestNo}
 	  AND APPROVAL_STATUS_CD = 'APPROVAL'
 	  AND APPROVAL_GRADE_CD = 'TL'
+	  AND PROCESS_SEQ = (
+		SELECT CURRENT_PROCESS_SEQ_NO FROM DOCS_REQUEST WHERE REQUEST_NO = #{requestNo}
+	  )
+	  AND ACTUAL_USER_CD = #{sessionUser.userCd}
+	  AND ACTION_CD = 'REQUEST'
 </update>
 
 <!-- 배포 승인 아이템 리스트 갯수 [2019.10.17(최금영)] -->

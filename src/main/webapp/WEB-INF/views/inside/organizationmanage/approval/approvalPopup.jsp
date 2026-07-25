@@ -78,7 +78,6 @@ function setGridParam(){
 	<div class="dialogContent">
 		<form id="approval" name="approval">
 		<input id="targetUserCd" name="targetUserCd" value="${DetailInfo.targetUserCd}" type="hidden" />
-		<input id="userPwd" name="userPwd" value="${DetailInfo.userPwd}" type="hidden" />
 		<input id="companyCd" name="companyCd" value="${DetailInfo.companyCd}" type="hidden" />
 		<input id="requestType" name="requestType" value="${DetailInfo.requestType}" type="hidden" />
 		<input id="protectYn" name="protectYn" value="${DetailInfo.protectYn}" type="hidden" />

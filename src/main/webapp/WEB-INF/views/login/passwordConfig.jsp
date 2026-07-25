@@ -6,6 +6,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>비밀번호 재설정 | 다목적실용위성8호사업단</title>
+  <%@ include file="/WEB-INF/jspf/csrf-meta.jspf" %>
   <style>
     * {
       box-sizing: border-box;
@@ -390,14 +391,7 @@
       </div>
 
       <form id="passwordForm">
-        <input type="hidden" name="userId" value="${userVo.userId}" />
-        <input type="hidden" name="userCd" value="${userVo.userCd}" />
-        <input type="hidden" name="userNm" value="${userVo.userNm}" />
-        <input type="hidden" name="deptCd" value="${userVo.deptCd}" />
-        <input type="hidden" name="positionCd" value="${userVo.positionCd}" />
-        <input type="hidden" name="roleGroupCd" value="${userVo.roleGroup}" />
-        <input type="hidden" name="email" value="${userVo.email}" />
-        <input type="hidden" name="saveFlag" value="E" />
+        <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
         <input type="hidden" name="authSite" value="${userVo.authSite}" />
 
         <div class="form-row">
@@ -454,7 +448,6 @@
   <script src="${pageContext.request.contextPath}/resources/js/jquery-3.4.1.min.js"></script>
   <script>
     var contextPath = "${pageContext.request.contextPath}";
-    var basicPassword = "${basicPassword}";
 
     function showModal(message, callback) {
       $("#modalMessage").text(message);
@@ -483,9 +476,7 @@
       var form = $("#passwordForm")[0];
       var formData = new FormData(form);
       var authSite = $("input[name='authSite']").val();
-      var url = contextPath + (authSite === "E"
-        ? "/inside/organizationmanage/outsideuser/saveRegisterUser"
-        : "/inside/organizationmanage/insideuser/saveRegisterUser");
+      var url = contextPath + "/login/password";
 
       $.ajax({
         url: url,
@@ -515,11 +506,6 @@
 
       if (newPassword !== confirmPassword) {
         showModal("비밀번호가 일치하지 않습니다.");
-        return;
-      }
-
-      if (newPassword === basicPassword) {
-        showModal("초기 비밀번호는 사용할 수 없습니다.");
         return;
       }
 

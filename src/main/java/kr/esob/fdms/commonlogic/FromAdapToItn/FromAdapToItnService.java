@@ -13,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.inject.Inject;
 import java.io.*;
-import java.nio.file.Paths;
 import java.util.*;
 
 @Slf4j
@@ -79,7 +78,6 @@ public class FromAdapToItnService implements CommonService{
 //			List<Map<String,Object>> pathList = dao.selectDbConfig();
 //			// 가져올 SYSTEM_CONFIG_CD 값들
 //			List<String> path = new ArrayList<>();
-//			path.add("3D_FILE_PATH");
 //			path.add("2D_FILE_PATH");
 //			path.add("SW_PATH");
 //			path.add("DOCUMENT_PATH");
@@ -338,7 +336,6 @@ public class FromAdapToItnService implements CommonService{
 //		List<Map<String,Object>> pathList = dao.selectDbConfig();
 //		// 가져올 SYSTEM_CONFIG_CD 값들
 //		List<String> path = new ArrayList<>();
-//		path.add("3D_FILE_PATH");
 //		path.add("2D_FILE_PATH");
 //		path.add("SW_PATH");
 //		path.add("DOCUMENT_PATH");
@@ -392,7 +389,7 @@ public class FromAdapToItnService implements CommonService{
 ////							//dao.insertAdapDrawing(ADAP_TYPE.ADAP_DRAWING, "drawing");
 ////							//dao.insertAdapDrawing(ADAP_TYPE.DOCS_DRAWING, "drawing");
 ////						} else
-//							if(tempKey.equals("2D_FILE_PATH") || tempKey.equals("3D_FILE_PATH")){
+//							if(tempKey.equals("2D_FILE_PATH")){
 //							//dao.insertAdapDrawing(ADAP_TYPE.ADAP_DRAWING, "drawing");
 //							//dao.insertAdapDrawing(ADAP_TYPE.DOCS_DRAWING, "drawing");
 //
@@ -498,7 +495,6 @@ public class FromAdapToItnService implements CommonService{
 	public void fileAutoInsertSchedule() {
 		List<Map<String,Object>> dbConfig = dao.selectDbConfig();
 		String file_path_2d="";
-		String file_path_3d="";
 		String file_path_doc="";
 		String file_path_sw="";
 		String file_path_cp="";
@@ -508,9 +504,6 @@ public class FromAdapToItnService implements CommonService{
 		for(Map<String,Object> config : dbConfig) {
 			if(config.get("SYSTEM_CONFIG_CD").equals("2D_FILE_PATH")) {
 				file_path_2d = config.get("SYSTEM_CONFIG_VALUE").toString() + "\\";
-			}
-			if(config.get("SYSTEM_CONFIG_CD").equals("3D_FILE_PATH")) {
-				file_path_3d = config.get("SYSTEM_CONFIG_VALUE").toString() + "\\";
 			}
 			if(config.get("SYSTEM_CONFIG_CD").equals("DOCUMENT_PATH")) {
 				file_path_doc = config.get("SYSTEM_CONFIG_VALUE").toString() + "\\";
@@ -530,8 +523,7 @@ public class FromAdapToItnService implements CommonService{
 		}
 
 		try {
-			String currentDir = Paths.get("").toAbsolutePath().toString();
-			log.info("스케줄러가 실행되는 디렉터리: {}", currentDir);
+			log.debug("ADAP-to-ITN scheduler started");
 
 			log.info("공유 폴더에서 새 파일을 탐색합니다...");
 			Set<String> currentFileSet = getCurrentFileSet();	// 공유폴더에 있는 모든 파일의 파일이름을 가져옴(중복 제거)
@@ -539,14 +531,14 @@ public class FromAdapToItnService implements CommonService{
 			// 새로 추가된 파일 찾기
 			// currentFileSet.removeAll(previousFileSet); // 동일한 파일명의 자료를 조회하지 않는 코드 주석처리
 
-			System.out.println("Current File Set:");
+			
 			for (String file : currentFileSet) {
-				System.out.println(file);
+				
 			}
 
 			if (!currentFileSet.isEmpty()) {
 				for (String fileName : currentFileSet) {
-					log.info("새로운 파일 발견: {}", fileName);
+					log.debug("ADAP-to-ITN source file detected");
 
 					File file = new File(file_path_scheduled, fileName);
 					Map<String, Object> data = new HashMap<>();
@@ -559,27 +551,18 @@ public class FromAdapToItnService implements CommonService{
 						// 이레산업에서 distribution_type 컬럼이 없다면
 						data.putIfAbsent("distribution_type", "도면/공정서");
 
-						StringBuilder sb = new StringBuilder("-------data 출력-------\n");
-
-						for (Map.Entry<String, Object> entry : data.entrySet()) {
-							sb.append("  Key: ")
-									.append(entry.getKey())
-									.append(", Value: ")
-									.append(entry.getValue())
-									.append("\n");
-						}
-						log.info(sb.toString());
+						log.debug("ADAP-to-ITN source metadata loaded. fieldCount={}", data.size());
 
 						// object_id 생성하는 임시 메서드 호출@
 						String objectId = generateObjectId();
 						data.put("object_id", objectId);
 						String objectNo = "";
 
-						insertResult = insertTargetDb(data, file_path_2d, file_path_3d, file_path_doc, file_path_sw, file_path_cp, file_path_dxf);
+						insertResult = insertTargetDb(data, file_path_2d, file_path_doc, file_path_sw, file_path_cp, file_path_dxf);
 
 						// insertResult가 true일 때만 파일을 이동하고 삭제하도록 변경
 						if (insertResult > 0) {
-							log.info("파일 {} 관련 데이터가 B DB에 저장되었습니다.", fileName);
+							log.info("ADAP-to-ITN target data stored");
 
 							// 파일 이동 후 삭제 (objectId로 이름 변경)
 							String srcPath = file_path_scheduled + "\\" + fileName;
@@ -587,16 +570,11 @@ public class FromAdapToItnService implements CommonService{
 							String distributionType = (String) data.get("distribution_type");
 							log.info("현재 문서 타입은 {}입니다.", distributionType);
 
-							String check3d = (String) data.get("check_3dfile");
 							boolean isSuccess = true;
 
 							switch (distributionType) {
 								case "도면/공정서":
-									if (check3d.equals("Y")) {
-										isSuccess = moveFileToDestination(srcPath, file_path_3d, objectId);
-									} else {
-										isSuccess = moveFileToDestination(srcPath, file_path_2d, objectId);
-									}
+									isSuccess = moveFileToDestination(srcPath, file_path_2d, objectId);
 									break;
 								case "문서":
 									isSuccess = moveFileToDestination(srcPath, file_path_doc, objectId);
@@ -626,7 +604,7 @@ public class FromAdapToItnService implements CommonService{
 										? data.get("drawing_no").toString()
 										: data.get("customer_document_no").toString();
 
-								log.info("obejctNo: {}", objectNo);
+								log.debug("ADAP-to-ITN revision lookup started");
 								List<String> requestNos = bdbService.getPrevRevisionFile(objectNo);
 								if (!requestNos.isEmpty()) {
 									log.info("revision updated");
@@ -646,12 +624,12 @@ public class FromAdapToItnService implements CommonService{
 								removeFile(srcPath);
 							}
 						} else {
-							log.error("데이터베이스에 저장 실패로 인해 파일을 이동하지 않았습니다: {}", fileName);
+							log.error("ADAP-to-ITN target data store failed");
 						}
 
 
 					} else {
-						log.warn("A DB에서 파일 {}에 대한 데이터를 찾을 수 없습니다.", fileName);
+						log.warn("ADAP-to-ITN source metadata not found");
 					}
 				}
 			} else {
@@ -661,14 +639,14 @@ public class FromAdapToItnService implements CommonService{
 			// 이전 파일 목록 갱신
 			previousFileSet = getCurrentFileSet();
 		} catch (Exception e) {
-			log.error("스케줄러 실행 중 오류 발생: {}", e.getMessage(), e);
+			log.warn("ADAP-to-ITN scheduler failed. cause={}", e.getClass().getSimpleName());
 		}
 	}
 
 	// 공유 폴더의 현재 파일 목록을 가져오는 메서드
 	private Set<String> getCurrentFileSet() {
 		File folder = new File(file_path_scheduled);
-		log.info("공유 폴더 경로: {}", file_path_scheduled);
+		log.debug("ADAP-to-ITN source directory scan started");
 		String[] files = folder.list();
 		return files != null ? new HashSet<>(Arrays.asList(files)) : new HashSet<>();
 	}
@@ -679,7 +657,7 @@ public class FromAdapToItnService implements CommonService{
 	 */
 	public void getFilesInDir(String dirRootPath,String dirPath) {
 
-		log.info("파일 넣는중 -> {}", dirRootPath);
+		log.debug("ADAP-to-ITN directory scan in progress");
 		//System.out.println("dirPath = " + dirPath);
 		File dir = new File(dirPath);
 		File[] files = dir.listFiles();
@@ -746,7 +724,7 @@ public class FromAdapToItnService implements CommonService{
 				}
 				result = true;
 			}catch (Exception e) {
-				e.printStackTrace();
+				log.warn("ADAP-to-ITN file stream copy failed. cause={}", e.getClass().getSimpleName());
 			}finally {
 				try {
 					if(bout != null) {
@@ -779,7 +757,7 @@ public class FromAdapToItnService implements CommonService{
 	}
 
 	// distributionType 확인 후 알맞은 테이블에 데이터 생성
-	private int insertTargetDb(Map<String, Object> data, String file_path_2d, String file_path_3d,
+	private int insertTargetDb(Map<String, Object> data, String file_path_2d,
 							   String file_path_doc, String file_path_sw, String file_path_cp, String file_path_dxf) {
 		String distributionType = (String)data.get("distribution_type");
 		String orgFileNm = data.get("org_file_nm") != null ? data.get("org_file_nm").toString() : "";
@@ -789,9 +767,7 @@ public class FromAdapToItnService implements CommonService{
 
 
 		if (distributionType.equals("도면/공정서")) {
-			if(data.get("check_3dfile").toString().equals("Y")) { filePathNm = file_path_3d + objectId + extension; }
-			else if(data.get("check_3dfile").toString().equals("N")) { filePathNm = file_path_2d + objectId + extension; }
-			else{ filePathNm = file_path_2d + objectId + extension;}
+			filePathNm = file_path_2d + objectId + extension;
 		}
 		else if (distributionType.equals("문서")) { filePathNm = file_path_doc + objectId+ extension;}
 		else if (distributionType.equals("CP 도면")) { filePathNm =  file_path_cp + objectId + extension;}
@@ -823,9 +799,9 @@ public class FromAdapToItnService implements CommonService{
 
 		// 파일 복사
 		if (copyFile(srcPath, destFile.getAbsolutePath())) {
-			log.info("파일 {}이 {}로 복사되었습니다.", srcPath, destFile.getAbsolutePath());
+			log.info("ADAP-to-ITN file copy completed");
 		} else {
-			log.error("파일 복사에 실패했습니다: {}", srcPath);
+			log.error("ADAP-to-ITN file copy failed");
 			isSuccess = false;
 		}
 		return isSuccess;
@@ -836,9 +812,9 @@ public class FromAdapToItnService implements CommonService{
 		boolean isSuccess = true;
 
 		if (srcFile.delete()) {
-			log.info("원본 파일 {}이 삭제되었습니다.", srcPath);
+			log.info("ADAP-to-ITN source file removed");
 		} else {
-			log.error("원본 파일 {} 삭제에 실패했습니다.", srcPath);
+			log.error("ADAP-to-ITN source file removal failed");
 			isSuccess = false;
 		}
 		return isSuccess;
@@ -860,12 +836,12 @@ public class FromAdapToItnService implements CommonService{
 			MailInfoVO mailParam = mailService.selectDeployUserInfo(requestNo);
 			if (data != null && mailParam != null && data.get("to_mail") != null && mailParam.getToMail() != null &&
 					mailParam.getToMail().equals(data.get("to_mail"))) {
-				System.out.println("Skipping requestNo: " + requestNo + " as outside user is already processed.");
+				
 				continue;
 			}
 
-			if(data.get("to_mail")==null){System.out.println("data.get(to_mail) is null");}
-			if(mailParam.getToMail()==null){System.out.println("mailParam.getToMail() is null");}
+			if(data.get("to_mail")==null){}
+			if(mailParam.getToMail()==null){}
 
 			Long mailId = getPk();
 

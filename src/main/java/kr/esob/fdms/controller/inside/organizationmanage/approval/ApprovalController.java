@@ -6,6 +6,7 @@ import javax.inject.Inject;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -51,6 +52,7 @@ public class ApprovalController extends AbstractController {
 
 	@RequestMapping("/approvalPopup")
 	public String approvalPopup(Model model, ApprovalListParam param) throws JsonProcessingException {
+		ApprovalListParam detail = service.selectDetailInfo(param);
 		ComboInfoVO combo = new ComboInfoVO();
 		combo.setComboCd("userRequestType");
 		model.addAttribute("userRequestType", comboService.selectComboList(combo));
@@ -61,26 +63,26 @@ public class ApprovalController extends AbstractController {
 		combo.setComboCd("informationProtect");
 		model.addAttribute("informationProtect", comboService.selectComboList(combo));
 
-		model.addAttribute("requestNo", param.getRequestNo());
+		model.addAttribute("requestNo", detail.getRequestNo());
 
-		model.addAttribute("DetailInfo", JSONObject.fromObject(service.selectDetailInfo(param)));
+		model.addAttribute("DetailInfo", JSONObject.fromObject(detail));
 
-		model.addAttribute("statusCd", param.getStatusCd());
+		model.addAttribute("statusCd", detail.getStatusCd());
 
 		return "inside/organizationmanage/approval/approvalPopup";
 	}
 
-	@RequestMapping(value = "/approval")
+	@PostMapping("/approval")
 	public @ResponseBody ResultVO approval(@RequestBody ApprovalListParam param) throws Exception {
 		return service.approvalUser(param);
 	}
 
-	@RequestMapping(value = "/reject")
+	@PostMapping("/reject")
 	public @ResponseBody ResultVO reject(@RequestBody ApprovalListParam param) throws Exception {
 		return service.rejectUser(param);
 	}
 	
-	@RequestMapping(value = "/venderUser")
+	@PostMapping("/venderUser")
 	public @ResponseBody List<ComboInfoVO> venderUser(@RequestBody ApprovalListParam param) throws Exception {
 		return service.venderUser(param);
 	}

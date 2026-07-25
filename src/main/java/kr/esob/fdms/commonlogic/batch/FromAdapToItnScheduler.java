@@ -14,7 +14,7 @@ import javax.inject.Inject;
 @ConditionalOnProperty(
 		name = "file.auto.insert.scheduler.enabled",
 		havingValue = "true",
-		matchIfMissing = true  // 설정이 없으면 기본적으로 활성화
+		matchIfMissing = false
 )
 public class FromAdapToItnScheduler {
 	@Inject

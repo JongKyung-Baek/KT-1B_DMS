@@ -277,22 +277,22 @@ public class FromAdapToItnDao extends AbstractDao {
 	//Update ADAP
 	public void updateRepo(ADAP_TYPE objectType, Map<String, Object> param) {
 
-		System.out.println("====" );
-		System.out.println("param = " +param);
-		System.out.println("====" );
+		
+		
+		
 		
 		int result = update(prefix + objectType.getUpdateQueryId(), param);
-		System.out.println("result : " + result);
+		
 	}
 
 	public void updateRepo(ADAP_TYPE objectType, String param) {
 
-		System.out.println("====" );
-		System.out.println("param = " +param);
-		System.out.println("====" );
+		
+		
+		
 
 		int result = update(prefix + objectType.getUpdateQueryId(), param);
-		System.out.println("result : " + result);
+		
 	}
 	
 	//REPO_TO_ADAP 대상 데이터 조회
@@ -325,7 +325,7 @@ public class FromAdapToItnDao extends AbstractDao {
 	//REPO_TO_ADAP 대량 업데이트	
 	public void updateAdapRepo(ADAP_TYPE objectType, String param) {		
 		int result = update(prefix + objectType.getUpdateQueryId(), param);
-		System.out.println("result : " + result);
+		
 	}
 	/*
 	public void insertAdapDocumnet(ADAP_TYPE objectType, Map<String, Object> param) {
@@ -380,11 +380,11 @@ public class FromAdapToItnDao extends AbstractDao {
 	//REPO_TO_ADAP 업데이트
 	public void updateRepoToAdap(ADAP_TYPE objectType, Map<String, Object> param) {
 		
-		System.out.println("====" );
-		System.out.println("param = " +param);
-		System.out.println("====" );
+		
+		
+		
 		int result = update(prefix + objectType.getUpdateQueryId(), param);
-		System.out.println("result : " + result);
+		
 	}
 	
 	//REPO_TO_ADAP 업데이트 대량
@@ -494,14 +494,14 @@ public class FromAdapToItnDao extends AbstractDao {
 	public void updateItn(ADAP_TYPE objectType, Map<String, Object> param) {
 		switch(objectType) {
 		case DOCUMENT_MEMBER:
-			System.out.println("Not suppoerted ObjectType");
+			
 			return;
 		default:
 			break;
 		}
 
 		int result = update(prefix + objectType.getUpdateQueryId(), param);
-		System.out.println("result : " + result);
+		
 	}
 
 	//Delete Itn
@@ -509,7 +509,7 @@ public class FromAdapToItnDao extends AbstractDao {
 		switch(objectType) {
 		case DOCUMENT:
 		case DOCUMENT_FILE:
-			System.out.println("Not suppoerted ObjectType");
+			
 			return;
 		default:
 			break;

@@ -424,6 +424,25 @@
 	WHERE destReq.DESTROY_REQUEST_NO = #{destroyRequestNo}
 </select>
 
+<select id="selectApprovalTargetForUpdate"
+		parameterType="kr.esob.fdms.controller.inside.production.disposalapproval.DisposalApprovalPopupParam"
+		resultType="kr.esob.fdms.controller.inside.production.disposalapproval.DisposalApprovalPopupParam">
+	SELECT destReq.DESTROY_REQUEST_NO AS destroyRequestNo
+		 , currDetail.APPROVAL_STATUS_CD AS approvalStatusCd
+		 , currDetail.APPROVAL_GRADE_CD AS approvalGradeCd
+	FROM DOCS_DESTROY_REQUEST destReq
+			 JOIN DOCS_DESTROY_REQUEST_DETAIL currDetail
+				  ON currDetail.DESTROY_REQUEST_NO = destReq.DESTROY_REQUEST_NO
+					 AND currDetail.PROCESS_SEQ = destReq.CURRENT_PROCESS_SEQ_NO
+	WHERE destReq.DESTROY_REQUEST_NO = #{destroyRequestNo}
+	  AND destReq.REQUEST_TYPE = 'PRODUCT'
+	  AND destReq.STATUS_CD = 'REQUEST'
+	  AND currDetail.APPROVAL_STATUS_CD = 'APPROVAL'
+	  AND currDetail.ACTUAL_USER_CD = #{sessionUser.userCd}
+	  AND currDetail.ACTION_CD = 'REQUEST'
+	FOR UPDATE OF destReq, currDetail
+</select>
+
 <!-- 폐기 요청 승인/반려 여부 수정 [2019.10.24(최금영)] -->
 <update id="updateDestroyRequestInfo" parameterType="kr.esob.fdms.controller.inside.production.disposalapproval.DisposalApprovalPopupParam">
 	/* 폐기 요청 승인/반려 여부 수정 */
@@ -434,6 +453,18 @@
 		, DESTROY_DT = CURRENT_DATE
 	</if>
 	WHERE DESTROY_REQUEST_NO = #{destroyRequestNo}
+	  AND REQUEST_TYPE = 'PRODUCT'
+	  AND STATUS_CD = 'REQUEST'
+	  AND EXISTS (
+			SELECT 1
+			FROM DOCS_DESTROY_REQUEST_DETAIL currDetail
+			WHERE currDetail.DESTROY_REQUEST_NO = DOCS_DESTROY_REQUEST.DESTROY_REQUEST_NO
+			  AND currDetail.PROCESS_SEQ = DOCS_DESTROY_REQUEST.CURRENT_PROCESS_SEQ_NO
+			  AND currDetail.APPROVAL_STATUS_CD = #{approvalStatusCd}
+			  AND currDetail.APPROVAL_GRADE_CD = #{approvalGradeCd}
+			  AND currDetail.ACTUAL_USER_CD = #{sessionUser.userCd}
+			  AND currDetail.ACTION_CD = 'REQUEST'
+	  )
 </update>
 
 <!-- 폐기 요청 상세정보 수정 [2019.10.24(최금영)] -->
@@ -444,8 +475,16 @@
 	  , REQUEST_DESC = #{rejectDesc}
 	  , ACTION_DT = CURRENT_DATE
 	WHERE DESTROY_REQUEST_NO = #{destroyRequestNo}
+	  AND PROCESS_SEQ = (
+			SELECT CURRENT_PROCESS_SEQ_NO
+			FROM DOCS_DESTROY_REQUEST
+			WHERE DESTROY_REQUEST_NO = #{destroyRequestNo}
+			  AND REQUEST_TYPE = 'PRODUCT'
+	  )
 	  AND APPROVAL_STATUS_CD = #{approvalStatusCd}
 	  AND APPROVAL_GRADE_CD = #{approvalGradeCd}
+	  AND ACTUAL_USER_CD = #{sessionUser.userCd}
+	  AND ACTION_CD = 'REQUEST'
 </update>
 
 <!-- 폐기 승인 시 해당 요청의 문서(접수자)의 아이템 전량 폐기 [2019.11.06(최금영)] -->
@@ -457,6 +496,25 @@
 	WHERE REQUEST_NO = #{requestNo}
 	  AND DEPLOY_USER_CD = #{deployUserCd}
 	  AND OBJECT_ID = #{objectId}
+	  AND EXISTS (
+			SELECT 1
+			FROM DOCS_DESTROY_REQUEST_MAPPING destroyMapping
+					 JOIN DOCS_DESTROY_REQUEST destroyRequest
+						  ON destroyRequest.DESTROY_REQUEST_NO = destroyMapping.DESTROY_REQUEST_NO
+					 JOIN DOCS_DESTROY_REQUEST_DETAIL currDetail
+						  ON currDetail.DESTROY_REQUEST_NO = destroyRequest.DESTROY_REQUEST_NO
+							 AND currDetail.PROCESS_SEQ = destroyRequest.CURRENT_PROCESS_SEQ_NO
+			WHERE destroyMapping.DESTROY_REQUEST_NO = #{destroyRequestNo}
+			  AND destroyMapping.REQUEST_NO = DOCS_DEPLOY_INFO.REQUEST_NO
+			  AND destroyMapping.OBJECT_ID = DOCS_DEPLOY_INFO.OBJECT_ID
+			  AND destroyMapping.DEPLOY_USER_CD = DOCS_DEPLOY_INFO.DEPLOY_USER_CD
+			  AND destroyRequest.REQUEST_TYPE = 'PRODUCT'
+			  AND destroyRequest.STATUS_CD = 'REQUEST'
+			  AND currDetail.APPROVAL_STATUS_CD = #{approvalStatusCd}
+			  AND currDetail.APPROVAL_GRADE_CD = #{approvalGradeCd}
+			  AND currDetail.ACTUAL_USER_CD = #{sessionUser.userCd}
+			  AND currDetail.ACTION_CD = 'REQUEST'
+	  )
 </update>
 
 <!-- 폐기할 내역 조회 [2019.11.06(최금영)]-->
@@ -466,21 +524,47 @@
 		 , OBJECT_ID AS objectId
 		 , DEPLOY_USER_CD AS deployUserCd
 		 , OBJECT_NO AS objectNo
-	FROM DOCS_DESTROY_REQUEST_MAPPING
-	WHERE DESTROY_REQUEST_NO = #{destroyRequestNo}
+	FROM DOCS_DESTROY_REQUEST_MAPPING destroyMapping
+	WHERE destroyMapping.DESTROY_REQUEST_NO = #{destroyRequestNo}
+	  AND EXISTS (
+			SELECT 1
+			FROM DOCS_DESTROY_REQUEST destroyRequest
+					 JOIN DOCS_DESTROY_REQUEST_DETAIL currDetail
+						  ON currDetail.DESTROY_REQUEST_NO = destroyRequest.DESTROY_REQUEST_NO
+							 AND currDetail.PROCESS_SEQ = destroyRequest.CURRENT_PROCESS_SEQ_NO
+			WHERE destroyRequest.DESTROY_REQUEST_NO = destroyMapping.DESTROY_REQUEST_NO
+			  AND destroyRequest.REQUEST_TYPE = 'PRODUCT'
+			  AND destroyRequest.STATUS_CD = 'REQUEST'
+			  AND currDetail.APPROVAL_STATUS_CD = #{approvalStatusCd}
+			  AND currDetail.APPROVAL_GRADE_CD = #{approvalGradeCd}
+			  AND currDetail.ACTUAL_USER_CD = #{sessionUser.userCd}
+			  AND currDetail.ACTION_CD = 'REQUEST'
+	  )
 </select>
 
 <delete id="deleteProductStatus">
 	DELETE FROM DOCS_PRODUCT_STATUS
-	WHERE (OBJECT_NO, USER_CD) IN
-		  (
-			  SELECT OBJECT_NO
-				   , DEPLOY_USER_CD
-			  FROM DOCS_DESTROY_REQUEST_MAPPING
-			  WHERE DESTROY_REQUEST_NO = #{destroyRequestNo}
-			  GROUP BY OBJECT_NO, DEPLOY_USER_CD
-		  )
+	WHERE OBJECT_NO = #{objectNo}
+	  AND USER_CD = #{deployUserCd}
 	  AND DISPOSAL_REQUEST_YN = 'Y'
+	  AND EXISTS (
+			SELECT 1
+			FROM DOCS_DESTROY_REQUEST_MAPPING destroyMapping
+					 JOIN DOCS_DESTROY_REQUEST destroyRequest
+						  ON destroyRequest.DESTROY_REQUEST_NO = destroyMapping.DESTROY_REQUEST_NO
+					 JOIN DOCS_DESTROY_REQUEST_DETAIL currDetail
+						  ON currDetail.DESTROY_REQUEST_NO = destroyRequest.DESTROY_REQUEST_NO
+							 AND currDetail.PROCESS_SEQ = destroyRequest.CURRENT_PROCESS_SEQ_NO
+			WHERE destroyMapping.DESTROY_REQUEST_NO = #{destroyRequestNo}
+			  AND destroyMapping.OBJECT_NO = DOCS_PRODUCT_STATUS.OBJECT_NO
+			  AND destroyMapping.DEPLOY_USER_CD = DOCS_PRODUCT_STATUS.USER_CD
+			  AND destroyRequest.REQUEST_TYPE = 'PRODUCT'
+			  AND destroyRequest.STATUS_CD = 'REQUEST'
+			  AND currDetail.APPROVAL_STATUS_CD = #{approvalStatusCd}
+			  AND currDetail.APPROVAL_GRADE_CD = #{approvalGradeCd}
+			  AND currDetail.ACTUAL_USER_CD = #{sessionUser.userCd}
+			  AND currDetail.ACTION_CD = 'REQUEST'
+	  )
 </delete>
 
 <update id="updateDisposalReject">
@@ -488,6 +572,25 @@
 	SET DISPOSAL_REQUEST_YN = 'N'
 	WHERE OBJECT_NO = #{objectNo}
 	  AND USER_CD = #{deployUserCd}
+	  AND DISPOSAL_REQUEST_YN = 'Y'
+	  AND EXISTS (
+			SELECT 1
+			FROM DOCS_DESTROY_REQUEST_MAPPING destroyMapping
+					 JOIN DOCS_DESTROY_REQUEST destroyRequest
+						  ON destroyRequest.DESTROY_REQUEST_NO = destroyMapping.DESTROY_REQUEST_NO
+					 JOIN DOCS_DESTROY_REQUEST_DETAIL currDetail
+						  ON currDetail.DESTROY_REQUEST_NO = destroyRequest.DESTROY_REQUEST_NO
+							 AND currDetail.PROCESS_SEQ = destroyRequest.CURRENT_PROCESS_SEQ_NO
+			WHERE destroyMapping.DESTROY_REQUEST_NO = #{destroyRequestNo}
+			  AND destroyMapping.OBJECT_NO = DOCS_PRODUCT_STATUS.OBJECT_NO
+			  AND destroyMapping.DEPLOY_USER_CD = DOCS_PRODUCT_STATUS.USER_CD
+			  AND destroyRequest.REQUEST_TYPE = 'PRODUCT'
+			  AND destroyRequest.STATUS_CD = 'REQUEST'
+			  AND currDetail.APPROVAL_STATUS_CD = #{approvalStatusCd}
+			  AND currDetail.APPROVAL_GRADE_CD = #{approvalGradeCd}
+			  AND currDetail.ACTUAL_USER_CD = #{sessionUser.userCd}
+			  AND currDetail.ACTION_CD = 'REQUEST'
+	  )
 </update>
 </mapper>
 

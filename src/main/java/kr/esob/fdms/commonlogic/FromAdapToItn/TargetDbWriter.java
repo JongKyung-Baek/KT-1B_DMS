@@ -3,6 +3,7 @@ package kr.esob.fdms.commonlogic.FromAdapToItn;
 
 import kr.esob.fdms.commonlogic.distributionDept.DistributionDeptVO;
 import kr.esob.fdms.commonlogic.mail.MailInfoVO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -10,6 +11,7 @@ import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.*;
 
+@Slf4j
 @Service
 public class TargetDbWriter {
     @Value("${spring.datasource.url}")
@@ -42,10 +44,10 @@ public class TargetDbWriter {
 //            int nextCnSerial = getNextCnSerial(conn);
 //            System.out.println("nextCnSerial : " + nextCnSerial);
             Timestamp currentTimestamp = Timestamp.valueOf(LocalDateTime.now());
-            System.out.println("currentTimestamp : " + currentTimestamp);
+            
 
             for(String tableName: tableNames){
-                System.out.println("tableName: " + tableName);
+                
             }
 
             // 컬럼과 placeholder 생성
@@ -62,7 +64,7 @@ public class TargetDbWriter {
             // 각 테이블에 데이터 삽입
             for (String tableName : tableNames) {
                 String query = String.format("INSERT INTO %s (%s) VALUES (%s)", tableName, columns, placeholders);
-                System.out.println("Generated Query: " + query);  // 디버깅용 출력
+                  // 디버깅용 출력
                 int cn_serial = getNextCnSerial(conn, tableName);
 
                 try (PreparedStatement pstmt = conn.prepareStatement(query)) {
@@ -87,14 +89,14 @@ public class TargetDbWriter {
 
                     // 실행
                     result = pstmt.executeUpdate();
-                    System.out.println(result + " row(s) inserted into " + tableName);
-                } catch (SQLException e) {
-                    System.err.println("Error inserting into table: " + tableName);
-                    e.printStackTrace();
+                    
+                } catch (SQLException e) { log.warn("Target database operation failed. cause={}", e.getClass().getSimpleName());
+                    
+                    
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (SQLException e) { log.warn("Target database operation failed. cause={}", e.getClass().getSimpleName());
+            
         }
         return result;
     }
@@ -108,24 +110,24 @@ public class TargetDbWriter {
 
             for (String tableName : tableNames) {
                 String query = String.format("DELETE FROM %s WHERE object_id = ?", tableName);
-                System.out.println("Generated delete Query: " + query);
+                
 
                 try (PreparedStatement pstmt = conn.prepareStatement(query)) {
                     pstmt.setString(1, objectId);
 
                     int rowsAffected = pstmt.executeUpdate();
                     result += rowsAffected;  // 삭제된 행의 수를 누적
-                    System.out.println(rowsAffected + " row(s) deleted from " + tableName);
-                } catch (SQLException e) {
-                    System.err.println("Error deleting from table: " + tableName);
-                    e.printStackTrace();
+                    
+                } catch (SQLException e) { log.warn("Target database operation failed. cause={}", e.getClass().getSimpleName());
+                    
+                    
                     conn.rollback();  // 실패 시 롤백
                     return 0;  // 오류가 발생하면 즉시 종료
                 }
             }
             conn.commit();  // 성공적으로 삭제되면 커밋
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (SQLException e) { log.warn("Target database operation failed. cause={}", e.getClass().getSimpleName());
+            
         }
 
         return result;
@@ -162,8 +164,8 @@ public class TargetDbWriter {
             while (rs.next()) {
                 requestNos.add(rs.getString("request_no"));
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (SQLException e) { log.warn("Target database operation failed. cause={}", e.getClass().getSimpleName());
+            
         }
         return requestNos;
     }
@@ -192,8 +194,8 @@ public class TargetDbWriter {
             pstmt.setString(7, "F");
 
             result += pstmt.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (SQLException e) { log.warn("Target database operation failed. cause={}", e.getClass().getSimpleName());
+            
         }
 
         return result;
@@ -225,8 +227,8 @@ public class TargetDbWriter {
                 groupedData.computeIfAbsent(toMail, k -> new ArrayList<>()).add(drawingData);
             }
 
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (SQLException e) { log.warn("Target database operation failed. cause={}", e.getClass().getSimpleName());
+            
         }
 
         return groupedData;
@@ -235,7 +237,7 @@ public class TargetDbWriter {
     private String[] checkTable(String distributionType){
         String[] tableName = {};
 
-        System.out.println("distributionType: "+distributionType);
+        
         // 추후 해당 방식을 enum으로 바꾸는 것이 나을듯.
         if (distributionType.equals("도면/공정서")) tableName = new String[]{"docs_drawing"};
         if (distributionType.equals("문서")) tableName = new String[]{"docs_document", "docs_document_file"};
@@ -282,22 +284,22 @@ public class TargetDbWriter {
 
                 for (int i = 0; i < mailIds.length; i++) {
 
-                    System.out.println("Generated update Query: " + query);
+                    
 
                     try (PreparedStatement pstmt = conn.prepareStatement(query)) {
                         pstmt.setInt(1, mailIds[i]);
 
                         int rowsAffected = pstmt.executeUpdate();
                         result += rowsAffected;  // 변경된 행의 수를 누적
-                    } catch (SQLException e) {
-                        e.printStackTrace();
+                    } catch (SQLException e) { log.warn("Target database operation failed. cause={}", e.getClass().getSimpleName());
+                        
                         return 0;  // 오류가 발생하면 즉시 종료
                     }
                 }
 
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (SQLException e) { log.warn("Target database operation failed. cause={}", e.getClass().getSimpleName());
+            
         }
 
         return result;
@@ -305,7 +307,7 @@ public class TargetDbWriter {
 
     public int[] extractMailId(String mailIds){
 
-        System.out.println("mailIds = " + mailIds);
+        
 
         String[] mailIdArray = mailIds.split(",");
 
@@ -339,8 +341,8 @@ public class TargetDbWriter {
                 pstmt.setInt(5, idx);
 
                 result += pstmt.executeUpdate();
-            } catch (SQLException e) {
-                e.printStackTrace();
+            } catch (SQLException e) { log.warn("Target database operation failed. cause={}", e.getClass().getSimpleName());
+                
             }
         }
 
@@ -376,8 +378,8 @@ public class TargetDbWriter {
 
                 distributionDeptList.add(distributionDept);
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (SQLException e) { log.warn("Target database operation failed. cause={}", e.getClass().getSimpleName());
+            
         }
 
         return distributionDeptList;
@@ -397,8 +399,8 @@ public class TargetDbWriter {
             if (rs.next()) {
                 maxIdx = rs.getInt("max_idx");
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (SQLException e) { log.warn("Target database operation failed. cause={}", e.getClass().getSimpleName());
+            
         }
         return maxIdx;
     }
@@ -424,14 +426,14 @@ public class TargetDbWriter {
                         int rowsAffected = pstmt.executeUpdate();
                         result += rowsAffected;
                         if(prevResult == result) updateFailedDrawingList.add(deptVO.getDrawingNo());
-                    } catch (SQLException e) {
-                        e.printStackTrace();
+                    } catch (SQLException e) { log.warn("Target database operation failed. cause={}", e.getClass().getSimpleName());
+                        
                         return updateFailedDrawingList;
                     }
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (SQLException e) { log.warn("Target database operation failed. cause={}", e.getClass().getSimpleName());
+            
         }
         return updateFailedDrawingList;
     }
@@ -449,13 +451,13 @@ public class TargetDbWriter {
 
                         int rowsAffected = pstmt.executeUpdate();
                         result += rowsAffected;
-                    } catch (SQLException e) {
-                        e.printStackTrace();
+                    } catch (SQLException e) { log.warn("Target database operation failed. cause={}", e.getClass().getSimpleName());
+                        
                         return 0;
                     }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (SQLException e) { log.warn("Target database operation failed. cause={}", e.getClass().getSimpleName());
+            
         }
         return result;
     }

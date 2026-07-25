@@ -3,7 +3,6 @@ package kr.esob.fdms.commonlogic.interceptor;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.servlet.ModelAndView;
@@ -17,6 +16,11 @@ public class CommonCheckInterceptor extends HandlerInterceptorAdapter {
 	@Override
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
 			throws Exception {
+		String duplicationPath = request.getContextPath() + "/login/duplication";
+		if (duplicationPath.equals(request.getRequestURI())) {
+			return true;
+		}
+
 		// 중복 로그인 체크
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
@@ -31,7 +35,11 @@ public class CommonCheckInterceptor extends HandlerInterceptorAdapter {
 		UserVO userVo = (UserVO) auth.getPrincipal();
 
 		if(LoginManager.checkUsing(userVo.getUserId(), request.getRemoteAddr())) {
-			//throw new LockedException("msg.alreadyLogin");
+			if ("XMLHttpRequest".equals(request.getHeader("X-Requested-With"))) {
+				response.sendError(HttpServletResponse.SC_CONFLICT, "Duplicate login");
+			} else {
+				response.sendRedirect(duplicationPath);
+			}
 			return false;
 		}
 

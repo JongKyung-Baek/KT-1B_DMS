@@ -9,7 +9,6 @@ import org.springframework.boot.web.servlet.ServletListenerRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.authentication.AuthenticationDetailsSource;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -22,12 +21,11 @@ import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
-import org.springframework.security.web.authentication.WebAuthenticationDetails;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 @AllArgsConstructor
@@ -88,10 +86,28 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 	protected void configure(HttpSecurity http) throws Exception {
 		List<MenuVO> menuList = menuDao.getMenuList();
 		http.headers().frameOptions().sameOrigin();
-		http.authorizeRequests().antMatchers("/**").permitAll();
+
+		// Authentication bootstrap endpoints are the only application URLs that
+		// remain public. Static resources are excluded in configure(WebSecurity).
+		http.authorizeRequests()
+				.antMatchers(HttpMethod.GET,
+						"/login/loginPage",
+						"/login/duplication").permitAll()
+				.antMatchers(HttpMethod.POST, "/login/loginProcess").permitAll()
+				.antMatchers("/error").permitAll()
+				// Duanzong/PDM exchange is intentionally deferred. Re-enable only
+				// after signed, replay-safe POST contracts are implemented.
+				.antMatchers("/outside/duanzong/**").denyAll()
+				// Native download client receives only a 128-bit, one-time capability.
+				.antMatchers(HttpMethod.GET, "/download", "/download/", "/download/*").permitAll()
+				.antMatchers("/inside/system/securityaccess/**").hasAuthority("ROLE_MENU_222");
+
+		// Keep the existing database-driven menu authorization rules. Register
+		// the ACL management rule first so a broad pattern cannot weaken it.
 		for(MenuVO menuVo : menuList) {
 			http.authorizeRequests().antMatchers(menuVo.getMenuUrl()).hasAuthority(menuVo.getRoleCd());
 		}
+		http.authorizeRequests().anyRequest().authenticated();
 
 
 //		http.sessionManagement()
@@ -107,30 +123,15 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 
 		http
 				.sessionManagement()
-				.sessionFixation().none()
+				.sessionFixation().migrateSession()
 				.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED);
 
 
 
-		http.authorizeRequests()
-				.antMatchers("/login/**").permitAll()
-				.antMatchers("/user_slo.jsp").permitAll()
-				.antMatchers("/redirect.jsp").permitAll()
-//				.antMatchers("/inside/**").hasAuthority("ROLE_C897D8E4")
-//				.antMatchers("/outside/**").hasAuthority("ROLE_936D3359")
-				//.antMatchers("/main/**").hasAuthority("ROLE_MENU_121")
-				.antMatchers("/inside/distribution/oldhistory/**").permitAll()
-//				.antMatchers("/inside/authorization/**").permitAll()
-				.antMatchers(HttpMethod.GET, "/resources/excel/**").permitAll()
-				.antMatchers(HttpMethod.POST, "/resources/excel/**").permitAll()
-				.antMatchers("/common/createExcel/createExcel").permitAll()
-				.antMatchers(HttpMethod.GET,"/hd_slo/**").permitAll()
-				//.antMatchers("/**").permitAll()
-				.and()
+		http
 //				.exceptionHandling().accessDeniedPage("/login/loginPage");
 				.exceptionHandling().accessDeniedHandler(accessDeniedHandler());
 		http.formLogin()
-				.authenticationDetailsSource(authenticationDetailsSource())
 				.loginPage("/login/loginPage")
 				.loginProcessingUrl("/login/loginProcess")
 				.successHandler(successhandler())
@@ -138,13 +139,15 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 				.usernameParameter(ID_PARAMETER)
 				.passwordParameter(PW_PARAMETER);
 		http.logout()
-			.logoutUrl("/login/logout")
+			.logoutRequestMatcher(new AntPathRequestMatcher("/login/logout", "POST"))
 //			.logoutSuccessUrl("/login/loginPage")
 			.logoutSuccessHandler(logoutSuccessHandler())
 			.invalidateHttpSession(true)
 			.deleteCookies("JSESSIONID");
-//		http.csrf().ignoringAntMatchers("/login/**");
-		http.csrf().disable();
+		// All browser mutations use the session-backed token rendered by the
+		// shared JSP fragment. External callbacks remain denied until their
+		// signed interface contract is implemented.
+		http.csrf();
 
 	}
 
@@ -166,17 +169,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 
 
 
-    private AuthenticationDetailsSource<HttpServletRequest, WebAuthenticationDetails> authenticationDetailsSource() {
-
-        return new AuthenticationDetailsSource<HttpServletRequest, WebAuthenticationDetails>() {
-
-            @Override
-            public WebAuthenticationDetails buildDetails(HttpServletRequest request) {
-                return new CustomWebAuthenticationDetails(request);
-            }
-
-        };
-    }
     @Bean
     public ServletListenerRegistrationBean<HttpSessionEventPublisher> httpSessionEventPublisher() {
     	return new ServletListenerRegistrationBean<HttpSessionEventPublisher>(new HttpSessionEventPublisher());
@@ -191,15 +183,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 //    public SessionRegistry sessionRegistry() {
 //        return new SessionRegistryImpl();
 //    }
-
-//	@Bean
-//	public CustomAuthenticationFilter authenticationFilter() throws Exception {
-//		CustomAuthenticationFilter customAuthenticationFilter = new CustomAuthenticationFilter();
-//		customAuthenticationFilter.setAuthenticationManager(this.authenticationManager());
-//		customAuthenticationFilter.setRequiresAuthenticationRequestMatcher(new AntPathRequestMatcher("/login/**", "POST"));
-//		return customAuthenticationFilter;
-//	}
-
 
 }
 

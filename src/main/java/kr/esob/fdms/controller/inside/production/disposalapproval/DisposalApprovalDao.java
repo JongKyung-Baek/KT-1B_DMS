@@ -27,16 +27,20 @@ public class DisposalApprovalDao extends AbstractDao {
 		return (ApprovalLineDetailVO) obj(prefix + "getApprovalLineInfo", param);
 	}
 
-	public void updateDestroyRequestInfo(DisposalApprovalPopupParam param) {
-		update(prefix + "updateDestroyRequestInfo", param);
+	public DisposalApprovalPopupParam selectApprovalTargetForUpdate(DisposalApprovalPopupParam param) {
+		return (DisposalApprovalPopupParam) obj(prefix + "selectApprovalTargetForUpdate", param);
 	}
 
-	public void updateDestroyRequestDetail(DisposalApprovalPopupParam param) {
-		update(prefix + "updateDestroyRequestDetail", param);
+	public int updateDestroyRequestInfo(DisposalApprovalPopupParam param) {
+		return update(prefix + "updateDestroyRequestInfo", param);
 	}
 
-	public void updateDestroyCount(DisposalApprovalPopupParam param) {
-		update(prefix + "updateDestroyCount", param);
+	public int updateDestroyRequestDetail(DisposalApprovalPopupParam param) {
+		return update(prefix + "updateDestroyRequestDetail", param);
+	}
+
+	public int updateDestroyCount(DisposalApprovalPopupParam param) {
+		return update(prefix + "updateDestroyCount", param);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -44,11 +48,11 @@ public class DisposalApprovalDao extends AbstractDao {
 		return list(prefix + "selectDestroyList", param);
 	}
 
-	public void deleteProductStatus(DisposalApprovalPopupParam param) {
-		delete(prefix + "deleteProductStatus", param);
+	public int deleteProductStatus(DisposalApprovalPopupParam param) {
+		return delete(prefix + "deleteProductStatus", param);
 	}
 
-	public void updateDisposalReject(DisposalApprovalPopupVO param) {
-		update(prefix + "updateDisposalReject", param);
+	public int updateDisposalReject(DisposalApprovalPopupParam param) {
+		return update(prefix + "updateDisposalReject", param);
 	}
 }

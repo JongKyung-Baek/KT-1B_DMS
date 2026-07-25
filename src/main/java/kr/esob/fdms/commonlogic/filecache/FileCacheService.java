@@ -103,7 +103,7 @@ public class FileCacheService {
 
         if (pdfTarget.exists() && !pdfTarget.delete()) {
             // 실패해도 서비스 동작은 유지하되 로그로만 남김
-            System.err.println("[FILE-CACHE] temp pdf delete failed: " + pdfTarget.getAbsolutePath());
+            
         }
 
         Map<String, Object> update = new HashMap<>();
@@ -173,7 +173,7 @@ public class FileCacheService {
 
         if (pdfTarget.exists() && !pdfTarget.delete()) {
             // 실패해도 서비스 동작은 유지하되 로그로만 남김
-            System.err.println("[FILE-CACHE] temp pdf delete failed: " + pdfTarget.getAbsolutePath());
+            
         }
 
         Map<String, Object> update = new HashMap<>();
@@ -260,7 +260,7 @@ public class FileCacheService {
         }
 
         if (pdfTarget.exists() && !pdfTarget.delete()) {
-            System.err.println("[FILE-CACHE] temp pdf delete failed: " + pdfTarget.getAbsolutePath());
+            
         }
 
         Map<String, Object> update = new HashMap<>();

@@ -44,10 +44,13 @@ public class GarbageCleanerService
 		    
 			// mergeFile 모든 폴더 목록을 가져온다
 			String isDir = strMergePath;
-			String isDir2 = "";
 			try 
 			{
-		        for (File info : new File(isDir).listFiles()) 
+				File[] mergeDirectories = new File(isDir).listFiles();
+				if (mergeDirectories == null) {
+					return;
+				}
+		        for (File info : mergeDirectories)
 		        {
 		            if (info.isDirectory()) {	                
 		                if (info.getName().equals(dateString))
@@ -56,9 +59,11 @@ public class GarbageCleanerService
 		                }
 		                else
 		                {
-		                	isDir2 = isDir + "\\" +info.getName();
-		                	
-		                	for (File info2 : new File(isDir2).listFiles()) 
+							File[] mergeFiles = info.listFiles();
+							if (mergeFiles == null) {
+								continue;
+							}
+		                	for (File info2 : mergeFiles)
 		                	{
 		        	            if (info2.isFile()) {
 		        	            	info2.delete();
@@ -69,14 +74,14 @@ public class GarbageCleanerService
 		            }
 		        }
 			} catch (Exception e) {
-				e.getStackTrace();
+				log.warn("Merge-file cleanup item failed. cause={}", e.getClass().getSimpleName());
 			}
 										
 		}
 		catch(Exception e) 
 		{
-			log.error(e.getMessage());
-			e.printStackTrace();
+			log.warn("Merge-file cleanup failed. cause={}", e.getClass().getSimpleName());
+			
 		}	
 		
 	}

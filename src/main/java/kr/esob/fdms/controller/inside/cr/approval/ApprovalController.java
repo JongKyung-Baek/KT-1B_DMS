@@ -7,6 +7,7 @@ import javax.inject.Inject;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -60,12 +61,12 @@ public class ApprovalController extends AbstractController {
 	}
 
 
-	@RequestMapping(value="/approve")
+	@PostMapping(value="/approve")
 	public @ResponseBody ResultVO approve(@RequestBody CrParam param) throws IOException {
 		return service.approve(param);
 	}
 
-	@RequestMapping(value="/approvalReject")
+	@PostMapping(value="/approvalReject")
 	public @ResponseBody ResultVO approvalReject(@RequestBody CrParam param) {
 		return service.approvalReject(param);
 	}

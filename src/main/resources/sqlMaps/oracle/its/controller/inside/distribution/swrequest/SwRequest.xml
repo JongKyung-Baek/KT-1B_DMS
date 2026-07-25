@@ -1230,7 +1230,9 @@
 		SELECT mainFile.OBJECT_ID AS "objectId",
 		       CAST(mainFile.FILE_NO AS TEXT) AS "fileNo",
 		       mainFile.ORG_FILE_NM AS "orgFileNm",
-		       mainFile.FILE_PATH_NM AS "filePath"
+		       mainFile.FILE_PATH_NM AS "filePath",
+		       'SW' AS "aclObjectType",
+		       mainFile.OBJECT_ID AS "aclObjectId"
 		FROM DOCS_SW_FILE mainFile
 		JOIN DOCS_SW sw ON sw.OBJECT_ID = mainFile.OBJECT_ID
 		WHERE mainFile.OBJECT_ID = #{objectId}
@@ -1243,7 +1245,9 @@
 		SELECT subFile.OBJECT_ID AS "objectId",
 		       CAST(subFile.FILE_NO AS TEXT) AS "fileNo",
 		       subFile.ORG_FILE_NM AS "orgFileNm",
-		       subFile.FILE_PATH_NM AS "filePath"
+		       subFile.FILE_PATH_NM AS "filePath",
+		       'SW_SUB' AS "aclObjectType",
+		       subFile.PARENT_OBJECT_ID AS "aclObjectId"
 		FROM DOCS_SW_SUB_FILE subFile
 		WHERE (subFile.OBJECT_ID = #{objectId} OR subFile.PARENT_OBJECT_ID = #{objectId})
 		  AND COALESCE(subFile.USE_YN, 'Y') = 'Y'

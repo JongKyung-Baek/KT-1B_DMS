@@ -5,6 +5,7 @@ import javax.inject.Inject;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -58,7 +59,7 @@ public class DisposalApprovalController extends AbstractController {
 	 * @return
 	 * @throws JsonProcessingException
 	 */
-	@RequestMapping(value="/destroyApproval")
+	@PostMapping(value="/destroyApproval")
 	public @ResponseBody ResultVO destroyApproval(@RequestBody DisposalApprovalPopupParam param, Model model) throws JsonProcessingException {
 		return service.destroyApproval(param);
 	}

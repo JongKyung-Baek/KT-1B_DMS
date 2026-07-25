@@ -4,7 +4,6 @@
 <%@page import="org.springframework.security.core.Authentication"%>
 
 <%@page import="org.springframework.web.servlet.i18n.SessionLocaleResolver"%>
-<%@page import="kr.esob.fdms.commonlogic.systemconfig.SystemConfig" %>
 
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
@@ -13,22 +12,20 @@
 <%
 	Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 	UserVO userVo = (UserVO) auth.getPrincipal();
-	String viewerCabUrl = null;
-
-	if(userVo.getAuthSite().equals("E")) {
-		viewerCabUrl = SystemConfig.getSystemConfigValue("VIEWER_CAB_URL_OUT");
-	}else {
-		viewerCabUrl = SystemConfig.getSystemConfigValue("VIEWER_CAB_URL");
-	}
 %>
 
 <!doctype html>
-<html lang="kr" class="layout-menu-fixed layout-compact" dir="ltr" data-skin="default" data-bs-theme="light">
+<html lang="kr" class="layout-menu-fixed layout-compact" dir="ltr"
+	data-skin="default"
+	data-bs-theme="light"
+	data-template="vertical-menu-template"
+	data-assets-path="${pageContext.request.contextPath}/vuexy/assets/">
 <head>
 	<meta charset="UTF-8">
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<%@ include file="/WEB-INF/jspf/csrf-meta.jspf" %>
 
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/vuexy/assets/vendor/fonts/iconify-icons.css" />
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/vuexy/assets/vendor/libs/node-waves/node-waves.css" />
@@ -153,7 +150,6 @@
 	</style>
 
 	<script src="${pageContext.request.contextPath}/vuexy/assets/vendor/js/helpers.js"></script>
-	<script src="${pageContext.request.contextPath}/vuexy/assets/vendor/js/template-customizer.js"></script>
 	<script src="${pageContext.request.contextPath}/vuexy/assets/js/config.js"></script>
 
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/jquery-3.4.1.min.js"></script>
@@ -240,7 +236,6 @@
 </head>
 
 <body>
-	<OBJECT classid="clsid:9E93A6E5-4247-416D-BA9C-7485ED08B23A" codebase="<%=viewerCabUrl %>" id="EDIActiveXT" style="display: none;"></OBJECT>
 	<div id="viewerCab"></div>
 
 	<div class="layout-wrapper layout-content-navbar bodyWrap">
@@ -283,7 +278,6 @@
 		<input type="hidden" name="downloadServerPort" value="${config.updownServerPort }"/>
 		<input type="hidden" name="downloadLangCode" value="${config.updownLangCode }"/>
 		<input type="hidden" name="downloadUserAuth" value="${config.updownUserAuth }"/>
-		<input type="hidden" name="downloadSecretKey" value="${config.updownSecretKey}"/>
 		<input type="hidden" name="downloadIsSecurity" value="${config.updownIsSecurity}"/>
 		<input type="hidden" name="downloadVolume" value="R"/>
 		<input type="hidden" name="ShowArray" value=""/>

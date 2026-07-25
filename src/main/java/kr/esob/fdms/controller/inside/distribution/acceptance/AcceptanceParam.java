@@ -20,6 +20,7 @@ public class AcceptanceParam extends CommonParam {
 	private String actionCd;
 	private String statusCd;
 	private String currentProcessSeqNo;
+	private String processSeq;
 	private String approvalLineId;
 	private String printYn;
 	private String fileDistributionType;

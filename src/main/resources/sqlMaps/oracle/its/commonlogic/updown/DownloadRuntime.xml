@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="sql.DownloadRuntime">
+
+    <resultMap id="runtimeStateMap"
+            type="kr.esob.fdms.commonlogic.updown.runtime.DownloadRuntimeState">
+        <id property="wsSeq" column="ws_seq"/>
+        <result property="requestNo" column="request_no"/>
+        <result property="docSeq" column="doc_seq"/>
+        <result property="fileNo" column="file_no"/>
+        <result property="fileSeq" column="file_seq"/>
+        <result property="downloadRequestKey" column="download_request_key"/>
+        <result property="requestType" column="request_type"/>
+        <result property="objectType" column="object_type"/>
+        <result property="originalFileName" column="original_file_name"/>
+        <result property="savedFileName" column="saved_file_name"/>
+        <result property="ownerUserCd" column="owner_user_cd"/>
+        <result property="ownerUserId" column="owner_user_id"/>
+        <result property="ownerUserNm" column="owner_user_nm"/>
+        <result property="ownerSessionId" column="owner_session_id"/>
+        <result property="restSequence" column="rest_sequence"/>
+        <result property="tempFilePath" column="temp_file_path"/>
+        <result property="status" column="status_cd"
+                javaType="kr.esob.fdms.commonlogic.updown.runtime.DownloadRuntimeStatus"/>
+        <result property="resultCode" column="result_code"/>
+        <result property="optionalData" column="optional_data"/>
+        <result property="errorMessage" column="error_message"/>
+        <result property="sentToWsAt" column="sent_to_ws_at"/>
+        <result property="downloadClaimed" column="download_claimed"/>
+        <result property="claimedAt" column="claimed_at"/>
+        <result property="actLogSaved" column="audit_saved"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <result property="expireAt" column="expire_at"/>
+    </resultMap>
+
+    <sql id="runtimeColumns">
+        ws_seq, request_no, doc_seq, file_no, file_seq,
+        download_request_key, request_type, object_type,
+        original_file_name, saved_file_name,
+        owner_user_cd, owner_user_id, owner_user_nm, owner_session_id,
+        rest_sequence, temp_file_path, status_cd, result_code,
+        optional_data, error_message, sent_to_ws_at,
+        download_claimed, claimed_at, audit_saved,
+        created_at, updated_at, expire_at
+    </sql>
+
+    <insert id="insertQueued"
+            parameterType="kr.esob.fdms.commonlogic.updown.runtime.DownloadRuntimeState">
+        INSERT INTO docs_download_runtime (
+            <include refid="runtimeColumns"/>
+        ) VALUES (
+            #{wsSeq}, #{requestNo}, #{docSeq}, #{fileNo}, #{fileSeq},
+            #{downloadRequestKey}, #{requestType}, #{objectType},
+            #{originalFileName}, #{savedFileName},
+            #{ownerUserCd}, #{ownerUserId}, #{ownerUserNm}, #{ownerSessionId},
+            #{restSequence}, #{tempFilePath}, #{status}, #{resultCode},
+            #{optionalData}, #{errorMessage}, #{sentToWsAt},
+            #{downloadClaimed}, #{claimedAt}, #{actLogSaved},
+            #{createdAt}, #{updatedAt}, #{expireAt}
+        )
+    </insert>
+
+    <select id="selectByWsSeq" resultMap="runtimeStateMap">
+        SELECT <include refid="runtimeColumns"/>
+          FROM docs_download_runtime
+         WHERE ws_seq = #{wsSeq}
+    </select>
+
+    <update id="updateState"
+            parameterType="kr.esob.fdms.commonlogic.updown.runtime.DownloadRuntimeState">
+        UPDATE docs_download_runtime
+           SET saved_file_name = #{savedFileName},
+               rest_sequence = #{restSequence},
+               temp_file_path = #{tempFilePath},
+               status_cd = #{status},
+               result_code = #{resultCode},
+               optional_data = #{optionalData},
+               error_message = #{errorMessage},
+               sent_to_ws_at = #{sentToWsAt},
+               audit_saved = #{actLogSaved},
+               updated_at = #{updatedAt},
+               expire_at = #{expireAt}
+         WHERE ws_seq = #{wsSeq}
+    </update>
+
+    <!-- One PostgreSQL statement is the serialization point for a public
+         capability. Competing requests can never both receive a state row. -->
+    <select id="claimByDownloadRequestKey" resultMap="runtimeStateMap">
+        WITH candidate AS (
+            SELECT ws_seq
+              FROM docs_download_runtime
+             WHERE download_request_key = #{downloadRequestKey}
+               AND download_claimed = FALSE
+               AND status_cd = 'SENT_TO_WS'
+               AND expire_at &gt; CURRENT_TIMESTAMP
+             ORDER BY updated_at DESC
+             LIMIT 1
+             FOR UPDATE SKIP LOCKED
+        ),
+        claimed AS (
+            UPDATE docs_download_runtime runtime
+               SET download_claimed = TRUE,
+                   claimed_at = CURRENT_TIMESTAMP,
+                   updated_at = CURRENT_TIMESTAMP
+              FROM candidate
+             WHERE runtime.ws_seq = candidate.ws_seq
+            RETURNING runtime.*
+        )
+        SELECT <include refid="runtimeColumns"/>
+          FROM claimed
+    </select>
+
+    <select id="selectLatestByFileName" resultMap="runtimeStateMap">
+        SELECT <include refid="runtimeColumns"/>
+          FROM docs_download_runtime
+         WHERE saved_file_name = #{fileName}
+            OR original_file_name = #{fileName}
+         ORDER BY updated_at DESC
+         LIMIT 1
+    </select>
+
+    <select id="selectLatestByDownloadRequestKey" resultMap="runtimeStateMap">
+        SELECT <include refid="runtimeColumns"/>
+          FROM docs_download_runtime
+         WHERE download_request_key = #{downloadRequestKey}
+         ORDER BY updated_at DESC
+         LIMIT 1
+    </select>
+
+    <delete id="deleteByWsSeq">
+        DELETE FROM docs_download_runtime
+         WHERE ws_seq = #{wsSeq}
+    </delete>
+
+    <delete id="deleteAuditedExpiredByWsSeq">
+        DELETE FROM docs_download_runtime
+         WHERE ws_seq = #{wsSeq}
+           AND audit_saved = TRUE
+           AND expire_at &lt;= CURRENT_TIMESTAMP
+    </delete>
+
+    <select id="selectExpiredKeys" resultType="string">
+        SELECT ws_seq
+          FROM docs_download_runtime
+         WHERE expire_at &lt;= CURRENT_TIMESTAMP
+         ORDER BY expire_at, ws_seq
+    </select>
+
+    <!-- Includes terminal-but-unaudited rows so a crash between the audit
+         insert and audit_saved update is retried with at-least-once semantics. -->
+    <select id="selectRestartRecoveryCandidates" resultMap="runtimeStateMap">
+        SELECT <include refid="runtimeColumns"/>
+          FROM docs_download_runtime
+         WHERE created_at &lt; #{startupCutoff}
+           AND (
+                audit_saved = FALSE
+                OR expire_at &lt;= #{startupCutoff}
+           )
+         ORDER BY created_at, ws_seq
+    </select>
+
+    <update id="markRestartRecoveryFailed">
+        UPDATE docs_download_runtime
+           SET status_cd = 'FAILED',
+               result_code = COALESCE(NULLIF(result_code, ''), '99'),
+               optional_data = NULL,
+               error_message = #{errorMessage},
+               updated_at = CURRENT_TIMESTAMP,
+               expire_at = LEAST(expire_at, CURRENT_TIMESTAMP)
+         WHERE ws_seq = #{wsSeq}
+           AND created_at &lt; #{startupCutoff}
+           AND (
+                status_cd NOT IN ('COMPLETED', 'FAILED')
+                OR expire_at &lt;= #{startupCutoff}
+           )
+    </update>
+
+    <update id="markExpiredFailed">
+        UPDATE docs_download_runtime
+           SET status_cd = 'FAILED',
+               result_code = COALESCE(NULLIF(result_code, ''), '99'),
+               optional_data = NULL,
+               error_message = #{errorMessage},
+               updated_at = CURRENT_TIMESTAMP
+         WHERE ws_seq = #{wsSeq}
+           AND expire_at &lt;= CURRENT_TIMESTAMP
+           AND status_cd NOT IN ('COMPLETED', 'FAILED')
+    </update>
+
+    <update id="markAuditSaved">
+        UPDATE docs_download_runtime
+           SET audit_saved = TRUE,
+               updated_at = CURRENT_TIMESTAMP
+         WHERE ws_seq = #{wsSeq}
+           AND status_cd IN ('COMPLETED', 'FAILED')
+    </update>
+
+    <select id="countAll" resultType="int">
+        SELECT COUNT(*)::integer
+          FROM docs_download_runtime
+    </select>
+</mapper>

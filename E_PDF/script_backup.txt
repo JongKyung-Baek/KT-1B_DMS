@@ -5670,7 +5670,7 @@ create table ADAP_REF
 comment on column ADAP_REF.GROUP1 is '도면/문서'
 /
 
-comment on column ADAP_REF.GROUP2 is '2D/3D'
+comment on column ADAP_REF.GROUP2 is '2D'
 /
 
 comment on column ADAP_REF.EXT_TYPE is '파일확장자'
@@ -5996,7 +5996,7 @@ create table CONVERT_LOG
 )
 /
 
-comment on table CONVERT_LOG is '2D 3D 이력'
+comment on table CONVERT_LOG is '2D 변환 이력'
 /
 
 comment on column CONVERT_LOG.PATH_NM is '파일경로'

@@ -43,7 +43,6 @@ public class SitemeshFilter extends ConfigurableSiteMeshFilter{
 		builder.addDecoratorPath("/inside/production/disposalApproval/", "/WEB-INF/decorator/decoratorProductTab.jsp");
 		builder.addDecoratorPath("/inside/production/disposal/", "/WEB-INF/decorator/decoratorDisposalTab.jsp");
 		builder.addDecoratorPath("/inside/production/disposalStatus/", "/WEB-INF/decorator/decoratorDisposalTab.jsp");
-		builder.addDecoratorPath("/inside/distribution/drawingRequest/view3DFile", "/WEB-INF/decorator/decoratorEmpty.jsp");
 		// 23.06.12 (yskim) install page
 		builder.addDecoratorPath("/downloadpage", "/WEB-INF/decorator/CollabviewInstallPage.jsp");
 		builder.addExcludedPath("/menu");

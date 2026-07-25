@@ -14,6 +14,7 @@ import kr.esob.fdms.controller.login.UserVO;
 import kr.esob.fdms.controller.outside.commonrequest.RequestParam;
 import kr.esob.fdms.controller.outside.drawing.request.DrawingInfoVO;
 import kr.esob.fdms.util.RandomStringGenerator;
+import kr.esob.fdms.util.StoragePathUtils;
 import kr.esob.fdms.util.StringUtil;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.io.FilenameUtils;
@@ -117,15 +118,12 @@ public class DrawingRequestService implements CommonService{
 		String isNewRevision = request.getParameter("isNewRevision");
 
 		ResultVO resultVo = new ResultVO();
-		System.out.println("파라미터 맵 확인 = " + request.getParameterMap());
-		System.out.println("파일명 파라미터 확인 = " + request.getParameter("fileName"));
-		System.out.println("objectType -> " + request.getParameter("objectType"));
+		log.debug("[DRAWING_REGISTER] request received");
 		MultipartFile file = request.getFile("file");
 		List<MultipartFile> subFiles = request.getFiles("subFiles");
 
-		System.out.println("protectYn 값 확인 = " + request.getParameter("protectYn"));
 
-		String drawingType = request.getParameter("drawingType");
+		String drawingType = "2D";
 		String distributionPoint = request.getParameter("distributionPoint");
 		String treeCd = request.getParameter("treeCd");
 		treeCd = (treeCd == null) ? "" : treeCd.trim();
@@ -149,18 +147,9 @@ public class DrawingRequestService implements CommonService{
 			// obejctId로 조회 DB에서 조회
 			DrawingRequestVO prevRevisionData = dao.getPrevRevisionData(prevObjectId);
 
-			drawingType = prevRevisionData.getDrawingType();
 			// 새로운 objectId 생성
-			String filePathNm;
-
-			if (drawingType.equals("2D")) {
-				filePathNm = SystemConfig.getSystemConfigValue("2D_FILE_PATH") + "\\" + objectId + "." + FilenameUtils.getExtension(request.getParameter("orgFileNm"));
-			} else if (drawingType.equals("3D")) {
-				filePathNm = SystemConfig.getSystemConfigValue("3D_FILE_PATH") + "\\" + objectId + "." + FilenameUtils.getExtension(request.getParameter("orgFileNm"));
-			} else {
-				log.info("Unexpected drawing type: {}. Expected 2D or 3D.", drawingType);
-				filePathNm = SystemConfig.getSystemConfigValue("2D_FILE_PATH") + "\\" + objectId + "." + FilenameUtils.getExtension(request.getParameter("orgFileNm"));
-			}
+			String filePathNm = buildDrawingSavedPath(
+					objectId, FilenameUtils.getExtension(request.getParameter("orgFileNm")));
 			// 업데이트된 리비전 (기존 리비전 + 1)
 			String updatedRevNo = String.valueOf(Integer.parseInt(prevRevisionData.getRevNo()) + 1);
 
@@ -204,13 +193,8 @@ public class DrawingRequestService implements CommonService{
 				}
 			}
 
-			String filePathNm;
-			// 2D인지 3D인지
-			if (drawingType.equals("2D")) {
-				filePathNm = SystemConfig.getSystemConfigValue("2D_FILE_PATH") + "\\" + objectId + "." + FilenameUtils.getExtension(request.getParameter("orgFileNm"));
-			} else {
-				filePathNm = SystemConfig.getSystemConfigValue("3D_FILE_PATH") + "\\" + objectId + "." + FilenameUtils.getExtension(request.getParameter("orgFileNm"));
-			}
+			String filePathNm = buildDrawingSavedPath(
+					objectId, FilenameUtils.getExtension(request.getParameter("orgFileNm")));
 
 			// DrawingRegisterPopupParam 객체 만들어서 저장
 			drawingRegisterPopupParam = DrawingRegisterPopupParam.builder()
@@ -249,7 +233,6 @@ public class DrawingRequestService implements CommonService{
 
 		}else {
 
-			System.out.println("drawingRegisterPopupParam 확인 = " + drawingRegisterPopupParam);
 
 			if (isNewRevision != null && isNewRevision.equals("true")) {
 				// 도면 리비전 업데이트 시
@@ -259,12 +242,8 @@ public class DrawingRequestService implements CommonService{
 				dao.insertDrawingRegisterInfo(drawingRegisterPopupParam);
 			}
 
-			if(drawingType.equals("2D")){
-				drawingRegisterPopupParam = getFileSavedPath2D(drawingRegisterPopupParam, file);
-			}else{
-				drawingRegisterPopupParam = getFileSavedPath3D(drawingRegisterPopupParam, file);
-			}
-			saveDrawingSubFiles(subFiles, drawingRegisterPopupParam.getObjectId(), drawingType);
+			drawingRegisterPopupParam = getFileSavedPath2D(drawingRegisterPopupParam, file);
+			saveDrawingSubFiles(subFiles, drawingRegisterPopupParam.getObjectId());
 			convertFunctionCodeMainFileAtRegister(drawingRegisterPopupParam);
 			saveFunctionCodeApprovalDetails(drawingRegisterPopupParam);
 			String mailDocumentName = safeString(drawingRegisterPopupParam.getDrawingNm());
@@ -391,7 +370,7 @@ public class DrawingRequestService implements CommonService{
 		path = StringUtil.replaceLfiPath(path);
 		File file = new File(path);
 		param.setFilePath(path);
-		System.out.println("파일 경로: " + path);
+		log.debug("[DRAWING_REGISTER] file stored");
 
 		param.setFileNm(orgName);
 		param.setFileSize(String.valueOf(mf.getSize()));
@@ -410,41 +389,7 @@ public class DrawingRequestService implements CommonService{
 		return param;
 	}
 
-	private DrawingRegisterPopupParam getFileSavedPath3D(DrawingRegisterPopupParam param, MultipartFile mf){
-//		String filePathNm = SystemConfig.getSystemConfigValue("3D_FILE_PATH")+"\\" + param.getObjectId() +"." + FilenameUtils.getExtension(param.getOrgFileNm());
-		String filePathNm = param.getFilePath();
-		File filePath = new File(filePathNm);
-
-		String orgName = mf.getOriginalFilename();
-
-		if(orgName.contains(File.separator)) {
-			orgName = orgName.substring(orgName.lastIndexOf(File.separator)+1, orgName.length());
-		}
-		orgName = StringUtil.replaceLfiPath(orgName);
-		String path = filePathNm;
-		path = StringUtil.replaceLfiPath(path);
-		File file = new File(path);
-		param.setFilePath(path);
-		System.out.println("파일 경로: " + path);
-
-		param.setFileNm(orgName);
-		param.setFileSize(String.valueOf(mf.getSize()));
-
-		try {
-			file.createNewFile();
-
-			// 0703 (yskim)
-			byte[] bytes = mf.getBytes();
-			Files.write(Paths.get(path), bytes);
-			//
-
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-		return param;
-	}
-
-	private void saveDrawingSubFiles(List<MultipartFile> subFiles, String parentObjectId, String drawingType) {
+	private void saveDrawingSubFiles(List<MultipartFile> subFiles, String parentObjectId) {
 		if (subFiles == null || subFiles.isEmpty()) {
 			return;
 		}
@@ -465,7 +410,7 @@ public class DrawingRequestService implements CommonService{
 			originalName = StringUtil.replaceLfiPath(originalName);
 
 			String extension = FilenameUtils.getExtension(originalName);
-			String targetPath = buildDrawingSavedPath(drawingType, subObjectId, extension);
+			String targetPath = buildDrawingSavedPath(subObjectId, extension);
 			targetPath = StringUtil.replaceLfiPath(targetPath);
 
 			File outFile = new File(targetPath);
@@ -501,18 +446,13 @@ public class DrawingRequestService implements CommonService{
 		}
 	}
 
-	private String buildDrawingSavedPath(String drawingType, String objectId, String extension) {
-		String basePath;
-		if ("3D".equals(drawingType)) {
-			basePath = SystemConfig.getSystemConfigValue("3D_FILE_PATH");
-		} else {
-			basePath = SystemConfig.getSystemConfigValue("2D_FILE_PATH");
-		}
+	private String buildDrawingSavedPath(String objectId, String extension) {
+		String basePath = SystemConfig.getSystemConfigValue("2D_FILE_PATH");
 
 		if (extension == null || extension.trim().isEmpty()) {
-			return basePath + "\\" + objectId;
+			return StoragePathUtils.resolve(basePath, objectId).toString();
 		}
-		return basePath + "\\" + objectId + "." + extension;
+		return StoragePathUtils.resolve(basePath, objectId + "." + extension).toString();
 	}
 
 	private void convertFunctionCodeMainFileAtRegister(DrawingRegisterPopupParam param) {
@@ -537,7 +477,7 @@ public class DrawingRequestService implements CommonService{
 		convertedUpdateParam.put("orgFileNm", toPdfFileName(safeString(param.getOrgFileNm()), safeString(param.getFileNm())));
 		convertedUpdateParam.put("fileSize", String.valueOf(convertedMain.length()));
 		int updated = dao.updateMainFileAfterCoverMerge(convertedUpdateParam);
-		System.out.println("[FC_CONVERT] register main update rows=" + updated + ", filePath=" + inputPdfPath);
+		log.info("[FC_CONVERT] register main update rows={}", updated);
 	}
 
 	private void markMainFileProcessingFail(String objectId, String errorMessage, String logTag) {
@@ -547,9 +487,9 @@ public class DrawingRequestService implements CommonService{
 			failParam.put("processingStatus", "FAIL");
 			failParam.put("errorMessage", safeString(errorMessage));
 			dao.updateMainFileProcessingFail(failParam);
-			System.out.println("[" + logTag + "] processing status updated to FAIL: " + errorMessage);
+			log.warn("[{}] processing status updated to FAIL", logTag);
 		} catch (Exception e) {
-			System.out.println("[" + logTag + "] fail status update exception: " + e.getMessage());
+			log.warn("[{}] fail status update exception type={}", logTag, e.getClass().getSimpleName());
 		}
 	}
 
@@ -557,13 +497,13 @@ public class DrawingRequestService implements CommonService{
 		try {
 			Map<String, Object> drawingInfo = dao.selectDrawingApprovalInfo(objectId);
 			if (drawingInfo == null || drawingInfo.isEmpty()) {
-				System.out.println("[FC_COVER] skip: drawingInfo is empty. objectId=" + objectId);
+				log.warn("[FC_COVER] skipped: drawing metadata missing");
 				return "drawingInfo is empty";
 			}
 			String sourceFilePath = getInfoString(drawingInfo, "filePath", "FILE_PATH_NM", "file_path_nm");
 			String inputPdfPath = ensureConvertedPdfForCover(sourceFilePath, objectId, "FC_COVER");
 			if (inputPdfPath.isEmpty()) {
-				System.out.println("[FC_COVER] skip: inputPdfPath is empty");
+				log.warn("[FC_COVER] skipped: input missing");
 				return "inputPdfPath is empty";
 			}
 			if (!inputPdfPath.equals(sourceFilePath) && inputPdfPath.toLowerCase().endsWith(".pdf")) {
@@ -575,7 +515,7 @@ public class DrawingRequestService implements CommonService{
 					convertedUpdateParam.put("orgFileNm", toPdfFileName(getInfoString(drawingInfo, "orgFileNm", "ORG_FILE_NM"), getInfoString(drawingInfo, "fileNm", "FILE_NM")));
 					convertedUpdateParam.put("fileSize", String.valueOf(convertedMain.length()));
 					int updated = dao.updateMainFileAfterCoverMerge(convertedUpdateParam);
-					System.out.println("[FC_COVER] pre-merge main update rows=" + updated + ", filePath=" + inputPdfPath);
+					log.info("[FC_COVER] pre-merge main update rows={}", updated);
 				}
 			}
 			String outputFileName = "cover_" + objectId + ".pdf";
@@ -638,16 +578,13 @@ public class DrawingRequestService implements CommonService{
 			if (endpoint.isEmpty()) {
 				endpoint = "http://localhost:7442/cover_merge_pdf";
 			}
-			System.out.println("[FC_COVER] distributeTypeCd=" + getInfoString(drawingInfo, "distributeTypeCd", "DISTRIBUTE_TYPE_CD") + ", fileType=" + getInfoString(drawingInfo, "fileType", "FILE_TYPE"));
-			System.out.println("[FC_COVER] templatePdfPath=" + templatePdfPath);
-			System.out.println("[FC_COVER] endpoint=" + endpoint);
-			System.out.println("[FC_COVER] inputPdfPath=" + inputPdfPath + ", outputFileName=" + outputFileName);
-			System.out.println("[FC_COVER] approverCount=" + approverUsers.size() + ", reviewerCount=" + reviewerUsers.size() + ", preparedCount=" + preparedBy.size());
+			log.debug("[FC_COVER] request prepared approverCount={}, reviewerCount={}, preparedCount={}",
+					approverUsers.size(), reviewerUsers.size(), preparedBy.size());
 
 			RestTemplate restTemplate = new RestTemplate();
 			ResponseEntity<String> response = restTemplate.postForEntity(endpoint, entity, String.class);
 			String responseBody = response.getBody();
-			System.out.println("[FC_COVER] responseStatus=" + response.getStatusCodeValue() + ", body=" + responseBody);
+			log.info("[FC_COVER] response status={}", response.getStatusCodeValue());
 
 			if (responseBody != null && !responseBody.trim().isEmpty()) {
 				Map<String, Object> responseMap = new Gson().fromJson(responseBody, new TypeToken<Map<String, Object>>() {}.getType());
@@ -663,18 +600,16 @@ public class DrawingRequestService implements CommonService{
 						updateParam.put("fileSize", String.valueOf(mergedFile.length()));
 						int updated = dao.updateMainFileAfterCoverMerge(updateParam);
 						copyMergedPdfToViewerCache(outputPdfPath, objectId, "FC_COVER");
-						System.out.println("[FC_COVER] post-merge main update rows=" + updated + ", filePath=" + inputPdfPath);
-						System.out.println("[FC_COVER] overwrite source file with merged cover: " + inputPdfPath);
+						log.info("[FC_COVER] merge applied rows={}", updated);
 					} else {
-						System.out.println("[FC_COVER] merged output file not found: " + outputPdfPath);
+						log.warn("[FC_COVER] merged output missing");
 					}
 				}
 			}
 			return null;
 		} catch (Exception e) {
-			System.out.println("[FC_COVER] exception: " + e.getMessage());
-			log.warn("Function Code cover merge skipped after approval", e);
-			return e.getMessage();
+			log.warn("[FC_COVER] merge skipped type={}", e.getClass().getSimpleName());
+			return "cover_merge_failed:" + e.getClass().getSimpleName();
 		}
 	}
 
@@ -687,15 +622,13 @@ public class DrawingRequestService implements CommonService{
 			String registeredAt
 	) {
 		try {
-			System.out.println("[DRAWING_REGISTER_MAIL] targetUsersCsv=" + targetUsersCsv);
+			log.debug("[DRAWING_REGISTER_MAIL] dispatch started");
 			for (String token : splitCsv(targetUsersCsv)) {
-				System.out.println("[DRAWING_REGISTER_MAIL] token=" + token);
 				MailInfoVO mailInfoVo = mailService.selectReceiveUser(token);
 				if (mailInfoVo == null) {
-					System.out.println("[DRAWING_REGISTER_MAIL] selectReceiveUser is null. token=" + token);
+					log.warn("[DRAWING_REGISTER_MAIL] recipient not resolved");
 					continue;
 				}
-				System.out.println("[DRAWING_REGISTER_MAIL] toUserId=" + mailInfoVo.getToUserId() + ", toMail=" + mailInfoVo.getToMail());
 				mailInfoVo.setMailEnum(mailEnum);
 				mailInfoVo.setContent(buildRegistrationMailContent(
 						mailInfoVo,
@@ -706,10 +639,10 @@ public class DrawingRequestService implements CommonService{
 						registeredAt
 				));
 				ResultVO mailResult = mailService.sendDocsMail(mailInfoVo);
-				System.out.println("[DRAWING_REGISTER_MAIL] sendDocsMail success=" + (mailResult != null && mailResult.isSuccess()));
+				log.info("[DRAWING_REGISTER_MAIL] success={}", mailResult != null && mailResult.isSuccess());
 			}
 		} catch (Exception e) {
-			System.out.println("[DRAWING_REGISTER_MAIL] skip: " + e.getMessage());
+			log.warn("[DRAWING_REGISTER_MAIL] skipped type={}", e.getClass().getSimpleName());
 		}
 	}
 
@@ -766,7 +699,7 @@ public class DrawingRequestService implements CommonService{
 			requestFactory.setReadTimeout(300000); //5분동안 변환 안되면 실패
 			RestTemplate restTemplate = new RestTemplate(requestFactory);
 			ResponseEntity<String> response = restTemplate.postForEntity(endpoint, new HttpEntity<>(body, headers), String.class);
-			System.out.println("[" + logTag + "] convert status=" + response.getStatusCodeValue() + ", body=" + response.getBody());
+			log.info("[{}] convert status={}", logTag, response.getStatusCodeValue());
 			if (!response.getStatusCode().is2xxSuccessful()) {
 				return "";
 			}
@@ -785,12 +718,12 @@ public class DrawingRequestService implements CommonService{
 					}
 				}
 				if (latest != null) {
-					System.out.println("[" + logTag + "] convertedPdfPath=" + latest.getAbsolutePath());
+					log.info("[{}] converted output found", logTag);
 					return latest.getAbsolutePath();
 				}
 			}
 		} catch (Exception e) {
-			System.out.println("[" + logTag + "] convert exception: " + e.getMessage());
+			log.warn("[{}] convert failed type={}", logTag, e.getClass().getSimpleName());
 		}
 		return "";
 	}
@@ -814,12 +747,12 @@ public class DrawingRequestService implements CommonService{
 		try {
 			String adapPdfPath = safeString(SystemConfig.getSystemConfigValue("ADAP_PDF_PATH"));
 			if (adapPdfPath.isEmpty()) {
-				System.out.println("[" + logTag + "] viewer cache skip: ADAP_PDF_PATH is empty");
+				log.warn("[{}] viewer cache skipped: root not configured", logTag);
 				return;
 			}
 			File source = new File(safeString(mergedPdfPath));
 			if (!source.isFile()) {
-				System.out.println("[" + logTag + "] viewer cache skip: merged file not found: " + mergedPdfPath);
+				log.warn("[{}] viewer cache skipped: merged file missing", logTag);
 				return;
 			}
 			File targetDir = new File(adapPdfPath);
@@ -828,9 +761,9 @@ public class DrawingRequestService implements CommonService{
 			}
 			File target = new File(targetDir, safeString(objectId) + ".pdf");
 			Files.copy(source.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
-			System.out.println("[" + logTag + "] viewer cache updated: " + target.getAbsolutePath());
+			log.info("[{}] viewer cache updated", logTag);
 		} catch (Exception e) {
-			System.out.println("[" + logTag + "] viewer cache update failed: " + e.getMessage());
+			log.warn("[{}] viewer cache update failed type={}", logTag, e.getClass().getSimpleName());
 		}
 	}
 
@@ -889,7 +822,7 @@ public class DrawingRequestService implements CommonService{
 			}
 			dates.add(approvalDt);
 		}
-		System.out.println("[FC_COVER] " + approvalRole + " dates=" + dates);
+		log.debug("[FC_COVER] approval dates prepared count={}", dates.size());
 		return dates;
 	}
 
@@ -900,7 +833,7 @@ public class DrawingRequestService implements CommonService{
 		detail.put("userId", safeString(userCd));
 		detail.put("userNm", safeString(userNm));
 		int updated = dao.updateApprovalDetailApproved(detail);
-		System.out.println("[FC_APPROVAL_DETAIL] approved rows=" + updated + ", objectId=" + objectId + ", userCd=" + userCd + ", userNm=" + userNm);
+		log.info("[FC_APPROVAL_DETAIL] approved rows={}", updated);
 	}
 
 	private boolean isFunctionCodeApprovalDetailCompleted(String objectId) {
@@ -980,10 +913,6 @@ public class DrawingRequestService implements CommonService{
 		String imgCompareUrl="";
 
 		for(Map<String,Object> config : dbConfig) {
-			System.out.println("Config keys and values: ");
-			for (String key : config.keySet()) {
-				System.out.println(key + " = " + config.get(key));
-			}
 			if(config.get("SYSTEM_CONFIG_CD").equals("BASE_URL")){
 				baseUrl = config.get("SYSTEM_CONFIG_VALUE").toString();
 			}
@@ -1033,7 +962,7 @@ public class DrawingRequestService implements CommonService{
 						+ "&Cur_DisplayLabel=" + curRevNo
 						+ "&Request_Flag=collabhub";
 
-				log.info("redirectUrl: {}", redirectUrl);
+				log.info("[DRAWING_REQUEST] redirect prepared");
 				return "redirect:" + redirectUrl;
 			} else {
 				// 두 요청 중 하나라도 success가 아닌 경우
@@ -1049,8 +978,8 @@ public class DrawingRequestService implements CommonService{
 				}
 			}
 		} catch (Exception e) {
-			System.out.println(e);
-			return "http_exception: " + e.getMessage();
+			log.warn("[DRAWING_REQUEST] operation failed type={}", e.getClass().getSimpleName());
+			return "http_exception:" + e.getClass().getSimpleName();
 		}
 	}
 
@@ -1299,7 +1228,7 @@ public class DrawingRequestService implements CommonService{
 		if (updated > 0) {
 			updateFunctionCodeApprovalDetail(objectId, userCd, userNm);
 			boolean detailFinalApprove = isFunctionCodeApprovalDetailCompleted(objectId);
-			System.out.println("[FC_APPROVAL] objectId=" + objectId + ", stringFinal=" + isFinalApprove + ", detailFinal=" + detailFinalApprove);
+			log.info("[FC_APPROVAL] stringFinal={}, detailFinal={}", isFinalApprove, detailFinalApprove);
 			if (isFinalApprove || detailFinalApprove) {
 				String coverMergeError = mergeFunctionCodeCoverAfterApproval(objectId);
 				if (coverMergeError != null && !coverMergeError.trim().isEmpty()) {

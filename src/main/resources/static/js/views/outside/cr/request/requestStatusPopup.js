@@ -1,11 +1,10 @@
 var acceptFlag;
 function fileDownload(crNo, fileNo){
-	$("form[name=tmpForm]")
-	.attr("action","/outside/cr/request/crFileDownload?crNo="+crNo+"&fileNo="+fileNo)
-	.attr("target", "hiddenFrame")
-	.attr("method", "post")
-	.submit();
-//	location.href="/outside/cr/request/getCrTemplate";
+	var frame = document.querySelector("iframe[name='hiddenFrame']");
+	if (frame) {
+		frame.src = "/outside/cr/request/crFileDownload?crNo=" + encodeURIComponent(crNo)
+			+ "&fileNo=" + encodeURIComponent(fileNo);
+	}
 }
 
 

@@ -8,6 +8,7 @@ import javax.inject.Inject;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -103,12 +104,12 @@ public class ApprovalController extends AbstractController {
 		return result;
 	}
 
-	@RequestMapping("/approval")
+	@PostMapping("/approval")
 	public @ResponseBody ResultVO approval(@RequestBody ApprovalPopupParam param) throws Exception {
 		return service.approval(param);
 	}
 
-	@RequestMapping("/replaceApproval")
+	@PostMapping("/replaceApproval")
 	public @ResponseBody ResultVO replaceApproval(@RequestBody ApprovalPopupParam param) throws Exception {
 		return service.replaceApproval(param);
 	}
@@ -146,7 +147,7 @@ public class ApprovalController extends AbstractController {
 	 * @return
 	 * @throws Exception
 	 */
-	@RequestMapping("/printApproval")
+	@PostMapping("/printApproval")
 	public @ResponseBody ResultVO printApproval(@RequestBody ApprovalPopupParam param) throws Exception {
 		return service.printApproval(param);
 	}

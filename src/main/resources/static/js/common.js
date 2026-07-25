@@ -45,21 +45,21 @@ $(document).ajaxStart(function(){
 	$('.ui-widget-overlay.pageLoader').show();
 })
 
-$(document).ajaxComplete(function(){
+$(document).ajaxComplete(function(event, xhr){
 	//console.log('ajaxComplete');
 	$('.ui-widget-overlay.pageLoader').hide();
 	dialogToolbarWidth();
-	try{
-		clearSessionTime();
-	}catch(e){
-		console.log(e);
-	}
+	refreshSessionTimer(xhr);
 })
-function clearSessionTime() {
-	timeoutSecond = defaultSessionTime;
+function refreshSessionTimer(xhr) {
+	if (xhr && xhr.status >= 200 && xhr.status < 400
+			&& typeof SessionTimer !== 'undefined'
+			&& typeof defaultSessionTime !== 'undefined') {
+		SessionTimer.updateTime(defaultSessionTime);
+	}
 }
 
-function initTimer(remainingTime) {initTimer
+function initTimer(remainingTime) {
 	clearTimeout(timerchecker); // 기존 타이머를 중지
 
 	function updateTimer() {
@@ -241,7 +241,7 @@ var decodeHtmlEntity = function(str) {
 		}
 		,error : function(e){
 			if(e.status==401){
-				parent.parent.location.href = "/login/logout";
+				parent.parent.location.href = "/login/loginPage";
 			}else{
 				alertMessage(g_msg("msg.error") + '[' + e + ']');
 			}
@@ -291,11 +291,45 @@ function openViewerMulti(gridId, requestType, objectType){
 let isProcessing = false;
 let lastClickTime = 0;
 
+function openViewerPostPopup(popupName, windowFeatures, params) {
+	if (!window.SdmsCsrf || !window.SdmsCsrf.getToken()) {
+		alertMessage('보안 요청 토큰을 확인할 수 없습니다. 페이지를 새로고침해 주세요.');
+		return null;
+	}
+
+	var popup = window.open('', popupName, windowFeatures || '');
+	if (!popup) {
+		return null;
+	}
+
+	var form = document.createElement('form');
+	form.method = 'POST';
+	form.action = '/inside/distribution/docPdfLinkRequest/selectItem2';
+	form.target = popupName;
+	form.style.display = 'none';
+
+	Object.keys(params).forEach(function(name) {
+		var input = document.createElement('input');
+		input.type = 'hidden';
+		input.name = name;
+		input.value = params[name] == null ? '' : params[name];
+		form.appendChild(input);
+	});
+
+	window.SdmsCsrf.addTokenToForm(form);
+	document.body.appendChild(form);
+	try {
+		form.submit();
+	} finally {
+		document.body.removeChild(form);
+	}
+	return popup;
+}
+
 function openFile(requestType, objectType, requestNo, objectId, fileNo, protectYn) {
 	const currentTime = new Date().getTime(); // 현재 시간 가져오기
 
 	if (isProcessing || currentTime - lastClickTime < 2000) {
-		console.log("두 번째 클릭 무시");
 		return; // 2초 이내에 클릭하면 무시
 	}
 
@@ -344,11 +378,10 @@ function openFile(requestType, objectType, requestNo, objectId, fileNo, protectY
 		}
 	}
 
-	var param = {
+	var viewerParam = {
 		requestNo: requestNo,
-		requestType: requestType,
 		objectType: objectType,
-		objectId: objectId,
+		file: objectId,
 		fileNo: fileNo
 	};
 
@@ -361,11 +394,10 @@ function openFile(requestType, objectType, requestNo, objectId, fileNo, protectY
 		",menubar=no,toolbar=no,location=no,status=no,scrollbars=yes,resizable=yes";
 
 	if (objectType === "SW") {
-		var ret = window.open('/inside/distribution/docPdfLinkRequest/selectItem2?objectType=' + objectType + '&file=' + objectId + '&requestNo=' + requestNo + '&fileNo=' + fileNo, '_blank', '', false);
+		var ret = openViewerPostPopup('ViewerWindow_' + currentTime, '', viewerParam);
 	} else {
 		var popupName = 'PopupWindow_' + objectId + '_' + fileNo;
-		var url = '/inside/distribution/docPdfLinkRequest/selectItem2?objectType=' + objectType + '&file=' + objectId + '&requestNo=' + requestNo + '&fileNo=' + fileNo;
-		var ret = window.open(url, popupName, windowFeatures);
+		var ret = openViewerPostPopup(popupName, windowFeatures, viewerParam);
 	}
 
 	isProcessing = false; // 처리 완료 후 상태 초기화
@@ -386,113 +418,6 @@ function openActLogPopup(downloadedName){
 function openActLogPopup_onlyForActLog(downloadedName){
 	openDialogPopup_onlyForActLog("/inside/distribution/downHistory/actLogPopup", {downloadedName:downloadedName}, "popupDialog", 'm', 350, true, 'popup-common popup-act-log');
 }
-
-function getViewerOptionPrefix(extName) {
-	var dwgdwfpltcgmOtpions = "-WM:WIDTH";       // 너비로 보기 옵션
-	var docsOptions = "-TM:VIEW-WM:AUTO";         // 문서파일 너비로 보기 옵션
-	var drawingOptions = "-WM:WIDTH-BC:WHITE";  // 기존 도면 배경색 흰색, 뷰어 띄웠을때 너비로 보기 옵션 적용
-	if (extName == "DWG" || extName == "DWF" || extName == "PLT" || extName == "CGM"){// 검은색
-	    return dwgdwfpltcgmOtpions;
-	} else if (extName == "TXT" || extName == "PDF" || extName == "HWP" || extName == "DOC" || extName == "DOCX" || extName == "PPT" || extName == "PPTX" || extName == "XLS" || extName == "XLSX") {
-	    return docsOptions;
-	} else{
-	    return drawingOptions;   // .SVG .TIFF .TIF
-	}
-}
-/**
- * 다중 파일 출력
- * @param response
- * @returns
- */
- 
-
-function callOpenViewer(response){
-	
-	var popup = window.open('http://localhost:8085/js/pdflegacy/web/viewer.html?file=aaa.pdf', 'pdfPopup', 'width=1000,height=800,scrollbars=yes');
-	var popup2 = window.open('http://esobinfo.iptime.org:42481/web/viewer.html', 'pdfPopup2', 'width=1000,height=800,scrollbars=yes');
-		
-	//alert(response.filePath);
-}	 
-function callOpenViewer_bjm(response){
-//	alert('aaa');
-	try { console.log(response); } catch(e) { }
-	if(response.success){
-		//$('#viewerCab').html('<OBJECT classid="clsid:9E93A6E5-4247-416D-BA9C-7485ED08B23A" codebase="'+ response.viewerCabUrl + '" id="EDIActiveXT" style="display: none;"></OBJECT>');
-
-		// Daview 수정 (2020.02.06)
-		// 다뷰 실행 했을때 문서(HWP, DOC, DOCX, XLS, XLSX, PPT, PPTX, 확장자면 창크기에 맞추기[A] 적용 상태에서 뷰잉
-		if('E' === AUTH_SITE) {
-			//외부 사용자 - 뷰어 출력 버튼 X
-			EDIActiveXT.Options = getViewerOptionPrefix(response.extName) + '-SC:001000010000-HC:1111111110';
-		}
-		else{
-			//내부 사용자 - 뷰어 출력 버튼 X (생산기술자료만 뷰어 출력 버튼 O)
-			if("32" == response.authLevel || "PRODUCT" == response.requestType ) {
-				EDIActiveXT.Options = getViewerOptionPrefix(response.extName) + '-SC:001000010000';
-			}else{
-				EDIActiveXT.Options = getViewerOptionPrefix(response.extName) + '-SC:000000000000';
-			}
-		}
-
-		try {console.log("watermarkInfo 뷰잉 : " + response.watermarkInfo);}catch(e) {}
-
-
-		if(response.filePath.indexOf('|') === -1) {
-			response.fileNm = response.fileNm.split('&amp;').join('&');
-			EDIActiveXT.viewfilename = decodeURIComponent(response.fileNm.split('&').join('&&'));
-		}
-
-		response.filePath = response.filePath.split("&amp;").join("&");
-
-		var arr = response.filePath.split('filename=$');
-		EDIActiveXT.WaterMark = response.watermarkInfo;
-		// Daview 수정 (2020.02.06)
-		// 파일명에 &들어간 경우 해결하기 위한 코드.
-		if(response.filePath.indexOf("filename=") > -1) {
-			var arr = response.filePath.split('filename=$');
-			var tmpPath = "";
-
-
-			var reg = /(.*?)\.(dgn)$/;
-		  	if(arr[1].match(reg)) {
-					tmpPath = arr[0] + "filename=$" + arr[1];
-			}
-		  	else{
-				try {
-					tmpPath = arr[0] + "filename=$" + encodeURIComponent(arr[1]);
-				}
-				catch(e) { }
-			}
-
-			EDIActiveXT.Original = tmpPath;
-			//EDIActiveXT.Original = arr[0] + "filename=$" + arr[1];
-		}
-		else {
-//			console.log("http://192.168.0.65:8080/DaVuForEG/DaViewSvc?ediauto=T&filename=$" + encodeURIComponent(response.filePath));
-			//EDIActiveXT.Original = "http://192.168.0.65:8080/DaVuForEG/DaViewSvc?ediauto=T&filename=$" + encodeURIComponent(response.filePath);
-			//var fileUrl = "\\\\192.168.0.158\\share\\DOCS\\OUT\\1111_001.SVG|1111_002.SVG|1111_003.SVG|1111_004.SVG";
-			//var fileUrl = "\\\\192.168.0.158\\share\\DOCS\\OUT\\1111.SVG";// 원본 파일이 같은 경로에 있을때 | 하이픈으로 구분
-			//var fileUrl = "D:\\DOCS\\OUT\\[열람]QAR-60349773-RA.PDF||[열람]QAR-60349773-RA - 복사본.PDF";// 원본 파일이 같은 경로에 있을때 | 하이픈으로 구분
-			EDIActiveXT.Original = encodeURIComponent(fileUrl);
-		}
-		EDIActiveXT.CreateAndView();
-	}else{
-		if('NO_SUPPORT_EXT' == response.failType) {
-			alertMessage(response.failReason + g_msg('msg.noSuportExtPrint'), function(){			//파일은 출력을 지원하지 않습니다.
-				$(this).dialog("close");
-			});
-		}else if('DESTROY' === response.failType) {
-			alertMessage(response.failReason, function(){
-				$(this).dialog("close");
-			});
-		}else{
-			alertMessage(g_msg('msg.noExistFile'), function(){										//파일이 존재하지 않습니다.
-				$(this).dialog("close");
-			});
-		}
-	}
-}
-
 
 var EXT = ['exe', 'zip'];
 
@@ -638,9 +563,16 @@ function openPrintViewer(requestType, gridId, userType){
 			}
 
 			param.watermarkType = wmType;
+			list.push({
+				objectId: data.objectId,
+				objectType: data.objectType,
+				requestNo: data.requestNo,
+				requestType: requestType,
+				fileNo: data.fileNo,
+				watermarkType: wmType,
+				userType: userType
+			});
 
-			console.log(param);
-			
 			//alert("data.protectYn= " + data.protectYn);
 			//alert("wmType= " + wmType);
 			//alert(' objectId = ' +  data.objectId);
@@ -651,6 +583,7 @@ function openPrintViewer(requestType, gridId, userType){
 		});
 		
 		param.objectId = strArrObjectID.replace('merge__','');
+		param.list = list;
 		//alert(' strArrObjectID = ' +  param.objectId);
 
 		// 출력버튼 눌렀을때 grid의 출력횟수 증가하게 하기 위해서. 원래 콜백함수 호출, 그 이후에 페이지 새로고침.
@@ -669,20 +602,6 @@ function openPrintViewer(requestType, gridId, userType){
 }
 
 function openPrintViewer_old(requestType, gridId, userType){
-
-//	$('#viewerCab').html('<OBJECT classid="clsid:9E93A6E5-4247-416D-BA9C-7485ED08B23A" codebase="http://192.168.0.65:8080/EDIActiveXT(NSU-8-99-4-0).cab#Version=8,99,4,0" id="EDIActiveXT" style="display: none;"></OBJECT>');
-////	EDIActiveXT.Options = '- PRT';
-////	EDIActiveXT.WaterMark = response.watermarkInfo;		// 네트워크 드라이브 워터마크	서버OS   네트워크 드라이브
-//	EDIActiveXT.WaterMark = 'http://192.168.0.225\\hh.gif|50|50|Arial|-1|0000010|10#[경고]본 도면은 당사 자산으로 무단 사용 및 복제를 금하고,|50|50|Arial|-1|0000010|100#한화디펜스 사내용 입니다|70|70|Arial|-1|0000020|100';
-////	EDIActiveXT.WaterMark = 'http://192.168.0.225\\hh.gif|50|50|Arial|-1|0000010|10#[경고]본 도면은 당사 자산으로 무단 사용 및 복제를 금하고,|50|50|Arial|-1|0000010|100#한화디펜스 사내용 입니다|70|70|Arial|-1|0000020|100';
-//	EDIActiveXT.Options = '-WM:WIDTH-BC:WHITE';
-//
-//	EDIActiveXT.Original = 'http://192.168.0.65:8080/DaViewForEG/DaViewSvc?ediauto=T&filename=$Y:\\문서2.docx';
-//	EDIActiveXT.CreateAndView();
-
-
-
-
 	var param = {
 		  requestType : requestType
 	};
@@ -801,8 +720,6 @@ function openPrintViewer_old(requestType, gridId, userType){
 
 			param.watermarkType = wmType;
 
-			console.log(param);
-
 	//				aJsonArray.push(data);
 			callAjax(param, '/common/viewer/getPrintInfo', callPrint, 'json');
 		});
@@ -823,7 +740,6 @@ function openPrintViewer_old(requestType, gridId, userType){
  */
  
 function callPrint(response){
-	try { console.log(response); } catch(e) { }
 	if(response.success){
 		
 		objectType = 'merge';		
@@ -847,38 +763,8 @@ function callPrint(response){
 			alertMessage(response.failReason, function(){
 				$(this).dialog("close");
 			});
-		} else{
-			alertMessage(g_msg('msg.noExistFile'), function(){	//파일이 존재하지 않습니다.
-				$(this).dialog("close");
-			});
-		}
-	}
-}
-
-function callPrint_old(response){
-	try { console.log(response); } catch(e) { }
-	if(response.success){
-		//$('#viewerCab').html('<OBJECT classid="clsid:9E93A6E5-4247-416D-BA9C-7485ED08B23A" codebase="'+ response.viewerCabUrl + '" id="EDIActiveXT" style="display: none;"></OBJECT>');
-		EDIActiveXT.Options = '-PRT-HC:1111111110';
-		EDIActiveXT.WaterMark = response.watermarkInfo;		// 네트워크 드라이브 워터마크	서버OS   네트워크 드라이브
-
-		if(response.filePath.indexOf('|') === -1) {
-			EDIActiveXT.viewfilename = decodeURIComponent(response.fileOrgNm.split('&').join('&&'));
-		}
-
-		EDIActiveXT.Original = response.filePath;
-		EDIActiveXT.CreateAndView();
-	}else{
-		printSuccess = false;
-		if('NO_SUPPORT_EXT' == response.failType) {
-			alertMessage(response.failReason + g_msg('msg.noSuportExtPrint'), function(){	//파일은 출력을 지원하지 않습니다.
-				$(this).dialog("close");
-			});
-		} else if('OVER_PRINT_COUNT' == response.failType) {
-			alertMessage(response.failReason + g_msg('msg.noPrintOverPrintCount'), function(){	//파일의 출력횟수가 초과되어 출력 할 수 없습니다.
-				$(this).dialog("close");
-			});
-		} else if('DESTROY' === response.failType) {
+		} else if('PRINT_RESULT_CALLBACK_REQUIRED' === response.failType
+				|| 'MERGE_PRINT_DISABLED_TICKETED_PDF_ONLY' === response.failType) {
 			alertMessage(response.failReason, function(){
 				$(this).dialog("close");
 			});
@@ -889,7 +775,6 @@ function callPrint_old(response){
 		}
 	}
 }
-
 
 function download(gridId, type){
 
@@ -959,8 +844,6 @@ function download(gridId, type){
 		dummyDiv.innerHTML = htmlString;
 		var downloadCount = dummyDiv.textContent || dummyDiv.innerText;
 		var countNumber = parseInt(downloadCount, 10);
-		console.log("countNumber >>>>>>>>>>>>>>>> " + countNumber);
-
 		if (3 === countNumber){
 			alertMessage(g_msg('msg.downloadCountOver'))
 		}
@@ -976,9 +859,6 @@ function download(gridId, type){
 			   , distributeTypeCd : nextType
 			   , DistributeTypeCd : prvType
 			};
-			console.log("nonActiveX");
-			console.log(param);
-
 			$.ajax({
 				url: '/common/updown/downloadData'
 				, type : "POST"
@@ -988,20 +868,16 @@ function download(gridId, type){
 				, contentType: "application/json"
 				, data : JSON.stringify(param)
 				, success : function(response){
-					console.log(response);
 					callDownload(response);
 				}
 				,error : function(e){
-					console.log("error");
-					console.log(e);
 					if(e.status==401){
-						parent.parent.location.href = "/login/logout";
+						parent.parent.location.href = "/login/loginPage";
 					}else if(e.status == 403){
 						alertMessage(g_msg("msg.accessDenied"));
 					}else{
 						alertMessage(g_msg("msg.beforeVersion"));
 						// 현재버전이 이전버전 입니다. 다시 배포해주세요.
-						console.log(e);
 					}
 				}
 			});
@@ -1113,7 +989,6 @@ function revisionUpdateInsideUser(objectType, gridId) {
 
 	var url = '/inside/distribution/commonRequest/' + objectType.toLowerCase() + 'RevisionUpdatePopup';
 	var data = $("#" + gridId).jqGrid('getRowData', selectedRows[0]);
-	console.log("data: ", data);
 
 	var popupHeight = Math.min($(window).height() - 100, 620);
 	openDialogPopup(url, data, "popupDialog", 'l', popupHeight, true, 'popup-common popup-revision-update');
@@ -1134,7 +1009,6 @@ function checkVersionInsideUser(objectType, gridId) {
 
 	var url = '/inside/distribution/commonRequest/' + objectType.toLowerCase() + 'VersionCheckPopup';
 	var data = $("#" + gridId).jqGrid('getRowData', selectedRows[0]);
-	console.log("data: ", data);
 
 	var popupHeight = Math.min($(window).height() - 100, 500);
 	openDialogPopup(url, data, "popupDialog", 'l', popupHeight, true, 'popup-common popup-version-check');
@@ -1155,7 +1029,6 @@ function checkVersionOutsideUser(objectType, gridId) {
 
 	var url = '/outside/drawing/approvalStatus/' + objectType.toLowerCase() + 'VersionCheckPopup';
 	var data = $("#" + gridId).jqGrid('getRowData', selectedRows[0]);
-	console.log("data: ", data);
 
 	openDialogPopup(url, data, "popupDialog", 'm', 500, true, 'popup-common popup-version-check');
 }
@@ -1254,7 +1127,7 @@ function makeLegacySequence(){
 			var uuid = window.crypto.randomUUID();
 			if (uuid && typeof uuid === "string") { return uuid.replace(/-/g, ""); }
 		}
-	} catch (e) { console.log("randomUUID unavailable, fallback to hex sequence", e); }
+	} catch (e) {}
 
 	// 구형 브라우저 fallback: 32자리 hex 생성
 	var bytes = null;
@@ -1375,7 +1248,7 @@ function completeOneFile(wsSeq, status, extra) {
 					var msg = g_msg(msgKey);
 					if (msg != null && String(msg).length > 0) { return msg; }
 				}
-			} catch (e) { console.log("message resolve fail:", msgKey, e); }
+			} catch (e) {}
 			return fallback;
 		}
 		if (downloadHasFailure) {
@@ -1466,21 +1339,6 @@ function registerDownloadStart(wsSeq, item, reqType, onSuccess, onFail){
 		fileNm: item.fileNm || "",
 		orgFileNm: item.orgFileNm || ""
 	};
-	/* [DOWNLOAD-DEBUG-START] 웹소켓 패킷 생성 전 JS -> JAVA 전달값 확인용 로그 */
-	console.log("[DOWNLOAD-DEBUG][V2-START][REQ]", {
-		wsSeq: payload.wsSeq,
-		reqType: payload.reqType,
-		requestNo: payload.requestNo,
-		dataNo: payload.dataNo,
-		docSeq: payload.docSeq,
-		objectType: payload.objectType,
-		fileNo: payload.fileNo,
-		fileSeq: payload.fileSeq,
-		fileNm: payload.fileNm,
-		orgFileNm: payload.orgFileNm
-	});
-	/* [DOWNLOAD-DEBUG-END] 웹소켓 패킷 생성 전 JS -> JAVA 전달값 확인용 로그 */
-
 	$.ajax({
 		url: '/common/updown/v2/start',
 		type: 'POST',
@@ -1491,7 +1349,6 @@ function registerDownloadStart(wsSeq, item, reqType, onSuccess, onFail){
 		contentType: 'application/json',
 		data: JSON.stringify(payload),
 		success: function(res) {
-			console.log("[V2-START][RES]", wsSeq, res);
 			if (res && res.success) {
 				if (downloadSeqList.indexOf(wsSeq) === -1) {
 					downloadSeqList.push(wsSeq);
@@ -1506,12 +1363,11 @@ function registerDownloadStart(wsSeq, item, reqType, onSuccess, onFail){
 			}
 		},
 		error: function(e) {
-			console.log("[V2-START][ERR]", wsSeq, e && e.status, e && e.responseText, e);
 			if (typeof onFail === 'function') {
 				onFail('start request error: ' + (e && e.responseText ? e.responseText : 'no response body'));
 			}
 			if (e && e.status === 401) {
-				parent.parent.location.href = "/login/logout";
+				parent.parent.location.href = "/login/loginPage";
 			}
 		}
 	});
@@ -1521,21 +1377,7 @@ function notifyWsResultToServer(messageText) {
     callAjax(
         { message: messageText },
         '/common/updown/v2/ws-result',
-        function(res) {
-        	console.log("[WS-CHECK][WS-RESULT-ACK]", {
-        		messageLength: messageText ? messageText.length : 0,
-        		success: res && res.success,
-        		status: res && res.status,
-        		resultCode: res && res.resultCode,
-        		message: res && res.message
-        	});
-        	if (!res || !res.success) {
-        		console.warn("[WS-CHECK][WS-RESULT-ACK-FAIL]", {
-        			rawMessage: messageText,
-        			response: res
-        		});
-        	}
-        },
+        function() {},
         'json',
         true,
         false
@@ -1552,7 +1394,6 @@ function pollDownloadStatus(wsSeq, onDone) {
 	}
 	downloadStatusTimerBySeq[wsSeq] = setTimeout(function() {
 		if (!isTerminalStatus(downloadStateBySeq[wsSeq])) {
-			console.warn("[V2-STATUS][TIMEOUT]", wsSeq);
 			completeOneFile(wsSeq, 'FAILED', { reason: 'download timeout' });
 			cleanupDownload(wsSeq);
 			if (onDone) {
@@ -1567,10 +1408,8 @@ function pollDownloadStatus(wsSeq, onDone) {
 	            '/common/updown/v2/status',
 	            function(res) {
 	            	if (!res || !res.success) {
-	            		console.warn("[V2-STATUS][FAIL]", wsSeq, res);
 	            		return;
 	            	}
-	            	console.log("[V2-STATUS]", wsSeq, res);
 
                 reportFileStatus(wsSeq, res.status, res);
 
@@ -1605,56 +1444,11 @@ function cleanupDownload(wsSeq) {
 function callDownload(response){
 	resetDownloadRuntimeState();
 	bindDownloadCleanupOnUnload();
-	console.log("callDownload response", response);
-	/* [DOWNLOAD-DEBUG-START] 웹소켓 연결 전 다운로드 대상 원본 데이터 확인용 로그 */
-	console.log("[DOWNLOAD-DEBUG][CALL-DOWNLOAD][PRE-WS]", {
-		userNm: response && response.userNm ? response.userNm : "",
-		downloadVolume: response && response.downloadVolume ? response.downloadVolume : "",
-		listSize: response && response.list ? response.list.length : 0,
-		list: response && response.list ? response.list.map(function(item, rowIndex) {
-			return {
-				rowIndex: rowIndex,
-				requestNo: item && item.requestNo ? item.requestNo : "",
-				dataNo: item && item.dataNo ? item.dataNo : "",
-				docSeq: item && (item.docSeq || item.dataOfferDocSeq || item.delvyCnfirmDocSeq) ? (item.docSeq || item.dataOfferDocSeq || item.delvyCnfirmDocSeq) : "",
-				objectType: resolveDownloadObjectType(item),
-				fileNo: item && item.fileNo ? item.fileNo : "",
-				fileSeq: item && item.fileSeq ? item.fileSeq : "",
-				fileNm: item && item.fileNm ? item.fileNm : "",
-				orgFileNm: item && item.orgFileNm ? item.orgFileNm : "",
-				folderName: item && item.folderName ? item.folderName : ""
-			};
-		}) : []
-	});
-	/* [DOWNLOAD-DEBUG-END] 웹소켓 연결 전 다운로드 대상 원본 데이터 확인용 로그 */
 	var webSocket = new WebSocket("ws://localhost:39229");
 	var webSocketOpened = false;
 	var webSocketFailureHandled = false;
 
 	function handleWebSocketConnectionFailure(reason) {
-		/* [DOWNLOAD-DEBUG-START] 웹소켓 연결 실패 시 패킷 후보값 확인용 로그 */
-		if (response && response.list) {
-			console.warn("[DOWNLOAD-DEBUG][CALL-DOWNLOAD][WS-FAIL-PACKET-CANDIDATE]", response.list.map(function(item, rowIndex) {
-				var wsSeqCandidate = makeLegacySequence();
-				var wsDownloadFileNameCandidate = buildWsDownloadRequestName(item, null);
-				var wsFolderNameCandidate = item && item.folderName ? item.folderName : "";
-				var packetCandidate = buildLegacyDownloadPacket(wsDownloadFileNameCandidate, wsSeqCandidate, wsFolderNameCandidate);
-				return {
-					rowIndex: rowIndex,
-					wsSeqCandidate: wsSeqCandidate,
-					packetDataCandidate: wsDownloadFileNameCandidate,
-					objectType: resolveDownloadObjectType(item),
-					fileSeq: item && item.fileSeq ? item.fileSeq : "",
-					fileNm: item && item.fileNm ? item.fileNm : "",
-					orgFileNm: item && item.orgFileNm ? item.orgFileNm : "",
-					folderName: wsFolderNameCandidate,
-					packetBuildOk: packetCandidate.ok,
-					packetBuildError: packetCandidate.ok ? "" : packetCandidate.error,
-					packetLength: packetCandidate.ok && packetCandidate.packet ? packetCandidate.packet.length : 0
-				};
-			}));
-		}
-		/* [DOWNLOAD-DEBUG-END] 웹소켓 연결 실패 시 패킷 후보값 확인용 로그 */
 		if (webSocketFailureHandled) {
 			return;
 		}
@@ -1666,9 +1460,7 @@ function callDownload(response){
 		webSocket.onmessage = null;
 		try {
 			webSocket.close();
-		} catch (e) {
-			console.log("[WS-CLOSE-IGNORE]", e);
-		}
+		} catch (e) {}
 		failDownloadRowsWithoutSeq(response && response.list ? response.list : [], reason);
 		failPendingDownloads(reason);
 		alertMessage(g_msg('msg.websockerFailed'), function() {
@@ -1702,14 +1494,6 @@ function callDownload(response){
 
 	webSocket.onopen = function(){
 		webSocketOpened = true;
-		console.log("Connected");
-
-		$("input[name=downloadServerIp]").val(response.config.updownServerIp);
-		$("input[name=downloadServerPort]").val(response.config.updownServerPort);
-		$("input[name=downloadLangCode]").val(response.config.updownLangCode);
-		$("input[name=downloadUserAuth]").val(response.config.updownUserAuth);
-		$("input[name=downloadSecretKey]").val(response.config.updownSecretKey);
-		$("input[name=downloadIsSecurity]").val(response.config.updownIsSecurity);
 		$("input[name=downloadVolume]").val(response.downloadVolume);
 
 			var arrFileList = [];
@@ -1721,7 +1505,8 @@ function callDownload(response){
 					arrFileInfo.push(item.fileNm);
 					arrFileInfo.push(item.orgFileNm);
 					arrFileInfo.push(item.fileSize);
-					arrFileInfo.push(item.filePathNm);
+					// V2 uses an opaque, one-time ticket; never expose a server path.
+					arrFileInfo.push("");
 					arrFileInfo.push("31");
 					arrFileInfo.push(item.endDate);
 					arrFileList.push(arrFileInfo.join('|'));
@@ -1749,34 +1534,16 @@ function callDownload(response){
 						var wsFolderName = item.folderName || "";
 						downloadMetaBySeq[wsSeq].savedFileName = startRes && startRes.savedFileName ? startRes.savedFileName : "";
 						if (!wsDownloadFileName) {
-							console.error("download requestName missing:", startRes, item);
 							completeOneFile(wsSeq, 'FAILED', { reason: 'download requestName missing', fileLabel: fileLabel });
 							return;
 						}
 						var packetResult = buildLegacyDownloadPacket(wsDownloadFileName, wsSeq, wsFolderName);
 						if (!packetResult.ok) {
-							console.error("download packet build failed:", packetResult.error, wsDownloadFileName);
 							completeOneFile(wsSeq, 'FAILED', { reason: packetResult.error, fileLabel: fileLabel });
 							return;
 						}
 						reportFileStatus(wsSeq, 'DOWNLOADING');
 						var buffer = toLegacyArrayBuffer(packetResult.packet);
-						/* [DOWNLOAD-DEBUG-START] 웹소켓 송신 직전 패킷 데이터 확인용 로그 */
-						console.log("[DOWNLOAD-DEBUG][WS-SEND]", {
-							wsSeq: wsSeq,
-							packetData: wsDownloadFileName || "",
-							packetFull: packetResult.packet || "",
-							packetHeader: packetResult.packet ? packetResult.packet.substring(0, I_WS_SIZE_HEADER) : "",
-							packetPreview: packetResult.packet ? packetResult.packet.substring(0, I_WS_SIZE_HEADER + I_WS_SIZE_UUID + 40) : "",
-							savedFileName: startRes && startRes.savedFileName ? startRes.savedFileName : "",
-							fileSeq: item.fileSeq || "",
-							orgFileNm: item.orgFileNm || "",
-							fileNm: item.fileNm || "",
-							objectType: resolveDownloadObjectType(item),
-							folderName: wsFolderName,
-							packetLength: packetResult.packet ? packetResult.packet.length : 0
-						});
-						/* [DOWNLOAD-DEBUG-END] 웹소켓 송신 직전 패킷 데이터 확인용 로그 */
 						webSocket.send(buffer);
 						pollDownloadStatus(wsSeq, function(finalState) {
 							if (finalState && finalState.status) {
@@ -1799,13 +1566,7 @@ function callDownload(response){
 				// event.data 예: "174710000012300C:/temp/a.svg"
 				var msg = typeof event.data === 'string' ? event.data : '';
 				// 웹소켓 송수신 확인용: 수신 원문 로그
-				console.log("[WS-CHECK][RECV]", msg);
 				if (!msg || msg.length < 34) {
-					console.warn("[WS-CHECK][RECV-IGNORED]", {
-						reason: "message length < 36",
-						length: msg ? msg.length : 0,
-						rawMessage: msg
-					});
 					return;
 				}
 
@@ -1813,92 +1574,3 @@ function callDownload(response){
 			};
 	}
 }
-/* function callDownload(response) {
-	console.log(" callDownload function 입장 ~ >> > >> > > > > > >> > > > > >>  > ");
-	console.log("callDownload response");
-	console.log(response);
-	console.log("response.list.length >>> " + response.list.length);
-
-	var webSocket = new WebSocket("ws://localhost:39229/websocketendpoint");
-
-	webSocket.onopen = function(event) {
-		console.log("Connected");
-	$("input[name=downloadServerIp]").val(response.config.updownServerIp);
-    $("input[name=downloadServerPort]").val(response.config.updownServerPort);
-    $("input[name=downloadLangCode]").val(response.config.updownLangCode);
-    $("input[name=downloadUserAuth]").val(response.config.updownUserAuth);
-    $("input[name=downloadSecretKey]").val(response.config.updownSecretKey);
-    $("input[name=downloadIsSecurity]").val(response.config.updownIsSecurity);
-    $("input[name=downloadVolume]").val(response.downloadVolume); // 일반영역, 보안영역
-//    $("input[name=downloadVolume]").val("R"); // 일반영역, 보안영역
-
-	var arrFileList = new Array();
-
-	console.log("response.list.length >>> " + response.list.length);
-	list_length = response.list.length;
-
-	// if (list_length == '0'){
-	// 	console.log("횟수 초과 메세지 출력 ")
-	// 	alertMessage(g_msg('msg.downloadCountOver'));
-	// }
-
-    for(var i=0 ; i < response.list.length ; i++){
-        var arrFileInfo = new Array();
-        var strRowKey = i;
-        arrFileInfo.push(strRowKey);
-        arrFileInfo.push(response.list[i].fileNm);		// uuid
-        arrFileInfo.push(response.list[i].orgFileNm);	// 실제 파일 이름
-        arrFileInfo.push(response.list[i].fileSize);
-        arrFileInfo.push(response.list[i].filePathNm);
-        arrFileInfo.push("31");
-        arrFileInfo.push(response.list[i].endDate);
-        arrFileList.push(arrFileInfo.join('|'));
-
-		var flag = '0001';
-		var fileName = response.list[i].fileNm;
-		var paddedFileName = fileName.padEnd(260,'\0');
-		var dataToSend = flag + paddedFileName;
-
-		var buffer = new ArrayBuffer(dataToSend.length);
-		var byteView = new Uint8Array(buffer);
-		for (var j=0; j<dataToSend.length; j++){
-			byteView[j] = dataToSend.charCodeAt(j);
-			}
-
-		// 다운로드 성공의 확인 버튼을 누르면 새로고침 => grid의 다운 횟수 증가를 보여주기 위해
-		alertMessage(g_msg('msg.downloadSuccess'), function() {
-			location.reload();
-		});
-
-		console.log(i);
-		console.log(buffer);
-		webSocket.send(buffer);
-		sleep(100);
-		}
-
-		$("input[name=ShowArray]").val(arrFileList.join('|'));
-		//$("input[name=ShowArray]").val(v);
-		console.log("callDownload arrFileList");
-		// console.log(arrFileList);
-		console.log("##############");
-		console.log($('#download').serialize());
-	};
-
-    // $.ajax({
-    // 	url: 'http://localhost:30100/',
-    // 	type: 'post',
-    // 	cache: false,
-    // 	async: true,
-    // 	data: $('#downloadFrm').serialize(),
-    // 	success: function(response) {
-    // 		console.log(response);
-    // 	},
-    // 	error: function(e) {
-    // 		console.log(e);
-    // 	}
-    // });
-	webSocket.onerror = function (event){
-		alertMessage(g_msg('msg.websockerFailed'));
-		console.log("UnConnected");
-	};
-} */

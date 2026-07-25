@@ -11,12 +11,12 @@ import kr.esob.fdms.controller.outside.cr.request.CrRequestParam;
 public class CommonCrDao extends AbstractDao{
 	private String prefix = "sql.CommonCr.";
 
-	public CrFileVO selectInsideFilePath(CrFileVO param) {
-		return (CrFileVO) obj(prefix + "selectInsideFilePath", param);
+	public CrFileVO selectInsideDownloadResource(CrFileDownloadParam param) {
+		return (CrFileVO) obj(prefix + "selectInsideDownloadResource", param);
 	}
 
-	public CrFileVO selectOutsideFilePath(CrFileVO param) {
-		return (CrFileVO) obj(prefix + "selectOutsideFilePath", param);
+	public CrFileVO selectOutsideDownloadResource(CrFileDownloadParam param) {
+		return (CrFileVO) obj(prefix + "selectOutsideDownloadResource", param);
 	}
 
 	@SuppressWarnings("unchecked")

@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -101,7 +102,7 @@ public class PdmDeployHistoryController extends AbstractController{
 		return result;
 	}
 
-	@RequestMapping("/updateList")
+	@PostMapping("/updateList")
 	public String updateList(@RequestBody PdmDeployHistoryParam param) {
 		service.updateList(param);
 		return "";

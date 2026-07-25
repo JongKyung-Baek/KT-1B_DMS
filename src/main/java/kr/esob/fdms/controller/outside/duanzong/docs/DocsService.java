@@ -25,13 +25,11 @@ import kr.esob.fdms.commonlogic.mail.DocsMailService;
 import kr.esob.fdms.commonlogic.mail.MailInfoVO;
 import kr.esob.fdms.commonlogic.result.ResultVO;
 import kr.esob.fdms.commonlogic.systemconfig.SystemConfig;
-import kr.esob.fdms.commonlogic.value.Constant;
 import kr.esob.fdms.controller.login.UserVO;
 import kr.esob.fdms.controller.outside.commonrequest.CommonRequestDao;
 import kr.esob.fdms.util.FileUtil;
 import kr.esob.fdms.util.ObjectUtil;
 import kr.esob.fdms.util.StringUtil;
-import kr.esob.fdms.util.seed.seed.Seed128Cipher;
 import net.sf.json.JSONObject;
 
 @Service
@@ -116,17 +114,18 @@ public class DocsService implements CommonService {
 			File inFile = new File(path);
 			mf.transferTo(inFile);
 			
-			String srcUrl = Seed128Cipher.encrypt(SystemConfig.getSystemConfigValue("SERVER_URL_OUTSIDE"), Constant.SEED_KEY.getBytes(), Constant.SEED_ENCODING);
-			String dstUrl = Seed128Cipher.encrypt(SystemConfig.getSystemConfigValue("SERVER_URL_INSIDE"), Constant.SEED_KEY.getBytes(), Constant.SEED_ENCODING);
-			String srcFilePath = Seed128Cipher.encrypt(path, Constant.SEED_KEY.getBytes(), Constant.SEED_ENCODING);
-			String dstFilePath = Seed128Cipher.encrypt(fileOutPathNm, Constant.SEED_KEY.getBytes(), Constant.SEED_ENCODING);
-			String dstFileNm = Seed128Cipher.encrypt(name, Constant.SEED_KEY.getBytes(), Constant.SEED_ENCODING);
+			String srcUrl = FileUtil.encryptTransferArgument(SystemConfig.getSystemConfigValue("SERVER_URL_OUTSIDE"));
+			String dstUrl = FileUtil.encryptTransferArgument(SystemConfig.getSystemConfigValue("SERVER_URL_INSIDE"));
+			String srcFilePath = FileUtil.encryptTransferArgument(path);
+			String dstFilePath = FileUtil.encryptTransferArgument(fileOutPathNm);
+			String dstFileNm = FileUtil.encryptTransferArgument(name);
 			
 			JSONObject result = FileUtil.callSender(srcUrl, dstUrl, srcFilePath, dstFilePath, dstFileNm);
+			String transferredFileName = FileUtil.requireSuccessfulTransferFileName(result);
 			
 			docParam.setFileNm(name);
 			docParam.setFilePath(path);
-			docParam.setFilePathE(fileOutPathNm + result.getString("fileNm"));
+			docParam.setFilePathE(fileOutPathNm + transferredFileName);
 
 			dao.insertDocsDuanzong(docParam);
 		}
@@ -161,13 +160,11 @@ public class DocsService implements CommonService {
 			inputStream = new BufferedInputStream(new FileInputStream(file));
             FileCopyUtils.copy(inputStream, response.getOutputStream());
         } catch(Exception e){
-            e.printStackTrace();
         } finally {
         	if(inputStream != null) {
         		try {
         			inputStream.close();
 				} catch (Exception e) {
-					e.printStackTrace();
 				}
         	}
         	if(response != null) {

@@ -7,6 +7,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -73,7 +74,7 @@ public class ConfigQnaController extends AbstractController {
 	/*	
 	 * 삽입
 	 * */
-	@RequestMapping(value="/configQna")
+	@PostMapping(value="/configQna")
 	public @ResponseBody ResultVO addQna(MultipartHttpServletRequest request) throws Exception {
 		return service.insertConfigQna(request);
 	}
@@ -103,7 +104,7 @@ public class ConfigQnaController extends AbstractController {
 	/*
 	 * 수정
 	 * */
-	@RequestMapping(value="/updateQna")
+	@PostMapping(value="/updateQna")
 	public @ResponseBody ResultVO updateQna(MultipartHttpServletRequest request) throws Exception {
 		return service.updateConfigQna(request);
 	}
@@ -124,7 +125,7 @@ public class ConfigQnaController extends AbstractController {
 	/*
 	 * 답글 삽입
 	 * */
-	@RequestMapping(value="/replyQna")
+	@PostMapping(value="/replyQna")
 	public @ResponseBody ResultVO replyQna(MultipartHttpServletRequest request) throws Exception {
 		return service.replyQna(request);
 	}

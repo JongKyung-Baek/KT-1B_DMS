@@ -1,7 +1,8 @@
 package kr.esob.fdms.commonlogic.value;
 
+import java.nio.charset.StandardCharsets;
+
 public class Constant {
-	public  static final String loginParamDelimeter = ":---:";
 	/** 날짜 표시 default 구분자 */
 	public static final String DATE_DELIMITER = "-";
 	public static final String RESULT_SUCCESS = "success";
@@ -39,8 +40,41 @@ public class Constant {
 	public static final String LOGIN_TYPE_LOGIN = "I";
 	public static final String LOGIN_TYPE_LOGOUT = "O";
 
-	public static final String SEED_KEY = "fdmsesob#soft#key";
 	public static final String SEED_ENCODING = "UTF-8";
+	private static final String LEGACY_CRYPTO_KEY_NAME = "KT1B_LEGACY_CRYPTO_KEY";
+	private static final int SEED_KEY_LENGTH_BYTES = 16;
+
+	public static final class LegacyCryptoConfigurationException extends IllegalStateException {
+		private static final long serialVersionUID = 1L;
+
+		private LegacyCryptoConfigurationException(String message) {
+			super(message);
+		}
+	}
+
+	/**
+	 * Loads the legacy SEED-128 key only when a retired integration path actually
+	 * needs it. This keeps unrelated application startup independent of the legacy
+	 * integration while preventing a built-in fallback key.
+	 */
+	public static byte[] legacyCryptoKeyBytes() {
+		String key = System.getProperty(LEGACY_CRYPTO_KEY_NAME);
+		if (key == null || key.trim().isEmpty()) {
+			key = System.getenv(LEGACY_CRYPTO_KEY_NAME);
+		}
+		if (key == null || key.trim().isEmpty()) {
+			throw new LegacyCryptoConfigurationException(
+					"Legacy encryption is unavailable: configure " + LEGACY_CRYPTO_KEY_NAME);
+		}
+
+		byte[] keyBytes = key.getBytes(StandardCharsets.UTF_8);
+		if (keyBytes.length != SEED_KEY_LENGTH_BYTES) {
+			throw new LegacyCryptoConfigurationException(
+					"Legacy encryption is unavailable: " + LEGACY_CRYPTO_KEY_NAME
+							+ " must be exactly " + SEED_KEY_LENGTH_BYTES + " UTF-8 bytes");
+		}
+		return keyBytes;
+	}
 
 
 	public static final String DISTRIBUTION_APPROVAL_URL = "/inside/distribution/approval/";

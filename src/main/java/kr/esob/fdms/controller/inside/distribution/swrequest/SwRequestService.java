@@ -30,6 +30,8 @@ import kr.esob.fdms.controller.login.UserVO;
 import kr.esob.fdms.util.RandomStringGenerator;
 import kr.esob.fdms.util.StringUtil;
 import org.apache.commons.io.FilenameUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.stereotype.Service;
@@ -54,6 +56,7 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 @Service
 public class SwRequestService implements CommonService{
 	private static final String CCB_OBJECT_TYPE = "CCB";
+	private static final Logger log = LoggerFactory.getLogger(SwRequestService.class);
 	private final FileApiClient fileApiClient = new FileApiClient();
 
 	@Inject
@@ -104,13 +107,10 @@ public class SwRequestService implements CommonService{
 	// 2020.07.24 기범추가( 등록 )
 	public ResultVO saveSwRegisterFileX2(MultipartHttpServletRequest request) throws Exception {
 		ResultVO resultVo = new ResultVO();
-		System.out.println("들어오는지 체크 = " + request.getParameterMap());
-		System.out.println("들어오는지 체크 = " + request.getParameter("fileName"));
-		System.out.println("objectType -> "+request.getParameter("objectType"));
+		log.debug("[SW_REGISTER] request received");
 		MultipartFile file = request.getFile("file");
 		List<MultipartFile> subFiles = request.getFiles("subFiles");
 
-//		System.out.println("protectYn 잘 들어오나 " + request.getParameter("protectYn"));
 
 
 
@@ -186,7 +186,7 @@ public class SwRequestService implements CommonService{
 			resultVo.setMessage("이미 있는 파일입니다");
 			return resultVo;
 		}else {
-			System.out.println("[SW_REGISTER] ready to upload. filePath=" + filePathNm + ", fileName=" + savedFileName + ", size=" + file.getSize());
+			log.info("[SW_REGISTER] upload prepared size={}", file.getSize());
 			uploadMultipartToFileApi(file, savedFileName, "SW_REGISTER");
 			dao.insertSwRegisterInfo(swRegisterPopupParam);
 			dao.insertSwRegisterInfoFile(swRegisterPopupParam);
@@ -221,22 +221,20 @@ public class SwRequestService implements CommonService{
 			String registeredAt
 	) {
 		try {
-			System.out.println("[SW_REGISTER_MAIL] targetUsersCsv=" + targetUsersCsv);
+			log.debug("[SW_REGISTER_MAIL] dispatch started");
 			for (String token : splitCsv(targetUsersCsv)) {
-				System.out.println("[SW_REGISTER_MAIL] token=" + token);
 				MailInfoVO mailInfoVo = mailService.selectReceiveUser(token);
 				if (mailInfoVo == null) {
-					System.out.println("[SW_REGISTER_MAIL] selectReceiveUser is null. token=" + token);
+					log.warn("[SW_REGISTER_MAIL] recipient not resolved");
 					continue;
 				}
-				System.out.println("[SW_REGISTER_MAIL] toUserId=" + mailInfoVo.getToUserId() + ", toMail=" + mailInfoVo.getToMail());
 				mailInfoVo.setMailEnum(mailEnum);
 				mailInfoVo.setContent(buildRegistrationMailContent(mailInfoVo, "CCB", documentNo, documentName, registrant, registeredAt));
 				ResultVO mailResult = mailService.sendDocsMail(mailInfoVo);
-				System.out.println("[SW_REGISTER_MAIL] sendDocsMail success=" + (mailResult != null && mailResult.isSuccess()));
+				log.info("[SW_REGISTER_MAIL] success={}", mailResult != null && mailResult.isSuccess());
 			}
 		} catch (Exception e) {
-			System.out.println("[SW_REGISTER_MAIL] skip: " + e.getMessage());
+			log.warn("[SW_REGISTER_MAIL] skipped type={}", e.getClass().getSimpleName());
 		}
 	}
 
@@ -291,7 +289,7 @@ public class SwRequestService implements CommonService{
 		convertedUpdateParam.put("orgFileNm", toPdfFileName(safeString(param.getOrgFileNm()), safeString(param.getFileNm())));
 		convertedUpdateParam.put("fileSize", String.valueOf(convertedMain.length()));
 		int updated = dao.updateMainFileAfterCoverMerge(convertedUpdateParam);
-		System.out.println("[CCB_CONVERT] register main update rows=" + updated + ", filePath=" + inputPdfPath);
+		log.info("[CCB_CONVERT] register main update rows={}", updated);
 		if (!inputPdfPath.equals(sourceFilePath)) {
 			uploadSwFileToFileApi(inputPdfPath, "CCB_CONVERT");
 		}
@@ -304,9 +302,9 @@ public class SwRequestService implements CommonService{
 			failParam.put("processingStatus", "FAIL");
 			failParam.put("errorMessage", safeString(errorMessage));
 			dao.updateMainFileProcessingFail(failParam);
-			System.out.println("[" + logTag + "] processing status updated to FAIL: " + errorMessage);
+			log.warn("[{}] processing status updated to FAIL", logTag);
 		} catch (Exception e) {
-			System.out.println("[" + logTag + "] fail status update exception: " + e.getMessage());
+			log.warn("[{}] fail status update exception type={}", logTag, e.getClass().getSimpleName());
 		}
 	}
 
@@ -332,7 +330,7 @@ public class SwRequestService implements CommonService{
 			String objectId = safeString(param.getObjectId());
 			String inputPdfPath = ensureConvertedPdfForCover(sourceFilePath, objectId, "CCB_COVER");
 			if (inputPdfPath.isEmpty()) {
-				System.out.println("[CCB_COVER] skip: inputPdfPath is empty");
+				log.warn("[CCB_COVER] skipped: input missing");
 				return;
 			}
 			if (!inputPdfPath.equals(sourceFilePath) && inputPdfPath.toLowerCase().endsWith(".pdf")) {
@@ -344,7 +342,7 @@ public class SwRequestService implements CommonService{
 					convertedUpdateParam.put("orgFileNm", toPdfFileName(safeString(param.getOrgFileNm()), safeString(param.getFileNm())));
 					convertedUpdateParam.put("fileSize", String.valueOf(convertedMain.length()));
 					int updated = dao.updateMainFileAfterCoverMerge(convertedUpdateParam);
-					System.out.println("[CCB_COVER] pre-merge main update rows=" + updated + ", filePath=" + inputPdfPath);
+					log.info("[CCB_COVER] pre-merge main update rows={}", updated);
 				}
 			}
 
@@ -401,14 +399,12 @@ public class SwRequestService implements CommonService{
 			if (endpoint.isEmpty()) {
 				endpoint = "http://localhost:7442/cover_merge_pdf";
 			}
-			System.out.println("[CCB_COVER] endpoint=" + endpoint);
-			System.out.println("[CCB_COVER] templatePdfPath=" + templatePdfPath);
-			System.out.println("[CCB_COVER] inputPdfPath=" + inputPdfPath + ", outputFileName=" + outputFileName);
+			log.debug("[CCB_COVER] request prepared");
 
 			RestTemplate restTemplate = new RestTemplate();
 			ResponseEntity<String> response = restTemplate.postForEntity(endpoint, entity, String.class);
 			String responseBody = response.getBody();
-			System.out.println("[CCB_COVER] responseStatus=" + response.getStatusCodeValue() + ", body=" + responseBody);
+			log.info("[CCB_COVER] response status={}", response.getStatusCodeValue());
 
 			if (responseBody != null && !responseBody.trim().isEmpty()) {
 				Map<String, Object> responseMap = new Gson().fromJson(responseBody, new TypeToken<Map<String, Object>>() {}.getType());
@@ -424,25 +420,23 @@ public class SwRequestService implements CommonService{
 						updateParam.put("fileSize", String.valueOf(mergedFile.length()));
 						int updated = dao.updateMainFileAfterCoverMerge(updateParam);
 						copyMergedPdfToViewerCache(outputPdfPath, objectId, "CCB_COVER");
-						System.out.println("[CCB_COVER] post-merge main update rows=" + updated + ", filePath=" + inputPdfPath);
-						System.out.println("[CCB_COVER] overwrite source file with merged cover: " + inputPdfPath);
+						log.info("[CCB_COVER] merge applied rows={}", updated);
 					}
 				}
 			}
 		} catch (Exception e) {
-			System.out.println("[CCB_COVER] exception: " + e.getMessage());
-			e.printStackTrace();
+			log.warn("[CCB_COVER] merge failed type={}", e.getClass().getSimpleName());
 			try {
 				Map<String, Object> failParam = new HashMap<>();
 				failParam.put("objectId", safeString(param.getObjectId()));
-				String errorMessage = safeString(e.getMessage());
+				String errorMessage = "cover_merge_failed:" + e.getClass().getSimpleName();
 				if (errorMessage.length() > 1000) {
 					errorMessage = errorMessage.substring(0, 1000);
 				}
 				failParam.put("errorMessage", errorMessage);
 				dao.updateMainFileProcessingFail(failParam);
 			} catch (Exception ignore) {
-				System.out.println("[CCB_COVER] fail status update exception: " + ignore.getMessage());
+				log.warn("[CCB_COVER] fail status update exception type={}", ignore.getClass().getSimpleName());
 			}
 		}
 	}
@@ -469,7 +463,7 @@ public class SwRequestService implements CommonService{
 			requestFactory.setReadTimeout(60000);
 			RestTemplate restTemplate = new RestTemplate(requestFactory);
 			ResponseEntity<String> response = restTemplate.postForEntity(endpoint, new HttpEntity<>(body, headers), String.class);
-			System.out.println("[" + logTag + "] convert status=" + response.getStatusCodeValue() + ", body=" + response.getBody());
+			log.info("[{}] convert status={}", logTag, response.getStatusCodeValue());
 			if (!response.getStatusCode().is2xxSuccessful()) {
 				return "";
 			}
@@ -488,12 +482,12 @@ public class SwRequestService implements CommonService{
 					}
 				}
 				if (latest != null) {
-					System.out.println("[" + logTag + "] convertedPdfPath=" + latest.getAbsolutePath());
+					log.info("[{}] converted output found", logTag);
 					return latest.getAbsolutePath();
 				}
 			}
 		} catch (Exception e) {
-			System.out.println("[" + logTag + "] convert exception: " + e.getMessage());
+			log.warn("[{}] convert failed type={}", logTag, e.getClass().getSimpleName());
 		}
 		return "";
 	}
@@ -544,7 +538,7 @@ public class SwRequestService implements CommonService{
 			String savedOrgFileNm = originalName;
 			long savedSize = subFile.getSize();
 			uploadMultipartToFileApi(subFile, savedFileName, "SW_SUB_REGISTER");
-			System.out.println("[CCB_SUB_COVER] original=" + originalName + ", savedPath=" + savedPath + ", savedOrgFileNm=" + savedOrgFileNm);
+			log.info("[CCB_SUB_COVER] upload completed");
 			SwSubFileParam subFileParam = SwSubFileParam.builder()
 					.objectId(subObjectId)
 					.parentObjectId(objectId)
@@ -573,7 +567,7 @@ public class SwRequestService implements CommonService{
 		path = StringUtil.replaceLfiPath(path);
 		File file = new File(path);
 		param.setFilePath(path);
-		System.out.println("파일 경로 : " + path);
+		log.debug("[SW_REGISTER] file stored");
 
 		param.setFileNm(orgName);
 		param.setFileSize(String.valueOf(mf.getSize()));
@@ -602,7 +596,7 @@ public class SwRequestService implements CommonService{
 		String fileName = uploadFile.getName();
 		String folder = getFileApiSwFolder();
 		fileApiClient.upload(uploadFile, fileName, folder);
-		System.out.println("[" + logTag + "] file api upload ok. folder=" + folder + ", fileName=" + fileName);
+		log.info("[{}] file api upload succeeded", logTag);
 	}
 
 	private void uploadMultipartToFileApi(MultipartFile multipartFile, String fileName, String logTag) {
@@ -612,9 +606,9 @@ public class SwRequestService implements CommonService{
 		String folder = getFileApiSwFolder();
 		try (java.io.InputStream input = multipartFile.getInputStream()) {
 			fileApiClient.upload(input, multipartFile.getSize(), fileName, folder);
-			System.out.println("[" + logTag + "] file api upload ok. folder=" + folder + ", fileName=" + fileName);
+			log.info("[{}] file api upload succeeded", logTag);
 		} catch (IOException e) {
-			throw new IllegalStateException("File API upload failed: " + e.getMessage(), e);
+			throw new IllegalStateException("file_api_upload_failed:" + e.getClass().getSimpleName());
 		}
 	}
 
@@ -783,7 +777,7 @@ public class SwRequestService implements CommonService{
 		if (updated > 0) {
 			updateDistributionApprovalDetail(objectId, CCB_OBJECT_TYPE, userCd, userNm);
 			boolean detailFinalApprove = isDistributionApprovalDetailCompleted(objectId, CCB_OBJECT_TYPE);
-			System.out.println("[CCB_APPROVAL] objectId=" + objectId + ", stringFinal=" + isFinalApprove + ", detailFinal=" + detailFinalApprove);
+			log.info("[CCB_APPROVAL] stringFinal={}, detailFinal={}", isFinalApprove, detailFinalApprove);
 		}
 		result.setSuccess(updated > 0);
 		result.setMessage(updated > 0 ? "승인되었습니다." : "승인 처리에 실패했습니다.");
@@ -1155,7 +1149,7 @@ public class SwRequestService implements CommonService{
 		detail.put("userId", safeString(userCd));
 		detail.put("userNm", safeString(userNm));
 		int updated = approvalDetailDao.updateApprovalDetailApproved(detail);
-		System.out.println("[" + objectType + "_APPROVAL_DETAIL] approved rows=" + updated + ", objectId=" + objectId);
+		log.info("[{}_APPROVAL_DETAIL] approved rows={}", objectType, updated);
 	}
 
 	private boolean isDistributionApprovalDetailCompleted(String objectId, String objectType) {
@@ -1218,12 +1212,12 @@ public class SwRequestService implements CommonService{
 		try {
 			String adapPdfPath = safeString(SystemConfig.getSystemConfigValue("ADAP_PDF_PATH"));
 			if (adapPdfPath.isEmpty()) {
-				System.out.println("[" + logTag + "] viewer cache skip: ADAP_PDF_PATH is empty");
+				log.warn("[{}] viewer cache skipped: root not configured", logTag);
 				return;
 			}
 			File source = new File(safeString(mergedPdfPath));
 			if (!source.isFile()) {
-				System.out.println("[" + logTag + "] viewer cache skip: merged file not found: " + mergedPdfPath);
+				log.warn("[{}] viewer cache skipped: merged file missing", logTag);
 				return;
 			}
 			File targetDir = new File(adapPdfPath);
@@ -1232,9 +1226,9 @@ public class SwRequestService implements CommonService{
 			}
 			File target = new File(targetDir, safeString(objectId) + ".pdf");
 			Files.copy(source.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
-			System.out.println("[" + logTag + "] viewer cache updated: " + target.getAbsolutePath());
+			log.info("[{}] viewer cache updated", logTag);
 		} catch (Exception e) {
-			System.out.println("[" + logTag + "] viewer cache update failed: " + e.getMessage());
+			log.warn("[{}] viewer cache update failed type={}", logTag, e.getClass().getSimpleName());
 		}
 	}
 
@@ -1265,7 +1259,7 @@ public class SwRequestService implements CommonService{
 		try {
 			rows = dao.selectUserPositionByNames(param);
 		} catch (Exception e) {
-			System.out.println("[CCB_COVER] position lookup skipped: " + e.getMessage());
+			log.warn("[CCB_COVER] position lookup skipped type={}", e.getClass().getSimpleName());
 			return new HashMap<>();
 		}
 		if (rows == null) {

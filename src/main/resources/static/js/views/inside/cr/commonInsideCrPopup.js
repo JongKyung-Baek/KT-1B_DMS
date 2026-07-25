@@ -1,27 +1,10 @@
-//function fileDownload(cnSerial, fileNo, orgFileNm){
-//	var xhr = new XMLHttpRequest();
-//    xhr.open("GET", "/inside/cr/acceptance/crFileDownload?cnSerial="+cnSerial+"&fileNo="+fileNo, true);
-//    xhr.responseType = "blob";
-//    xhr.onload = function(){
-//        var urlCreator = window.URL || window.webkitURL;
-//        var imageUrl = urlCreator.createObjectURL(this.response);
-//        var tag = document.createElement('a');
-//        tag.href = imageUrl;
-//        tag.download = orgFileNm;
-//        document.body.appendChild(tag);
-//        tag.click();
-//        document.body.removeChild(tag);
-//    }
-//    xhr.send();
-//}
 var acceptFlag;
-function fileDownload(cnSerial, fileNo, orgFileNm){
-	$("form[name=tmpForm]")
-	.attr("action","/inside/cr/acceptance/crFileDownload?cnSerial="+cnSerial+"&fileNo="+fileNo)
-	.attr("target", "hiddenFrame")
-	.attr("method", "post")
-	.submit();
-//	location.href="/outside/cr/request/getCrTemplate";
+function fileDownload(crNo, fileNo){
+	var frame = document.querySelector("iframe[name='hiddenFrame']");
+	if (frame) {
+		frame.src = "/inside/cr/acceptance/crFileDownload?crNo=" + encodeURIComponent(crNo)
+			+ "&fileNo=" + encodeURIComponent(fileNo);
+	}
 }
 
 function approvalRequest(){

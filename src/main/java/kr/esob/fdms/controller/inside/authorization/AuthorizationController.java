@@ -173,7 +173,7 @@ public class AuthorizationController extends AbstractController {
 		if(user == null)user = new UserVO();
 		rtn.put("userCd", user.getUserCd());
 		rtn.put("userNm", user.getUserNm());
-		System.out.println("userNm -> " + rtn.get("userNm"));
+		
 		return rtn;
 	}
 
@@ -218,7 +218,8 @@ public class AuthorizationController extends AbstractController {
 	@RequestMapping("/checkOutsideProtectAuth")
 	public @ResponseBody String checkOutsideProtectAuth(@RequestBody ProtectObjectVO vo) {
 		Map<String, Object> map = new HashMap<String, Object>();
-		map.put("protectYn", vo.getSessionUser().getProtectYn());
+		UserVO actor = (UserVO) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+		map.put("protectYn", actor.getProtectYn());
 
 		return JSONObject.fromObject(map).toString();
 	}
@@ -231,7 +232,8 @@ public class AuthorizationController extends AbstractController {
 	@RequestMapping("/getOutsideCompanyAuthYn")
 	public @ResponseBody String getOutsideCompanyAuthYn(@RequestBody ProtectObjectVO vo) {
 		Map<String, Object> map = new HashMap<String, Object>();
-		map.put("delYn", vo.getSessionUser().getCompanyDelYn());
+		UserVO actor = (UserVO) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+		map.put("delYn", actor.getCompanyDelYn());
 
 		/*
 		 * 오픈때문에 급하게 수정(Viewer 또는 파일 다운로드시 "거래중단 업체" 메시지 출력됨)
@@ -285,7 +287,7 @@ public class AuthorizationController extends AbstractController {
 	 */
 	@RequestMapping(value="/selectJikUserComboList")
 	public @ResponseBody String selectJikUserComboList(SearchComboParamVO vo){
-		System.out.println("selectJikUserComboList");
+		
 
 		UserVO user = (UserVO) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 

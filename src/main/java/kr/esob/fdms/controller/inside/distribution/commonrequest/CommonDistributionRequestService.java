@@ -71,7 +71,6 @@ public class CommonDistributionRequestService {
 				mailService.sendDocsMail(mailInfoVo);
 			}
 		}catch(Exception e) {
-			e.printStackTrace();
 		}
 		resultVo.setSuccess(true);
 
@@ -151,7 +150,6 @@ public class CommonDistributionRequestService {
 		}else if("DISTRIBUTION".equals(param.getApprovalRequestType())){				//배포승인요청
 			mailEnum = DocsMailEnum.DISTRIBUTION_APPROVAL;
 			//배포유형 (체크박스)
-			System.out.println("yskim:test - " + param.getFileDistributionType());
 			if("general".equals(param.getFileDistributionType())) {
 				param.setDeployNormalYn("Y");
 				param.setDeploySpecialYn("N");
@@ -203,7 +201,6 @@ public class CommonDistributionRequestService {
 				mailService.sendDocsMail(mailInfoVo);
 			}
 		}catch(Exception e) {
-			e.printStackTrace();
 		}
 		resultVo.setSuccess(true);
 		return resultVo;

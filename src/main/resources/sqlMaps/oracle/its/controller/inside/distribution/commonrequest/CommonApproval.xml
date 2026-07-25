@@ -403,6 +403,15 @@
 	UPDATE DOCS_REQUEST
 	SET CURRENT_PROCESS_SEQ_NO = '4'
 	WHERE REQUEST_NO = #{requestNo}
+	  AND STATUS_CD = 'REQUEST'
+	  AND CURRENT_PROCESS_SEQ_NO = CAST(#{currentProcessSeqNo} AS INTEGER)
+	  AND EXISTS (
+		SELECT 1 FROM DOCS_REQUEST_DETAIL currDetail
+		WHERE currDetail.REQUEST_NO = DOCS_REQUEST.REQUEST_NO
+		  AND currDetail.PROCESS_SEQ = DOCS_REQUEST.CURRENT_PROCESS_SEQ_NO
+		  AND currDetail.ACTUAL_USER_CD = #{sessionUser.userCd}
+		  AND currDetail.ACTION_CD = 'REQUEST'
+	  )
 </update>
 
 <!-- 배포 승인 결과 수정 [2019.09.25(최금영)] -->
@@ -413,6 +422,15 @@
 		, APPROVAL_DT = CURRENT_TIMESTAMP
 	</if>
 	WHERE REQUEST_NO = #{requestNo}
+	  AND STATUS_CD = 'REQUEST'
+	  AND CURRENT_PROCESS_SEQ_NO = CAST(#{currentProcessSeqNo} AS INTEGER)
+	  AND EXISTS (
+		SELECT 1 FROM DOCS_REQUEST_DETAIL currDetail
+		WHERE currDetail.REQUEST_NO = DOCS_REQUEST.REQUEST_NO
+		  AND currDetail.PROCESS_SEQ = DOCS_REQUEST.CURRENT_PROCESS_SEQ_NO
+		  AND currDetail.ACTUAL_USER_CD = #{sessionUser.userCd}
+		  AND currDetail.ACTION_CD = 'REQUEST'
+	  )
 </update>
 
 <!-- 배포 요청 상세 수정 [2019.09.25(최금영)] -->
@@ -424,6 +442,9 @@
 	WHERE REQUEST_NO = #{requestNo}
 	  AND APPROVAL_STATUS_CD = #{approvalStatusCd}
 	  AND APPROVAL_GRADE_CD = #{approvalGradeCd}
+	  AND PROCESS_SEQ = CAST(#{currentProcessSeqNo} AS INTEGER)
+	  AND ACTUAL_USER_CD = #{sessionUser.userCd}
+	  AND ACTION_CD = 'REQUEST'
 </update>
 
 <!-- 승인 요청 아이템 리스트 갯수 조회[2019.10.01(최금영)]  -->
@@ -606,22 +627,45 @@
 
 <!-- 현재 결재 라인 조회  -->
 <select id="getCurrentApprovalInfo" parameterType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonApprovalParam" resultType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonApprovalParam">
-	SELECT lineDtl.APPROVAL_GRADE_CD	AS approvalGradeCd
-		 , lineDtl.APPROVAL_STATUS_CD	AS approvalStatusCd
-		 , lineDtl.APPROVAL_LINE_ID		AS approvalLineId
+	SELECT currDetail.APPROVAL_GRADE_CD	AS approvalGradeCd
+		 , currDetail.APPROVAL_STATUS_CD	AS approvalStatusCd
+		 , req.APPROVAL_LINE_ID			AS approvalLineId
 		 , req.CURRENT_PROCESS_SEQ_NO	AS currentProcessSeqNo
 		 , req.PROTECT_YN				AS protectYn
-		 , deploy.DEPLOY_USER_CD			AS deployUserCd
 		 , req.OBJECT_TYPE				AS objectType
-	FROM DOCS_APPROVAL_LINE_DETAIL lineDtl
-			 JOIN DOCS_APPROVAL_LINE line
-				  ON lineDtl.APPROVAL_LINE_ID = line.APPROVAL_LINE_ID
-			 JOIN DOCS_REQUEST req
-				  ON line.APPROVAL_LINE_ID = req.APPROVAL_LINE_ID
-					  AND req.REQUEST_NO = #{requestNo}
-			 JOIN DOCS_REQUEST_DEPLOY deploy
-				  ON req.REQUEST_NO = deploy.REQUEST_NO
-	WHERE lineDtl.PROCESS_SEQ_NO = req.CURRENT_PROCESS_SEQ_NO
+		 , req.REQUEST_TYPE				AS approvalType
+	FROM DOCS_REQUEST req
+			 JOIN DOCS_REQUEST_DETAIL currDetail
+				  ON currDetail.REQUEST_NO = req.REQUEST_NO
+					 AND currDetail.PROCESS_SEQ = req.CURRENT_PROCESS_SEQ_NO
+	WHERE req.REQUEST_NO = #{requestNo}
+	  AND req.STATUS_CD = 'REQUEST'
+	  AND currDetail.APPROVAL_STATUS_CD = 'APPROVAL'
+	  AND currDetail.ACTUAL_USER_CD = #{sessionUser.userCd}
+	  AND currDetail.ACTION_CD = 'REQUEST'
+	FOR UPDATE OF req, currDetail
+</select>
+
+<select id="selectPassTargetForUpdate" parameterType="kr.esob.fdms.controller.inside.distribution.commonrequest.PassParamVO" resultType="String">
+	SELECT req.REQUEST_NO
+	FROM DOCS_REQUEST req
+			 JOIN DOCS_REQUEST_DETAIL currDetail
+				  ON currDetail.REQUEST_NO = req.REQUEST_NO
+					 AND currDetail.PROCESS_SEQ = req.CURRENT_PROCESS_SEQ_NO
+	WHERE req.REQUEST_NO = #{requestNo}
+	  AND req.STATUS_CD = 'REQUEST'
+	  AND currDetail.APPROVAL_STATUS_CD = 'APPROVAL'
+	  AND currDetail.APPROVAL_GRADE_CD = 'DEF'
+	  AND currDetail.ACTUAL_USER_CD = #{sessionUser.userCd}
+	  AND currDetail.ACTION_CD = 'REQUEST'
+	  AND EXISTS (
+		SELECT 1
+		FROM DOCS_USER targetUser
+		WHERE targetUser.USER_CD = #{passTarget}
+		  AND targetUser.USE_YN = 'Y'
+		  AND targetUser.DEL_YN = 'N'
+	  )
+	FOR UPDATE OF req, currDetail
 </select>
 
 <update id="updatePassTarget">
@@ -630,6 +674,14 @@
 	WHERE REQUEST_NO = #{requestNo}
 	  AND APPROVAL_STATUS_CD = 'APPROVAL'
 	  AND APPROVAL_GRADE_CD = 'DEF'
+	  AND ACTUAL_USER_CD = #{sessionUser.userCd}
+	  AND ACTION_CD = 'REQUEST'
+	  AND PROCESS_SEQ = (
+		SELECT CURRENT_PROCESS_SEQ_NO
+		FROM DOCS_REQUEST
+		WHERE REQUEST_NO = #{requestNo}
+		  AND STATUS_CD = 'REQUEST'
+	  )
 </update>
 
 <select id="selectRequestInfo" resultType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonApprovalParam">

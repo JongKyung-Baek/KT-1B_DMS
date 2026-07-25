@@ -360,12 +360,17 @@
 	JOIN DOCS_POSITION position ON docsUser.POSITION_CD = position.POSITION_CD
 	JOIN DOCS_DEPT dept ON docsUser.DEPT_CD = dept.DEPT_CD
 	WHERE docsUser.USER_NM LIKE '%' || #{userNm} || '%'
-	<if test='sortColumn == null or "".equals(sortColumn)'>
-		ORDER BY userNm ASC
-	</if>
-	<if test='sortColumn != null and !"".equals(sortColumn)'>
-		ORDER BY ${sortColumn} ${order}
-	</if>
+	ORDER BY
+	<choose>
+		<when test='sortColumn == "positionNm"'>positionNm</when>
+		<when test='sortColumn == "deptNm"'>deptNm</when>
+		<when test='sortColumn == "userId"'>userId</when>
+		<otherwise>userNm</otherwise>
+	</choose>
+	<choose>
+		<when test='order != null and "desc".equalsIgnoreCase(order)'>DESC</when>
+		<otherwise>ASC</otherwise>
+	</choose>
 	) A1
 	<if test='end != null and !end.equals("")'>
 		LIMIT #{end}

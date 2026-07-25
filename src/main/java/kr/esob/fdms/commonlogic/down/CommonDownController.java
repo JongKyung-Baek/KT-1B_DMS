@@ -22,6 +22,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -50,14 +51,16 @@ public class CommonDownController extends AbstractController {
 	CommonDownService service;
 
 	@RequestMapping(value="/openFileDownPopup")
-	public String openFileDownPopup(CommonDownParam param, Model model) throws JsonProcessingException {
-		model.addAttribute("config", service.getUploadConfig());
-		model.addAttribute("gridId", param.getGridId());
-		return "down/commonFileDownPopup";
+	public String openFileDownPopup(CommonDownParam param, Model model, HttpServletResponse response) throws JsonProcessingException {
+		// This popup hands raw server paths to the legacy ActiveX client.  It is
+		// deliberately retired; callers must use /common/updown/v2 instead.
+		response.setStatus(HttpServletResponse.SC_GONE);
+		return null;
 	}
 
 	@RequestMapping("/selectList")
-	public @ResponseBody List selectList(@RequestBody CommonDownParam param) throws Exception {
-		return service.selectList(param);
+	public @ResponseBody List selectList(@RequestBody CommonDownParam param, HttpServletResponse response) throws Exception {
+		response.setStatus(HttpServletResponse.SC_GONE);
+		return java.util.Collections.emptyList();
 	}
 }

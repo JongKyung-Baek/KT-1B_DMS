@@ -23,8 +23,10 @@ import kr.esob.fdms.controller.inside.distribution.commonrequest.ApprovalLineDet
 // import kr.esob.fdms.controller.outside.commonrequest.CommonRequestService;
 import kr.esob.fdms.util.DateUtil;
 import kr.esob.fdms.util.ObjectUtil;
-import kr.esob.fdms.util.StringUtil;
+import kr.esob.fdms.util.StoragePathUtils;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 public class RequestService implements CommonService {
 
@@ -60,20 +62,14 @@ public class RequestService implements CommonService {
 		dao.insertUnregisterInfo(param);
 		//미등록 자료 파일 등록
 		MultipartFile mf = request.getFile("file");
-		String filePathNm = SystemConfig.getSystemConfigValue("UNREG_FILE_PATH") + param.getObjectNo() + "\\";
-		File filePath = new File(filePathNm);
+		File filePath = StoragePathUtils.resolve(
+				SystemConfig.getSystemConfigValue("UNREG_FILE_PATH"),
+				param.getObjectNo()).toFile();
 		if(!filePath.exists())filePath.mkdirs();
-		param.setFilePath(filePathNm);
-		String orgName = mf.getOriginalFilename();
-
-		if(orgName.contains(File.separator)) {
-			orgName = orgName.substring(orgName.lastIndexOf(File.separator)+1, orgName.length());
-		}
-		orgName = StringUtil.replaceLfiPath(orgName);
-		String path = filePathNm + orgName;
-		path = StringUtil.replaceLfiPath(path);
-		File file = new File(path);
-		param.setFilePath(path);
+		param.setFilePath(filePath.getPath());
+		String orgName = StoragePathUtils.fileName(mf.getOriginalFilename());
+		File file = StoragePathUtils.resolve(filePath.getPath(), orgName).toFile();
+		param.setFilePath(file.getPath());
 
 		param.setFileNm(orgName);
 		param.setFileSize(String.valueOf(mf.getSize()));
@@ -86,8 +82,6 @@ public class RequestService implements CommonService {
 
 	public ResultVO saveUnregisterFileX(UnregisterPopupParam param) throws Exception {
 		ResultVO resultVo = new ResultVO();
-		System.out.println("들어오는지 체크\n" + param.toString());
-		//System.out.println(param.getParameterMap());
 		// UnregisterPopupParam param = (UnregisterPopupParam) ObjectUtil.jsonToObj(param2.getParameter("formUnRegisterPopup"), UnregisterPopupParam.class);
 
 		//FDMS_UNREG_INFO insert
@@ -95,23 +89,18 @@ public class RequestService implements CommonService {
 		// dao.insertUnregisterInfo(param);
 		for (UnregisterPopupParam list : param.getParamList()) {
 			list.setFileCd(param.getFileCd());
-			System.out.println("로그 확인중 -> " + list.getFileCd());
 			dao.insertUnregisterFileX(list);
 		}
 
 //		MultipartFile mf = request.getFile("file");
-//		System.out.println("asd --" + mf.getSize());
 		resultVo.setSuccess(true);
 		return resultVo;
 	}
 
 	public ResultVO saveUnregisterFileX2(MultipartHttpServletRequest request) throws Exception {
 		ResultVO resultVo = new ResultVO();
-		System.out.println("들어오는지 체크 = " + request.getParameterMap());
-		System.out.println("들어오는지 체크 = " + request.getParameter("fileName"));
 
 		MultipartFile file = request.getFile("file");
-		System.out.println("objectType -> "+request.getParameter("objectType"));
 		// UnregisterPopupParam 객체 만들어서 저장
 		UnregisterPopupParam unregisterPopupParam = UnregisterPopupParam.builder()
 				// 자료명
@@ -207,27 +196,21 @@ public class RequestService implements CommonService {
 				mailService.sendDocsMail(mailInfoVo);
 			}
 		}catch(Exception e) {
-			e.printStackTrace();
+			log.warn("Unregistered file notification failed. cause={}", e.getClass().getSimpleName());
 		}
 		return result;
 	}
 
 	private UnregisterPopupParam getFileSavedPath(UnregisterPopupParam param, MultipartFile mf){
-		String filePathNm = SystemConfig.getSystemConfigValue("UNREG_FILE_PATH") + param.getObjectNo() + "\\";
-		File filePath = new File(filePathNm);
+		File filePath = StoragePathUtils.resolve(
+				SystemConfig.getSystemConfigValue("UNREG_FILE_PATH"),
+				param.getObjectNo()).toFile();
 		if(!filePath.exists())filePath.mkdirs();
-		param.setFilePath(filePathNm);
-		String orgName = mf.getOriginalFilename();
-
-		if(orgName.contains(File.separator)) {
-			orgName = orgName.substring(orgName.lastIndexOf(File.separator)+1, orgName.length());
-		}
-		orgName = StringUtil.replaceLfiPath(orgName);
-		String path = filePathNm + orgName;
-		path = StringUtil.replaceLfiPath(path);
-		File file = new File(path);
+		param.setFilePath(filePath.getPath());
+		String orgName = StoragePathUtils.fileName(mf.getOriginalFilename());
+		File file = StoragePathUtils.resolve(filePath.getPath(), orgName).toFile();
+		String path = file.getPath();
 		param.setFilePath(path);
-		System.out.println("파일 경로 : " + path);
 
 		param.setFileNm(orgName);
 		param.setFileSize(String.valueOf(mf.getSize()));

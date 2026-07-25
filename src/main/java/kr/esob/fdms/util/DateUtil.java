@@ -124,7 +124,7 @@ public class DateUtil {
 			return format.format(convertedCurrentDate);
 		}
 		catch(Exception e) {
-			e.printStackTrace();
+			
 			return "";
 		}
 	}

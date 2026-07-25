@@ -4,6 +4,7 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -25,7 +26,7 @@ public class CreateExcelController extends AbstractController {
 
 	RequestUtil requestUtil;
 
-	@RequestMapping("/createExcel")
+	@PostMapping("/createExcel")
 	public @ResponseBody CreateExcelVO CreateExcel(HttpServletRequest request) throws Exception {
 //		if(!"".equals(request.getParameter("dynamicType"))) {
 //			Map<String, String> paramMap = requestUtil.getRequestParameterToMap(request);
@@ -53,14 +54,14 @@ public class CreateExcelController extends AbstractController {
 //		}
 	}
 
-	@RequestMapping("/createExcelFromLocalGrid")
+	@PostMapping("/createExcelFromLocalGrid")
 	public @ResponseBody CreateExcelVO createExcelFromLocalGrid(HttpServletRequest request, LocalParam param) throws Exception {
-		System.out.println(param.getGridId());
+		
 //		return null;
 		return service.createExcelFromLocalGrid(request, param);
 	}
 	
-	@RequestMapping("/createExcelDuanzongPdm")
+	@PostMapping("/createExcelDuanzongPdm")
 	public @ResponseBody CreateExcelVO createExcelDuanzongPdm(HttpServletRequest request, CommonParam param) throws Exception {
 		return service.createExcelDuanzongPdm(request, param);
 	}

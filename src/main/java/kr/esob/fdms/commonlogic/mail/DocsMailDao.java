@@ -14,7 +14,6 @@ public class DocsMailDao extends AbstractDao{
 	private final String prefix = "sql.DocsMail.";
 
 	public MailInfoVO selectReceiveUser(String param) {
-		System.out.println(param);System.out.println(param);System.out.println(param);
 		return (MailInfoVO) obj(prefix + "selectReceiveUser", param);
 	}
 

@@ -10,7 +10,11 @@ import java.util.UUID;
 import javax.inject.Inject;
 
 import org.apache.commons.beanutils.BeanUtils;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
@@ -33,7 +37,6 @@ import kr.esob.fdms.controller.outside.commonrequest.RequestParam;
 import kr.esob.fdms.controller.outside.drawing.request.DrawingInfoVO;
 import kr.esob.fdms.util.FileUtil;
 import kr.esob.fdms.util.ObjectUtil;
-import kr.esob.fdms.util.seed.seed.Seed128Cipher;
 import net.sf.json.JSONObject;
 
 @Service
@@ -64,14 +67,19 @@ public class RequestService implements CommonService {
 	@SuppressWarnings("rawtypes")
 	@Override
 	public List selectList(Object param) {
-		return dao.selectList(param);
+		RequestListParam listParam = requireListParam(param);
+		listParam.setSessionUser(requireAuthenticatedActor());
+		return dao.selectList(listParam);
 	}
 
 	@Override
 	public int selectListCount(Object param) {
-		return dao.selectListCount(param);
+		RequestListParam listParam = requireListParam(param);
+		listParam.setSessionUser(requireAuthenticatedActor());
+		return dao.selectListCount(listParam);
 	}
 
+	@Transactional(rollbackFor = Exception.class)
 	public ResultVO insertCrRequest(MultipartHttpServletRequest request) throws Exception {
 		ResultVO resultVo = new ResultVO();
 		//도면정보, CR정보, 결재 요청정보에 관련된 파라미터 정리
@@ -114,16 +122,18 @@ public class RequestService implements CommonService {
 				list.get(i).transferTo(file);
 				dao.insertRequestFile(crParam);
 
-				String srcUrl = Seed128Cipher.encrypt(SystemConfig.getSystemConfigValue("SERVER_URL_OUTSIDE"), Constant.SEED_KEY.getBytes(), Constant.SEED_ENCODING);
-				String dstUrl = Seed128Cipher.encrypt(SystemConfig.getSystemConfigValue("SERVER_URL_INSIDE"), Constant.SEED_KEY.getBytes(), Constant.SEED_ENCODING);
-				String srcFilePath = Seed128Cipher.encrypt(filePathNm+fileName, Constant.SEED_KEY.getBytes(), Constant.SEED_ENCODING);
-				String dstFilePath = Seed128Cipher.encrypt(SystemConfig.getSystemConfigValue("CR_EXCELFILE_PATH") + crParam.getCrNo().substring(2, 6) + "\\", Constant.SEED_KEY.getBytes(), Constant.SEED_ENCODING);
-				String dstFileNm = Seed128Cipher.encrypt(fileName, Constant.SEED_KEY.getBytes(), Constant.SEED_ENCODING);
+				String srcUrl = FileUtil.encryptTransferArgument(SystemConfig.getSystemConfigValue("SERVER_URL_OUTSIDE"));
+				String dstUrl = FileUtil.encryptTransferArgument(SystemConfig.getSystemConfigValue("SERVER_URL_INSIDE"));
+				String srcFilePath = FileUtil.encryptTransferArgument(filePathNm + fileName);
+				String targetDirectory = SystemConfig.getSystemConfigValue("CR_EXCELFILE_PATH")
+						+ crParam.getCrNo().substring(2, 6) + "\\";
+				String dstFilePath = FileUtil.encryptTransferArgument(targetDirectory);
+				String dstFileNm = FileUtil.encryptTransferArgument(fileName);
 				
 				JSONObject result = FileUtil.callSender(srcUrl, dstUrl, srcFilePath, dstFilePath, dstFileNm);
-				
-				crParam.setFilePathNm(SystemConfig.getSystemConfigValue("CR_EXCELFILE_PATH") + crParam.getCrNo().substring(2, 6) + "\\" + result.getString("fileNm"));
-				crParam.setFileNm(result.getString("fileNm"));
+				String transferredFileName = FileUtil.requireSuccessfulTransferFileName(result);
+				crParam.setFilePathNm(targetDirectory + transferredFileName);
+				crParam.setFileNm(transferredFileName);
 				dao.insertCrFile(crParam);
 			}
 		}
@@ -163,42 +173,117 @@ public class RequestService implements CommonService {
 	}
 
 	public RequestStatusPopupVO getCrRequestInfo(CrRequestParam param) {
-		return dao.getCrRequestInfo(param);
+		if (param == null || isBlank(param.getCrNo())) {
+			throw new IllegalArgumentException("CR number is required");
+		}
+		param.setCrNo(param.getCrNo().trim());
+		param.setSessionUser(requireAuthenticatedActor());
+		RequestStatusPopupVO info = dao.getCrRequestInfo(param);
+		if (info == null) {
+			throw new AccessDeniedException("CR request is not accessible");
+		}
+		return info;
 	}
 
 	public CrInfoVO selectAcceptanceInfo(CrRequestParam param) {
+		if (param == null || isBlank(param.getCrNo())) {
+			throw new IllegalArgumentException("CR number is required");
+		}
+		UserVO actor = requireAuthenticatedActor();
+		param.setCrNo(param.getCrNo().trim());
+		param.setSessionUser(actor);
 		CrInfoVO vo = new CrInfoVO();
 		CrParam crParam = new CrParam();
 		crParam.setCrNo(param.getCrNo());
+		crParam.setSessionUser(actor);
 		vo.setFileList(commonCrDao.selectOutsideFileList(crParam));
 		return vo;
 	}
 
+	@Transactional(rollbackFor = Exception.class)
 	public ResultVO approve(OutsideCrParam param) {
-		ResultVO resultVo = new ResultVO();
+		authorizeApprovalTarget(param);
 		param.setActionCd(Constant.APPROVAL);
 		param.setReqStatusCd(Constant.REQUEST);
 		param.setApprovalStatusCd(Constant.WAITING);
+		param.setCurrentProcessSeqNo(3);
 		param.setStatusCd(CrStatusCdInfo.VENDOR_APPROVAL);
 		param.setRejectDesc(null);
-		dao.updateRequest(param);
-		dao.updateRequestDetail(param);
-		dao.updateCr(param);
+		requireSingleRow(dao.updateRequestDetail(param), "complete vendor CR approval step");
+		requireSingleRow(dao.updateRequest(param), "advance vendor-approved CR request");
+		requireSingleRow(dao.updateCr(param), "update vendor-approved CR");
+
+		ResultVO resultVo = new ResultVO();
 		resultVo.setSuccess(true);
 		return resultVo;
 	}
 
+	@Transactional(rollbackFor = Exception.class)
 	public ResultVO approvalReject(OutsideCrParam param) {
-		ResultVO resultVo = new ResultVO();
+		authorizeApprovalTarget(param);
 		param.setActionCd(Constant.REJECT);
 		param.setReqStatusCd(Constant.REJECT);
 		param.setApprovalStatusCd(Constant.WAITING);
+		param.setCurrentProcessSeqNo(2);
 		param.setStatusCd(CrStatusCdInfo.VENDOR_REJECT);
-		dao.updateRequest(param);
-		dao.updateRequestDetail(param);
-		dao.updateCr(param);
+		requireSingleRow(dao.updateRequestDetail(param), "complete vendor CR rejection step");
+		requireSingleRow(dao.updateRequest(param), "reject vendor CR request");
+		requireSingleRow(dao.updateCr(param), "update vendor-rejected CR");
+
+		ResultVO resultVo = new ResultVO();
 		resultVo.setSuccess(true);
 		return resultVo;
+	}
+
+	private RequestListParam requireListParam(Object param) {
+		if (!(param instanceof RequestListParam)) {
+			throw new IllegalArgumentException("Invalid CR request list");
+		}
+		return (RequestListParam) param;
+	}
+
+	private void authorizeApprovalTarget(OutsideCrParam param) {
+		if (param == null || isBlank(param.getCrNo())) {
+			throw new IllegalArgumentException("CR number is required");
+		}
+
+		param.setCrNo(param.getCrNo().trim());
+		param.setRequestNo(null);
+		param.setFilePathNmList(null);
+		param.setActionCd(null);
+		param.setApprovalGradeCd(null);
+		param.setApprovalStatusCd(null);
+		param.setReqStatusCd(null);
+		param.setRequestDesc(null);
+		param.setCurrentProcessSeqNo(0);
+		param.setStatusCd(0);
+		UserVO actor = requireAuthenticatedActor();
+		param.setSessionUser(actor);
+		param.setActualUserCd(actor.getUserCd());
+
+		String requestNo = dao.selectApprovalTargetForUpdate(param);
+		if (isBlank(requestNo)) {
+			throw new AccessDeniedException("CR approval request is not accessible");
+		}
+		param.setRequestNo(requestNo);
+	}
+
+	private UserVO requireAuthenticatedActor() {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		if (authentication == null || !(authentication.getPrincipal() instanceof UserVO)) {
+			throw new AccessDeniedException("Authenticated user is required");
+		}
+		return (UserVO) authentication.getPrincipal();
+	}
+
+	private void requireSingleRow(int affectedRows, String operation) {
+		if (affectedRows != 1) {
+			throw new IllegalStateException("Unable to " + operation);
+		}
+	}
+
+	private boolean isBlank(String value) {
+		return value == null || value.trim().isEmpty();
 	}
 
 }

@@ -45,7 +45,7 @@
 	}
 
 	function checkPassword(password){
-	    if(!/^(?=.*[a-zA-Z])(?=.*[~`!@#$%^&*+=-])(?=.*[0-9]).{9,25}$/.test(password)){
+	    if(!/^(?=.*[a-zA-Z])(?=.*[~`!@#$%^&*+=-])(?=.*[0-9]).{9,20}$/.test(password)){
 	        return true;
 	    }
 	    var checkNumber = password.search(/[0-9]/g);

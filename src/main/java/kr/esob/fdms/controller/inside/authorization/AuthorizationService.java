@@ -14,6 +14,9 @@ import kr.esob.fdms.commonlogic.combo.ComboInfoVO;
 import kr.esob.fdms.commonlogic.combo.SearchComboInfoVO;
 import kr.esob.fdms.commonlogic.combo.SearchComboParamVO;
 import kr.esob.fdms.commonlogic.message.Prop;
+import kr.esob.fdms.commonlogic.securityacl.FileAccessDecisionVO;
+import kr.esob.fdms.commonlogic.securityacl.FileAccessRequest;
+import kr.esob.fdms.commonlogic.securityacl.SecurityAclService;
 import kr.esob.fdms.commonlogic.value.Constant;
 import kr.esob.fdms.controller.inside.unregisted.request.DistributionRequestPopupParam;
 import kr.esob.fdms.controller.login.UserVO;
@@ -25,6 +28,8 @@ public class AuthorizationService {
 	AuthorizationDao dao;
 	@Inject
 	Prop prop;
+	@Inject
+	SecurityAclService securityAclService;
 
 	public Map<String, Object> selectSearchCombo(SearchComboParamVO vo) {
 		int limit = 50;
@@ -129,14 +134,19 @@ public class AuthorizationService {
 	}
 
 	public List<String> checkProtectAuth(ProtectObjectVO vo) {
+		securityAclService.requireCurrentUser();
 		String [] objIds = vo.getObjectId().split(",");
 		List<String> result = new ArrayList<String>();
 
 		for(int i=0; i<objIds.length; i++) {
-			vo.setObjectId(objIds[i]);
+			FileAccessRequest access = new FileAccessRequest();
+			access.setActionCd(SecurityAclService.VIEW);
+			access.setObjectType(vo.getObjectType());
+			access.setObjectId(objIds[i]);
+			access.setFileNo("*");
+			FileAccessDecisionVO decision = securityAclService.checkAccess(access);
 
-			// 권한이 없다면 result에 추가
-			if(!dao.checkProtectAuth(vo)) {
+			if(!decision.isAllowed()) {
 				result.add(objIds[i]);
 			}
 		}

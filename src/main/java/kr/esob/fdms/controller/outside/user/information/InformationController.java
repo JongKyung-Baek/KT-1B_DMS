@@ -17,6 +17,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -87,16 +88,17 @@ public class InformationController extends AbstractController {
 		return "outside/user/information/userModPopup";
 	}
 
-	@RequestMapping(value = "/request")
-	public @ResponseBody ResultVO request(@RequestBody InformationListParam param) throws Exception {
-		return service.insertRequest(param);
+	@PostMapping(value = "/request")
+	public @ResponseBody ResultVO request(@RequestBody InformationListParam param, Authentication authentication) throws Exception {
+		return service.insertRequest(param, authentication);
 	}
 
-	@RequestMapping(value = "/update")
+	@PostMapping(value = "/update")
 	public @ResponseBody ResultVO update(@RequestBody InformationListParam param, Authentication authentication, HttpServletRequest request) throws Exception {
+		boolean passwordChangeRequested = hasText(param.getUserNewPwd());
 		ResultVO result = service.updateUser(param, authentication);
 
-		if (result.isSuccess() && hasText(param.getUserNewPwd()) && authentication != null
+		if (result.isSuccess() && passwordChangeRequested && authentication != null
 				&& authentication.getPrincipal() instanceof UserVO) {
 			UserVO userVo = (UserVO) authentication.getPrincipal();
 			auditLogService.insertAuditLog("changePassword", userVo.getUserId(), userVo.getUserNm(), request);

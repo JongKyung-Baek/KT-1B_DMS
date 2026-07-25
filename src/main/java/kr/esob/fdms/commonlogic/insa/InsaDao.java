@@ -10,8 +10,10 @@ import kr.esob.fdms.commonlogic.abstractclass.AbstractDao;
 import kr.esob.fdms.controller.inside.cr.CrInfoVO;
 import kr.esob.fdms.controller.inside.cr.CrParam;
 import kr.esob.fdms.controller.inside.cr.history.HistoryListVO;
+import lombok.extern.slf4j.Slf4j;
 import net.sf.json.JSONObject;
 
+@Slf4j
 @Repository
 public class InsaDao extends AbstractDao {
 	private String prefix = "sql.insa.";
@@ -51,11 +53,10 @@ public class InsaDao extends AbstractDao {
 	public void updateDocsUser(Map<String, Object> param) {
 		try {
 			int result = update(prefix + "updateDocsUser", param);
-			System.out.println("result : " + result);
+			
 		}
 		catch(Exception e) {
-			System.out.println(e.getMessage());
-			e.printStackTrace();
+			log.warn("Personnel data update failed. cause={}", e.getClass().getSimpleName());
 		}
 	}
 	public void deleteDocsUser() {

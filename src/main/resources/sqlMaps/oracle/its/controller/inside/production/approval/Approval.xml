@@ -813,12 +813,22 @@
 </select>
 
 <!-- 현재 결재 라인 조회 -->
-<select id="getCurrentApprovalInfo" resultType="kr.esob.fdms.controller.inside.distribution.commonrequest.CommonApprovalParam">
-	SELECT lineDtl.APPROVAL_GRADE_CD AS approvalGradeCd, lineDtl.APPROVAL_STATUS_CD AS approvalStatusCd, lineDtl.APPROVAL_LINE_ID AS approvalLineId, req.CURRENT_PROCESS_SEQ_NO AS currentProcessSeqNo, req.PROTECT_YN AS protectYn
-	FROM DOCS_APPROVAL_LINE_DETAIL lineDtl
-			 JOIN DOCS_APPROVAL_LINE line ON lineDtl.APPROVAL_LINE_ID = line.APPROVAL_LINE_ID
-			 JOIN DOCS_REQUEST req ON line.APPROVAL_LINE_ID = req.APPROVAL_LINE_ID AND req.REQUEST_NO = #{requestNo}
-	WHERE lineDtl.PROCESS_SEQ_NO = req.CURRENT_PROCESS_SEQ_NO
+<select id="getCurrentApprovalInfo" parameterType="kr.esob.fdms.controller.inside.production.approval.ApprovalPopupParam" resultType="kr.esob.fdms.controller.inside.production.approval.ApprovalPopupParam">
+	SELECT currDetail.APPROVAL_GRADE_CD AS approvalGradeCd,
+		   currDetail.APPROVAL_STATUS_CD AS approvalStatusCd,
+		   req.REQUEST_PURPOSE AS requestPurpose,
+		   req.OBJECT_TYPE AS objectType
+	FROM DOCS_REQUEST req
+			 JOIN DOCS_REQUEST_DETAIL currDetail
+				  ON currDetail.REQUEST_NO = req.REQUEST_NO
+					 AND currDetail.PROCESS_SEQ = req.CURRENT_PROCESS_SEQ_NO
+	WHERE req.REQUEST_NO = #{requestNo}
+	  AND req.STATUS_CD = 'REQUEST'
+	  AND req.REQUEST_TYPE = 'PRODUCT'
+	  AND currDetail.APPROVAL_STATUS_CD = 'APPROVAL'
+	  AND currDetail.ACTUAL_USER_CD = #{sessionUser.userCd}
+	  AND currDetail.ACTION_CD = 'REQUEST'
+	FOR UPDATE OF req, currDetail
 </select>
 
 <!-- 배포요청 승인/반려 내용 수정 [2019.10.24(최금영)] -->
@@ -830,6 +840,15 @@
 		, APPROVAL_DT = CURRENT_TIMESTAMP
 	</if>
 	WHERE REQUEST_NO = #{requestNo}
+	  AND STATUS_CD = 'REQUEST'
+	  AND REQUEST_TYPE = 'PRODUCT'
+	  AND EXISTS (
+		SELECT 1 FROM DOCS_REQUEST_DETAIL currDetail
+		WHERE currDetail.REQUEST_NO = DOCS_REQUEST.REQUEST_NO
+		  AND currDetail.PROCESS_SEQ = DOCS_REQUEST.CURRENT_PROCESS_SEQ_NO
+		  AND currDetail.ACTUAL_USER_CD = #{sessionUser.userCd}
+		  AND currDetail.ACTION_CD = 'REQUEST'
+	  )
 </update>
 
 <!-- 배포요청 승인/반려 상세 내용 수정 [2019.10.24(최금영)] -->
@@ -837,7 +856,14 @@
 	/* 배포요청 승인/반려 상세 내용 수정 */
 	UPDATE DOCS_REQUEST_DETAIL
 	SET REQUEST_DESC = #{rejectDesc}, ACTION_CD = #{actionCd}, ACTION_DT = CURRENT_TIMESTAMP
-	WHERE REQUEST_NO = #{requestNo} AND APPROVAL_STATUS_CD = #{approvalStatusCd} AND APPROVAL_GRADE_CD = #{approvalGradeCd}
+	WHERE REQUEST_NO = #{requestNo}
+	  AND APPROVAL_STATUS_CD = #{approvalStatusCd}
+	  AND APPROVAL_GRADE_CD = #{approvalGradeCd}
+	  AND PROCESS_SEQ = (
+		SELECT CURRENT_PROCESS_SEQ_NO FROM DOCS_REQUEST WHERE REQUEST_NO = #{requestNo}
+	  )
+	  AND ACTUAL_USER_CD = #{sessionUser.userCd}
+	  AND ACTION_CD = 'REQUEST'
 </update>
 
 <select id="selectDeployInfoList" resultType="kr.esob.fdms.controller.inside.production.common.DeployInfoVO">
@@ -855,26 +881,75 @@
 <select id="selectDeployInfoUserList" resultType="kr.esob.fdms.controller.inside.production.common.DeployInfoVO">
 	SELECT info.*, product.REV_NO
 	FROM DOCS_DEPLOY_INFO info
+	INNER JOIN DOCS_REQUEST req
+	  ON req.REQUEST_NO = info.REQUEST_NO
+	INNER JOIN DOCS_REQUEST_MAPPING mapping
+	  ON mapping.REQUEST_NO = info.REQUEST_NO
+	 AND mapping.OBJECT_ID = info.OBJECT_ID
+	INNER JOIN DOCS_REQUEST_DEPLOY deploy
+	  ON deploy.REQUEST_NO = info.REQUEST_NO
+	 AND deploy.DEPLOY_USER_CD = info.DEPLOY_USER_CD
+	INNER JOIN DOCS_REQUEST_DETAIL currDetail
+	  ON currDetail.REQUEST_NO = req.REQUEST_NO
+	 AND currDetail.PROCESS_SEQ = req.CURRENT_PROCESS_SEQ_NO
 	<if test="'DOC'.equals(objectType)">
 		INNER JOIN DOCS_PRODUCT_DOCUMENT product ON info.OBJECT_ID = product.OBJECT_ID
 	</if>
 	<if test="'SW'.equals(objectType)">
 		INNER JOIN DOCS_PRODUCT_SW product ON info.OBJECT_ID = product.OBJECT_ID
 	</if>
-	WHERE REQUEST_NO = #{requestNo} AND OBJECT_NO = #{objectNo} AND DEPLOY_USER_CD = #{deployUserCd}
+	WHERE req.REQUEST_NO = #{requestNo}
+	  AND req.REQUEST_TYPE = 'PRODUCT'
+	  AND req.STATUS_CD = 'APPROVAL'
+	  AND deploy.DEPLOY_USER_CD = #{sessionUser.userCd}
+	  AND (deploy.ACCEPT_YN = 'N' OR deploy.ACCEPT_YN IS NULL)
+	  AND info.DEPLOY_USER_CD = #{sessionUser.userCd}
+	  AND (info.DEPLOY_ACCEPT_YN = 'N' OR info.DEPLOY_ACCEPT_YN IS NULL)
+	  AND currDetail.APPROVAL_STATUS_CD = 'APPROVAL'
+	  AND currDetail.ACTION_CD = 'APPROVAL'
+	ORDER BY info.OBJECT_ID, info.DEPLOY_DEPT_CD, info.OBJECT_NO
+	FOR UPDATE OF info
 </select>
 
 <select id="selectProductionStatus" resultType="kr.esob.fdms.controller.inside.production.common.ProductStatusVO">
-	SELECT *
-	FROM DOCS_PRODUCT_STATUS
-	WHERE OBJECT_NO = #{objectNo} AND DEPT_CD = #{deployDeptCd} AND USER_CD = #{deployUserCd}
-		LIMIT 1
+	SELECT status.*
+	FROM DOCS_PRODUCT_STATUS status
+	WHERE status.OBJECT_NO = #{objectNo}
+	  AND status.DEPT_CD = #{deployDeptCd}
+	  AND status.USER_CD = #{sessionUser.userCd}
+	FOR UPDATE OF status
 </select>
 
 <update id="updateProductionStatus">
 	UPDATE DOCS_PRODUCT_STATUS
 	SET CURRENT_COUNT = #{currentCount}, UPDATE_DT = CURRENT_TIMESTAMP, LAST_REQUEST_NO = #{lastRequestNo}, OBJECT_TYPE = #{objectType}, LAST_DEPLOY_REV_NO = #{lastDeployRevNo}
-	WHERE OBJECT_NO = #{objectNo} AND DEPT_CD = #{deptCd} AND USER_CD = #{userCd}
+	WHERE OBJECT_NO = #{objectNo}
+	  AND DEPT_CD = #{deptCd}
+	  AND USER_CD = #{sessionUser.userCd}
+	  AND EXISTS (
+		  SELECT 1
+		  FROM DOCS_DEPLOY_INFO info
+		  JOIN DOCS_REQUEST req
+		    ON req.REQUEST_NO = info.REQUEST_NO
+		  JOIN DOCS_REQUEST_DEPLOY deploy
+		    ON deploy.REQUEST_NO = req.REQUEST_NO
+		   AND deploy.DEPLOY_USER_CD = info.DEPLOY_USER_CD
+		  JOIN DOCS_REQUEST_DETAIL currDetail
+		    ON currDetail.REQUEST_NO = req.REQUEST_NO
+		   AND currDetail.PROCESS_SEQ = req.CURRENT_PROCESS_SEQ_NO
+		  WHERE req.REQUEST_NO = #{requestNo}
+		    AND req.REQUEST_TYPE = 'PRODUCT'
+		    AND req.STATUS_CD = 'APPROVAL'
+		    AND info.OBJECT_ID = #{objectId}
+		    AND info.OBJECT_NO = #{objectNo}
+		    AND info.DEPLOY_DEPT_CD = #{deptCd}
+		    AND info.DEPLOY_USER_CD = #{sessionUser.userCd}
+		    AND (info.DEPLOY_ACCEPT_YN = 'N' OR info.DEPLOY_ACCEPT_YN IS NULL)
+		    AND deploy.DEPLOY_USER_CD = #{sessionUser.userCd}
+		    AND (deploy.ACCEPT_YN = 'N' OR deploy.ACCEPT_YN IS NULL)
+		    AND currDetail.APPROVAL_STATUS_CD = 'APPROVAL'
+		    AND currDetail.ACTION_CD = 'APPROVAL'
+	  )
 </update>
 
 <insert id="insertProductionStatus">
@@ -891,19 +966,47 @@
 		USER_CD,
 		LAST_DEPLOY_REV_NO
 	)
-	VALUES
-		(
-			#{objectNo},
-			#{deptCd},
-			#{currentCount},
-			CURRENT_TIMESTAMP,
-			CURRENT_TIMESTAMP,
-			#{lastRequestNo},
-			#{objectType},
-			'N',
-			#{userCd},
-			#{lastDeployRevNo}
-		)
+	SELECT #{objectNo},
+		   #{deptCd},
+		   #{currentCount},
+		   CURRENT_TIMESTAMP,
+		   CURRENT_TIMESTAMP,
+		   #{lastRequestNo},
+		   #{objectType},
+		   'N',
+		   #{sessionUser.userCd},
+		   #{lastDeployRevNo}
+	WHERE EXISTS (
+		SELECT 1
+		FROM DOCS_DEPLOY_INFO info
+		JOIN DOCS_REQUEST req
+		  ON req.REQUEST_NO = info.REQUEST_NO
+		JOIN DOCS_REQUEST_DEPLOY deploy
+		  ON deploy.REQUEST_NO = req.REQUEST_NO
+		 AND deploy.DEPLOY_USER_CD = info.DEPLOY_USER_CD
+		JOIN DOCS_REQUEST_DETAIL currDetail
+		  ON currDetail.REQUEST_NO = req.REQUEST_NO
+		 AND currDetail.PROCESS_SEQ = req.CURRENT_PROCESS_SEQ_NO
+		WHERE req.REQUEST_NO = #{requestNo}
+		  AND req.REQUEST_TYPE = 'PRODUCT'
+		  AND req.STATUS_CD = 'APPROVAL'
+		  AND info.OBJECT_ID = #{objectId}
+		  AND info.OBJECT_NO = #{objectNo}
+		  AND info.DEPLOY_DEPT_CD = #{deptCd}
+		  AND info.DEPLOY_USER_CD = #{sessionUser.userCd}
+		  AND (info.DEPLOY_ACCEPT_YN = 'N' OR info.DEPLOY_ACCEPT_YN IS NULL)
+		  AND deploy.DEPLOY_USER_CD = #{sessionUser.userCd}
+		  AND (deploy.ACCEPT_YN = 'N' OR deploy.ACCEPT_YN IS NULL)
+		  AND currDetail.APPROVAL_STATUS_CD = 'APPROVAL'
+		  AND currDetail.ACTION_CD = 'APPROVAL'
+	)
+	  AND NOT EXISTS (
+		  SELECT 1
+		  FROM DOCS_PRODUCT_STATUS status
+		  WHERE status.OBJECT_NO = #{objectNo}
+		    AND status.DEPT_CD = #{deptCd}
+		    AND status.USER_CD = #{sessionUser.userCd}
+	  )
 </insert>
 
 <!-- 출력 승인 상세정보 조회 [2019.11.11(최금영)] -->
@@ -989,12 +1092,44 @@
 	UPDATE DOCS_DEPLOY_INFO
 	SET DEPLOY_ACCEPT_YN = 'Y'
 	WHERE REQUEST_NO = #{requestNo}
+	  AND EXISTS (
+		SELECT 1
+		FROM DOCS_REQUEST req
+				 JOIN DOCS_REQUEST_DETAIL currDetail
+					  ON currDetail.REQUEST_NO = req.REQUEST_NO
+						 AND currDetail.PROCESS_SEQ = req.CURRENT_PROCESS_SEQ_NO
+		WHERE req.REQUEST_NO = #{requestNo}
+		  AND req.STATUS_CD = 'REQUEST'
+		  AND currDetail.ACTUAL_USER_CD = #{sessionUser.userCd}
+		  AND currDetail.ACTION_CD = 'REQUEST'
+	  )
 </update>
 
 <update id="updateDeployInfo">
-	UPDATE DOCS_DEPLOY_INFO
+	UPDATE DOCS_DEPLOY_INFO info
 	SET DEPLOY_ACCEPT_YN = 'Y'
-	WHERE OBJECT_NO = #{objectNo} AND DEPLOY_DEPT_CD = #{deployDeptCd} AND DEPLOY_USER_CD = #{deployUserCd}
+	WHERE info.REQUEST_NO = #{requestNo}
+	  AND info.OBJECT_ID = #{objectId}
+	  AND info.OBJECT_NO = #{objectNo}
+	  AND info.DEPLOY_DEPT_CD = #{deployDeptCd}
+	  AND info.DEPLOY_USER_CD = #{sessionUser.userCd}
+	  AND (info.DEPLOY_ACCEPT_YN = 'N' OR info.DEPLOY_ACCEPT_YN IS NULL)
+	  AND EXISTS (
+		  SELECT 1
+		  FROM DOCS_REQUEST req
+		  JOIN DOCS_REQUEST_DEPLOY deploy
+		    ON deploy.REQUEST_NO = req.REQUEST_NO
+		  JOIN DOCS_REQUEST_DETAIL currDetail
+		    ON currDetail.REQUEST_NO = req.REQUEST_NO
+		   AND currDetail.PROCESS_SEQ = req.CURRENT_PROCESS_SEQ_NO
+		  WHERE req.REQUEST_NO = info.REQUEST_NO
+		    AND req.REQUEST_TYPE = 'PRODUCT'
+		    AND req.STATUS_CD = 'APPROVAL'
+		    AND deploy.DEPLOY_USER_CD = #{sessionUser.userCd}
+		    AND (deploy.ACCEPT_YN = 'N' OR deploy.ACCEPT_YN IS NULL)
+		    AND currDetail.APPROVAL_STATUS_CD = 'APPROVAL'
+		    AND currDetail.ACTION_CD = 'APPROVAL'
+	  )
 </update>
 
 </mapper>

@@ -399,10 +399,6 @@ function searchAll(){
 	openDialogPopup("/inside/distribution/commonRequest/searchAllPopup", {type:'DRAWING'}, "searchAllPopup", 's', 600);
 }
 
-function view3d(){
-	window.open("/inside/distribution/drawingRequest/view3DFile", "", 'width="100%", height="100%", resizable = yes');
-}
-
 function revisionUpdate(){
 	revisionUpdateInsideUser('DRAWING', 'gridDrawingRequestList');
 }

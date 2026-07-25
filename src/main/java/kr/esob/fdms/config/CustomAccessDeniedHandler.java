@@ -20,8 +20,6 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
 	@Override
 	public void handle(HttpServletRequest request, HttpServletResponse response,
 			AccessDeniedException accessDeniedException) throws IOException, ServletException {
-		System.out.println("accessDenied");
-		System.out.println(request.getHeader("x-requested-with"));
 		if((request.getHeader("x-requested-with") != null) && request.getHeader("x-requested-with").equals("XMLHttpRequest")) {
 			response.setStatus(HttpServletResponse.SC_FORBIDDEN);
 		}else {

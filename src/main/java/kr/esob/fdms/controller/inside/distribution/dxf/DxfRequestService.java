@@ -13,6 +13,7 @@ import kr.esob.fdms.controller.inside.distribution.approvaldetail.DistributionAp
 import kr.esob.fdms.controller.login.UserVO;
 import kr.esob.fdms.controller.outside.dxf.request.DxfInfoVO;
 import kr.esob.fdms.util.RandomStringGenerator;
+import kr.esob.fdms.util.StoragePathUtils;
 import kr.esob.fdms.util.StringUtil;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.core.io.ClassPathResource;
@@ -117,7 +118,9 @@ public class DxfRequestService implements CommonService {
 		reviewerUser = trimCsv(reviewerUser);
 
 		String fileNo = "1";
-		String filePathNm = SystemConfig.getSystemConfigValue("DXF_PATH") + "\\" + objectId + "." + FilenameUtils.getExtension(request.getParameter("orgFileNm"));
+		String filePathNm = StoragePathUtils.resolve(
+				SystemConfig.getSystemConfigValue("DXF_PATH"),
+				objectId + "." + FilenameUtils.getExtension(request.getParameter("orgFileNm"))).toString();
 
 		String issueDt = request.getParameter("pmpcbIssueDt");
 		if (issueDt == null || issueDt.trim().isEmpty()) {
@@ -185,22 +188,16 @@ public class DxfRequestService implements CommonService {
 			String registeredAt
 	) {
 		try {
-			System.out.println("[DXF_REGISTER_MAIL] targetUsersCsv=" + targetUsersCsv);
 			for (String token : splitCsv(targetUsersCsv)) {
-				System.out.println("[DXF_REGISTER_MAIL] token=" + token);
 				MailInfoVO mailInfoVo = mailService.selectReceiveUser(token);
 				if (mailInfoVo == null) {
-					System.out.println("[DXF_REGISTER_MAIL] selectReceiveUser is null. token=" + token);
 					continue;
 				}
-				System.out.println("[DXF_REGISTER_MAIL] toUserId=" + mailInfoVo.getToUserId() + ", toMail=" + mailInfoVo.getToMail());
 				mailInfoVo.setMailEnum(mailEnum);
 				mailInfoVo.setContent(buildRegistrationMailContent(mailInfoVo, "PMPCB", documentNo, documentName, registrant, registeredAt));
 				ResultVO mailResult = mailService.sendDocsMail(mailInfoVo);
-				System.out.println("[DXF_REGISTER_MAIL] sendDocsMail success=" + (mailResult != null && mailResult.isSuccess()));
 			}
 		} catch (Exception e) {
-			System.out.println("[DXF_REGISTER_MAIL] skip: " + e.getMessage());
 		}
 	}
 
@@ -255,7 +252,6 @@ public class DxfRequestService implements CommonService {
 		convertedUpdateParam.put("orgFileNm", toPdfFileName(safeString(param.getOrgFileNm()), safeString(param.getFileNm())));
 		convertedUpdateParam.put("fileSize", String.valueOf(convertedMain.length()));
 		int updated = dao.updateMainFileAfterCoverMerge(convertedUpdateParam);
-		System.out.println("[PMPCB_CONVERT] register main update rows=" + updated + ", filePath=" + inputPdfPath);
 	}
 
 	private void markMainFileProcessingFail(String objectId, String errorMessage, String logTag) {
@@ -265,9 +261,7 @@ public class DxfRequestService implements CommonService {
 			failParam.put("processingStatus", "FAIL");
 			failParam.put("errorMessage", safeString(errorMessage));
 			dao.updateMainFileProcessingFail(failParam);
-			System.out.println("[" + logTag + "] processing status updated to FAIL: " + errorMessage);
 		} catch (Exception e) {
-			System.out.println("[" + logTag + "] fail status update exception: " + e.getMessage());
 		}
 	}
 
@@ -293,7 +287,6 @@ public class DxfRequestService implements CommonService {
 			String objectId = safeString(param.getObjectId());
 			String inputPdfPath = ensureConvertedPdfForCover(sourceFilePath, objectId, "PMPCB_COVER");
 			if (inputPdfPath.isEmpty()) {
-				System.out.println("[PMPCB_COVER] skip: inputPdfPath is empty");
 				return;
 			}
 			if (!inputPdfPath.equals(sourceFilePath) && inputPdfPath.toLowerCase().endsWith(".pdf")) {
@@ -305,7 +298,6 @@ public class DxfRequestService implements CommonService {
 					convertedUpdateParam.put("orgFileNm", toPdfFileName(safeString(param.getOrgFileNm()), safeString(param.getFileNm())));
 					convertedUpdateParam.put("fileSize", String.valueOf(convertedMain.length()));
 					int updated = dao.updateMainFileAfterCoverMerge(convertedUpdateParam);
-					System.out.println("[PMPCB_COVER] pre-merge main update rows=" + updated + ", filePath=" + inputPdfPath);
 				}
 			}
 
@@ -363,14 +355,10 @@ public class DxfRequestService implements CommonService {
 			if (endpoint.isEmpty()) {
 				endpoint = "http://localhost:7442/cover_merge_pdf";
 			}
-			System.out.println("[PMPCB_COVER] endpoint=" + endpoint);
-			System.out.println("[PMPCB_COVER] templatePdfPath=" + templatePdfPath);
-			System.out.println("[PMPCB_COVER] inputPdfPath=" + inputPdfPath + ", outputFileName=" + outputFileName);
 
 			RestTemplate restTemplate = new RestTemplate();
 			ResponseEntity<String> response = restTemplate.postForEntity(endpoint, entity, String.class);
 			String responseBody = response.getBody();
-			System.out.println("[PMPCB_COVER] responseStatus=" + response.getStatusCodeValue() + ", body=" + responseBody);
 
 			if (responseBody != null && !responseBody.trim().isEmpty()) {
 				Map<String, Object> responseMap = new Gson().fromJson(responseBody, new TypeToken<Map<String, Object>>() {}.getType());
@@ -386,25 +374,20 @@ public class DxfRequestService implements CommonService {
 						updateParam.put("fileSize", String.valueOf(mergedFile.length()));
 						int updated = dao.updateMainFileAfterCoverMerge(updateParam);
 						copyMergedPdfToViewerCache(outputPdfPath, objectId, "PMPCB_COVER");
-						System.out.println("[PMPCB_COVER] post-merge main update rows=" + updated + ", filePath=" + inputPdfPath);
-						System.out.println("[PMPCB_COVER] overwrite source file with merged cover: " + inputPdfPath);
 					}
 				}
 			}
 		} catch (Exception e) {
-			System.out.println("[PMPCB_COVER] exception: " + e.getMessage());
-			e.printStackTrace();
 			try {
 				Map<String, Object> failParam = new HashMap<>();
 				failParam.put("objectId", safeString(param.getObjectId()));
-				String errorMessage = safeString(e.getMessage());
+				String errorMessage = "cover_merge_failed:" + e.getClass().getSimpleName();
 				if (errorMessage.length() > 1000) {
 					errorMessage = errorMessage.substring(0, 1000);
 				}
 				failParam.put("errorMessage", errorMessage);
 				dao.updateMainFileProcessingFail(failParam);
 			} catch (Exception ignore) {
-				System.out.println("[PMPCB_COVER] fail status update exception: " + ignore.getMessage());
 			}
 		}
 	}
@@ -431,7 +414,6 @@ public class DxfRequestService implements CommonService {
 			requestFactory.setReadTimeout(60000);
 			RestTemplate restTemplate = new RestTemplate(requestFactory);
 			ResponseEntity<String> response = restTemplate.postForEntity(endpoint, new HttpEntity<>(body, headers), String.class);
-			System.out.println("[" + logTag + "] convert status=" + response.getStatusCodeValue() + ", body=" + response.getBody());
 			if (!response.getStatusCode().is2xxSuccessful()) {
 				return "";
 			}
@@ -450,12 +432,10 @@ public class DxfRequestService implements CommonService {
 					}
 				}
 				if (latest != null) {
-					System.out.println("[" + logTag + "] convertedPdfPath=" + latest.getAbsolutePath());
 					return latest.getAbsolutePath();
 				}
 			}
 		} catch (Exception e) {
-			System.out.println("[" + logTag + "] convert exception: " + e.getMessage());
 		}
 		return "";
 	}
@@ -498,8 +478,10 @@ public class DxfRequestService implements CommonService {
 
 			String subObjectId = RandomStringGenerator.generateRandomString(32);
 			String extension = FilenameUtils.getExtension(originalName);
-			String targetPath = SystemConfig.getSystemConfigValue("DXF_PATH") + "\\" + subObjectId
-					+ (extension == null || extension.trim().isEmpty() ? "" : "." + extension);
+			String targetPath = StoragePathUtils.resolve(
+					SystemConfig.getSystemConfigValue("DXF_PATH"),
+					subObjectId + (extension == null || extension.trim().isEmpty()
+							? "" : "." + extension)).toString();
 			targetPath = StringUtil.replaceLfiPath(targetPath);
 
 			try {
@@ -698,7 +680,6 @@ public class DxfRequestService implements CommonService {
 		if (updated > 0) {
 			updateDistributionApprovalDetail(objectId, PMPCB_OBJECT_TYPE, userCd, userNm);
 			boolean detailFinalApprove = isDistributionApprovalDetailCompleted(objectId, PMPCB_OBJECT_TYPE);
-			System.out.println("[PMPCB_APPROVAL] objectId=" + objectId + ", stringFinal=" + isFinalApprove + ", detailFinal=" + detailFinalApprove);
 			if (isFinalApprove || detailFinalApprove) {
 				mergePmpcbCoverAfterApproval(objectId);
 			}
@@ -960,7 +941,6 @@ public class DxfRequestService implements CommonService {
 		try {
 			rows = dao.selectUserPositionByNames(param);
 		} catch (Exception e) {
-			System.out.println("[PMPCB_COVER] position lookup skipped: " + e.getMessage());
 			return new HashMap<>();
 		}
 		if (rows == null) {
@@ -1128,7 +1108,6 @@ public class DxfRequestService implements CommonService {
 		detail.put("userId", safeString(userCd));
 		detail.put("userNm", safeString(userNm));
 		int updated = approvalDetailDao.updateApprovalDetailApproved(detail);
-		System.out.println("[" + objectType + "_APPROVAL_DETAIL] approved rows=" + updated + ", objectId=" + objectId);
 	}
 
 	private boolean isDistributionApprovalDetailCompleted(String objectId, String objectType) {
@@ -1191,12 +1170,10 @@ public class DxfRequestService implements CommonService {
 		try {
 			String adapPdfPath = safeString(SystemConfig.getSystemConfigValue("ADAP_PDF_PATH"));
 			if (adapPdfPath.isEmpty()) {
-				System.out.println("[" + logTag + "] viewer cache skip: ADAP_PDF_PATH is empty");
 				return;
 			}
 			File source = new File(safeString(mergedPdfPath));
 			if (!source.isFile()) {
-				System.out.println("[" + logTag + "] viewer cache skip: merged file not found: " + mergedPdfPath);
 				return;
 			}
 			File targetDir = new File(adapPdfPath);
@@ -1205,9 +1182,7 @@ public class DxfRequestService implements CommonService {
 			}
 			File target = new File(targetDir, safeString(objectId) + ".pdf");
 			Files.copy(source.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
-			System.out.println("[" + logTag + "] viewer cache updated: " + target.getAbsolutePath());
 		} catch (Exception e) {
-			System.out.println("[" + logTag + "] viewer cache update failed: " + e.getMessage());
 		}
 	}
 

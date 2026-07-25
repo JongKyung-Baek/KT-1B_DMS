@@ -298,6 +298,7 @@
 		a.REQUEST_REASON AS requestReason,
 		a.REJECT_REASON AS rejectReason,
 		ROW_NUMBER() OVER (
+			ORDER BY a.INSERT_DT DESC, a.REQUEST_NO DESC
 		) AS PAGEINDEX
 		FROM DOCS_USER_REQUEST a
 		LEFT JOIN docs_user b ON a.insert_user_cd = b.user_cd
@@ -345,6 +346,7 @@
 		LEFT JOIN docs_user b ON a.insert_user_cd = b.user_cd
 	</if>
 	WHERE 1=1
+	AND a.APPROVAL_USER_CD = #{sessionUser.userCd}
 	<if test='approvalUserCd != null and !approvalUserCd.equals("")'>
 		AND a.APPROVAL_USER_CD = #{approvalUserCd}
 	</if>
@@ -358,7 +360,7 @@
 		AND a.STATUS_CD = #{statusCd}
 	</if>
 	<if test='requestStartDt != null and !requestStartDt.equals("")'>
-		AND a.INSERT_DT BETWEEN TO_DATE(#{requestStartDt}, 'YYYY-MM-DD') AND TO_DATE(#{requestEndDt}, 'YYYY-MM-DD') + 1
+		AND a.INSERT_DT BETWEEN TO_DATE(#{requestStartDt}, 'YYYY-MM-DD') AND TO_DATE(#{requestEndDt}, 'YYYY-MM-DD') + INTERVAL '1 day'
 	</if>
 </select>
 
@@ -373,15 +375,43 @@
 		a.REQUEST_REASON AS requestReason,
 		d.TEXT AS requestNm,
 		a.REQUEST_TYPE AS requestType,
+		a.STATUS_CD AS statusCd,
 		a.TARGET_USER_CD AS targetUserCd,
-		c.COMPANY_CD AS companyCd,
-		a.USER_PWD AS userPwd
+		a.COMPANY_CD AS companyCd
 	FROM docs_user_request a
 			 LEFT JOIN docs_company b ON a.company_cd = b.company_cd
 			 LEFT JOIN docs_user c ON a.insert_user_cd = c.user_cd
 			 LEFT JOIN DOCS_COMBO d ON a.REQUEST_TYPE = d.VALUE AND d.combo_cd = 'userRequestType'
 	WHERE a.request_no = #{requestNo}
+	  AND a.approval_user_cd = #{sessionUser.userCd}
 	ORDER BY a.REQUEST_NO DESC
+</select>
+
+<select id="selectApprovalTarget" resultType="kr.esob.fdms.controller.inside.organizationmanage.approval.ApprovalListParam">
+	SELECT
+		a.REQUEST_NO AS requestNo,
+		a.USER_NM AS userNm,
+		a.EMAIL AS email,
+		COALESCE(a.PROTECT_YN, 'N') AS protectYn,
+		COALESCE(a.CR_YN, 'N') AS crYn,
+		a.REQUEST_TYPE AS requestType,
+		a.TARGET_USER_CD AS targetUserCd,
+		a.COMPANY_CD AS companyCd
+	FROM DOCS_USER_REQUEST a
+	WHERE a.REQUEST_NO = #{requestNo}
+	  AND a.APPROVAL_USER_CD = #{sessionUser.userCd}
+	  AND a.STATUS_CD = 'REQUEST'
+	  AND (a.REQUEST_TYPE != 'I'
+	       OR a.USER_PWD ~ '^pbkdf2-sha256[$][1-9][0-9]{5}[$][A-Za-z0-9_-]{21}[AQgw][$][A-Za-z0-9_-]{42}[AEIMQUYcgkosw048]$'
+	       OR (#{rejectReason} IS NOT NULL AND BTRIM(#{rejectReason}) != ''))
+	  AND (a.REQUEST_TYPE = 'I'
+	       OR EXISTS (
+	           SELECT 1
+	           FROM DOCS_USER target_user
+	           WHERE target_user.USER_CD = a.TARGET_USER_CD
+	             AND target_user.COMPANY_CD = a.COMPANY_CD
+	       ))
+	FOR UPDATE
 </select>
 
 <update id="updateReqeust">
@@ -389,22 +419,23 @@
 	SET
 		STATUS_CD = #{statusCd},
 		REJECT_REASON = #{rejectReason},
-		APPROVAL_DT = SYSDATE,
-		APPROVAL_USER_CD = #{sessionUser.userCd}
+		APPROVAL_DT = CURRENT_TIMESTAMP,
+		APPROVAL_USER_CD = #{sessionUser.userCd},
+		USER_PWD = NULL
 	WHERE
 		REQUEST_NO = #{requestNo}
+		AND APPROVAL_USER_CD = #{sessionUser.userCd}
+		AND STATUS_CD = 'REQUEST'
 </update>
 
 <update id="updateUserInfo">
 	UPDATE DOCS_USER
 	SET
 	USER_NM = #{userNm},
-	<if test='userPwd != null and !userPwd.equals("")'>
-		USER_PWD = #{userPwd},
-	</if>
 	EMAIL = #{email}
 	WHERE
 	USER_CD = #{targetUserCd}
+	AND COMPANY_CD = #{companyCd}
 </update>
 
 <update id="deleteUserInfo">
@@ -415,6 +446,7 @@
 		LOCK_YN = 'Y'
 	WHERE
 		USER_CD = #{targetUserCd}
+		AND COMPANY_CD = #{companyCd}
 </update>
 
 <update id="updateUserProtectN">
@@ -436,6 +468,7 @@
 		USE_YN = 'Y'
 	  AND DEL_YN = 'N'
 	  AND USER_CD = #{targetUserCd}
+	  AND COMPANY_CD = #{companyCd}
 </update>
 
 <update id="updateUserCr">
@@ -448,8 +481,9 @@
 
 <insert id="insertUser">
 	<selectKey keyProperty="targetUserCd" resultType="String" order="BEFORE">
-		SELECT 'USER_' || LPAD(NVL(SUBSTR(MAX(user_cd), 6), 0) + 1, 10, 0) AS TARGET_USER_CD
-		FROM DOCS_USER
+		SELECT 'USER_' ||
+		       LPAD(NEXTVAL('public.docs_user_cd_sequence')::TEXT, 10, '0')
+		       AS TARGET_USER_CD
 	</selectKey>
 	INSERT INTO DOCS_USER
 	(
@@ -474,9 +508,21 @@
 	VALUES
 	(
 	#{targetUserCd},
-	(SELECT NVL(MAX(TO_NUMBER(USER_ID)), 0) + 1 FROM DOCS_USER WHERE AUTH_SITE = 'E' AND REGEXP_INSTR(USER_ID, '[^0-9]') = 0),
+	NEXTVAL('public.docs_external_user_id_sequence')::TEXT,
 	#{userNm},
-	#{userPwd},
+	(SELECT request_password.USER_PWD
+	 FROM DOCS_USER_REQUEST request_password
+	 CROSS JOIN LATERAL GENERATE_SERIES(
+	     1,
+	     CASE
+	         WHEN request_password.USER_PWD ~ '^pbkdf2-sha256[$][1-9][0-9]{5}[$][A-Za-z0-9_-]{21}[AQgw][$][A-Za-z0-9_-]{42}[AEIMQUYcgkosw048]$'
+	         THEN 1
+	         ELSE 2
+	     END
+	 ) password_format_guard
+	 WHERE request_password.REQUEST_NO = #{requestNo}
+	   AND request_password.STATUS_CD = 'REQUEST'
+	   AND request_password.APPROVAL_USER_CD = #{sessionUser.userCd}),
 	#{companyCd},
 	#{email},
 	'Y',
@@ -486,10 +532,10 @@
 	0,
 	'E',
 	#{sessionUser.userCd},
-	SYSDATE,
+	CURRENT_TIMESTAMP,
 	#{sessionUser.userCd},
-	SYSDATE,
-	SYSDATE
+	CURRENT_TIMESTAMP,
+	CURRENT_TIMESTAMP
 	)
 </insert>
 
@@ -501,6 +547,7 @@
 		b.COMPANY_NM AS comboTooltip
 	FROM docs_user_request a
 			 INNER JOIN DOCS_COMPANY b ON a.COMPANY_CD = b.COMPANY_CD AND USE_YN = 'Y'
+	WHERE a.APPROVAL_USER_CD = #{sessionUser.userCd}
 	GROUP BY a.COMPANY_CD, b.COMPANY_NM
 </select>
 
@@ -512,17 +559,28 @@
 		b.user_nm AS comboTooltip
 	FROM docs_user_request a
 			 INNER JOIN docs_user b ON a.approval_user_cd = b.user_cd
+	WHERE a.APPROVAL_USER_CD = #{sessionUser.userCd}
 	GROUP BY a.approval_user_cd, b.user_nm
 </select>
 
 <select id="venderUser" resultType="comboInfoVo">
 	SELECT
 		'venderUserCd' AS comboCd,
-		user_cd AS comboVal,
-		user_nm AS comboLabel,
-		user_nm AS comboTooltip
-	FROM docs_user
-	WHERE company_cd = #{companyCd}
+		vendor_user.user_cd AS comboVal,
+		vendor_user.user_nm AS comboLabel,
+		vendor_user.user_nm AS comboTooltip
+	FROM docs_user vendor_user
+	WHERE vendor_user.company_cd = #{companyCd}
+	  AND vendor_user.use_yn = 'Y'
+	  AND vendor_user.del_yn = 'N'
+	  AND EXISTS (
+	      SELECT 1
+	      FROM docs_user_request request_scope
+	      WHERE request_scope.company_cd = vendor_user.company_cd
+	        AND request_scope.insert_user_cd = vendor_user.user_cd
+	        AND request_scope.approval_user_cd = #{sessionUser.userCd}
+	  )
+	ORDER BY vendor_user.user_nm, vendor_user.user_cd
 </select>
 
 </mapper>

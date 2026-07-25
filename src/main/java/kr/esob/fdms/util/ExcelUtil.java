@@ -203,8 +203,8 @@ public class ExcelUtil {
 	}
 
 	public static String getMenuCode(int v) {
-		System.out.println(v);
-		System.out.println(String.format("%03d", v));
+		
+		
 		return "MENU_" + String.format("%03d", v);
 	}
 

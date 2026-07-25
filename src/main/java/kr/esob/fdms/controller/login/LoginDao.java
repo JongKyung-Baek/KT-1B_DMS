@@ -59,6 +59,13 @@ public class LoginDao extends AbstractDao {
 		update(prefix + "updateUnlock", userVo);
 	}
 
+	public int resetPassword(String userCd, String userPwd) {
+		Map<String, String> paramMap = new HashMap<String, String>();
+		paramMap.put("userCd", userCd);
+		paramMap.put("userPwd", userPwd);
+		return update(prefix + "resetPwd", paramMap);
+	}
+
 	public List<UserVO> selectList(UserChangePopupVO param){
 		return list(prefix + "selectList", param);
 	}

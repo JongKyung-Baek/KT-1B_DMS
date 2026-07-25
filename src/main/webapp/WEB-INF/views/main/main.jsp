@@ -962,11 +962,11 @@ window.location.replace("${pageContext.request.contextPath}/inside/distribution/
 <%--						<c:choose>--%>
 <%--							<c:when test="${'E' == sessionUser.authSite}">--%>
 <%--								<!-- <a href="/fileDownload?fileName=install/DaVuEDIActiveXT(NSU-8-99-5-0).exe">Viewer 수동설치</a> -->--%>
-<%--								<a href="/fileDownload?fileName=<%=URLEncoder.encode(Seed128Cipher.encrypt("install/DocsAutoSetUp_ExOut.exe", Constant.SEED_KEY.getBytes(), Constant.SEED_ENCODING)) %>">보안드라이브 수동설치</a>--%>
-<%--								<a href="/fileDownload?fileName=<%=URLEncoder.encode(Seed128Cipher.encrypt("install/ExtUpDown.exe", Constant.SEED_KEY.getBytes(), Constant.SEED_ENCODING)) %>">업다운로더 수동설치</a>--%>
+<%--								<a href="/fileDownload?fileName=<%=URLEncoder.encode(Seed128Cipher.encrypt("install/DocsAutoSetUp_ExOut.exe", Constant.legacyCryptoKeyBytes(), Constant.SEED_ENCODING)) %>">보안드라이브 수동설치</a>--%>
+<%--								<a href="/fileDownload?fileName=<%=URLEncoder.encode(Seed128Cipher.encrypt("install/ExtUpDown.exe", Constant.legacyCryptoKeyBytes(), Constant.SEED_ENCODING)) %>">업다운로더 수동설치</a>--%>
 <%--							</c:when>--%>
 <%--							<c:otherwise>--%>
-<%--								<a href="/fileDownload?fileName=<%=URLEncoder.encode(Seed128Cipher.encrypt("install/ExtUpDown.exe", Constant.SEED_KEY.getBytes(), Constant.SEED_ENCODING)) %>">업다운로더 수동설치</a>--%>
+<%--								<a href="/fileDownload?fileName=<%=URLEncoder.encode(Seed128Cipher.encrypt("install/ExtUpDown.exe", Constant.legacyCryptoKeyBytes(), Constant.SEED_ENCODING)) %>">업다운로더 수동설치</a>--%>
 <%--							</c:otherwise>--%>
 <%--						</c:choose>--%>
 <%--					</div>--%>

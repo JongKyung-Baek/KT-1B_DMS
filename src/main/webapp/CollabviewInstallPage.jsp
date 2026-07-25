@@ -1,12 +1,9 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
-         pageEncoding="UTF-8" import="java.util.*" %>
-<%@page import="kr.esob.fdms.util.seed.seed.Seed128Cipher"%>
-<%@page import="java.net.URLEncoder"%>
-<%@page import="kr.esob.fdms.commonlogic.value.Constant"%>
+         pageEncoding="UTF-8" %>
 
 <%
 <%--  2023. 09. 05 14:57 기범 최신화 --%>
-  String downloadUrl = "/fileDownload?fileName=" + URLEncoder.encode(Seed128Cipher.encrypt("install/COLLABVIEW_COMMON.exe", Constant.SEED_KEY.getBytes(), Constant.SEED_ENCODING));
+  String downloadUrl = "/install/COLLABVIEW_COMMON.exe";
 %>
 
 <!DOCTYPE html>
@@ -129,7 +126,7 @@
           <a class="self">설치완료 후 새로고침(F5) 해주세요.</a>
         </div>
         <div class="link-container">
-          <a class="install-link" href="/fileDownload?fileName=<%=URLEncoder.encode(Seed128Cipher.encrypt("install/COLLABVIEW_COMMON.exe", Constant.SEED_KEY.getBytes(), Constant.SEED_ENCODING)) %>">수동설치</a>
+          <a class="install-link" href="/install/COLLABVIEW_COMMON.exe">수동설치</a>
         </div>
       </div>
     </div>

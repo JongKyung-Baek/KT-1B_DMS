@@ -26,7 +26,7 @@ public class DeptInfoService {
     public void moveData(){
         // 1. distribution_dept 테이블에서 가장 높은 인덱스를 가진 데이터의 인덱스 +1
         int departmentInfoIdx = getIndex();
-        log.info("index: {}", departmentInfoIdx);
+        log.debug("Distribution department synchronization started");
 
 
         // 2. DepartmentInfo 테이블 데이터 조회(추가된 데이터가 없다면 스케줄러 종료)
@@ -52,10 +52,7 @@ public class DeptInfoService {
         boolean tableNameResult = getTableName(copiedDeptList);
         if(!tableNameResult) log.error("getTableName() returned false");
 
-        log.info("----------copiedDeptList----------");
-        for(DistributionDeptVO deptVO : copiedDeptList){
-            log.info(deptVO.toString());
-        }
+        log.debug("Distribution department rows loaded. count={}", copiedDeptList.size());
 
         // 6. 도면, CP, DXF 테이블에 변경사항 적용
         List<String> updateFailedDrawingList = targetDbWriter.updateDistributionDept(copiedDeptList);
@@ -105,7 +102,7 @@ public class DeptInfoService {
                         tableNames.add("docs_sw");
                         tableNames.add("docs_sw_file");
                     } else {
-                        log.error("Unknown distributionType for drawingNo {}: {}", deptVO.getDrawingNo(), distributionType);
+                        log.error("Unknown distribution type while synchronizing department data");
 //                        return false;
                     }
 

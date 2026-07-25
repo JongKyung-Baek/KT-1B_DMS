@@ -9,12 +9,6 @@
 var emptyArray2 = [];
 var bUploadCheck = false;
 
-$(document).ready(function() {
-	$("#uploadActiveX")[0].InitializationUpload();
-//	console.log("----------")
-});
-
-
 var curSendIndex = 0
 
 function isValidationX(){
@@ -189,7 +183,6 @@ function fnUploadSuccess(){
 <%--                <PARAM NAME="uploadServerPort"     VALUE="${updownServerPort }">--%>
 <%--                &lt;%&ndash; <PARAM NAME="uploadServerPath"     VALUE="${updownPath }"> &ndash;%&gt;--%>
 <%--                <PARAM NAME="uploadServerPath"     VALUE="D:/FDMS/uploadFile">--%>
-<%--                <PARAM NAME="uploadSecretKey"      VALUE="${updownSecretKey }">--%>
 <%--                <PARAM NAME="uploadLangCode"       VALUE="${updownLangCode }">--%>
 <%--                <PARAM NAME="uploadIsSecurity"     VALUE="${updownIsSecurity }">--%>
 <%--                <PARAM NAME="userUploadSize"       VALUE="2050846883.84">--%>

@@ -22,7 +22,7 @@
 </c:if>
 	<label for="${id}"><spring:message code="${label }"/></label>
 <div>
-<textarea id="${id}" name="${name}" rows="${rows }" >${value }</textarea>
+<textarea id="${id}" name="${name}" rows="${rows }" >${fn:escapeXml(value) }</textarea>
 </div>
 <c:if test="${'Y' == disabled}">
 	<script>

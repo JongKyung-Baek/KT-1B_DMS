@@ -93,7 +93,7 @@ $(document).ready(function(){
 			</li>
 			<li>
 				<label for=""><spring:message code="form.uploadFileList" /><span class="listCount" id="listCount">${fn:length(formData.fileList)}</span></label>
-				<div class="fileDownload"><c:forEach items="${formData.fileList }" var="fileInfo"><button type="button" class="ui-button ui-corner-all fileDownBtn" onclick='fileDownload( ${fileInfo.cnSerial}, ${fileInfo.fileNo }, "${fileInfo.orgFileNm }")' ><span>${fileInfo.orgFileNm }</span></button></c:forEach></div>
+				<div class="fileDownload"><c:forEach items="${formData.fileList }" var="fileInfo"><button type="button" class="ui-button ui-corner-all fileDownBtn" onclick='fileDownload("${fileInfo.crNo}", ${fileInfo.fileNo})' ><span><c:out value="${fileInfo.orgFileNm}"/></span></button></c:forEach></div>
 			</li>
 		</ul>
 		<input type="hidden" id="sendEmailYn" name="sendEmailYn" value="Y"/>

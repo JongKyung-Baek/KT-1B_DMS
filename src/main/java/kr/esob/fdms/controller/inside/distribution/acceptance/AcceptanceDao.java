@@ -37,20 +37,27 @@ public class AcceptanceDao extends AbstractDao {
 		return (AcceptanceVO) obj(prefix + "getDocRequestData", requestNo);
 	}
 
-	public void saveAccept(AcceptanceParam param) {
-		update(prefix + "updateRequest", param);
-		update(prefix + "updateRequestAcceptDetail", param);
+	public AcceptanceParam selectAcceptanceTargetForUpdate(AcceptanceParam param) {
+		return (AcceptanceParam) obj(prefix + "selectAcceptanceTargetForUpdate", param);
 	}
 
-	public void saveDefRequestDetail(AcceptanceParam param) {
-		update(prefix + "updateDefRequestDetail", param);
+	public int updateRequest(AcceptanceParam param) {
+		return update(prefix + "updateRequest", param);
 	}
 
-	public void updateTlRequestDetail(AcceptanceParam param) {
-		update(prefix + "updateTlRequestDetail", param);
+	public int updateRequestAcceptDetail(AcceptanceParam param) {
+		return update(prefix + "updateRequestAcceptDetail", param);
 	}
 
-	public void updateRequestFile(AcceptanceParam param) {
-		update(prefix + "updateRequestFile", param);
+	public int saveDefRequestDetail(AcceptanceParam param) {
+		return update(prefix + "updateDefRequestDetail", param);
+	}
+
+	public int updateTlRequestDetail(AcceptanceParam param) {
+		return update(prefix + "updateTlRequestDetail", param);
+	}
+
+	public int updateRequestFile(AcceptanceParam param) {
+		return update(prefix + "updateRequestFile", param);
 	}
 }

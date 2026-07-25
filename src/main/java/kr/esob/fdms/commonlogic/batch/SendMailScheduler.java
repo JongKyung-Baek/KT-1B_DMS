@@ -15,7 +15,7 @@ import javax.inject.Inject;
 @ConditionalOnProperty(
 		name = "send.mail.scheduler.enabled",
 		havingValue = "true",
-		matchIfMissing = true
+		matchIfMissing = false
 )
 public class SendMailScheduler {
 	@Inject

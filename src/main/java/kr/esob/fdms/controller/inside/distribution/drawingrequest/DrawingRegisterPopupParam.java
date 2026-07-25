@@ -39,7 +39,7 @@ public class DrawingRegisterPopupParam extends CommonParam {
     private String orgFileNm; // 원본 파일 이름
     private String protectYn;
     private String insertDt;
-    private String drawingType; // 도면 종류( 2D,3D )
+    private String drawingType; // 도면 종류(2D)
     private String revNo;
     private String distributionPoint;   // 배포처
     private String modelCode;   // 기종

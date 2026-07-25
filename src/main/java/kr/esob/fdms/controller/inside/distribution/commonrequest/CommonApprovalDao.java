@@ -17,16 +17,16 @@ public class CommonApprovalDao extends AbstractDao {
 		return (String) obj(prefix + "getDistributionApprovalRequestDesc", param);
 	}
 
-	public void updateRequestDefInfo(CommonApprovalParam param) {
-		update(prefix + "updateRequestDefInfo", param);
+	public int updateRequestDefInfo(CommonApprovalParam param) {
+		return update(prefix + "updateRequestDefInfo", param);
 	}
 
-	public void updateRequestInfo(CommonApprovalParam param) {
-		update(prefix + "updateRequestInfo", param);
+	public int updateRequestInfo(CommonApprovalParam param) {
+		return update(prefix + "updateRequestInfo", param);
 	}
 
-	public void updateRequestDetail(CommonApprovalParam param) {
-		update(prefix + "updateRequestDetail", param);
+	public int updateRequestDetail(CommonApprovalParam param) {
+		return update(prefix + "updateRequestDetail", param);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -47,8 +47,8 @@ public class CommonApprovalDao extends AbstractDao {
 		return list(prefix + "selectItemList", param);
 	}
 
-	public void insertApprovalFile(CommonApprovalParam param) {
-		insert(prefix + "insertApprovalFile", param);
+	public int insertApprovalFile(CommonApprovalParam param) {
+		return (Integer) insert(prefix + "insertApprovalFile", param);
 	}
 
 	public List<CommonApprovalPopupListVO> selectDestroyItemList(CommonApprovalParam param) {
@@ -84,8 +84,12 @@ public class CommonApprovalDao extends AbstractDao {
 	 * 방산기술 결재자 이관
 	 * @param param
 	 */
-	public void updatePassTarget(PassParamVO param) {
-		update(prefix + "updatePassTarget", param);
+	public String selectPassTargetForUpdate(PassParamVO param) {
+		return (String) obj(prefix + "selectPassTargetForUpdate", param);
+	}
+
+	public int updatePassTarget(PassParamVO param) {
+		return update(prefix + "updatePassTarget", param);
 	}
 
 	public CommonApprovalParam selectRequestInfo(CommonApprovalParam param) {

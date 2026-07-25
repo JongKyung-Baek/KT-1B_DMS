@@ -7,9 +7,14 @@ import lombok.Setter;
 @Setter
 public class DestroyFileVO {
 
+	private String destroyRequestNo;
 	private String destroyNo;
 	private int destroyFileSeq;
 	private String fileName;
 	private String filePath;
+	private String requestNo;
+	private String objectType;
+	private String objectId;
+	private String fileNo;
 
 }

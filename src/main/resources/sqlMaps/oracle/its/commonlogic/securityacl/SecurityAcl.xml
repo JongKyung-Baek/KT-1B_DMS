@@ -1,0 +1,813 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="sql.SecurityAcl">
+
+    <select id="selectGrades" resultType="kr.esob.fdms.commonlogic.securityacl.SecurityGradeVO">
+        SELECT grade_cd, grade_nm, grade_level, description, default_yn, use_yn
+          FROM docs_security_grade
+         ORDER BY grade_level, grade_cd
+    </select>
+
+    <select id="countGrade" parameterType="string" resultType="int">
+        SELECT COUNT(*)
+          FROM docs_security_grade
+         WHERE grade_cd = #{value}
+           AND use_yn = 'Y'
+    </select>
+
+    <update id="clearDefaultGrade">
+        UPDATE docs_security_grade
+           SET default_yn = 'N',
+               update_user_cd = #{value},
+               update_dt = CURRENT_TIMESTAMP
+         WHERE default_yn = 'Y'
+    </update>
+
+    <insert id="upsertGrade">
+        INSERT INTO docs_security_grade (
+            grade_cd, grade_nm, grade_level, description, default_yn, use_yn,
+            insert_user_cd, update_user_cd, update_dt
+        ) VALUES (
+            #{grade.gradeCd}, #{grade.gradeNm}, #{grade.gradeLevel}, #{grade.description},
+            #{grade.defaultYn}, #{grade.useYn}, #{actorUserCd}, #{actorUserCd}, CURRENT_TIMESTAMP
+        )
+        ON CONFLICT (grade_cd) DO UPDATE SET
+            grade_nm = EXCLUDED.grade_nm,
+            grade_level = EXCLUDED.grade_level,
+            description = EXCLUDED.description,
+            default_yn = EXCLUDED.default_yn,
+            use_yn = EXCLUDED.use_yn,
+            update_user_cd = EXCLUDED.update_user_cd,
+            update_dt = CURRENT_TIMESTAMP
+    </insert>
+
+    <select id="selectUsers" resultType="kr.esob.fdms.commonlogic.securityacl.UserClearanceVO">
+        SELECT u.user_cd,
+               u.user_id,
+               u.user_nm,
+               u.dept_cd,
+               d.dept_nm,
+               c.company_nm,
+               uc.grade_cd,
+               g.grade_nm,
+               g.grade_level,
+               TO_CHAR(uc.valid_from AT TIME ZONE 'Asia/Seoul', 'YYYY-MM-DD') AS valid_from,
+               TO_CHAR(uc.valid_to AT TIME ZONE 'Asia/Seoul', 'YYYY-MM-DD') AS valid_to,
+               uc.grant_reason,
+               COALESCE(MAX(CASE WHEN p.action_cd = 'LIST' THEN p.allow_yn END), 'N') AS list_yn,
+               COALESCE(MAX(CASE WHEN p.action_cd = 'DETAIL' THEN p.allow_yn END), 'N') AS detail_yn,
+               COALESCE(MAX(CASE WHEN p.action_cd = 'VIEW' THEN p.allow_yn END), 'N') AS view_yn,
+               COALESCE(MAX(CASE WHEN p.action_cd = 'DOWNLOAD_ORIGINAL' THEN p.allow_yn END), 'N') AS download_original_yn,
+               COALESCE(MAX(CASE WHEN p.action_cd = 'PRINT' THEN p.allow_yn END), 'N') AS print_yn,
+               COALESCE(MAX(CASE WHEN p.action_cd = 'MANAGE_ACL' THEN p.allow_yn END), 'N') AS manage_acl_yn
+          FROM docs_user u
+          LEFT JOIN docs_dept d ON d.dept_cd = u.dept_cd
+          LEFT JOIN docs_company c ON c.company_cd = u.company_cd
+          LEFT JOIN docs_user_security_clearance uc ON uc.user_cd = u.user_cd
+          LEFT JOIN docs_security_grade g ON g.grade_cd = uc.grade_cd
+          LEFT JOIN docs_user_action_permission p ON p.user_cd = u.user_cd
+         WHERE u.use_yn = 'Y'
+           AND u.del_yn = 'N'
+        <if test="keyword != null and keyword != ''">
+           AND (u.user_cd ILIKE '%' || #{keyword} || '%'
+                OR u.user_id ILIKE '%' || #{keyword} || '%'
+                OR u.user_nm ILIKE '%' || #{keyword} || '%'
+                OR COALESCE(d.dept_nm, '') ILIKE '%' || #{keyword} || '%')
+        </if>
+         GROUP BY u.user_cd, u.user_id, u.user_nm, u.dept_cd, d.dept_nm, c.company_nm,
+                  uc.grade_cd, g.grade_nm, g.grade_level, uc.valid_from, uc.valid_to, uc.grant_reason
+         ORDER BY u.user_nm, u.user_id
+         LIMIT 500
+    </select>
+
+    <insert id="upsertClearance">
+        INSERT INTO docs_user_security_clearance (
+            user_cd, grade_cd, valid_from, valid_to, grant_reason,
+            granted_by, updated_by, updated_at
+        ) VALUES (
+            #{clearance.userCd}, #{clearance.gradeCd},
+            COALESCE(
+                CAST(NULLIF(#{clearance.validFrom}, '') AS date)::timestamp AT TIME ZONE 'Asia/Seoul',
+                CURRENT_TIMESTAMP
+            ),
+            CASE
+                WHEN NULLIF(#{clearance.validTo}, '') IS NULL THEN NULL
+                ELSE (
+                    CAST(#{clearance.validTo} AS date)::timestamp
+                    + INTERVAL '1 day' - INTERVAL '1 microsecond'
+                ) AT TIME ZONE 'Asia/Seoul'
+            END,
+            #{clearance.grantReason}, #{actorUserCd}, #{actorUserCd}, CURRENT_TIMESTAMP
+        )
+        ON CONFLICT (user_cd) DO UPDATE SET
+            grade_cd = EXCLUDED.grade_cd,
+            valid_from = EXCLUDED.valid_from,
+            valid_to = EXCLUDED.valid_to,
+            grant_reason = EXCLUDED.grant_reason,
+            updated_by = EXCLUDED.updated_by,
+            updated_at = CURRENT_TIMESTAMP
+    </insert>
+
+    <insert id="upsertActionPermission">
+        INSERT INTO docs_user_action_permission (
+            user_cd, action_cd, allow_yn, granted_by, updated_by, updated_at
+        ) VALUES (
+            #{userCd}, #{actionCd}, #{allowYn}, #{actorUserCd}, #{actorUserCd}, CURRENT_TIMESTAMP
+        )
+        ON CONFLICT (user_cd, action_cd) DO UPDATE SET
+            allow_yn = EXCLUDED.allow_yn,
+            updated_by = EXCLUDED.updated_by,
+            updated_at = CURRENT_TIMESTAMP
+    </insert>
+
+    <sql id="fileInventory">
+        <choose>
+            <when test="objectType == 'DOCUMENT'">
+                SELECT 'DOCUMENT'::varchar AS object_type, f.object_id, COALESCE(f.file_no, '*') AS file_no,
+                       COALESCE(d.document_no, f.object_id) AS object_no,
+                       COALESCE(d.document_nm, '') AS object_nm, COALESCE(f.org_file_nm, f.file_nm) AS org_file_nm
+                  FROM docs_document_file f
+                  LEFT JOIN LATERAL (
+                      SELECT document_no, document_nm FROM docs_document d
+                       WHERE d.object_id = f.object_id ORDER BY d.interface_dt DESC NULLS LAST LIMIT 1
+                  ) d ON TRUE
+            </when>
+            <when test="objectType == 'DRAWING'">
+                SELECT 'DRAWING'::varchar AS object_type, d.object_id, COALESCE(d.file_no, '*') AS file_no,
+                       COALESCE(d.drawing_no, d.object_id) AS object_no,
+                       COALESCE(d.drawing_nm, '') AS object_nm, COALESCE(d.org_file_nm, d.file_nm) AS org_file_nm
+                  FROM docs_drawing d
+            </when>
+            <when test="objectType == 'SW'">
+                SELECT 'SW'::varchar AS object_type, f.object_id, COALESCE(f.file_no, '*') AS file_no,
+                       COALESCE(s.sw_no, f.object_id) AS object_no,
+                       COALESCE(s.sw_nm, '') AS object_nm, COALESCE(f.org_file_nm, f.file_nm) AS org_file_nm
+                  FROM docs_sw_file f
+                  LEFT JOIN LATERAL (
+                      SELECT sw_no, sw_nm FROM docs_sw s
+                       WHERE s.object_id = f.object_id ORDER BY s.interface_dt DESC NULLS LAST LIMIT 1
+                  ) s ON TRUE
+            </when>
+            <when test="objectType == 'PRODUCT_DOCUMENT'">
+                SELECT 'PRODUCT_DOCUMENT'::varchar AS object_type, f.object_id, COALESCE(f.file_no, '*') AS file_no,
+                       COALESCE(d.document_no, f.object_id) AS object_no,
+                       COALESCE(d.document_nm, '') AS object_nm, COALESCE(f.org_file_nm, f.file_nm) AS org_file_nm
+                  FROM docs_product_document_file f
+                  LEFT JOIN LATERAL (
+                      SELECT document_no, document_nm FROM docs_product_document d
+                       WHERE d.object_id = f.object_id ORDER BY d.interface_dt DESC NULLS LAST LIMIT 1
+                  ) d ON TRUE
+            </when>
+            <when test="objectType == 'PRODUCT_SW'">
+                SELECT 'PRODUCT_SW'::varchar AS object_type, f.object_id, COALESCE(f.file_no::varchar, '*') AS file_no,
+                       COALESCE(s.sw_no, f.object_id) AS object_no,
+                       COALESCE(s.sw_nm, '') AS object_nm, COALESCE(f.org_file_nm, f.file_nm) AS org_file_nm
+                  FROM docs_product_sw_file f
+                  LEFT JOIN LATERAL (
+                      SELECT sw_no, sw_nm FROM docs_product_sw s
+                       WHERE s.object_id = f.object_id ORDER BY s.interface_dt DESC NULLS LAST LIMIT 1
+                  ) s ON TRUE
+            </when>
+            <when test="objectType == 'DXF'">
+                SELECT 'DXF'::varchar AS object_type, f.object_id, COALESCE(f.file_no, '*') AS file_no,
+                       COALESCE(d.document_no, f.object_id) AS object_no,
+                       COALESCE(d.document_nm, '') AS object_nm, COALESCE(f.org_file_nm, f.file_nm) AS org_file_nm
+                  FROM docs_dxf_document_file f
+                  LEFT JOIN LATERAL (
+                      SELECT document_no, document_nm FROM docs_dxf_document d
+                       WHERE d.object_id = f.object_id ORDER BY d.interface_dt DESC NULLS LAST LIMIT 1
+                   ) d ON TRUE
+            </when>
+            <when test="objectType == 'PEER_REVIEW'">
+                SELECT 'PEER_REVIEW'::varchar AS object_type, p.object_id, '1'::varchar AS file_no,
+                       COALESCE(p.peerreview_no, p.object_id) AS object_no,
+                       COALESCE(p.peerreview_nm, '') AS object_nm,
+                       COALESCE(NULLIF(p.org_file_nm, ''), p.file_nm) AS org_file_nm
+                  FROM docs_peerreview p
+                 WHERE COALESCE(p.deleted_yn, 'N') = 'N'
+            </when>
+            <when test="objectType == 'DOCUMENT_SUB'">
+                SELECT 'DOCUMENT_SUB'::varchar AS object_type, f.parent_object_id AS object_id,
+                       f.file_no::varchar AS file_no, f.parent_object_id AS object_no,
+                       ''::varchar AS object_nm, f.org_file_nm
+                  FROM docs_document_sub_file f WHERE COALESCE(f.use_yn, 'Y') = 'Y'
+            </when>
+            <when test="objectType == 'DRAWING_SUB'">
+                SELECT 'DRAWING_SUB'::varchar AS object_type, f.parent_object_id AS object_id,
+                       f.file_no::varchar AS file_no, f.parent_object_id AS object_no,
+                       ''::varchar AS object_nm, f.org_file_nm
+                  FROM docs_drawing_sub_file f WHERE COALESCE(f.use_yn, 'Y') = 'Y'
+            </when>
+            <when test="objectType == 'SW_SUB'">
+                SELECT 'SW_SUB'::varchar AS object_type, f.parent_object_id AS object_id,
+                       f.file_no::varchar AS file_no, f.parent_object_id AS object_no,
+                       ''::varchar AS object_nm, f.org_file_nm
+                  FROM docs_sw_sub_file f WHERE COALESCE(f.use_yn, 'Y') = 'Y'
+            </when>
+            <when test="objectType == 'PRODUCT_DOCUMENT_SUB'">
+                SELECT 'PRODUCT_DOCUMENT_SUB'::varchar AS object_type, f.parent_object_id AS object_id,
+                       f.file_no::varchar AS file_no, f.parent_object_id AS object_no,
+                       ''::varchar AS object_nm, f.org_file_nm
+                  FROM docs_production_sub_file f
+                 WHERE COALESCE(f.use_yn, 'Y') = 'Y'
+                   AND EXISTS (SELECT 1 FROM docs_product_document d WHERE d.object_id = f.parent_object_id)
+            </when>
+            <when test="objectType == 'PRODUCT_SW_SUB'">
+                SELECT 'PRODUCT_SW_SUB'::varchar AS object_type, f.parent_object_id AS object_id,
+                       f.file_no::varchar AS file_no, f.parent_object_id AS object_no,
+                       ''::varchar AS object_nm, f.org_file_nm
+                  FROM docs_production_sub_file f
+                 WHERE COALESCE(f.use_yn, 'Y') = 'Y'
+                   AND EXISTS (SELECT 1 FROM docs_product_sw s WHERE s.object_id = f.parent_object_id)
+            </when>
+            <when test="objectType == 'DXF_SUB'">
+                SELECT 'DXF_SUB'::varchar AS object_type, f.parent_object_id AS object_id,
+                       f.file_no::varchar AS file_no, f.parent_object_id AS object_no,
+                       ''::varchar AS object_nm, f.org_file_nm
+                  FROM docs_dxf_sub_file f WHERE COALESCE(f.use_yn, 'Y') = 'Y'
+            </when>
+            <otherwise>
+                SELECT ''::varchar AS object_type, ''::varchar AS object_id, ''::varchar AS file_no,
+                       ''::varchar AS object_no, ''::varchar AS object_nm, ''::varchar AS org_file_nm
+                 WHERE FALSE
+            </otherwise>
+        </choose>
+    </sql>
+
+    <select id="selectFiles" resultType="kr.esob.fdms.commonlogic.securityacl.FileSecurityLabelVO">
+        WITH inventory AS (
+            <include refid="fileInventory"/>
+        )
+        SELECT i.object_type, i.object_id, i.file_no, i.object_no, i.object_nm, i.org_file_nm,
+               effective_label.grade_cd,
+               effective_label.grade_nm,
+               effective_label.grade_level,
+               effective_label.label_reason,
+               CASE
+                   WHEN effective_label.object_type = i.object_type
+                    AND effective_label.file_no = i.file_no
+                   THEN 'Y' ELSE 'N'
+               END AS assigned_yn
+          FROM inventory i
+          LEFT JOIN LATERAL (
+              SELECT l.object_type, l.file_no, l.grade_cd, l.label_reason,
+                     g.grade_nm, g.grade_level
+                FROM docs_file_security_label l
+                LEFT JOIN docs_security_grade g ON g.grade_cd = l.grade_cd
+               WHERE l.object_id = i.object_id
+                 AND (
+                         (
+                             l.object_type = i.object_type
+                             AND l.file_no IN (i.file_no, '*')
+                         )
+                         OR (
+                             l.object_type = CASE i.object_type
+                                 WHEN 'DOCUMENT_SUB' THEN 'DOCUMENT'
+                                 WHEN 'DRAWING_SUB' THEN 'DRAWING'
+                                 WHEN 'SW_SUB' THEN 'SW'
+                                 WHEN 'PRODUCT_DOCUMENT_SUB' THEN 'PRODUCT_DOCUMENT'
+                                 WHEN 'PRODUCT_SW_SUB' THEN 'PRODUCT_SW'
+                                 WHEN 'DXF_SUB' THEN 'DXF'
+                                 ELSE ''
+                             END
+                             AND l.file_no = '*'
+                         )
+                     )
+               ORDER BY g.grade_level DESC NULLS LAST,
+                        CASE
+                            WHEN l.object_type = i.object_type
+                             AND l.file_no = i.file_no THEN 0
+                            WHEN l.object_type = i.object_type
+                             AND l.file_no = '*' THEN 1
+                            ELSE 2
+                        END
+               LIMIT 1
+          ) effective_label ON TRUE
+         WHERE 1 = 1
+        <if test="keyword != null and keyword != ''">
+           AND (i.object_id ILIKE '%' || #{keyword} || '%'
+                OR i.object_no ILIKE '%' || #{keyword} || '%'
+                OR i.object_nm ILIKE '%' || #{keyword} || '%'
+                OR i.org_file_nm ILIKE '%' || #{keyword} || '%')
+        </if>
+         ORDER BY i.object_no, i.file_no
+         LIMIT 500
+    </select>
+
+    <select id="countResource" resultType="int">
+        SELECT COUNT(*) FROM (
+        <choose>
+            <when test="objectType == 'DOCUMENT'">
+                SELECT 1 FROM docs_document
+                 WHERE object_id = #{objectId}
+                   AND (#{fileNo} = '*' OR EXISTS (
+                       SELECT 1 FROM docs_document_file f WHERE f.object_id = #{objectId} AND f.file_no = #{fileNo}
+                   )) LIMIT 1
+            </when>
+            <when test="objectType == 'DRAWING'">
+                SELECT 1 FROM docs_drawing
+                 WHERE object_id = #{objectId}
+                   AND (#{fileNo} = '*' OR file_no::varchar = #{fileNo})
+                 LIMIT 1
+            </when>
+            <when test="objectType == 'SW'">
+                SELECT 1 FROM docs_sw
+                 WHERE object_id = #{objectId}
+                   AND (#{fileNo} = '*' OR EXISTS (
+                       SELECT 1 FROM docs_sw_file f WHERE f.object_id = #{objectId} AND f.file_no = #{fileNo}
+                   )) LIMIT 1
+            </when>
+            <when test="objectType == 'PRODUCT_DOCUMENT'">
+                SELECT 1 FROM docs_product_document
+                 WHERE object_id = #{objectId}
+                   AND (#{fileNo} = '*' OR EXISTS (
+                       SELECT 1 FROM docs_product_document_file f WHERE f.object_id = #{objectId} AND f.file_no = #{fileNo}
+                   )) LIMIT 1
+            </when>
+            <when test="objectType == 'PRODUCT_SW'">
+                SELECT 1 FROM docs_product_sw
+                 WHERE object_id = #{objectId}
+                   AND (#{fileNo} = '*' OR EXISTS (
+                       SELECT 1 FROM docs_product_sw_file f WHERE f.object_id = #{objectId} AND f.file_no::varchar = #{fileNo}
+                   )) LIMIT 1
+            </when>
+            <when test="objectType == 'DXF'">
+                SELECT 1 FROM docs_dxf_document
+                 WHERE object_id = #{objectId}
+                   AND (#{fileNo} = '*' OR EXISTS (
+                       SELECT 1 FROM docs_dxf_document_file f WHERE f.object_id = #{objectId} AND f.file_no = #{fileNo}
+                   )) LIMIT 1
+            </when>
+            <when test="objectType == 'DOCUMENT_SUB'">
+                SELECT 1 FROM docs_document_sub_file
+                 WHERE parent_object_id = #{objectId}
+                   AND (#{fileNo} = '*' OR file_no::varchar = #{fileNo})
+                 LIMIT 1
+            </when>
+            <when test="objectType == 'DRAWING_SUB'">
+                SELECT 1 FROM docs_drawing_sub_file
+                 WHERE parent_object_id = #{objectId}
+                   AND (#{fileNo} = '*' OR file_no::varchar = #{fileNo})
+                 LIMIT 1
+            </when>
+            <when test="objectType == 'SW_SUB'">
+                SELECT 1 FROM docs_sw_sub_file
+                 WHERE parent_object_id = #{objectId}
+                   AND (#{fileNo} = '*' OR file_no::varchar = #{fileNo})
+                 LIMIT 1
+            </when>
+            <when test="objectType == 'PRODUCT_DOCUMENT_SUB'">
+                SELECT 1
+                  FROM docs_production_sub_file f
+                 WHERE f.parent_object_id = #{objectId}
+                   AND (#{fileNo} = '*' OR f.file_no::varchar = #{fileNo})
+                   AND EXISTS (
+                       SELECT 1 FROM docs_product_document d WHERE d.object_id = f.parent_object_id
+                   )
+                 LIMIT 1
+            </when>
+            <when test="objectType == 'PRODUCT_SW_SUB'">
+                SELECT 1
+                  FROM docs_production_sub_file f
+                 WHERE f.parent_object_id = #{objectId}
+                   AND (#{fileNo} = '*' OR f.file_no::varchar = #{fileNo})
+                   AND EXISTS (
+                       SELECT 1 FROM docs_product_sw s WHERE s.object_id = f.parent_object_id
+                   )
+                 LIMIT 1
+            </when>
+            <when test="objectType == 'DXF_SUB'">
+                SELECT 1 FROM docs_dxf_sub_file
+                 WHERE parent_object_id = #{objectId}
+                   AND (#{fileNo} = '*' OR file_no::varchar = #{fileNo})
+                 LIMIT 1
+            </when>
+            <when test="objectType == 'PEER_REVIEW'">
+                SELECT 1 FROM docs_peerreview
+                 WHERE object_id = #{objectId}
+                   AND COALESCE(deleted_yn, 'N') = 'N'
+                   AND (#{fileNo} = '*' OR #{fileNo} = '1')
+                 LIMIT 1
+            </when>
+            <otherwise>
+                SELECT 1 WHERE FALSE
+            </otherwise>
+        </choose>
+        ) resource_row
+    </select>
+
+    <insert id="upsertFileLabel">
+        INSERT INTO docs_file_security_label (
+            object_type, object_id, file_no, grade_cd, label_reason,
+            assigned_by, updated_by, updated_at
+        ) VALUES (
+            #{label.objectType}, #{label.objectId}, #{label.fileNo}, #{label.gradeCd}, #{label.labelReason},
+            #{actorUserCd}, #{actorUserCd}, CURRENT_TIMESTAMP
+        )
+        ON CONFLICT (object_type, object_id, file_no) DO UPDATE SET
+            grade_cd = EXCLUDED.grade_cd,
+            label_reason = EXCLUDED.label_reason,
+            updated_by = EXCLUDED.updated_by,
+            updated_at = CURRENT_TIMESTAMP
+    </insert>
+
+    <select id="selectEffectiveFileGradeCd" resultType="string">
+        SELECT l.grade_cd
+          FROM docs_file_security_label l
+          LEFT JOIN docs_security_grade ordering_grade
+            ON ordering_grade.grade_cd = l.grade_cd
+         WHERE l.object_id = #{objectId}
+           AND (
+                   (
+                       l.object_type = #{objectType}
+                       AND l.file_no IN (#{fileNo}, '*')
+                   )
+                   OR (
+                       #{permissionObjectType} != #{objectType}
+                       AND l.object_type = #{permissionObjectType}
+                       AND l.file_no = '*'
+                   )
+               )
+         ORDER BY ordering_grade.grade_level DESC NULLS LAST,
+                  CASE
+                      WHEN l.object_type = #{objectType} AND l.file_no = #{fileNo} THEN 0
+                      WHEN l.object_type = #{objectType} AND l.file_no = '*' THEN 1
+                      WHEN l.object_type = #{permissionObjectType} AND l.file_no = #{fileNo} THEN 2
+                      ELSE 3
+                  END
+         LIMIT 1
+    </select>
+
+    <select id="selectFileUserPermissions"
+            resultType="kr.esob.fdms.commonlogic.securityacl.FileUserPermissionVO">
+        WITH selected_label AS (
+            SELECT l.grade_cd, g.grade_nm, g.grade_level, g.use_yn AS grade_use_yn
+              FROM docs_file_security_label l
+              JOIN docs_security_grade g
+                ON g.grade_cd = l.grade_cd
+             WHERE l.object_id = #{objectId}
+               AND (
+                       (
+                           l.object_type = #{objectType}
+                           AND l.file_no IN (#{fileNo}, '*')
+                       )
+                       OR (
+                           #{permissionObjectType} != #{objectType}
+                           AND l.object_type = #{permissionObjectType}
+                           AND l.file_no = '*'
+                       )
+                   )
+              ORDER BY g.grade_level DESC,
+                       CASE
+                           WHEN l.object_type = #{objectType} AND l.file_no = #{fileNo} THEN 0
+                           WHEN l.object_type = #{objectType} AND l.file_no = '*' THEN 1
+                           WHEN l.object_type = #{permissionObjectType} AND l.file_no = #{fileNo} THEN 2
+                           ELSE 3
+                       END
+              LIMIT 1
+        )
+        SELECT u.user_cd,
+               u.user_id,
+               u.user_nm,
+               d.dept_nm,
+               ug.grade_cd AS user_grade_cd,
+               ug.grade_nm AS user_grade_nm,
+               ug.grade_level AS user_grade_level,
+               sl.grade_cd AS file_grade_cd,
+               sl.grade_nm AS file_grade_nm,
+               sl.grade_level AS file_grade_level,
+               CASE
+                   WHEN u.use_yn = 'Y'
+                    AND u.del_yn = 'N'
+                    AND COALESCE(u.lock_yn, 'N') != 'Y'
+                   THEN 'Y' ELSE 'N'
+               END AS account_active_yn,
+               CASE
+                   WHEN u.use_yn = 'Y'
+                    AND u.del_yn = 'N'
+                    AND COALESCE(u.lock_yn, 'N') != 'Y'
+                    AND uc.user_cd IS NOT NULL
+                    AND ug.grade_cd IS NOT NULL
+                    AND sl.grade_cd IS NOT NULL
+                    AND sl.grade_use_yn = 'Y'
+                    AND ug.grade_level &gt;= sl.grade_level
+                   THEN 'Y' ELSE 'N'
+               END AS grade_eligible_yn,
+               CASE WHEN (
+                   SELECT COUNT(*)
+                     FROM docs_user_action_permission p
+                    WHERE p.user_cd = u.user_cd
+                      AND p.action_cd IN ('LIST', 'DETAIL', 'VIEW')
+                      AND p.allow_yn = 'Y'
+               ) = 3 THEN 'Y' ELSE 'N' END AS global_view_yn,
+               CASE WHEN EXISTS (
+                   SELECT 1 FROM docs_user_action_permission p
+                    WHERE p.user_cd = u.user_cd
+                      AND p.action_cd = 'DOWNLOAD_ORIGINAL'
+                      AND p.allow_yn = 'Y'
+               ) THEN 'Y' ELSE 'N' END AS global_download_original_yn,
+               CASE WHEN EXISTS (
+                   SELECT 1 FROM docs_user_action_permission p
+                    WHERE p.user_cd = u.user_cd
+                      AND p.action_cd = 'PRINT'
+                      AND p.allow_yn = 'Y'
+               ) THEN 'Y' ELSE 'N' END AS global_print_yn,
+               CASE WHEN (
+                   SELECT COUNT(*)
+                     FROM docs_object_user_permission p
+                    WHERE p.object_type = #{permissionObjectType}
+                      AND p.object_id = #{objectId}
+                      AND p.user_cd = u.user_cd
+                      AND p.action_cd IN ('LIST', 'DETAIL', 'VIEW')
+                      AND p.allow_yn = 'Y'
+               ) = 3 THEN 'Y' ELSE 'N' END AS view_yn,
+               CASE WHEN EXISTS (
+                   SELECT 1 FROM docs_object_user_permission p
+                    WHERE p.object_type = #{permissionObjectType}
+                      AND p.object_id = #{objectId}
+                      AND p.user_cd = u.user_cd
+                      AND p.action_cd = 'DOWNLOAD_ORIGINAL'
+                      AND p.allow_yn = 'Y'
+               ) THEN 'Y' ELSE 'N' END AS download_original_yn,
+               CASE WHEN EXISTS (
+                   SELECT 1 FROM docs_object_user_permission p
+                    WHERE p.object_type = #{permissionObjectType}
+                      AND p.object_id = #{objectId}
+                      AND p.user_cd = u.user_cd
+                      AND p.action_cd = 'PRINT'
+                      AND p.allow_yn = 'Y'
+               ) THEN 'Y' ELSE 'N' END AS print_yn
+          FROM docs_user u
+          LEFT JOIN docs_dept d ON d.dept_cd = u.dept_cd
+          LEFT JOIN docs_user_security_clearance uc
+            ON uc.user_cd = u.user_cd
+           AND uc.valid_from &lt;= CURRENT_TIMESTAMP
+           AND (uc.valid_to IS NULL OR uc.valid_to &gt; CURRENT_TIMESTAMP)
+          LEFT JOIN docs_security_grade ug
+            ON ug.grade_cd = uc.grade_cd
+           AND ug.use_yn = 'Y'
+          LEFT JOIN selected_label sl ON TRUE
+         WHERE (
+                   (
+                       u.use_yn = 'Y'
+                       AND u.del_yn = 'N'
+                       AND COALESCE(u.lock_yn, 'N') != 'Y'
+                   )
+                   OR EXISTS (
+                       SELECT 1
+                         FROM docs_object_user_permission existing_permission
+                        WHERE existing_permission.object_type = #{permissionObjectType}
+                          AND existing_permission.object_id = #{objectId}
+                          AND existing_permission.user_cd = u.user_cd
+                          AND existing_permission.allow_yn = 'Y'
+                   )
+               )
+         ORDER BY CASE
+                      WHEN u.use_yn = 'Y'
+                       AND u.del_yn = 'N'
+                       AND COALESCE(u.lock_yn, 'N') != 'Y'
+                      THEN 0 ELSE 1
+                  END,
+                  u.user_nm, u.user_id
+    </select>
+
+    <select id="selectDocumentUserPermissionStates"
+            resultType="kr.esob.fdms.commonlogic.securityacl.FileUserPermissionVO">
+        SELECT u.user_cd,
+               CASE WHEN COUNT(DISTINCT p.action_cd) FILTER (
+                   WHERE p.action_cd IN ('LIST', 'DETAIL', 'VIEW')
+               ) = 3 THEN 'Y' ELSE 'N' END AS view_yn,
+               CASE WHEN COUNT(*) FILTER (
+                   WHERE p.action_cd = 'DOWNLOAD_ORIGINAL'
+               ) &gt; 0 THEN 'Y' ELSE 'N' END AS download_original_yn,
+               CASE WHEN COUNT(*) FILTER (
+                   WHERE p.action_cd = 'PRINT'
+               ) &gt; 0 THEN 'Y' ELSE 'N' END AS print_yn
+          FROM docs_user u
+          LEFT JOIN docs_object_user_permission p
+            ON p.object_type = #{request.permissionObjectType}
+           AND p.object_id = #{request.objectId}
+           AND p.user_cd = u.user_cd
+           AND p.allow_yn = 'Y'
+         WHERE u.user_cd IN
+        <foreach collection="userCds" item="userCd" open="(" separator="," close=")">
+            #{userCd}
+        </foreach>
+         GROUP BY u.user_cd
+    </select>
+
+    <delete id="deleteDocumentUserPermissions">
+        DELETE FROM docs_object_user_permission
+         WHERE object_type = #{permissionObjectType}
+           AND object_id = #{objectId}
+           AND user_cd = #{userCd}
+    </delete>
+
+    <insert id="upsertDocumentUserPermission">
+        INSERT INTO docs_object_user_permission (
+            object_type, object_id, user_cd, action_cd, allow_yn,
+            grant_reason, granted_by, granted_at, updated_by, updated_at
+        )
+        SELECT #{request.permissionObjectType}, #{request.objectId}, u.user_cd,
+               #{actionCd}, 'Y', #{grantReason}, #{actorUserCd},
+               CURRENT_TIMESTAMP, #{actorUserCd}, CURRENT_TIMESTAMP
+          FROM docs_user u
+          JOIN docs_user_security_clearance uc
+            ON uc.user_cd = u.user_cd
+           AND uc.valid_from &lt;= CURRENT_TIMESTAMP
+           AND (uc.valid_to IS NULL OR uc.valid_to &gt; CURRENT_TIMESTAMP)
+          JOIN docs_security_grade ug
+            ON ug.grade_cd = uc.grade_cd
+           AND ug.use_yn = 'Y'
+          JOIN docs_user_action_permission global_permission
+            ON global_permission.user_cd = u.user_cd
+           AND global_permission.action_cd = #{actionCd}
+           AND global_permission.allow_yn = 'Y'
+           JOIN LATERAL (
+               SELECT l.grade_cd
+                 FROM docs_file_security_label l
+                 LEFT JOIN docs_security_grade candidate_grade
+                   ON candidate_grade.grade_cd = l.grade_cd
+                WHERE l.object_id = #{request.objectId}
+                  AND (
+                          (
+                              l.object_type = #{request.objectType}
+                              AND l.file_no IN (#{request.fileNo}, '*')
+                          )
+                          OR (
+                              #{request.permissionObjectType} != #{request.objectType}
+                              AND l.object_type = #{request.permissionObjectType}
+                              AND l.file_no = '*'
+                          )
+                      )
+                ORDER BY candidate_grade.grade_level DESC NULLS LAST,
+                         CASE
+                             WHEN l.object_type = #{request.objectType}
+                              AND l.file_no = #{request.fileNo} THEN 0
+                             WHEN l.object_type = #{request.objectType}
+                              AND l.file_no = '*' THEN 1
+                             WHEN l.object_type = #{request.permissionObjectType}
+                              AND l.file_no = #{request.fileNo} THEN 2
+                             ELSE 3
+                         END
+                LIMIT 1
+           ) label ON TRUE
+          JOIN docs_security_grade fg
+            ON fg.grade_cd = label.grade_cd
+           AND fg.use_yn = 'Y'
+         WHERE u.user_cd = #{userCd}
+           AND u.use_yn = 'Y'
+           AND u.del_yn = 'N'
+           AND COALESCE(u.lock_yn, 'N') != 'Y'
+           AND ug.grade_level &gt;= fg.grade_level
+        ON CONFLICT (object_type, object_id, user_cd, action_cd) DO UPDATE SET
+            allow_yn = EXCLUDED.allow_yn,
+            grant_reason = EXCLUDED.grant_reason,
+            updated_by = EXCLUDED.updated_by,
+            updated_at = CURRENT_TIMESTAMP
+    </insert>
+
+    <select id="selectDecision" resultType="kr.esob.fdms.commonlogic.securityacl.FileAccessDecisionVO">
+        SELECT CASE
+                   WHEN u.user_cd IS NULL THEN FALSE
+                   WHEN uc.user_cd IS NULL THEN FALSE
+                   WHEN ug.grade_cd IS NULL THEN FALSE
+                   WHEN label.grade_cd IS NULL THEN FALSE
+                   WHEN fg.grade_cd IS NULL THEN FALSE
+                   WHEN permission.allow_yn IS DISTINCT FROM 'Y' THEN FALSE
+                   WHEN ug.grade_level &lt; fg.grade_level THEN FALSE
+                   WHEN document_permission.allow_yn IS DISTINCT FROM 'Y' THEN FALSE
+                   ELSE TRUE
+               END AS allowed,
+               CASE
+                   WHEN u.user_cd IS NULL THEN 'NO_ACTIVE_USER'
+                   WHEN uc.user_cd IS NULL THEN 'NO_VALID_CLEARANCE'
+                   WHEN ug.grade_cd IS NULL THEN 'INACTIVE_USER_GRADE'
+                   WHEN label.grade_cd IS NULL THEN 'NO_FILE_LABEL'
+                   WHEN fg.grade_cd IS NULL THEN 'INACTIVE_FILE_GRADE'
+                   WHEN permission.allow_yn IS DISTINCT FROM 'Y' THEN 'ACTION_NOT_ALLOWED'
+                   WHEN ug.grade_level &lt; fg.grade_level THEN 'CLEARANCE_TOO_LOW'
+                   WHEN document_permission.allow_yn IS DISTINCT FROM 'Y' THEN 'DOCUMENT_PERMISSION_NOT_GRANTED'
+                   ELSE 'ALLOW'
+               END AS reason_cd,
+               #{actorUserCd} AS actor_user_cd,
+               #{actionCd} AS action_cd,
+               #{objectType} AS object_type,
+               #{objectId} AS object_id,
+               #{fileNo} AS file_no,
+               ug.grade_cd AS user_grade_cd,
+               fg.grade_cd AS file_grade_cd,
+               ug.grade_level AS user_grade_level,
+               fg.grade_level AS file_grade_level,
+               COALESCE(permission.allow_yn, 'N') AS action_allowed_yn,
+               COALESCE(document_permission.allow_yn, 'N') AS document_permission_allowed_yn
+          FROM (VALUES (1)) root(dummy)
+          LEFT JOIN docs_user u
+            ON u.user_cd = #{actorUserCd}
+           AND u.use_yn = 'Y'
+           AND u.del_yn = 'N'
+           AND COALESCE(u.lock_yn, 'N') != 'Y'
+          LEFT JOIN docs_user_security_clearance uc
+            ON uc.user_cd = u.user_cd
+           AND uc.valid_from &lt;= CURRENT_TIMESTAMP
+           AND (uc.valid_to IS NULL OR uc.valid_to &gt; CURRENT_TIMESTAMP)
+          LEFT JOIN docs_security_grade ug
+            ON ug.grade_cd = uc.grade_cd
+           AND ug.use_yn = 'Y'
+           LEFT JOIN LATERAL (
+               SELECT l.grade_cd
+                 FROM docs_file_security_label l
+                 LEFT JOIN docs_security_grade candidate_grade
+                   ON candidate_grade.grade_cd = l.grade_cd
+                WHERE l.object_id = #{objectId}
+                  AND (
+                          (
+                              l.object_type = #{objectType}
+                              AND l.file_no IN (#{fileNo}, '*')
+                          )
+                          OR (
+                              #{permissionObjectType} != #{objectType}
+                              AND l.object_type = #{permissionObjectType}
+                              AND l.file_no = '*'
+                          )
+                      )
+                ORDER BY candidate_grade.grade_level DESC NULLS LAST,
+                         CASE
+                             WHEN l.object_type = #{objectType}
+                              AND l.file_no = #{fileNo} THEN 0
+                             WHEN l.object_type = #{objectType}
+                              AND l.file_no = '*' THEN 1
+                             WHEN l.object_type = #{permissionObjectType}
+                              AND l.file_no = #{fileNo} THEN 2
+                             ELSE 3
+                         END
+                LIMIT 1
+           ) label ON TRUE
+          LEFT JOIN docs_security_grade fg
+            ON fg.grade_cd = label.grade_cd
+           AND fg.use_yn = 'Y'
+          LEFT JOIN docs_user_action_permission permission
+             ON permission.user_cd = u.user_cd
+            AND permission.action_cd = #{actionCd}
+          LEFT JOIN docs_object_user_permission document_permission
+            ON document_permission.object_type = #{permissionObjectType}
+           AND document_permission.object_id = #{objectId}
+           AND document_permission.user_cd = u.user_cd
+           AND document_permission.action_cd = #{actionCd}
+    </select>
+
+    <select id="countActionPermission" resultType="int">
+        SELECT COUNT(*)
+          FROM docs_user u
+          JOIN docs_user_action_permission p ON p.user_cd = u.user_cd
+         WHERE u.user_cd = #{userCd}
+           AND u.use_yn = 'Y'
+           AND u.del_yn = 'N'
+           AND COALESCE(u.lock_yn, 'N') != 'Y'
+           AND p.action_cd = #{actionCd}
+           AND p.allow_yn = 'Y'
+    </select>
+
+    <insert id="insertAudit">
+        INSERT INTO docs_access_audit_log (
+            event_type, action_type, result_cd, reason_cd, result_message,
+            actor_user_cd, actor_user_id, actor_user_nm,
+            object_type, object_id, file_no, request_no, grade_cd,
+            client_ip, session_id, correlation_id, detail_json
+        ) VALUES (
+            #{eventType}, #{actionType}, #{resultCd}, #{reasonCd}, #{resultMessage},
+            #{actorUserCd}, #{actorUserId}, #{actorUserNm},
+            #{objectType}, #{objectId}, #{fileNo}, #{requestNo}, #{gradeCd},
+            #{clientIp}, #{sessionId}, #{correlationId},
+            CAST(COALESCE(NULLIF(#{detailJson}, ''), '{}') AS jsonb)
+        )
+    </insert>
+
+    <select id="selectAudit" resultType="kr.esob.fdms.commonlogic.securityacl.AccessAuditEventVO">
+        SELECT event_id,
+               TO_CHAR(occurred_at AT TIME ZONE 'Asia/Seoul', 'YYYY-MM-DD HH24:MI:SS') AS occurred_at,
+               event_type, action_type, result_cd, reason_cd, result_message,
+               actor_user_cd, actor_user_id, actor_user_nm,
+               object_type, object_id, file_no, request_no, grade_cd,
+               client_ip, session_id, correlation_id, detail_json::text AS detail_json
+          FROM docs_access_audit_log
+         WHERE 1 = 1
+        <if test="eventType != null and eventType != ''">
+           AND event_type = #{eventType}
+        </if>
+        <if test="resultCd != null and resultCd != ''">
+           AND result_cd = #{resultCd}
+        </if>
+        <if test="keyword != null and keyword != ''">
+           AND (COALESCE(actor_user_id, '') ILIKE '%' || #{keyword} || '%'
+                OR COALESCE(actor_user_nm, '') ILIKE '%' || #{keyword} || '%'
+                OR COALESCE(object_id, '') ILIKE '%' || #{keyword} || '%'
+                OR COALESCE(request_no, '') ILIKE '%' || #{keyword} || '%'
+                OR COALESCE(correlation_id, '') ILIKE '%' || #{keyword} || '%')
+        </if>
+         ORDER BY event_id DESC
+         LIMIT 1000
+    </select>
+
+</mapper>

@@ -276,7 +276,7 @@ public class FromItnToDocsDao extends AbstractDao {
 		case SW_MEMBER:
 		case ECO_HISTORY:
 		default:
-			System.out.println("Not suppoerted ObjectType");
+			
 			return "";
 		}
 		HashMap<String, Object> result = (HashMap<String, Object>) objNotUseSession(prefix + "selectFileProtect", param);
@@ -314,14 +314,14 @@ public class FromItnToDocsDao extends AbstractDao {
 		case DOCUMENT_MEMBER:
 		case DRAWING_MEMBER:
 		case SW_MEMBER:
-			System.out.println("Not suppoerted ObjectType");
+			
 			return;
 		default:
 			break;
 		}
 
 		int result = update(prefix + objectType.getUpdateQueryId(), param);
-		System.out.println("result : " + result);
+		
 	}
 
 	//Delete Docs
@@ -337,7 +337,7 @@ public class FromItnToDocsDao extends AbstractDao {
 		case SW:
 		case SW_FILE:
 		case ECO_HISTORY:
-			System.out.println("Not suppoerted ObjectType");
+			
 			return;
 		default:
 			break;

@@ -4,8 +4,13 @@ import kr.esob.fdms.commonlogic.mail.DocsMailEnum;
 import kr.esob.fdms.commonlogic.mail.DocsMailService;
 import kr.esob.fdms.commonlogic.mail.MailInfoVO;
 import kr.esob.fdms.commonlogic.result.ResultVO;
+import kr.esob.fdms.controller.login.UserVO;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.inject.Inject;
 import java.util.HashMap;
@@ -30,32 +35,48 @@ public class CommonApprovalService {
 		return dao.selectApprovalList(param);
 	}
 
+	@Transactional(rollbackFor = Exception.class)
 	public ResultVO saveApproval(CommonApprovalParam param) {
 		log.info("{} is called", this.getClass().getSimpleName());
 
+		validateApprovalRequest(param);
+		UserVO actor = requireAuthenticatedActor();
+		param.setSessionUser(actor);
+
 		ResultVO result = new ResultVO();
 		CommonApprovalParam approveParam = dao.getCurrentApprovalInfo(param);
+		if (approveParam == null) {
+			throw new AccessDeniedException("Approval request is not accessible");
+		}
+		param.setApprovalStatusCd(approveParam.getApprovalStatusCd());
+		param.setApprovalGradeCd(approveParam.getApprovalGradeCd());
+		param.setCurrentProcessSeqNo(approveParam.getCurrentProcessSeqNo());
+		param.setProtectYn(approveParam.getProtectYn());
+		param.setObjectType(approveParam.getObjectType());
+		param.setApprovalType(approveParam.getApprovalType());
+		param.setRequestType(approveParam.getApprovalType());
 		boolean isDestroyExists = false;
 		if( "A".equals(param.getSaveType()) ) {			//승인
 			param.setActionCd("APPROVAL");
 			param.setApprovalStatusCd("APPROVAL");
 			if( "TL".equals(approveParam.getApprovalGradeCd()) && "Y".equals(approveParam.getProtectYn())){	//현재 구매팀장 결재면서 방산결재면 방산팀장한테 보내기
 				param.setStatusCd("ACCEPT");
-				dao.updateRequestDefInfo(param);
+				requireSingleRow(dao.updateRequestDefInfo(param), "advance approval request");
 
 			}else {																						// 최종승인
 				param.setStatusCd("APPROVAL");
 				param.setApprovalStatusCd("APPROVAL");
-				dao.updateRequestInfo(param);
+				requireSingleRow(dao.updateRequestInfo(param), "approve request");
 				//최종승인인 경우 파일 결재 정보 테이블(DOCS_APPROVAL_FILE)에 각 아이템 추가
 				List<CommonApprovalPopupListVO> itemList = dao.selectItemList(param);
 				for(CommonApprovalPopupListVO tempVo : itemList) {
 					CommonApprovalParam tempParam = new CommonApprovalParam();
+					tempParam.setSessionUser(actor);
 					tempParam.setObjectId(tempVo.getObjectId());
 					tempParam.setRequestNo(param.getRequestNo());
-					tempParam.setDeployUserCd(approveParam.getDeployUserCd());
+					tempParam.setDeployUserCd(tempVo.getDeployUserCd());
 					tempParam.setFileNo(tempVo.getFileNo());
-					dao.insertApprovalFile(tempParam);
+					requireSingleRow(dao.insertApprovalFile(tempParam), "record approved file");
 				}
 
 				//같은 object_id 중에서 가장 높은 rev 선별
@@ -111,24 +132,20 @@ public class CommonApprovalService {
 			param.setActionCd("REJECT");
 			param.setStatusCd("REJECT");
 			param.setApprovalStatusCd("REJECT");
-			dao.updateRequestInfo(param);
+			requireSingleRow(dao.updateRequestInfo(param), "reject request");
 		}
 //		param.setCurrentProcessSeqNo("3");
 		param.setApprovalStatusCd(approveParam.getApprovalStatusCd());
 		param.setApprovalGradeCd(approveParam.getApprovalGradeCd());
-		if("REJECT".equals(param.getActionCd())) {
-			param.setCurrentProcessSeqNo(approveParam.getCurrentProcessSeqNo());
-		}else {
-			param.setCurrentProcessSeqNo( String.valueOf((Integer.parseInt(approveParam.getCurrentProcessSeqNo())+1)) );
-		}
-		dao.updateRequestDetail(param);
+		param.setCurrentProcessSeqNo(approveParam.getCurrentProcessSeqNo());
+		requireSingleRow(dao.updateRequestDetail(param), "complete approval step");
 
 		try {
 			if(param.getSendEmailYn().isBooleanValue()) {
 				sendMail(param, approveParam, isDestroyExists);
 			}
 		}catch(Exception e) {
-			e.printStackTrace();
+			log.warn("Approval notification failed. cause={}", e.getClass().getSimpleName());
 		}
 
 		result.setSuccess(true);
@@ -187,23 +204,60 @@ public class CommonApprovalService {
 	 * 방산기술 결재자 이관
 	 * @param param
 	 */
+	@Transactional(rollbackFor = Exception.class)
 	public ResultVO savePass(PassParamVO param) {
 		ResultVO result = new ResultVO();
+		if (param == null || isBlank(param.getRequestNo()) || isBlank(param.getPassTarget())) {
+			throw new IllegalArgumentException("Request number and pass target are required");
+		}
+		param.setSessionUser(requireAuthenticatedActor());
 
 		String[] arrRequestNo = param.getRequestNo().split(",");
 
-		for(int i=0; i<arrRequestNo.length; i++) {
-
-			param.setRequestNo(arrRequestNo[i]);
-
-			dao.updatePassTarget(param);
+		for (String requestNo : arrRequestNo) {
+			String normalizedRequestNo = requestNo == null ? null : requestNo.trim();
+			if (isBlank(normalizedRequestNo)) {
+				throw new IllegalArgumentException("Request number is required");
+			}
+			param.setRequestNo(normalizedRequestNo);
+			if (dao.selectPassTargetForUpdate(param) == null) {
+				throw new AccessDeniedException("Approval request is not accessible");
+			}
+			requireSingleRow(dao.updatePassTarget(param), "reassign approval request");
 		}
 
+		result.setSuccess(true);
 		return result;
 	}
 
 	public CommonApprovalParam selectRequestInfo(CommonApprovalParam param) {
 		return dao.selectRequestInfo(param);
+	}
+
+	private void validateApprovalRequest(CommonApprovalParam param) {
+		if (param == null || isBlank(param.getRequestNo())
+				|| (!"A".equals(param.getSaveType()) && !"R".equals(param.getSaveType()))) {
+			throw new IllegalArgumentException("Invalid approval request");
+		}
+		param.setRequestNo(param.getRequestNo().trim());
+	}
+
+	private UserVO requireAuthenticatedActor() {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		if (authentication == null || !(authentication.getPrincipal() instanceof UserVO)) {
+			throw new AccessDeniedException("Authenticated user is required");
+		}
+		return (UserVO) authentication.getPrincipal();
+	}
+
+	private void requireSingleRow(int affectedRows, String operation) {
+		if (affectedRows != 1) {
+			throw new IllegalStateException("Unable to " + operation);
+		}
+	}
+
+	private boolean isBlank(String value) {
+		return value == null || value.trim().isEmpty();
 	}
 
 }

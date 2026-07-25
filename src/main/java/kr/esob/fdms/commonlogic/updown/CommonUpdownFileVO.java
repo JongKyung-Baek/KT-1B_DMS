@@ -4,6 +4,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import kr.esob.fdms.commonlogic.result.ResultVO;
 import kr.esob.fdms.commonlogic.systemconfig.SystemConfig;
 import lombok.Getter;
@@ -23,14 +24,18 @@ public class CommonUpdownFileVO extends ResultVO{
 	private String dataNo;
 	private String dataSeq;
 	private String docSeq;
+	private String objectId;
+	private String objectType;
+	private String fileNo;
 	private String objectNo;
 	private String requestNo;
 	private String folderName;
 
-	
-//	public String getFilePathNm() {
-//		return SystemConfig.getSystemConfigValue("UPDOWN_PATH") + this.filePathNm.replace(this.fileNm, "");
-//	}	
+	/** Internal storage location. Never serialize it to a client. */
+	@JsonIgnore
+	public String getFilePathNm() {
+		return filePathNm;
+	}
 	
 	public String getEndDate() {
 		String rtn = endDate;

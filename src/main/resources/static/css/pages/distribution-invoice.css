@@ -31,7 +31,7 @@
   flex-direction: column;
   height: calc(100dvh - 160px);
   min-height: 620px;
-  --tree-toggle-collapsed-icon: url("/resources/images/folder.png");
+  --tree-toggle-collapsed-icon: url("/resources/images/icon/folder.png");
   --tree-toggle-expanded-icon: url("/resources/images/depth1.png");
   --tree-toggle-leaf-icon: url("/resources/images/depth0.png");
   --tree-toggle-drawing-leaf-icon: url("/resources/images/depth3.png");

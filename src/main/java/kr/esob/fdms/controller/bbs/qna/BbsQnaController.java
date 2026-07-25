@@ -6,6 +6,7 @@ import kr.esob.fdms.commonlogic.toolbar.ToolbarInfoVO;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -40,11 +41,6 @@ public class BbsQnaController extends AbstractController {
 		// 툴바 정보를 변수에 저장
 		List<ToolbarInfoVO> toolbarInfo = toolbarService.selectToolbarInfo("toolbarBbsQna");
 
-		System.out.println("아오");
-		System.out.println("user.getRoleGroup() >>> " + user.getRoleGroup());
-		System.out.println(toolbarInfo.get(1).getButtonId());
-		System.out.println("아오");
-
 		if ("btnDelete".equals(toolbarInfo.get(1).getButtonId())) {
 			if (!"RG_001".equals(user.getRoleGroup())) {
 				toolbarInfo.remove(1);
@@ -63,10 +59,6 @@ public class BbsQnaController extends AbstractController {
 //		UserVO user = param.getSessionUser();
 //		model.addAttribute("formInfo", JSONArray.fromObject(formService.selectFormInfo("formBbsQna")));
 //
-//		System.out.println("아오");
-//		System.out.println("user.getRoleGroup() >>> " + user.getRoleGroup());
-//		System.out.println(toolbarService.selectToolbarInfo("toolbarBbsQna").get(1).getButtonId());
-//		System.out.println("아오");
 //
 //		if("btnDelete".equals(toolbarService.selectToolbarInfo("toolbarBbsQna").get(1).getButtonId())) {
 //			if("RG_001".equals(user.getRoleGroup()) == false) {
@@ -85,7 +77,7 @@ public class BbsQnaController extends AbstractController {
 		return result;
 	}
 
-	@RequestMapping(value="/qnaPopup")
+	@PostMapping("/qnaPopup")
 	public String qnaPopup(BbsQnaPopupParam param, Model model) throws JsonProcessingException {
 		UserVO user = param.getSessionUser();
 		model.addAttribute("gridInfo", JSONArray.fromObject(gridService.selectGridInfo("gridQnaPopup")));
@@ -108,7 +100,7 @@ public class BbsQnaController extends AbstractController {
 	/*
 	 * 삽입
 	 * */
-	@RequestMapping(value="/bbsQna")
+	@PostMapping(value="/bbsQna")
 	public @ResponseBody ResultVO bbsQna(MultipartHttpServletRequest request) throws Exception {
 		return service.insertBbsQna(request);
 	}
@@ -127,7 +119,7 @@ public class BbsQnaController extends AbstractController {
 	}
 
 	//답글 삽입
-	@RequestMapping(value="/replyQna")
+	@PostMapping(value="/replyQna")
 	public @ResponseBody ResultVO replyQna(MultipartHttpServletRequest request) throws Exception {
 		return service.replyBbsQna(request);
 	}

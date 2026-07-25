@@ -3,7 +3,6 @@ package kr.esob.fdms.commonlogic.mail;
 import kr.esob.fdms.commonlogic.result.ResultVO;
 import kr.esob.fdms.commonlogic.seq.SeqDao;
 import kr.esob.fdms.commonlogic.value.Constant;
-import kr.esob.fdms.config.Property;
 import kr.esob.fdms.controller.inside.cr.CrParam;
 import kr.esob.fdms.controller.inside.distribution.commonrequest.CommonApprovalParam;
 import kr.esob.fdms.controller.login.LoginDao;
@@ -55,7 +54,7 @@ public class DocsMailService {
 
 	public void sendMail(MailInfoVO param) {
 		if (!MAIL_SEND_ENABLED) {
-			log.info("Mail sending is disabled. skipped toMail={}, title={}", param.getToMail(), param.getTitle());
+			log.info("Mail sending is disabled.");
 			return;
 		}
 		try {
@@ -66,7 +65,6 @@ public class DocsMailService {
 			String detail = "";
 
 			log.info("Method {}#sendMail is called", this.getClass().getSimpleName());
-			log.info("MailInfoVO param at sendMail(): {}", param.toString());
 
 			helper.setFrom(fromMail, fromName);
 			helper.setTo(param.getToMail());                			// 수신자
@@ -161,7 +159,7 @@ public class DocsMailService {
 
 			dao.updateMail(param);
 		} catch(Exception e){
-			log.error("Failed to send mail to {}: {}", param.getToMail(), e.getMessage(), e);
+			log.warn("Mail delivery failed. cause={}", e.getClass().getSimpleName());
 		}
 	}
 
@@ -173,11 +171,9 @@ public class DocsMailService {
 	 * @throws UnsupportedEncodingException
 	 */
 	public ResultVO sendDocsMail(MailInfoVO param) {
-		log.info("MailInfoVO: {}", param.toString());
-
 		ResultVO resultVo = new ResultVO();
 		if (!MAIL_SEND_ENABLED) {
-			log.info("Mail sending is disabled. skipped mailEnum={}, toUserId={}, toMail={}", param.getMailEnum(), param.getToUserId(), param.getToMail());
+			log.info("Mail sending is disabled.");
 			resultVo.setSuccess(true);
 			return resultVo;
 		}
@@ -199,24 +195,6 @@ public class DocsMailService {
 				param.setMailEnum(DocsMailEnum.REVISION_UPDATED);
 				isNewRevision = true;
 			}
-			System.out.println("UserVO: " + userVo.toString());
-			Property property = new Property();
-			String urlParam = "userId="+param.getToUserId()+"&url="+param.getMailEnum().getUrl();
-			String serverUrl;
-//			if("I".equals(param.getMailEnum().getUrlType())) {
-//				serverUrl = SystemConfig.getSystemConfigValue("SERVER_DOMAIN_IN");
-//				serverUrl = property.getProperty("SERVER.DOMAIN.IN");
-//			}else {
-//				serverUrl = SystemConfig.getSystemConfigValue("SERVER_DOMAIN_OUT");
-//				serverUrl = property.getProperty("SERVER.DOMAIN.OUT");
-//				urlParam += "&bizNo=" + param.getBizNo();
-//			}
-//
-//			String linkUrl =
-//					serverUrl
-//							+"redirect.jsp"
-//							+"?p="+ URLEncoder.encode(Seed128Cipher.encrypt(urlParam, Constant.SEED_KEY.getBytes(), Constant.SEED_ENCODING), Constant.SEED_ENCODING)
-//							+"&url_type=" + param.getMailEnum().getUrlType();
 			StringBuffer contentbuffer = new StringBuffer();
 
 			if(param.getMailEnum().getUrl().equals(Constant.DISTRIBUTION_ACCEPTANCE_URL)) {
@@ -268,7 +246,7 @@ public class DocsMailService {
 			resultVo.setSuccess(true);
 
 		}catch(Exception e) {
-			e.printStackTrace();
+			log.warn("Mail preparation failed. cause={}", e.getClass().getSimpleName());
 			resultVo.setSuccess(false);
 		}
 		return resultVo;
@@ -313,7 +291,7 @@ public class DocsMailService {
 			} catch (Exception e) {
 				hasFailure = true;
 
-				log.error("Failed to send mail to {}: {}", scheduledMail.getToMail(), e.getMessage(), e);
+				log.warn("Scheduled mail delivery failed. cause={}", e.getClass().getSimpleName());
 
 				// 실패 업데이트
 				scheduledMail.setResult("F");
@@ -343,10 +321,8 @@ public class DocsMailService {
 	}
 
 	public boolean insertDocsMail(MailInfoVO param) {
-		log.info("MailInfoVO: {}", param.toString());
-
 		if (!MAIL_SEND_ENABLED) {
-			log.info("Mail sending is disabled. mail queue insert skipped mailEnum={}, toUserId={}, toMail={}", param.getMailEnum(), param.getToUserId(), param.getToMail());
+			log.info("Mail sending is disabled. Mail queue insert skipped.");
 			return true;
 		}
 		boolean insertResult = false;
@@ -369,10 +345,6 @@ public class DocsMailService {
 				param.setMailEnum(DocsMailEnum.REVISION_UPDATED);
 				isNewRevision = true;
 			}
-			System.out.println("UserVO: " + userVo.toString());
-			Property property = new Property();
-			String urlParam = "userId="+param.getToUserId()+"&url="+param.getMailEnum().getUrl();
-			String serverUrl;
 			StringBuffer contentbuffer = new StringBuffer();
 
 			if(param.getMailEnum().getUrl().equals(Constant.DISTRIBUTION_ACCEPTANCE_URL)) {
@@ -402,7 +374,7 @@ public class DocsMailService {
 
 
 		}catch(Exception e) {
-			e.printStackTrace();
+			log.warn("Mail preparation failed. cause={}", e.getClass().getSimpleName());
 		}
 		return insertResult;
 	}

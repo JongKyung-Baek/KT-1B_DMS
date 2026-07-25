@@ -37,7 +37,6 @@ public class InsidedeptDao extends AbstractDao {
 	}
 
 	public void editDeptInfo(DeptPopupParam param) {
-		System.out.println("param in editDeptInfo: " + param.toString() );
 		update(prefix + "editDeptInfo", param);
 	}
 

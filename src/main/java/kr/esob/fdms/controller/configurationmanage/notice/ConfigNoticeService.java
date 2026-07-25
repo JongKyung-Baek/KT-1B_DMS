@@ -27,6 +27,7 @@ import kr.esob.fdms.commonlogic.systemconfig.SystemConfig;
 import kr.esob.fdms.util.DateUtil;
 import kr.esob.fdms.util.ObjectUtil;
 import kr.esob.fdms.util.StringUtil;
+import kr.esob.fdms.util.StoragePathUtils;
 
 @Service
 public class ConfigNoticeService implements CommonService{
@@ -59,19 +60,14 @@ public class ConfigNoticeService implements CommonService{
 
 		Iterator<String> itr = request.getFileNames();
 		MultipartFile mf = request.getFile("file");
-		String filePathNm = SystemConfig.getSystemConfigValue("CON_NOTICE_FILE_PATH") + configParam.getNoticeCd() + "\\";
-		File filePath = new File(filePathNm);
+		File filePath = StoragePathUtils.resolve(
+				SystemConfig.getSystemConfigValue("CON_NOTICE_FILE_PATH"),
+				String.valueOf(configParam.getNoticeCd())).toFile();
 		if(!filePath.exists()) filePath.mkdirs();
 		if(itr.hasNext()) {
-			String orgName = mf.getOriginalFilename();
-			if(orgName.contains(File.separator)) {
-				orgName = orgName.substring(orgName.lastIndexOf(File.separator)+1, orgName.length());
-			}
-			orgName = StringUtil.replaceLfiPath(orgName);
-			String path = filePathNm + orgName;
-			path = StringUtil.replaceLfiPath(path);
-			File file = new File(path);
-			configParam.setFilePath(path);
+			String orgName = StoragePathUtils.fileName(mf.getOriginalFilename());
+			File file = StoragePathUtils.resolve(filePath.getPath(), orgName).toFile();
+			configParam.setFilePath(file.getPath());
 			configParam.setFileNm(orgName);
 			configParam.setOrgFileNm(orgName);
 			mf.transferTo(file);
@@ -106,8 +102,9 @@ public class ConfigNoticeService implements CommonService{
 
 		Iterator<String> itr = request.getFileNames();
 		MultipartFile mf = request.getFile("file");
-		String filePathNm = SystemConfig.getSystemConfigValue("CON_NOTICE_FILE_PATH") + configParam.getNoticeCd() + "\\";
-		File filePath = new File(filePathNm);
+		File filePath = StoragePathUtils.resolve(
+				SystemConfig.getSystemConfigValue("CON_NOTICE_FILE_PATH"),
+				String.valueOf(configParam.getNoticeCd())).toFile();
 		if(!filePath.exists()) filePath.mkdirs();
 		if(configParam.getFileDelete().equals("true")) {
 			// 기존 파일 삭제
@@ -118,17 +115,9 @@ public class ConfigNoticeService implements CommonService{
 			// 기존 파일 삭제
 			deleteNoticeFile(configParam);
 			
-			String orgName = mf.getOriginalFilename();
-			if(orgName.contains(File.separator)) {
-				orgName = orgName.substring(orgName.lastIndexOf(File.separator)+1, orgName.length());
-			}
-			
-			orgName = StringUtil.replaceLfiPath(orgName);
-			String path = filePathNm + orgName;
-			path = StringUtil.replaceLfiPath(path);
-			
-			File file = new File(path);
-			configParam.setFilePath(path);
+			String orgName = StoragePathUtils.fileName(mf.getOriginalFilename());
+			File file = StoragePathUtils.resolve(filePath.getPath(), orgName).toFile();
+			configParam.setFilePath(file.getPath());
 			configParam.setFileNm(orgName);
 			configParam.setOrgFileNm(orgName);
 			mf.transferTo(file);
@@ -241,7 +230,7 @@ public class ConfigNoticeService implements CommonService{
         		try {
         			inputStream.close();
 				} catch (Exception e) {
-					e.printStackTrace();
+					
 				}
         	}
         	if(response != null) {

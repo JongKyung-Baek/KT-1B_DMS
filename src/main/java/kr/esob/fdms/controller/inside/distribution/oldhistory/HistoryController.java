@@ -7,6 +7,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -44,7 +45,7 @@ public class HistoryController extends AbstractController {
 		return "inside/distribution/oldhistory/historyList";
 	}
 	
-	@RequestMapping(value="/destroyOldHistory", produces="application/json;charset=UTF-8")
+	@PostMapping(value="/destroyOldHistory", produces="application/json;charset=UTF-8")
 	public @ResponseBody ResultVO destroyOldHistory(@RequestBody HistoryListParam param) {
 		return service.destroyOldHistory(param);
 	}

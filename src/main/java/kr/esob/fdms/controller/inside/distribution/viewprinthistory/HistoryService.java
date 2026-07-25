@@ -171,11 +171,11 @@ public class HistoryService implements CommonService{
 					}
 
 				} catch (NoSuchFieldException | IllegalAccessException e) {
-					System.err.println("Failed to access logType: " + e.getMessage());
+					
 				}
 			}
 		} else {
-			System.err.println("contents is not a List.");
+			
 		}
 	}
 

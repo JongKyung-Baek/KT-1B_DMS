@@ -37,9 +37,8 @@ public class HistoryService implements CommonService{
 			result.setSuccess(true);
 		}
 		catch(Exception e) {
-			e.printStackTrace();
 			result.setSuccess(false);
-			result.setFailReason(e.getMessage());
+			result.setFailReason("history_delete_failed:" + e.getClass().getSimpleName());
 		}
 		
 		return result;

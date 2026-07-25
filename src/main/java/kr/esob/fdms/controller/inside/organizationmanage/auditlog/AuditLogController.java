@@ -6,6 +6,7 @@ import kr.esob.fdms.commonlogic.grid.GridResultVO;
 import net.sf.json.JSONArray;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -34,13 +35,13 @@ public class AuditLogController extends AbstractController {
         return commonSelectList(param, service);
     }
 
-    @RequestMapping("/notifyLogoutOnLeave")
+    @PostMapping("/notifyLogoutOnLeave")
     public @ResponseBody void notifyLogoutOnLeave(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         service.markPendingLogoutOnLeave(session, request);
     }
 
-    @RequestMapping("/clearPendingLogoutOnStay")
+    @PostMapping("/clearPendingLogoutOnStay")
     public @ResponseBody void clearPendingLogoutOnStay(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         service.clearPendingLogoutOnStay(session);

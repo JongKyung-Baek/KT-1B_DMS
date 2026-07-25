@@ -305,20 +305,10 @@
 
 <update id="updatePrintCnt" parameterType="kr.esob.fdms.commonlogic.viewer.CommonViewerParam">
 	UPDATE DOCS_REQUEST_FILE
-	SET PRINT_COUNT = (SELECT CAST(PRINT_COUNT AS INTEGER) + 1
-					   FROM DOCS_REQUEST_FILE
-					   WHERE REQUEST_NO = #{requestNo}
-						 AND OBJECT_ID = #{objectId}
-						 AND FILE_NO = #{fileNo} )
+	SET PRINT_COUNT = COALESCE(PRINT_COUNT, 0) + 1
 	WHERE REQUEST_NO = #{requestNo}
 	  AND OBJECT_ID = #{objectId}
 	  AND FILE_NO = #{fileNo}
 </update>
 
-<update id="updateMergePrintCnt4" parameterType="hashMap">
-	UPDATE DOCS_REQUEST_FILE
-	SET PRINT_COUNT = PRINT_COUNT + 1
-	WHERE REQUEST_NO = #{requestNo}
-	  AND OBJECT_ID IN (${objectId})
-</update>
 </mapper>

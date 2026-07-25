@@ -225,13 +225,33 @@
 
 	<select id="selectPeerReviewFileDownloadInfo" parameterType="map" resultType="hashmap">
 		SELECT
-			object_id AS objectId,
-			file_path_nm AS filePath,
-			org_file_nm AS orgFileNm,
-			file_nm AS fileNm,
-			file_size AS fileSize
+			object_id AS "objectId",
+			file_path_nm AS "filePath",
+			org_file_nm AS "orgFileNm",
+			file_nm AS "fileNm",
+			file_size AS "fileSize",
+			'1' AS "fileNo",
+			'PEER_REVIEW' AS "aclObjectType",
+			object_id AS "aclObjectId"
 		FROM docs_peerreview
 		WHERE object_id = #{objectId}
+		  AND COALESCE(deleted_yn, 'N') = 'N'
+	</select>
+
+	<select id="selectPeerReviewFileDownloadInfoByPeerReviewNo" parameterType="string" resultType="hashmap">
+		SELECT object_id AS "objectId",
+		       file_path_nm AS "filePath",
+		       org_file_nm AS "orgFileNm",
+		       file_nm AS "fileNm",
+		       file_size AS "fileSize",
+		       '1' AS "fileNo",
+		       'PEER_REVIEW' AS "aclObjectType",
+		       object_id AS "aclObjectId"
+		  FROM docs_peerreview
+		 WHERE TRIM(peerreview_no) = TRIM(#{value})
+		   AND COALESCE(deleted_yn, 'N') = 'N'
+		 ORDER BY insert_dt DESC
+		 LIMIT 1
 	</select>
 
 	<select id="selectObjectIdByPeerReviewNo" parameterType="string" resultType="string">

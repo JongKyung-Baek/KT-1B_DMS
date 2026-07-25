@@ -65,7 +65,7 @@ public class SessionExtendController {
         try {
             sessionValueProvider.get().setTimeoutSecond(String.valueOf(sessionTime));
         } catch(Exception e) {
-            log.warn("Unable to update session scoped timeout value", e);
+            log.warn("Session timeout update failed. cause={}", e.getClass().getSimpleName());
         }
 
         response.put("success", true);

@@ -19,24 +19,43 @@
 		auditLogoutSkip = true;
 	}
 
+	function buildAuditLeaveBody() {
+		var fields = ['event=leave'];
+		if (window.SdmsCsrf) {
+			var token = window.SdmsCsrf.getToken();
+			var parameterName = window.SdmsCsrf.getParameterName();
+			if (token && parameterName) {
+				fields.push(encodeURIComponent(parameterName) + '=' + encodeURIComponent(token));
+			}
+		}
+		return fields.join('&');
+	}
+
 	function notifyLogoutOnLeave() {
 		if (auditLeaveNotified || auditLogoutSkip || auditInternalNavigation) {
 			return;
 		}
 
 		auditLeaveNotified = true;
+		var notifyUrl = '${pageContext.request.contextPath}/inside/organizationmanage/auditlog/notifyLogoutOnLeave';
+		var requestBody = buildAuditLeaveBody();
 
 		if (navigator.sendBeacon) {
-			var logoutBlob = new Blob(['leave'], {type: 'text/plain;charset=UTF-8'});
-			navigator.sendBeacon('/inside/organizationmanage/auditlog/notifyLogoutOnLeave', logoutBlob);
-			return;
+			var logoutBlob = new Blob([requestBody], {type: 'application/x-www-form-urlencoded;charset=UTF-8'});
+			if (navigator.sendBeacon(notifyUrl, logoutBlob)) {
+				return;
+			}
 		}
 
 		if (window.fetch) {
-			fetch('/inside/organizationmanage/auditlog/notifyLogoutOnLeave', {
+			var requestHeaders = {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'};
+			if (window.SdmsCsrf) {
+				requestHeaders = window.SdmsCsrf.headers(requestHeaders);
+			}
+			fetch(notifyUrl, {
 				method: 'POST',
-				body: 'leave',
-				headers: {'Content-Type': 'text/plain;charset=UTF-8'},
+				body: requestBody,
+				headers: requestHeaders,
 				keepalive: true
 			});
 		}
@@ -45,7 +64,7 @@
 	function clearPendingLogoutOnStay() {
 		$.ajax({
 			url: '/inside/organizationmanage/auditlog/clearPendingLogoutOnStay',
-			type: 'GET'
+			type: 'POST'
 		});
 	}
 
@@ -189,7 +208,15 @@
 		try { clearTimeout(timerchecker); } catch (e) {}
 		try { skipAuditLogoutOnLeave(); } catch (e) {}
 		try { markAuditInternalNavigation(); } catch (e) {}
-		window.location.replace("/login/logout");
+		var logoutForm = document.createElement('form');
+		logoutForm.method = 'POST';
+		logoutForm.action = '${pageContext.request.contextPath}/login/logout';
+		logoutForm.style.display = 'none';
+		document.body.appendChild(logoutForm);
+		if (window.SdmsCsrf) {
+			window.SdmsCsrf.addTokenToForm(logoutForm);
+		}
+		logoutForm.submit();
 	}
 
 	function checkSession() {

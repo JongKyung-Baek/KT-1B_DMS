@@ -24,13 +24,17 @@ public class ApprovalDao extends AbstractDao{
 		return (ApprovalPopupVO) obj(prefix + "getRequestInfo", param);
 	}
 
+	public ApprovalPopupParam selectApprovalTargetForUpdate(ApprovalPopupParam param) {
+		return (ApprovalPopupParam) obj(prefix + "selectApprovalTargetForUpdate", param);
+	}
+
 	@SuppressWarnings("unchecked")
 	public List<GridResultVO> selectPopupList(ApprovalPopupParam param) {
 		return list(prefix + "selectPopupList", param);
 	}
 
-	public void updateRequestInfo(ApprovalPopupParam param) {
-		update(prefix + "updateRequestInfo", param);
+	public int updateRequestInfo(ApprovalPopupParam param) {
+		return update(prefix + "updateRequestInfo", param);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -38,12 +42,12 @@ public class ApprovalDao extends AbstractDao{
 		return list(prefix + "selectItemList", param);
 	}
 
-	public void insertApprovalFile(ApprovalPopupParam param) {
-		insert(prefix + "insertApprovalFile", param);
+	public int insertApprovalFile(ApprovalPopupParam param) {
+		return (Integer) insert(prefix + "insertApprovalFile", param);
 	}
 
-	public void updateRequestDetail(ApprovalPopupParam param) {
-		update(prefix + "updateRequestDetail", param);
+	public int updateRequestDetail(ApprovalPopupParam param) {
+		return update(prefix + "updateRequestDetail", param);
 	}
 
 	public int selectPopupListCount(ApprovalPopupParam param) {

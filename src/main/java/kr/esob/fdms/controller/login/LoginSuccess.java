@@ -106,7 +106,11 @@ public class LoginSuccess implements AuthenticationSuccessHandler {
 
 		String userPwd = userVo.getUserPwd();
 		// 비밀번호가 '0000'라면 비밀번호 초기화 기능 수행
-		if (verifyPassword(userPwd, basicPassword)) {
+		boolean mustChangePassword = verifyPassword(userPwd, basicPassword);
+		// The stored password hash is only needed during authentication. Do not
+		// retain it in the SecurityContext-backed session principal.
+		userVo.setUserPwd(null);
+		if (mustChangePassword) {
 			// 비밀번호 초기화 페이지로 리다이렉트
 			response.sendRedirect("/login/password");
 			return; // 리다이렉트 후 메소드 종료

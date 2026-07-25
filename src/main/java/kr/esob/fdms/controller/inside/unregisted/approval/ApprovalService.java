@@ -4,7 +4,11 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import kr.esob.fdms.commonlogic.abstractclass.CommonService;
 import kr.esob.fdms.commonlogic.grid.GridResultVO;
@@ -13,6 +17,7 @@ import kr.esob.fdms.commonlogic.mail.DocsMailService;
 import kr.esob.fdms.commonlogic.mail.MailInfoVO;
 import kr.esob.fdms.commonlogic.result.ResultVO;
 import kr.esob.fdms.controller.outside.commonrequest.CommonRequestService;
+import kr.esob.fdms.controller.login.UserVO;
 
 @Service
 public class ApprovalService implements CommonService {
@@ -38,6 +43,7 @@ public class ApprovalService implements CommonService {
 	}
 
 	public ApprovalPopupVO getRequestInfo(ApprovalPopupParam param) {
+		param.setSessionUser(requireAuthenticatedActor());
 		return dao.getRequestInfo(param);
 	}
 
@@ -45,22 +51,26 @@ public class ApprovalService implements CommonService {
 		return dao.selectPopupList(param);
 	}
 
+	@Transactional(rollbackFor = Exception.class)
 	public ResultVO saveApproval(ApprovalPopupParam param) {
 		ResultVO result = new ResultVO();
+		ApprovalPopupParam approvalTarget = loadApprovalTarget(param);
+		param.setApprovalStatusCd(approvalTarget.getApprovalStatusCd());
 		if( "A".equals(param.getSaveType()) ) {			//승인
 			param.setActionCd("APPROVAL");
 			param.setApprovalStatusCd("APPROVAL");
 			param.setStatusCd("APPROVAL");
 			//승인으로 변경
-			dao.updateRequestInfo(param);
+			requireSingleRow(dao.updateRequestInfo(param), "approve unregistered request");
 			// 파일 결재 정보 테이블(DOCS_APPROVAL_FILE)에 각 아이템 추가
 			List<ApprovalPopupVO> itemList = dao.selectItemList(param);
 			for(ApprovalPopupVO tempVo : itemList) {
 				ApprovalPopupParam tempParam = new ApprovalPopupParam();
+				tempParam.setSessionUser(param.getSessionUser());
 				tempParam.setObjectId(tempVo.getObjectId());
 				tempParam.setRequestNo(param.getRequestNo());
 				tempParam.setFileNo(tempVo.getFileNo());
-				dao.insertApprovalFile(tempParam);
+				requireSingleRow(dao.insertApprovalFile(tempParam), "record approved unregistered file");
 			}
 			param.setRejectDesc(null);
 			try {
@@ -72,15 +82,14 @@ public class ApprovalService implements CommonService {
 					mailService.sendDocsMail(mailInfoVo);
 				}
 			}catch(Exception e) {
-				e.printStackTrace();
 			}
 		}else if( "R".equals(param.getSaveType()) ) {	//반려
 			param.setActionCd("REJECT");
 			param.setStatusCd("REJECT");
 			param.setApprovalStatusCd("REJECT");
-			dao.updateRequestInfo(param);
+			requireSingleRow(dao.updateRequestInfo(param), "reject unregistered request");
 		}
-		dao.updateRequestDetail(param);
+		requireSingleRow(dao.updateRequestDetail(param), "complete unregistered approval step");
 		result.setSuccess(true);
 
 		return result;
@@ -88,6 +97,34 @@ public class ApprovalService implements CommonService {
 
 	public int selectPopupListCount(ApprovalPopupParam param) {
 		return dao.selectPopupListCount(param);
+	}
+
+	private ApprovalPopupParam loadApprovalTarget(ApprovalPopupParam param) {
+		if (param == null || param.getRequestNo() == null || param.getRequestNo().trim().isEmpty()
+				|| (!"A".equals(param.getSaveType()) && !"R".equals(param.getSaveType()))) {
+			throw new IllegalArgumentException("Invalid unregistered approval request");
+		}
+		param.setRequestNo(param.getRequestNo().trim());
+		param.setSessionUser(requireAuthenticatedActor());
+		ApprovalPopupParam approvalTarget = dao.selectApprovalTargetForUpdate(param);
+		if (approvalTarget == null) {
+			throw new AccessDeniedException("Unregistered approval request is not accessible");
+		}
+		return approvalTarget;
+	}
+
+	private UserVO requireAuthenticatedActor() {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		if (authentication == null || !(authentication.getPrincipal() instanceof UserVO)) {
+			throw new AccessDeniedException("Authenticated user is required");
+		}
+		return (UserVO) authentication.getPrincipal();
+	}
+
+	private void requireSingleRow(int affectedRows, String operation) {
+		if (affectedRows != 1) {
+			throw new IllegalStateException("Unable to " + operation);
+		}
 	}
 
 }

@@ -1,29 +1,36 @@
 package kr.esob.fdms.commonlogic.viewer;
 
 
-import epdf.epdfconvert;
 import kr.esob.fdms.commonlogic.fileapi.FileApiClient;
 import kr.esob.fdms.commonlogic.abstractclass.CommonService;
 import kr.esob.fdms.commonlogic.message.CommonMessageContainer;
+import kr.esob.fdms.commonlogic.securityacl.FileAccessRequest;
+import kr.esob.fdms.commonlogic.securityacl.SecurityAclService;
 import kr.esob.fdms.commonlogic.systemconfig.SystemConfig;
 import kr.esob.fdms.commonlogic.value.Constant;
 import kr.esob.fdms.controller.inside.distribution.doc_pdf_link_request.DocPdfLinkRequestDao;
 import kr.esob.fdms.controller.inside.unregisted.request.UnregisterRequestDao;
 import kr.esob.fdms.controller.outside.commonrequest.CommonRequestDao;
 import kr.esob.fdms.controller.outside.commonrequest.RequestParam;
+import kr.esob.fdms.controller.login.UserVO;
 import kr.esob.fdms.util.FileUtil;
+import kr.esob.fdms.util.StoragePathUtils;
 import kr.esob.fdms.util.seed.seed.Seed128Cipher;
 import net.sf.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.inject.Inject;
 import java.io.*;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -48,10 +55,28 @@ public class CommonViewerService implements CommonService{
 	@Inject
 	UnregisterRequestDao unregisterRequestDao;
 
+	@Inject
+	SecurityAclService securityAclService;
+
+	@Inject
+	PrintAuditService printAuditService;
+
+	@Inject
+	ViewerTicketService viewerTicketService;
+
 	private final FileApiClient fileApiClient = new FileApiClient();
 
 	private static final int DEFAULT_BUFFER_SIZE = 1024 * 8;
 	private static final String EXCEPTION_EXT[] = {"zip", "exe"};
+	static final String MERGE_PRINT_SECURITY_REASON =
+			"MERGE_PRINT_DISABLED_TICKETED_PDF_ONLY";
+	private static final String MERGE_PRINT_SECURITY_MESSAGE =
+			"Merged printing is disabled because a multi-resource "
+			+ "ticket-backed PDF cannot be securely authorized.";
+	static final String PRINT_CALLBACK_REQUIRED_REASON =
+			"PRINT_RESULT_CALLBACK_REQUIRED";
+	private static final String PRINT_CALLBACK_REQUIRED_MESSAGE =
+			"출력 성공 결과를 검증하는 뷰어 연계가 완료될 때까지 출력 기능을 사용할 수 없습니다.";
 
 	private CommonViewerVO getFileInfo(CommonViewerParam param) {
 		CommonViewerVO tempFileInfo = new CommonViewerVO();
@@ -105,6 +130,7 @@ public class CommonViewerService implements CommonService{
 	@Override
 	public List<CommonViewerVO> selectList(Object object) {
 		CommonViewerParam param = (CommonViewerParam) object;
+		bindActorAndRequire(param, SecurityAclService.DETAIL);
 		List<CommonViewerVO> fileList = new ArrayList<CommonViewerVO>();
 		fileList = dao.selectFileList(param);
 		return fileList;
@@ -118,7 +144,7 @@ public class CommonViewerService implements CommonService{
 
 //	23.07.06 (yskim) Add check destroyCD value.
 public boolean getDestroyStatus(CommonViewerParam param) throws ParseException, UnsupportedEncodingException {
-	System.out.println("yskim_test: in");
+	bindActorAndRequire(param, SecurityAclService.DETAIL);
 
 	CommonViewerVO tempFileInfo = dao.getFileInfoForDestroyStatus(param);
 	String tempFileInfo_printHistory = dao.getFileInfoForDestroyStatus_printHistory(param);
@@ -135,22 +161,22 @@ public boolean getDestroyStatus(CommonViewerParam param) throws ParseException, 
 	if ("1".equals(tempFileInfo.getDestroyStatusCd())
 			|| "2".equals(tempFileInfo.getDestroyStatusCd())
 			|| "3".equals(tempFileInfo.getDestroyStatusCd())) {
-		System.out.println("yskim_test: getDestroyStatus, destroy....");
 
 		return true;
 	} else {
-		System.out.println("yskim_test: getDestroyStatus, not destroyed");
 
 		return false;
 	}
 }
 
 	public boolean getDestroyStatus_printHistory(CommonViewerParam param) throws ParseException, UnsupportedEncodingException {
+		// This lookup is part of the VIEW pre-check. Requiring PRINT here made a
+		// view-only user fail before the viewer was opened.
+		bindActorAndRequire(param, SecurityAclService.DETAIL);
 
 		String tempFileInfo_printHistory = dao.getFileInfoForDestroyStatus_printHistory(param);
 		// 프린트 히스토리의 VO에 데이터 담으면 됨. dao로 확인할때, 출력이력 보여주는 db확인 하면 됨.
 		// 거기서 폐기요청자 들어 있으면 저 아래 식에 넣어두는거
-		System.out.println("tempFileInfo_printHistory:  " + tempFileInfo_printHistory);
 //		임시방편으로 처리해둠
 		if (tempFileInfo_printHistory == null) {
 			return false;
@@ -158,11 +184,9 @@ public boolean getDestroyStatus(CommonViewerParam param) throws ParseException, 
 
 
 		if (tempFileInfo_printHistory != null) {
-			System.out.println("yskim_test: getDestroyStatus, destroy....");
 
 			return true;
 		} else {
-			System.out.println("yskim_test: getDestroyStatus, not destroyed");
 
 			return false;
 		}
@@ -178,22 +202,18 @@ public boolean getDestroyStatus(CommonViewerParam param) throws ParseException, 
 
 
 	public CommonViewerVO getViewFilePath(CommonViewerParam param) throws ParseException, UnsupportedEncodingException {
+		bindActorAndRequire(param, SecurityAclService.VIEW);
 		CommonViewerVO result = new CommonViewerVO();
-		if(param.getSessionUser().getAuthSite().equals("E")) {
-			result.setViewerCabUrl(SystemConfig.getSystemConfigValue("VIEWER_CAB_URL_OUT"));
-		}else {
-			result.setViewerCabUrl(SystemConfig.getSystemConfigValue("VIEWER_CAB_URL"));
-		}
+		result.setSuccess(false);
 		//파일 정보 조회
 		CommonViewerVO tempFileInfo = getFileInfo(param);
 		result.setRequestType(param.getRequestType());
-		System.out.println("yskim_test: tempFileInfo (" + tempFileInfo + ")");
 
 		//파일 Copy
 //		File orgFile = new File(SystemConfig.getSystemConfigValue("VIEWER_NETWORK_PATH") + tempFileInfo.getFilePath());
 
 		if( null==tempFileInfo ) {            //파일이 없을경우
-			System.out.println("yskim_test: 파일이 없습니다. setSuccess(false)");
+			log.debug("[VIEWER] file metadata not found");
 			result.setSuccess(false);
 		} else if(tempFileInfo.getDestroyStatusCd() != null && ("1".equals(tempFileInfo.getDestroyStatusCd()) || "2".equals(tempFileInfo.getDestroyStatusCd()) || "3".equals(tempFileInfo.getDestroyStatusCd()))) {
 			// 1: 폐기중, 2: 폐기요청, 3: 폐기승인
@@ -222,14 +242,15 @@ public boolean getDestroyStatus(CommonViewerParam param) throws ParseException, 
 			String orgPathOut = "";
 			boolean fileApiSource = "SW".equals(param.getObjectType()) && isFileApiPath(tempFileInfo.getFilePath());
 			if (fileApiSource) {
-				System.out.println("[FILE_API_VIEWER] file api path detected. filePath=" + tempFileInfo.getFilePath());
+				log.debug("[FILE_API_VIEWER] source detected");
 				orgPath = cacheFileApiFileForViewer(tempFileInfo.getFilePath(), tempFileInfo.getFileOrgNm());
 				orgPathOut = orgPath;
 			} else if( ("UNREG".equals(param.getRequestType())) || ("UNREG_DISTRIBUTION".equals(param.getRequestType())) ) {
-				orgPath = tempFileInfo.getFilePath().replaceAll("/", "\\\\");
-				System.out.println("yskim_test: orgPath" + orgPath);
+				orgPath = StoragePathUtils.toPath(tempFileInfo.getFilePath()).toString();
 			}else {
-				orgPath = SystemConfig.getSystemConfigValue("VIEWER_NETWORK_PATH") + tempFileInfo.getFilePath().replaceAll("/", "\\\\");
+				orgPath = StoragePathUtils.resolve(
+						SystemConfig.getSystemConfigValue("VIEWER_NETWORK_PATH"),
+						tempFileInfo.getFilePath()).toString();
 				orgPathOut = tempFileInfo.getFilePath();
 //				orgPath = SystemConfig.getSystemConfigValue("VIEWER_NETWORK_PATH") +  tempFileInfo.getFileNm();
 			}
@@ -254,11 +275,12 @@ public boolean getDestroyStatus(CommonViewerParam param) throws ParseException, 
 			String oViewerServerIp = SystemConfig.getSystemConfigValue("SERVER_URL_OUTSIDE");
 
 			if (fileApiSource) {
-				String viewerPath = buildAdapPdfViewerUrl(new File(orgPath).getName());
+				String viewerTicket = viewerTicketService.issue(param, new File(orgPath).getName());
+				String viewerPath = buildAdapPdfViewerUrl(viewerTicket);
 				result.setFilePath(viewerPath);
 				result.setFileNm(tempFileInfo.getFileOrgNm());
 				result.setSuccess(true);
-				log.info("FILE_API viewer URL : " + viewerPath);
+				log.info("[VIEWER] file-api viewer prepared");
 			} else if(param.getSessionUser().getAuthSite().equals("E")) {
 				//외부서버에 옮겨질 파일 경로
 				String outServerFilepath = SystemConfig.getSystemConfigValue("VIEWER_UPDOWN_PATH");
@@ -267,25 +289,21 @@ public boolean getDestroyStatus(CommonViewerParam param) throws ParseException, 
 
 				//외부서버로 파일 Copy 요청
 				JSONObject fileCall = FileUtil.callSender(
-						Seed128Cipher.encrypt(sViewerServerIp, Constant.SEED_KEY.getBytes(), Constant.SEED_ENCODING)
-						, Seed128Cipher.encrypt(oViewerServerIp, Constant.SEED_KEY.getBytes(), Constant.SEED_ENCODING)
-						, Seed128Cipher.encrypt(orgPath, Constant.SEED_KEY.getBytes(), Constant.SEED_ENCODING)
-						, Seed128Cipher.encrypt(outServerFilepath, Constant.SEED_KEY.getBytes(), Constant.SEED_ENCODING)
-						, Seed128Cipher.encrypt(tempFileInfo.getFileOrgNm(), Constant.SEED_KEY.getBytes(), Constant.SEED_ENCODING));
-				//System.out.println("fileNm ================================> " + fileCall.get("fileNm"));
-				log.info("원본 서버 아이피 : "+sViewerServerIp);
-				log.info("카피 서버 아이피 : "+oViewerServerIp);
-				log.info("원본 경로 : "+orgPath);
-				log.info(fileCall.toString());
+						Seed128Cipher.encrypt(sViewerServerIp, Constant.legacyCryptoKeyBytes(), Constant.SEED_ENCODING)
+						, Seed128Cipher.encrypt(oViewerServerIp, Constant.legacyCryptoKeyBytes(), Constant.SEED_ENCODING)
+						, Seed128Cipher.encrypt(orgPath, Constant.legacyCryptoKeyBytes(), Constant.SEED_ENCODING)
+						, Seed128Cipher.encrypt(outServerFilepath, Constant.legacyCryptoKeyBytes(), Constant.SEED_ENCODING)
+						, Seed128Cipher.encrypt(tempFileInfo.getFileOrgNm(), Constant.legacyCryptoKeyBytes(), Constant.SEED_ENCODING));
+				String transferredFileName = FileUtil.requireSuccessfulTransferFileName(fileCall);
+				log.info("[VIEWER] legacy transfer prepared");
 
 				//외부서버 뷰어 호출 URL
 				//String oViewerPath = null;
-				String oViewerPath = orgPathOutTemp + fileCall.get("fileNm");
-				//System.out.println("oViewerPath ================================> " + oViewerPath);
+				String oViewerPath = orgPathOutTemp + transferredFileName;
 
 				// 외부 서버로 파일을 옮긴 다음 파일 분할
 				if(ext.equalsIgnoreCase("SVG")) {
-					List<String> svgList = ViewerUtil.executeSvgFileParser(orgPathOutTemp + fileCall.get("fileNm"));
+					List<String> svgList = ViewerUtil.executeSvgFileParser(orgPathOutTemp + transferredFileName);
 
 					if(svgList.size() > 0) {
 						StringBuilder sb = new StringBuilder();
@@ -307,8 +325,7 @@ public boolean getDestroyStatus(CommonViewerParam param) throws ParseException, 
 				result.setFilePath(SystemConfig.getSystemConfigValue("VIEWER_URL_OUT") + oViewerPath);
 				result.setFileNm(tempFileInfo.getFileOrgNm());
 				result.setSuccess(true);
-				//System.out.println("외부서버 뷰어 호출 URL ================> " + oViewerPath);
-				log.info(oViewerPath);
+				log.info("[VIEWER] external viewer prepared");
 			} else {
 				//내부서버 뷰어 호출 URL
 				String sViewerPath = SystemConfig.getSystemConfigValue("VIEWER_URL") + orgPath;
@@ -339,8 +356,7 @@ public boolean getDestroyStatus(CommonViewerParam param) throws ParseException, 
 				result.setFilePath(sViewerPath);
 				result.setFileNm(tempFileInfo.getFileOrgNm());
 				result.setSuccess(true);
-				//System.out.println("내부서버 뷰어 호출 URL ================> " + sViewerPath);
-				log.info(sViewerPath);
+				log.info("[VIEWER] internal viewer prepared");
 			}
 
 //			}else {
@@ -382,10 +398,10 @@ public boolean getDestroyStatus(CommonViewerParam param) throws ParseException, 
 			}
 
 
-			log.debug("orgPath : " + orgPath);
+			log.debug("[VIEWER] source resolved");
 		}
 
-		log.debug(JSONObject.fromObject(result).toString());
+		log.debug("[VIEWER] response prepared");
 
 		return result;
 	}
@@ -413,16 +429,39 @@ public boolean getDestroyStatus(CommonViewerParam param) throws ParseException, 
                 }
             }
         } catch (Exception e) {
-			e.printStackTrace();
-			System.out.println(e.getMessage());
+			log.warn("[VIEWER_COPY] failed type={}", e.getClass().getSimpleName());
             ret = false;
         }
         return ret;
 	}
 
 	public CommonViewerVO getMergePrintInfo(CommonViewerParam param) throws ParseException {
-
+		if (param == null) {
+			throw new IllegalArgumentException("Merged print request is required.");
+		}
+		UserVO actor = securityAclService.requireCurrentUser();
+		param.setSessionUser(actor);
+		List<CommonViewerParam> printItems = buildMergePrintItems(param);
+		if (printItems.isEmpty()) {
+			throw new IllegalArgumentException("Merged print items are required.");
+		}
+		for (CommonViewerParam printItem : printItems) {
+			printItem.setSessionUser(actor);
+			requireFileAccess(printItem, SecurityAclService.PRINT);
+		}
+		/*
+		 * A viewer ticket is bound to exactly one object/file ACL subject.
+		 * Releasing a multi-resource result through the legacy ESOB/static URL
+		 * would bypass per-item re-authorization when the result is fetched.
+		 * Until an aggregate ticket schema and a server-side PDF merger exist,
+		 * stop after validating every canonical item and release no job/path.
+		 */
+		CommonViewerVO secureRejection = rejectUnsafeMergePrint(printItems);
+		if (secureRejection != null) {
+			return secureRejection;
+		}
 		CommonViewerVO result = new CommonViewerVO();
+		result.setSuccess(false);
 		try {
 			String strArrObjectId = "";
 			String strRequestNo = "";
@@ -430,8 +469,6 @@ public boolean getDestroyStatus(CommonViewerParam param) throws ParseException, 
 			strArrObjectId = param.getObjectId();
 			strRequestNo = param.getRequestNo();
 			strFileNo = "0";
-			System.out.println("strArrObjectId = " + strArrObjectId);
-			System.out.println("strRequestNo = " + strRequestNo);
 
 			//config table에서, 대상파일 경로 조희
 			List<Map<String,Object>> dbConfig = pdao.selectDbConfig();
@@ -448,7 +485,6 @@ public boolean getDestroyStatus(CommonViewerParam param) throws ParseException, 
 			String cvrtFilePathNm="";
 			String cvrtFileUrl = "";
 			String dirUrl = "";
-			String FilePath3D ="";
 
 
 			String strFeedObjectId = "";
@@ -479,15 +515,10 @@ public boolean getDestroyStatus(CommonViewerParam param) throws ParseException, 
 				if(config.get("SYSTEM_CONFIG_CD").equals("MERGE_PATH")) {
 					mergePdfPath = config.get("SYSTEM_CONFIG_VALUE").toString();
 				}
-				if(config.get("SYSTEM_CONFIG_CD").equals("3D_FILE_PATH")){
-					FilePath3D = config.get("SYSTEM_CONFIG_VALUE").toString();
-					System.out.println("FilePath3D =>>>>>>>>>>> " + FilePath3D);
-				}
 			}
 
 			//objctId별로 파일이 있는지 체크한후 없으면 생성
 
-			String[] arraysStr = strArrObjectId.split("__");
 			String strObject = "";
 			String strObjectType = "";
 			String strWmType = "";
@@ -507,44 +538,28 @@ public boolean getDestroyStatus(CommonViewerParam param) throws ParseException, 
 			int intCvrt = 10;
 			int intCountCvrt = 0;
 
-			//System.out.println(ArraysStr);
 
 			strObjectIdSql = "";
 
-			for(String s : arraysStr) {
-				if( s != null ) {
-					String[] arraysStr2 = s.split("_");
-					System.out.println(s);
-
-					strObject = arraysStr2[0];
-					strObjectType = arraysStr2[1];
-					strWmType = arraysStr2[2];
+			for(CommonViewerParam parsedItem : printItems) {
+				if (parsedItem != null) {
+					strObject = parsedItem.getObjectId();
+					strObjectType = parsedItem.getObjectType();
+					strWmType = parsedItem.getWatermarkType();
 
 					// 출력 성공하면 개수 올려주는 테스트 코드
 					objectID = strObject;
-					param.setObjectId(objectID);
 //					dao.updatePrintCnt(param);
 
 					Map<String, Object> map = new HashMap<String, Object>();
 					map.put("OBJECT_ID",strObject);
-					System.out.println("OBJECT_ID -> " + strObject);
-					System.out.println("strObjectType -> " + strObjectType);
+					map.put("FILE_NO", parsedItem.getFileNo());
 
 					if (strObjectType.equals("문서") || strObjectType.equals("DOC")) {
-						System.out.println("objectType= DOC = "+strObjectType);
 						orgFileNm = pdao.selectFilePathNmDoc(map);
 						strTotalPageNo = pdao.selectTotalPageNoDoc(map);
 					} else if (strObjectType.equals("도면") || strObjectType.equals("DRAWING") ) {
-						System.out.println("objectType= Drawing = "+strObjectType);
 						orgFileNm = pdao.selectFilePathNmDrawing(map);
-						System.out.println("orgFileNm =>>>>>>>>> " + orgFileNm);
-						if(orgFileNm.contains(FilePath3D)){
-							result.setSuccess(false);
-							result.setFailReason("3D ");
-							result.setFailType("NO_SUPPORT_EXT");
-							System.out.println("실패 ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ");
-							return result;
-						}
 						strTotalPageNo = pdao.selectTotalPageNoDrawing(map);
 					}
 
@@ -555,14 +570,14 @@ public boolean getDestroyStatus(CommonViewerParam param) throws ParseException, 
 //					}
 
 					// 윈도우 전용 가공 처리 23.05.15 koo
-					orgFileNm = orgFileNm.replace("/", "\\");
+					orgFileNm = StoragePathUtils.toPath(orgFileNm).toString();
 
-					System.out.println("orgFileNm -> " + orgFileNm);
 					orgFilePathNm = orgFileNm;
-					cvrtFilePathNm = adapPdfPath + "\\" + objectID + ".pdf";
+					cvrtFilePathNm = StoragePathUtils.resolve(
+							adapPdfPath.replace("$", ""), objectID + ".pdf").toString();
 					//chkcvrtFilePathNm = adapPdfPath+ "/" + objectID+".esob";
-					chkcvrtFilePathNm = adapPdfPath+ "\\" + objectID+".esob";
-					System.out.println("chkcvrtFilePathNm -> " + chkcvrtFilePathNm);
+					chkcvrtFilePathNm = StoragePathUtils.resolve(
+							adapPdfPath.replace("$", ""), objectID + ".esob").toString();
 					cvrtFileUrl =  adapPdfUrl + "?file=" + "/out/destfile" + orgFileNm + ".esob";
 					// dirUrl = adapPdfUrl + "?file=" + "/out/destfile/" + URLEncoder.encode(orgFileNm) + ".esob";
 					intCvrt = 0;
@@ -570,26 +585,23 @@ public boolean getDestroyStatus(CommonViewerParam param) throws ParseException, 
 					// 이미 파일 생성된 경우 변환 안 함 + 전체 페이지 수를 가져온다. 아니면 페이지 수 = 리턴 값
 					File fileExist = new File(chkcvrtFilePathNm);
 					if (fileExist.isFile()) {
-						System.out.println("cvrtFilePathNm exists : " + chkcvrtFilePathNm);
+						log.debug("[MERGE_PRINT] converted file cache hit");
 
 						intCvrt = 1;
 					} else {
-						System.out.println("getMergePrintInfo, if (fileExist.isFile()) else orgFilePathNm " + orgFilePathNm);
-						System.out.println("getMergePrintInfo, if (fileExist.isFile()) else cvrtFilePathNm " + cvrtFilePathNm);
+						log.debug("[MERGE_PRINT] conversion requested");
 
 						intCvrt = requestPathConvertApi(orgFilePathNm, adapPdfPath, objectID);
 						// 변환 API 성공 응답이어도 실제 .esob 생성 여부로 최종 판단
 						if (intCvrt > 0 && !(new File(chkcvrtFilePathNm).isFile())) {
-							System.out.println("convert api success but .esob not found: " + chkcvrtFilePathNm);
+							log.warn("[MERGE_PRINT] conversion output missing");
 							intCvrt = 0;
 						}
 					}
 					//이미 파일 생성된 경우 변환 안 함*/
 					strTotalPageNo = String.valueOf(intCvrt);
 
-					System.out.println("strTotalPageNo=  "+strTotalPageNo);
-					System.out.println("ObjectId= " + objectID);
-					System.out.println("intCvrt= " + intCvrt);
+					log.debug("[MERGE_PRINT] conversion status={}", intCvrt);
 
 					//변환 결과를 CVRT에 입력
 
@@ -620,11 +632,9 @@ public boolean getDestroyStatus(CommonViewerParam param) throws ParseException, 
 				strObjectIdSql = strObjectIdSql + ",\'"+ objectID + "\'";
 			}
 
-			System.out.println("strObjectIdSql -> " + strObjectIdSql);
 
 			strObjectIdSql = strObjectIdSql.substring(1,strObjectIdSql.length() );
 
-			System.out.println("StrObjectIdSql == " + strObjectIdSql);
 
 			strFeedObjectId= feedObjectId.substring(1, feedObjectId.length());
 			strParamWmType= paramWmType.substring(1, paramWmType.length());
@@ -632,10 +642,7 @@ public boolean getDestroyStatus(CommonViewerParam param) throws ParseException, 
 
 			//머지 파일 생성 후 경로가져와서 DB입력
 
-			System.out.println("intCountCvrt= "+intCountCvrt);
-			System.out.println("strFeedObjectId= "+strFeedObjectId);
-			System.out.println("strParamWmType= "+strParamWmType);
-			System.out.println("strFeedObjectIdFilePathNm= "+strFeedObjectIdFilePathNm);
+			log.debug("[MERGE_PRINT] convertedCount={}", intCountCvrt);
 
 			strMergeFilePathNm = "";
 
@@ -648,23 +655,19 @@ public boolean getDestroyStatus(CommonViewerParam param) throws ParseException, 
 				Calendar cal = Calendar.getInstance();
 				String dateString;
 				dateString = String.format("%04d-%02d-%02d", cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
-				File f = new File(mergePdfPath + "\\" +dateString);
+				File f = new File(mergePdfPath, dateString);
+				if (!f.isDirectory() && !f.mkdirs()) {
+					throw new IllegalStateException("병합 파일 디렉터리를 생성할 수 없습니다.");
+				}
 
-				if (!f.mkdirs())
-					//System.err.println("디렉토리 생성 실패");
+				// GUID 구함
+				strGuid = pdao.selectGuid("");
 
-					//GUID 구함
-					strGuid = pdao.selectGuid("");
-
-				strMergeFilePathNm = mergePdfPath + "\\" +dateString + "\\" + strGuid + ".pdf";
-				strCopyFilePathNm = mergePdfPath + "\\" +dateString + "\\" + strGuid + ".esob";
+				strMergeFilePathNm = new File(f, strGuid + ".pdf").getPath();
+				strCopyFilePathNm = new File(f, strGuid + ".esob").getPath();
 				//strMergeFilePathNm = mergePdfPath + "\\" +dateString + "\\" + "test.pdf";
-				strMergeFileUrl =  adapPdfUrl + "?file=" + "/out/mergefile" + dateString + "/" + strGuid + ".esob";
-				strMergedirUrl = adapPdfUrl + "?file=" + "/out/mergefile/" + dateString + "/" + URLEncoder.encode(strGuid) + ".esob";
 				//strMergedirUrl = strMergedirUrl + "&ParamWmType=" + strParamWmType;
 
-				System.out.println("strFeedObjectIdFilePathNm= " + strFeedObjectIdFilePathNm);
-				System.out.println("strMergeFilePathNm= " + strMergeFilePathNm);
 
 				// 파일이 1개면 이동
 				if (intCountCvrt == 1 ) {
@@ -672,24 +675,23 @@ public boolean getDestroyStatus(CommonViewerParam param) throws ParseException, 
 				}
 				// 파일이 1개보다 크면 머지
 				else if (intCountCvrt > 1) {
-					epdfconvert mergeFile = new epdfconvert();
-					intCvrt = mergeFile.pdfmerge(strFeedObjectIdFilePathNm, strMergeFilePathNm);
+					throw new UnsupportedOperationException("네이티브 PDF 병합 기능은 제거되었습니다.");
 				}
 
-				System.out.println("intCvrt= "+intCvrt);
+				log.debug("[MERGE_PRINT] merge status={}", intCvrt);
 
-				// 출력 횟수 업데이트
-				param.setObjectId(objectID);
-				dao.updatePrintCnt(param);
-
-				//성공
-				result.setSuccess(true);
-				result.setFilePath(strMergedirUrl);
-				result.setWatermarkInfo(strParamWmType);
+				// Defense in depth: even if the entry guard is changed later,
+				// this legacy branch can never release a raw cache path.
+				return rejectUnsafeMergePrint(printItems);
 			}
 		} catch(Exception e) {
-			e.printStackTrace();
-			log.error(e.getMessage());
+			log.error("[MERGE_PRINT] failed type={}", e.getClass().getSimpleName());
+			result.setSuccess(false);
+			result.setPrintJobId(null);
+			result.setFilePath(null);
+			result.setWatermarkInfo(null);
+			result.setFailType(MERGE_PRINT_SECURITY_REASON);
+			result.setFailReason(MERGE_PRINT_SECURITY_MESSAGE);
 		}
 
 		return result;
@@ -706,7 +708,7 @@ public boolean getDestroyStatus(CommonViewerParam param) throws ParseException, 
 
 			File inputFile = new File(inputFilePath);
 			if (!inputFile.isFile()) {
-				System.out.println("convert api skip: input file not found " + inputFilePath);
+				log.warn("[CONVERT_API] input file missing");
 				return 0;
 			}
 
@@ -735,13 +737,13 @@ public boolean getDestroyStatus(CommonViewerParam param) throws ParseException, 
 
 			int status = connection.getResponseCode();
 			String body = readHttpBody(connection, status >= 200 && status < 300);
-			System.out.println("convert api status=" + status + ", body=" + body);
+			log.info("[CONVERT_API] completed status={}", status);
 			if (status >= 200 && status < 300) {
 				promoteConvertedPdfAsEsob(outputDir, objectId);
 				return 1;
 			}
 		} catch (Exception e) {
-			System.out.println("convert api error: " + e.getMessage());
+			log.warn("[CONVERT_API] failed type={}", e.getClass().getSimpleName());
 		} finally {
 			try {
 				if (requestStream != null) {
@@ -757,7 +759,8 @@ public boolean getDestroyStatus(CommonViewerParam param) throws ParseException, 
 
 	private void promoteConvertedPdfAsEsob(String outputDir, String objectId) {
 		try {
-			File targetEsob = new File(outputDir + "\\" + objectId + ".esob");
+			File targetEsob = StoragePathUtils.resolve(
+					outputDir.replace("$", ""), objectId + ".esob").toFile();
 			if (targetEsob.isFile()) {
 				return;
 			}
@@ -783,9 +786,9 @@ public boolean getDestroyStatus(CommonViewerParam param) throws ParseException, 
 			});
 
 			copyFile(candidates[0].getAbsolutePath(), targetEsob.getAbsolutePath());
-			System.out.println("converted pdf mapped to esob: " + candidates[0].getAbsolutePath() + " -> " + targetEsob.getAbsolutePath());
+			log.info("[CONVERT_API] output promoted");
 		} catch (Exception e) {
-			System.out.println("promoteConvertedPdfAsEsob error: " + e.getMessage());
+			log.warn("[CONVERT_API] output promotion failed type={}", e.getClass().getSimpleName());
 		}
 	}
 
@@ -842,17 +845,26 @@ public boolean getDestroyStatus(CommonViewerParam param) throws ParseException, 
 	}
 
 
-	public CommonViewerVO getPrintInfo(CommonViewerParam param) throws ParseException {
+	public CommonViewerVO getPrintInfo(CommonViewerParam param) {
+		bindActorAndRequire(param, SecurityAclService.PRINT);
+		CommonViewerVO result = new CommonViewerVO();
+		result.setSuccess(false);
+		result.setPrintJobId(null);
+		result.setFilePath(null);
+		result.setWatermarkInfo(null);
+		result.setFailType(PRINT_CALLBACK_REQUIRED_REASON);
+		result.setFailReason(PRINT_CALLBACK_REQUIRED_MESSAGE);
+		log.warn("[PRINT_VIEWER][DENY] reason={}", PRINT_CALLBACK_REQUIRED_REASON);
+		return result;
+	}
+
+	@SuppressWarnings("unused")
+	private CommonViewerVO prepareLegacyPrintInfo(CommonViewerParam param) throws ParseException {
+		bindActorAndRequire(param, SecurityAclService.PRINT);
 		CommonViewerVO result = new CommonViewerVO();
 
 		try {
 			String outServerFilepath = SystemConfig.getSystemConfigValue("UPDOWN_PRINT_PATH");
-
-			if(param.getSessionUser().getAuthSite().equals("E")) {
-				result.setViewerCabUrl(SystemConfig.getSystemConfigValue("VIEWER_CAB_URL_OUT"));
-			}else {
-				result.setViewerCabUrl(SystemConfig.getSystemConfigValue("VIEWER_CAB_URL"));
-			}
 
 			String filePath = "";
 			String filePathOut = "";
@@ -876,6 +888,10 @@ public boolean getDestroyStatus(CommonViewerParam param) throws ParseException, 
 				result.setFailReason("폐기상태인 자료는 출력할 수 없습니다.");
 			} else {                                //파일이 있는경우
 				String ext = fileInfo.getFileOrgNm().substring(fileInfo.getFileOrgNm().lastIndexOf(".")+1, fileInfo.getFileOrgNm().length());
+				if (!"PDF".equalsIgnoreCase(ext)) {
+					throw new UnsupportedOperationException(
+							"Printing is limited to ticket-backed PDF files.");
+				}
 //			for(CommonViewerVO tempFileInfo : fileInfo) {
 //				String ext = fileInfo.getFileOrgNm().substring(fileInfo.getFileOrgNm().lastIndexOf(".")+1, fileInfo.getFileOrgNm().length());
 //				String tempPath = SystemConfig.getSystemConfigValue("VIEWER_TEMP_PATH").replace("$", "");
@@ -891,30 +907,36 @@ public boolean getDestroyStatus(CommonViewerParam param) throws ParseException, 
 				if( ("UNREG".equals(param.getRequestType())) || ("UNREG_DISTRIBUTION".equals(param.getRequestType())) ) {
 					filePath = fileInfo.getFilePath();
 				}else {
-					filePath = SystemConfig.getSystemConfigValue("VIEWER_NETWORK_PATH") + fileInfo.getFilePath();
+					filePath = StoragePathUtils.resolve(
+							SystemConfig.getSystemConfigValue("VIEWER_NETWORK_PATH"),
+							fileInfo.getFilePath()).toString();
 					filePathOut = outServerFilepath + fileInfo.getFileOrgNm();
 //						orgPath = SystemConfig.getSystemConfigValue("VIEWER_NETWORK_PATH") + tempFileInfo.getFileNm();
 				}
 
 				//내부서버 네트워크 드라이브 원본 경로
-				String orgPath = SystemConfig.getSystemConfigValue("VIEWER_NETWORK_PATH") + fileInfo.getFilePath().replaceAll("/", "\\\\");
+				String orgPath = StoragePathUtils.resolve(
+						SystemConfig.getSystemConfigValue("VIEWER_NETWORK_PATH"),
+						fileInfo.getFilePath()).toString();
 				String sViewerServerIp = SystemConfig.getSystemConfigValue("SERVER_URL_INSIDE");
 				String oViewerServerIp = SystemConfig.getSystemConfigValue("SERVER_URL_OUTSIDE");
 				String fileTransId = "";
-				if(param.getSessionUser().getAuthSite().equals("E")) {
+				if(param.getSessionUser().getAuthSite().equals("E") && !"PDF".equalsIgnoreCase(ext)) {
 					//외부서버 출력
 					result.setFileOrgNm(fileInfo.getFileOrgNm());
-					log.debug("filePathOut : " + filePathOut);
-					result.setSuccess(true);
+					log.debug("[PRINT_VIEWER] external source prepared");
 					//http://211.197.235.163:9001/DaVuForEG/DaViewSvc?ediauto=T&filename=$D:\\DOCS\\FILE\\general\\ff\\f2\\UA20030925_1_D_0_01.PLT
 
 					//외부서버로 파일 Copy 요청
-					JSONObject fileCall = FileUtil.callSender(sViewerServerIp, oViewerServerIp, orgPath, outServerFilepath, fileInfo.getFileOrgNm());
-					//System.out.println("fileNm ================================> " + fileCall.get("fileNm"));
-					fileTransId = (String)fileCall.get("fileNm");
+					JSONObject fileCall = FileUtil.callSender(
+							Seed128Cipher.encrypt(sViewerServerIp, Constant.legacyCryptoKeyBytes(), Constant.SEED_ENCODING),
+							Seed128Cipher.encrypt(oViewerServerIp, Constant.legacyCryptoKeyBytes(), Constant.SEED_ENCODING),
+							Seed128Cipher.encrypt(orgPath, Constant.legacyCryptoKeyBytes(), Constant.SEED_ENCODING),
+							Seed128Cipher.encrypt(outServerFilepath, Constant.legacyCryptoKeyBytes(), Constant.SEED_ENCODING),
+							Seed128Cipher.encrypt(fileInfo.getFileOrgNm(), Constant.legacyCryptoKeyBytes(), Constant.SEED_ENCODING));
+					fileTransId = requireSuccessfulTransfer(fileCall);
 
 //					String oViewerPath = orgPathOutTemp + fileCall.get("fileNm");
-//					//System.out.println("oViewerPath ================================> " + oViewerPath);
 //
 //					// 외부 서버로 파일을 옮긴 다음 파일 분할
 //					if(ext.equalsIgnoreCase("SVG")) {
@@ -940,15 +962,13 @@ public boolean getDestroyStatus(CommonViewerParam param) throws ParseException, 
 //
 //					result.setFilePath(SystemConfig.getSystemConfigValue("VIEWER_URL_OUT") + oViewerPath);
 
-					log.info(fileCall.toString());
+					log.info("[PRINT_VIEWER] legacy transfer prepared");
 				}else {
 					//내부서버 출력
 					result.setFileOrgNm(fileInfo.getFileOrgNm());
-					log.debug("filePath : " + filePath);
-					result.setSuccess(true);
+					log.debug("[PRINT_VIEWER] internal source prepared");
 				}
 
-				//System.out.println("fileInfo.getFileOrgNm() : " + fileInfo.getFileOrgNm());
 //				log.info("copyPath : " + copyPath);
 //				if(copyFile(orgPath, copyPath)) {
 //					log.info("copy 성공");
@@ -971,19 +991,18 @@ public boolean getDestroyStatus(CommonViewerParam param) throws ParseException, 
 //				}
 //			}
 
-				if(result.isSuccess()) {
+				if(!isBlankValue(result.getFileOrgNm())) {
 					//워터마크
-					filePath = filePath.replaceAll("/", "\\\\\\\\");
+					filePath = StoragePathUtils.toPath(filePath).toString();
 //					filePath = filePath.replaceAll("a2085qdfpkgoaqow3mamhtmyn8hupqsbiqf8d1t8p6c.g4w", "111.txt");
-					log.debug("replace filePath : " + filePath);
+					log.debug("[PRINT_VIEWER] source normalized");
 
 					String viewerCallUrl = "";
 
-					if(param.getSessionUser().getAuthSite().equals("E")) {
+					if(param.getSessionUser().getAuthSite().equals("E") && !"PDF".equalsIgnoreCase(ext)) {
 						//viewerCallUrl = SystemConfig.getSystemConfigValue("VIEWER_URL_OUT") + outServerFilepath + fileTransId;
 
 						viewerCallUrl = outServerFilepath + fileTransId;
-						System.out.println("oViewerPath ================================> " + viewerCallUrl);
 
 						// 외부 서버로 파일을 옮긴 다음 파일 분할
 						if(ext.equalsIgnoreCase("SVG")) {
@@ -1039,27 +1058,49 @@ public boolean getDestroyStatus(CommonViewerParam param) throws ParseException, 
 						result.setFilePath(viewerCallUrl);
 					}
 
-					System.out.println("프린트 호출 URL : " +  viewerCallUrl);
-					log.info("프린트 호출 URL : " + viewerCallUrl);
+					String cachedPdfName = cacheLocalPdfForViewer(filePath);
+					String viewerTicket = viewerTicketService.issue(param, cachedPdfName);
+					result.setFilePath(buildAdapPdfViewerUrl(viewerTicket));
+					log.info("[PRINT_VIEWER] ticket-backed viewer prepared");
 					CommonViewerParam watermarkParam = new CommonViewerParam();
 					watermarkParam.setUserType(param.getUserType());
 					watermarkParam.setWatermarkType(param.getWatermarkType());
 					result.setWatermarkInfo(getWatermarkInfo(watermarkParam, fileInfo));
 
-					log.debug(JSONObject.fromObject(result).toString());
+					log.debug("[PRINT_VIEWER] response prepared");
 
-					//출력 횟수 업데이트
-					dao.updatePrintCnt(param);
+					// 실제 성공 콜백 전에는 출력 횟수를 올리지 않는다.
+					if (isBlankValue(result.getFilePath())) {
+						throw new IllegalStateException("Print viewer path was not prepared.");
+					}
+					result.setPrintJobId(printAuditService.start(param));
+					result.setSuccess(true);
 				}else {
 
 				}
 			}
+		} catch (Constant.LegacyCryptoConfigurationException e) {
+			log.error("Legacy print encryption is unavailable; configure KT1B_LEGACY_CRYPTO_KEY");
+			throw e;
 		} catch(Exception e) {
-			e.printStackTrace();
-			log.error(e.getMessage());
+			log.error("[PRINT_VIEWER] failed type={}", e.getClass().getSimpleName());
+			result.setSuccess(false);
+			result.setPrintJobId(null);
+			result.setFilePath(null);
+			result.setFileOrgNm(null);
+			result.setFailType("PRINT_PREPARE_FAILED");
+			result.setFailReason("Print file preparation failed.");
 		}
 
 		return result;
+	}
+
+	static String requireSuccessfulTransfer(JSONObject transfer) {
+		return FileUtil.requireSuccessfulTransferFileName(transfer);
+	}
+
+	private boolean isBlankValue(String value) {
+		return value == null || value.trim().isEmpty();
 	}
 
 	private String getWatermarkInfo(CommonViewerParam param, CommonViewerVO fileInfo) throws ParseException {
@@ -1159,13 +1200,117 @@ public boolean getDestroyStatus(CommonViewerParam param) throws ParseException, 
 
 
 	public void updatePrintCnt(CommonViewerParam param){
-		dao.updatePrintCnt(param);
+		throw new UnsupportedOperationException("출력 횟수는 print-result 성공 콜백에서만 갱신됩니다.");
+	}
+
+	private CommonViewerVO rejectUnsafeMergePrint(List<CommonViewerParam> printItems) {
+		CommonViewerVO result = new CommonViewerVO();
+		result.setSuccess(false);
+		result.setPrintJobId(null);
+		result.setFilePath(null);
+		result.setWatermarkInfo(null);
+		result.setFailType(MERGE_PRINT_SECURITY_REASON);
+		result.setFailReason(MERGE_PRINT_SECURITY_MESSAGE);
+		log.warn("[MERGE_PRINT][DENY] reason={}, itemCount={}",
+				MERGE_PRINT_SECURITY_REASON, printItems == null ? 0 : printItems.size());
+		return result;
+	}
+
+	private void bindActorAndRequire(CommonViewerParam param, String actionCd) {
+		if (param == null) {
+			throw new IllegalArgumentException("자료 요청값이 없습니다.");
+		}
+		UserVO actor = securityAclService.requireCurrentUser();
+		param.setSessionUser(actor);
+		requireFileAccess(param, actionCd);
+	}
+
+	private void requireFileAccess(CommonViewerParam param, String actionCd) {
+		FileAccessRequest request = new FileAccessRequest();
+		request.setActionCd(actionCd);
+		request.setObjectType(toAclObjectType(param.getObjectType(), param.getRequestType()));
+		request.setObjectId(param.getObjectId());
+		request.setFileNo(param.getFileNo());
+		request.setRequestNo(param.getRequestNo());
+		securityAclService.requireAccess(request);
+	}
+
+	private List<CommonViewerParam> buildMergePrintItems(CommonViewerParam param) {
+		List<CommonViewerParam> legacyItems = new ArrayList<CommonViewerParam>();
+		if (param.getObjectId() == null) return legacyItems;
+		for (String encoded : param.getObjectId().split("__")) {
+			if (encoded != null && !encoded.trim().isEmpty()) {
+				legacyItems.add(parseLegacyMergeItem(encoded, param));
+			}
+		}
+		if (param.getList() == null || param.getList().isEmpty()) {
+			for (CommonViewerParam item : legacyItems) {
+				if (isBlankValue(item.getFileNo())) {
+					throw new IllegalArgumentException("Merged print file number is required.");
+				}
+			}
+			return legacyItems;
+		}
+		if (legacyItems.size() != param.getList().size()) {
+			throw new IllegalArgumentException("Merged print item representations do not match.");
+		}
+
+		List<CommonViewerParam> canonicalItems = new ArrayList<CommonViewerParam>();
+		for (int index = 0; index < legacyItems.size(); index++) {
+			CommonViewerParam encodedItem = legacyItems.get(index);
+			CommonViewerParam listedItem = param.getList().get(index);
+			if (listedItem == null
+					|| !sameValue(encodedItem.getObjectId(), listedItem.getObjectId())
+					|| !sameValue(encodedItem.getObjectType(), listedItem.getObjectType())
+					|| !sameValue(encodedItem.getWatermarkType(), listedItem.getWatermarkType())
+					|| isBlankValue(listedItem.getFileNo())) {
+				throw new IllegalArgumentException("Merged print item representations do not match.");
+			}
+			CommonViewerParam canonical = new CommonViewerParam();
+			canonical.setObjectId(encodedItem.getObjectId());
+			canonical.setObjectType(encodedItem.getObjectType());
+			canonical.setWatermarkType(encodedItem.getWatermarkType());
+			canonical.setRequestNo(listedItem.getRequestNo());
+			canonical.setRequestType(listedItem.getRequestType());
+			canonical.setFileNo(listedItem.getFileNo());
+			canonical.setUserType(listedItem.getUserType());
+			canonicalItems.add(canonical);
+		}
+		return canonicalItems;
+	}
+
+	private boolean sameValue(String left, String right) {
+		return left != null && right != null && left.trim().equalsIgnoreCase(right.trim());
+	}
+
+	private CommonViewerParam parseLegacyMergeItem(String encoded, CommonViewerParam parent) {
+		int last = encoded.lastIndexOf('_');
+		int second = last < 0 ? -1 : encoded.lastIndexOf('_', last - 1);
+		if (second <= 0 || last <= second) {
+			throw new IllegalArgumentException("병합 출력 자료 식별자가 올바르지 않습니다.");
+		}
+		CommonViewerParam item = new CommonViewerParam();
+		item.setObjectId(encoded.substring(0, second));
+		item.setObjectType(encoded.substring(second + 1, last));
+		item.setWatermarkType(encoded.substring(last + 1));
+		item.setRequestNo(parent.getRequestNo());
+		item.setRequestType(parent.getRequestType());
+		item.setFileNo(parent.getFileNo());
+		return item;
+	}
+
+	private String toAclObjectType(String objectType, String requestType) {
+		if ("문서".equals(objectType)) return "DOCUMENT";
+		if ("도면".equals(objectType)) return "DRAWING";
+		if ("PRODUCT".equals(requestType) && "DOC".equalsIgnoreCase(objectType)) return "PRODUCT_DOCUMENT";
+		if ("PRODUCT".equals(requestType) && "SW".equalsIgnoreCase(objectType)) return "PRODUCT_SW";
+		return objectType;
 	}
 
 	private boolean isFileApiPath(String filePath) {
 		String[] fileApiPath = splitFileApiPath(filePath);
 		boolean result = fileApiPath != null;
-		System.out.println("[FILE_API_VIEWER] check path=" + normalizeFileApiPath(filePath) + ", matched=" + result);
+		log.debug("[FILE_API_VIEWER] source matched={}", result);
 		return result;
 	}
 
@@ -1179,7 +1324,7 @@ public boolean getDestroyStatus(CommonViewerParam param) throws ParseException, 
 
 		byte[] bytes = fileApiClient.download(fileName, folder);
 		String cacheDir = resolveViewerCacheDir();
-		System.out.println("[FILE_API_VIEWER] cacheDir=" + cacheDir + ", fileName=" + fileName + ", bytes=" + bytes.length);
+		log.debug("[FILE_API_VIEWER] cache write bytes={}", bytes.length);
 		File dir = new File(cacheDir);
 		if (!dir.exists() && !dir.mkdirs()) {
 			throw new IllegalStateException("Viewer cache directory cannot be created: " + cacheDir);
@@ -1190,8 +1335,27 @@ public boolean getDestroyStatus(CommonViewerParam param) throws ParseException, 
 		} catch (IOException e) {
 			throw new IllegalStateException("Viewer cache write failed: " + target.getAbsolutePath(), e);
 		}
-		System.out.println("[FILE_API_VIEWER] cached file=" + target.getAbsolutePath() + ", exists=" + target.isFile() + ", size=" + target.length());
+		log.info("[FILE_API_VIEWER] cached success={}, size={}", target.isFile(), target.length());
 		return target.getAbsolutePath();
+	}
+
+	private String cacheLocalPdfForViewer(String sourcePath) {
+		File source = StoragePathUtils.toPath(sourcePath).toFile();
+		if (!source.isFile() || !source.getName().toLowerCase(Locale.ROOT).endsWith(".pdf")) {
+			throw new IllegalStateException("Ticket-backed PDF source is unavailable.");
+		}
+		File cacheDir = StoragePathUtils.toPath(resolveViewerCacheDir()).toFile();
+		if (!cacheDir.isDirectory() && !cacheDir.mkdirs()) {
+			throw new IllegalStateException("Viewer cache directory cannot be created.");
+		}
+		String cachedName = UUID.randomUUID().toString().replace("-", "") + ".pdf";
+		File cached = new File(cacheDir, cachedName);
+		try {
+			Files.copy(source.toPath(), cached.toPath(), StandardCopyOption.REPLACE_EXISTING);
+		} catch (IOException exception) {
+			throw new IllegalStateException("Viewer cache write failed.", exception);
+		}
+		return cachedName;
 	}
 
 	private String[] splitFileApiPath(String filePath) {
@@ -1220,19 +1384,37 @@ public boolean getDestroyStatus(CommonViewerParam param) throws ParseException, 
 		if (cacheDir == null || cacheDir.trim().isEmpty()) {
 			throw new IllegalStateException("ADAP_PDF_PATH is empty");
 		}
-		return cacheDir.replace("$", "").trim();
+		return StoragePathUtils.toPath(cacheDir.replace("$", "").trim()).toString();
 	}
 
-	private String buildAdapPdfViewerUrl(String fileName) throws UnsupportedEncodingException {
+	private String buildAdapPdfViewerUrl(String ticketKey) throws UnsupportedEncodingException {
 		String adapPdfUrl = SystemConfig.getSystemConfigValue("ADAP_PDF_URL");
-		String pdfFileUrl = SystemConfig.getSystemConfigValue("ADAP_PDF_FILE_URL");
 		if (adapPdfUrl == null || adapPdfUrl.trim().isEmpty()) {
 			throw new IllegalStateException("ADAP_PDF_URL is empty");
 		}
-		if (pdfFileUrl == null || pdfFileUrl.trim().isEmpty()) {
-			throw new IllegalStateException("ADAP_PDF_FILE_URL is empty");
+		String fileUrl = ServletUriComponentsBuilder.fromCurrentContextPath()
+				.path("/common/viewer/pdf-cache/")
+				.path(ticketKey)
+				.build()
+				.toUriString();
+		return requireSecureViewerUrl(adapPdfUrl) + "?file=" + URLEncoder.encode(fileUrl, "UTF-8");
+	}
+
+	private String requireSecureViewerUrl(String rawUrl) {
+		try {
+			URI uri = URI.create(rawUrl == null ? "" : rawUrl.trim());
+			String host = uri.getHost();
+			boolean loopbackHttp = "http".equalsIgnoreCase(uri.getScheme())
+					&& ("localhost".equalsIgnoreCase(host)
+							|| "127.0.0.1".equals(host)
+							|| "::1".equals(host));
+			if (host == null || uri.getUserInfo() != null || uri.getFragment() != null
+					|| (!"https".equalsIgnoreCase(uri.getScheme()) && !loopbackHttp)) {
+				throw new IllegalArgumentException("Viewer endpoint must use HTTPS.");
+			}
+			return uri.toString();
+		} catch (RuntimeException exception) {
+			throw new IllegalStateException("Viewer endpoint is not securely configured.", exception);
 		}
-		String fileUrl = pdfFileUrl.trim() + "/" + URLEncoder.encode(fileName, "UTF-8");
-		return adapPdfUrl.trim() + "?file=" + URLEncoder.encode(fileUrl, "UTF-8");
 	}
 }

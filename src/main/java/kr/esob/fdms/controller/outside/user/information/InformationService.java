@@ -32,37 +32,97 @@ public class InformationService implements CommonService {
 		return vo;
 	}
 
-	public ResultVO insertRequest(InformationListParam param) throws Exception {
+	public ResultVO insertRequest(InformationListParam param, Authentication authentication) throws Exception {
 		ResultVO resultVo = new ResultVO();
-		dao.insertInfo(param);
+		if (param == null) {
+			resultVo.setMessage("msg.invalidRequest");
+			return resultVo;
+		}
 
-		resultVo.setSuccess(true);
+		try {
+			if (authentication == null || !(authentication.getPrincipal() instanceof UserVO)) {
+				resultVo.setMessage("msg.accessDenied");
+				return resultVo;
+			}
+			param.setSessionUser((UserVO) authentication.getPrincipal());
+
+			if (!isSupportedRequestType(param.getRequestType())) {
+				resultVo.setMessage("msg.invalidRequest");
+				return resultVo;
+			}
+
+			String approvalUserCd = dao.selectCompanyApprover(param);
+			if (!hasText(approvalUserCd)) {
+				resultVo.setMessage("msg.approvalUserNotFound");
+				return resultVo;
+			}
+			param.setApprovalUserCd(approvalUserCd);
+			param.setProtectYn("Y".equals(param.getProtectYn()) ? "Y" : "N");
+			param.setCrYn("Y".equals(param.getCrYn()) ? "Y" : "N");
+
+			if ("I".equals(param.getRequestType())) {
+				if (!PasswordUtils.isAcceptablePassword(param.getUserPwd())) {
+					resultVo.setMessage("msg.invalidPassword");
+					return resultVo;
+				}
+				param.setUserCd(null);
+				param.setUserPwd(PasswordUtils.hashPasswordWithSalt(param.getUserPwd()));
+			} else {
+				if (!hasText(param.getUserCd()) || dao.selectCompanyUserCount(param) != 1) {
+					resultVo.setMessage("msg.invalidRequest");
+					return resultVo;
+				}
+				// Password changes are handled only by updateUser().
+				param.setUserPwd(null);
+			}
+
+			dao.insertInfo(param);
+			resultVo.setSuccess(true);
+		} finally {
+			// Do not retain either a raw password or its hash in a request DTO.
+			param.setUserPwd(null);
+		}
 		return resultVo;
-	}
-
-	public boolean checkPwd(InformationListParam param) {
-
-		if (dao.checkPwd(param) == 1)
-			return true;
-		else
-			return false;
 	}
 
 	public ResultVO updateUser(InformationListParam param, Authentication authentication) throws Exception {
 		ResultVO resultVo = new ResultVO();
+		if (param == null || authentication == null
+				|| !(authentication.getPrincipal() instanceof UserVO)) {
+			resultVo.setMessage("msg.accessDenied");
+			return resultVo;
+		}
 
 		UserVO userVo = (UserVO) authentication.getPrincipal();
-		String userPwd = userVo.getUserPwd();
-		param.setUserPwd(userPwd);
+		String currentPassword = param.getUserPwd();
+		String newPassword = param.getUserNewPwd();
 
-		if (checkPwd(param)) {
-			String hashedPassword = PasswordUtils.hashPasswordWithSalt(param.getUserNewPwd());
-			param.setUserNewPwd(hashedPassword);
-			dao.updateUser(param);
-			resultVo.setSuccess(true);
-		}
-		else {
-			resultVo.setSuccess(false);
+		try {
+			if (!hasText(userVo.getUserCd()) || !hasText(currentPassword)
+					|| !PasswordUtils.isAcceptablePassword(newPassword)) {
+				resultVo.setMessage("msg.invalidPassword");
+				return resultVo;
+			}
+
+			// The target identity and current hash are both resolved server-side.
+			param.setUserCd(userVo.getUserCd());
+			String storedPassword = dao.selectPasswordHash(param);
+			if (!PasswordUtils.verifyPassword(storedPassword, currentPassword)) {
+				resultVo.setMessage("msg.invalidPassword");
+				return resultVo;
+			}
+
+			param.setUserPwd(null);
+			param.setUserNewPwd(PasswordUtils.hashPasswordWithSalt(newPassword));
+			if (dao.updateUser(param) == 1) {
+				resultVo.setSuccess(true);
+			} else {
+				resultVo.setMessage("msg.error");
+			}
+		} finally {
+			// Never leave credentials on a DTO that may later be logged or serialized.
+			param.setUserPwd(null);
+			param.setUserNewPwd(null);
 		}
 
 		return resultVo;
@@ -104,6 +164,14 @@ public class InformationService implements CommonService {
 			resultVo.setSuccess(false);
 
 		return resultVo;
+	}
+
+	private boolean hasText(String value) {
+		return value != null && !value.trim().isEmpty();
+	}
+
+	private boolean isSupportedRequestType(String requestType) {
+		return "I".equals(requestType) || "U".equals(requestType) || "D".equals(requestType);
 	}
 
 }

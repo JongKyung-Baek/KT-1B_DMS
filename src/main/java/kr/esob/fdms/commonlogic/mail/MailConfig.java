@@ -45,7 +45,7 @@ public class MailConfig {
         props.put("mail.transport.protocol", "smtp");
         props.put("mail.smtp.auth", "true");
         props.put("mail.smtp.starttls.enable", "true");
-        props.put("mail.debug", "true");
+        props.put("mail.debug", "false");
 
         return mailSender;
     }
@@ -62,7 +62,6 @@ public class MailConfig {
             dbConfig = Collections.emptyList();
         }
 
-        System.out.println("dbConfig.size(): " + dbConfig.size());
         for (Map<String, Object> config : dbConfig) {
             // 2026-03-30: support both uppercase/lowercase keys from result map
 //            String configCd = config.get("SYSTEM_CONFIG_CD").toString();
@@ -70,11 +69,8 @@ public class MailConfig {
             String configCd = strVal(config, "SYSTEM_CONFIG_CD", "system_config_cd");
             String configValue = strVal(config, "SYSTEM_CONFIG_VALUE", "system_config_value");
 
-            System.out.println("SYSTEM_CONFIG_CD: " + configCd + ", SYSTEM_CONFIG_VALUE: " + configValue);
-
             if ("FROM_MAIL_ADDRESS".equals(configCd)) {
                 fromMail = configValue;
-                System.out.println("fromMail: " + fromMail);
             }
             if ("FROM_MAIL_PASSWORD".equals(configCd)) {
                 password = configValue;

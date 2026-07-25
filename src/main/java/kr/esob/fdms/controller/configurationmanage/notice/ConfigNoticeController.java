@@ -7,6 +7,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -70,7 +71,7 @@ public class ConfigNoticeController extends AbstractController {
 	/*
 	 * 삽입
 	 * */
-	@RequestMapping(value="/configNotice")
+	@PostMapping(value="/configNotice")
 	public @ResponseBody ResultVO configNotice(MultipartHttpServletRequest request) throws Exception {
 		return service.insertConfigNotice(request);
 	}
@@ -78,7 +79,7 @@ public class ConfigNoticeController extends AbstractController {
 	/*
 	 * 확인 팝업
 	 * */
-	@RequestMapping(value="/noticePopup")
+	@PostMapping("/noticePopup")
 	public String noticePopup(ConfigNoticePopupVO param, Model model) throws JsonProcessingException {
 		UserVO user = param.getSessionUser();
 		String updateFlag = null;
@@ -103,7 +104,7 @@ public class ConfigNoticeController extends AbstractController {
 	/*
 	 * 수정
 	 * */
-	@RequestMapping(value="/updateNotice")
+	@PostMapping(value="/updateNotice")
 	public @ResponseBody ResultVO updateNotice(MultipartHttpServletRequest request) throws Exception {
 		return service.updateConfigNotice(request);
 	}

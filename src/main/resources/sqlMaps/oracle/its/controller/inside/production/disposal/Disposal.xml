@@ -612,10 +612,10 @@
 	, PROCESS_SEQ
 	, APPROVAL_STATUS_CD
 	, APPROVAL_GRADE_CD
+	, ACTION_CD
 	<if test='"REQUEST".equals(approvalStatusCd)'>
 		, REQUEST_DESC
 		, ACTION_DT
-		, ACTION_CD
 	</if>
 	, ORIGINAL_USER_CD
 	, ACTUAL_USER_CD
@@ -625,10 +625,10 @@
 	, #{processSeq}
 	, #{approvalStatusCd}
 	, #{approvalGradeCd}
+	, 'REQUEST'
 	<if test='"REQUEST".equals(approvalStatusCd)'>
 		, #{requestDesc}
 		, CURRENT_DATE
-		, 'REQUEST'
 		, #{sessionUser.userCd}
 		, #{sessionUser.userCd}
 	</if>

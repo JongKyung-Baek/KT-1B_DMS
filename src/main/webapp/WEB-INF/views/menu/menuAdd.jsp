@@ -3,6 +3,7 @@
 <%@page import="java.util.Locale"%>
 <html>
 <head>
+<%@ include file="/WEB-INF/jspf/csrf-meta.jspf" %>
 
 <%@ page session="false" contentType="text/html; charset=utf-8"
 	pageEncoding="utf-8"%>
@@ -50,6 +51,7 @@
 </head>
 <body>
 	<form action="/menu/insertMenu" method="POST" id="form">
+		<input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
 		상위메뉴 :
 		<select id='parentMenuCd' style='width: 300px' name="parentMenuCd">
 		<option></option>

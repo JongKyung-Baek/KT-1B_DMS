@@ -22,18 +22,15 @@ public class ExternalFileApiClient {
         String url = UriComponentsBuilder.fromHttpUrl(apiUrl)
                 .queryParam("sequence", seq)
                 .toUriString();
-        log.info("[REST CALL][DOWNLOAD] {}", url);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
         ResponseEntity<byte[]> res = restTemplate.exchange(url, HttpMethod.GET, entity, byte[].class);
-        log.info("[REST RESP][DOWNLOAD] status={}, bodyLength={}, contentDisposition={}, filenameHeader={}, contentType={}",
+        log.info("[REST RESP][DOWNLOAD] status={}, bodyLength={}, contentType={}",
                 res.getStatusCodeValue(),
                 res.getBody() == null ? 0 : res.getBody().length,
-                res.getHeaders().getFirst(HttpHeaders.CONTENT_DISPOSITION),
-                res.getHeaders().getFirst("filename"),
                 res.getHeaders().getContentType());
-        validateFileResponse("DOWNLOAD", url, res);
+        validateFileResponse("DOWNLOAD", res);
         return res.getBody();
     }
 
@@ -41,17 +38,16 @@ public class ExternalFileApiClient {
         String url = UriComponentsBuilder.fromHttpUrl(apiUrl)
                 .queryParam("sequence", seq)
                 .toUriString();
-        log.info("[REST CALL][VIEW] {}", url);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
         ResponseEntity<byte[]> res = restTemplate.exchange(url, HttpMethod.GET, entity, byte[].class);
         log.info("[REST RESP][VIEW] status={}, bodyLength={}", res.getStatusCodeValue(), res.getBody() == null ? 0 : res.getBody().length);
-        validateFileResponse("VIEW", url, res);
+        validateFileResponse("VIEW", res);
         return res.getBody();
     }
 
-    private void validateFileResponse(String apiType, String url, ResponseEntity<byte[]> res) {
+    private void validateFileResponse(String apiType, ResponseEntity<byte[]> res) {
         if (res == null) {
             throw new IllegalStateException("REST " + apiType + " response is null.");
         }
@@ -67,12 +63,12 @@ public class ExternalFileApiClient {
 
         MediaType contentType = res.getHeaders().getContentType();
         if (isErrorContentType(contentType)) {
-            throw new IllegalStateException("REST " + apiType + " returned non-file contentType="
-                    + String.valueOf(contentType) + ", url=" + url);
+			throw new IllegalStateException("REST " + apiType + " returned non-file contentType="
+					+ String.valueOf(contentType));
         }
 
         if (isLikelyErrorPayload(body)) {
-            throw new IllegalStateException("REST " + apiType + " returned error payload body, url=" + url);
+			throw new IllegalStateException("REST " + apiType + " returned error payload body.");
         }
     }
 

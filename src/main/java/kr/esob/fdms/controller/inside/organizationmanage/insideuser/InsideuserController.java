@@ -56,12 +56,12 @@ public class InsideuserController extends AbstractController {
 		return result;
 	}
 
-	@RequestMapping("/update")
+	@PostMapping("/update")
 	public @ResponseBody ResultVO update(@RequestBody UserVO userVo) throws Exception {
 		return service.updateUnlock(userVo);
 	}
 
-	@RequestMapping("/resetPwd")
+	@PostMapping("/resetPwd")
 	public @ResponseBody ResultVO resetPwd(@RequestBody UserVO userVo) throws Exception {
 		return service.resetPwd(userVo);
 	}

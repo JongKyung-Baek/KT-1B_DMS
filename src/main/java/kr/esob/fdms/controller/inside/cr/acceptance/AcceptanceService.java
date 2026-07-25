@@ -1,5 +1,15 @@
 package kr.esob.fdms.controller.inside.cr.acceptance;
 
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import kr.esob.fdms.commonlogic.abstractclass.CommonService;
 import kr.esob.fdms.commonlogic.mail.DocsMailEnum;
 import kr.esob.fdms.commonlogic.mail.DocsMailService;
@@ -10,15 +20,10 @@ import kr.esob.fdms.commonlogic.value.CrStatusCdInfo;
 import kr.esob.fdms.controller.inside.cr.CommonCrDao;
 import kr.esob.fdms.controller.inside.cr.CrInfoVO;
 import kr.esob.fdms.controller.inside.cr.CrParam;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
+import kr.esob.fdms.controller.login.UserVO;
 
-import javax.inject.Inject;
-import java.util.List;
-
-@Slf4j
 @Service
-public class AcceptanceService implements CommonService{
+public class AcceptanceService implements CommonService {
 
 	@Inject
 	CommonCrDao commonCrDao;
@@ -32,74 +37,140 @@ public class AcceptanceService implements CommonService{
 	@SuppressWarnings("rawtypes")
 	@Override
 	public List selectList(Object param) {
-		return dao.selectList(param);
+		AcceptanceListParam listParam = requireListParam(param);
+		listParam.setSessionUser(requireAuthenticatedActor());
+		return dao.selectList(listParam);
 	}
 
 	@Override
 	public int selectListCount(Object param) {
-		return dao.selectListCount(param);
+		AcceptanceListParam listParam = requireListParam(param);
+		listParam.setSessionUser(requireAuthenticatedActor());
+		return dao.selectListCount(listParam);
 	}
 
-//	public void updateList(Object param) {
-//		dao.updateList(param);
-//	}
-
 	public void deleteList(Object param) {
-
+		// No delete operation for CR acceptance.
 	}
 
 	public CrInfoVO selectAcceptanceInfo(CrParam param) {
+		if (param == null || isBlank(param.getCrNo())) {
+			throw new IllegalArgumentException("CR number is required");
+		}
+		param.setCrNo(param.getCrNo().trim());
+		param.setSessionUser(requireAuthenticatedActor());
+
 		CrInfoVO vo = dao.selectAcceptanceInfo(param);
+		if (vo == null) {
+			throw new AccessDeniedException("CR acceptance request is not accessible");
+		}
 		vo.setFileList(commonCrDao.selectInsideFileList(param));
 		return vo;
 	}
 
+	@Transactional(rollbackFor = Exception.class)
 	public ResultVO approvalRequest(CrParam param) {
-		log.info("Method {}#approvalRequest is called", this.getClass().getSimpleName());
-		ResultVO resultVo = new ResultVO();
+		authorizeAcceptanceTarget(param, true);
 		param.setActionCd(Constant.ACCEPT);
 		param.setApprovalGradeCd("TL");
 		param.setCurrentProcessSeqNo(4);
 		param.setStatusCd(CrStatusCdInfo.PURCHASER_ACCEPT);
 		param.setApprovalStatusCd(Constant.ACCEPT);
 		param.setRequestDesc(param.getReviewResult());
-		dao.updateAcceptance(param);
-		dao.updateAproval(param);
-		dao.updateRequest(param);
-		dao.updateCr(param);
-		resultVo.setSuccess(true);
-		try {
-			if(param.getSendEmailYn().isBooleanValue()) {
-				MailInfoVO mailInfoVo = mailService.selectApprovalUserInfo(param);
-				mailInfoVo.setMailEnum(DocsMailEnum.CR_APPROVAL);
-				mailService.sendDocsMail(mailInfoVo);
-			}
-		}catch(Exception e) {
-			e.printStackTrace();
-		}
-		return resultVo;
+
+		requireSingleRow(dao.updateAcceptance(param), "complete CR acceptance step");
+		requireSingleRow(dao.updateApproval(param), "assign CR approval step");
+		requireSingleRow(dao.updateRequest(param), "advance accepted CR request");
+		requireSingleRow(dao.updateCr(param), "update accepted CR");
+
+		sendApprovalMail(param);
+		ResultVO result = new ResultVO();
+		result.setSuccess(true);
+		return result;
 	}
 
+	@Transactional(rollbackFor = Exception.class)
 	public ResultVO acceptanceReject(CrParam param) {
-		ResultVO resultVo = new ResultVO();
+		authorizeAcceptanceTarget(param, false);
 		param.setActionCd(Constant.REJECT);
 		param.setApprovalStatusCd(Constant.REJECT);
+		param.setCurrentProcessSeqNo(3);
 		param.setStatusCd(CrStatusCdInfo.PURCHASER_REJECT);
 		param.setRequestDesc(param.getRejectReason());
-		dao.updateAcceptance(param);
-		dao.updateRequest(param);
-		dao.updateCr(param);
-		resultVo.setSuccess(true);
-		try {
-			if(param.getSendEmailYn().isBooleanValue()) {
-				MailInfoVO mailInfoVo = mailService.selectCrRequestUserInfo(param);
-				mailInfoVo.setMailEnum(DocsMailEnum.CR_STATUS);
-				mailService.sendDocsMail(mailInfoVo);
-			}
-		}catch(Exception e) {
-			e.printStackTrace();
-		}
-		return resultVo;
+
+		requireSingleRow(dao.updateAcceptance(param), "complete CR rejection step");
+		requireSingleRow(dao.updateRequest(param), "reject CR request");
+		requireSingleRow(dao.updateCr(param), "update rejected CR");
+
+		sendRejectionMail(param);
+		ResultVO result = new ResultVO();
+		result.setSuccess(true);
+		return result;
 	}
 
+	private AcceptanceListParam requireListParam(Object param) {
+		if (!(param instanceof AcceptanceListParam)) {
+			throw new IllegalArgumentException("Invalid CR acceptance list request");
+		}
+		return (AcceptanceListParam) param;
+	}
+
+	private void authorizeAcceptanceTarget(CrParam param, boolean approval) {
+		if (param == null || isBlank(param.getCrNo())) {
+			throw new IllegalArgumentException("CR number is required");
+		}
+		if (approval && isBlank(param.getApprovalUser())) {
+			throw new IllegalArgumentException("CR approval user is required");
+		}
+
+		param.setCrNo(param.getCrNo().trim());
+		UserVO actor = requireAuthenticatedActor();
+		param.setSessionUser(actor);
+		param.setActualUserCd(actor.getUserCd());
+		if (dao.selectAcceptanceTargetForUpdate(param) == null) {
+			throw new AccessDeniedException("CR acceptance request is not accessible");
+		}
+	}
+
+	private UserVO requireAuthenticatedActor() {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		if (authentication == null || !(authentication.getPrincipal() instanceof UserVO)) {
+			throw new AccessDeniedException("Authenticated user is required");
+		}
+		return (UserVO) authentication.getPrincipal();
+	}
+
+	private void requireSingleRow(int affectedRows, String operation) {
+		if (affectedRows != 1) {
+			throw new IllegalStateException("Unable to " + operation);
+		}
+	}
+
+	private void sendApprovalMail(CrParam param) {
+		try {
+			if (param.getSendEmailYn().isBooleanValue()) {
+				MailInfoVO mailInfo = mailService.selectApprovalUserInfo(param);
+				mailInfo.setMailEnum(DocsMailEnum.CR_APPROVAL);
+				mailService.sendDocsMail(mailInfo);
+			}
+		} catch (Exception ignored) {
+			// Mail is fail-soft; required database mutations already succeeded.
+		}
+	}
+
+	private void sendRejectionMail(CrParam param) {
+		try {
+			if (param.getSendEmailYn().isBooleanValue()) {
+				MailInfoVO mailInfo = mailService.selectCrRequestUserInfo(param);
+				mailInfo.setMailEnum(DocsMailEnum.CR_STATUS);
+				mailService.sendDocsMail(mailInfo);
+			}
+		} catch (Exception ignored) {
+			// Mail is fail-soft; required database mutations already succeeded.
+		}
+	}
+
+	private boolean isBlank(String value) {
+		return value == null || value.trim().isEmpty();
+	}
 }

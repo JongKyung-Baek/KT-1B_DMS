@@ -1874,7 +1874,7 @@ function fnGetRadioTag(id, list, selectedValue) {
 		result = $.trim(v);
 	}).fail(function(jqXHR, strMessage){
 	  	if(jqXHR.status==401){
-			location.href = CONTEXT_PATH+"/login/logout.login?statusCode="+e.status;
+			location.href = CONTEXT_PATH+"/login/loginPage";
 		}else{
 			alertMessage(g_msg("msg.error") + '[' + e + ']');
 		}
@@ -1919,7 +1919,7 @@ function commonDelete(gridId, formId, code, saveUrl, listUrl) {
 			}
 			,error : function(e){
 				if(e.status==401){
-					parent.parent.location.href = CONTEXT_PATH+"/login/logout.login?statusCode="+e.status;
+					parent.parent.location.href = CONTEXT_PATH+"/login/loginPage";
 				}else{
 					alertMessage(g_msg("msg.error") + '[' + e + ']');
 				}
@@ -2909,20 +2909,16 @@ function callAjax(param, url, callback, dataType, async){
 		, data : param
 		, success : function(response){
 			if('undefined' !== typeof callback) {
-				console.log(response)
 				callback(response);
 			}
 		}
 		,error : function(e){
-			console.log("error");
-			console.log(e);
 			if(e.status==401){
-				parent.parent.location.href = "/login/logout";
+				parent.parent.location.href = "/login/loginPage";
 			}else if(e.status == 403){
 				alertMessage(g_msg("msg.accessDenied"));
 			}else{
 				alertMessage(g_msg("msg.error"));
-				console.log(e);
 			}
 		}
 	});
@@ -2941,19 +2937,15 @@ function checkBoolean(param, url){
 		, contentType: "application/json"
 		, data : JSON.stringify(param)
 		, success : function(response){
-			console.log(response);
 			bRet = response;
 		}
 		,error : function(e){
-			console.log("error");
-			console.log(e);
 			if(e.status==401){
-				parent.parent.location.href = "/login/logout";
+				parent.parent.location.href = "/login/loginPage";
 			}else if(e.status == 403){
 				alertMessage(g_msg("msg.accessDenied"));
 			}else{
 				alertMessage(g_msg("msg.error"));
-				console.log(e);
 			}
 		}
 	});
@@ -2962,7 +2954,6 @@ function checkBoolean(param, url){
 }
 
 function callAjaxUpload(param, url, callback){
-	console.log("enterted callAjaxUpload()");
 	$.ajax({
 		url: url
 		, type: "POST"
@@ -2972,17 +2963,14 @@ function callAjaxUpload(param, url, callback){
 		, contentType: false
 		, encType: 'multipart/form-data'
 		, success: function(response){
-			console.log("enterted callAjaxUpload() - success");
 			if('undefined' !== typeof callback){
-				console.log("enterted callAjaxUpload() - typeof callback");
-				console.log(response)
 				callback(response);
 			}
 		}
 		, error: function(e){
 
 			if(e.status == 401){
-				parent.parent.location.href = '/login/logout';
+				parent.parent.location.href = '/login/loginPage';
 			}else if(e.status == 403){
 				alertMessage(g_msg("msg.accessDenied"));
 			}else{

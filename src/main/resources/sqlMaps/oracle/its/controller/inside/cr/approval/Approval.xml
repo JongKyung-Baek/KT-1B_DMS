@@ -159,7 +159,39 @@
 			 SELECT *
 			 FROM ITN_CR cr
 			 WHERE CR_NO = #{crNo}
+			   AND STATUS_CD = 30
+			   AND EXISTS (
+				SELECT 1
+				FROM DOCS_REQUEST_MAPPING mapping
+						 JOIN DOCS_REQUEST req
+							  ON req.REQUEST_NO = mapping.REQUEST_NO
+						 JOIN DOCS_REQUEST_DETAIL currDetail
+							  ON currDetail.REQUEST_NO = req.REQUEST_NO
+								 AND currDetail.PROCESS_SEQ = req.CURRENT_PROCESS_SEQ_NO
+				WHERE mapping.OBJECT_ID = cr.CR_NO
+				  AND req.STATUS_CD = 'ACCEPT'
+				  AND currDetail.APPROVAL_STATUS_CD = 'APPROVAL'
+				  AND currDetail.ACTUAL_USER_CD = #{sessionUser.userCd}
+				  AND currDetail.ACTION_CD = 'REQUEST'
+			   )
 		 ) A
+</select>
+
+<select id="selectApprovalTargetForUpdate" parameterType="kr.esob.fdms.controller.inside.cr.CrParam" resultType="String">
+	SELECT cr.CR_NO
+	FROM ITN_CR cr
+			 JOIN DOCS_REQUEST_MAPPING mapping ON mapping.OBJECT_ID = cr.CR_NO
+			 JOIN DOCS_REQUEST req ON req.REQUEST_NO = mapping.REQUEST_NO
+			 JOIN DOCS_REQUEST_DETAIL currDetail
+				  ON currDetail.REQUEST_NO = req.REQUEST_NO
+					 AND currDetail.PROCESS_SEQ = req.CURRENT_PROCESS_SEQ_NO
+	WHERE cr.CR_NO = #{crNo}
+	  AND cr.STATUS_CD = 30
+	  AND req.STATUS_CD = 'ACCEPT'
+	  AND currDetail.APPROVAL_STATUS_CD = 'APPROVAL'
+	  AND currDetail.ACTUAL_USER_CD = #{sessionUser.userCd}
+	  AND currDetail.ACTION_CD = 'REQUEST'
+	FOR UPDATE OF cr, req, currDetail
 </select>
 
 <update id="updateRequest">
@@ -170,7 +202,17 @@
 	<if test="'APPROVAL'.equals(actionCd)">
 		, APPROVAL_DT = CURRENT_TIMESTAMP
 	</if>
-	WHERE REQUEST_NO = (SELECT REQUEST_NO FROM DOCS_REQUEST_MAPPING WHERE OBJECT_ID = #{crNo} LIMIT 1)
+	WHERE STATUS_CD = 'ACCEPT'
+	  AND REQUEST_NO IN (
+		SELECT REQUEST_NO FROM DOCS_REQUEST_MAPPING WHERE OBJECT_ID = #{crNo}
+	  )
+	  AND EXISTS (
+		SELECT 1 FROM DOCS_REQUEST_DETAIL currDetail
+		WHERE currDetail.REQUEST_NO = DOCS_REQUEST.REQUEST_NO
+		  AND currDetail.PROCESS_SEQ = DOCS_REQUEST.CURRENT_PROCESS_SEQ_NO
+		  AND currDetail.ACTUAL_USER_CD = #{sessionUser.userCd}
+		  AND currDetail.ACTION_CD = 'REQUEST'
+	  )
 </update>
 
 	<update id="updateRequestDetail">
@@ -178,8 +220,17 @@
 		SET ACTION_DT = CURRENT_TIMESTAMP
 		  , ACTION_CD = #{actionCd}
 		  , REQUEST_DESC = #{requestDesc}
-		WHERE REQUEST_NO = (SELECT REQUEST_NO FROM DOCS_REQUEST_MAPPING WHERE OBJECT_ID = #{crNo} LIMIT 1)
+		WHERE REQUEST_NO IN (
+			SELECT REQUEST_NO FROM DOCS_REQUEST_MAPPING WHERE OBJECT_ID = #{crNo}
+		  )
 		  AND APPROVAL_STATUS_CD = 'APPROVAL'
+		  AND PROCESS_SEQ = (
+			SELECT CURRENT_PROCESS_SEQ_NO
+			FROM DOCS_REQUEST
+			WHERE REQUEST_NO = DOCS_REQUEST_DETAIL.REQUEST_NO
+		  )
+		  AND ACTUAL_USER_CD = #{sessionUser.userCd}
+		  AND ACTION_CD = 'REQUEST'
 	</update>
 
 <update id="updateCr">
@@ -188,6 +239,7 @@
 	  , CN_CHANGE_TYPE = CASE WHEN #{statusCd} = 40 THEN 'I' ELSE CN_CHANGE_TYPE END  /* 팀장승인일 경우 CN_CHANGE_TYPE을 I로 변경*/
 	  , REJECT_REASON = #{rejectReason}
 	WHERE CR_NO = #{crNo}
+	  AND STATUS_CD = 30
 </update>
 
 <update id="updateCrFile">

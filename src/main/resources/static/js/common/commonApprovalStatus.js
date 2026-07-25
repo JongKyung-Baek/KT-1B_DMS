@@ -128,11 +128,6 @@ function formatViewFile(cellValue, options, rowdata, action){
 	return '<a onclick="openFile(\'OBJECT\', \'DRAWING\', null, \'' + rowdata["objectId"] +'\', null, \'' + rowdata["protectYn"] + '\')">'+cellValue+'</a>';
 	//alert('a');
 	//return '<a onclick="openFile(\'OBJECT\', \'DRAWING\', null, \'' + rowdata["objectId"] +'\', null, \'' + rowdata["protectYn"] + '\')">'+cellValue+'</a>';
-	//return '<a onclick=window.open("/inside/distribution/drawingRequest/view3DFile", "", width="100%", height="100%", resizable = "yes");</a>';
-	//return '<a onclick=javascript:window.open("/inside/distribution/drawingRequest/view3DFile?fname=' + cellValue + '")>' + cellValue+'</a>';
-	////return '<a onclick=javascript:window.open("/inside/distribution/drawingRequest/view3DFile?fname=' + "/MODEL/toycar/vizw/toycar_wh.vizw" + '")>' + cellValue+'</a>';
-
-	//return '<a onclick=javascript:window.open("/inside/distribution/drawingRequest/view3DFile/?filename='+ cellValue + '")>' + cellValue+'</a>';
 }
 
 function formatValidType(cellValue, options, rowdata, action){

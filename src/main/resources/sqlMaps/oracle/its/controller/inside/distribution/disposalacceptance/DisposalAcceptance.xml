@@ -203,6 +203,16 @@
 				 INNER JOIN DOCS_USER docsUser
 							ON destroyRequest.INSERT_USER_CD = docsUser.USER_CD
 		WHERE destroyRequest.DESTROY_REQUEST_NO = #{destroyRequestNo}
+		  AND (
+				destroyRequest.INSERT_USER_CD = #{sessionUser.userCd}
+				OR EXISTS (
+					SELECT 1
+					  FROM DOCS_DESTROY_REQUEST_DETAIL accessDetail
+					 WHERE accessDetail.DESTROY_REQUEST_NO = destroyRequest.DESTROY_REQUEST_NO
+					   AND (accessDetail.ORIGINAL_USER_CD = #{sessionUser.userCd}
+							OR accessDetail.ACTUAL_USER_CD = #{sessionUser.userCd})
+				)
+		  )
 	</select>
 
 	<select id="selectPopupList" resultType="kr.esob.fdms.controller.inside.distribution.disposalacceptance.DisposalAcceptancePopupListVO">
@@ -212,7 +222,6 @@
 			 , dm.FILE_NO
 			 , dm.BUSINESS_AREA_CD
 			 , FN_GET_CD_NM('businessAreaCd', dm.BUSINESS_AREA_CD, #{sessionLang}) AS businessAreaNm
-			 , rf.FILE_PATH_NM
 			 , rf.ORG_FILE_NM
 			 , rf.FILE_NM
 			 , rf.FILE_SIZE
@@ -245,30 +254,123 @@
 				 INNER JOIN DOCS_REQUEST r
 							ON r.REQUEST_NO = m.REQUEST_NO
 		WHERE dm.DESTROY_REQUEST_NO = #{destroyRequestNo}
+		  AND EXISTS (
+				SELECT 1
+				  FROM DOCS_DESTROY_REQUEST accessRequest
+				 WHERE accessRequest.DESTROY_REQUEST_NO = dm.DESTROY_REQUEST_NO
+				   AND (
+						accessRequest.INSERT_USER_CD = #{sessionUser.userCd}
+						OR EXISTS (
+							SELECT 1
+							  FROM DOCS_DESTROY_REQUEST_DETAIL accessDetail
+							 WHERE accessDetail.DESTROY_REQUEST_NO = accessRequest.DESTROY_REQUEST_NO
+							   AND (accessDetail.ORIGINAL_USER_CD = #{sessionUser.userCd}
+									OR accessDetail.ACTUAL_USER_CD = #{sessionUser.userCd})
+						)
+				   )
+		  )
 	</select>
 
 	<select id="selectDisposalFileList" resultType="kr.esob.fdms.controller.outside.commondestroystatus.DestroyFileVO">
-		SELECT DESTROY_NO
-			 , DESTROY_FILE_SEQ
-			 , FILE_NM AS fileName
-		FROM DOCS_DESTROY_FILE
-		WHERE DESTROY_NO =
-			  (
-				  SELECT CAST(DESTROY_NO AS TEXT)
-				  FROM DOCS_DESTROY_REQUEST
-				  WHERE DESTROY_REQUEST_NO = #{destroyRequestNo}
-			  )
+		SELECT destroyRequest.DESTROY_REQUEST_NO
+			 , destroyFile.DESTROY_NO
+			 , destroyFile.DESTROY_FILE_SEQ
+			 , COALESCE(NULLIF(destroyFile.FILE_NM, ''),
+						NULLIF(REGEXP_REPLACE(destroyFile.FILE_PATH, '^.*[\\/]', ''), '')) AS fileName
+		  FROM DOCS_DESTROY_REQUEST destroyRequest
+		  JOIN DOCS_DESTROY_FILE destroyFile
+		    ON destroyFile.DESTROY_NO = CAST(destroyRequest.DESTROY_NO AS TEXT)
+		 WHERE destroyRequest.DESTROY_REQUEST_NO = #{destroyRequestNo}
+		   AND (
+				destroyRequest.INSERT_USER_CD = #{sessionUser.userCd}
+				OR EXISTS (
+					SELECT 1
+					  FROM DOCS_DESTROY_REQUEST_DETAIL accessDetail
+					 WHERE accessDetail.DESTROY_REQUEST_NO = destroyRequest.DESTROY_REQUEST_NO
+					   AND (accessDetail.ORIGINAL_USER_CD = #{sessionUser.userCd}
+							OR accessDetail.ACTUAL_USER_CD = #{sessionUser.userCd})
+				)
+		   )
+		 ORDER BY destroyFile.DESTROY_FILE_SEQ
 	</select>
 
 
-	<select id="selectFileInfo" resultType="kr.esob.fdms.controller.outside.commondestroystatus.DestroyFileVO">
-		SELECT DESTROY_NO
-			 , DESTROY_FILE_SEQ
-			 , FILE_PATH_INSIDE AS FILE_PATH
-			 , FILE_NM AS fileName
-		FROM DOCS_DESTROY_FILE
-		WHERE DESTROY_NO = #{destroyNo}
-		  AND DESTROY_FILE_SEQ = #{destroyFileSeq}
+	<select id="selectAuthorizedDownloadTargets" resultType="kr.esob.fdms.controller.outside.commondestroystatus.DestroyFileVO">
+		SELECT DISTINCT
+			   destroyRequest.DESTROY_REQUEST_NO
+			 , destroyFile.DESTROY_NO
+			 , destroyFile.DESTROY_FILE_SEQ
+			 , destroyFile.FILE_PATH
+			 , COALESCE(NULLIF(destroyFile.FILE_NM, ''),
+						NULLIF(REGEXP_REPLACE(destroyFile.FILE_PATH, '^.*[\\/]', ''), '')) AS fileName
+			 , destroyMapping.REQUEST_NO
+			 , CASE UPPER(request.OBJECT_TYPE)
+					WHEN 'DOC' THEN 'DOCUMENT'
+					WHEN 'DOCUMENT' THEN 'DOCUMENT'
+					WHEN 'DRAWING' THEN 'DRAWING'
+					WHEN 'SW' THEN 'SW'
+					WHEN 'PRODUCT_DOC' THEN 'PRODUCT_DOCUMENT'
+					WHEN 'PRODUCT_DOCUMENT' THEN 'PRODUCT_DOCUMENT'
+					WHEN 'PRODUCT_SW' THEN 'PRODUCT_SW'
+					WHEN 'SECP' THEN 'PRODUCT_SW'
+					WHEN 'SECP_PARTDOC' THEN 'PRODUCT_SW'
+					WHEN 'DXF' THEN 'DXF'
+					WHEN 'PEERREVIEW' THEN 'PEER_REVIEW'
+					WHEN 'PEER_REVIEW' THEN 'PEER_REVIEW'
+			   END AS objectType
+			 , destroyMapping.OBJECT_ID
+			 , COALESCE(CAST(destroyMapping.FILE_NO AS TEXT), '*') AS fileNo
+		  FROM DOCS_DESTROY_REQUEST destroyRequest
+		  JOIN DOCS_DESTROY_FILE destroyFile
+		    ON destroyFile.DESTROY_NO = CAST(destroyRequest.DESTROY_NO AS TEXT)
+		  JOIN DOCS_DESTROY_REQUEST_MAPPING destroyMapping
+		    ON destroyMapping.DESTROY_REQUEST_NO = destroyRequest.DESTROY_REQUEST_NO
+		  JOIN DOCS_REQUEST request
+		    ON request.REQUEST_NO = destroyMapping.REQUEST_NO
+		 WHERE destroyRequest.DESTROY_REQUEST_NO = #{destroyRequestNo}
+		   AND destroyFile.DESTROY_FILE_SEQ = #{destroyFileSeq}
+		   AND (
+				destroyRequest.INSERT_USER_CD = #{sessionUser.userCd}
+				OR EXISTS (
+					SELECT 1
+					  FROM DOCS_DESTROY_REQUEST_DETAIL accessDetail
+					 WHERE accessDetail.DESTROY_REQUEST_NO = destroyRequest.DESTROY_REQUEST_NO
+					   AND (accessDetail.ORIGINAL_USER_CD = #{sessionUser.userCd}
+							OR accessDetail.ACTUAL_USER_CD = #{sessionUser.userCd})
+				)
+		   )
+		   AND CASE UPPER(request.OBJECT_TYPE)
+					WHEN 'DOC' THEN 'DOCUMENT'
+					WHEN 'DOCUMENT' THEN 'DOCUMENT'
+					WHEN 'DRAWING' THEN 'DRAWING'
+					WHEN 'SW' THEN 'SW'
+					WHEN 'PRODUCT_DOC' THEN 'PRODUCT_DOCUMENT'
+					WHEN 'PRODUCT_DOCUMENT' THEN 'PRODUCT_DOCUMENT'
+					WHEN 'PRODUCT_SW' THEN 'PRODUCT_SW'
+					WHEN 'SECP' THEN 'PRODUCT_SW'
+					WHEN 'SECP_PARTDOC' THEN 'PRODUCT_SW'
+					WHEN 'DXF' THEN 'DXF'
+					WHEN 'PEERREVIEW' THEN 'PEER_REVIEW'
+					WHEN 'PEER_REVIEW' THEN 'PEER_REVIEW'
+			   END IS NOT NULL
+		 ORDER BY destroyMapping.REQUEST_NO, destroyMapping.OBJECT_ID, fileNo
+	</select>
+
+	<select id="selectApprovalTargetForUpdate"
+			parameterType="kr.esob.fdms.controller.inside.distribution.disposalacceptance.DisposalAcceptanceParam"
+			resultType="String">
+		SELECT destroyRequest.DESTROY_REQUEST_NO
+		FROM DOCS_DESTROY_REQUEST destroyRequest
+				 JOIN DOCS_DESTROY_REQUEST_DETAIL currDetail
+					  ON currDetail.DESTROY_REQUEST_NO = destroyRequest.DESTROY_REQUEST_NO
+						 AND currDetail.PROCESS_SEQ = destroyRequest.CURRENT_PROCESS_SEQ_NO
+		WHERE destroyRequest.DESTROY_REQUEST_NO = #{destroyRequestNo}
+		  AND destroyRequest.REQUEST_TYPE = 'DISTRIBUTION'
+		  AND destroyRequest.STATUS_CD = 'REQUEST'
+		  AND currDetail.APPROVAL_STATUS_CD = 'APPROVAL'
+		  AND currDetail.ACTUAL_USER_CD = #{sessionUser.userCd}
+		  AND currDetail.ACTION_CD = 'REQUEST'
+		FOR UPDATE OF destroyRequest, currDetail
 	</select>
 
 	<update id="updateDestroyRequest">
@@ -277,6 +379,17 @@
 		  , DESTROY_DT = CASE WHEN #{saveFlag} = 'A' THEN CURRENT_TIMESTAMP ELSE NULL END
 		  , APPROVAL_DT = CASE WHEN #{saveFlag} = 'A' THEN CURRENT_TIMESTAMP ELSE NULL END
 		WHERE DESTROY_REQUEST_NO = #{destroyRequestNo}
+		  AND REQUEST_TYPE = 'DISTRIBUTION'
+		  AND STATUS_CD = 'REQUEST'
+		  AND EXISTS (
+				SELECT 1
+				FROM DOCS_DESTROY_REQUEST_DETAIL currDetail
+				WHERE currDetail.DESTROY_REQUEST_NO = DOCS_DESTROY_REQUEST.DESTROY_REQUEST_NO
+				  AND currDetail.PROCESS_SEQ = DOCS_DESTROY_REQUEST.CURRENT_PROCESS_SEQ_NO
+				  AND currDetail.APPROVAL_STATUS_CD = 'APPROVAL'
+				  AND currDetail.ACTUAL_USER_CD = #{sessionUser.userCd}
+				  AND currDetail.ACTION_CD = 'REQUEST'
+		  )
 	</update>
 
 	<update id="updateDestroyRequestDetail">
@@ -286,6 +399,13 @@
 		  , ACTION_DT = CURRENT_TIMESTAMP
 		WHERE DESTROY_REQUEST_NO = #{destroyRequestNo}
 		  AND APPROVAL_STATUS_CD = 'APPROVAL'
+		  AND PROCESS_SEQ = (
+				SELECT CURRENT_PROCESS_SEQ_NO
+				FROM DOCS_DESTROY_REQUEST
+				WHERE DESTROY_REQUEST_NO = #{destroyRequestNo}
+		  )
+		  AND ACTUAL_USER_CD = #{sessionUser.userCd}
+		  AND ACTION_CD = 'REQUEST'
 	</update>
 
 	<update id="updateRequestFile">
@@ -293,10 +413,23 @@
 		SET DESTROY_STATUS_CD = CASE WHEN #{saveFlag} = 'A' THEN '3' ELSE '4' END  /* 3:폐기승인, 4:폐기반려 */
 		WHERE (REQUEST_NO, OBJECT_ID, FILE_NO) IN
 			  (
-				  SELECT REQUEST_NO, OBJECT_ID, FILE_NO
+				  SELECT REQUEST_NO, OBJECT_ID, CAST(FILE_NO AS TEXT)
 				  FROM DOCS_DESTROY_REQUEST_MAPPING
 				  WHERE DESTROY_REQUEST_NO = #{destroyRequestNo}
 			  )
+		  AND EXISTS (
+				SELECT 1
+				FROM DOCS_DESTROY_REQUEST destroyRequest
+						 JOIN DOCS_DESTROY_REQUEST_DETAIL currDetail
+							  ON currDetail.DESTROY_REQUEST_NO = destroyRequest.DESTROY_REQUEST_NO
+								 AND currDetail.PROCESS_SEQ = destroyRequest.CURRENT_PROCESS_SEQ_NO
+				WHERE destroyRequest.DESTROY_REQUEST_NO = #{destroyRequestNo}
+				  AND destroyRequest.REQUEST_TYPE = 'DISTRIBUTION'
+				  AND destroyRequest.STATUS_CD = 'REQUEST'
+				  AND currDetail.APPROVAL_STATUS_CD = 'APPROVAL'
+				  AND currDetail.ACTUAL_USER_CD = #{sessionUser.userCd}
+				  AND currDetail.ACTION_CD = 'REQUEST'
+		  )
 	</update>
 
 	<update id="updateApprovalFile">
@@ -305,9 +438,22 @@
 		  , DESTROY_DT = CASE WHEN #{saveFlag} = 'A' THEN CURRENT_TIMESTAMP ELSE NULL END
 		WHERE (REQUEST_NO, OBJECT_ID, FILE_NO) IN
 			  (
-				  SELECT REQUEST_NO, OBJECT_ID, FILE_NO
+				  SELECT REQUEST_NO, OBJECT_ID, CAST(FILE_NO AS TEXT)
 				  FROM DOCS_DESTROY_REQUEST_MAPPING
 				  WHERE DESTROY_REQUEST_NO = #{destroyRequestNo}
 			  )
+		  AND EXISTS (
+				SELECT 1
+				FROM DOCS_DESTROY_REQUEST destroyRequest
+						 JOIN DOCS_DESTROY_REQUEST_DETAIL currDetail
+							  ON currDetail.DESTROY_REQUEST_NO = destroyRequest.DESTROY_REQUEST_NO
+								 AND currDetail.PROCESS_SEQ = destroyRequest.CURRENT_PROCESS_SEQ_NO
+				WHERE destroyRequest.DESTROY_REQUEST_NO = #{destroyRequestNo}
+				  AND destroyRequest.REQUEST_TYPE = 'DISTRIBUTION'
+				  AND destroyRequest.STATUS_CD = 'REQUEST'
+				  AND currDetail.APPROVAL_STATUS_CD = 'APPROVAL'
+				  AND currDetail.ACTUAL_USER_CD = #{sessionUser.userCd}
+				  AND currDetail.ACTION_CD = 'REQUEST'
+		  )
 	</update>
 </mapper>

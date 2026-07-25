@@ -30,22 +30,38 @@ public class CommonUpdownDao extends AbstractDao {
 		return list(prefix + "selectList", param);
 	}
 
+	public CommonUpdownFileVO selectDownloadResource(String requestNo, String objectId, String fileNo) {
+		Map<String, Object> params = new HashMap<>();
+		params.put("requestNo", requestNo);
+		params.put("objectId", objectId);
+		params.put("fileNo", fileNo);
+		return sqlSession.selectOne(prefix + "selectDownloadResource", params);
+	}
+
 
 
 	// DOWNLOAD_COUNT 데이터 가져오기
 	@Autowired
 	private SqlSession sqlSession;
-	public Integer getDownloadCount(String orgFilePath) {
-		return sqlSession.selectOne(prefix + "getDownloadCount", orgFilePath);
+	public Integer getDownloadCount(String requestNo, String objectId, String fileNo) {
+		Map<String, Object> params = new HashMap<>();
+		params.put("requestNo", requestNo);
+		params.put("objectId", objectId);
+		params.put("fileNo", fileNo);
+		return sqlSession.selectOne(prefix + "getDownloadCount", params);
 	}
 
 
-	public Integer plusDownloadCount(String orgFilePath){
-		return sqlSession.selectOne(prefix + "plusDownloadCount", orgFilePath);
+	public int plusDownloadCount(String requestNo, String objectId, String fileNo){
+		Map<String, Object> params = new HashMap<>();
+		params.put("requestNo", requestNo);
+		params.put("objectId", objectId);
+		params.put("fileNo", fileNo);
+		return sqlSession.update(prefix + "plusDownloadCount", params);
 	}
 
 
-	public void addToDownHistory(String requestNo, String docSeq, Integer downCount, String objectNo, String objectNm, String userNm , java.util.Date downDate, String downloadedName){
+	public int addToDownHistory(String requestNo, String docSeq, Integer downCount, String objectNo, String objectNm, String userNm , java.util.Date downDate, String downloadedName){
 		Map<String, Object> params = new HashMap<>();
 		params.put("requestNo", requestNo);
 		params.put("docSeq", docSeq);
@@ -55,7 +71,7 @@ public class CommonUpdownDao extends AbstractDao {
 		params.put("userNm", userNm);
 		params.put("downDate", downDate);
 		params.put("downloadedName", downloadedName);
-		sqlSession.insert(prefix + "addToDownHistory", params);
+		return sqlSession.insert(prefix + "addToDownHistory", params);
 	}
 
 	public Map<String, Object> getObjectNoObjectNm(String requestNo, String docSeq) {
@@ -114,6 +130,13 @@ public class CommonUpdownDao extends AbstractDao {
 		return (String) obj(prefix + "selectDrawingDocSeqByDataNo", p);
 	}
 
+	public String selectObjectIdByDataNo(String requestNo, String dataNo) {
+		Map<String, Object> p = new HashMap<>();
+		p.put("requestNo", requestNo);
+		p.put("dataNo", dataNo);
+		return (String) obj(prefix + "selectObjectIdByDataNo", p);
+	}
+
 	public String selectDocPdfFileSeqByDocSeq(String requestNo, String docSeq) {
 		Map<String, Object> p = new HashMap<>();
 		p.put("requestNo", requestNo);
@@ -145,6 +168,15 @@ public class CommonUpdownDao extends AbstractDao {
 		params.put("objectType", objectType);
 		params.put("fileSeq", fileSeq);
 		return sqlSession.selectOne(prefix + "selectOutsideDistributionActLogBase", params);
+	}
+
+	public int countDownloadBusinessAccess(String requestNo, String objectId, String fileNo, String userCd) {
+		Map<String, Object> params = new HashMap<>();
+		params.put("requestNo", requestNo);
+		params.put("objectId", objectId);
+		params.put("fileNo", fileNo);
+		params.put("userCd", userCd);
+		return (Integer) objNotUseSession(prefix + "countDownloadBusinessAccess", params);
 	}
 
 	public int updateOutsideDistributionDeliveryConfirmDoc(String objectId, String objectType) {

@@ -14,6 +14,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -33,7 +34,13 @@ public class CommonViewerController extends AbstractController {
 	@Inject
 	CommonViewerService service;
 
-	@RequestMapping(value="/openFileListPopup")
+	@Inject
+	PrintAuditService printAuditService;
+
+	@Inject
+	ViewerTicketService viewerTicketService;
+
+	@PostMapping("/openFileListPopup")
 	public String openFileListPopup(CommonViewerParam param, Model model) throws JsonProcessingException {
 		model.addAttribute("gridInfo", JSONArray.fromObject(gridService.selectGridInfo("gridCommonViewerPopup")));
 		model.addAttribute("requestNo", param.getRequestNo());
@@ -44,35 +51,35 @@ public class CommonViewerController extends AbstractController {
 	}
 
 
-	@RequestMapping("/selectList")
+	@PostMapping("/selectList")
 	public @ResponseBody GridResultVO selectList(CommonViewerParam param) throws Exception {
 		GridResultVO result = new GridResultVO();
 		result.setContents(service.selectList(param));
 		return result;
 	}
 
-	@RequestMapping("/getDestroyStatus")
+	@PostMapping("/getDestroyStatus")
 	public @ResponseBody boolean getDestroyStatus(@RequestBody CommonViewerParam param) throws Exception {
 		return service.getDestroyStatus(param);
 	}
 
-	@RequestMapping("/getDestroyStatus_printHistory")
+	@PostMapping("/getDestroyStatus_printHistory")
 	public @ResponseBody boolean getDestroyStatus_printHistory(@RequestBody CommonViewerParam param) throws Exception {
 		return service.getDestroyStatus_printHistory(param);
 	}
 
-	@RequestMapping("/openViewer")
-	public @ResponseBody CommonViewerVO openViewer(@RequestBody CommonViewerParam param) throws Exception {
-		return service.getViewFilePath(param);
+	@PostMapping("/openViewer")
+	public void openViewer(HttpServletResponse response) {
+		response.setStatus(HttpServletResponse.SC_GONE);
 	}
 
-	@RequestMapping("/getPrintInfo")
+	@PostMapping("/getPrintInfo")
 	public @ResponseBody CommonViewerVO getPrintInfo(@RequestBody CommonViewerParam param) throws Exception {
 		return service.getPrintInfo(param);
 	}
 
 
-	@RequestMapping("/getMergePrintInfo")
+	@PostMapping("/getMergePrintInfo")
 	public @ResponseBody CommonViewerVO getMergePrintInfo(@RequestBody CommonViewerParam param) throws Exception {
 	//public @ResponseBody void getPrintInfo(@RequestBody CommonViewerParam param) throws Exception {
 		//System.out.println("====" );
@@ -82,26 +89,31 @@ public class CommonViewerController extends AbstractController {
 		return service.getMergePrintInfo(param);
 	}
 
+	@RequestMapping(value = "/print-result", method = RequestMethod.POST)
+	public @ResponseBody PrintJobVO printResult(@RequestBody PrintResultParam param) {
+		return printAuditService.complete(param);
+	}
+
 	@GetMapping("/collabInstallPage")
 	public String collabInstallPage(){
 		// 폴더 경로 views 생략
 		return "viewer/collabViewInstallPage";
 	}
 
-	@RequestMapping(value = "/pdf-cache/{fileName:.+}", method = {RequestMethod.GET, RequestMethod.OPTIONS})
-	public void pdfCache(@PathVariable String fileName, HttpServletRequest request, HttpServletResponse response) throws IOException {
-		setPdfCacheCorsHeaders(response);
-		if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
-			response.setStatus(HttpServletResponse.SC_OK);
-			return;
-		}
-		if (fileName.contains("/") || fileName.contains("\\") || !fileName.toLowerCase().endsWith(".pdf")) {
-			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-			return;
-		}
-
+	@GetMapping("/pdf-cache/{ticketKey:[0-9a-fA-F]{32}}")
+	public void pdfCache(@PathVariable String ticketKey, HttpServletResponse response) throws IOException {
+		String fileName = viewerTicketService.resolve(ticketKey);
 		String basePath = SystemConfig.getSystemConfigValue("ADAP_PDF_PATH");
-		File file = new File(basePath, fileName);
+		if (basePath == null || basePath.trim().isEmpty()) {
+			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+			return;
+		}
+		File baseDir = new File(basePath.replace("$", "").trim()).getCanonicalFile();
+		File file = new File(baseDir, fileName).getCanonicalFile();
+		if (!file.toPath().startsWith(baseDir.toPath())) {
+			response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+			return;
+		}
 		if (!file.isFile()) {
 			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 			return;
@@ -110,15 +122,9 @@ public class CommonViewerController extends AbstractController {
 		response.setContentType("application/pdf");
 		response.setContentLengthLong(file.length());
 		response.setHeader("Content-Disposition", "inline; filename=\"" + fileName + "\"");
+		response.setHeader("Cache-Control", "no-store, private");
+		response.setHeader("X-Content-Type-Options", "nosniff");
 		Files.copy(file.toPath(), response.getOutputStream());
-	}
-
-	private void setPdfCacheCorsHeaders(HttpServletResponse response) {
-		response.setHeader("Access-Control-Allow-Origin", "*");
-		response.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-		response.setHeader("Access-Control-Allow-Headers", "Range, Content-Type");
-		response.setHeader("Access-Control-Expose-Headers", "Accept-Ranges, Content-Encoding, Content-Length, Content-Range");
-		response.setHeader("Accept-Ranges", "bytes");
 	}
 
 }

@@ -35,6 +35,5 @@ public class ApprovalListParam extends CommonParam {
 	private String crYn;
 
 	private String targetUserCd;
-	private String userPwd;
 
 }

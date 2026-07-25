@@ -12,6 +12,7 @@ import org.apache.commons.beanutils.PropertyUtils;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.Authentication;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import kr.esob.fdms.commonlogic.combo.ComboInfoVO;
@@ -34,6 +35,7 @@ public class AbstractDao {
     @SuppressWarnings("unchecked")
     public Map<String, Object> get(String queryId, Object obj) {
         log.info("Query Id - {}", queryId);
+        initParam(obj);
         return (Map<String, Object>) sqlMap.selectOne(queryId, obj);
     }
 
@@ -51,11 +53,26 @@ public class AbstractDao {
         if (obj.getClass().getSimpleName().equals("HashMap")) {
             Map<String, Object> paramMap = (Map<String, Object>) obj;
             paramMap.put("sessionLang", session.getSessionLang());
-            paramMap.put("sessionUser", (UserVO) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null && authentication.getPrincipal() instanceof UserVO) {
+                paramMap.put("sessionUser", authentication.getPrincipal());
+            } else {
+                paramMap.remove("sessionUser");
+            }
             return paramMap;
         }
         try {
             PropertyUtils.setSimpleProperty(obj, "sessionLang", session.getSessionLang());
+        } catch (Exception e) {
+        }
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null && authentication.getPrincipal() instanceof UserVO) {
+                // Never trust a sessionUser value supplied through JSON or form binding.
+                PropertyUtils.setSimpleProperty(obj, "sessionUser", authentication.getPrincipal());
+            } else {
+                PropertyUtils.setSimpleProperty(obj, "sessionUser", null);
+            }
         } catch (Exception e) {
         }
         return obj;
@@ -98,10 +115,7 @@ public class AbstractDao {
 
     public List<ComboInfoVO> comboList(String queryId, Object obj, boolean useDefaultText) {
         log.info("Query Id - {}", queryId);
-        try {
-            PropertyUtils.setSimpleProperty(obj, "sessionLang", session.getSessionLang());
-        } catch (Exception e) {
-        }
+        initParam(obj);
 
         List<ComboInfoVO> list = sqlMap.selectList(queryId, obj);
         if (!useDefaultText) {
@@ -122,6 +136,7 @@ public class AbstractDao {
     }
 
     public List<String> stringList(String queryId, Object obj) {
+        initParam(obj);
         return sqlMap.selectList(queryId, obj);
     }
 
@@ -144,26 +159,31 @@ public class AbstractDao {
         PropertyUtils.setSimpleProperty(obj, "start", pagingStart);
         PropertyUtils.setSimpleProperty(obj, "end", pagingEnd);
         log.info("Query Id - {}", queryId);
+        initParam(obj);
         return sqlMap.selectList(queryId, obj);
     }
 
     public Object insert(String queryId, Object obj) {
         log.info("Query Id - {}", queryId);
+        initParam(obj);
         return sqlMap.insert(queryId, obj);
     }
 
     public int update(String queryId, Object obj) {
         log.info("Query Id - {}", queryId);
+        initParam(obj);
         return sqlMap.update(queryId, obj);
     }
 
     public int delete(String queryId, Object obj) {
         log.info("Query Id - {}", queryId);
+        initParam(obj);
         return sqlMap.delete(queryId, obj);
     }
 
     public List<ComboInfoVO> comboInfoList(String queryId, Object obj) {
         log.info("Query Id - {}", queryId);
+        initParam(obj);
         return sqlMap.selectList(queryId, obj);
     }
 }

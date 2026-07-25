@@ -13,6 +13,7 @@ import kr.esob.fdms.controller.inside.distribution.approvaldetail.DistributionAp
 import kr.esob.fdms.controller.login.UserVO;
 import kr.esob.fdms.controller.inside.production.common.ProductionInfoVO;
 import kr.esob.fdms.util.RandomStringGenerator;
+import kr.esob.fdms.util.StoragePathUtils;
 import kr.esob.fdms.util.StringUtil;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.core.io.ClassPathResource;
@@ -96,17 +97,11 @@ public class ProductionRequestService implements CommonService{
 	// 2020.07.24 기범추가( 등록 )
 	public ResultVO saveProductionRegisterFileX2(MultipartHttpServletRequest request) throws Exception {
 		ResultVO resultVo = new ResultVO();
-		System.out.println("들어오는지 체크 = " + request.getParameterMap());
-		System.out.println("들어오는지 체크 = " + request.getParameter("fileName"));
-		System.out.println("objectType -> "+request.getParameter("objectType"));
 		MultipartFile file = request.getFile("file");
 		List<MultipartFile> subFiles = request.getFiles("subFiles");
 
-//		System.out.println("protectYn 잘 들어오나 " + request.getParameter("protectYn"));
 
-		String drawingType = request.getParameter("drawingType");
 		String distributionPoint = request.getParameter("distributionPoint");
-		String check3DFile = "N";
 
 		String objectId = RandomStringGenerator.generateRandomString(32);
 
@@ -129,11 +124,9 @@ public class ProductionRequestService implements CommonService{
 		reviewerUser = reviewerUser.replace(APPROVER_EMPTY_VALUE, "").replace(",,", ",");
 		reviewerUser = trimCsv(reviewerUser);
 
-		String filePathNm = SystemConfig.getSystemConfigValue("PRODUCTION_PATH")+"\\"+ objectId+"." + FilenameUtils.getExtension(request.getParameter("orgFileNm"));
-
-		if (drawingType != null && !drawingType.isEmpty() && !"2D".equalsIgnoreCase(drawingType)) {
-			check3DFile = "Y";
-		}
+		String filePathNm = StoragePathUtils.resolve(
+				SystemConfig.getSystemConfigValue("PRODUCTION_PATH"),
+				objectId + "." + FilenameUtils.getExtension(request.getParameter("orgFileNm"))).toString();
 
 		// DrawingRegisterPopupParam 객체 만들어서 저장
 		String issueDt = request.getParameter("mrbIssueDt");
@@ -160,7 +153,6 @@ public class ProductionRequestService implements CommonService{
 				.distributionPoint(distributionPoint)
 				.modelCode(request.getParameter("modelCode"))
 //				.customerRevision(request.getParameter("customerRevision"))
-				.check3DFile(check3DFile)
 				.changeActionNo(request.getParameter("changeActionNo"))
 				.statusCd(STATUS_APPROVING)
 				.approver(approver)
@@ -209,22 +201,16 @@ public class ProductionRequestService implements CommonService{
 			String registeredAt
 	) {
 		try {
-			System.out.println("[PRODUCT_REGISTER_MAIL] targetUsersCsv=" + targetUsersCsv);
 			for (String token : splitCsv(targetUsersCsv)) {
-				System.out.println("[PRODUCT_REGISTER_MAIL] token=" + token);
 				MailInfoVO mailInfoVo = mailService.selectReceiveUser(token);
 				if (mailInfoVo == null) {
-					System.out.println("[PRODUCT_REGISTER_MAIL] selectReceiveUser is null. token=" + token);
 					continue;
 				}
-				System.out.println("[PRODUCT_REGISTER_MAIL] toUserId=" + mailInfoVo.getToUserId() + ", toMail=" + mailInfoVo.getToMail());
 				mailInfoVo.setMailEnum(mailEnum);
 				mailInfoVo.setContent(buildRegistrationMailContent(mailInfoVo, "MRB", documentNo, documentName, registrant, registeredAt));
 				ResultVO mailResult = mailService.sendDocsMail(mailInfoVo);
-				System.out.println("[PRODUCT_REGISTER_MAIL] sendDocsMail success=" + (mailResult != null && mailResult.isSuccess()));
 			}
 		} catch (Exception e) {
-			System.out.println("[PRODUCT_REGISTER_MAIL] skip: " + e.getMessage());
 		}
 	}
 
@@ -279,7 +265,6 @@ public class ProductionRequestService implements CommonService{
 		convertedUpdateParam.put("orgFileNm", toPdfFileName(safeString(param.getOrgFileNm()), safeString(param.getFileNm())));
 		convertedUpdateParam.put("fileSize", String.valueOf(convertedMain.length()));
 		int updated = dao.updateMainFileAfterCoverMerge(convertedUpdateParam);
-		System.out.println("[MRB_CONVERT] register main update rows=" + updated + ", filePath=" + inputPdfPath);
 	}
 
 	private void markMainFileProcessingFail(String objectId, String errorMessage, String logTag) {
@@ -289,9 +274,7 @@ public class ProductionRequestService implements CommonService{
 			failParam.put("processingStatus", "FAIL");
 			failParam.put("errorMessage", safeString(errorMessage));
 			dao.updateMainFileProcessingFail(failParam);
-			System.out.println("[" + logTag + "] processing status updated to FAIL: " + errorMessage);
 		} catch (Exception e) {
-			System.out.println("[" + logTag + "] fail status update exception: " + e.getMessage());
 		}
 	}
 
@@ -317,7 +300,6 @@ public class ProductionRequestService implements CommonService{
 			String objectId = safeString(param.getObjectId());
 			String inputPdfPath = ensureConvertedPdfForCover(sourceFilePath, objectId, "MRB_COVER");
 			if (inputPdfPath.isEmpty()) {
-				System.out.println("[MRB_COVER] skip: inputPdfPath is empty");
 				return;
 			}
 			if (!inputPdfPath.equals(sourceFilePath) && inputPdfPath.toLowerCase().endsWith(".pdf")) {
@@ -329,7 +311,6 @@ public class ProductionRequestService implements CommonService{
 					convertedUpdateParam.put("orgFileNm", toPdfFileName(safeString(param.getOrgFileNm()), safeString(param.getFileNm())));
 					convertedUpdateParam.put("fileSize", String.valueOf(convertedMain.length()));
 					int updated = dao.updateMainFileAfterCoverMerge(convertedUpdateParam);
-					System.out.println("[MRB_COVER] pre-merge main update rows=" + updated + ", filePath=" + inputPdfPath);
 				}
 			}
 
@@ -339,9 +320,6 @@ public class ProductionRequestService implements CommonService{
 				put("fileNo", "1");
 			}});
 			String dbFilePath = safeString(getInfoString(mainFileInfo, "filePath", "FILE_PATH_NM", "filepath"));
-			System.out.println("[MRB_COVER] objectId=" + objectId);
-			System.out.println("[MRB_COVER] param.filePath=" + inputPdfPath + ", exists=" + new File(inputPdfPath).exists());
-			System.out.println("[MRB_COVER] db.filePath=" + dbFilePath + ", exists=" + (!dbFilePath.isEmpty() && new File(dbFilePath).exists()));
 
 			Map<String, Object> info = dao.selectProductionApprovalInfo(objectId);
 			List<String> preparedBy = splitCsv(getInfoString(info, "registerUser", "REGISTER_USER", "insertUserNm", "INSERT_USER_NM"));
@@ -396,14 +374,10 @@ public class ProductionRequestService implements CommonService{
 			if (endpoint.isEmpty()) {
 				endpoint = "http://localhost:7442/cover_merge_pdf";
 			}
-			System.out.println("[MRB_COVER] endpoint=" + endpoint);
-			System.out.println("[MRB_COVER] templatePdfPath=" + templatePdfPath);
-			System.out.println("[MRB_COVER] inputPdfPath=" + inputPdfPath + ", outputFileName=" + outputFileName);
 
 			RestTemplate restTemplate = new RestTemplate();
 			ResponseEntity<String> response = restTemplate.postForEntity(endpoint, entity, String.class);
 			String responseBody = response.getBody();
-			System.out.println("[MRB_COVER] responseStatus=" + response.getStatusCodeValue() + ", body=" + responseBody);
 
 			if (responseBody != null && !responseBody.trim().isEmpty()) {
 				Map<String, Object> responseMap = new Gson().fromJson(responseBody, new TypeToken<Map<String, Object>>() {}.getType());
@@ -419,25 +393,20 @@ public class ProductionRequestService implements CommonService{
 						updateParam.put("fileSize", String.valueOf(mergedFile.length()));
 						int updated = dao.updateMainFileAfterCoverMerge(updateParam);
 						copyMergedPdfToViewerCache(outputPdfPath, objectId, "MRB_COVER");
-						System.out.println("[MRB_COVER] post-merge main update rows=" + updated + ", filePath=" + inputPdfPath);
-						System.out.println("[MRB_COVER] overwrite source file with merged cover: " + inputPdfPath);
 					}
 				}
 			}
 		} catch (Exception e) {
-			System.out.println("[MRB_COVER] exception: " + e.getMessage());
-			e.printStackTrace();
 			try {
 				Map<String, Object> failParam = new HashMap<>();
 				failParam.put("objectId", safeString(param.getObjectId()));
-				String errorMessage = safeString(e.getMessage());
+				String errorMessage = "cover_merge_failed:" + e.getClass().getSimpleName();
 				if (errorMessage.length() > 1000) {
 					errorMessage = errorMessage.substring(0, 1000);
 				}
 				failParam.put("errorMessage", errorMessage);
 				dao.updateMainFileProcessingFail(failParam);
 			} catch (Exception ignore) {
-				System.out.println("[MRB_COVER] fail status update exception: " + ignore.getMessage());
 			}
 		}
 	}
@@ -464,7 +433,6 @@ public class ProductionRequestService implements CommonService{
 			requestFactory.setReadTimeout(60000);
 			RestTemplate restTemplate = new RestTemplate(requestFactory);
 			ResponseEntity<String> response = restTemplate.postForEntity(endpoint, new HttpEntity<>(body, headers), String.class);
-			System.out.println("[" + logTag + "] convert status=" + response.getStatusCodeValue() + ", body=" + response.getBody());
 			if (!response.getStatusCode().is2xxSuccessful()) {
 				return "";
 			}
@@ -483,12 +451,10 @@ public class ProductionRequestService implements CommonService{
 					}
 				}
 				if (latest != null) {
-					System.out.println("[" + logTag + "] convertedPdfPath=" + latest.getAbsolutePath());
 					return latest.getAbsolutePath();
 				}
 			}
 		} catch (Exception e) {
-			System.out.println("[" + logTag + "] convert exception: " + e.getMessage());
 		}
 		return "";
 	}
@@ -531,8 +497,10 @@ public class ProductionRequestService implements CommonService{
 
 			String subObjectId = RandomStringGenerator.generateRandomString(32);
 			String extension = FilenameUtils.getExtension(originalName);
-			String targetPath = SystemConfig.getSystemConfigValue("PRODUCTION_PATH") + "\\" + subObjectId
-					+ (extension == null || extension.trim().isEmpty() ? "" : "." + extension);
+			String targetPath = StoragePathUtils.resolve(
+					SystemConfig.getSystemConfigValue("PRODUCTION_PATH"),
+					subObjectId + (extension == null || extension.trim().isEmpty()
+							? "" : "." + extension)).toString();
 			targetPath = StringUtil.replaceLfiPath(targetPath);
 
 			try {
@@ -582,7 +550,6 @@ public class ProductionRequestService implements CommonService{
 		path = StringUtil.replaceLfiPath(path);
 		File file = new File(path);
 		param.setFilePath(path);
-		System.out.println("파일 경로 : " + path);
 
 		param.setFileNm(orgName);
 		param.setFileSize(String.valueOf(mf.getSize()));
@@ -746,7 +713,6 @@ public class ProductionRequestService implements CommonService{
 		if (updated > 0) {
 			updateDistributionApprovalDetail(objectId, MRB_OBJECT_TYPE, userCd, userNm);
 			boolean detailFinalApprove = isDistributionApprovalDetailCompleted(objectId, MRB_OBJECT_TYPE);
-			System.out.println("[MRB_APPROVAL] objectId=" + objectId + ", stringFinal=" + isFinalApprove + ", detailFinal=" + detailFinalApprove);
 			if (isFinalApprove || detailFinalApprove) {
 				mergeMrbCoverAfterApproval(objectId);
 			}
@@ -976,10 +942,6 @@ public class ProductionRequestService implements CommonService{
 		param.put("fileNo", fileNo == null ? "" : fileNo.trim());
 		Map<String, Object> fileInfo = dao.selectProductionFileDownloadInfo(param);
 		String filePath = fileInfo == null || fileInfo.get("filePath") == null ? "" : String.valueOf(fileInfo.get("filePath"));
-		System.out.println("[MRB_VIEWER] getProductionFileDownloadInfo objectId=" + objectId
-				+ ", fileNo=" + (fileNo == null ? "" : fileNo)
-				+ ", db.filePath=" + filePath
-				+ ", exists=" + (!filePath.isEmpty() && new File(filePath).exists()));
 		return fileInfo;
 	}
 
@@ -1082,7 +1044,6 @@ public class ProductionRequestService implements CommonService{
 		detail.put("userId", safeString(userCd));
 		detail.put("userNm", safeString(userNm));
 		int updated = approvalDetailDao.updateApprovalDetailApproved(detail);
-		System.out.println("[" + objectType + "_APPROVAL_DETAIL] approved rows=" + updated + ", objectId=" + objectId);
 	}
 
 	private boolean isDistributionApprovalDetailCompleted(String objectId, String objectType) {
@@ -1145,12 +1106,10 @@ public class ProductionRequestService implements CommonService{
 		try {
 			String adapPdfPath = safeString(SystemConfig.getSystemConfigValue("ADAP_PDF_PATH"));
 			if (adapPdfPath.isEmpty()) {
-				System.out.println("[" + logTag + "] viewer cache skip: ADAP_PDF_PATH is empty");
 				return;
 			}
 			File source = new File(safeString(mergedPdfPath));
 			if (!source.isFile()) {
-				System.out.println("[" + logTag + "] viewer cache skip: merged file not found: " + mergedPdfPath);
 				return;
 			}
 			File targetDir = new File(adapPdfPath);
@@ -1159,9 +1118,7 @@ public class ProductionRequestService implements CommonService{
 			}
 			File target = new File(targetDir, safeString(objectId) + ".pdf");
 			Files.copy(source.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
-			System.out.println("[" + logTag + "] viewer cache updated: " + target.getAbsolutePath());
 		} catch (Exception e) {
-			System.out.println("[" + logTag + "] viewer cache update failed: " + e.getMessage());
 		}
 	}
 
@@ -1192,7 +1149,6 @@ public class ProductionRequestService implements CommonService{
 		try {
 			rows = dao.selectUserPositionByNames(param);
 		} catch (Exception e) {
-			System.out.println("[MRB_COVER] position lookup skipped: " + e.getMessage());
 			return new HashMap<>();
 		}
 		if (rows == null) {

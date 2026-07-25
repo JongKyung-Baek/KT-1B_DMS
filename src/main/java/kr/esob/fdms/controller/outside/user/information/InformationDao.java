@@ -29,12 +29,20 @@ public class InformationDao extends AbstractDao {
 		insert(prefix + "insertInfo", param);
 	}
 
-	public Integer checkPwd(Object param){
-		return (Integer) obj(prefix + "checkPwd", param);
+	public String selectCompanyApprover(InformationListParam param) {
+		return (String) obj(prefix + "selectCompanyApprover", param);
 	}
 
-	public void updateUser(InformationListParam param) {
-		update(prefix + "updateUser", param);
+	public int selectCompanyUserCount(InformationListParam param) {
+		return (Integer) obj(prefix + "selectCompanyUserCount", param);
+	}
+
+	public String selectPasswordHash(InformationListParam param) {
+		return (String) obj(prefix + "selectPasswordHash", param);
+	}
+
+	public int updateUser(InformationListParam param) {
+		return update(prefix + "updateUser", param);
 	}
 
 	public void updateInfo(InformationListParam param) {

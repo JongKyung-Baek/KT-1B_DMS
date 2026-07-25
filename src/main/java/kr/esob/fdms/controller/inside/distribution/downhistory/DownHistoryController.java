@@ -62,9 +62,6 @@ public class DownHistoryController extends AbstractController{
         model.addAttribute("objectId", param.getObjectId());
         model.addAttribute("requestNo", param.getRequestNo());
 
-        System.out.println("param.getObjectId() ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ " + param.getObjectId());
-        System.out.println("param.getRequestNo() ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ " + param.getRequestNo());
-
         return "/inside/common/downHistoryPopup";
     }
 
@@ -83,7 +80,6 @@ public class DownHistoryController extends AbstractController{
             HistoryListVO processedItem = new HistoryListVO();
 
             // json형식 아닌 일반 노말 데이터
-            System.out.println("originalItem.getRequestNo() ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ" + originalItem.getRequestNo() );
             processedItem.setRequestNo(originalItem.getRequestNo());
             processedItem.setObjectNm(originalItem.getObjectNm());
             processedItem.setObjectNo(originalItem.getObjectNo());
@@ -108,8 +104,6 @@ public class DownHistoryController extends AbstractController{
         model.addAttribute("gridInfo", JSONArray.fromObject(gridService.selectGridInfo("gridActLogListPopup")));
         model.addAttribute("downloadedName", param.getDownloadedName());
 
-        System.out.println("param.getDownloadedName() ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ " + param.getDownloadedName());
-
         return "/inside/common/actLogPopup";
     }
 
@@ -127,9 +121,7 @@ public class DownHistoryController extends AbstractController{
             HistoryListVO processedItem = new HistoryListVO();
 
             // json형식 아닌 일반 노말 데이터
-            System.out.println("originalItem.getDownloadedName() ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ" + originalItem.getDownloadedName() );
             processedItem.setDownloadedName(originalItem.getUuid());
-            System.out.println("originalItem.getUuid()ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ "+ originalItem.getUuid());
             processedItem.setActTime(originalItem.getActTime());
             processedItem.setActType(originalItem.getActType());
 

@@ -1,5 +1,6 @@
 package kr.esob.fdms.commonlogic.abstractclass;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import kr.esob.fdms.controller.login.UserVO;
@@ -9,6 +10,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class CommonHomeParam {
+    @JsonIgnore
     private UserVO sessionUser;
 
     public CommonHomeParam() {

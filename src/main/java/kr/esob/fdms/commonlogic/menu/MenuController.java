@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -35,14 +36,14 @@ public class MenuController extends AbstractController {
 
 	@RequestMapping("/getMenuCombo")
 	public @ResponseBody String getMenuCombo(String q){
-		System.out.println(q);
+		
 		Map<String, Object> rtn = new HashMap<String, Object>();
 		rtn.put("results", service.getMenuCombo(q));
 
 		return JSONObject.fromObject(rtn).toString();
 	}
 
-	@RequestMapping("/insertMenu")
+	@PostMapping("/insertMenu")
 	public String insertMenu(MenuVO menuVo) {
 		service.insertMenu(menuVo);
 		return "/menu/menuAdd";
@@ -54,9 +55,9 @@ public class MenuController extends AbstractController {
 		//System.out.println("menuUrl : " + menuUrl);
 
 		Map<String, Object> rtn = new HashMap<String, Object>();
-		System.out.println("##########################");System.out.println("##########################");
+		
 		rtn.put("results", service.getMenuNm(param.getMenuUrl()));
-		System.out.println("##########################");System.out.println("##########################");
+		
 		
 		return JSONObject.fromObject(rtn).toString();
 	}

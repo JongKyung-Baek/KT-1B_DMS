@@ -19,16 +19,10 @@ import net.sf.json.JSONObject;
 public class CommonFileSenderController extends AbstractController {
 	@RequestMapping("/common/fileTransfer/sender")
 	public @ResponseBody String sender(HttpServletRequest request, HttpServletResponse response) throws UnsupportedEncodingException {
-		String dstUrl = request.getParameter("dstUrl");
-		String srcFilePath = request.getParameter("srcFilePath");
-		String dstFilePath = request.getParameter("dstFilePath");
-		String dstFileNm = request.getParameter("dstFileNm");
-
-		log.info("dstUrl : " +dstUrl);
-		log.info("srcFilePath : " +srcFilePath);
-		log.info("dstFilePath : " +dstFilePath);
-		log.info("dstFileNm : " +dstFileNm);
-
-		return JSONObject.fromObject(FileUtil.sendFile(dstUrl, srcFilePath, dstFilePath, dstFileNm)).toString();
+		// External file transfer is intentionally disabled until the final
+		// integration phase. The old endpoint trusted arbitrary source paths and
+		// destination URLs, allowing server-side file reads or SSRF.
+		response.setStatus(HttpServletResponse.SC_GONE);
+		return "{\"result\":false,\"msg\":\"legacy file transfer is disabled\"}";
 	}
 }

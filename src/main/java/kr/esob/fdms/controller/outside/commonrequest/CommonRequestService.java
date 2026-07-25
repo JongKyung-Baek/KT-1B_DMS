@@ -40,7 +40,6 @@ public class CommonRequestService {
 		try {
 			sendMail(param);
 		}catch(Exception e) {
-			e.printStackTrace();
 		}
 	}
 

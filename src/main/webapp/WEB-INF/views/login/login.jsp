@@ -1,12 +1,18 @@
 <%@page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@page import="kr.esob.fdms.commonlogic.message.LocaleUtil"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!doctype html>
-<html lang="kr" class="layout-wide customizer-hide" dir="ltr" data-skin="default" data-bs-theme="light">
+<html lang="kr" class="layout-wide customizer-hide" dir="ltr"
+      data-skin="default"
+      data-bs-theme="light"
+      data-template="vertical-menu-template"
+      data-assets-path="${pageContext.request.contextPath}/vuexy/assets/">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 <title>SDMS - Login </title>
+<%@ include file="/WEB-INF/jspf/csrf-meta.jspf" %>
 
 <!-- vuexy CSS -->
   <!-- <link rel="icon" type="image/x-icon" href="${pageContext.request.contextPath}/vuexy/assets/img/favicon/favicon.ico" /> -->
@@ -19,14 +25,8 @@
   <link rel="stylesheet" href="${pageContext.request.contextPath}/vuexy/assets/vendor/css/pages/page-auth.css" />  
 
   <script src="${pageContext.request.contextPath}/vuexy/assets/vendor/js/helpers.js"></script>
-  <script src="${pageContext.request.contextPath}/vuexy/assets/vendor/js/template-customizer.js"></script>
   <script src="${pageContext.request.contextPath}/vuexy/assets/js/config.js"></script>  
 
-  <script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/i18n/jquery-i18n-properties-master/jquery.i18n.properties.js"></script>
-  <script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/i18n/common_i18n.js"></script>
-  <script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/kessinfo.js"></script>
-  <script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/polyfill.js"></script>  
-  <script> loadBundles('<%=LocaleUtil.getCurrentLanguage(request) %>', '${pageContext.request.contextPath}'); </script>  
 <!-- vuexy CSS -->
 
 <script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/jquery-3.4.1.min.js"></script>
@@ -34,8 +34,8 @@
 <script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common_dialog.js"></script>
 <script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/i18n/jquery-i18n-properties-master/jquery.i18n.properties.js"></script>
 <script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/i18n/common_i18n.js"></script>
-<script type="text/javascript" src="/resources/js/kessinfo.js"></script>
-<script type="text/javascript" src="/resources/js/polyfill.js"></script>
+<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/polyfill.js"></script>
+<script>loadBundles('<%=LocaleUtil.getCurrentLanguage(request) %>', '${pageContext.request.contextPath}');</script>
 
 
 <!-- <link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/style.css" media="screen" /> -->
@@ -495,17 +495,6 @@
 </style>
 <script>
 loadBundles('<%=LocaleUtil.getCurrentLanguage(request) %>', '${pageContext.request.contextPath}');
-	$(document).ready(function(){
-		console.log('${errorMsg}');
-		var errorMsg = "${errorMsg}";
-		if(errorMsg != undefined && errorMsg != ''){
-			alertMessage(errorMsg, function(){
-				errorMsg = '';
-				location.href='/?url_type=I';
-				$(this).dialog("close");
-			});
-		}
-	});
 
 	//const socket = new WebSocket("ws://localhost:39229/websocket");
 	// 웹소켓 연결이 열린 경우
@@ -541,8 +530,9 @@ loadBundles('<%=LocaleUtil.getCurrentLanguage(request) %>', '${pageContext.reque
 </script>
 </head>
 <body>
+<div id="loginErrorMessage" hidden><c:out value="${errorMsg}"/></div>
 
-  <main class="login-page">
+<main class="login-page">
     <section class="login-wrap" aria-label="KAI S-DMS Login Page">
       <div class="brand-area">
         <div class="brand-box">
@@ -576,6 +566,7 @@ loadBundles('<%=LocaleUtil.getCurrentLanguage(request) %>', '${pageContext.reque
         <div class="auth-area">
           <div class="login-area">
             <form id="loginForm" name="loginForm" class="login-panel" action="${pageContext.request.contextPath}/login/loginProcess" method="POST">
+              <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
               <input type="hidden" id="url_type" name="url_type" value="I" />
           <div class="input-group">
             <span class="icon-box">
@@ -652,146 +643,13 @@ loadBundles('<%=LocaleUtil.getCurrentLanguage(request) %>', '${pageContext.reque
   <!-- errorMsg 처리 -->
   <script>
   (function() {
-    var errorMsg = "${errorMsg}";
+    var errorElement = document.getElementById('loginErrorMessage');
+    var errorMsg = errorElement ? errorElement.textContent : "";
     if (errorMsg && errorMsg.trim() !== "") {
       alert(errorMsg);
-      location.href='${pageContext.request.contextPath}/?url_type=I';
     }
   })();
   </script>
-
-  <!-- 기존 유지 -->
-  <script>
-    var remoteServer = 'http://localhost:8088';
-    GetIsKess(remoteServer, false)
-      .then(function(ret){ console.log("result: install"); })
-      .catch(function(error){ console.log("result: not install"); });
-  </script>
-
-
-
-
-<!--이전버전 백업용 -->
-<%--
-	<script>
-
-		//var remoteServer = 'http://192.168.1.180:8443';
-		//var remoteServer = 'https://nfthuman.duckdns.org';
-
-		//var remoteServer = 'http://127.0.0.1:8443';
-		//var remoteServer = 'http://js-lab.iptime.org';
-		var remoteServer = 'http://localhost:8088';
-		
-		GetIsKess(remoteServer, false)  //연동대상 그룹웨어 url 주소 , 외부망 서버인지 여부 
-		.then(function(ret){
-			console.log("result: install");
-			alert("install!");
-		})
-		.catch(function(error){
-			console.log("result: not install");
-			// 2023.2.13 개발서버 테스트용으로 임시로 막음 대체용이지만 막음2
-			//var retVal = confirm("뷰어 프로그램이 설치되지 않았습니다.\n\r 설치 페이지로 이동할까요?");
-			//if( retVal == true ){
-			//	window.location.href = '/login/kess';
-			//}
-			// 2023.2.13 개발서버 테스트용으로 임시로 막음 대체용이지만 막음2
-			
-		// 2023.1.11 개발서버 테스트용으로 임시로 막음
-		//console.log("result: not install");
-		//alert("뷰어 프로그램이 설치되지 않았습니다.\n\r 설치 페이지로 이동합니다.");
-		//window.location.href = '/login/kess';
-		// 2023.1.11 개발서버 테스트용으로 임시로 막음
-		});
-		
-		/*
-		IsKESSInstall()
-		.then(function(ret){
-			console.log("result: install");
-			alert("install!");
-		})
-		.catch(function(error){
-			console.log("result: not install");
-			alert("뷰어 프로그램이 설치되지 않았습니다.\n\r 설치 페이지로 이동합니다.");
-			//window.location.href = '/login/kess';
-		});
-		*/
-
-	</script>
-	<div class="loginWrap inside">
-		<div class="header">
-			<div class="left">
-				<h1 class="logo">
-					<a href="#">logo</a>
-					<span>CollabHub</span>
-				</h1>
-			</div>
-			<div class="right">
-			</div>
-		</div>
-		<div class="loginArea">
-			<div class="loginBox">
-				<h1>CollabHub</h1>
-				<p><span>내부사용자용</span> 로그인 페이지</p>
-				<form id="loginForm" name="loginForm" action="/login/loginProcess" method="POST">
-						<input type="hidden" id="url_type" name="url_type" value="I" />
-	<!-- 				<select id="url_type" name="url_type"><option value="I">내부사용자</option><option value="E">외부사용자</option></select> -->
-					<ul>
-						<li><label for="userId">ID</label>
-							<input type="text" id="userId" name="userId" value="" placeholder="ID을 입력하세요" autofocus>
-							<label for="userId" class="icon">I</label>
-						</li>
-						<li>
-							<label for="userPw">Password</label>
-							<input type="password" id="userPw"  name="userPw" placeholder="Password를 입력하세요">
-							<label for="userPw" class="icon">P</label>
-						</li>
-					</ul>
-					<button type="submit" class="loginSubmitBtn">LOGIN</button>
-					<!--  <button type="button" id="btnHi"  class="loginSubmitBtn" onclick="popup();">Hi~</button> -->
-				</form>
-			</div>
-			<!-- Secure Site Seal - DO NOT EDIT -->
-			<div id="tls_seal_e6f644384d8e43a7971e74d3591458b8" data-id="e6f644384d8e43a7971e74d3591458b8" data-logosize="medium" data-logotype="static"></div>
-			<script src="https://seal.turingsign.com/v1.1/e6f644384d8e43a7971e74d3591458b8/script.js" async defer></script>
-			<!--- Secure Site Seal - DO NOT EDIT --->
-		</div>
-	</div>
-	<!--
-	<div class="loginWrap outside">
-		<div class="header">
-			<div class="left">
-				<h1 class="logo">
-					<a href="#">logo</a>
-					<span>CollabHub</span>
-				</h1>
-			</div>
-			<div class="right">
-			</div>
-		</div>
-		<div class="loginArea">
-			<div class="loginBox">
-				<h1>CollabHub</h1>
-				<p><span>외부업체용</span> 로그인 페이지</p>
-				<form id="loginForm" name="loginForm" action="/login/loginProcess" method="POST">
-					<ul>
-						<li><label for="">사업자번호</label><input type="text" id="" name="" placeholder="사업자번호를 입력하세요" autofocus></li>
-						<li><label for="userId">ID</label><input type="text" id="userId" name="userId" placeholder="ID을 입력하세요"><label for="userId" class="icon">I</label></li>
-						<li><label for="userPw">Password</label><input type="password" id="userPw"  name="userPw" placeholder="Password를 입력하세요"><label for="userPw" class="icon">P</label></li>
-					</ul>
-					<button type="submit" class="loginSubmitBtn">LOGIN</button>
-				</form>
-				<p class="linkBtnArea">
-					<a href="#" class="pwInquiry">비밀번호 찾기</a>
-				</p>
-			</div>
-		</div>
-	</div>
-	-->
-	<!-- <a href="#" class="selectLanguage en">English</a> -->
-	<div id="alertMessage"></div>
---%>
-<!--이전버전 백업용 -->
-
 
 </body>
 

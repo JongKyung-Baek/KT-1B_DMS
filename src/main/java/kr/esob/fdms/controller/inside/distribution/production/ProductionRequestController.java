@@ -9,11 +9,14 @@ import kr.esob.fdms.commonlogic.form.FormInfoService;
 import kr.esob.fdms.commonlogic.grid.GridInfoService;
 import kr.esob.fdms.commonlogic.grid.GridResultVO;
 import kr.esob.fdms.commonlogic.result.ResultVO;
+import kr.esob.fdms.commonlogic.securityacl.FileAccessRequest;
+import kr.esob.fdms.commonlogic.securityacl.SecurityAclService;
 import kr.esob.fdms.commonlogic.systemconfig.SystemConfig;
 import kr.esob.fdms.commonlogic.toolbar.ToolbarInfoService;
 import kr.esob.fdms.controller.inside.authorization.AuthorizationService;
 import kr.esob.fdms.controller.login.UserVO;
 import net.sf.json.JSONArray;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -60,6 +63,9 @@ public class ProductionRequestController extends AbstractController {
 	ProductionRequestService service;
 
 	@Inject
+	SecurityAclService securityAclService;
+
+	@Inject
 	AuthorizationService authService;
 
 	@Inject
@@ -103,7 +109,7 @@ public class ProductionRequestController extends AbstractController {
 		return result;
 	}
 
-	@RequestMapping("/delete")
+	@PostMapping("/delete")
 	@ResponseBody
 	public Map<String, Object> deletePrd(@RequestBody Map<String, List<Map<String, String>>> param,
 			Authentication authentication) {
@@ -220,15 +226,72 @@ public class ProductionRequestController extends AbstractController {
 
 	@RequestMapping("/productionFilePopup")
 	public String productionFilePopup(ProductionRequestParam param, Model model) {
-		List<Map<String, Object>> mainFileList = service.selectMainFileInfo(param.getObjectId());
-		List<Map<String, Object>> subFileList = service.selectSubFileInfo(param.getObjectId());
-		model.addAttribute("objectId", param.getObjectId());
-		model.addAttribute("productionNo", param.getObjectNo());
+		Map<String, Object> popupResource = service.getProductionFileDownloadInfo(param.getObjectId(), null);
+		String resolvedObjectId = requirePopupViewAccess(popupResource, "PRODUCT_DOCUMENT");
+		List<Map<String, Object>> mainFileList = filterAccessiblePopupRows(
+				service.selectMainFileInfo(resolvedObjectId), "PRODUCT_DOCUMENT", false);
+		List<Map<String, Object>> subFileList = filterAccessiblePopupRows(
+				service.selectSubFileInfo(resolvedObjectId), "PRODUCT_DOCUMENT_SUB", true);
+		model.addAttribute("objectId", resolvedObjectId);
+		model.addAttribute("productionNo", firstRowValue(mainFileList, "productionNo"));
 		model.addAttribute("mainFileList", mainFileList);
 		model.addAttribute("subFileList", subFileList);
 		model.addAttribute("mainFileJson", JSONArray.fromObject(mainFileList));
 		model.addAttribute("subFileJson", JSONArray.fromObject(subFileList));
 		return "inside/distribution/production/productionFilePopup";
+	}
+
+	private String requirePopupViewAccess(Map<String, Object> resource, String defaultObjectType) {
+		if (resource == null || resource.isEmpty()) {
+			throw new AccessDeniedException("File resource was not resolved from the database.");
+		}
+		String objectId = mapValue(resource, "aclObjectId", mapValue(resource, "objectId", ""));
+		if (objectId.isEmpty()) {
+			throw new AccessDeniedException("File resource identifier is missing.");
+		}
+		FileAccessRequest access = new FileAccessRequest();
+		access.setActionCd(SecurityAclService.VIEW);
+		access.setObjectType(mapValue(resource, "aclObjectType", defaultObjectType));
+		access.setObjectId(objectId);
+		access.setFileNo(mapValue(resource, "fileNo", "*"));
+		securityAclService.requireAccess(access);
+		return objectId;
+	}
+
+	private List<Map<String, Object>> filterAccessiblePopupRows(List<Map<String, Object>> rows,
+			String objectType, boolean subFile) {
+		List<Map<String, Object>> safeRows = new java.util.ArrayList<>();
+		if (rows == null) return safeRows;
+		for (Map<String, Object> row : rows) {
+			if (row == null) continue;
+			String objectId = mapValue(row, subFile ? "parentObjectId" : "objectId", "");
+			if (objectId.isEmpty()) continue;
+			FileAccessRequest access = new FileAccessRequest();
+			access.setActionCd(SecurityAclService.VIEW);
+			access.setObjectType(objectType);
+			access.setObjectId(objectId);
+			access.setFileNo(mapValue(row, "fileNo", "*"));
+			if (securityAclService.checkAccess(access).isAllowed()) {
+				safeRows.add(withoutServerPath(row));
+			}
+		}
+		return safeRows;
+	}
+
+	private Map<String, Object> withoutServerPath(Map<String, Object> row) {
+		Map<String, Object> safe = new LinkedHashMap<>();
+		for (Map.Entry<String, Object> entry : row.entrySet()) {
+			String key = entry.getKey() == null ? "" : entry.getKey().replace("_", "").replace("-", "").toLowerCase();
+			if (!"filepath".equals(key) && !"filepathnm".equals(key)
+					&& !"fullpath".equals(key) && !"physicalpath".equals(key) && !"storagepath".equals(key)) {
+				safe.put(entry.getKey(), entry.getValue());
+			}
+		}
+		return safe;
+	}
+
+	private String firstRowValue(List<Map<String, Object>> rows, String key) {
+		return rows == null || rows.isEmpty() ? "" : mapValue(rows.get(0), key, "");
 	}
 
 	@RequestMapping("/selectRevisionUsers")
@@ -255,37 +318,73 @@ public class ProductionRequestController extends AbstractController {
 			@RequestParam(value = "fileNo", required = false) String fileNo,
 			@RequestParam(value = "watermarkYn", required = false, defaultValue = "Y") String watermarkYn,
 			Authentication authentication) throws Exception {
-		System.out.println("[MRB_VIEWER] downloadFile request objectId=" + objectId + ", fileNo=" + fileNo);
 		Map<String, Object> fileInfo = service.getProductionFileDownloadInfo(objectId, fileNo);
 		if (fileInfo == null || fileInfo.isEmpty()) {
-			System.out.println("[MRB_VIEWER] downloadFile not found: fileInfo is empty");
+			recordDirectDownloadResult(fileInfo, "PRODUCT_DOCUMENT", objectId, fileNo,
+					"FAIL", "RESOURCE_NOT_FOUND", "Direct download resource was not found.");
 			return ResponseEntity.notFound().build();
 		}
+		requireDownloadAccess(fileInfo, "PRODUCT_DOCUMENT", objectId, fileNo);
 		String filePath = fileInfo.get("filePath") == null ? "" : String.valueOf(fileInfo.get("filePath"));
 		String orgFileNm = fileInfo.get("orgFileNm") == null ? "download.bin" : String.valueOf(fileInfo.get("orgFileNm"));
 		if (!isPdfFilePath(filePath) && !isAdminRole(authentication)) {
+			recordDirectDownloadResult(fileInfo, "PRODUCT_DOCUMENT", objectId, fileNo,
+					"FAIL", "FILE_TYPE_DENIED", "Direct download file type was denied.");
 			return ResponseEntity.status(403).build();
 		}
-		System.out.println("[MRB_VIEWER] downloadFile db.filePath=" + filePath + ", orgFileNm=" + orgFileNm);
 		if (filePath.isEmpty() || !Files.exists(Paths.get(filePath))) {
-			System.out.println("[MRB_VIEWER] downloadFile not found: file does not exist on disk");
+			recordDirectDownloadResult(fileInfo, "PRODUCT_DOCUMENT", objectId, fileNo,
+					"FAIL", "FILE_NOT_FOUND", "Direct download file was not found.");
 			return ResponseEntity.notFound().build();
 		}
-		byte[] bytes = null;
-		if ("Y".equalsIgnoreCase(watermarkYn)) {
-			bytes = requestWatermarkPdf(filePath, orgFileNm, authentication);
+		byte[] bytes;
+		try {
+			bytes = "Y".equalsIgnoreCase(watermarkYn)
+					? requestWatermarkPdf(filePath, orgFileNm, authentication) : null;
+			if (bytes == null || bytes.length == 0) {
+				bytes = Files.readAllBytes(Paths.get(filePath));
+			}
+		} catch (Exception exception) {
+			recordDirectDownloadResult(fileInfo, "PRODUCT_DOCUMENT", objectId, fileNo,
+					"FAIL", "READ_ERROR", "Direct download response preparation failed.");
+			throw exception;
 		}
-		if (bytes == null || bytes.length == 0) {
-			bytes = Files.readAllBytes(Paths.get(filePath));
-		}
-		System.out.println("[MRB_VIEWER] downloadFile success bytes=" + bytes.length);
 		String downloadFileName = buildDownloadFileName(filePath, orgFileNm);
 		String encodedFileName = URLEncoder.encode(downloadFileName, "UTF-8").replaceAll("\\+", "%20");
+		recordDirectDownloadResult(fileInfo, "PRODUCT_DOCUMENT", objectId, fileNo,
+				"SUCCESS", null, "Direct download response prepared.");
 		return ResponseEntity.ok()
 				.contentType(MediaType.APPLICATION_OCTET_STREAM)
 				.header("Content-Disposition", "attachment; filename*=UTF-8''" + encodedFileName)
 				.contentLength(bytes.length)
 				.body(bytes);
+	}
+
+	private void requireDownloadAccess(Map<String, Object> fileInfo, String defaultObjectType,
+			String requestedObjectId, String requestedFileNo) {
+		FileAccessRequest access = new FileAccessRequest();
+		access.setActionCd(SecurityAclService.DOWNLOAD_ORIGINAL);
+		access.setObjectType(mapValue(fileInfo, "aclObjectType", defaultObjectType));
+		access.setObjectId(mapValue(fileInfo, "aclObjectId", mapValue(fileInfo, "objectId", requestedObjectId)));
+		access.setFileNo(mapValue(fileInfo, "fileNo", requestedFileNo));
+		securityAclService.requireAccess(access);
+	}
+
+	private void recordDirectDownloadResult(Map<String, Object> fileInfo, String defaultObjectType,
+			String requestedObjectId, String requestedFileNo, String resultCd, String reasonCd,
+			String message) {
+		securityAclService.recordDownloadResult(null, resultCd, reasonCd,
+				mapValue(fileInfo, "aclObjectType", defaultObjectType),
+				mapValue(fileInfo, "aclObjectId", mapValue(fileInfo, "objectId", requestedObjectId)),
+				mapValue(fileInfo, "fileNo", requestedFileNo),
+				mapValue(fileInfo, "requestNo", mapValue(fileInfo, "REQUEST_NO", "")),
+				message);
+	}
+
+	private String mapValue(Map<String, Object> source, String key, String fallback) {
+		Object value = source == null ? null : source.get(key);
+		if (value == null || String.valueOf(value).trim().isEmpty()) return fallback;
+		return String.valueOf(value).trim();
 	}
 
 	private String buildDownloadFileName(String filePath, String orgFileNm) {
@@ -428,7 +527,6 @@ public class ProductionRequestController extends AbstractController {
 		model.addAttribute("updownServerIp", SystemConfig.getSystemConfigValue("UPDOWN_SERVER_IP"));
 		model.addAttribute("updownServerPort", SystemConfig.getSystemConfigValue("UPDOWN_SERVER_PORT"));
 		model.addAttribute("updownPath", SystemConfig.getSystemConfigValue("UPDOWN_PATH"));
-		model.addAttribute("updownSecretKey", SystemConfig.getSystemConfigValue("UPDOWN_SECRET_KEY"));
 		model.addAttribute("updownLangCode", SystemConfig.getSystemConfigValue("UPDOWN_LANG_CODE"));
 		model.addAttribute("updownIsSecurity", SystemConfig.getSystemConfigValue("UPDOWN_IS_SECURITY"));
 		model.addAttribute("updownExtension", SystemConfig.getSystemConfigValue("UPDOWN_EXTENSION"));

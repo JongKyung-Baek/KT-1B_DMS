@@ -6,6 +6,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -63,7 +64,7 @@ public class AcceptanceController extends AbstractController {
 	}
 
 
-	@RequestMapping("/saveAcceptance")
+	@PostMapping("/saveAcceptance")
 	public @ResponseBody ResultVO saveAcceptance(@RequestBody AcceptancePopupParam param) throws Exception {
 		return service.saveAcceptance(param);
 	}

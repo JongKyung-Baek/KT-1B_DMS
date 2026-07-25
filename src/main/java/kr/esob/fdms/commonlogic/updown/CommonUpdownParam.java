@@ -12,6 +12,7 @@ import lombok.Setter;
 @Setter
 public class CommonUpdownParam extends CommonParam{
 	private String requestNo;
+	private String objectId;
 	private String docSeq;
 	private String dataNo;
 	private String objectType;

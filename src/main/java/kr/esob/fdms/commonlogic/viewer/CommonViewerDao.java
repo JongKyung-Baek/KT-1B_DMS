@@ -2,7 +2,6 @@ package kr.esob.fdms.commonlogic.viewer;
 
 
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.stereotype.Repository;
 
@@ -78,11 +77,7 @@ public class CommonViewerDao extends AbstractDao {
 		return list(prefix + "selectFileList", param);
 	}
 
-	public void updatePrintCnt(CommonViewerParam param) {
-		update(prefix + "updatePrintCnt", param);
-	}
-
-	public void updateMergePrintCnt(Map<String, Object> param) {
-		update(prefix + "updateMergePrintCnt4", param);
+	public int updatePrintCnt(CommonViewerParam param) {
+		return update(prefix + "updatePrintCnt", param);
 	}
 }

@@ -16,6 +16,9 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class ViewerUtil {
 
 	/**
@@ -72,7 +75,7 @@ public class ViewerUtil {
 		}
 		catch(Exception e) {
 			fileList.clear();
-			e.printStackTrace();
+			log.warn("SVG viewer preparation failed. cause={}", e.getClass().getSimpleName());
 		}
 
 		return fileList;

@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Repository;
 
 import kr.esob.fdms.commonlogic.abstractclass.AbstractDao;
+import kr.esob.fdms.controller.outside.commondestroystatus.DestroyFileDownloadParam;
 import kr.esob.fdms.controller.outside.commondestroystatus.DestroyFileVO;
 
 @Repository
@@ -35,24 +36,29 @@ public class DisposalAcceptanceDao extends AbstractDao {
 		return list(prefix + "selectDisposalFileList", param);
 	}
 
-	public DestroyFileVO selectFileInfo(DestroyFileVO param) {
-		return (DestroyFileVO) obj(prefix + "selectFileInfo", param);
+	@SuppressWarnings("unchecked")
+	public List<DestroyFileVO> selectAuthorizedDownloadTargets(DestroyFileDownloadParam param) {
+		return list(prefix + "selectAuthorizedDownloadTargets", param);
 	}
 
-	public void updateDestroyRequest(DisposalAcceptanceParam param) {
-		update(prefix + "updateDestroyRequest", param);
+	public String selectApprovalTargetForUpdate(DisposalAcceptanceParam param) {
+		return (String) obj(prefix + "selectApprovalTargetForUpdate", param);
 	}
 
-	public void updateDestroyRequestDetail(DisposalAcceptanceParam param) {
-		update(prefix + "updateDestroyRequestDetail", param);
+	public int updateDestroyRequest(DisposalAcceptanceParam param) {
+		return update(prefix + "updateDestroyRequest", param);
 	}
 
-	public void updateRequestFile(DisposalAcceptanceParam param) {
-		update(prefix + "updateRequestFile", param);
+	public int updateDestroyRequestDetail(DisposalAcceptanceParam param) {
+		return update(prefix + "updateDestroyRequestDetail", param);
 	}
 
-	public void updateApprovalFile(DisposalAcceptanceParam param) {
-		update(prefix + "updateApprovalFile", param);
+	public int updateRequestFile(DisposalAcceptanceParam param) {
+		return update(prefix + "updateRequestFile", param);
+	}
+
+	public int updateApprovalFile(DisposalAcceptanceParam param) {
+		return update(prefix + "updateApprovalFile", param);
 	}
 	
 }

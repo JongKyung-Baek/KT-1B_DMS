@@ -311,6 +311,25 @@
 	</select>
 
 	<!-- 배포 요청 승인 및 정보 수정 [2019.09.17(최금영)] -->
+	<select id="selectAcceptanceTargetForUpdate"
+			parameterType="kr.esob.fdms.controller.inside.distribution.acceptance.AcceptanceParam"
+			resultType="kr.esob.fdms.controller.inside.distribution.acceptance.AcceptanceParam">
+		SELECT request.REQUEST_NO AS requestNo
+			 , request.APPROVAL_LINE_ID AS approvalLineId
+			 , request.CURRENT_PROCESS_SEQ_NO AS currentProcessSeqNo
+		FROM DOCS_REQUEST request
+		JOIN DOCS_REQUEST_DETAIL currDetail
+		  ON currDetail.REQUEST_NO = request.REQUEST_NO
+		 AND currDetail.PROCESS_SEQ = request.CURRENT_PROCESS_SEQ_NO
+		WHERE request.REQUEST_NO = #{requestNo}
+		  AND request.REQUEST_TYPE = 'DISTRIBUTION'
+		  AND request.STATUS_CD IN ('REQUEST', 'WAITING')
+		  AND currDetail.APPROVAL_STATUS_CD = 'ACCEPT'
+		  AND currDetail.ACTUAL_USER_CD = #{sessionUser.userCd}
+		  AND currDetail.ACTION_CD = 'REQUEST'
+		FOR UPDATE OF request, currDetail
+	</select>
+
 	<update id="updateRequest" parameterType="kr.esob.fdms.controller.inside.distribution.acceptance.AcceptanceParam">
 		UPDATE DOCS_REQUEST
 		<if test="!'REJECT'.equals(actionCd)">
@@ -328,6 +347,18 @@
 			SET STATUS_CD = #{actionCd}
 		</if>
 		WHERE REQUEST_NO = #{requestNo}
+		  AND REQUEST_TYPE = 'DISTRIBUTION'
+		  AND STATUS_CD IN ('REQUEST', 'WAITING')
+		  AND CURRENT_PROCESS_SEQ_NO = CAST(#{processSeq} AS INTEGER)
+		  AND EXISTS (
+			  SELECT 1
+			  FROM DOCS_REQUEST_DETAIL currDetail
+			  WHERE currDetail.REQUEST_NO = DOCS_REQUEST.REQUEST_NO
+			    AND currDetail.PROCESS_SEQ = DOCS_REQUEST.CURRENT_PROCESS_SEQ_NO
+			    AND currDetail.APPROVAL_STATUS_CD = 'ACCEPT'
+			    AND currDetail.ACTUAL_USER_CD = #{sessionUser.userCd}
+			    AND currDetail.ACTION_CD = 'REQUEST'
+		  )
 	</update>
 
 	<!-- 배포 요청 상세 정보 수정 - 접수 [2019.09.17(최금영)] -->
@@ -341,7 +372,10 @@
 		, ACTUAL_USER_CD = #{sessionUser.userCd}
 		, ACTION_CD = #{actionCd}
 		WHERE REQUEST_NO = #{requestNo}
-		AND APPROVAL_STATUS_CD = 'ACCEPT'
+		  AND PROCESS_SEQ = CAST(#{processSeq} AS INTEGER)
+		  AND APPROVAL_STATUS_CD = 'ACCEPT'
+		  AND ACTUAL_USER_CD = #{sessionUser.userCd}
+		  AND ACTION_CD = 'REQUEST'
 	</update>
 
 	<!-- 배포 요청 상세 정보 수정 - 방산팀장 [2019.09.17(최금영)] -->
@@ -352,6 +386,21 @@
 		WHERE REQUEST_NO = #{requestNo}
 		  AND APPROVAL_STATUS_CD = 'APPROVAL'
 		  AND APPROVAL_GRADE_CD = 'DEF'
+		  AND ACTION_CD = 'REQUEST'
+		  AND EXISTS (
+			  SELECT 1
+			  FROM DOCS_REQUEST request
+			  JOIN DOCS_REQUEST_DETAIL currDetail
+			    ON currDetail.REQUEST_NO = request.REQUEST_NO
+			   AND currDetail.PROCESS_SEQ = request.CURRENT_PROCESS_SEQ_NO
+			  WHERE request.REQUEST_NO = DOCS_REQUEST_DETAIL.REQUEST_NO
+			    AND request.REQUEST_TYPE = 'DISTRIBUTION'
+			    AND request.STATUS_CD IN ('REQUEST', 'WAITING')
+			    AND request.CURRENT_PROCESS_SEQ_NO = CAST(#{processSeq} AS INTEGER)
+			    AND currDetail.APPROVAL_STATUS_CD = 'ACCEPT'
+			    AND currDetail.ACTUAL_USER_CD = #{sessionUser.userCd}
+			    AND currDetail.ACTION_CD = 'REQUEST'
+		  )
 	</update>
 
 	<!-- 배포 요청 상세 정보 수정 - 결재자 [2019.10.14(최금영)] -->
@@ -362,6 +411,21 @@
 		WHERE REQUEST_NO = #{requestNo}
 		  AND APPROVAL_STATUS_CD = 'APPROVAL'
 		  AND APPROVAL_GRADE_CD = 'TL'
+		  AND ACTION_CD = 'REQUEST'
+		  AND EXISTS (
+			  SELECT 1
+			  FROM DOCS_REQUEST request
+			  JOIN DOCS_REQUEST_DETAIL currDetail
+			    ON currDetail.REQUEST_NO = request.REQUEST_NO
+			   AND currDetail.PROCESS_SEQ = request.CURRENT_PROCESS_SEQ_NO
+			  WHERE request.REQUEST_NO = DOCS_REQUEST_DETAIL.REQUEST_NO
+			    AND request.REQUEST_TYPE = 'DISTRIBUTION'
+			    AND request.STATUS_CD IN ('REQUEST', 'WAITING')
+			    AND request.CURRENT_PROCESS_SEQ_NO = CAST(#{processSeq} AS INTEGER)
+			    AND currDetail.APPROVAL_STATUS_CD = 'ACCEPT'
+			    AND currDetail.ACTUAL_USER_CD = #{sessionUser.userCd}
+			    AND currDetail.ACTION_CD = 'REQUEST'
+		  )
 	</update>
 
 	<update id="updateRequestFile">
@@ -373,5 +437,19 @@
 		WHERE REQUEST_NO = #{requestNo}
 		  AND OBJECT_ID = #{objectId}
 		  AND FILE_NO = #{fileNo}
+		  AND EXISTS (
+			  SELECT 1
+			  FROM DOCS_REQUEST request
+			  JOIN DOCS_REQUEST_DETAIL currDetail
+			    ON currDetail.REQUEST_NO = request.REQUEST_NO
+			   AND currDetail.PROCESS_SEQ = request.CURRENT_PROCESS_SEQ_NO
+			  WHERE request.REQUEST_NO = DOCS_REQUEST_FILE.REQUEST_NO
+			    AND request.REQUEST_TYPE = 'DISTRIBUTION'
+			    AND request.STATUS_CD IN ('REQUEST', 'WAITING')
+			    AND request.CURRENT_PROCESS_SEQ_NO = CAST(#{processSeq} AS INTEGER)
+			    AND currDetail.APPROVAL_STATUS_CD = 'ACCEPT'
+			    AND currDetail.ACTUAL_USER_CD = #{sessionUser.userCd}
+			    AND currDetail.ACTION_CD = 'REQUEST'
+		  )
 	</update>
 </mapper>

@@ -1,5 +1,13 @@
 HELP.md
 target/
+run-logs/
+*.log
+.env
+.env.*
+ssl_key/
+*.backup
+*.p12
+*.jks
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**
 !**/src/test/**
@@ -33,7 +41,6 @@ build/
 *.png
 !src/main/resources/static/images/icon/*.png
 !src/main/resources/static/images/KAI/*.png
-!src/main/resources/static/images/kess/*.png
 !src/main/resources/static/images/depth*.png
 src/main/webapp/excel/grid_20263181336596.xlsx
 src/main/webapp/excel/grid_2026318142345.xlsx

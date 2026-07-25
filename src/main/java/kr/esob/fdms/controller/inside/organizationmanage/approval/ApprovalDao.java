@@ -27,33 +27,37 @@ public class ApprovalDao extends AbstractDao {
 		return (ApprovalListParam) obj(prefix + "selectDetailInfo", param);
 	}
 
-	public void updateReqeust(ApprovalListParam param) {
-		delete(prefix + "updateReqeust", param);
+	public ApprovalListParam selectApprovalTarget(ApprovalListParam param) {
+		return (ApprovalListParam) obj(prefix + "selectApprovalTarget", param);
 	}
 
-	public void updateUserInfo(ApprovalListParam param) {
-		update(prefix + "updateUserInfo", param);
+	public int updateReqeust(ApprovalListParam param) {
+		return update(prefix + "updateReqeust", param);
 	}
 
-	public void deleteUserInfo(ApprovalListParam param) {
-		update(prefix + "deleteUserInfo", param);
+	public int updateUserInfo(ApprovalListParam param) {
+		return update(prefix + "updateUserInfo", param);
+	}
+
+	public int deleteUserInfo(ApprovalListParam param) {
+		return update(prefix + "deleteUserInfo", param);
 	}
 
 	public void updateUserProtectN(ApprovalListParam param) {
 		update(prefix + "updateUserProtectN", param);
 	}
 
-	public void updateUserProtectY(ApprovalListParam param) {
-		update(prefix + "updateUserProtectY", param);
+	public int updateUserProtectY(ApprovalListParam param) {
+		return update(prefix + "updateUserProtectY", param);
 	}
 
 
-	public void updateUserCr(ApprovalListParam param) {
-		update(prefix + "updateUserCr", param);
+	public int updateUserCr(ApprovalListParam param) {
+		return update(prefix + "updateUserCr", param);
 	}
 
-	public void insertUser(ApprovalListParam param) {
-		insert(prefix + "insertUser", param);
+	public int insertUser(ApprovalListParam param) {
+		return (Integer) insert(prefix + "insertUser", param);
 	}
 
 	public List<ComboInfoVO> venderUser(ApprovalListParam param){

@@ -8,6 +8,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -47,7 +48,7 @@ public class BbsNoticeController extends AbstractController {
 		return "bbs/notice/noticeList";
 	}
 
-	@RequestMapping(value="/noticePopup")
+	@PostMapping("/noticePopup")
 	public String noticePopup(HttpServletRequest request, HttpServletResponse response, BbsNoticeListParam listParam,BbsNoticePopupParam param, Model model) throws JsonProcessingException {
 		UserVO user = param.getSessionUser();
 		String updateFlag = null;
@@ -101,7 +102,7 @@ public class BbsNoticeController extends AbstractController {
 	/*
 	 * 삽입
 	 * */
-	@RequestMapping(value="/bbsNotice")
+	@PostMapping(value="/bbsNotice")
 	public @ResponseBody ResultVO bbsNotice(MultipartHttpServletRequest request, HttpServletResponse response) throws Exception {
 		UserVO user = (UserVO) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
@@ -112,7 +113,7 @@ public class BbsNoticeController extends AbstractController {
 		return service.insertBbsNotice(request);
 	}
 
-	@RequestMapping(value="/updateNotice")
+	@PostMapping(value="/updateNotice")
 	public @ResponseBody ResultVO updateNotice(MultipartHttpServletRequest request, HttpServletResponse response) throws Exception {
 		UserVO user = (UserVO) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 

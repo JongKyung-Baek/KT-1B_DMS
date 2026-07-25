@@ -447,7 +447,10 @@
 	, '' 																AS "comment"			/* 검토의견 */
 	, #{sessionUser.approvalYn}											AS approvalYn
 	FROM DOCS_REQUEST req
-	INNER JOIN DOCS_REQUEST_MAPPING mapping ON mapping.REQUEST_NO = req.REQUEST_NO AND req.OBJECT_TYPE = 'CR'
+	INNER JOIN DOCS_REQUEST_MAPPING mapping ON mapping.REQUEST_NO = req.REQUEST_NO
+		AND mapping.USE_YN = 'Y'
+		AND req.OBJECT_TYPE = 'CR'
+		AND req.REQUEST_TYPE = 'CR'
 	INNER JOIN DOCS_REQUEST_DETAIL requestDetail ON requestDetail.REQUEST_NO = req.REQUEST_NO AND APPROVAL_STATUS_CD = 'WAITING'	/* WAITING이 업체결재자*/
 	INNER JOIN DOCS_USER companyApprovalUser ON companyApprovalUser.USER_CD = requestDetail.ACTUAL_USER_CD
 	INNER JOIN ITN_CR cr ON cr.CR_NO = mapping.OBJECT_ID
@@ -455,6 +458,7 @@
 	INNER JOIN DOCS_USER requestUser ON requestUser.USER_ID = cr.VENDOR_UID
 	<!-- 					<if test='"Y".equals(sessionUser.approvalYn)'> -->
 	WHERE requestUser.COMPANY_CD = #{sessionUser.companyCd}
+	  AND req.DEPLOY_COMPANY_CD = #{sessionUser.companyCd}
 	<!-- 					</if> -->
 	<!-- 					<if test='"N".equals(sessionUser.approvalYn)'> -->
 	<!-- 					WHERE requestUser.USER_CD = #{sessionUser.userCd} -->
@@ -536,7 +540,10 @@
 	, cr.PART_NO      								AS partNo			/* 규격화 품번*/
 	, '' 											AS "comment"			/* 검토의견 */
 	FROM DOCS_REQUEST req
-	INNER JOIN DOCS_REQUEST_MAPPING mapping ON mapping.REQUEST_NO = req.REQUEST_NO AND req.OBJECT_TYPE = 'CR'
+	INNER JOIN DOCS_REQUEST_MAPPING mapping ON mapping.REQUEST_NO = req.REQUEST_NO
+		AND mapping.USE_YN = 'Y'
+		AND req.OBJECT_TYPE = 'CR'
+		AND req.REQUEST_TYPE = 'CR'
 	INNER JOIN DOCS_REQUEST_DETAIL requestDetail ON requestDetail.REQUEST_NO = req.REQUEST_NO AND APPROVAL_STATUS_CD = 'WAITING'	/* WAITING이 업체결재자*/
 	INNER JOIN DOCS_USER companyApprovalUser ON companyApprovalUser.USER_CD = requestDetail.ACTUAL_USER_CD
 	INNER JOIN ITN_CR cr ON cr.CR_NO = mapping.OBJECT_ID
@@ -544,6 +551,7 @@
 	INNER JOIN DOCS_USER requestUser ON requestUser.USER_ID = cr.VENDOR_UID
 	<!-- 					<if test='"Y".equals(sessionUser.approvalYn)'> -->
 	WHERE requestUser.COMPANY_CD = #{sessionUser.companyCd}
+	  AND req.DEPLOY_COMPANY_CD = #{sessionUser.companyCd}
 	<!-- 					</if> -->
 	<!-- 					<if test='"N".equals(sessionUser.approvalYn)'> -->
 	<!-- 					WHERE requestUser.USER_CD = #{sessionUser.userCd} -->
@@ -760,6 +768,7 @@
 	FROM DOCS_REQUEST_MAPPING reqMap
 			 JOIN ITN_CR cr
 				  ON reqMap.OBJECT_ID = cr.CR_NO
+				 AND reqMap.USE_YN = 'Y'
 			 JOIN DOCS_REQUEST_DETAIL reqDtl
 				  ON reqMap.REQUEST_NO = reqDtl.REQUEST_NO AND reqDtl.APPROVAL_STATUS_CD = 'WAITING'
 			 JOIN DOCS_REQUEST req
@@ -767,37 +776,170 @@
 			 LEFT JOIN DOCS_REQUEST_DETAIL rejDtl
 					   ON reqMap.REQUEST_NO = rejDtl.REQUEST_NO AND rejDtl.ACTION_CD = 'REJECT'
 	WHERE cr.CR_NO = #{crNo}
+	  AND req.REQUEST_TYPE = 'CR'
+	  AND req.OBJECT_TYPE = 'CR'
+	  AND EXISTS (
+		SELECT 1
+		  FROM DOCS_USER actor
+		  JOIN DOCS_USER vendorUser
+			ON vendorUser.USER_ID = cr.VENDOR_UID
+		 WHERE actor.USER_CD = #{sessionUser.userCd}
+		   AND actor.COMPANY_CD = req.DEPLOY_COMPANY_CD
+		   AND actor.COMPANY_CD = vendorUser.COMPANY_CD
+		   AND actor.USE_YN = 'Y'
+		   AND actor.DEL_YN = 'N'
+	  )
 </select>
 
 <!-- CR 외부사용자 승인 [2019.11.20(최금영)] -->
+<select id="selectApprovalTargetForUpdate"
+		parameterType="kr.esob.fdms.controller.outside.cr.request.OutsideCrParam"
+		resultType="String">
+	SELECT req.REQUEST_NO
+	  FROM ITN_CR cr
+	  JOIN DOCS_REQUEST_MAPPING reqMap
+		ON reqMap.OBJECT_ID = cr.CR_NO
+	   AND reqMap.USE_YN = 'Y'
+	  JOIN DOCS_REQUEST req
+		ON req.REQUEST_NO = reqMap.REQUEST_NO
+	  JOIN DOCS_REQUEST_DETAIL currDetail
+		ON currDetail.REQUEST_NO = req.REQUEST_NO
+	   AND currDetail.PROCESS_SEQ = req.CURRENT_PROCESS_SEQ_NO
+	  JOIN DOCS_USER actor
+		ON actor.USER_CD = #{sessionUser.userCd}
+	  JOIN DOCS_USER vendorUser
+		ON vendorUser.USER_ID = cr.VENDOR_UID
+	 WHERE cr.CR_NO = #{crNo}
+	   AND cr.STATUS_CD = 10
+	   AND req.REQUEST_TYPE = 'CR'
+	   AND req.OBJECT_TYPE = 'CR'
+	   AND req.STATUS_CD = 'WAITING'
+	   AND req.CURRENT_PROCESS_SEQ_NO = 2
+	   AND currDetail.APPROVAL_STATUS_CD = 'WAITING'
+	   AND currDetail.ACTUAL_USER_CD = actor.USER_CD
+	   AND currDetail.ACTION_CD = 'REQUEST'
+	   AND actor.COMPANY_CD = req.DEPLOY_COMPANY_CD
+	   AND actor.COMPANY_CD = vendorUser.COMPANY_CD
+	   AND actor.USE_YN = 'Y'
+	   AND actor.DEL_YN = 'N'
+	 FOR UPDATE OF cr, req, currDetail
+</select>
+
 <update id="updateRequest">
 	/* CR 외부사용자 승인 */
-	UPDATE DOCS_REQUEST
-	SET STATUS_CD = #{reqStatusCd}
-	, UPDATE_DT = CURRENT_TIMESTAMP
-	, UPDATE_USER_CD = #{sessionUser.userCd}
-	<if test="'REQUEST'.equals(reqStatusCd)">
-		, CURRENT_PROCESS_SEQ_NO = 3
-	</if>
-	WHERE REQUEST_NO = (SELECT REQUEST_NO FROM DOCS_REQUEST_MAPPING WHERE OBJECT_ID = #{crNo} LIMIT 1)
+	UPDATE DOCS_REQUEST request
+	   SET STATUS_CD = #{reqStatusCd},
+		   CURRENT_PROCESS_SEQ_NO = #{currentProcessSeqNo},
+		   UPDATE_DT = CURRENT_TIMESTAMP,
+		   UPDATE_USER_CD = #{sessionUser.userCd}
+	 WHERE request.REQUEST_NO = #{requestNo}
+	   AND request.REQUEST_TYPE = 'CR'
+	   AND request.OBJECT_TYPE = 'CR'
+	   AND request.STATUS_CD = 'WAITING'
+	   AND request.CURRENT_PROCESS_SEQ_NO = 2
+	   AND EXISTS (
+		SELECT 1
+		  FROM DOCS_REQUEST_MAPPING reqMap
+		  JOIN ITN_CR cr
+			ON cr.CR_NO = reqMap.OBJECT_ID
+		  JOIN DOCS_USER actor
+			ON actor.USER_CD = #{sessionUser.userCd}
+		  JOIN DOCS_USER vendorUser
+			ON vendorUser.USER_ID = cr.VENDOR_UID
+		 WHERE reqMap.REQUEST_NO = request.REQUEST_NO
+		   AND reqMap.OBJECT_ID = #{crNo}
+		   AND reqMap.USE_YN = 'Y'
+		   AND cr.STATUS_CD = 10
+		   AND actor.COMPANY_CD = request.DEPLOY_COMPANY_CD
+		   AND actor.COMPANY_CD = vendorUser.COMPANY_CD
+		   AND actor.USE_YN = 'Y'
+		   AND actor.DEL_YN = 'N'
+	   )
+	   AND EXISTS (
+		SELECT 1
+		  FROM DOCS_REQUEST_DETAIL completedDetail
+		 WHERE completedDetail.REQUEST_NO = request.REQUEST_NO
+		   AND completedDetail.PROCESS_SEQ = 2
+		   AND completedDetail.APPROVAL_STATUS_CD = 'WAITING'
+		   AND completedDetail.ACTUAL_USER_CD = #{sessionUser.userCd}
+		   AND completedDetail.ACTION_CD = #{actionCd}
+	   )
 </update>
 
 <!-- CR 외부사용자 승인 상세정보 수정 [2019.11.20(최금영)] -->
 <update id="updateRequestDetail">
 	/* CR 외부사용자 승인 상세정보 수정 */
-	UPDATE DOCS_REQUEST_DETAIL
-	SET ACTION_DT = CURRENT_TIMESTAMP
-	  , ACTION_CD = #{actionCd}
-	  , REQUEST_DESC = #{rejectDesc}
-	WHERE REQUEST_NO = (SELECT REQUEST_NO FROM DOCS_REQUEST_MAPPING WHERE OBJECT_ID = #{crNo} LIMIT 1)
-	  AND APPROVAL_STATUS_CD = 'WAITING'
+	UPDATE DOCS_REQUEST_DETAIL currentDetail
+	   SET ACTION_DT = CURRENT_TIMESTAMP,
+		   ACTION_CD = #{actionCd},
+		   REQUEST_DESC = #{rejectDesc}
+	 WHERE currentDetail.REQUEST_NO = #{requestNo}
+	   AND currentDetail.PROCESS_SEQ = 2
+	   AND currentDetail.APPROVAL_STATUS_CD = 'WAITING'
+	   AND currentDetail.ACTUAL_USER_CD = #{sessionUser.userCd}
+	   AND currentDetail.ACTION_CD = 'REQUEST'
+	   AND EXISTS (
+		SELECT 1
+		  FROM DOCS_REQUEST request
+		  JOIN DOCS_REQUEST_MAPPING reqMap
+			ON reqMap.REQUEST_NO = request.REQUEST_NO
+		   AND reqMap.USE_YN = 'Y'
+		  JOIN ITN_CR cr
+			ON cr.CR_NO = reqMap.OBJECT_ID
+		  JOIN DOCS_USER actor
+			ON actor.USER_CD = #{sessionUser.userCd}
+		  JOIN DOCS_USER vendorUser
+			ON vendorUser.USER_ID = cr.VENDOR_UID
+		 WHERE request.REQUEST_NO = currentDetail.REQUEST_NO
+		   AND reqMap.OBJECT_ID = #{crNo}
+		   AND cr.STATUS_CD = 10
+		   AND request.REQUEST_TYPE = 'CR'
+		   AND request.OBJECT_TYPE = 'CR'
+		   AND request.STATUS_CD = 'WAITING'
+		   AND request.CURRENT_PROCESS_SEQ_NO = 2
+		   AND actor.COMPANY_CD = request.DEPLOY_COMPANY_CD
+		   AND actor.COMPANY_CD = vendorUser.COMPANY_CD
+		   AND actor.USE_YN = 'Y'
+		   AND actor.DEL_YN = 'N'
+	   )
 </update>
 
 <update id="updateCr">
 	/* 외부업체 팀장 - 승인/반려 */
-	UPDATE ITN_CR
-	SET REJECT_REASON = #{rejectDesc}
-	  , STATUS_CD = #{statusCd}
-	WHERE CR_NO = #{crNo}
+	UPDATE ITN_CR cr
+	   SET REJECT_REASON = #{rejectDesc},
+		   STATUS_CD = #{statusCd}
+	 WHERE cr.CR_NO = #{crNo}
+	   AND cr.STATUS_CD = 10
+	   AND EXISTS (
+		SELECT 1
+		  FROM DOCS_REQUEST_MAPPING reqMap
+		  JOIN DOCS_REQUEST request
+			ON request.REQUEST_NO = reqMap.REQUEST_NO
+		  JOIN DOCS_USER actor
+			ON actor.USER_CD = #{sessionUser.userCd}
+		  JOIN DOCS_USER vendorUser
+			ON vendorUser.USER_ID = cr.VENDOR_UID
+		 WHERE reqMap.OBJECT_ID = cr.CR_NO
+		   AND reqMap.REQUEST_NO = #{requestNo}
+		   AND reqMap.USE_YN = 'Y'
+		   AND request.REQUEST_TYPE = 'CR'
+		   AND request.OBJECT_TYPE = 'CR'
+		   AND request.STATUS_CD = #{reqStatusCd}
+		   AND request.CURRENT_PROCESS_SEQ_NO = #{currentProcessSeqNo}
+		   AND actor.COMPANY_CD = request.DEPLOY_COMPANY_CD
+		   AND actor.COMPANY_CD = vendorUser.COMPANY_CD
+		   AND actor.USE_YN = 'Y'
+		   AND actor.DEL_YN = 'N'
+		   AND EXISTS (
+			SELECT 1
+			  FROM DOCS_REQUEST_DETAIL completedDetail
+			 WHERE completedDetail.REQUEST_NO = request.REQUEST_NO
+			   AND completedDetail.PROCESS_SEQ = 2
+			   AND completedDetail.APPROVAL_STATUS_CD = 'WAITING'
+			   AND completedDetail.ACTUAL_USER_CD = #{sessionUser.userCd}
+			   AND completedDetail.ACTION_CD = #{actionCd}
+		   )
+	   )
 </update>
 </mapper>

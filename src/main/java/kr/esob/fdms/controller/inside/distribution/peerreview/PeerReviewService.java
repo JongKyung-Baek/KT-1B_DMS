@@ -23,6 +23,8 @@ import java.time.format.DateTimeFormatter;
 import javax.inject.Inject;
 
 import org.apache.commons.io.FilenameUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StreamUtils;
@@ -36,11 +38,13 @@ import kr.esob.fdms.commonlogic.mail.MailInfoVO;
 import kr.esob.fdms.commonlogic.result.ResultVO;
 import kr.esob.fdms.commonlogic.systemconfig.SystemConfig;
 import kr.esob.fdms.util.RandomStringGenerator;
+import kr.esob.fdms.util.StoragePathUtils;
 import kr.esob.fdms.util.StringUtil;
 import kr.esob.fdms.controller.login.UserVO;
 
 @Service
 public class PeerReviewService implements CommonService {
+    private static final Logger log = LoggerFactory.getLogger(PeerReviewService.class);
     private static final String STATUS_APPROVING = "승인진행중";
     private static final String STATUS_APPROVED = "승인완료";
 
@@ -139,7 +143,8 @@ public class PeerReviewService implements CommonService {
             dir.mkdirs();
         }
 
-        String filePathNm = basePath + "\\" + objectId + (extension == null || extension.isEmpty() ? "" : "." + extension);
+        String filePathNm = StoragePathUtils.resolve(basePath,
+                objectId + (extension == null || extension.isEmpty() ? "" : "." + extension)).toString();
         filePathNm = StringUtil.replaceLfiPath(filePathNm);
         Files.write(Paths.get(filePathNm), file.getBytes());
 
@@ -317,13 +322,13 @@ public class PeerReviewService implements CommonService {
             String convertedPdfPath = requestPathConvertApiAndGetPdf(inputFilePath, outputDir, objectId);
             if (convertedPdfPath == null || convertedPdfPath.trim().isEmpty()) {
                 updatePeerReviewProcessingStatus(objectId, "FAIL");
-                System.out.println("[PEERREVIEW_CONVERT] failed: pdf output not found. objectId=" + objectId);
+                log.warn("[PEERREVIEW_CONVERT] failed: output missing");
                 return;
             }
             File convertedFile = new File(convertedPdfPath);
             if (!convertedFile.isFile()) {
                 updatePeerReviewProcessingStatus(objectId, "FAIL");
-                System.out.println("[PEERREVIEW_CONVERT] failed: pdf file not found. objectId=" + objectId + ", filePath=" + convertedPdfPath);
+                log.warn("[PEERREVIEW_CONVERT] failed: output file missing");
                 return;
             }
             Map<String, Object> updateParam = new java.util.HashMap<>();
@@ -331,10 +336,10 @@ public class PeerReviewService implements CommonService {
             updateParam.put("filePathNm", StringUtil.replaceLfiPath(convertedPdfPath));
             updateParam.put("fileSize", String.valueOf(convertedFile.length()));
             dao.updateConvertedMainFile(updateParam);
-            System.out.println("[PEERREVIEW_CONVERT] updated objectId=" + objectId + ", filePath=" + convertedPdfPath);
+            log.info("[PEERREVIEW_CONVERT] updated");
         } catch (Exception e) {
             updatePeerReviewProcessingStatus(objectId, "FAIL");
-            System.out.println("[PEERREVIEW_CONVERT] failed: " + e.getMessage());
+            log.warn("[PEERREVIEW_CONVERT] failed type={}", e.getClass().getSimpleName());
         }
     }
 
@@ -345,7 +350,7 @@ public class PeerReviewService implements CommonService {
             statusParam.put("processingStatus", processingStatus);
             dao.updateProcessingStatus(statusParam);
         } catch (Exception e) {
-            System.out.println("[PEERREVIEW_CONVERT] status update failed: " + e.getMessage());
+            log.warn("[PEERREVIEW_CONVERT] status update failed type={}", e.getClass().getSimpleName());
         }
     }
 
@@ -384,15 +389,13 @@ public class PeerReviewService implements CommonService {
             String reviewdate
     ) {
         try {
-            System.out.println("[PEERREVIEW_REGISTER_MAIL] targetUsersCsv=" + targetUsersCsv);
+            log.debug("[PEERREVIEW_REGISTER_MAIL] dispatch started");
             for (String token : splitCsv(targetUsersCsv)) {
-                System.out.println("[PEERREVIEW_REGISTER_MAIL] token=" + token);
                 MailInfoVO mailInfoVo = mailService.selectReceiveUser(token);
                 if (mailInfoVo == null) {
-                    System.out.println("[PEERREVIEW_REGISTER_MAIL] selectReceiveUser is null. token=" + token);
+                    log.warn("[PEERREVIEW_REGISTER_MAIL] recipient not resolved");
                     continue;
                 }
-                System.out.println("[PEERREVIEW_REGISTER_MAIL] toUserId=" + mailInfoVo.getToUserId() + ", toMail=" + mailInfoVo.getToMail());
                 mailInfoVo.setMailEnum(mailEnum);
                 mailInfoVo.setContent(buildRegistrationMailContent(
                         mailInfoVo,
@@ -404,10 +407,10 @@ public class PeerReviewService implements CommonService {
                         reviewdate
                 ));
                 ResultVO mailResult = mailService.sendDocsMail(mailInfoVo);
-                System.out.println("[PEERREVIEW_REGISTER_MAIL] sendDocsMail success=" + (mailResult != null && mailResult.isSuccess()));
+                log.info("[PEERREVIEW_REGISTER_MAIL] success={}", mailResult != null && mailResult.isSuccess());
             }
         } catch (Exception e) {
-            System.out.println("[PEERREVIEW_REGISTER_MAIL] skip: " + e.getMessage());
+            log.warn("[PEERREVIEW_REGISTER_MAIL] skipped type={}", e.getClass().getSimpleName());
         }
     }
 

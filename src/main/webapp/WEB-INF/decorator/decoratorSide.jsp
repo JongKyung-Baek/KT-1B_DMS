@@ -17,7 +17,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 	<%@ include file="/WEB-INF/jspf/csrf-meta.jspf" %>
-	<!-- <link rel="shortcut icon"  type="image/x-icon" href="${pageContext.request.contextPath}/resources/images/main/favicon.ico" /> -->
+	<%@ include file="/WEB-INF/jspf/favicon.jspf" %>
 
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/vuexy/assets/vendor/fonts/iconify-icons.css" />
 	<link rel="stylesheet" href="${pageContext.request.contextPath}/vuexy/assets/vendor/libs/node-waves/node-waves.css" />

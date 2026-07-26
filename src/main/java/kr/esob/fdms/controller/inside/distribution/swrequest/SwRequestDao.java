@@ -77,6 +77,10 @@ public class SwRequestDao extends AbstractDao {
 		return list(prefix + "selectMainFileInfo", objectId);
 	}
 
+	public Map<String, Object> selectSwDetailInfo(String objectId) {
+		return (Map<String, Object>) obj(prefix + "selectSwDetailInfo", objectId);
+	}
+
 	public List<Map<String, Object>> selectSubFileInfo(String objectId) {
 		return list(prefix + "selectSubFileInfo", objectId);
 	}

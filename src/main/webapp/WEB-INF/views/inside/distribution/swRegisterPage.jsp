@@ -7,7 +7,7 @@
 
                 <head>
                     <meta charset="UTF-8">
-                    <title>SW Register</title>
+                    <title>자료 등록 | 기술자료관리시스템</title>
                     <style>
                         body {
                             margin: 0;
@@ -330,21 +330,37 @@
                             }
                         }
                     </style>
+                    <link rel="stylesheet"
+                        href="${pageContext.request.contextPath}/resources/css/pages/technical-data-register.css?v=20260726.2" />
                 </head>
 
                 <body>
-                    <div class="container sw-register-page popup-common popup-sw-register">
-                        <div class="sw-register-page-header">
-                            <div class="sw-register-page-title">
-                                <h1><span style="font-size: 23px;">
-                                        <spring:message code='label.dataRegistration'></spring:message>
-                                    </span></h1>
-                                <p><span>
-                                        <spring:message code='label.dataRegistrationInfo'></spring:message>
-                                    </span></p>
+                    <div class="container sw-register-page technical-register-page popup-common popup-sw-register">
+                        <header class="sw-register-hero" aria-labelledby="swRegisterPageTitle">
+                            <div class="sw-register-hero__copy">
+                                <div class="sw-register-hero__eyebrow">
+                                    <i class="icon-base ti tabler-file-upload" aria-hidden="true"></i>
+                                    <span>TECHNICAL DATA REGISTRATION</span>
+                                </div>
+                                <h1 id="swRegisterPageTitle">
+                                    <spring:message code='label.dataRegistration'></spring:message>
+                                </h1>
+                                <p>
+                                    <spring:message code='label.dataRegistrationInfo'></spring:message>
+                                    필수 정보를 입력하고 원본 PDF를 첨부해 주세요.
+                                </p>
                             </div>
-                            <!-- <button type="button" class="sw-register-back" onclick="location.href='/inside/distribution/swRequest/'">목록</button> -->
-                        </div>
+                            <div class="sw-register-hero__chips" aria-label="등록 필수 안내">
+                                <span class="sw-register-chip">
+                                    <i class="icon-base ti tabler-circle-check" aria-hidden="true"></i>
+                                    필수 4개 항목
+                                </span>
+                                <span class="sw-register-chip sw-register-chip--accent">
+                                    <i class="icon-base ti tabler-file-type-pdf" aria-hidden="true"></i>
+                                    주파일 PDF
+                                </span>
+                            </div>
+                        </header>
 
                         <script type="text/javascript"
                             src="/resources/js/views/inside/distribution/swRegisterPopup.js"></script>
@@ -981,6 +997,9 @@
                                     }
                                 }
                                 $fileName.val('');
+                                if (typeof updateSwRegisterStatus === 'function') {
+                                    updateSwRegisterStatus();
+                                }
                             }
 
                             function clearSwSubSelectedFiles() {
@@ -993,6 +1012,9 @@
                                     }
                                 }
                                 $subFileNames.val('');
+                                if (typeof updateSwRegisterStatus === 'function') {
+                                    updateSwRegisterStatus();
+                                }
                             }
 
                             function bindSwFileDragDrop(inputSelector, allowMultiple) {
@@ -1138,18 +1160,31 @@
 
                         </script>
                         <div class="dialogContent swRegisterPopup popup-base popup-actions-center">
-                            <div class="popupHero">
-                                <!-- <h2>등록 정보</h2>
-        <p>필수 항목을 입력하고 파일을 첨부한 뒤 등록해 주세요.</p> -->
-                            </div>
-                            <form id="formSwRegisterPopup">
+                            <div class="sw-register-main-grid">
+                                <section class="sw-register-section sw-register-section--form"
+                                    aria-labelledby="swRegisterInfoTitle">
+                                    <header class="sw-register-section-header">
+                                        <span class="sw-register-section-header__icon" aria-hidden="true">
+                                            <i class="icon-base ti tabler-file-description"></i>
+                                        </span>
+                                        <div class="sw-register-section-header__copy">
+                                            <span class="sw-register-step">STEP 01</span>
+                                            <h2 id="swRegisterInfoTitle">기본 정보</h2>
+                                            <p>자료 식별에 필요한 분류와 송부 정보를 입력합니다.</p>
+                                        </div>
+                                        <span class="sw-register-required-guide">
+                                            <em>*</em> 필수 입력
+                                        </span>
+                                    </header>
+                                    <form id="formSwRegisterPopup">
                                 <input type="hidden" name="treeCd" id="treeCd" value="${treeCd}" />
                                 <input type="hidden" name="registerUser" id="registerUser" value="${registerUser}" />
-                                <ul class="section popupCard popupFormGrid">
+                                <ul class="section popupFormGrid register-form-grid">
 
                                     <li class="field-requester">
                                         <!-- <label>발행자</label> --><label>
                                             <spring:message code='label.client'></spring:message>
+                                            <span class="field-auto-badge">자동</span>
                                         </label><input type="text" id="registerUserView" value="${registerUser}"
                                             readonly>
                                     </li>
@@ -1158,20 +1193,24 @@
                                             value="${date}">
                                     </li>
 
-                                    <li class="full field-data-name">
+                                    <li class="field-data-name">
                                         <!-- <label>CCB 제목</label> -->
                                         <label>
                                             <spring:message code='label.projectNm'></spring:message>
+                                            <em class="field-required">*</em>
                                         </label>
-                                        <input type="text" name="dataName" id="dataName" value="" />
+                                        <input type="text" name="dataName" id="dataName" value=""
+                                            placeholder="자료명을 입력하세요" aria-required="true" />
                                     </li>
 
                                     <li class="half field-type">
                                         <!-- <label>Level</label> -->
                                         <label>
                                             <spring:message code='label.type'></spring:message>
+                                            <em class="field-required">*</em>
                                         </label>
-                                        <select id="businessTypeParentCd" name="businessTypeParentCd">
+                                        <select id="businessTypeParentCd" name="businessTypeParentCd"
+                                            aria-required="true">
                                             <option value="">
                                                 <spring:message code="combo.select" />
                                             </option>
@@ -1184,8 +1223,9 @@
                                     <li class="half field-type-sub">
                                         <label>
                                             <spring:message code='label.typeSub'></spring:message>
+                                            <em class="field-required">*</em>
                                         </label>
-                                        <select id="businessTypeCd" name="businessTypeCd" disabled>
+                                        <select id="businessTypeCd" name="businessTypeCd" aria-required="true" disabled>
                                             <option value="">
                                                 <spring:message code="combo.select" />
                                             </option>
@@ -1199,16 +1239,19 @@
                                         <!-- <label>Revision</label> -->
                                         <label>
                                             <spring:message code='label.version'></spring:message>
+                                            <span class="field-auto-badge">자동</span>
                                         </label>
                                         <input type="text" id="revNo" name="revNo" value="00" readonly>
                                     </li>
 
-                                    <li class="full field-sw-no">
+                                    <li class="field-sw-no">
                                         <!-- <label>문서번호</label> -->
                                         <label>
                                             <spring:message code='label.sendNum'></spring:message>
+                                            <em class="field-required">*</em>
                                         </label>
-                                        <input type="text" id="swNo" name="swNo" value="" maxlength="100" />
+                                        <input type="text" id="swNo" name="swNo" value="" maxlength="100"
+                                            placeholder="송부번호를 입력하세요" aria-required="true" />
                                     </li>
 
                                     <li class="half" style="display:none;">
@@ -1252,55 +1295,173 @@
                                             </c:forEach>
                                         </select>
                                     </li>
-                                </ul>
-                            </form>
-                            <ul class="section popupCard popupFormGrid uploadOnly">
+                                        </ul>
+                                    </form>
+                                </section>
+
+                                <aside class="sw-register-summary-card" aria-labelledby="swRegisterSummaryTitle"
+                                    aria-live="polite">
+                                    <header class="sw-register-summary-card__header">
+                                        <span class="sw-register-section-header__icon" aria-hidden="true">
+                                            <i class="icon-base ti tabler-clipboard-check"></i>
+                                        </span>
+                                        <div>
+                                            <span class="sw-register-step">LIVE STATUS</span>
+                                            <h2 id="swRegisterSummaryTitle">입력 현황</h2>
+                                            <p>필수 항목이 채워지면 등록 준비가 완료됩니다.</p>
+                                        </div>
+                                    </header>
+                                    <div class="sw-register-summary-progress">
+                                        <div>
+                                            <span>필수항목 진행률</span>
+                                            <strong id="registerProgressLabel">0 / 4</strong>
+                                        </div>
+                                        <div class="sw-register-progress-track" id="registerProgressTrack"
+                                            role="progressbar" aria-label="필수항목 입력 진행률"
+                                            aria-valuemin="0" aria-valuemax="4" aria-valuenow="0">
+                                            <span id="registerProgressBar"></span>
+                                        </div>
+                                    </div>
+                                    <ul class="sw-register-summary-list">
+                                        <li class="sw-register-summary-item" id="summaryCheckDataName">
+                                            <span><i class="icon-base ti tabler-file-text"></i> 의뢰명</span>
+                                            <strong class="sw-register-summary-value is-pending"
+                                                id="summaryDataName">미입력</strong>
+                                        </li>
+                                        <li class="sw-register-summary-item" id="summaryCheckType">
+                                            <span><i class="icon-base ti tabler-category"></i> 자료 분류</span>
+                                            <strong class="sw-register-summary-value is-pending"
+                                                id="summaryBusinessType">미선택</strong>
+                                        </li>
+                                        <li class="sw-register-summary-item" id="summaryCheckSwNo">
+                                            <span><i class="icon-base ti tabler-hash"></i> 송부번호</span>
+                                            <strong class="sw-register-summary-value is-pending"
+                                                id="summarySwNo">미입력</strong>
+                                        </li>
+                                        <li class="sw-register-summary-item" id="summaryCheckMainFile">
+                                            <span><i class="icon-base ti tabler-file-type-pdf"></i> 주파일</span>
+                                            <strong class="sw-register-summary-value is-pending"
+                                                id="summaryMainFile">미선택</strong>
+                                        </li>
+                                        <li class="sw-register-summary-item sw-register-summary-item--optional">
+                                            <span><i class="icon-base ti tabler-files"></i> 보조파일</span>
+                                            <strong class="sw-register-summary-value"
+                                                id="summarySubFiles">선택 안 함</strong>
+                                        </li>
+                                    </ul>
+                                    <div class="sw-register-security-note">
+                                        <i class="icon-base ti tabler-shield-lock" aria-hidden="true"></i>
+                                        <div>
+                                            <strong>문서등급과 접근권한</strong>
+                                            <span>등록 후 문서등급/권한 화면에서 보안등급과 사용자 권한을 설정합니다.</span>
+                                        </div>
+                                    </div>
+                                </aside>
+                            </div>
+
+                            <section class="sw-register-section sw-register-section--upload"
+                                aria-labelledby="swRegisterUploadTitle">
+                                <header class="sw-register-section-header">
+                                    <span class="sw-register-section-header__icon" aria-hidden="true">
+                                        <i class="icon-base ti tabler-paperclip"></i>
+                                    </span>
+                                    <div class="sw-register-section-header__copy">
+                                        <span class="sw-register-step">STEP 02</span>
+                                        <h2 id="swRegisterUploadTitle">파일 첨부</h2>
+                                        <p>원본 PDF와 함께 관리할 참고자료를 선택합니다.</p>
+                                    </div>
+                                </header>
+                                <ul class="section popupFormGrid uploadOnly register-upload-grid">
                                 <li class="singleFileUpload full">
-                                    <label>
-                                        <spring:message code='label.attachedFileMain'></spring:message>
-                                    </label>
+                                    <div class="upload-card-heading">
+                                        <span class="upload-card-heading__icon" aria-hidden="true">
+                                            <i class="icon-base ti tabler-file-type-pdf"></i>
+                                        </span>
+                                        <div class="upload-card-heading__copy">
+                                            <label for="swRegisFile">
+                                                <spring:message code='label.attachedFileMain'></spring:message>
+                                            </label>
+                                            <p>등록할 원본 기술자료 PDF 파일 1개를 첨부합니다.</p>
+                                        </div>
+                                        <span class="upload-card-heading__badge upload-card-badge--required">필수 · PDF</span>
+                                    </div>
                                     <%-- 파일추가 --%>
                                         <div class="uploadLine"
                                             title="Drag and drop a file to upload it, or click the button.">
                                             <form id="fileForm" name="fileForm" enctype="multipart/form-data">
                                                 <input type="file" id="swRegisFile" name="swRegisFile"
-                                                    onchange="fileChange()" style="display: none;" />
+                                                    accept=".pdf,application/pdf" onchange="fileChange()"
+                                                    style="display: none;" />
                                             </form>
+                                            <span class="upload-line-icon" aria-hidden="true">
+                                                <i class="icon-base ti tabler-cloud-upload"></i>
+                                            </span>
                                             <div class="fileNameWrap">
                                                 <input type="text" name="fileName" id="fileName"
-                                                    placeholder="<spring:message code='msg.fileUpload'></spring:message>" readonly />
-                                                <button type="button" class="fileClearBtn" title=""
+                                                    placeholder="PDF 파일 선택 또는 드래그앤드롭" readonly />
+                                                <button type="button" class="fileClearBtn" title="선택 파일 제거"
+                                                    aria-label="선택한 주파일 제거"
                                                     onclick="clearSwSelectedFile()">×</button>
                                             </div>
-                                            <button class="ui-button ui-corner-all fileUploadBtn"
-                                                onclick="fileUpload()"><%-- <spring:message code="btn.fileUpload" />
-                                                --%></button>
+                                            <button type="button" class="ui-button ui-corner-all fileUploadBtn"
+                                                onclick="fileUpload()">
+                                                <i class="icon-base ti tabler-folder-open" aria-hidden="true"></i>
+                                                <span>파일 선택</span>
+                                            </button>
                                         </div>
                                 </li>
                                 <li class="singleFileUpload full">
-                                    <label>
-                                        <spring:message code='label.attachedFileSub'></spring:message>
-                                    </label>
+                                    <div class="upload-card-heading">
+                                        <span class="upload-card-heading__icon" aria-hidden="true">
+                                            <i class="icon-base ti tabler-files"></i>
+                                        </span>
+                                        <div class="upload-card-heading__copy">
+                                            <label for="swSubFiles">
+                                                <spring:message code='label.attachedFileSub'></spring:message>
+                                            </label>
+                                            <p>설명서나 참고자료 등 관련 파일을 여러 개 첨부할 수 있습니다.</p>
+                                        </div>
+                                        <span class="upload-card-heading__badge">선택 · 다중</span>
+                                    </div>
                                     <div class="uploadLine"
                                         title="Drag and drop a file to upload it, or click the button.">
                                         <form id="subFileForm" name="subFileForm" enctype="multipart/form-data">
                                             <input type="file" id="swSubFiles" name="swSubFiles" multiple="multiple"
                                                 style="display: none;" />
                                         </form>
+                                        <span class="upload-line-icon" aria-hidden="true">
+                                            <i class="icon-base ti tabler-cloud-upload"></i>
+                                        </span>
                                         <div class="fileNameWrap">
                                             <input type="text" name="subFileNames" id="subFileNames"
-                                                class="subFileNames" placeholder="<spring:message code='msg.fileUpload'></spring:message>" readonly />
-                                            <button type="button" class="fileClearBtn" title=""
+                                                class="subFileNames" placeholder="보조파일 선택 또는 드래그앤드롭"
+                                                readonly />
+                                            <button type="button" class="fileClearBtn" title="선택 파일 제거"
+                                                aria-label="선택한 보조파일 제거"
                                                 onclick="clearSwSubSelectedFiles()">×</button>
                                         </div>
                                         <button class="ui-button ui-corner-all fileUploadBtn" type="button"
-                                            onclick="$('#swSubFiles').click();"></button>
+                                            onclick="$('#swSubFiles').click();">
+                                            <i class="icon-base ti tabler-folder-open" aria-hidden="true"></i>
+                                            <span>파일 선택</span>
+                                        </button>
                                     </div>
                                 </li>
                             </ul>
+                            </section>
                             <div class="dialogBtnSet">
-                                <div class="left"></div>
+                                <div class="left">
+                                    <p class="register-action-note">
+                                        <i class="icon-base ti tabler-info-circle" aria-hidden="true"></i>
+                                        <span id="registerActionProgress">필수항목 4개를 입력하면 등록할 수 있습니다.</span>
+                                    </p>
+                                </div>
                                 <div class="right">
+                                    <button type="button" class="sw-register-list-button"
+                                        onclick="location.href='${pageContext.request.contextPath}/inside/distribution/swRequest/'">
+                                        <i class="icon-base ti tabler-list" aria-hidden="true"></i>
+                                        목록으로
+                                    </button>
                                     <!-- 등록 -->
                                     <custom:popupButton function="saveX()" name="save" label="btn.register" id="save" />
                                     <!-- <custom:popupButton function="closePopup('popupDialog')" name="close" label="btn.close" id="close"/> -->
@@ -1308,6 +1469,63 @@
                             </div>
                         </div>
                     </div>
+                    <script>
+                        function updateSwRegisterSummaryValue(selector, text, complete) {
+                            var $value = $(selector);
+                            $value.text(text);
+                            $value.toggleClass('is-complete', !!complete);
+                            $value.toggleClass('is-pending', !complete);
+                            $value.closest('.sw-register-summary-item').toggleClass('is-complete', !!complete);
+                        }
+
+                        function updateSwRegisterStatus() {
+                            var dataName = $.trim($('#dataName').val() || '');
+                            var businessTypeValue = $.trim($('#businessTypeCd').val() || '');
+                            var businessTypeText = businessTypeValue
+                                ? $.trim($('#businessTypeCd option:selected').text() || '')
+                                : '';
+                            var swNo = $.trim($('#swNo').val() || '');
+                            var mainFileInput = document.getElementById('swRegisFile');
+                            var subFileInput = document.getElementById('swSubFiles');
+                            var mainFile = mainFileInput && mainFileInput.files && mainFileInput.files.length
+                                ? mainFileInput.files[0]
+                                : null;
+                            var subFileCount = subFileInput && subFileInput.files
+                                ? subFileInput.files.length
+                                : 0;
+
+                            updateSwRegisterSummaryValue('#summaryDataName', dataName || '미입력', !!dataName);
+                            updateSwRegisterSummaryValue('#summaryBusinessType', businessTypeText || '미선택',
+                                !!businessTypeValue);
+                            updateSwRegisterSummaryValue('#summarySwNo', swNo || '미입력', !!swNo);
+                            updateSwRegisterSummaryValue('#summaryMainFile', mainFile ? mainFile.name : '미선택',
+                                !!mainFile);
+                            $('#summarySubFiles').text(subFileCount ? subFileCount + '개 선택' : '선택 안 함');
+
+                            var completed = [!!dataName, !!businessTypeValue, !!swNo, !!mainFile]
+                                .filter(function (value) { return value; }).length;
+                            var percent = completed * 25;
+                            $('#registerProgressLabel').text(completed + ' / 4');
+                            $('#registerProgressBar').css('width', percent + '%');
+                            $('#registerProgressTrack').attr('aria-valuenow', completed);
+                            $('#registerActionProgress').text(completed === 4
+                                ? '필수항목 입력이 완료되었습니다. 등록 전 내용을 한 번 더 확인해 주세요.'
+                                : '필수항목 ' + (4 - completed) + '개를 더 입력하면 등록할 수 있습니다.');
+                        }
+
+                        $(function () {
+                            $('#dataName, #swNo').on('input.swRegisterStatus', updateSwRegisterStatus);
+                            $('#businessTypeParentCd, #businessTypeCd, #swRegisFile, #swSubFiles')
+                                .on('change.swRegisterStatus', updateSwRegisterStatus);
+                            $('.technical-register-page .uploadLine').on('click.swRegisterPage', function (event) {
+                                if ($(event.target).closest('.fileClearBtn, .fileUploadBtn, input[type="file"]').length) {
+                                    return;
+                                }
+                                $(this).find('input[type="file"]').first().trigger('click');
+                            });
+                            updateSwRegisterStatus();
+                        });
+                    </script>
                 </body>
 
                 </html>

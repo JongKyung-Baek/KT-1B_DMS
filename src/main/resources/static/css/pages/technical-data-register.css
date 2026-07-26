@@ -1,0 +1,1281 @@
+/*
+ * Technical data registration
+ * Scoped to the full-page registration route so legacy popup styles remain intact.
+ */
+.technical-register-page,
+.sw-register-route {
+	--register-primary: #034c8c;
+	--register-primary-dark: #023e73;
+	--register-primary-soft: #eaf3fb;
+	--register-primary-border: #bdd6eb;
+	--register-heading: #17212b;
+	--register-text: #28323c;
+	--register-muted: #687582;
+	--register-border: #d9e0e7;
+	--register-border-light: #e9edf1;
+	--register-surface: #ffffff;
+	--register-canvas: #f5f8fb;
+	--register-success: #1f7a4d;
+	--register-success-soft: #e9f7ef;
+	--register-warning: #9a6506;
+	--register-warning-soft: #fff8e5;
+	--register-danger: #b42318;
+	--register-danger-soft: #fff0ee;
+	--register-shadow: 0 8px 28px rgba(25, 48, 70, 0.07);
+	--register-shadow-soft: 0 3px 12px rgba(25, 48, 70, 0.05);
+	width: calc(100% - 48px) !important;
+	max-width: 1240px !important;
+	min-width: 0 !important;
+	margin: 0 auto !important;
+	padding: 24px 0 40px !important;
+	overflow-x: hidden;
+	color: var(--register-text);
+	font-family: "Pretendard", "Noto Sans KR", sans-serif;
+}
+
+.technical-register-page *,
+.technical-register-page *::before,
+.technical-register-page *::after,
+.sw-register-route *,
+.sw-register-route *::before,
+.sw-register-route *::after {
+	box-sizing: border-box;
+}
+
+.technical-register-page.sw-register-page,
+.sw-register-route.sw-register-page {
+	width: calc(100% - 48px) !important;
+	max-width: 1240px !important;
+	margin: 0 auto !important;
+	padding: 24px 0 40px !important;
+}
+
+.technical-register-page .swRegisterPopup,
+.sw-register-route .swRegisterPopup {
+	width: 100% !important;
+	max-width: none !important;
+	height: auto !important;
+	max-height: none !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	overflow: visible !important;
+	border: 0 !important;
+	background: transparent !important;
+}
+
+.technical-register-page .sw-register-hero,
+.sw-register-route .sw-register-hero {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 28px;
+	min-height: 150px;
+	margin: 0 0 18px;
+	padding: 26px 30px;
+	overflow: hidden;
+	border: 1px solid var(--register-primary-border);
+	border-radius: 14px;
+	background:
+		radial-gradient(circle at 92% 10%, rgba(3, 76, 140, 0.14), transparent 30%),
+		linear-gradient(135deg, #ffffff 0%, #f2f8fd 100%);
+	box-shadow: var(--register-shadow);
+}
+
+.technical-register-page .sw-register-hero::after,
+.sw-register-route .sw-register-hero::after {
+	content: "";
+	position: absolute;
+	right: 5%;
+	bottom: -86px;
+	width: 190px;
+	height: 190px;
+	border: 28px solid rgba(3, 76, 140, 0.045);
+	border-radius: 50%;
+	pointer-events: none;
+}
+
+.technical-register-page .sw-register-hero__copy,
+.technical-register-page .sw-register-hero__chips,
+.sw-register-route .sw-register-hero__copy,
+.sw-register-route .sw-register-hero__chips {
+	position: relative;
+	z-index: 1;
+	min-width: 0;
+}
+
+.technical-register-page .sw-register-hero__copy,
+.sw-register-route .sw-register-hero__copy {
+	flex: 1 1 auto;
+}
+
+.technical-register-page .sw-register-hero__eyebrow,
+.sw-register-route .sw-register-hero__eyebrow {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	margin: 0 0 8px;
+	color: var(--register-primary);
+	font-size: 11px;
+	font-weight: 800;
+	letter-spacing: 0.09em;
+	line-height: 1.2;
+	text-transform: uppercase;
+}
+
+.technical-register-page .sw-register-hero__eyebrow::before,
+.sw-register-route .sw-register-hero__eyebrow::before {
+	content: "";
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: var(--register-primary);
+	box-shadow: 0 0 0 5px rgba(3, 76, 140, 0.11);
+}
+
+.technical-register-page .sw-register-hero__copy h1,
+.sw-register-route .sw-register-hero__copy h1 {
+	margin: 0;
+	color: var(--register-heading);
+	font-size: 27px;
+	font-weight: 800;
+	letter-spacing: -0.035em;
+	line-height: 1.25;
+	text-align: left;
+}
+
+.technical-register-page .sw-register-hero__copy p,
+.sw-register-route .sw-register-hero__copy p {
+	max-width: 660px;
+	margin: 8px 0 0;
+	color: var(--register-muted);
+	font-size: 13px;
+	line-height: 1.55;
+	text-align: left;
+}
+
+.technical-register-page .sw-register-hero__chips,
+.sw-register-route .sw-register-hero__chips {
+	display: flex;
+	flex: 0 0 auto;
+	align-items: center;
+	justify-content: flex-end;
+	flex-wrap: wrap;
+	gap: 8px;
+	max-width: 390px;
+}
+
+.technical-register-page .sw-register-chip,
+.sw-register-route .sw-register-chip {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	min-height: 30px;
+	padding: 6px 11px;
+	border: 1px solid var(--register-primary-border);
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.88);
+	color: var(--register-primary);
+	font-size: 11px;
+	font-weight: 750;
+	line-height: 1;
+	white-space: nowrap;
+}
+
+.technical-register-page .sw-register-chip i,
+.sw-register-route .sw-register-chip i {
+	font-size: 14px;
+}
+
+.technical-register-page .sw-register-chip--accent,
+.sw-register-route .sw-register-chip--accent {
+	border-color: var(--register-primary);
+	background: var(--register-primary);
+	color: #fff;
+}
+
+.technical-register-page .sw-register-chip--neutral,
+.sw-register-route .sw-register-chip--neutral {
+	border-color: var(--register-border);
+	background: #f8fafc;
+	color: #586674;
+}
+
+.technical-register-page .sw-register-chip--success,
+.sw-register-route .sw-register-chip--success {
+	border-color: #b9dfca;
+	background: var(--register-success-soft);
+	color: var(--register-success);
+}
+
+.technical-register-page .sw-register-chip--warning,
+.sw-register-route .sw-register-chip--warning {
+	border-color: #ead39e;
+	background: var(--register-warning-soft);
+	color: var(--register-warning);
+}
+
+.technical-register-page .sw-register-main-grid,
+.sw-register-route .sw-register-main-grid {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(300px, 350px);
+	gap: 18px;
+	align-items: start;
+	width: 100%;
+	min-width: 0;
+}
+
+.technical-register-page .sw-register-main-grid > *,
+.sw-register-route .sw-register-main-grid > * {
+	min-width: 0;
+	max-width: 100%;
+}
+
+.technical-register-page .sw-register-section,
+.technical-register-page .sw-register-summary-card,
+.sw-register-route .sw-register-section,
+.sw-register-route .sw-register-summary-card {
+	min-width: 0;
+	margin: 0 0 18px !important;
+	padding: 22px !important;
+	border: 1px solid var(--register-border) !important;
+	border-radius: 12px !important;
+	background: var(--register-surface) !important;
+	box-shadow: var(--register-shadow-soft) !important;
+}
+
+.technical-register-page .sw-register-main-grid > .sw-register-section:last-child,
+.technical-register-page .sw-register-main-grid > div > .sw-register-section:last-child,
+.sw-register-route .sw-register-main-grid > .sw-register-section:last-child,
+.sw-register-route .sw-register-main-grid > div > .sw-register-section:last-child {
+	margin-bottom: 0;
+}
+
+.technical-register-page .sw-register-section-header,
+.sw-register-route .sw-register-section-header {
+	display: flex;
+	align-items: flex-start;
+	gap: 12px;
+	margin: 0 0 20px;
+	padding: 0 0 16px;
+	border-bottom: 1px solid var(--register-border-light);
+	text-align: left;
+}
+
+.technical-register-page .sw-register-section-header__icon,
+.sw-register-route .sw-register-section-header__icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 40px;
+	width: 40px;
+	height: 40px;
+	border-radius: 10px;
+	background: var(--register-primary-soft);
+	color: var(--register-primary);
+	font-size: 20px;
+}
+
+.technical-register-page .sw-register-section-header__copy,
+.sw-register-route .sw-register-section-header__copy {
+	min-width: 0;
+	flex: 1 1 auto;
+	padding-top: 1px;
+	text-align: left;
+}
+
+.technical-register-page .sw-register-section-header__copy h2,
+.technical-register-page .sw-register-section-header__copy h3,
+.sw-register-route .sw-register-section-header__copy h2,
+.sw-register-route .sw-register-section-header__copy h3 {
+	margin: 0;
+	color: #202b35;
+	font-size: 16px;
+	font-weight: 800;
+	letter-spacing: -0.015em;
+	line-height: 1.35;
+}
+
+.technical-register-page .sw-register-section-header__copy p,
+.sw-register-route .sw-register-section-header__copy p {
+	margin: 4px 0 0;
+	color: var(--register-muted);
+	font-size: 12px;
+	line-height: 1.45;
+}
+
+.technical-register-page .sw-register-step,
+.sw-register-route .sw-register-step {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 auto;
+	min-width: 29px;
+	min-height: 24px;
+	margin: 0 0 4px;
+	padding: 4px 8px;
+	border: 1px solid var(--register-primary-border);
+	border-radius: 999px;
+	background: var(--register-primary-soft);
+	color: var(--register-primary);
+	font-size: 10px;
+	font-weight: 800;
+	line-height: 1;
+	white-space: nowrap;
+}
+
+.technical-register-page .sw-register-required-guide,
+.sw-register-route .sw-register-required-guide {
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
+	margin-left: auto;
+	padding: 5px 8px;
+	border-radius: 999px;
+	background: var(--register-danger-soft);
+	color: #7f3029;
+	font-size: 10px;
+	font-weight: 750;
+	white-space: nowrap;
+}
+
+.technical-register-page .sw-register-required-guide em,
+.sw-register-route .sw-register-required-guide em {
+	color: var(--register-danger);
+	font-style: normal;
+}
+
+.technical-register-page .register-form-grid,
+.sw-register-route .register-form-grid {
+	display: grid !important;
+	grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+	gap: 17px 18px !important;
+	width: 100% !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	list-style: none !important;
+}
+
+.technical-register-page .register-form-grid > li,
+.sw-register-route .register-form-grid > li {
+	display: flex !important;
+	grid-column: auto;
+	flex-direction: column !important;
+	align-items: stretch !important;
+	justify-content: flex-start !important;
+	gap: 7px !important;
+	width: 100% !important;
+	min-width: 0 !important;
+	min-height: 0 !important;
+	height: auto !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	background: transparent !important;
+}
+
+.technical-register-page .register-form-grid > li[style*="display:none"],
+.technical-register-page .register-form-grid > li[style*="display: none"],
+.sw-register-route .register-form-grid > li[style*="display:none"],
+.sw-register-route .register-form-grid > li[style*="display: none"] {
+	display: none !important;
+}
+
+.technical-register-page .register-form-grid > li.full,
+.sw-register-route .register-form-grid > li.full {
+	grid-column: 1 / -1;
+}
+
+.technical-register-page .register-form-grid > li > label,
+.sw-register-route .register-form-grid > li > label {
+	display: flex !important;
+	align-items: center;
+	gap: 4px;
+	width: auto !important;
+	max-width: 100%;
+	min-width: 0 !important;
+	height: auto !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	color: #3c4854 !important;
+	font-size: 12px !important;
+	font-weight: 750 !important;
+	line-height: 1.35 !important;
+	white-space: normal !important;
+}
+
+.technical-register-page .register-form-grid > li > label em,
+.technical-register-page .register-form-grid > li > label .required,
+.sw-register-route .register-form-grid > li > label em,
+.sw-register-route .register-form-grid > li > label .required {
+	color: var(--register-danger);
+	font-style: normal;
+}
+
+.technical-register-page .field-auto-badge,
+.sw-register-route .field-auto-badge {
+	display: inline-flex;
+	align-items: center;
+	min-height: 18px;
+	margin-left: 3px;
+	padding: 2px 6px;
+	border-radius: 999px;
+	background: #eef1f4;
+	color: #6a7681;
+	font-size: 9px;
+	font-weight: 750;
+	line-height: 1;
+}
+
+.technical-register-page .register-form-grid input[type="text"],
+.technical-register-page .register-form-grid input[type="date"],
+.technical-register-page .register-form-grid select,
+.technical-register-page .register-form-grid textarea,
+.sw-register-route .register-form-grid input[type="text"],
+.sw-register-route .register-form-grid input[type="date"],
+.sw-register-route .register-form-grid select,
+.sw-register-route .register-form-grid textarea {
+	width: 100% !important;
+	min-width: 0 !important;
+	min-height: 42px !important;
+	height: 42px;
+	margin: 0 !important;
+	padding: 9px 12px !important;
+	border: 1px solid #cbd3db !important;
+	border-radius: 7px !important;
+	background: #fff !important;
+	color: var(--register-text) !important;
+	font-family: inherit !important;
+	font-size: 13px !important;
+	line-height: 1.35 !important;
+	outline: none !important;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.technical-register-page .register-form-grid textarea,
+.sw-register-route .register-form-grid textarea {
+	height: auto;
+	min-height: 88px !important;
+	resize: vertical;
+}
+
+.technical-register-page .register-form-grid input:focus,
+.technical-register-page .register-form-grid select:focus,
+.technical-register-page .register-form-grid textarea:focus,
+.sw-register-route .register-form-grid input:focus,
+.sw-register-route .register-form-grid select:focus,
+.sw-register-route .register-form-grid textarea:focus {
+	border-color: var(--register-primary) !important;
+	box-shadow: 0 0 0 3px rgba(3, 76, 140, 0.1) !important;
+}
+
+.technical-register-page .register-form-grid input[readonly],
+.technical-register-page .register-form-grid input:disabled,
+.technical-register-page .register-form-grid select:disabled,
+.sw-register-route .register-form-grid input[readonly],
+.sw-register-route .register-form-grid input:disabled,
+.sw-register-route .register-form-grid select:disabled {
+	border-color: #dce2e8 !important;
+	background: #f4f6f8 !important;
+	color: #67737e !important;
+	cursor: not-allowed;
+	opacity: 1;
+}
+
+.technical-register-page .register-form-grid .select2-container,
+.sw-register-route .register-form-grid .select2-container {
+	display: block !important;
+	width: 100% !important;
+	max-width: 100% !important;
+	min-width: 0 !important;
+	margin: 0 !important;
+}
+
+.technical-register-page .register-form-grid .select2-container .select2-selection--single,
+.sw-register-route .register-form-grid .select2-container .select2-selection--single {
+	height: 42px !important;
+	min-height: 42px !important;
+	margin: 0 !important;
+	border: 1px solid #cbd3db !important;
+	border-radius: 7px !important;
+	background: #fff !important;
+}
+
+.technical-register-page .register-form-grid .select2-container .select2-selection--single .select2-selection__rendered,
+.sw-register-route .register-form-grid .select2-container .select2-selection--single .select2-selection__rendered {
+	padding: 0 34px 0 12px !important;
+	color: var(--register-text) !important;
+	font-size: 13px !important;
+	line-height: 40px !important;
+}
+
+.technical-register-page .register-form-grid .select2-container .select2-selection--single .select2-selection__arrow,
+.sw-register-route .register-form-grid .select2-container .select2-selection--single .select2-selection__arrow {
+	height: 40px !important;
+	right: 5px !important;
+}
+
+.technical-register-page .register-form-grid .select2-container--focus .select2-selection,
+.technical-register-page .register-form-grid .select2-container--open .select2-selection,
+.sw-register-route .register-form-grid .select2-container--focus .select2-selection,
+.sw-register-route .register-form-grid .select2-container--open .select2-selection {
+	border-color: var(--register-primary) !important;
+	box-shadow: 0 0 0 3px rgba(3, 76, 140, 0.1) !important;
+}
+
+.technical-register-page .sw-register-summary-card,
+.sw-register-route .sw-register-summary-card {
+	position: sticky;
+	top: 18px;
+	margin-bottom: 0;
+	padding: 20px;
+}
+
+.technical-register-page .sw-register-summary-card__header,
+.sw-register-route .sw-register-summary-card__header {
+	display: flex;
+	align-items: flex-start;
+	gap: 12px;
+	margin: 0 0 16px;
+	padding: 0 0 14px;
+	border-bottom: 1px solid var(--register-border-light);
+	text-align: left;
+}
+
+.technical-register-page .sw-register-summary-card__header > div,
+.sw-register-route .sw-register-summary-card__header > div {
+	min-width: 0;
+	flex: 1 1 auto;
+	text-align: left;
+}
+
+.technical-register-page .sw-register-summary-card__header h2,
+.technical-register-page .sw-register-summary-card__header h3,
+.sw-register-route .sw-register-summary-card__header h2,
+.sw-register-route .sw-register-summary-card__header h3 {
+	margin: 0;
+	color: #202b35;
+	font-size: 15px;
+	font-weight: 800;
+	line-height: 1.35;
+}
+
+.technical-register-page .sw-register-summary-card__header p,
+.sw-register-route .sw-register-summary-card__header p {
+	margin: 3px 0 0;
+	color: var(--register-muted);
+	font-size: 11px;
+	line-height: 1.4;
+}
+
+.technical-register-page .sw-register-summary-progress,
+.sw-register-route .sw-register-summary-progress {
+	width: 100%;
+	margin: 0 0 16px;
+	padding: 12px;
+	border: 1px solid var(--register-border-light);
+	border-radius: 8px;
+	background: #f8fafc;
+}
+
+.technical-register-page .sw-register-summary-progress > div:first-child,
+.sw-register-route .sw-register-summary-progress > div:first-child {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	margin-bottom: 8px;
+	color: var(--register-muted);
+	font-size: 10px;
+	font-weight: 700;
+}
+
+.technical-register-page .sw-register-summary-progress > div:first-child strong,
+.sw-register-route .sw-register-summary-progress > div:first-child strong {
+	color: var(--register-primary);
+	font-size: 11px;
+}
+
+.technical-register-page .sw-register-progress-track,
+.sw-register-route .sw-register-progress-track {
+	width: 100%;
+	height: 8px;
+	overflow: hidden;
+	border-radius: 999px;
+	background: #e2e8ee;
+}
+
+.technical-register-page .sw-register-progress-track > span,
+.sw-register-route .sw-register-progress-track > span {
+	display: block;
+	width: 0;
+	height: 100%;
+	border-radius: inherit;
+	background: linear-gradient(90deg, var(--register-primary) 0%, #1976b9 100%);
+	transition: width 0.2s ease;
+}
+
+.technical-register-page .sw-register-summary-list,
+.sw-register-route .sw-register-summary-list {
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.technical-register-page .sw-register-summary-item,
+.sw-register-route .sw-register-summary-item {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 14px;
+	min-height: 42px;
+	padding: 9px 0;
+	border-bottom: 1px solid var(--register-border-light);
+	color: #52606d;
+	font-size: 12px;
+	line-height: 1.35;
+}
+
+.technical-register-page .sw-register-summary-item:last-child,
+.sw-register-route .sw-register-summary-item:last-child {
+	border-bottom: 0;
+}
+
+.technical-register-page .sw-register-summary-item > span:first-child,
+.sw-register-route .sw-register-summary-item > span:first-child {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	min-width: 0;
+	color: var(--register-muted);
+}
+
+.technical-register-page .sw-register-summary-item > span:first-child i,
+.sw-register-route .sw-register-summary-item > span:first-child i {
+	color: #8a96a1;
+	font-size: 15px;
+}
+
+.technical-register-page .sw-register-summary-item.is-complete > span:first-child i,
+.sw-register-route .sw-register-summary-item.is-complete > span:first-child i {
+	color: var(--register-success);
+}
+
+.technical-register-page .sw-register-summary-value,
+.sw-register-route .sw-register-summary-value {
+	display: inline-flex;
+	align-items: center;
+	justify-content: flex-end;
+	max-width: 62%;
+	color: #2f3b46;
+	font-size: 12px;
+	font-weight: 750;
+	text-align: right;
+	overflow-wrap: anywhere;
+}
+
+.technical-register-page .sw-register-summary-value.is-complete,
+.sw-register-route .sw-register-summary-value.is-complete {
+	color: var(--register-success);
+}
+
+.technical-register-page .sw-register-summary-value.is-pending,
+.sw-register-route .sw-register-summary-value.is-pending {
+	color: var(--register-warning);
+}
+
+.technical-register-page .sw-register-security-note,
+.sw-register-route .sw-register-security-note {
+	display: flex;
+	align-items: flex-start;
+	gap: 9px;
+	margin-top: 16px;
+	padding: 11px 12px;
+	border: 1px solid var(--register-primary-border);
+	border-radius: 8px;
+	background: var(--register-primary-soft);
+	color: #36566f;
+	font-size: 11px;
+	line-height: 1.5;
+}
+
+.technical-register-page .sw-register-security-note i,
+.sw-register-route .sw-register-security-note i {
+	flex: 0 0 auto;
+	margin-top: 1px;
+	color: var(--register-primary);
+	font-size: 16px;
+}
+
+.technical-register-page .sw-register-security-note div,
+.sw-register-route .sw-register-security-note div {
+	display: flex;
+	min-width: 0;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.technical-register-page .sw-register-security-note strong,
+.sw-register-route .sw-register-security-note strong {
+	color: var(--register-primary);
+	font-size: 11px;
+}
+
+.technical-register-page .sw-register-security-note span,
+.sw-register-route .sw-register-security-note span {
+	color: #516878;
+	font-size: 10px;
+}
+
+.technical-register-page .register-upload-grid,
+.sw-register-route .register-upload-grid {
+	display: grid !important;
+	grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+	gap: 14px !important;
+	width: 100% !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	list-style: none !important;
+}
+
+.technical-register-page .register-upload-grid > li,
+.sw-register-route .register-upload-grid > li {
+	display: flex !important;
+	flex-direction: column !important;
+	min-width: 0 !important;
+	width: 100% !important;
+	margin: 0 !important;
+	padding: 16px !important;
+	border: 1px solid var(--register-border-light) !important;
+	border-radius: 10px !important;
+	background: #fbfcfd !important;
+}
+
+.technical-register-page .upload-card-heading,
+.sw-register-route .upload-card-heading {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	min-height: 38px;
+	margin: 0 0 12px;
+}
+
+.technical-register-page .upload-card-heading__icon,
+.sw-register-route .upload-card-heading__icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 36px;
+	width: 36px;
+	height: 36px;
+	border-radius: 9px;
+	background: var(--register-primary-soft);
+	color: var(--register-primary);
+	font-size: 18px;
+}
+
+.technical-register-page .upload-card-heading__copy,
+.sw-register-route .upload-card-heading__copy {
+	display: flex;
+	min-width: 0;
+	flex: 1 1 auto;
+	flex-direction: column;
+}
+
+.technical-register-page .upload-card-heading__copy strong,
+.technical-register-page .upload-card-heading__copy label,
+.sw-register-route .upload-card-heading__copy strong,
+.sw-register-route .upload-card-heading__copy label {
+	display: block;
+	margin: 0;
+	padding: 0;
+	color: #27333f;
+	font-size: 13px;
+	font-weight: 800;
+	line-height: 1.3;
+}
+
+.technical-register-page .upload-card-heading__copy small,
+.technical-register-page .upload-card-heading__copy p,
+.sw-register-route .upload-card-heading__copy small,
+.sw-register-route .upload-card-heading__copy p {
+	margin: 2px 0 0;
+	color: var(--register-muted);
+	font-size: 10px;
+	line-height: 1.4;
+}
+
+.technical-register-page .upload-card-heading__badge,
+.sw-register-route .upload-card-heading__badge {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 auto;
+	min-height: 23px;
+	padding: 4px 8px;
+	border: 1px solid var(--register-primary-border);
+	border-radius: 999px;
+	background: #fff;
+	color: var(--register-primary);
+	font-size: 10px;
+	font-weight: 750;
+	line-height: 1;
+}
+
+.technical-register-page .uploadLine,
+.sw-register-route .uploadLine {
+	display: grid !important;
+	grid-template-columns: auto minmax(0, 1fr) auto;
+	align-items: center !important;
+	gap: 9px !important;
+	width: 100%;
+	min-width: 0;
+	min-height: 92px !important;
+	margin: 0 !important;
+	padding: 16px !important;
+	border: 1px dashed #adc4d8 !important;
+	border-radius: 9px !important;
+	background: #f6fafe !important;
+	cursor: pointer;
+	transition: border-color 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.technical-register-page .upload-line-icon,
+.sw-register-route .upload-line-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 38px;
+	height: 38px;
+	border-radius: 9px;
+	background: #fff;
+	color: var(--register-primary);
+	font-size: 19px;
+	box-shadow: inset 0 0 0 1px #d8e4ee;
+}
+
+.technical-register-page .uploadLine:hover,
+.sw-register-route .uploadLine:hover {
+	border-color: var(--register-primary) !important;
+	background: #f0f7fc !important;
+}
+
+.technical-register-page .uploadLine.is-dragover,
+.sw-register-route .uploadLine.is-dragover {
+	border-color: var(--register-primary) !important;
+	background: var(--register-primary-soft) !important;
+	box-shadow: 0 0 0 3px rgba(3, 76, 140, 0.09);
+}
+
+.technical-register-page .uploadLine > form,
+.sw-register-route .uploadLine > form {
+	display: none !important;
+}
+
+.technical-register-page .fileNameWrap,
+.sw-register-route .fileNameWrap {
+	position: relative;
+	display: block;
+	min-width: 0;
+	width: 100%;
+}
+
+.technical-register-page .fileNameWrap input[type="text"],
+.sw-register-route .fileNameWrap input[type="text"] {
+	width: 100% !important;
+	min-width: 0 !important;
+	height: 40px !important;
+	margin: 0 !important;
+	padding: 9px 34px 9px 11px !important;
+	overflow: hidden;
+	border: 1px solid #d5dde5 !important;
+	border-radius: 7px !important;
+	background: #fff !important;
+	color: #455461 !important;
+	font-family: inherit !important;
+	font-size: 12px !important;
+	line-height: 1.35 !important;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.technical-register-page .upload-card-heading__badge.upload-card-badge--required,
+.sw-register-route .upload-card-heading__badge.upload-card-badge--required {
+	border-color: #ecc5bf;
+	background: var(--register-danger-soft);
+	color: var(--register-danger);
+}
+
+.technical-register-page .fileNameWrap input[type="text"]::placeholder,
+.sw-register-route .fileNameWrap input[type="text"]::placeholder {
+	color: #8a96a1;
+	opacity: 1;
+}
+
+.technical-register-page .fileNameWrap .fileClearBtn,
+.sw-register-route .fileNameWrap .fileClearBtn {
+	position: absolute !important;
+	top: 50% !important;
+	right: 7px !important;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 22px !important;
+	min-width: 22px !important;
+	height: 22px !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	transform: translateY(-50%) !important;
+	border: 0 !important;
+	border-radius: 50%;
+	background: transparent !important;
+	color: #687582 !important;
+	font-size: 16px !important;
+	line-height: 1 !important;
+	cursor: pointer;
+}
+
+.technical-register-page .fileNameWrap .fileClearBtn:hover,
+.sw-register-route .fileNameWrap .fileClearBtn:hover {
+	background: #edf1f4 !important;
+	color: var(--register-danger) !important;
+}
+
+.technical-register-page .fileUploadBtn,
+.sw-register-route .fileUploadBtn {
+	display: inline-flex !important;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	flex: 0 0 auto;
+	min-width: 88px !important;
+	height: 40px !important;
+	margin: 0 !important;
+	padding: 0 13px !important;
+	border: 1px solid var(--register-primary) !important;
+	border-radius: 7px !important;
+	background: var(--register-primary) !important;
+	box-shadow: none !important;
+	color: #fff !important;
+	font-size: 11px !important;
+	font-weight: 750 !important;
+	line-height: 1 !important;
+	text-indent: 0 !important;
+	cursor: pointer;
+}
+
+.technical-register-page .fileUploadBtn::before,
+.sw-register-route .fileUploadBtn::before {
+	content: none !important;
+}
+
+.technical-register-page .fileUploadBtn::after,
+.sw-register-route .fileUploadBtn::after {
+	display: none !important;
+	content: none !important;
+}
+
+.technical-register-page .fileUploadBtn i,
+.sw-register-route .fileUploadBtn i {
+	font-size: 14px;
+}
+
+.technical-register-page .fileUploadBtn span,
+.sw-register-route .fileUploadBtn span {
+	color: #fff;
+	font-size: 11px;
+	white-space: nowrap;
+}
+
+.technical-register-page .fileUploadBtn:hover,
+.sw-register-route .fileUploadBtn:hover {
+	border-color: var(--register-primary-dark) !important;
+	background: var(--register-primary-dark) !important;
+}
+
+.technical-register-page .dialogBtnSet,
+.sw-register-route .dialogBtnSet {
+	position: static !important;
+	display: flex !important;
+	align-items: center;
+	justify-content: space-between !important;
+	gap: 16px;
+	width: 100% !important;
+	min-height: 72px;
+	margin: 18px 0 0 !important;
+	padding: 14px 18px !important;
+	border: 1px solid var(--register-border) !important;
+	border-radius: 11px;
+	background: rgba(255, 255, 255, 0.97) !important;
+	box-shadow: var(--register-shadow-soft);
+}
+
+.technical-register-page .dialogBtnSet .left,
+.sw-register-route .dialogBtnSet .left {
+	display: flex !important;
+	flex: 1 1 auto;
+	align-items: center;
+	min-width: 0;
+	width: auto !important;
+}
+
+.technical-register-page .dialogBtnSet .right,
+.sw-register-route .dialogBtnSet .right {
+	display: flex !important;
+	flex: 0 0 auto;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 8px;
+	width: auto !important;
+	text-align: right !important;
+}
+
+.technical-register-page .register-action-note,
+.sw-register-route .register-action-note {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	margin: 0;
+	color: var(--register-muted);
+	font-size: 11px;
+	line-height: 1.45;
+}
+
+.technical-register-page .register-action-note i,
+.sw-register-route .register-action-note i {
+	flex: 0 0 auto;
+	color: var(--register-primary);
+	font-size: 15px;
+}
+
+.technical-register-page .sw-register-list-button,
+.technical-register-page .dialogBtnSet .bottomBtn,
+.sw-register-route .sw-register-list-button,
+.sw-register-route .dialogBtnSet .bottomBtn {
+	display: inline-flex !important;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	min-width: 92px !important;
+	min-height: 40px !important;
+	height: 40px !important;
+	margin: 0 !important;
+	padding: 8px 15px !important;
+	border-radius: 7px !important;
+	font-family: inherit !important;
+	font-size: 12px !important;
+	font-weight: 750 !important;
+	line-height: 1 !important;
+	cursor: pointer;
+}
+
+.technical-register-page .sw-register-list-button,
+.sw-register-route .sw-register-list-button {
+	border: 1px solid #cbd3db !important;
+	background: #fff !important;
+	color: #465564 !important;
+}
+
+.technical-register-page .sw-register-list-button:hover,
+.sw-register-route .sw-register-list-button:hover {
+	border-color: #aeb9c4 !important;
+	background: #f5f7f9 !important;
+}
+
+.technical-register-page .dialogBtnSet #save,
+.technical-register-page .dialogBtnSet [name="save"],
+.sw-register-route .dialogBtnSet #save,
+.sw-register-route .dialogBtnSet [name="save"] {
+	border: 1px solid var(--register-primary) !important;
+	background: var(--register-primary) !important;
+	box-shadow: 0 4px 10px rgba(3, 76, 140, 0.2) !important;
+	color: #fff !important;
+}
+
+.technical-register-page .dialogBtnSet #save:hover,
+.technical-register-page .dialogBtnSet [name="save"]:hover,
+.sw-register-route .dialogBtnSet #save:hover,
+.sw-register-route .dialogBtnSet [name="save"]:hover {
+	border-color: var(--register-primary-dark) !important;
+	background: var(--register-primary-dark) !important;
+}
+
+.technical-register-page .dialogBtnSet button:focus-visible,
+.technical-register-page .fileUploadBtn:focus-visible,
+.technical-register-page .sw-register-list-button:focus-visible,
+.sw-register-route .dialogBtnSet button:focus-visible,
+.sw-register-route .fileUploadBtn:focus-visible,
+.sw-register-route .sw-register-list-button:focus-visible {
+	outline: 2px solid var(--register-primary);
+	outline-offset: 2px;
+}
+
+@media (max-width: 960px) {
+	.technical-register-page,
+	.sw-register-route {
+		width: calc(100% - 32px) !important;
+		padding-top: 18px !important;
+	}
+
+	.technical-register-page.sw-register-page,
+	.sw-register-route.sw-register-page {
+		width: calc(100% - 32px) !important;
+		padding-top: 18px !important;
+	}
+
+	.technical-register-page .sw-register-main-grid,
+	.sw-register-route .sw-register-main-grid {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.technical-register-page .sw-register-summary-card,
+	.sw-register-route .sw-register-summary-card {
+		position: static;
+	}
+
+	.technical-register-page .sw-register-hero,
+	.sw-register-route .sw-register-hero {
+		align-items: flex-start;
+		flex-direction: column;
+		gap: 16px;
+	}
+
+	.technical-register-page .sw-register-hero__chips,
+	.sw-register-route .sw-register-hero__chips {
+		justify-content: flex-start;
+		max-width: none;
+	}
+}
+
+@media (max-width: 680px) {
+	.technical-register-page,
+	.sw-register-route {
+		width: calc(100% - 24px) !important;
+		padding: 12px 0 28px !important;
+	}
+
+	.technical-register-page.sw-register-page,
+	.sw-register-route.sw-register-page {
+		width: calc(100% - 24px) !important;
+		padding: 12px 0 28px !important;
+	}
+
+	.technical-register-page .sw-register-hero,
+	.sw-register-route .sw-register-hero {
+		min-height: 0;
+		padding: 21px 19px;
+		border-radius: 12px;
+	}
+
+	.technical-register-page .sw-register-hero__copy h1,
+	.sw-register-route .sw-register-hero__copy h1 {
+		font-size: 23px;
+	}
+
+	.technical-register-page .sw-register-hero__copy p,
+	.sw-register-route .sw-register-hero__copy p {
+		font-size: 12px;
+	}
+
+	.technical-register-page .sw-register-hero__chips,
+	.sw-register-route .sw-register-hero__chips {
+		width: 100%;
+	}
+
+	.technical-register-page .sw-register-chip,
+	.sw-register-route .sw-register-chip {
+		flex: 1 1 auto;
+	}
+
+	.technical-register-page .sw-register-section,
+	.technical-register-page .sw-register-summary-card,
+	.sw-register-route .sw-register-section,
+	.sw-register-route .sw-register-summary-card {
+		margin-bottom: 14px;
+		padding: 17px 15px;
+		border-radius: 10px;
+	}
+
+	.technical-register-page .sw-register-section-header,
+	.sw-register-route .sw-register-section-header {
+		gap: 10px;
+		margin-bottom: 16px;
+		padding-bottom: 13px;
+	}
+
+	.technical-register-page .sw-register-section-header__icon,
+	.sw-register-route .sw-register-section-header__icon {
+		flex-basis: 36px;
+		width: 36px;
+		height: 36px;
+	}
+
+	.technical-register-page .sw-register-step,
+	.sw-register-route .sw-register-step {
+		display: none;
+	}
+
+	.technical-register-page .register-form-grid,
+	.sw-register-route .register-form-grid {
+		grid-template-columns: minmax(0, 1fr) !important;
+		gap: 14px !important;
+	}
+
+	.technical-register-page .register-form-grid > li.full,
+	.sw-register-route .register-form-grid > li.full {
+		grid-column: auto;
+	}
+
+	.technical-register-page .register-upload-grid,
+	.sw-register-route .register-upload-grid {
+		grid-template-columns: minmax(0, 1fr) !important;
+	}
+
+	.technical-register-page .register-upload-grid > li,
+	.sw-register-route .register-upload-grid > li {
+		padding: 13px !important;
+	}
+
+	.technical-register-page .uploadLine,
+	.sw-register-route .uploadLine {
+		grid-template-columns: minmax(0, 1fr);
+		min-height: 0 !important;
+		padding: 13px !important;
+	}
+
+	.technical-register-page .fileUploadBtn,
+	.sw-register-route .fileUploadBtn {
+		width: 100% !important;
+	}
+
+	.technical-register-page .dialogBtnSet,
+	.sw-register-route .dialogBtnSet {
+		align-items: stretch;
+		flex-direction: column;
+		min-height: 0;
+		padding: 14px !important;
+	}
+
+	.technical-register-page .dialogBtnSet .left,
+	.technical-register-page .dialogBtnSet .right,
+	.sw-register-route .dialogBtnSet .left,
+	.sw-register-route .dialogBtnSet .right {
+		width: 100% !important;
+	}
+
+	.technical-register-page .dialogBtnSet .right,
+	.sw-register-route .dialogBtnSet .right {
+		display: grid !important;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.technical-register-page .sw-register-list-button,
+	.technical-register-page .dialogBtnSet .bottomBtn,
+	.sw-register-route .sw-register-list-button,
+	.sw-register-route .dialogBtnSet .bottomBtn {
+		width: 100% !important;
+	}
+}

@@ -7,6 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>비밀번호 재설정 | 다목적실용위성8호사업단</title>
   <%@ include file="/WEB-INF/jspf/csrf-meta.jspf" %>
+  <%@ include file="/WEB-INF/jspf/favicon.jspf" %>
   <style>
     * {
       box-sizing: border-box;

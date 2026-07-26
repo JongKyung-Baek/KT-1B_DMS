@@ -276,7 +276,6 @@
 
 .sa-search { display: grid; grid-template-columns: minmax(180px, 1fr) auto; gap: 0.45rem; width: min(390px, 100%); }
 .sa-search--wide { grid-template-columns: 125px minmax(180px, 1fr) auto; width: min(560px, 100%); }
-.sa-search--audit { grid-template-columns: 125px 125px minmax(180px, 1fr) auto; width: min(720px, 100%); }
 .sa-search input, .sa-search select { min-height: 34px !important; }
 
 .sa-list-toolbar {
@@ -440,7 +439,7 @@
     .sa-tab { flex: 1 0 auto; padding-inline: 0.75rem; }
     .sa-card { padding: 0.9rem; }
     .sa-card-header--stack-mobile { align-items: stretch; flex-direction: column; }
-    .sa-search, .sa-search--wide, .sa-search--audit { grid-template-columns: 1fr; width: 100%; }
+    .sa-search, .sa-search--wide { grid-template-columns: 1fr; width: 100%; }
     .sa-form-grid, .sa-permission-grid { grid-template-columns: 1fr; }
     .sa-field--full { grid-column: auto; }
 }

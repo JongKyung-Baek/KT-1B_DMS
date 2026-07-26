@@ -799,14 +799,10 @@
                client_ip, session_id, correlation_id, detail_json::text AS detail_json
           FROM docs_access_audit_log
          WHERE 1 = 1
-        <choose>
-            <when test="eventType != null and eventType != ''">
-               AND event_type = #{eventType}
-            </when>
-            <otherwise>
-               AND event_type NOT IN ('MENU_ACTION', 'AUTH')
-            </otherwise>
-        </choose>
+           AND event_type IN ('FILE_ACCESS', 'DOWNLOAD_RESULT', 'PRINT_RESULT', 'ACL_CHANGE')
+        <if test="eventType != null and eventType != ''">
+           AND event_type = #{eventType}
+        </if>
         <if test="resultCd != null and resultCd != ''">
            AND result_cd = #{resultCd}
         </if>

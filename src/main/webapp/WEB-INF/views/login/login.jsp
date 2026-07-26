@@ -13,9 +13,9 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 <title>SDMS - Login </title>
 <%@ include file="/WEB-INF/jspf/csrf-meta.jspf" %>
+<%@ include file="/WEB-INF/jspf/favicon.jspf" %>
 
 <!-- vuexy CSS -->
-  <!-- <link rel="icon" type="image/x-icon" href="${pageContext.request.contextPath}/vuexy/assets/img/favicon/favicon.ico" /> -->
   <link rel="stylesheet" href="${pageContext.request.contextPath}/vuexy/assets/vendor/fonts/iconify-icons.css" />
   <link rel="stylesheet" href="${pageContext.request.contextPath}/vuexy/assets/vendor/libs/node-waves/node-waves.css" />
   <link rel="stylesheet" href="${pageContext.request.contextPath}/vuexy/assets/vendor/libs/pickr/pickr-themes.css" />

@@ -1,5 +1,6 @@
 ﻿<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
 <script>
 	var mainFileRows = ${ empty mainFileJson ?'[]': mainFileJson };
@@ -7,7 +8,7 @@
 	var popupRequestNo = "${param.requestNo}";
 	var popupObjectId = "${objectId}";
 	var MAIN_GRID_BODY_HEIGHT = 52;
-	var SUB_GRID_BODY_HEIGHT = 180;
+	var SUB_GRID_BODY_HEIGHT = 174;
 	var APPROVAL_GRID_BODY_HEIGHT = 140;
 
 	function escapeAttr(value) {
@@ -53,8 +54,8 @@
 
 	function renderSwDocumentGrade(rowdata) {
 		var grade = getSwGradePresentation(rowdata && rowdata.gradeNm, rowdata);
-		$("#swPopupDocumentGrade")
-			.attr("class", "document-grade-badge document-grade-badge--" + grade.tone)
+		$(".sw-document-grade-display")
+			.attr("class", "sw-document-grade-display document-grade-badge document-grade-badge--" + grade.tone)
 			.attr("title", grade.title)
 			.text(grade.name);
 	}
@@ -396,11 +397,15 @@
 			subFileRows = [];
 		}
 		renderSwDocumentGrade(mainFileRows[0] || {});
-		loadApprovalStatus();
+		if ($("#gridSwApproverStatus, #gridSwReviewerStatus").length) {
+			loadApprovalStatus();
+		}
 		initSwFileGrid("gridSwMainFile", mainFileRows);
 		initSwFileGrid("gridSwSubFile", subFileRows);
 
-		$(document).on("click", ".sw-file-popup .sw-file-link", function (e) {
+		$(document)
+			.off("click.swFilePopup", ".sw-file-popup .sw-file-link")
+			.on("click.swFilePopup", ".sw-file-popup .sw-file-link", function (e) {
 			e.preventDefault();
 			var $row = $(this).closest('tr.jqgrow');
 			var rowId = $row.attr('id');
@@ -413,7 +418,9 @@
 			openSwFileViewer(objectId, fileNo);
 		});
 
-		$(document).on("click", ".sw-file-popup .approval-comment-save", function (e) {
+		$(document)
+			.off("click.swFilePopup", ".sw-file-popup .approval-comment-save")
+			.on("click.swFilePopup", ".sw-file-popup .approval-comment-save", function (e) {
 			e.preventDefault();
 			saveApprovalComment($(this).data("gridId"), $(this).data("rowId"));
 		});
@@ -435,6 +442,134 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 7px;
+	}
+
+	.sw-file-popup .sw-detail-hero p {
+		margin: 0;
+		color: #6b778c;
+		font-size: 14px;
+		line-height: 1.45;
+		overflow-wrap: anywhere;
+	}
+
+	.sw-file-popup .sw-detail-summary {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 8px;
+		margin: 10px 0 14px;
+	}
+
+	.sw-file-popup .sw-detail-summary__chip {
+		display: inline-flex;
+		align-items: center;
+		gap: 7px;
+		min-height: 32px;
+		padding: 5px 11px;
+		border: 1px solid #dce5f0;
+		border-radius: 999px;
+		background: #f7faff;
+		color: #536079;
+		font-size: 12px;
+		line-height: 1.3;
+	}
+
+	.sw-file-popup .sw-detail-summary__chip strong {
+		max-width: 320px;
+		color: #1f2a44;
+		font-size: 13px;
+		font-weight: 700;
+		overflow-wrap: anywhere;
+	}
+
+	.sw-file-popup .sw-detail-panel {
+		margin-top: 12px;
+		overflow: hidden;
+		border: 1px solid #dce3ee;
+		border-radius: 10px;
+		background: #fff;
+	}
+
+	.sw-file-popup .sw-detail-panel__header {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 12px;
+		padding: 11px 14px;
+		border-bottom: 1px solid #e7edf5;
+		background: #f8fafd;
+	}
+
+	.sw-file-popup .sw-detail-panel__header h3 {
+		margin: 0;
+		color: #2f3a55;
+		font-size: 14px;
+		font-weight: 700;
+		line-height: 1.3;
+	}
+
+	.sw-file-popup .sw-detail-panel__header span {
+		color: #7a8599;
+		font-size: 12px;
+		line-height: 1.3;
+	}
+
+	.sw-file-popup .sw-detail-grid {
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		gap: 8px;
+		margin: 0;
+		padding: 12px;
+	}
+
+	.sw-file-popup .sw-detail-item {
+		min-width: 0;
+		min-height: 56px;
+		margin: 0;
+		padding: 9px 10px;
+		border: 1px solid #edf1f6;
+		border-radius: 8px;
+		background: #fbfcfe;
+	}
+
+	.sw-file-popup .sw-detail-item--span-2 {
+		grid-column: span 2;
+	}
+
+	.sw-file-popup .sw-detail-item--span-3 {
+		grid-column: span 3;
+	}
+
+	.sw-file-popup .sw-detail-item dt {
+		margin: 0 0 5px;
+		color: #798399;
+		font-size: 11px;
+		font-weight: 600;
+		line-height: 1.2;
+	}
+
+	.sw-file-popup .sw-detail-item dd {
+		margin: 0;
+		color: #252d40;
+		font-size: 13px;
+		font-weight: 600;
+		line-height: 1.4;
+		overflow-wrap: anywhere;
+		white-space: normal;
+	}
+
+	.sw-file-popup .sw-detail-state {
+		display: inline-flex;
+		align-items: center;
+		min-height: 24px;
+		padding: 3px 9px;
+		border-radius: 999px;
+		background: #eaf4ff;
+		color: #075a9c;
+		font-size: 12px;
+		font-weight: 700;
+		line-height: 1.3;
 	}
 
 	.sw-file-popup .sectionBlock {
@@ -545,21 +680,209 @@
 		box-shadow: none !important;
 		outline: none !important;
 	}
+
+	@media (max-width: 900px) {
+		.sw-file-popup .sw-detail-grid {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+
+		.sw-file-popup .sw-detail-item--span-3 {
+			grid-column: span 2;
+		}
+	}
+
+	@media (max-width: 600px) {
+		.sw-file-popup .sw-detail-grid {
+			grid-template-columns: minmax(0, 1fr);
+		}
+
+		.sw-file-popup .sw-detail-item--span-2,
+		.sw-file-popup .sw-detail-item--span-3 {
+			grid-column: auto;
+		}
+
+		.sw-file-popup .sw-detail-panel__header {
+			align-items: flex-start;
+			flex-direction: column;
+			gap: 3px;
+		}
+	}
 </style>
 
 <div class="dialogContent sw-file-popup popup-base popup-actions-center popup-type-form-grid">
-	<div class="popupHero">
-		<h2>파일 정보</h2>
+	<div class="popupHero sw-detail-hero">
+		<h2>기술자료 상세</h2>
+		<p><c:out value="${empty documentInfo.swNm ? '제목 미등록' : documentInfo.swNm}" /></p>
 	</div>
 
-	<div class="popupMeta">
-		<span class="popupMetaItem">문서번호: <strong>${swNo}</strong></span>
-		<span class="popupMetaItem">
+	<div class="sw-detail-summary" role="list" aria-label="기술자료 요약">
+		<span class="sw-detail-summary__chip" role="listitem">
+			CCB번호
+			<strong><c:out value="${empty documentInfo.swNo ? '-' : documentInfo.swNo}" /></strong>
+		</span>
+		<span class="sw-detail-summary__chip" role="listitem">
 			문서등급:
 			<span id="swPopupDocumentGrade"
-				  class="document-grade-badge document-grade-badge--unassigned">미지정</span>
+				  class="sw-document-grade-display document-grade-badge document-grade-badge--unassigned">미지정</span>
+		</span>
+		<span class="sw-detail-summary__chip" role="listitem">
+			진행상태
+			<strong><c:out value="${empty documentInfo.status ? '-' : documentInfo.status}" /></strong>
 		</span>
 	</div>
+
+	<section class="sw-detail-panel" aria-labelledby="swDetailBasicTitle">
+		<div class="sw-detail-panel__header">
+			<h3 id="swDetailBasicTitle">문서 정보</h3>
+			<span>목록에서 숨겨진 기술자료 속성을 함께 표시합니다.</span>
+		</div>
+		<dl class="sw-detail-grid">
+			<div class="sw-detail-item">
+				<dt>CCB번호</dt>
+				<dd><c:out value="${empty documentInfo.swNo ? '-' : documentInfo.swNo}" /></dd>
+			</div>
+			<div class="sw-detail-item sw-detail-item--span-3">
+				<dt>CCB제목</dt>
+				<dd><c:out value="${empty documentInfo.swNm ? '-' : documentInfo.swNm}" /></dd>
+			</div>
+			<div class="sw-detail-item sw-detail-item--span-2">
+				<dt>자료분류</dt>
+				<dd><c:out value="${empty documentInfo.classificationPath ? '-' : documentInfo.classificationPath}" /></dd>
+			</div>
+			<div class="sw-detail-item">
+				<dt>사업단계</dt>
+				<dd><c:out value="${empty documentInfo.businessTypeNm ? '-' : documentInfo.businessTypeNm}" /></dd>
+			</div>
+			<div class="sw-detail-item">
+				<dt>파일유형</dt>
+				<dd><c:out value="${empty documentInfo.distributeTypeNm ? '-' : documentInfo.distributeTypeNm}" /></dd>
+			</div>
+			<div class="sw-detail-item">
+				<dt>Revision</dt>
+				<dd><c:out value="${empty documentInfo.revNo ? '-' : documentInfo.revNo}" /></dd>
+			</div>
+			<div class="sw-detail-item">
+				<dt>SW버전</dt>
+				<dd><c:out value="${empty documentInfo.swVersionNo ? '-' : documentInfo.swVersionNo}" /></dd>
+			</div>
+			<div class="sw-detail-item">
+				<dt>SW분류</dt>
+				<dd><c:out value="${empty documentInfo.swTypeNm ? '-' : documentInfo.swTypeNm}" /></dd>
+			</div>
+			<div class="sw-detail-item">
+				<dt>파일수</dt>
+				<dd><c:out value="${empty documentInfo.fileCount ? '0' : documentInfo.fileCount}" />건</dd>
+			</div>
+			<div class="sw-detail-item">
+				<dt>기종</dt>
+				<dd><c:out value="${empty documentInfo.productNm ? '-' : documentInfo.productNm}" /></dd>
+			</div>
+			<div class="sw-detail-item">
+				<dt>사업장</dt>
+				<dd><c:out value="${empty documentInfo.businessAreaNm ? '-' : documentInfo.businessAreaNm}" /></dd>
+			</div>
+			<div class="sw-detail-item">
+				<dt>CCB개최일</dt>
+				<dd><c:out value="${empty documentInfo.ccbDate ? '-' : documentInfo.ccbDate}" /></dd>
+			</div>
+			<div class="sw-detail-item">
+				<dt>생성일</dt>
+				<dd><c:out value="${empty documentInfo.createDt ? '-' : documentInfo.createDt}" /></dd>
+			</div>
+		</dl>
+	</section>
+
+	<section class="sw-detail-panel" aria-labelledby="swDetailHistoryTitle">
+		<div class="sw-detail-panel__header">
+			<h3 id="swDetailHistoryTitle">등록·변경 이력</h3>
+			<span>등록, 수정, 인터페이스 및 승인일 정보를 표시합니다.</span>
+		</div>
+		<dl class="sw-detail-grid">
+			<div class="sw-detail-item">
+				<dt>의뢰자</dt>
+				<dd><c:out value="${empty documentInfo.registerUser ? '-' : documentInfo.registerUser}" /></dd>
+			</div>
+			<div class="sw-detail-item">
+				<dt>등록자</dt>
+				<dd><c:out value="${empty documentInfo.insertUserNm ? '-' : documentInfo.insertUserNm}" /></dd>
+			</div>
+			<div class="sw-detail-item">
+				<dt>등록팀</dt>
+				<dd><c:out value="${empty documentInfo.insertDeptNm ? '-' : documentInfo.insertDeptNm}" /></dd>
+			</div>
+			<div class="sw-detail-item">
+				<dt>등록일</dt>
+				<dd><c:out value="${empty documentInfo.insertDt ? '-' : documentInfo.insertDt}" /></dd>
+			</div>
+			<div class="sw-detail-item">
+				<dt>수정자</dt>
+				<dd><c:out value="${empty documentInfo.updateUserNm ? '-' : documentInfo.updateUserNm}" /></dd>
+			</div>
+			<div class="sw-detail-item">
+				<dt>수정일</dt>
+				<dd><c:out value="${empty documentInfo.updateDt ? '-' : documentInfo.updateDt}" /></dd>
+			</div>
+			<div class="sw-detail-item">
+				<dt>Interface일</dt>
+				<dd><c:out value="${empty documentInfo.interfaceDt ? '-' : documentInfo.interfaceDt}" /></dd>
+			</div>
+			<div class="sw-detail-item">
+				<dt>CO번호</dt>
+				<dd><c:out value="${empty documentInfo.ecnNo ? '-' : documentInfo.ecnNo}" /></dd>
+			</div>
+			<div class="sw-detail-item">
+				<dt>CO담당자</dt>
+				<dd><c:out value="${empty documentInfo.ecnUserNm ? '-' : documentInfo.ecnUserNm}" /></dd>
+			</div>
+			<div class="sw-detail-item">
+				<dt>규격화승인일</dt>
+				<dd><c:out value="${empty documentInfo.stdGappDt ? '-' : documentInfo.stdGappDt}" /></dd>
+			</div>
+			<div class="sw-detail-item">
+				<dt>기술변경승인일</dt>
+				<dd><c:out value="${empty documentInfo.changeGappDt ? '-' : documentInfo.changeGappDt}" /></dd>
+			</div>
+		</dl>
+	</section>
+
+	<section class="sw-detail-panel" aria-labelledby="swDetailSecurityTitle">
+		<div class="sw-detail-panel__header">
+			<h3 id="swDetailSecurityTitle">보안·승인 정보</h3>
+			<span>등급, 유효성 및 승인 참여 정보를 표시합니다.</span>
+		</div>
+		<dl class="sw-detail-grid">
+			<div class="sw-detail-item">
+				<dt>문서등급</dt>
+				<dd>
+					<span class="sw-document-grade-display document-grade-badge document-grade-badge--unassigned">미지정</span>
+				</dd>
+			</div>
+			<div class="sw-detail-item">
+				<dt>진행상태</dt>
+				<dd><span class="sw-detail-state"><c:out value="${empty documentInfo.status ? '-' : documentInfo.status}" /></span></dd>
+			</div>
+			<div class="sw-detail-item">
+				<dt>처리상태</dt>
+				<dd><span class="sw-detail-state"><c:out value="${empty documentInfo.processingStatusNm ? '-' : documentInfo.processingStatusNm}" /></span></dd>
+			</div>
+			<div class="sw-detail-item">
+				<dt>방산기술</dt>
+				<dd><c:out value="${empty documentInfo.protectYnNm ? '미지정' : documentInfo.protectYnNm}" /></dd>
+			</div>
+			<div class="sw-detail-item">
+				<dt>유효본</dt>
+				<dd><c:out value="${empty documentInfo.validTypeNm ? '-' : documentInfo.validTypeNm}" /></dd>
+			</div>
+			<div class="sw-detail-item sw-detail-item--span-3">
+				<dt>승인자</dt>
+				<dd><c:out value="${empty documentInfo.approver ? '-' : documentInfo.approver}" /></dd>
+			</div>
+			<div class="sw-detail-item sw-detail-item--span-2">
+				<dt>참여자</dt>
+				<dd><c:out value="${empty documentInfo.reviewerUser ? '-' : documentInfo.reviewerUser}" /></dd>
+			</div>
+		</dl>
+	</section>
 
 	<!-- <div class="section popupCard sectionBlock">
 		<div class="dialogToolbar">

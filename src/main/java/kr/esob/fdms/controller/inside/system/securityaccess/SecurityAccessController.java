@@ -26,7 +26,6 @@ import kr.esob.fdms.commonlogic.securityacl.FileUserPermissionVO;
 import kr.esob.fdms.commonlogic.securityacl.SecurityAclService;
 import kr.esob.fdms.commonlogic.securityacl.SecurityGradeVO;
 import kr.esob.fdms.commonlogic.securityacl.UserClearanceVO;
-import kr.esob.fdms.commonlogic.securityacl.AccessAuditEventVO;
 
 @Controller
 @RequestMapping("/inside/system/securityaccess")
@@ -99,14 +98,6 @@ public class SecurityAccessController extends AbstractController {
     public @ResponseBody FileAccessDecisionVO check(@RequestBody FileAccessRequest request) {
         service.requireManageAcl();
         return service.checkAccess(request);
-    }
-
-    @RequestMapping(value = "/api/audit", method = RequestMethod.GET)
-    public @ResponseBody List<AccessAuditEventVO> audit(
-        @RequestParam(value = "keyword", required = false) String keyword,
-        @RequestParam(value = "eventType", required = false) String eventType,
-        @RequestParam(value = "resultCd", required = false) String resultCd) {
-        return service.selectAuditForManagement(keyword, eventType, resultCd);
     }
 
     @ExceptionHandler(AccessDeniedException.class)

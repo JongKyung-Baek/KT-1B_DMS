@@ -13,6 +13,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 <title>Login - CollabHub - external</title>
 <%@ include file="/WEB-INF/jspf/csrf-meta.jspf" %>
+<%@ include file="/WEB-INF/jspf/favicon.jspf" %>
 
   <link rel="stylesheet" href="${pageContext.request.contextPath}/vuexy/assets/vendor/fonts/iconify-icons.css" />
   <link rel="stylesheet" href="${pageContext.request.contextPath}/vuexy/assets/vendor/libs/node-waves/node-waves.css" />

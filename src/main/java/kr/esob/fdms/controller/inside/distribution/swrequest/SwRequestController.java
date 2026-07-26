@@ -256,6 +256,7 @@ public class SwRequestController extends AbstractController {
 
 		model.addAttribute("objectId", resolvedObjectId);
 		model.addAttribute("swNo", firstRowValue(mainFileList, "swNo"));
+		model.addAttribute("documentInfo", service.selectSwDetailInfo(resolvedObjectId));
 		model.addAttribute("mainFileList", mainFileList);
 		model.addAttribute("subFileList", subFileList);
 		model.addAttribute("mainFileJson", JSONArray.fromObject(mainFileList));

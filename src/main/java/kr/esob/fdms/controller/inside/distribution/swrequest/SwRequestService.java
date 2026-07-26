@@ -982,6 +982,14 @@ public class SwRequestService implements CommonService{
 		return appendFileExists(dao.selectMainFileInfo(objectId));
 	}
 
+	public Map<String, Object> selectSwDetailInfo(String objectId) {
+		if (objectId == null || objectId.trim().isEmpty()) {
+			return new HashMap<>();
+		}
+		Map<String, Object> detail = dao.selectSwDetailInfo(objectId.trim());
+		return detail == null ? new HashMap<>() : detail;
+	}
+
 	public List<Map<String, Object>> selectSubFileInfo(String objectId) {
 		return appendFileExists(dao.selectSubFileInfo(objectId));
 	}

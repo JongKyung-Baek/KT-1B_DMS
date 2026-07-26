@@ -14,6 +14,7 @@
 					<meta name="viewport" content="width=device-width, initial-scale=1">
 					<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 					<%@ include file="/WEB-INF/jspf/csrf-meta.jspf" %>
+					<%@ include file="/WEB-INF/jspf/favicon.jspf" %>
 
 					<script type="text/javascript" src="/resources/js/common_util.js"></script>
 					<script type="text/javascript" src="/resources/js/common_dialog.js"></script>

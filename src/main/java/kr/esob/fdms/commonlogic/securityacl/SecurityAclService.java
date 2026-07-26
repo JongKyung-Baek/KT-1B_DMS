@@ -137,6 +137,19 @@ public class SecurityAclService {
         return dao.selectAudit(trim(keyword), normalizeOptionalCode(eventType), normalizeOptionalCode(resultCd));
     }
 
+    /**
+     * 접근이력 메뉴 전용 조회.
+     *
+     * 메뉴 접근 여부는 SecurityConfig의 ROLE_MENU_206으로 통제한다. 이 조회에서
+     * MANAGE_ACL을 다시 요구하면 기존 메뉴 권한 배정 화면에서 접근이력을 허용한
+     * 사용자도 403이 되므로, 로그인 사용자 확인만 수행한다.
+     */
+    public List<AccessAuditEventVO> selectAccessHistoryForViewer(
+            String keyword, String eventType, String resultCd) {
+        requireCurrentUser();
+        return dao.selectAudit(trim(keyword), normalizeOptionalCode(eventType), normalizeOptionalCode(resultCd));
+    }
+
     @Transactional
     public void saveFileLabel(FileSecurityLabelVO label) {
         requireManageAcl();

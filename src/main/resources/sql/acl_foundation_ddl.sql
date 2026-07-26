@@ -621,6 +621,49 @@ ALTER TABLE IF EXISTS docs_print_job_item
 CREATE INDEX IF NOT EXISTS idx_print_job_item_object
     ON docs_print_job_item (object_type, object_id, file_no);
 
+-- Access history replaces the legacy view/print-history menu while retaining
+-- its URL and role so existing menu-permission assignments continue to work.
+INSERT INTO docs_menu (
+    menu_cd, parent_menu_cd, menu_nm, message_cd, menu_level, menu_type,
+    menu_url, sort_seq, tree_type, del_yn, use_yn, tooltip, menu_desc,
+    role_cd, auth_site, menu_icon
+)
+VALUES (
+    'MENU_206', 'I', '접근이력', 'menu.vphistory', '1', 'M',
+    '/inside/distribution/viewPrintHistory/**', 6130, 'root', 'N', 'Y',
+    '자료 접근 및 권한 변경 이력',
+    '사용자별 열람·다운로드·출력, 접근 차단 및 권한 변경 결과 조회',
+    'ROLE_MENU_206', 'I', ''
+)
+ON CONFLICT (menu_cd) DO UPDATE SET
+    parent_menu_cd = EXCLUDED.parent_menu_cd,
+    menu_nm = EXCLUDED.menu_nm,
+    message_cd = EXCLUDED.message_cd,
+    menu_level = EXCLUDED.menu_level,
+    menu_type = EXCLUDED.menu_type,
+    menu_url = EXCLUDED.menu_url,
+    sort_seq = EXCLUDED.sort_seq,
+    tree_type = EXCLUDED.tree_type,
+    tooltip = EXCLUDED.tooltip,
+    menu_desc = EXCLUDED.menu_desc,
+    role_cd = EXCLUDED.role_cd,
+    auth_site = EXCLUDED.auth_site,
+    use_yn = 'Y',
+    del_yn = 'N';
+
+INSERT INTO docs_rel_role_group
+    (group_cd, role_cd, insert_user_cd, update_user_cd, insert_dt, update_dt)
+VALUES
+    ('RG_001', 'ROLE_MENU_206', 'SYSTEM', 'SYSTEM', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+ON CONFLICT (group_cd, role_cd) DO NOTHING;
+
+-- Disable the legacy generic Excel action. It referenced the wrong mapper and
+-- bypassed the access-history route's authorization boundary.
+UPDATE docs_toolbar_info
+   SET use_yn = 'N'
+ WHERE toolbar_id = 'toolbarViewPrintHistory'
+   AND button_id = 'btnExcel';
+
 -- ACL administration menu: administrator group only.
 INSERT INTO docs_menu (
     menu_cd, parent_menu_cd, menu_nm, message_cd, menu_level, menu_type,

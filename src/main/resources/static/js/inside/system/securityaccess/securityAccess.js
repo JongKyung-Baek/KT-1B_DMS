@@ -10,7 +10,6 @@
         users: [],
         files: [],
         filePermissions: [],
-        audit: [],
         selectedUser: null,
         selectedFile: null,
         selectedFileNo: null,
@@ -382,6 +381,25 @@
         return valueOf(file, ['objectType', 'type'], $('#fileObjectType').val());
     }
 
+    function fileObjectTypeLabel(objectType) {
+        var labels = {
+            SW: '기술자료',
+            SW_SUB: '기술자료 보조파일',
+            DOCUMENT: '일반문서',
+            DRAWING: '도면',
+            PRODUCT_DOCUMENT: '생산기술문서',
+            PRODUCT_SW: '생산기술 소프트웨어',
+            DXF: 'DXF',
+            PEER_REVIEW: 'Peer Review',
+            DOCUMENT_SUB: '일반문서 보조파일',
+            DRAWING_SUB: '도면 보조파일',
+            PRODUCT_DOCUMENT_SUB: '생산기술문서 보조파일',
+            PRODUCT_SW_SUB: '생산기술 SW 보조파일',
+            DXF_SUB: 'DXF 보조파일'
+        };
+        return labels[objectType] || objectType || '-';
+    }
+
     function selectedFileResource() {
         if (!state.selectedFile) return null;
         return {
@@ -550,15 +568,19 @@
         $.each(state.files, function (index, file) {
             var selected = state.selectedFile && fileKey(state.selectedFile) === fileKey(file) ? ' is-selected' : '';
             var gradeCd = valueOf(file, ['gradeCd', 'securityGradeCd'], '');
+            var objectType = valueOf(file, ['objectType', 'type'], '');
             rows.push('<tr class="sa-selectable-row' + selected + '" tabindex="0" data-file-index="' + index + '">' +
-                '<td>' + escapeHtml(valueOf(file, ['objectType', 'type'], '-')) + '</td>' +
+                '<td>' + escapeHtml(fileObjectTypeLabel(objectType)) + '</td>' +
                 '<td><code>' + escapeHtml(valueOf(file, ['objectNo', 'documentNo', 'drawingNo', 'swNo'], fileId(file))) + '</code></td>' +
                 '<td>' + escapeHtml(valueOf(file, ['orgFileNm', 'fileNm'], '-')) + '</td>' +
                 '<td>' + escapeHtml(valueOf(file, ['fileNo'], '*')) + '</td>' +
                 '<td><span class="sa-badge sa-badge--grade">' + escapeHtml(valueOf(file, ['gradeNm', 'securityGradeNm'], gradeNameByCode(gradeCd))) + '</span></td>' +
                 '</tr>');
         });
-        $('#fileTableBody').html(rows.length ? rows.join('') : '<tr class="sa-empty-row"><td colspan="5">조회된 파일이 없습니다.</td></tr>');
+        var selectedTypeLabel = $('#fileObjectType option:selected').text() || '선택한 자료유형';
+        $('#fileTableBody').html(rows.length ? rows.join('') :
+            '<tr class="sa-empty-row"><td colspan="5">' +
+            escapeHtml(selectedTypeLabel) + '에서 조회된 파일이 없습니다.</td></tr>');
     }
 
     function selectFile(file, options) {
@@ -568,7 +590,7 @@
         renderFiles();
         $('#selectedFileSummary').removeClass('is-empty').html(
             '<strong>' + escapeHtml(valueOf(file, ['objectNo', 'documentNo', 'drawingNo', 'swNo'], fileId(file))) + '</strong>' +
-            '<span>' + escapeHtml(valueOf(file, ['objectType', 'type'], '-')) + ' · ' +
+            '<span>' + escapeHtml(fileObjectTypeLabel(fileObjectType(file))) + ' · ' +
             escapeHtml(valueOf(file, ['objectNm', 'documentNm', 'drawingNm', 'swNm', 'fileNm', 'orgFileNm'], '자료명 없음')) + '</span>'
         );
         $('#fileGradeCd').prop('disabled', false).val(valueOf(file, ['gradeCd', 'securityGradeCd'], ''));
@@ -718,46 +740,6 @@
         });
     }
 
-    function renderAudit() {
-        var rows = [];
-        $.each(state.audit, function (_, event) {
-            var actor = valueOf(event, ['actorUserNm'], '') || valueOf(event, ['actorUserId', 'actorUserCd'], '-');
-            var actorId = valueOf(event, ['actorUserId'], '');
-            if (actorId && actor !== actorId) actor += ' (' + actorId + ')';
-            var resource = valueOf(event, ['objectType'], '');
-            var objectId = valueOf(event, ['objectId'], '');
-            if (resource || objectId) resource = (resource || '-') + ' / ' + (objectId || '-');
-            rows.push('<tr>' +
-                '<td>' + escapeHtml(valueOf(event, ['occurredAt'], '-')) + '</td>' +
-                '<td>' + escapeHtml(valueOf(event, ['eventType'], '-')) + '</td>' +
-                '<td><code>' + escapeHtml(valueOf(event, ['actionType'], '-')) + '</code></td>' +
-                '<td><span class="sa-badge">' + escapeHtml(valueOf(event, ['resultCd'], '-')) + '</span></td>' +
-                '<td>' + escapeHtml(actor) + '</td>' +
-                '<td>' + escapeHtml(resource || '-') + '</td>' +
-                '<td>' + escapeHtml(valueOf(event, ['reasonCd', 'resultMessage'], '-')) + '</td>' +
-                '<td>' + escapeHtml(valueOf(event, ['clientIp'], '-')) + '</td>' +
-                '</tr>');
-        });
-        $('#auditTableBody').html(rows.length ? rows.join('') : '<tr class="sa-empty-row"><td colspan="8">조회된 이력이 없습니다.</td></tr>');
-    }
-
-    function loadAudit() {
-        setBusy($('#auditSearchButton'), true, '조회 중...');
-        apiRequest('GET', '/audit', {
-            keyword: $.trim($('#auditKeyword').val()),
-            eventType: $('#auditEventType').val(),
-            resultCd: $('#auditResultCd').val()
-        }).done(function (response) {
-            state.audit = normalizeList(response);
-            renderAudit();
-        }).fail(function (xhr) {
-            $('#auditTableBody').html('<tr class="sa-empty-row sa-empty-row--error"><td colspan="8">이력을 불러오지 못했습니다.</td></tr>');
-            showMessage('error', errorMessage(xhr));
-        }).always(function () {
-            setBusy($('#auditSearchButton'), false);
-        });
-    }
-
     function activateTab(targetId) {
         $('.sa-tab').each(function () {
             var active = $(this).data('tab-target') === targetId;
@@ -767,7 +749,6 @@
             var active = this.id === targetId;
             $(this).toggleClass('is-active', active).prop('hidden', !active);
         });
-        if (targetId === 'auditPanel') loadAudit();
     }
 
     function bindEvents() {
@@ -797,6 +778,7 @@
         });
         $('#clearanceForm').on('submit', function (event) { event.preventDefault(); saveClearance(); });
         $('#fileSearchForm').on('submit', function (event) { event.preventDefault(); loadFiles(); });
+        $('#fileObjectType').on('change', function () { loadFiles(); });
         $('#fileTableBody').on('click keydown', '.sa-selectable-row', function (event) {
             if (event.type === 'keydown' && event.key !== 'Enter' && event.key !== ' ') return;
             event.preventDefault();
@@ -840,7 +822,6 @@
             permission.printYn = 'N';
             renderFilePermissions();
         });
-        $('#auditSearchForm').on('submit', function (event) { event.preventDefault(); loadAudit(); });
     }
 
     $(function () {

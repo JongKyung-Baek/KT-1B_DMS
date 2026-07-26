@@ -20,7 +20,7 @@
         };
     </script>
     <script type="text/javascript"
-            src="${pageContext.request.contextPath}/resources/js/inside/system/securityaccess/securityAccess.js?v=20260726.2"></script>
+            src="${pageContext.request.contextPath}/resources/js/inside/system/securityaccess/securityAccess.js?v=20260726.3"></script>
 </head>
 <body>
 <main class="security-access-page" aria-labelledby="securityAccessTitle">
@@ -51,10 +51,6 @@
             <button type="button" class="sa-tab" id="fileTab"
                     role="tab" aria-selected="false" aria-controls="filePanel" data-tab-target="filePanel">
                 <span class="sa-tab__step">3</span>문서등급/권한
-            </button>
-            <button type="button" class="sa-tab" id="auditTab"
-                    role="tab" aria-selected="false" aria-controls="auditPanel" data-tab-target="auditPanel">
-                <span class="sa-tab__step">4</span>접근이력
             </button>
         </nav>
 
@@ -232,16 +228,16 @@
                         <form id="fileSearchForm" class="sa-search sa-search--wide" role="search">
                              <label class="sa-sr-only" for="fileObjectType">자료유형</label>
                              <select id="fileObjectType">
+                                <option value="SW">기술자료 (주파일)</option>
+                                <option value="SW_SUB">기술자료 (보조파일)</option>
                                 <option value="DOCUMENT">일반문서</option>
                                  <option value="DRAWING">도면</option>
-                                 <option value="SW">소프트웨어</option>
                                 <option value="PRODUCT_DOCUMENT">생산기술문서</option>
                                 <option value="PRODUCT_SW">생산기술 소프트웨어</option>
                                  <option value="DXF">DXF</option>
                                 <option value="PEER_REVIEW">Peer Review</option>
                                 <option value="DOCUMENT_SUB">Document sub-file</option>
                                 <option value="DRAWING_SUB">Drawing sub-file</option>
-                                <option value="SW_SUB">SW sub-file</option>
                                 <option value="PRODUCT_DOCUMENT_SUB">Production document sub-file</option>
                                 <option value="PRODUCT_SW_SUB">Production SW sub-file</option>
                                 <option value="DXF_SUB">DXF sub-file</option>
@@ -351,49 +347,6 @@
             </div>
         </section>
 
-        <section id="auditPanel" class="sa-tab-panel" role="tabpanel" aria-labelledby="auditTab" hidden>
-            <article class="sa-card sa-card--table">
-                <div class="sa-card-header sa-card-header--stack-mobile">
-                    <div>
-                        <h2>접근·권한 변경 이력</h2>
-                        <p>서버에서 기록한 허용·차단·다운로드·출력·권한변경 이력입니다.</p>
-                    </div>
-                    <form id="auditSearchForm" class="sa-search sa-search--audit" role="search">
-                        <select id="auditEventType" aria-label="이벤트 유형">
-                            <option value="">전체 이벤트</option>
-                            <option value="FILE_ACCESS">파일 접근</option>
-                            <option value="DOWNLOAD_RESULT">다운로드 결과</option>
-                            <option value="PRINT_RESULT">출력 결과</option>
-                            <option value="ACL_CHANGE">권한 변경</option>
-                        </select>
-                        <select id="auditResultCd" aria-label="결과">
-                            <option value="">전체 결과</option>
-                            <option value="ALLOW">허용</option>
-                            <option value="DENY">차단</option>
-                            <option value="SUCCESS">성공</option>
-                            <option value="FAIL">실패(다운로드)</option>
-                            <option value="FAILED">실패(출력)</option>
-                            <option value="CANCELLED">취소</option>
-                            <option value="STARTED">시작</option>
-                        </select>
-                        <input type="search" id="auditKeyword" maxlength="100" placeholder="사용자, 자료ID, 요청번호 검색">
-                        <button type="submit" class="sa-button sa-button--secondary" id="auditSearchButton">조회</button>
-                    </form>
-                </div>
-                <div class="sa-table-wrap sa-table-wrap--tall">
-                    <table class="sa-table" aria-label="접근 및 권한 변경 이력">
-                        <thead><tr>
-                            <th scope="col">일시</th><th scope="col">이벤트</th><th scope="col">행위</th>
-                            <th scope="col">결과</th><th scope="col">사용자</th><th scope="col">자료</th>
-                            <th scope="col">사유</th><th scope="col">IP</th>
-                        </tr></thead>
-                        <tbody id="auditTableBody">
-                            <tr class="sa-empty-row"><td colspan="8">이력을 조회해 주세요.</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </article>
-        </section>
     </section>
 </main>
 </body>

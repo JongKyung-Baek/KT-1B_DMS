@@ -5,6 +5,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>허용되지 않은 요청 방식</title>
+<%@ include file="/WEB-INF/jspf/favicon.jspf" %>
 <style>
 html, body { width: 100%; height: 100%; margin: 0; }
 body {

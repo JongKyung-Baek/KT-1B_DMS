@@ -1245,6 +1245,96 @@
 		LIMIT 1
 	</select>
 
+	<select id="selectSwDetailInfo" resultType="hashmap">
+		SELECT sw.SW_NO AS "swNo",
+		       sw.SW_NM AS "swNm",
+		       COALESCE(sw.REV_NO, '') AS "revNo",
+		       COALESCE(sw.SW_VERSION_NO, '') AS "swVersionNo",
+		       COALESCE(
+		           NULLIF(FN_GET_CD_NM('businessTypeCd', sw.BUSINESS_TYPE_CD, 'ko'), ''),
+		           NULLIF(sw.BUSINESS_PHASE, ''),
+		           NULLIF(swTree.TREE_NM, ''),
+		           NULLIF(sw.BUSINESS_TYPE_CD, ''),
+		           ''
+		       ) AS "businessTypeNm",
+		       COALESCE(
+		           NULLIF(REPLACE(TRIM(BOTH '/' FROM swTree.TREE_PATH), '/', ' > '), ''),
+		           NULLIF(swTree.TREE_NM, ''),
+		           ''
+		       ) AS "classificationPath",
+		       COALESCE(
+		           NULLIF(sw.DISTRIBUTE_TYPE_NAME, ''),
+		           NULLIF(sw.DISTRIBUTION_TYPE, ''),
+		           NULLIF(sw.DISTRIBUTE_TYPE_CD, ''),
+		           ''
+		       ) AS "distributeTypeNm",
+		       COALESCE(
+		           NULLIF(FN_GET_CD_NM('swClassCd1', sw.SW_TYPE_CD, 'ko'), ''),
+		           NULLIF(sw.SW_CLASS_NM1, ''),
+		           NULLIF(sw.SW_TYPE_CD, ''),
+		           ''
+		       ) AS "swTypeNm",
+		       COALESCE(NULLIF(sw.PRODUCT_CD, ''), NULLIF(sw.MODEL_CODE, ''), '') AS "productNm",
+		       COALESCE(NULLIF(sw.ECN_NO, ''), NULLIF(sw.CHANGE_ACTION_NO, ''), '') AS "ecnNo",
+		       COALESCE(NULLIF(ecnInsert.USER_NM, ''), NULLIF(sw.ECN_INSERT_UID, ''), '') AS "ecnUserNm",
+		       COALESCE(
+		           NULLIF(FN_GET_CD_NM('businessAreaCdAll', sw.BUSINESS_AREA_CD, 'ko'), ''),
+		           NULLIF(sw.FACTORY_REGION, ''),
+		           NULLIF(sw.BUSINESS_AREA_CD, ''),
+		           ''
+		       ) AS "businessAreaNm",
+		       COALESCE(NULLIF(sw.REGISTER_USER, ''), NULLIF(insertUser.USER_NM, ''), NULLIF(sw.INSERT_UID, ''), '') AS "registerUser",
+		       COALESCE(NULLIF(insertUser.USER_NM, ''), NULLIF(sw.REGISTER_USER, ''), NULLIF(sw.INSERT_UID, ''), '') AS "insertUserNm",
+		       COALESCE(sw.INSERT_DEPT_NM, '') AS "insertDeptNm",
+		       COALESCE(TO_CHAR(sw.INSERT_DT, 'YYYY-MM-DD HH24:MI'), '') AS "insertDt",
+		       COALESCE(NULLIF(updateUser.USER_NM, ''), NULLIF(sw.UPDATE_UID, ''), '') AS "updateUserNm",
+		       COALESCE(TO_CHAR(sw.UPDATE_DT, 'YYYY-MM-DD HH24:MI'), '') AS "updateDt",
+		       COALESCE(NULLIF(sw.CCBDATE, ''), '') AS "ccbDate",
+		       COALESCE(TO_CHAR(sw.CREATE_DT, 'YYYY-MM-DD'), '') AS "createDt",
+		       COALESCE(TO_CHAR(sw.INTERFACE_DT, 'YYYY-MM-DD HH24:MI'), '') AS "interfaceDt",
+		       COALESCE(TO_CHAR(sw.STD_GAPP_DT, 'YYYY-MM-DD'), '') AS "stdGappDt",
+		       COALESCE(TO_CHAR(sw.CHANGE_GAPP_DT, 'YYYY-MM-DD'), '') AS "changeGappDt",
+		       COALESCE(sw.APPROVER, '') AS "approver",
+		       COALESCE(sw.REVIEWERUSER, '') AS "reviewerUser",
+		       COALESCE(NULLIF(sw.STATUS, ''), '승인진행중') AS "status",
+		       CASE
+		           WHEN UPPER(COALESCE(mainFile.PROCESSING_STATUS, '')) IN ('DONE', 'SUCCESS', 'COMPLETED') THEN '완료'
+		           WHEN UPPER(COALESCE(mainFile.PROCESSING_STATUS, '')) IN ('PROCESSING', 'PENDING', 'WAITING') THEN '처리 중'
+		           WHEN UPPER(COALESCE(mainFile.PROCESSING_STATUS, '')) = 'FAIL' THEN '처리 실패'
+		           ELSE COALESCE(NULLIF(mainFile.PROCESSING_STATUS, ''), '미지정')
+		       END AS "processingStatusNm",
+		       CASE
+		           WHEN UPPER(COALESCE(sw.PROTECT_YN, '')) = 'Y' THEN '대상'
+		           WHEN UPPER(COALESCE(sw.PROTECT_YN, '')) = 'N' THEN '비대상'
+		           ELSE '미지정'
+		       END AS "protectYnNm",
+		       CASE
+		           WHEN UPPER(COALESCE(sw.VALID_TYPE, '')) = 'N' THEN '무효'
+		           ELSE '유효'
+		       END AS "validTypeNm",
+		       (
+		           SELECT COUNT(*)
+		           FROM DOCS_SW_FILE countedMain
+		           WHERE countedMain.OBJECT_ID = sw.OBJECT_ID
+		       ) AS "fileCount"
+		FROM DOCS_SW sw
+		LEFT JOIN DOCS_USER insertUser ON insertUser.USER_ID = sw.INSERT_UID
+		LEFT JOIN DOCS_USER updateUser ON updateUser.USER_ID = sw.UPDATE_UID
+		LEFT JOIN DOCS_USER ecnInsert ON ecnInsert.USER_ID = sw.ECN_INSERT_UID
+		LEFT JOIN DOCS_SW_TREE swTree
+		       ON swTree.TREE_CD = COALESCE(NULLIF(sw.TREE_CD, ''), sw.BUSINESS_TYPE_CD)
+		LEFT JOIN LATERAL (
+			SELECT fileInfo.PROCESSING_STATUS
+			FROM DOCS_SW_FILE fileInfo
+			WHERE fileInfo.OBJECT_ID = sw.OBJECT_ID
+			  AND CAST(fileInfo.FILE_NO AS INTEGER) = 1
+			LIMIT 1
+		) mainFile ON TRUE
+		WHERE sw.OBJECT_ID = #{objectId}
+		  AND COALESCE(sw.DELETED_YN, 'N') = 'N'
+		LIMIT 1
+	</select>
+
 	<select id="selectSubFileInfo" resultType="hashmap">
 		SELECT fileInfo.OBJECT_ID AS "objectId",
 		       fileInfo.PARENT_OBJECT_ID AS "parentObjectId",

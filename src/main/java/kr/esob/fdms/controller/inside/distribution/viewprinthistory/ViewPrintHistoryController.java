@@ -8,6 +8,8 @@ import kr.esob.fdms.commonlogic.abstractclass.CommonParam;
 import kr.esob.fdms.commonlogic.combo.ComboInfoVO;
 import kr.esob.fdms.commonlogic.grid.GridResultVO;
 import kr.esob.fdms.commonlogic.result.ResultVO;
+import kr.esob.fdms.commonlogic.securityacl.AccessAuditEventVO;
+import kr.esob.fdms.commonlogic.securityacl.SecurityAclService;
 import kr.esob.fdms.controller.inside.authorization.AuthorizationDao;
 import kr.esob.fdms.controller.inside.authorization.AuthorizationService;
 import net.sf.json.JSONArray;
@@ -16,6 +18,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.inject.Inject;
@@ -36,11 +39,17 @@ public class ViewPrintHistoryController extends AbstractController {
 	@Inject
 	AuthorizationDao authorizationDao;
 
+	@Inject
+	SecurityAclService securityAclService;
+
 	@RequestMapping(value="/")
 	public String home(Model model, CommonHomeParam param) throws JsonProcessingException {
+		securityAclService.requireCurrentUser();
 		setHomeParam(model, param);
 		model.addAttribute("formInfo", JSONArray.fromObject(formService.selectFormInfo("formViewPrintHistoryList")));
-		model.addAttribute("toolbarInfo", JSONArray.fromObject(toolbarService.selectToolbarInfo("toolbarViewPrintHistory")));
+		// The legacy generic Excel button executed a client-provided mapper id.
+		// Access history export must use a dedicated authorized endpoint when added.
+		model.addAttribute("toolbarInfo", JSONArray.fromObject(new ArrayList<Object>()));
 		model.addAttribute("gridInfo", JSONArray.fromObject(gridService.selectGridInfo("gridViewPrintHistoryList")));
 
 		return "inside/distribution/viewPrintHistory/historyList";
@@ -48,11 +57,20 @@ public class ViewPrintHistoryController extends AbstractController {
 
 	@RequestMapping("/selectList")
 	public @ResponseBody GridResultVO selectList(HistoryListParam param) throws Exception {
+		securityAclService.requireCurrentUser();
 		GridResultVO result = commonSelectList(param, service);
 
 		service.formatLogType(result);
 
 		return result;
+	}
+
+	@RequestMapping(value="/accessEvents", method=RequestMethod.GET)
+	public @ResponseBody List<AccessAuditEventVO> accessEvents(
+			@RequestParam(value="keyword", required=false) String keyword,
+			@RequestParam(value="eventType", required=false) String eventType,
+			@RequestParam(value="resultCd", required=false) String resultCd) {
+		return securityAclService.selectAccessHistoryForViewer(keyword, eventType, resultCd);
 	}
 
 	/**

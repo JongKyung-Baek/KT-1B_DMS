@@ -45,7 +45,8 @@ public class LoginService implements UserDetailsService {
     }
 
     public boolean changeOwnPassword(String userCd, String rawPassword) {
-        if (userCd == null || userCd.trim().isEmpty() || rawPassword == null) {
+        if (userCd == null || userCd.trim().isEmpty()
+                || !PasswordUtils.isAcceptablePassword(rawPassword)) {
             return false;
         }
         String hashedPassword = PasswordUtils.hashPasswordWithSalt(rawPassword);

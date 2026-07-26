@@ -1,13 +1,13 @@
 package kr.esob.fdms.controller.login;
 
 
-import kr.esob.fdms.commonlogic.combo.ComboCdVO;
 import kr.esob.fdms.commonlogic.combo.ComboDao;
 import kr.esob.fdms.commonlogic.combo.ComboLang;
 import kr.esob.fdms.commonlogic.loginhistory.HistoryService;
 import kr.esob.fdms.commonlogic.menu.MenuDao;
 import kr.esob.fdms.commonlogic.menu.MenuVO;
 import kr.esob.fdms.commonlogic.message.LocaleUtil;
+import kr.esob.fdms.commonlogic.message.SupportedLocaleChangeInterceptor;
 import kr.esob.fdms.commonlogic.systemconfig.SystemConfig;
 import kr.esob.fdms.commonlogic.systemconfig.SystemConfigDao;
 import kr.esob.fdms.commonlogic.systemconfig.SystemConfigVO;
@@ -26,6 +26,7 @@ import org.springframework.security.web.RedirectStrategy;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.i18n.SessionLocaleResolver;
+import org.springframework.web.servlet.support.RequestContextUtils;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -86,20 +87,21 @@ public class LoginSuccess implements AuthenticationSuccessHandler {
 			Authentication authentication) throws IOException, ServletException {
 
 
-		List<Map<String,Object>> dbConfig = dao_for_pwd.selectDbConfig();
-		String basicPassword="";
-
-		for(Map<String,Object> config : dbConfig) {
-			if(config.get("system_config_cd").equals("BASIC_PASSWORD")) {
-				basicPassword = config.get("system_config_value").toString();
-			}
-		}
+		String basicPassword = findBasicPassword(dao_for_pwd.selectDbConfig());
 
 
 		String urlType = request.getParameter("url_type");
 		String mainUrl = "/main";
 		UserVO userVo = (UserVO) authentication.getPrincipal();
 		HttpSession session = request.getSession();
+		SessionValue sessionValue = provider.get();
+		String sessionLang = resolveLoginLanguage(request, session);
+		Locale sessionLocale = LocaleUtil.getLocale(sessionLang);
+		sessionValue.setSessionLang(sessionLang);
+		userVo.setSessionLang(sessionLang);
+		session.setAttribute(
+				SessionLocaleResolver.LOCALE_SESSION_ATTRIBUTE_NAME,
+				sessionLocale);
 
 		auditLogService.setSessionAuditInfo(
 				session, userVo.getUserCd(), userVo.getUserId(), userVo.getUserNm(), request);
@@ -113,31 +115,27 @@ public class LoginSuccess implements AuthenticationSuccessHandler {
 		// retain it in the SecurityContext-backed session principal.
 		userVo.setUserPwd(null);
 		if (mustChangePassword) {
-			// 비밀번호 초기화 페이지로 리다이렉트
-			response.sendRedirect("/login/password");
-			return; // 리다이렉트 후 메소드 종료
+			response.sendRedirect(response.encodeRedirectURL(
+					request.getContextPath() + "/login/password"));
+			return;
 		}
 
 		userVo.setUrl_type(urlType);
 //		userVo.setRoleGroup(roleGroup);
-		SessionValue sessionValue = provider.get();
-		String sessionLang = resolveBrowserLanguage(request.getLocale());
-		sessionValue.setSessionLang(sessionLang);
-		userVo.setSessionLang(sessionLang);
 		List<MenuVO> menuTopList = menuDao.getMenuTopList(userVo);
 		List<MenuVO> menuSubList = menuDao.getMenuSubList(userVo);
 		sessionValue.setMenuTop(menuTopList);
 		sessionValue.setMenuSub(menuSubList);
 		sessionValue.setUrlType(urlType);
-		ComboLang.comboLang = createComboMap();
+		ComboLang.replaceLanguage(
+				sessionLang,
+				comboDao.selectComboLang(sessionLang));
 		SystemConfig.systemConfig = createSystemConfig();
 		String timeoutSecond = resolveSessionTimeoutSecond();
 		sessionValue.setTimeoutSecond(timeoutSecond);
-		Locale locales = LocaleUtil.getLocale(sessionLang);
 		if(userVo.getOneOffMainUrl() != null) {
 			mainUrl = userVo.getOneOffMainUrl();
 		}
-		request.getSession().setAttribute(SessionLocaleResolver.LOCALE_SESSION_ATTRIBUTE_NAME, locales);
 		dao.resetLoginCount(userVo.getUserId());
 		dao.updateLastLoginDt(userVo.getUserId(), requestUtil.getClientIp(request));
 		historyService.insertHistory(Constant.LOGIN_TYPE_LOGIN, request);
@@ -179,15 +177,6 @@ public class LoginSuccess implements AuthenticationSuccessHandler {
 		}
 		return SystemConfig.getSystemConfigValue("TIMEOUT_SECOND");
 	}
-	private Map<String, String> createComboMap() {
-		List<ComboCdVO> comboCdVoList = comboDao.selectComboLang();
-		Map<String, String> langMap = new HashMap<String, String>();
-		for(ComboCdVO comboCdVo : comboCdVoList) {
-			langMap.put(comboCdVo.getComboCd() + "|" + comboCdVo.getValue(), comboCdVo.getLangDesc());
-		}
-		return langMap;
-	}
-
 	private Map<String, String> createSystemConfig(){
 		List<SystemConfigVO> systemConfigVoList = systemConfigDao.selectSystemConfig();
 		Map<String, String> systemMap = new HashMap<String, String>();
@@ -197,12 +186,54 @@ public class LoginSuccess implements AuthenticationSuccessHandler {
 		return systemMap;
 	}
 
+	private String findBasicPassword(List<Map<String, Object>> dbConfig) {
+		if (dbConfig == null) {
+			return null;
+		}
+		for (Map<String, Object> config : dbConfig) {
+			if (config == null) {
+				continue;
+			}
+			Object configCd = value(config, "SYSTEM_CONFIG_CD", "system_config_cd");
+			if (!"BASIC_PASSWORD".equals(configCd)) {
+				continue;
+			}
+			Object configValue = value(config, "SYSTEM_CONFIG_VALUE", "system_config_value");
+			return configValue == null ? null : configValue.toString();
+		}
+		return null;
+	}
+
+	private Object value(Map<String, Object> config, String... keys) {
+		for (String key : keys) {
+			Object value = config.get(key);
+			if (value != null) {
+				return value;
+			}
+		}
+		return null;
+	}
+
 	private String resolveBrowserLanguage(Locale locale) {
-		String language = locale == null ? "" : locale.getLanguage();
-		if ("en".equalsIgnoreCase(language)) return "en";
-		if ("ja".equalsIgnoreCase(language)) return "ja";
-		if ("zh".equalsIgnoreCase(language)) return "zh";
-		return "ko";
+		return LocaleUtil.resolveSupportedLanguage(locale);
+	}
+
+	String resolveLoginLanguage(
+			HttpServletRequest request, HttpSession session) {
+		String requestedLanguage = LocaleUtil.normalizeSupportedLanguage(
+				request.getParameter(
+						SupportedLocaleChangeInterceptor.PARAMETER_NAME));
+		if (requestedLanguage != null) {
+			return requestedLanguage;
+		}
+
+		Object selectedLocale = session.getAttribute(
+				SessionLocaleResolver.LOCALE_SESSION_ATTRIBUTE_NAME);
+		if (selectedLocale instanceof Locale) {
+			return resolveBrowserLanguage((Locale) selectedLocale);
+		}
+
+		return resolveBrowserLanguage(RequestContextUtils.getLocale(request));
 	}
 
 }

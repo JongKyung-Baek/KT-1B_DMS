@@ -621,18 +621,50 @@ ALTER TABLE IF EXISTS docs_print_job_item
 CREATE INDEX IF NOT EXISTS idx_print_job_item_object
     ON docs_print_job_item (object_type, object_id, file_no);
 
--- Access history replaces the legacy view/print-history menu while retaining
--- its URL and role so existing menu-permission assignments continue to work.
+-- History management groups security access decisions, viewing records, and
+-- verified print results under one administrator-facing root menu. The parent
+-- URL is deliberately exact: a wildcard here would shadow the independent
+-- child roles in Spring Security.
 INSERT INTO docs_menu (
     menu_cd, parent_menu_cd, menu_nm, message_cd, menu_level, menu_type,
     menu_url, sort_seq, tree_type, del_yn, use_yn, tooltip, menu_desc,
     role_cd, auth_site, menu_icon
 )
 VALUES (
-    'MENU_206', 'I', '접근이력', 'menu.vphistory', '1', 'M',
-    '/inside/distribution/viewPrintHistory/**', 6130, 'root', 'N', 'Y',
+    'MENU_223', 'I', '이력관리', '', '1', 'T',
+    '/inside/history/', 115, 'root', 'N', 'Y',
+    '접근·열람·출력 이력 관리',
+    '보안 접근 판정과 실제 열람·출력 결과를 구분하여 조회',
+    'ROLE_MENU_223', 'I', ''
+)
+ON CONFLICT (menu_cd) DO UPDATE SET
+    parent_menu_cd = EXCLUDED.parent_menu_cd,
+    menu_nm = EXCLUDED.menu_nm,
+    message_cd = EXCLUDED.message_cd,
+    menu_level = EXCLUDED.menu_level,
+    menu_type = EXCLUDED.menu_type,
+    menu_url = EXCLUDED.menu_url,
+    sort_seq = EXCLUDED.sort_seq,
+    tree_type = EXCLUDED.tree_type,
+    tooltip = EXCLUDED.tooltip,
+    menu_desc = EXCLUDED.menu_desc,
+    role_cd = EXCLUDED.role_cd,
+    auth_site = EXCLUDED.auth_site,
+    use_yn = 'Y',
+    del_yn = 'N';
+
+-- Retain the access-history URL and role so existing permission assignments
+-- remain valid, but move it below the history-management root.
+INSERT INTO docs_menu (
+    menu_cd, parent_menu_cd, menu_nm, message_cd, menu_level, menu_type,
+    menu_url, sort_seq, tree_type, del_yn, use_yn, tooltip, menu_desc,
+    role_cd, auth_site, menu_icon
+)
+VALUES (
+    'MENU_206', 'MENU_223', '접근이력', '', '2', 'M',
+    '/inside/distribution/viewPrintHistory/**', 116, 'leaf', 'N', 'Y',
     '자료 접근 및 권한 변경 이력',
-    '사용자별 열람·다운로드·출력, 접근 차단 및 권한 변경 결과 조회',
+    '자료 접근 판정, 다운로드 결과 및 권한 변경 결과 조회',
     'ROLE_MENU_206', 'I', ''
 )
 ON CONFLICT (menu_cd) DO UPDATE SET
@@ -651,11 +683,77 @@ ON CONFLICT (menu_cd) DO UPDATE SET
     use_yn = 'Y',
     del_yn = 'N';
 
+INSERT INTO docs_menu (
+    menu_cd, parent_menu_cd, menu_nm, message_cd, menu_level, menu_type,
+    menu_url, sort_seq, tree_type, del_yn, use_yn, tooltip, menu_desc,
+    role_cd, auth_site, menu_icon
+)
+VALUES
+    (
+        'MENU_224', 'MENU_223', '열람이력', '', '2', 'M',
+        '/inside/history/view/**', 117, 'leaf', 'N', 'Y',
+        '기술자료 열람 이력',
+        '사용자별 기술자료 열람 허용·차단 및 이전 시스템 열람 기록 조회',
+        'ROLE_MENU_224', 'I', ''
+    ),
+    (
+        'MENU_225', 'MENU_223', '출력이력', '', '2', 'M',
+        '/inside/history/print/**', 118, 'leaf', 'N', 'Y',
+        '기술자료 출력 이력',
+        '사용자별 출력 요청과 검증된 성공·실패 결과 조회',
+        'ROLE_MENU_225', 'I', ''
+    )
+ON CONFLICT (menu_cd) DO UPDATE SET
+    parent_menu_cd = EXCLUDED.parent_menu_cd,
+    menu_nm = EXCLUDED.menu_nm,
+    message_cd = EXCLUDED.message_cd,
+    menu_level = EXCLUDED.menu_level,
+    menu_type = EXCLUDED.menu_type,
+    menu_url = EXCLUDED.menu_url,
+    sort_seq = EXCLUDED.sort_seq,
+    tree_type = EXCLUDED.tree_type,
+    tooltip = EXCLUDED.tooltip,
+    menu_desc = EXCLUDED.menu_desc,
+    role_cd = EXCLUDED.role_cd,
+    auth_site = EXCLUDED.auth_site,
+    use_yn = 'Y',
+    del_yn = 'N';
+
+-- Keep the established administrator assignment even when the source dump did
+-- not include it, then clone every existing access-history group to the new
+-- parent and its two sibling history menus.
 INSERT INTO docs_rel_role_group
     (group_cd, role_cd, insert_user_cd, update_user_cd, insert_dt, update_dt)
 VALUES
     ('RG_001', 'ROLE_MENU_206', 'SYSTEM', 'SYSTEM', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 ON CONFLICT (group_cd, role_cd) DO NOTHING;
+
+INSERT INTO docs_rel_role_group
+    (group_cd, role_cd, insert_user_cd, update_user_cd, insert_dt, update_dt)
+SELECT source.group_cd,
+       target.role_cd,
+       'SYSTEM',
+       'SYSTEM',
+       CURRENT_TIMESTAMP,
+       CURRENT_TIMESTAMP
+  FROM docs_rel_role_group source
+ CROSS JOIN (
+       VALUES
+           ('ROLE_MENU_223'),
+           ('ROLE_MENU_224'),
+           ('ROLE_MENU_225')
+ ) AS target(role_cd)
+ WHERE source.role_cd = 'ROLE_MENU_206'
+ON CONFLICT (group_cd, role_cd) DO NOTHING;
+
+-- The legacy screen manages print approval and disposal rather than verified
+-- print execution. Keep the workflow, but remove the misleading duplicate
+-- "출력이력" label now used by MENU_225.
+UPDATE docs_menu
+   SET menu_nm = '출력 승인/폐기 관리',
+       tooltip = '출력 승인 및 출력물 폐기 관리',
+       menu_desc = '승인된 출력 요청, 출력 횟수 및 출력물 폐기 업무 관리'
+ WHERE menu_cd = 'MENU_032';
 
 -- Disable the legacy generic Excel action. It referenced the wrong mapper and
 -- bypassed the access-history route's authorization boundary.
@@ -758,27 +856,233 @@ WHERE NOT EXISTS (
        AND column_id = 'gradeLevel'
 );
 
--- Technical-data list: provide a direct route back to the new dashboard.
-INSERT INTO docs_toolbar_info (
-    toolbar_id, button_id, button_seq, button_label, button_img,
-    button_align, call_func, use_yn, lang_cd, button_type,
-    system_class_group, role_cd
+-- Technical-data status: remove fields that are not part of the current screen.
+DELETE FROM docs_grid_info
+ WHERE grid_id = 'gridSwRequestList'
+   AND column_id IN (
+       'swTypeNm',
+       'revNo',
+       'swVersionNo',
+       'businessTypeNm',
+       'distributeTypeNm',
+       'businessAreaNm',
+       'createDt',
+       'ccbDate',
+       'updateUserNm',
+       'updateDt',
+       'interfaceDt',
+       'stdGappDt',
+       'changeGappDt',
+       'ecnUserNm',
+       'ecnNo',
+       'validType',
+       'reviewerUser'
+   );
+
+DELETE FROM docs_form_info
+ WHERE form_id = 'formSwRequest'
+   AND column_id IN (
+       'swTypeCd',
+       'version',
+       'distributeTypeCd',
+       'businessAreaCd',
+       'ccbDate',
+       'interfaceStartDt,interfaceEndDt',
+       'ecnNo',
+       'validType'
+   );
+
+UPDATE docs_grid_info
+   SET column_nm = '의뢰일자',
+       column_size = 100
+ WHERE grid_id = 'gridSwRequestList'
+   AND column_id = 'insertDt';
+
+UPDATE docs_form_info
+   SET column_nm = '의뢰일자'
+ WHERE form_id = 'formSwRequest'
+   AND column_id = 'insertStartDt,insertEndDt';
+
+-- Technical-data list: dashboard, update and withdrawal actions are not exposed.
+UPDATE docs_toolbar_info
+   SET use_yn = 'N'
+ WHERE toolbar_id = 'toolbarSwRequest'
+   AND button_id IN ('btnDashboard', 'btnUpdate', 'btnDelete');
+
+-- System-management navigation repair.
+-- MENU_137 was intentionally hidden with the legacy system-common features,
+-- which also made its still-supported permission screens unreachable. Re-parent
+-- those screens under the active MENU_214 root and use reader-facing names that
+-- describe what each screen actually manages.
+UPDATE docs_menu
+   SET menu_nm = '분류/레벨 관리',
+       message_cd = '',
+       tooltip = '기술자료 분류 및 Level 관리',
+       menu_desc = '기술자료 분류와 Level 코드를 등록·수정·삭제',
+       sort_seq = 1,
+       use_yn = 'Y',
+       del_yn = 'N'
+ WHERE menu_cd = 'MENU_215';
+
+UPDATE docs_menu
+   SET parent_menu_cd = 'MENU_214',
+       menu_nm = '메뉴권한',
+       menu_level = '2',
+       sort_seq = 2,
+       tree_type = 'leaf',
+       use_yn = 'Y',
+       del_yn = 'N'
+ WHERE menu_cd = 'MENU_138';
+
+UPDATE docs_menu
+   SET parent_menu_cd = 'MENU_214',
+       menu_nm = '사용자등급',
+       menu_level = '2',
+       sort_seq = 3,
+       tree_type = 'leaf',
+       use_yn = 'Y',
+       del_yn = 'N'
+ WHERE menu_cd = 'MENU_141';
+
+UPDATE docs_menu
+   SET parent_menu_cd = 'MENU_214',
+       menu_nm = '메뉴권한배정',
+       menu_level = '2',
+       sort_seq = 4,
+       tree_type = 'leaf',
+       use_yn = 'Y',
+       del_yn = 'N'
+ WHERE menu_cd = 'MENU_160';
+
+UPDATE docs_menu
+   SET sort_seq = 5
+ WHERE menu_cd = 'MENU_222';
+
+-- Audit log is an operational history, so it belongs under history management.
+UPDATE docs_menu
+   SET parent_menu_cd = 'MENU_223',
+       menu_nm = '감사로그',
+       menu_level = '2',
+       sort_seq = 119,
+       tree_type = 'leaf',
+       use_yn = 'Y',
+       del_yn = 'N'
+ WHERE menu_cd = 'MENU_218';
+
+-- A group must own both the root and child role for the recursive navigation
+-- query. Preserve every established audit-log assignment after the move.
+INSERT INTO docs_rel_role_group
+    (group_cd, role_cd, insert_user_cd, update_user_cd, insert_dt, update_dt)
+SELECT source.group_cd,
+       'ROLE_MENU_223',
+       'SYSTEM',
+       'SYSTEM',
+       CURRENT_TIMESTAMP,
+       CURRENT_TIMESTAMP
+  FROM docs_rel_role_group source
+ WHERE source.role_cd = 'ROLE_MENU_218'
+ON CONFLICT (group_cd, role_cd) DO NOTHING;
+
+-- Reader-facing navigation and the metadata introduced by this migration must
+-- use stable message codes. A future Indonesian rollout only needs matching
+-- LANG_TYPE='id' rows; no menu or grid schema change is required.
+WITH menu_i18n (menu_cd, message_cd) AS (
+    VALUES
+        ('MENU_223', 'menu.historyManagement'),
+        ('MENU_206', 'menu.accessHistory'),
+        ('MENU_224', 'menu.viewHistory'),
+        ('MENU_225', 'menu.printHistory'),
+        ('MENU_222', 'menu.securityAccess'),
+        ('MENU_215', 'menu.classificationLevel'),
+        ('MENU_138', 'menu.menuPermission'),
+        ('MENU_141', 'menu.userGrade'),
+        ('MENU_160', 'menu.menuPermissionAssignment'),
+        ('MENU_032', 'menu.printApprovalDisposal'),
+        ('MENU_218', 'menu.auditlog')
 )
-VALUES (
-    'toolbarSwRequest', 'btnDashboard', 5, '대시보드', '',
-    'left', 'openTechnicalDashboard()', 'Y', '', 'dashboard',
-    '', NULL
-)
-ON CONFLICT (toolbar_id, button_id) DO UPDATE SET
-    button_seq = EXCLUDED.button_seq,
-    button_label = EXCLUDED.button_label,
-    button_img = EXCLUDED.button_img,
-    button_align = EXCLUDED.button_align,
-    call_func = EXCLUDED.call_func,
-    use_yn = 'Y',
-    lang_cd = EXCLUDED.lang_cd,
-    button_type = EXCLUDED.button_type,
-    system_class_group = EXCLUDED.system_class_group,
-    role_cd = NULL;
+UPDATE docs_menu menu
+   SET message_cd = menu_i18n.message_cd
+  FROM menu_i18n
+ WHERE menu.menu_cd = menu_i18n.menu_cd;
+
+UPDATE docs_grid_info
+   SET column_nm = CASE column_id
+       WHEN 'swNo' THEN '송부번호'
+       WHEN 'swNm' THEN '의뢰명'
+       ELSE column_nm
+   END,
+       lang_cd = CASE column_id
+       WHEN 'swNo' THEN 'grid.transmittalNo'
+       WHEN 'swNm' THEN 'grid.requestName'
+       WHEN 'gradeNm' THEN 'grid.documentGrade'
+       WHEN 'insertDt' THEN 'grid.requestDate'
+       WHEN 'insertUser' THEN 'grid.registrant'
+       WHEN 'insertUserNm' THEN 'grid.registrant'
+       ELSE lang_cd
+   END
+ WHERE grid_id = 'gridSwRequestList'
+   AND column_id IN (
+       'swNo', 'swNm', 'gradeNm', 'insertDt', 'insertUser', 'insertUserNm'
+   );
+
+UPDATE docs_form_info
+   SET lang_cd = CASE column_id
+       WHEN 'swNo' THEN 'form.transmittalNo'
+       WHEN 'swNm' THEN 'form.requestName'
+       WHEN 'insertStartDt,insertEndDt' THEN 'form.requestDate'
+       ELSE lang_cd
+   END
+ WHERE form_id = 'formSwRequest'
+   AND column_id IN ('swNo', 'swNm', 'insertStartDt,insertEndDt');
+
+UPDATE docs_toolbar_info
+   SET lang_cd = 'toolbar.excel'
+ WHERE toolbar_id = 'toolbarSwRequest'
+   AND button_id = 'btnExcel';
+
+INSERT INTO docs_lang (lang_type, lang_cd, lang_desc)
+VALUES
+    ('ko', 'menu.historyManagement', '이력관리'),
+    ('en', 'menu.historyManagement', 'History Management'),
+    ('ko', 'menu.accessHistory', '접근이력'),
+    ('en', 'menu.accessHistory', 'Access History'),
+    ('ko', 'menu.viewHistory', '열람이력'),
+    ('en', 'menu.viewHistory', 'View History'),
+    ('ko', 'menu.printHistory', '출력이력'),
+    ('en', 'menu.printHistory', 'Print History'),
+    ('ko', 'menu.securityAccess', '보안등급/인가 관리'),
+    ('en', 'menu.securityAccess', 'Security Grade / Clearance'),
+    ('ko', 'menu.classificationLevel', '분류/레벨 관리'),
+    ('en', 'menu.classificationLevel', 'Classification / Level'),
+    ('ko', 'menu.menuPermission', '메뉴권한'),
+    ('en', 'menu.menuPermission', 'Menu Permissions'),
+    ('ko', 'menu.userGrade', '사용자등급'),
+    ('en', 'menu.userGrade', 'User Grades'),
+    ('ko', 'menu.menuPermissionAssignment', '메뉴권한배정'),
+    ('en', 'menu.menuPermissionAssignment', 'Menu Permission Assignment'),
+    ('ko', 'menu.printApprovalDisposal', '출력 승인/폐기 관리'),
+    ('en', 'menu.printApprovalDisposal', 'Print Approval / Disposal'),
+    ('ko', 'menu.auditlog', '감사로그'),
+    ('en', 'menu.auditlog', 'Audit Log'),
+    ('ko', 'grid.documentGrade', '문서등급'),
+    ('en', 'grid.documentGrade', 'Document Grade'),
+    ('ko', 'grid.transmittalNo', '송부번호'),
+    ('en', 'grid.transmittalNo', 'Transmittal No.'),
+    ('ko', 'grid.requestName', '의뢰명'),
+    ('en', 'grid.requestName', 'Request Name'),
+    ('ko', 'grid.requestDate', '의뢰일자'),
+    ('en', 'grid.requestDate', 'Request Date'),
+    ('ko', 'grid.registrant', '등록자'),
+    ('en', 'grid.registrant', 'Registered By'),
+    ('ko', 'form.transmittalNo', '송부번호'),
+    ('en', 'form.transmittalNo', 'Transmittal No.'),
+    ('ko', 'form.requestName', '의뢰명'),
+    ('en', 'form.requestName', 'Request Name'),
+    ('ko', 'form.requestDate', '의뢰일자'),
+    ('en', 'form.requestDate', 'Request Date'),
+    ('ko', 'toolbar.excel', '엑셀'),
+    ('en', 'toolbar.excel', 'Excel')
+ON CONFLICT (lang_type, lang_cd) DO UPDATE
+   SET lang_desc = EXCLUDED.lang_desc;
 
 COMMIT;

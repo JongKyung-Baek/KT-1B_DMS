@@ -23,7 +23,9 @@ import kr.esob.fdms.commonlogic.fileapi.FileApiClient;
 import kr.esob.fdms.commonlogic.mail.DocsMailEnum;
 import kr.esob.fdms.commonlogic.mail.DocsMailService;
 import kr.esob.fdms.commonlogic.mail.MailInfoVO;
+import kr.esob.fdms.commonlogic.message.Prop;
 import kr.esob.fdms.commonlogic.result.ResultVO;
+import kr.esob.fdms.commonlogic.securityacl.SecurityAclService;
 import kr.esob.fdms.commonlogic.systemconfig.SystemConfig;
 import kr.esob.fdms.controller.inside.distribution.approvaldetail.DistributionApprovalDetailDao;
 import kr.esob.fdms.controller.login.UserVO;
@@ -34,7 +36,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -65,6 +69,10 @@ public class SwRequestService implements CommonService{
 	DistributionApprovalDetailDao approvalDetailDao;
 	@Inject
 	DocsMailService mailService;
+	@Inject
+	Prop prop;
+	@Inject
+	SecurityAclService securityAclService;
 
 	@Override
 	public List selectList(Object param) {
@@ -105,6 +113,7 @@ public class SwRequestService implements CommonService{
 
 
 	// 2020.07.24 기범추가( 등록 )
+	@Transactional(rollbackFor = Exception.class)
 	public ResultVO saveSwRegisterFileX2(MultipartHttpServletRequest request) throws Exception {
 		ResultVO resultVo = new ResultVO();
 		log.debug("[SW_REGISTER] request received");
@@ -149,7 +158,7 @@ public class SwRequestService implements CommonService{
 		String extension = FilenameUtils.getExtension(originalFileName);
 		if (!"pdf".equalsIgnoreCase(extension)) {
 			resultVo.setSuccess(false);
-			resultVo.setMessage("PDF 파일만 등록할 수 있습니다.");
+			resultVo.setMessage(prop.msg("feature.techRegister.validation.pdfOnly"));
 			return resultVo;
 		}
 		String savedFileName = objectId + ".pdf";
@@ -183,7 +192,7 @@ public class SwRequestService implements CommonService{
 		String existingFileName = dao.getSwRegisterByOrgFileNm(objectId);
 		if(existingFileName != null){
 			resultVo.setSuccess(false);
-			resultVo.setMessage("이미 있는 파일입니다");
+			resultVo.setMessage(prop.msg("feature.techRegister.validation.duplicateFile"));
 			return resultVo;
 		}else {
 			log.info("[SW_REGISTER] upload prepared size={}", file.getSize());
@@ -192,6 +201,7 @@ public class SwRequestService implements CommonService{
 			dao.insertSwRegisterInfoFile(swRegisterPopupParam);
 
 			saveSwSubFiles(subFiles, swRegisterPopupParam.getObjectId(), swRegisterPopupParam.getDistributeTypeCd());
+			securityAclService.initializeRegisteredSwAcl(swRegisterPopupParam.getObjectId());
 			String reqPreparedByRaw = safeString(request.getParameter("registerUser"));
 			if (reqPreparedByRaw.isEmpty()) {
 				reqPreparedByRaw = safeString(request.getParameter("insertUserNm"));
@@ -207,7 +217,7 @@ public class SwRequestService implements CommonService{
 			mailTargets.addAll(splitCsv(reqReviewerUsersRaw));
 			sendRegistrationMail(String.join(",", mailTargets), DocsMailEnum.DISTRIBUTION_SW_STATUS, safeString(swRegisterPopupParam.getSwNo()), safeString(swRegisterPopupParam.getFileNm()), safeString(request.getParameter("registerUser")), LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
 			resultVo.setSuccess(true);
-			resultVo.setMessage("등록 완료.");			
+			resultVo.setMessage(prop.msg("feature.techRegister.result.complete"));
 			return resultVo;
 		}
 	}
@@ -260,12 +270,12 @@ public class SwRequestService implements CommonService{
 		String role = safeString(mailInfoVo.getApprovalGrade());
 		return html
 				.replace("{메뉴명}", safeString(menuName))
-				.replace("{메일제목}", "문서 등록 및 검토/승인 요청 알림")
+				.replace("{메일제목}", prop.msg("feature.techRegister.mail.registrationReviewSubject"))
 				.replace("{문서번호}", safeString(documentNo))
 				.replace("{문서명}", safeString(documentName))
 				.replace("{등록자}", safeString(registrant))
 				.replace("{등록일시}", safeString(registeredAt))
-				.replace("{요청업무}", "문서승인")
+				.replace("{요청업무}", prop.msg("feature.techRegister.mail.requestTaskApproval"))
 				.replace("{수신자역할}", role);
 	}
 
@@ -531,7 +541,11 @@ public class SwRequestService implements CommonService{
 			String subObjectId = RandomStringGenerator.generateRandomString(32);
 			String extension = FilenameUtils.getExtension(originalName);
 			if (!"pdf".equalsIgnoreCase(extension)) {
-				throw new IllegalArgumentException("PDF 첨부파일만 등록할 수 있습니다: " + originalName);
+				throw new IllegalArgumentException(
+						prop.messagesFormat(
+								"feature.techRegister.validation.supportingPdfOnly",
+								LocaleContextHolder.getLocale(),
+								originalName));
 			}
 			String savedFileName = subObjectId + ".pdf";
 			String savedPath = buildFileApiPath(savedFileName);
@@ -640,19 +654,19 @@ public class SwRequestService implements CommonService{
 		ResultVO result = new ResultVO();
 		if (objectId == null || objectId.trim().isEmpty()) {
 			result.setSuccess(false);
-			result.setMessage("철회 대상이 없습니다.");
+			result.setMessage(prop.msg("feature.techList.withdraw.selectionRequired"));
 			return result;
 		}
 		if (userVo == null) {
 			result.setSuccess(false);
-			result.setMessage("로그인 사용자 정보를 확인할 수 없습니다.");
+			result.setMessage(prop.msg("feature.techList.session.userUnavailable"));
 			return result;
 		}
 
 		Map<String, Object> info = dao.selectSwApprovalInfo(objectId.trim());
 		if (info == null || info.isEmpty()) {
 			result.setSuccess(false);
-			result.setMessage("대상 문서를 찾을 수 없습니다.");
+			result.setMessage(prop.msg("feature.techList.document.notFound"));
 			return result;
 		}
 
@@ -670,7 +684,7 @@ public class SwRequestService implements CommonService{
 
 		if ("Y".equalsIgnoreCase(deletedYn)) {
 			result.setSuccess(false);
-			result.setMessage("이미 철회된 문서입니다.");
+			result.setMessage(prop.msg("feature.techList.withdraw.alreadyWithdrawn"));
 			return result;
 		}
 
@@ -691,13 +705,13 @@ public class SwRequestService implements CommonService{
 
 		if (!ownerMatched) {
 			result.setSuccess(false);
-			result.setMessage("등록자 본인만 철회할 수 있습니다.");
+			result.setMessage(prop.msg("feature.techList.withdraw.ownerOnly"));
 			return result;
 		}
 
 		if (isApprovalCompleted(info)) {
 			result.setSuccess(false);
-			result.setMessage("승인완료 문서는 철회할 수 없습니다.");
+			result.setMessage(prop.msg("feature.techList.withdraw.approvedDocument"));
 			return result;
 		}
 
@@ -716,13 +730,13 @@ public class SwRequestService implements CommonService{
 
 		if (info == null || info.isEmpty()) {
 			result.setSuccess(false);
-			result.setMessage("승인 대상을 찾을 수 없습니다.");
+			result.setMessage(prop.msg("feature.techList.approval.targetNotFound"));
 			return result;
 		}
 
 		if ("Y".equalsIgnoreCase(getInfoString(info, "deletedYn", "DELETED_YN"))) {
 			result.setSuccess(false);
-			result.setMessage("삭제된 문서는 승인할 수 없습니다.");
+			result.setMessage(prop.msg("feature.techList.approval.deletedDocument"));
 			return result;
 		}
 
@@ -730,7 +744,7 @@ public class SwRequestService implements CommonService{
 		List<String> reviewerUsers = splitCsv(getInfoString(info, "reviewerUser", "reviewer_user", "REVIEWER_USER", "REVIEWERUSER"));
 		if (requiredUsers.isEmpty()) {
 			result.setSuccess(false);
-			result.setMessage("승인자가 지정되지 않은 문서입니다.");
+			result.setMessage(prop.msg("feature.techList.approval.approverNotAssigned"));
 			return result;
 		}
 
@@ -744,14 +758,14 @@ public class SwRequestService implements CommonService{
 			approverToken = userNm;
 		} else {
 			result.setSuccess(false);
-			result.setMessage("승인 대상자만 승인할 수 있습니다.");
+			result.setMessage(prop.msg("feature.techList.approval.approverOnly"));
 			return result;
 		}
 
 		String currentStatus = getInfoString(info, "status", "STATUS");
 		if (STATUS_APPROVED.equals(currentStatus)) {
 			result.setSuccess(false);
-			result.setMessage("이미 승인완료된 건입니다.");
+			result.setMessage(prop.msg("feature.techList.approval.alreadyCompleted"));
 			return result;
 		}
 
@@ -761,7 +775,7 @@ public class SwRequestService implements CommonService{
 		String normalizedApprover = splitApprovedUser(approverToken);
 		if (approvedSet.contains(normalizedApprover)) {
 			result.setSuccess(false);
-			result.setMessage("이미 승인한 건입니다.");
+			result.setMessage(prop.msg("feature.techList.approval.alreadyApproved"));
 			return result;
 		}
 
@@ -780,7 +794,9 @@ public class SwRequestService implements CommonService{
 			log.info("[CCB_APPROVAL] stringFinal={}, detailFinal={}", isFinalApprove, detailFinalApprove);
 		}
 		result.setSuccess(updated > 0);
-		result.setMessage(updated > 0 ? "승인되었습니다." : "승인 처리에 실패했습니다.");
+		result.setMessage(prop.msg(updated > 0
+				? "feature.techList.approval.complete"
+				: "feature.techList.approval.failed"));
 		return result;
 	}
 
@@ -789,27 +805,27 @@ public class SwRequestService implements CommonService{
 
 		if (objectId == null || objectId.trim().isEmpty()) {
 			result.setSuccess(false);
-			result.setMessage("승인 대상을 확인할 수 없습니다.");
+			result.setMessage(prop.msg("feature.techList.approval.targetNotFound"));
 			return result;
 		}
 
 		Map<String, Object> info = dao.selectSwApprovalInfo(objectId.trim());
 		if (info == null || info.isEmpty()) {
 			result.setSuccess(false);
-			result.setMessage("승인 대상을 확인할 수 없습니다.");
+			result.setMessage(prop.msg("feature.techList.approval.targetNotFound"));
 			return result;
 		}
 
 		if ("Y".equalsIgnoreCase(getInfoString(info, "deletedYn", "DELETED_YN"))) {
 			result.setSuccess(false);
-			result.setMessage("삭제된 문서는 승인할 수 없습니다.");
+			result.setMessage(prop.msg("feature.techList.approval.deletedDocument"));
 			return result;
 		}
 
 		List<String> requiredUsers = getRequiredApprovalUsers(info);
 		if (requiredUsers.isEmpty()) {
 			result.setSuccess(false);
-			result.setMessage("승인자가 지정되지 않은 문서입니다.");
+			result.setMessage(prop.msg("feature.techList.approval.approverNotAssigned"));
 			return result;
 		}
 
@@ -823,14 +839,14 @@ public class SwRequestService implements CommonService{
 			approverToken = userNm;
 		} else {
 			result.setSuccess(false);
-			result.setMessage("승인 대상자만 승인할 수 있습니다.");
+			result.setMessage(prop.msg("feature.techList.approval.approverOnly"));
 			return result;
 		}
 
 		String currentStatus = getInfoString(info, "status", "STATUS");
 		if (STATUS_APPROVED.equals(currentStatus)) {
 			result.setSuccess(false);
-			result.setMessage("이미 승인완료된 건입니다.");
+			result.setMessage(prop.msg("feature.techList.approval.alreadyCompleted"));
 			return result;
 		}
 
@@ -839,7 +855,7 @@ public class SwRequestService implements CommonService{
 		Set<String> approvedSet = new LinkedHashSet<>(parseApprovedUsers(approvalSource));
 		if (approvedSet.contains(splitApprovedUser(approverToken))) {
 			result.setSuccess(false);
-			result.setMessage("이미 승인한 건입니다.");
+			result.setMessage(prop.msg("feature.techList.approval.alreadyApproved"));
 			return result;
 		}
 
@@ -851,7 +867,7 @@ public class SwRequestService implements CommonService{
 	public String getApprovalStatusMessage(String objectId) {
 		Map<String, Object> info = dao.selectSwApprovalInfo(objectId);
 		if (info == null || info.isEmpty()) {
-			return "상태 정보를 찾을 수 없습니다.";
+			return prop.msg("feature.techList.approval.statusNotFound");
 		}
 
 		String status = getInfoString(info, "status", "STATUS");
@@ -859,7 +875,9 @@ public class SwRequestService implements CommonService{
 
 		List<String> requiredUsers = getRequiredApprovalUsers(info);
 		if (requiredUsers.isEmpty()) {
-			return forceApproved ? STATUS_APPROVED : "승인자가 지정되지 않았습니다.";
+			return prop.msg(forceApproved
+					? "feature.techList.approval.status.approved"
+					: "feature.techList.approval.status.approverNotAssigned");
 		}
 
 		String approvedUsers = getInfoString(info, "approvedUsers", "APPROVED_USERS", "approved_users");
@@ -872,7 +890,9 @@ public class SwRequestService implements CommonService{
 		List<String> rows = new ArrayList<>();
 		for (String approver : requiredUsers) {
 			boolean isApproved = approvedSet.contains(splitApprovedUser(approver));
-			rows.add(approver + " : " + (isApproved ? "승인" : "미승인"));
+			rows.add(approver + " : " + prop.msg(isApproved
+					? "feature.techList.approval.status.approved"
+					: "feature.techList.approval.status.notApproved"));
 		}
 		return String.join("\n", rows);
 	}
@@ -904,7 +924,9 @@ public class SwRequestService implements CommonService{
 			boolean editable = approver.equals(userCd) || approver.equals(userNm);
 			Map<String, Object> row = new HashMap<>();
 			row.put("approver", approver);
-			row.put("status", approved ? "승인" : "대기");
+			row.put("status", prop.msg(approved
+					? "feature.techList.approval.status.approved"
+					: "feature.techList.approval.status.waiting"));
 			row.put("comment", safeString(commentMap.get(normalized)));
 			row.put("editable", editable ? "Y" : "N");
 			row.put("approvalType", reviewerUsers.contains(approver) ? "REVIEWER" : "APPROVER");
@@ -918,7 +940,7 @@ public class SwRequestService implements CommonService{
 		Map<String, Object> info = dao.selectSwApprovalInfo(objectId);
 		if (info == null || info.isEmpty()) {
 			result.setSuccess(false);
-			result.setMessage("승인 대상 문서를 찾을 수 없습니다.");
+			result.setMessage(prop.msg("feature.techList.approval.targetNotFound"));
 			return result;
 		}
 
@@ -933,7 +955,7 @@ public class SwRequestService implements CommonService{
 		}
 		if (actor.isEmpty()) {
 			result.setSuccess(false);
-			result.setMessage("본인 행에만 코멘트를 입력할 수 있습니다.");
+			result.setMessage(prop.msg("feature.techList.approval.comment.ownRowOnly"));
 			return result;
 		}
 
@@ -943,13 +965,13 @@ public class SwRequestService implements CommonService{
 		Set<String> approvedSet = new LinkedHashSet<>(parseApprovedUsers(approvalSource));
 		if (!approvedSet.contains(splitApprovedUser(actor)) && !STATUS_APPROVED.equals(currentStatus)) {
 			result.setSuccess(false);
-			result.setMessage("승인 후 코멘트 입력이 가능합니다.");
+			result.setMessage(prop.msg("feature.techList.approval.comment.afterApprovalOnly"));
 			return result;
 		}
 
 		String normalizedComment = safeString(comment);
 		if (normalizedComment.isEmpty()) {
-			normalizedComment = "승인하였습니다";
+			normalizedComment = prop.msg("feature.techList.approval.comment.default");
 		}
 
 		Map<String, Object> param = new HashMap<>();
@@ -958,7 +980,9 @@ public class SwRequestService implements CommonService{
 		param.put("comment", normalizedComment);
 		int updated = dao.upsertApprovalComment(param);
 		result.setSuccess(updated > 0);
-		result.setMessage(updated > 0 ? "코멘트가 저장되었습니다." : "코멘트 저장에 실패했습니다.");
+		result.setMessage(prop.msg(updated > 0
+				? "feature.techList.approval.comment.saved"
+				: "feature.techList.approval.comment.saveFailed"));
 		return result;
 	}
 

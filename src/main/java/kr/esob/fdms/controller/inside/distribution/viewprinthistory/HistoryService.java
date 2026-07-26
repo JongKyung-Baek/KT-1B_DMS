@@ -30,6 +30,46 @@ public class HistoryService implements CommonService{
 		return dao.selectListCount(obj);
 	}
 
+	public List<HistoryEventVO> selectViewEvents(String keyword, String distributionType) {
+		Map<String, Object> param = new HashMap<String, Object>();
+		param.put("keyword", normalizeSearch(keyword));
+		param.put("distributionType", normalizeSearch(distributionType));
+		return dao.selectViewEvents(param);
+	}
+
+	public List<HistoryEventVO> selectPrintEvents(String keyword, String statusCd) {
+		Map<String, Object> param = new HashMap<String, Object>();
+		param.put("keyword", normalizeSearch(keyword));
+		param.put("statusCd", normalizeStatus(statusCd));
+		return dao.selectPrintEvents(param);
+	}
+
+	private String normalizeSearch(String value) {
+		if (value == null) {
+			return null;
+		}
+		String normalized = value.trim();
+		if (normalized.isEmpty()) {
+			return null;
+		}
+		return normalized.length() > 100 ? normalized.substring(0, 100) : normalized;
+	}
+
+	private String normalizeStatus(String value) {
+		String normalized = normalizeSearch(value);
+		if (normalized == null) {
+			return null;
+		}
+		normalized = normalized.toUpperCase();
+		if ("STARTED".equals(normalized)
+				|| "SUCCESS".equals(normalized)
+				|| "FAILED".equals(normalized)
+				|| "CANCELLED".equals(normalized)) {
+			return normalized;
+		}
+		return null;
+	}
+
 
 	public ResultVO destroyRequest(DestroyRequestParam param) {
 		List<Map<String, Object>> arrNonProtect = new ArrayList<Map<String, Object>>();

@@ -5,10 +5,10 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
+import java.util.regex.Pattern;
 
 import javax.inject.Inject;
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.IOUtils;
@@ -20,28 +20,54 @@ import kr.esob.fdms.commonlogic.value.RootAbsolutePath;
 
 @Controller
 public class PropertiesController {
-	@Inject
-	RootAbsolutePath rootAbsolutePath;
+    private static final Pattern PROPERTIES_FILE =
+            Pattern.compile("^[A-Za-z0-9_-]+\\.properties$");
 
-	@RequestMapping("/messages/{propertiesName}")
-    public void getProperties(@PathVariable String propertiesName, HttpServletResponse response) throws IOException {
-        OutputStream outputStream = response.getOutputStream();
+    @Inject
+    RootAbsolutePath rootAbsolutePath;
+
+    @Inject
+    ServletContext servletContext;
+
+    @RequestMapping("/messages/{propertiesName}")
+    public void getProperties(
+            @PathVariable String propertiesName,
+            HttpServletResponse response) throws IOException {
+        if (propertiesName == null
+                || !PROPERTIES_FILE.matcher(propertiesName).matches()) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
+
+        InputStream inputStream = openGeneratedMessage(propertiesName);
+        if (inputStream == null) {
+            // Executable WARs do not expose bundled web resources as regular
+            // files. ServletContext can still stream them from the archive.
+            inputStream = servletContext.getResourceAsStream(
+                    "/messages/" + propertiesName);
+        }
+        if (inputStream == null) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+
         response.setContentType("text/plain; charset=UTF-8");
-        
-        //보안 취약성 조치에 따라 필터링 처리
-        propertiesName = propertiesName.replace("/", "");
-        propertiesName = propertiesName.replace("\\", "");
-        propertiesName = propertiesName.replace(".", "");
-        propertiesName = propertiesName.replace("&", "");
-        propertiesName = propertiesName.replace("properties", ".properties");
-        
-        File messageFile = new File(rootAbsolutePath+"messages/"+propertiesName);
-        InputStream inputStream = new FileInputStream(messageFile);
+        try (InputStream source = inputStream;
+                OutputStream target = response.getOutputStream()) {
+            IOUtils.copy(source, target);
+        }
+    }
 
-        List<String> readLines = IOUtils.readLines(inputStream, StandardCharsets.UTF_8);
-        IOUtils.writeLines(readLines, null, outputStream, StandardCharsets.UTF_8);
-
-        IOUtils.closeQuietly(inputStream);
-        IOUtils.closeQuietly(outputStream);
+    private InputStream openGeneratedMessage(String propertiesName)
+            throws IOException {
+        String webRoot = rootAbsolutePath.getRootAbsolutePath();
+        if (webRoot == null || webRoot.trim().isEmpty()) {
+            return null;
+        }
+        File messageFile = new File(
+                new File(webRoot, "messages"), propertiesName);
+        return messageFile.isFile()
+                ? new FileInputStream(messageFile)
+                : null;
     }
 }

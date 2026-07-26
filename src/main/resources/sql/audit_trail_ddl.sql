@@ -118,13 +118,20 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Result is always persisted for internal policy/audit integrity, but it is
+-- not a meaningful operator-facing column. Remove stale presentation metadata
+-- as well as its formatter so legacy dumps cannot break jqGrid initialization.
+DELETE FROM docs_grid_info
+ WHERE grid_id = 'gridInsideAuditLogList'
+   AND lower(column_id) IN ('resultcd', 'result');
+
 -- Search form metadata.
 UPDATE docs_form_info
    SET use_yn = 'N'
  WHERE form_id = 'formInsideAuditLog'
    AND column_id NOT IN (
        'startDt,endDt', 'userId', 'userNm', 'menuNm', 'eventType',
-       'actionType', 'resultCd', 'targetKeyword', 'btnSearch'
+       'actionType', 'targetKeyword', 'btnSearch'
    );
 
 INSERT INTO docs_form_info (
@@ -145,9 +152,7 @@ VALUES
      'left', '', 'Y', '', '', 'N', '', 'N'),
     ('formInsideAuditLog', 'actionType', 'input', '행위', 60, '150',
      'left', '', 'Y', '', '', 'N', '', 'N'),
-    ('formInsideAuditLog', 'resultCd', 'input', '결과', 70, '120',
-     'left', '', 'Y', '', '', 'N', '', 'N'),
-    ('formInsideAuditLog', 'targetKeyword', 'input', '대상', 80, '190',
+    ('formInsideAuditLog', 'targetKeyword', 'input', '대상', 70, '190',
      'left', '', 'Y', '', '', 'N', '', 'N'),
     ('formInsideAuditLog', 'btnSearch', 'btnSearch', '조회', 1000, NULL,
      NULL, '', 'Y', '', '', 'N', '', 'N')
@@ -180,10 +185,9 @@ WITH desired (
         ('userNm', '사용자', 20, 115, 'left', 'Y', 'formatAuditUser'),
         ('menuNm', '메뉴', 30, 135, 'left', 'Y', 'formatAuditMenu'),
         ('actionNm', '행위', 40, 115, 'left', 'Y', 'formatAuditAction'),
-        ('resultCd', '결과', 50, 90, 'center', 'Y', 'formatAuditResult'),
-        ('targetSummary', '대상', 60, 145, 'left', 'Y', 'formatAuditTarget'),
-        ('reasonCd', '사유', 70, 95, 'left', 'Y', NULL::varchar),
-        ('accessIp', '접속 IP', 80, 100, 'center', 'Y', NULL::varchar)
+        ('targetSummary', '대상', 50, 145, 'left', 'Y', 'formatAuditTarget'),
+        ('reasonCd', '사유', 60, 95, 'left', 'Y', NULL::varchar),
+        ('accessIp', '접속 IP', 70, 100, 'center', 'Y', NULL::varchar)
 )
 UPDATE docs_grid_info gridInfo
    SET column_nm = desired.column_nm,
@@ -210,10 +214,9 @@ WITH desired (
         ('userNm', '사용자', 20, 115, 'left', 'Y', 'formatAuditUser'),
         ('menuNm', '메뉴', 30, 135, 'left', 'Y', 'formatAuditMenu'),
         ('actionNm', '행위', 40, 115, 'left', 'Y', 'formatAuditAction'),
-        ('resultCd', '결과', 50, 90, 'center', 'Y', 'formatAuditResult'),
-        ('targetSummary', '대상', 60, 145, 'left', 'Y', 'formatAuditTarget'),
-        ('reasonCd', '사유', 70, 95, 'left', 'Y', NULL::varchar),
-        ('accessIp', '접속 IP', 80, 100, 'center', 'Y', NULL::varchar)
+        ('targetSummary', '대상', 50, 145, 'left', 'Y', 'formatAuditTarget'),
+        ('reasonCd', '사유', 60, 95, 'left', 'Y', NULL::varchar),
+        ('accessIp', '접속 IP', 70, 100, 'center', 'Y', NULL::varchar)
 )
 INSERT INTO docs_grid_info (
     grid_id, column_id, column_nm, column_seq, column_size,
@@ -240,5 +243,85 @@ SELECT 'gridInsideAuditLogList',
         WHERE currentGrid.grid_id = 'gridInsideAuditLogList'
           AND currentGrid.column_id = desired.column_id
  );
+
+-- Keep database-driven form and grid labels synchronized with the session
+-- locale. Indonesian can be enabled later by adding LANG_TYPE='id' rows for
+-- these same stable keys.
+UPDATE docs_form_info
+   SET lang_cd = CASE column_id
+       WHEN 'startDt,endDt' THEN 'form.audit.period'
+       WHEN 'userId' THEN 'form.audit.userId'
+       WHEN 'userNm' THEN 'form.audit.userName'
+       WHEN 'menuNm' THEN 'form.audit.menu'
+       WHEN 'eventType' THEN 'form.audit.event'
+       WHEN 'actionType' THEN 'form.audit.action'
+       WHEN 'targetKeyword' THEN 'form.audit.target'
+       WHEN 'btnSearch' THEN 'btn.search'
+       ELSE lang_cd
+   END
+ WHERE form_id = 'formInsideAuditLog'
+   AND column_id IN (
+       'startDt,endDt', 'userId', 'userNm', 'menuNm', 'eventType',
+       'actionType', 'targetKeyword', 'btnSearch'
+   );
+
+UPDATE docs_grid_info
+   SET lang_cd = CASE column_id
+       WHEN 'occurredAt' THEN 'grid.audit.occurredAt'
+       WHEN 'userNm' THEN 'grid.audit.user'
+       WHEN 'menuNm' THEN 'grid.audit.menu'
+       WHEN 'actionNm' THEN 'grid.audit.action'
+       WHEN 'targetSummary' THEN 'grid.audit.target'
+       WHEN 'reasonCd' THEN 'grid.audit.reason'
+       WHEN 'accessIp' THEN 'grid.audit.accessIp'
+       ELSE lang_cd
+   END
+ WHERE grid_id = 'gridInsideAuditLogList'
+   AND column_id IN (
+       'occurredAt', 'userNm', 'menuNm', 'actionNm',
+       'targetSummary', 'reasonCd', 'accessIp'
+   );
+
+UPDATE docs_toolbar_info
+   SET lang_cd = 'toolbar.excel'
+ WHERE toolbar_id = 'toolbarInsideAuditLog'
+   AND button_id = 'btnExcel';
+
+INSERT INTO docs_lang (lang_type, lang_cd, lang_desc)
+VALUES
+    ('ko', 'form.audit.period', '기간'),
+    ('en', 'form.audit.period', 'Period'),
+    ('ko', 'form.audit.userId', '사용자 아이디'),
+    ('en', 'form.audit.userId', 'User ID'),
+    ('ko', 'form.audit.userName', '사용자 이름'),
+    ('en', 'form.audit.userName', 'User Name'),
+    ('ko', 'form.audit.menu', '메뉴'),
+    ('en', 'form.audit.menu', 'Menu'),
+    ('ko', 'form.audit.event', '이벤트'),
+    ('en', 'form.audit.event', 'Event'),
+    ('ko', 'form.audit.action', '행위'),
+    ('en', 'form.audit.action', 'Action'),
+    ('ko', 'form.audit.target', '대상'),
+    ('en', 'form.audit.target', 'Target'),
+    ('ko', 'btn.search', '조회'),
+    ('en', 'btn.search', 'Search'),
+    ('ko', 'grid.audit.occurredAt', '시각'),
+    ('en', 'grid.audit.occurredAt', 'Time'),
+    ('ko', 'grid.audit.user', '사용자'),
+    ('en', 'grid.audit.user', 'User'),
+    ('ko', 'grid.audit.menu', '메뉴'),
+    ('en', 'grid.audit.menu', 'Menu'),
+    ('ko', 'grid.audit.action', '행위'),
+    ('en', 'grid.audit.action', 'Action'),
+    ('ko', 'grid.audit.target', '대상'),
+    ('en', 'grid.audit.target', 'Target'),
+    ('ko', 'grid.audit.reason', '사유'),
+    ('en', 'grid.audit.reason', 'Reason'),
+    ('ko', 'grid.audit.accessIp', '접속 IP'),
+    ('en', 'grid.audit.accessIp', 'Access IP'),
+    ('ko', 'toolbar.excel', '엑셀'),
+    ('en', 'toolbar.excel', 'Excel')
+ON CONFLICT (lang_type, lang_cd) DO UPDATE
+   SET lang_desc = EXCLUDED.lang_desc;
 
 COMMIT;

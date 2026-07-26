@@ -50,32 +50,36 @@
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	gap: 24px;
-	min-height: 184px;
-	padding: 32px 36px;
+	gap: 20px;
+	min-height: 112px;
+	padding: 20px 24px;
 	overflow: hidden;
-	border-radius: 16px;
-	background:
-		radial-gradient(circle at 91% 14%, rgba(115, 103, 240, .17), transparent 28%),
-		linear-gradient(135deg, #ffffff 0%, #faf9ff 100%);
+	border-radius: 14px;
+	background: linear-gradient(135deg, #ffffff 0%, #faf9ff 100%);
+	box-shadow: 0 3px 14px rgba(47, 43, 61, .045);
 }
 
 .dashboard-hero-card::after {
-	content: "";
-	position: absolute;
-	right: 5%;
-	bottom: -78px;
-	width: 210px;
-	height: 210px;
-	border: 30px solid rgba(115, 103, 240, .055);
-	border-radius: 50%;
-	pointer-events: none;
+	display: none;
 }
 
 .dashboard-hero-copy,
 .dashboard-hero-actions {
 	position: relative;
 	z-index: 1;
+}
+
+.dashboard-hero-copy {
+	min-width: 0;
+	text-align: left;
+}
+
+.dashboard-hero-overline {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 8px 12px;
+	margin-bottom: 5px;
 }
 
 .dashboard-eyebrow,
@@ -91,7 +95,7 @@
 	display: inline-flex;
 	align-items: center;
 	gap: 7px;
-	margin-bottom: 10px;
+	margin: 0;
 }
 
 .dashboard-eyebrow-dot {
@@ -105,15 +109,34 @@
 .dashboard-hero-card h1 {
 	margin: 0;
 	color: #262235;
-	font-size: 28px;
+	font-size: 25px;
 	font-weight: 800;
 	letter-spacing: -.035em;
+	line-height: 1.2;
 }
 
 .dashboard-hero-card p {
-	margin: 9px 0 15px;
+	margin: 5px 0 0;
 	color: var(--dashboard-muted);
-	font-size: 14px;
+	font-size: 13px;
+	line-height: 1.45;
+}
+
+.dashboard-generated-at {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding-left: 12px;
+	border-left: 1px solid #dedbe8;
+	color: #827e8c;
+	font-size: 11px;
+	font-weight: 700;
+	line-height: 1;
+	white-space: nowrap;
+}
+
+.dashboard-generated-at i {
+	font-size: 13px;
 }
 
 .dashboard-context-chips,
@@ -163,6 +186,7 @@
 	flex-wrap: wrap;
 	justify-content: flex-end;
 	gap: 10px;
+	flex: 0 0 auto;
 }
 
 .dashboard-button,
@@ -838,11 +862,11 @@
 @media (max-width: 991px) {
 	.dashboard-hero-card {
 		align-items: flex-start;
-		flex-direction: column;
 	}
 
 	.dashboard-hero-actions {
-		justify-content: flex-start;
+		flex-direction: column;
+		align-items: flex-end;
 	}
 
 	.dashboard-activity-strip {
@@ -867,11 +891,19 @@
 	}
 
 	.dashboard-hero-card {
+		flex-direction: column;
 		padding: 24px;
 	}
 
 	.dashboard-hero-card h1 {
 		font-size: 23px;
+	}
+
+	.dashboard-hero-actions {
+		width: 100%;
+		align-items: center;
+		flex-direction: row;
+		justify-content: flex-start;
 	}
 
 	.dashboard-summary-grid {

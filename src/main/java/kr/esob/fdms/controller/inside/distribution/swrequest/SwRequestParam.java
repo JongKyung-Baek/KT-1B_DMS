@@ -11,6 +11,7 @@ import java.util.List;
 @Getter
 @Setter
 public class SwRequestParam extends CommonParam {
+	private String aclUserCd;
 	private String objectId;
 	private String businessTypeCd;
 	private String distributeTypeCd;

@@ -15,6 +15,7 @@ public class ComboInfoVO {
     private String onchange;
     private String valueId;
     private String selectedValue;
+    private String sessionLang;
 
     private String id;
     private String text;

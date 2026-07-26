@@ -1,43 +1,31 @@
 ﻿<%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
 <%@ taglib prefix="custom" tagdir="/WEB-INF/tags" %>
+<%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
+<spring:message code="feature.locale.code" text="ko" var="pageLocale"/>
+<spring:message code="feature.organization.user.browserTitle" text="내부 사용자 관리" var="pageTitle"/>
+<spring:message code="feature.organization.user.resultsAria" text="내부 사용자 검색 및 목록" var="resultsAria"/>
 <!doctype html>
-<html lang="kr">
+<html lang="${pageLocale}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Collabhub</title>
+<title>${pageTitle} - CollabHub</title>
 <link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/distribution-invoice.css" media="screen" />
+<link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/organization-management.css?v=20260726.2" media="screen" />
 <script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/views/inside/distribution/acceptance/common-form-vuexy.js"></script>
-<style>
-	.distribution-invoice-page #gbox_gridInsideUserList .ui-jqgrid-hdiv {
-		overflow: visible !important;
-	}
-	.distribution-invoice-page #gbox_gridInsideUserList .ui-jqgrid-htable th,
-	.distribution-invoice-page #gbox_gridInsideUserList .ui-jqgrid-htable th.ui-th-column {
-		height: 37px !important;
-		padding: 0 !important;
-		vertical-align: middle !important;
-	}
-	.distribution-invoice-page #gbox_gridInsideUserList .ui-jqgrid-labels th > div,
-	.distribution-invoice-page #gbox_gridInsideUserList .ui-jqgrid-labels th > div.ui-jqgrid-sortable {
-		height: 37px !important;
-		min-height: 37px !important;
-		display: flex !important;
-		align-items: center !important;
-		justify-content: center !important;
-		line-height: 1.2 !important;
-		padding: 0 8px !important;
-		box-sizing: border-box !important;
-		white-space: nowrap !important;
-		overflow: visible !important;
-	}
-</style>
+<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/views/inside/organizationmanage/organization-management.js?v=20260726.1"></script>
 <script>
 window.USE_ACCEPTANCE_VUEXY_FORM = true;
 
 var gridId = 'gridInsideUserList';
 var formId = 'formInsideUser';
+
+	function organizationText(key, fallback) {
+		return window.SdmsI18n && typeof window.SdmsI18n.t === 'function'
+			? window.SdmsI18n.t(key, fallback)
+			: fallback;
+	}
 
 	function setGridParam(){
 		gridParam = {
@@ -67,7 +55,7 @@ var formId = 'formInsideUser';
 
 	function unlockAccount(){
 		if($("#"+ gridId).getGridParam('selarrrow').length < 1){
-			alertMessage(g_msg('msg.noSelectData'), function(){			//선택된 데이터가 없습니다.
+			alertMessage(organizationText('feature.common.noSelection', '선택된 데이터가 없습니다.'), function(){
 				$(this).dialog("close");
 			});
 			return false;
@@ -83,7 +71,7 @@ var formId = 'formInsideUser';
 	}
 	function resetPwd(){
 		if($("#"+ gridId).getGridParam('selarrrow').length < 1){
-			alertMessage(g_msg('msg.noSelectData'), function(){			//선택된 데이터가 없습니다.
+			alertMessage(organizationText('feature.common.noSelection', '선택된 데이터가 없습니다.'), function(){
 				$(this).dialog("close");
 			});
 			return false;
@@ -103,26 +91,35 @@ var formId = 'formInsideUser';
 	 */
 	function unlockAccountCallback(response){
 		if(response.success){
-			infoMessage(g_msg('msg.requestComplete'), function(){		//요청이 완료되었습니다.
+			infoMessage(organizationText('feature.common.requestCompleted', '요청이 완료되었습니다.'), function(){
 				searchList(gridParam);
 				closePopup('popupDialog');
 				$(this).dialog("close");
 			});
 		}else{
-			alertMessage(g_msg("msg.requestFailure"));					//요청이 실패했습니다
+			alertMessage(organizationText('feature.common.requestFailed', '요청이 실패했습니다.'));
 		}
 	}
 
 
 	function resetPwdCallback(response){
 		if(response.success){
-			infoMessage((function(){ var resetPwdMessage = '초기화가 완료되었습니다. <br/>초기 비밀번호는 "0000" 입니다.'; try { resetPwdMessage = g_msg('msg.resetPwd') || resetPwdMessage; } catch(e) { console.log(e); } return resetPwdMessage; })(), function(){		//초기 비밀번호는 0000 입니다
+			infoMessage((function(){
+				var resetPwdMessage = '초기화가 완료되었습니다. <br/>초기 비밀번호는 "0000" 입니다.';
+				if(window.SdmsI18n && typeof window.SdmsI18n.t === 'function') {
+					resetPwdMessage = window.SdmsI18n.t(
+						'feature.organization.user.passwordReset.completed',
+						resetPwdMessage
+					);
+				}
+				return resetPwdMessage;
+			})(), function(){
 				searchList(gridParam);
 				closePopup('popupDialog');
 				$(this).dialog("close");
 			});
 		}else{
-			alertMessage(g_msg("msg.requestFailure"));					//요청이 실패했습니다
+			alertMessage(organizationText('feature.common.requestFailed', '요청이 실패했습니다.'));
 		}
 	}
 
@@ -162,8 +159,10 @@ var formId = 'formInsideUser';
 </script>
 </head>
 <body>
-	<div class="distribution-invoice-page">
-		<custom:listTemplateInvoice gridId="gridInsideUserList"/>
+	<div class="distribution-invoice-page organization-management-page">
+		<section class="organization-management-results-card" aria-label="${resultsAria}">
+			<custom:listTemplateInvoice gridId="gridInsideUserList"/>
+		</section>
 	</div>
 </body>
 </html>

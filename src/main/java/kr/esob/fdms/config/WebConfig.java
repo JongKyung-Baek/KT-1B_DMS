@@ -18,6 +18,8 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistration;
+import org.springframework.web.servlet.i18n.SessionLocaleResolver;
+import org.springframework.web.servlet.LocaleResolver;
 
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -25,6 +27,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.navercorp.lucy.security.xss.servletfilter.XssEscapeServletFilter;
 
 import kr.esob.fdms.commonlogic.interceptor.CommonCheckInterceptor;
+import kr.esob.fdms.commonlogic.message.SupportedLocaleChangeInterceptor;
 import kr.esob.fdms.util.HTMLCharacterEscapes;
 
 import javax.servlet.ServletContext;
@@ -34,6 +37,11 @@ import javax.servlet.SessionTrackingMode;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer{
+	private final SupportedLocaleChangeInterceptor localeChangeInterceptor;
+
+	public WebConfig(SupportedLocaleChangeInterceptor localeChangeInterceptor) {
+		this.localeChangeInterceptor = localeChangeInterceptor;
+	}
 //	@Bean
 //	MappingJackson2JsonView jsonView() {
 //		return new MappingJackson2JsonView();
@@ -86,7 +94,7 @@ public class WebConfig implements WebMvcConfigurer{
 	@Bean
 	public ReloadableResourceBundleMessageSource messageSource() {
 		ReloadableResourceBundleMessageSource messageSource = new ReloadableResourceBundleMessageSource();
-		messageSource.setBasename("messages/message");
+		messageSource.setBasenames("messages/feature", "messages/message");
 		messageSource.setDefaultEncoding("UTF-8");
 		messageSource.setCacheSeconds(180);
 
@@ -95,8 +103,17 @@ public class WebConfig implements WebMvcConfigurer{
 		return messageSource;
 	}
 
+	@Bean
+	public LocaleResolver localeResolver() {
+		// Without a session selection, SessionLocaleResolver keeps the browser's
+		// Accept-Language locale. The explicit language selector then persists
+		// the chosen locale in this session.
+		return new SessionLocaleResolver();
+	}
+
 	@Override
 	public void addInterceptors(InterceptorRegistry registry) {
+		registry.addInterceptor(localeChangeInterceptor);
 		registry.addInterceptor(new CommonCheckInterceptor());
 	}
 

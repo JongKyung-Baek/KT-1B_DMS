@@ -69,7 +69,6 @@
         };
 
         settings = $.extend(defaults, settings);
-        console.log('확장된 settings: ', settings); // settings 값 출력
 
         if (settings.namespace && typeof settings.namespace == 'string') {
             // A namespace has been supplied, initialise it.
@@ -269,8 +268,6 @@
             }
         }
 
-        console.log($.i18n.map);
-        console.log('All keys in i18n map:', $.i18n.map);
 
         if (value.length === 0) {
             return "";

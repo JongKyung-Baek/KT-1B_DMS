@@ -5,8 +5,9 @@ import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 
@@ -50,36 +51,45 @@ public class CommonMessageContainer {
 		List<CommonMessageVO> messageMapList 	 = commonMessageDao.selectMessageList();
 
 		//메시지 properties 생성
-		Properties props   = new Properties();
-		Properties propsKo = new Properties();
-		Properties propsEn = new Properties();
-		Properties propsJa = new Properties();
-		Properties propsZh = new Properties();
-		Iterator iterator = messageMapList.iterator();
-
-		while (iterator.hasNext()) {
-			CommonMessageVO commonMessageVO = (CommonMessageVO) iterator.next();
-			if("en".equalsIgnoreCase(commonMessageVO.getLangType())){
-				propsEn.setProperty(commonMessageVO.getLangCd(), commonMessageVO.getLangDesc());
-			}else if("ja".equalsIgnoreCase(commonMessageVO.getLangType())){
-				propsJa.setProperty(commonMessageVO.getLangCd(), commonMessageVO.getLangDesc());
-			}else if("ko".equalsIgnoreCase(commonMessageVO.getLangType())){
-				propsKo.setProperty(commonMessageVO.getLangCd(), commonMessageVO.getLangDesc());
-			}else if("zh".equalsIgnoreCase(commonMessageVO.getLangType())){
-				propsZh.setProperty(commonMessageVO.getLangCd(), commonMessageVO.getLangDesc());
-			}else {
-				props.setProperty(commonMessageVO.getLangCd(), commonMessageVO.getLangDesc());
+		Map<String, Properties> propertiesByLanguage =
+				new LinkedHashMap<String, Properties>();
+		for (CommonMessageVO message : messageMapList) {
+			String language = normalizeLanguageCode(message.getLangType());
+			if (language == null || message.getLangCd() == null
+					|| message.getLangDesc() == null) {
+				continue;
 			}
+			Properties languageProperties = propertiesByLanguage.get(language);
+			if (languageProperties == null) {
+				languageProperties = new Properties();
+				propertiesByLanguage.put(language, languageProperties);
+			}
+			languageProperties.setProperty(message.getLangCd(), message.getLangDesc());
 		}
-//		props.store(new OutputStreamWriter(new FileOutputStream(new File(rootAbsolutePath.toString()+"/messages/message.properties")), "UTF-8"), "message comment");
+
+		Properties propsKo = propertiesByLanguage.get("ko");
+		if (propsKo == null) {
+			propsKo = new Properties();
+		}
 		store(propsKo, new File(messageDir, "message.properties"));
 		store(propsKo, new File(messageDir, "message_ko.properties"));
 		store(propsKo, new File(messageDir, "message_ko_KR.properties"));
-		store(propsEn, new File(messageDir, "message_en.properties"));
-		store(propsJa, new File(messageDir, "message_ja.properties"));
-		store(propsZh, new File(messageDir, "message_zh.properties"));
+		for (Map.Entry<String, Properties> entry : propertiesByLanguage.entrySet()) {
+			if ("ko".equals(entry.getKey())) {
+				continue;
+			}
+			store(entry.getValue(),
+					new File(messageDir, "message_" + entry.getKey() + ".properties"));
+		}
 
+	}
 
+	private String normalizeLanguageCode(String language) {
+		if (language == null) {
+			return null;
+		}
+		String normalized = language.trim().toLowerCase(Locale.ROOT);
+		return normalized.matches("^[a-z]{2,3}$") ? normalized : null;
 	}
 
 	private void store(Properties properties, File target) throws Exception {

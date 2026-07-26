@@ -109,7 +109,7 @@ class SwRequestDashboardContractTest {
 
 		assertTrue(page.contains("dashboard-summary-grid"));
 		assertTrue(page.contains("dashboard-metric-card"));
-		assertTrue(page.contains("dashboard-context-chips"));
+		assertTrue(page.contains("dashboard-hero-overline"));
 		assertTrue(page.contains("dashboard-activity-chip"));
 		assertTrue(page.contains("문서등급 분포"));
 		assertTrue(pageWithoutWhitespace.contains("내인가등급"));
@@ -141,15 +141,20 @@ class SwRequestDashboardContractTest {
 	}
 
 	@Test
-	void technicalDataListHasAnIdempotentDashboardRoute() throws Exception {
-		String list = read(
-			"src/main/webapp/WEB-INF/views/inside/distribution/swRequestList.jsp");
+	void technicalDataListHidesDashboardUpdateAndWithdrawalButtons() throws Exception {
+		String controller = read(
+			"src/main/java/kr/esob/fdms/controller/inside/distribution/swrequest/SwRequestController.java");
 		String ddl = read("src/main/resources/sql/acl_foundation_ddl.sql");
 
-		assertTrue(list.contains("function openTechnicalDashboard()"));
-		assertTrue(ddl.contains("'toolbarSwRequest', 'btnDashboard'"));
-		assertTrue(ddl.contains("'openTechnicalDashboard()'"));
-		assertTrue(ddl.contains("ON CONFLICT (toolbar_id, button_id) DO UPDATE"));
+		assertTrue(controller.contains(
+			"toolbarInfo.removeIf(this::isRemovedTechnicalDataToolbarButton)"));
+		assertTrue(controller.contains("\"btnDashboard\".equals(buttonId)"));
+		assertTrue(controller.contains("\"btnUpdate\".equals(buttonId)"));
+		assertTrue(controller.contains("\"btnDelete\".equals(buttonId)"));
+		assertTrue(ddl.contains("toolbar_id = 'toolbarSwRequest'"));
+		assertTrue(ddl.contains(
+			"button_id IN ('btnDashboard', 'btnUpdate', 'btnDelete')"));
+		assertTrue(ddl.contains("SET use_yn = 'N'"));
 	}
 
 	private String read(String path) throws Exception {

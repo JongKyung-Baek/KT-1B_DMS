@@ -53,23 +53,23 @@ public class PasswordController {
         result.setSuccess(false);
 
         if (authentication == null || !(authentication.getPrincipal() instanceof UserVO)) {
-            result.setMessage("msg.accessDenied");
+            result.setMessage("feature.password.error.sessionExpired");
             return result;
         }
         if (!PasswordUtils.isAcceptablePassword(newPassword)) {
-            result.setMessage("msg.invalidPassword");
+            result.setMessage("feature.password.error.invalidPolicy");
             return result;
         }
 
         String basicPassword = findBasicPassword(systemConfigDao.selectDbConfig());
-        if (basicPassword == null || basicPassword.equals(newPassword)) {
-            result.setMessage("msg.invalidPassword");
+        if (basicPassword != null && basicPassword.equals(newPassword)) {
+            result.setMessage("feature.password.error.invalidPolicy");
             return result;
         }
 
         UserVO userVo = (UserVO) authentication.getPrincipal();
         if (!loginService.changeOwnPassword(userVo.getUserCd(), newPassword)) {
-            result.setMessage("msg.error");
+            result.setMessage("feature.password.error.save");
             return result;
         }
 

@@ -16,8 +16,8 @@
 </c:choose>
 <div class="dialogContent registerDeptPopup popup-base popup-actions-center popup-type-form-grid popup-overflow-visible">
     <div class="popupHero">
-        <h2>부서 정보</h2>
-        <p>부서 코드와 부서명, 사용 여부를 입력하거나 수정할 수 있습니다.</p>
+        <h2><spring:message code="feature.organization.department.popup.title"/></h2>
+        <p><spring:message code="feature.organization.department.popup.description"/></p>
     </div>
     <form id="formPopup">
         <input type="hidden" id="dept_cd" name="dept_cd" value="${info.deptCd}"/>

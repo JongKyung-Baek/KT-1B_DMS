@@ -212,4 +212,89 @@
         ) A1
         ) B1
     </select>
+
+    <select id="selectViewEvents"
+            resultType="kr.esob.fdms.controller.inside.distribution.viewprinthistory.HistoryEventVO">
+        SELECT 'VIEW' AS history_type,
+               TO_CHAR(info.INSERT_DATE, 'YYYY-MM-DD HH24:MI:SS') AS occurred_at,
+               info.USER_ID AS actor_user_id,
+               info.USER_NM AS actor_user_nm,
+               CASE
+                   WHEN info.DISTRIBUTION_TYPE = 'FunctionCode' THEN 'Documents'
+                   WHEN info.DISTRIBUTION_TYPE = 'CCB' THEN '기술자료관리'
+                   ELSE info.DISTRIBUTION_TYPE
+               END AS distribution_type,
+               info.DRAWING_NO AS drawing_no,
+               info.OBJECT_ID AS object_id,
+               info.ORG_FILE_NM AS org_file_nm,
+               info.REVISION AS revision,
+               'SUCCESS' AS status_cd
+          FROM DOCS_HISTORY info
+         WHERE info.LOG_TYPE = 'VIEWING'
+        <if test="distributionType != null and distributionType != ''">
+            <choose>
+                <when test="distributionType == '기술자료관리'">
+                    AND info.DISTRIBUTION_TYPE = 'CCB'
+                </when>
+                <when test="distributionType == 'Documents'">
+                    AND info.DISTRIBUTION_TYPE = 'FunctionCode'
+                </when>
+                <otherwise>
+                    AND info.DISTRIBUTION_TYPE = #{distributionType}
+                </otherwise>
+            </choose>
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND (COALESCE(info.USER_ID, '') ILIKE '%' || #{keyword} || '%'
+                 OR COALESCE(info.USER_NM, '') ILIKE '%' || #{keyword} || '%'
+                 OR COALESCE(info.DRAWING_NO, '') ILIKE '%' || #{keyword} || '%'
+                 OR COALESCE(info.OBJECT_ID, '') ILIKE '%' || #{keyword} || '%'
+                 OR COALESCE(info.ORG_FILE_NM, '') ILIKE '%' || #{keyword} || '%')
+        </if>
+         ORDER BY info.INSERT_DATE DESC
+         LIMIT 1000
+    </select>
+
+    <select id="selectPrintEvents"
+            resultType="kr.esob.fdms.controller.inside.distribution.viewprinthistory.HistoryEventVO">
+        SELECT 'PRINT' AS history_type,
+               TO_CHAR(job.REQUESTED_AT AT TIME ZONE 'Asia/Seoul', 'YYYY-MM-DD HH24:MI:SS') AS occurred_at,
+               TO_CHAR(job.COMPLETED_AT AT TIME ZONE 'Asia/Seoul', 'YYYY-MM-DD HH24:MI:SS') AS completed_at,
+               job.ACTOR_USER_CD AS actor_user_cd,
+               job.ACTOR_USER_ID AS actor_user_id,
+               job.ACTOR_USER_NM AS actor_user_nm,
+               job.PRINT_JOB_ID AS print_job_id,
+               item.ITEM_SEQ AS item_seq,
+               COUNT(*) OVER (PARTITION BY job.PRINT_JOB_ID) AS item_count,
+               COALESCE(item.OBJECT_TYPE, job.OBJECT_TYPE) AS object_type,
+               COALESCE(item.OBJECT_ID, job.OBJECT_ID) AS object_id,
+               COALESCE(item.FILE_NO, job.FILE_NO) AS file_no,
+               COALESCE(item.REQUEST_NO, job.REQUEST_NO) AS request_no,
+               item.REQUEST_TYPE AS request_type,
+               job.STATUS_CD AS status_cd,
+               job.PAGE_COUNT AS page_count,
+               job.COPY_COUNT AS copy_count,
+               job.PRINTER_NM AS printer_nm,
+               job.DEVICE_ID AS device_id,
+               job.CLIENT_IP AS client_ip,
+               job.ERROR_MESSAGE AS error_message
+          FROM DOCS_PRINT_JOB job
+          LEFT JOIN DOCS_PRINT_JOB_ITEM item
+            ON item.PRINT_JOB_ID = job.PRINT_JOB_ID
+         WHERE 1 = 1
+        <if test="statusCd != null and statusCd != ''">
+            AND job.STATUS_CD = #{statusCd}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND (COALESCE(job.ACTOR_USER_ID, '') ILIKE '%' || #{keyword} || '%'
+                 OR COALESCE(job.ACTOR_USER_NM, '') ILIKE '%' || #{keyword} || '%'
+                 OR COALESCE(job.PRINT_JOB_ID, '') ILIKE '%' || #{keyword} || '%'
+                 OR COALESCE(item.OBJECT_ID, job.OBJECT_ID, '') ILIKE '%' || #{keyword} || '%'
+                 OR COALESCE(item.FILE_NO, job.FILE_NO, '') ILIKE '%' || #{keyword} || '%'
+                 OR COALESCE(item.REQUEST_NO, job.REQUEST_NO, '') ILIKE '%' || #{keyword} || '%'
+                 OR COALESCE(job.PRINTER_NM, '') ILIKE '%' || #{keyword} || '%')
+        </if>
+         ORDER BY job.REQUESTED_AT DESC, item.ITEM_SEQ
+         LIMIT 1000
+    </select>
 </mapper>

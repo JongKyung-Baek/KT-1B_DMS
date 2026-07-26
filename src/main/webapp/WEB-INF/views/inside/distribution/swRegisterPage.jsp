@@ -2,12 +2,14 @@
     <%@ taglib prefix="custom" tagdir="/WEB-INF/tags" %>
         <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
             <%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
+<spring:message code="feature.locale.code" text="ko" var="pageLanguage" />
                 <!doctype html>
-                <html lang="kr">
+                <html lang="${pageLanguage}">
 
                 <head>
                     <meta charset="UTF-8">
-                    <title>자료 등록 | 기술자료관리시스템</title>
+                    <title><spring:message code="feature.techRegister.pageTitle"
+                            text="자료 등록 | 기술자료관리시스템" /></title>
                     <style>
                         body {
                             margin: 0;
@@ -331,7 +333,7 @@
                         }
                     </style>
                     <link rel="stylesheet"
-                        href="${pageContext.request.contextPath}/resources/css/pages/technical-data-register.css?v=20260726.2" />
+                        href="${pageContext.request.contextPath}/resources/css/pages/technical-data-register.css?v=20260726.4" />
                 </head>
 
                 <body>
@@ -340,24 +342,26 @@
                             <div class="sw-register-hero__copy">
                                 <div class="sw-register-hero__eyebrow">
                                     <i class="icon-base ti tabler-file-upload" aria-hidden="true"></i>
-                                    <span>TECHNICAL DATA REGISTRATION</span>
+                                    <span><spring:message code="feature.techRegister.eyebrow"
+                                            text="TECHNICAL DATA REGISTRATION" /></span>
                                 </div>
                                 <h1 id="swRegisterPageTitle">
-                                    <spring:message code='label.dataRegistration'></spring:message>
+                                    <spring:message code="feature.techRegister.title" text="자료 등록" />
                                 </h1>
                                 <p>
-                                    <spring:message code='label.dataRegistrationInfo'></spring:message>
-                                    필수 정보를 입력하고 원본 PDF를 첨부해 주세요.
+                                    <spring:message code="feature.techRegister.description"
+                                        text="송부 정보와 필수 정보를 입력하고 원본 PDF를 첨부해 주세요." />
                                 </p>
                             </div>
-                            <div class="sw-register-hero__chips" aria-label="등록 필수 안내">
+                            <div class="sw-register-hero__chips"
+                                aria-label="<spring:message code='feature.techRegister.required.aria' text='등록 필수 안내' />">
                                 <span class="sw-register-chip">
                                     <i class="icon-base ti tabler-circle-check" aria-hidden="true"></i>
-                                    필수 4개 항목
+                                    <spring:message code="feature.techRegister.required.count" text="필수 4개 항목" />
                                 </span>
                                 <span class="sw-register-chip sw-register-chip--accent">
                                     <i class="icon-base ti tabler-file-type-pdf" aria-hidden="true"></i>
-                                    주파일 PDF
+                                    <spring:message code="feature.techRegister.required.mainPdf" text="주파일 PDF" />
                                 </span>
                             </div>
                         </header>
@@ -396,7 +400,7 @@
 
                             .swRegisterPopup .popupFormGrid #swTypeCd+.select2-container.swtype-empty .select2-selection--multiple::before,
                             .swRegisterPopup .popupFormGrid #reviewerUser+.select2-container.swtype-empty .select2-selection--multiple::before {
-                                content: "선택";
+                                content: "<spring:message code='feature.common.select' text='선택' javaScriptEscape='true' />";
                                 position: absolute;
                                 left: 12px;
                                 top: 50%;
@@ -432,8 +436,8 @@
                                 min-width: 120px;
                             }
 
-                            .swRegisterPopup .popupFormGrid #swTypeCd+.select2-container .select2-selection__choice[title="선택"],
-                            .swRegisterPopup .popupFormGrid #reviewerUser+.select2-container .select2-selection__choice[title="선택"] {
+                            .swRegisterPopup .popupFormGrid #swTypeCd+.select2-container .select2-selection__choice[title="<spring:message code='feature.common.select' text='선택' />"],
+                            .swRegisterPopup .popupFormGrid #reviewerUser+.select2-container .select2-selection__choice[title="<spring:message code='feature.common.select' text='선택' />"] {
                                 display: none !important;
                             }
 
@@ -541,6 +545,16 @@
                             var IS_SW_REVISION_UPDATE = "${param.isNewRevision}" === "true";
                             var SW_PREV_OBJECT_ID = "${param.objectId}";
                             var IS_SW_REGISTER_PAGE = "${swRegisterPageMode}" === "true";
+                            function swRegisterMessage(key, fallback) {
+                                var args = Array.prototype.slice.call(arguments, 2);
+                                var message = fallback || key;
+                                if (window.SdmsI18n && typeof window.SdmsI18n.t === "function") {
+                                    message = window.SdmsI18n.t.apply(window.SdmsI18n, [key, fallback].concat(args));
+                                }
+                                return args.reduce(function (text, value, index) {
+                                    return String(text).replace(new RegExp("\\{" + index + "\\}", "g"), value);
+                                }, message);
+                            }
                             var BUSINESS_TYPE_SUB_OPTIONS = [
                                 <c:forEach var="item" items="${businessTypeCd}" varStatus="status">
                                 {
@@ -612,12 +626,16 @@
                                     };
                                     if (isMultiple) {
                                         option.closeOnSelect = false;
-                                        option.placeholder = $select.data('placeholder') || '선택';
+                                        option.placeholder = $select.data('placeholder')
+                                            || swRegisterMessage("feature.common.select", "선택");
                                         if ($select.attr('id') === 'swTypeCd') {
                                             option.maximumSelectionLength = 3;
                                             option.language = {
                                                 maximumSelected: function () {
-                                                    return '보드 멤버는 최대 3명까지 선택할 수 있습니다.';
+                                                    return swRegisterMessage(
+                                                        "feature.techRegister.validation.boardMemberLimit",
+                                                        "보드 멤버는 최대 3명까지 선택할 수 있습니다."
+                                                    );
                                                 }
                                             };
                                         }
@@ -627,7 +645,8 @@
                                         $select.off('change.multiPlaceholder select2:open.multiPlaceholder select2:close.multiPlaceholder');
                                         $select.on('change.multiPlaceholder select2:open.multiPlaceholder select2:close.multiPlaceholder', function () {
                                             var $current = $(this);
-                                            var placeholder = $current.data('placeholder') || '선택';
+                                            var placeholder = $current.data('placeholder')
+                                                || swRegisterMessage("feature.common.select", "선택");
                                             var selected = $current.val() || [];
                                             var hasSelected = Array.isArray(selected)
                                                 ? selected.filter(function (v) { return $.trim(v || '') !== '' && v !== SWTYPE_EMPTY_VALUE; }).length > 0
@@ -780,28 +799,43 @@
                                 emptyArray2 = [];
 
                                 if ($.trim($swPopupField("#ccbIssueDt").val()) === "") {
-                                    alertMessage("CCB발행일을 입력하세요.");
+                                    alertMessage(swRegisterMessage(
+                                        "feature.techRegister.validation.ccbDate",
+                                        "CCB발행일을 입력하세요."
+                                    ));
                                     return false;
                                 }
 
                                 if ($.trim($swPopupField("#dataName").val()) === "") {
                                     //isValidDataEmpty("dataName", "form.dataName");
                                     /* alertMessage('의뢰명을 입력하세요.'); */
-                                    alertMessage(g_msg('msg.requestNm'));
+                                    alertMessage(swRegisterMessage(
+                                        "feature.techRegister.validation.requestName",
+                                        "의뢰명을 입력하세요."
+                                    ));
                                     return false;
                                 }
                                 if ($.trim($swPopupField("#businessTypeCd").val()) === "") {
                                     /* alertMessage("유형을 선택하세요."); */
-                                    alertMessage(g_msg('msg.selectType'));
+                                    alertMessage(swRegisterMessage(
+                                        "feature.techRegister.validation.classification",
+                                        "자료 분류를 선택하세요."
+                                    ));
                                     return false;
                                 }
                                 if ($.trim($swPopupField("#revNo").val()) === "") {
-                                    alertMessage("Revision을 선택하세요.");
+                                    alertMessage(swRegisterMessage(
+                                        "feature.techRegister.validation.revision",
+                                        "Revision을 선택하세요."
+                                    ));
                                     return false;
                                 }
                                 if ($.trim($swPopupField("#swNo").val()) === "") {
                                     /* alertMessage("송부번호를 확인하세요."); */
-                                    alertMessage(g_msg('msg.sendNum'));
+                                    alertMessage(swRegisterMessage(
+                                        "feature.techRegister.validation.transmittalNo",
+                                        "송부번호를 입력하세요."
+                                    ));
                                     return false;
                                 }
                                 /* var swTypeCdValue = $swPopupField("#swTypeCd").val();
@@ -829,7 +863,10 @@
 
                                 if (emptyArray2.length <= 0) {
                                     /* alertMessage("첨부파일을 선택하세요."); */
-                                    alertMessage(g_msg('msg.attachedFile'));
+                                    alertMessage(swRegisterMessage(
+                                        "feature.techRegister.validation.mainFile",
+                                        "주파일을 선택하세요."
+                                    ));
                                     return false;
                                 }
 
@@ -869,7 +906,10 @@
                                 var swNo = $swPopupField("#swNo").val();
                                 var treeCd = $swPopupField("#treeCd").val() || businessType;
                                 if (!$.trim(treeCd)) {
-                                    alertMessage("Level을 선택하세요.");
+                                    alertMessage(swRegisterMessage(
+                                        "feature.techRegister.validation.level",
+                                        "Level을 선택하세요."
+                                    ));
                                     return;
                                 }
 
@@ -904,7 +944,10 @@
                                     });
                                 }
 
-                                infoMessage(g_msg('msg.registerComplete'), function () {
+                                infoMessage(swRegisterMessage(
+                                    "feature.techRegister.result.complete",
+                                    "등록이 완료되었습니다."
+                                ), function () {
                                     if (IS_SW_REGISTER_PAGE) {
                                         location.href = "/inside/distribution/swRequest/";
                                         return;
@@ -922,7 +965,10 @@
                             function requestCrXCallback(response) {
                                 if (response.success) {
                                 } else {
-                                    alertMessage(g_msg("msg.registerFailure"));						//등록에 실패했습니다.
+                                    alertMessage(swRegisterMessage(
+                                        "feature.techRegister.result.failed",
+                                        "등록에 실패했습니다."
+                                    ));
                                 }
                             }
 
@@ -1168,12 +1214,16 @@
                                             <i class="icon-base ti tabler-file-description"></i>
                                         </span>
                                         <div class="sw-register-section-header__copy">
-                                            <span class="sw-register-step">STEP 01</span>
-                                            <h2 id="swRegisterInfoTitle">기본 정보</h2>
-                                            <p>자료 식별에 필요한 분류와 송부 정보를 입력합니다.</p>
+                                            <span class="sw-register-step"><spring:message
+                                                code="feature.techRegister.step.basic" text="STEP 01" /></span>
+                                            <h2 id="swRegisterInfoTitle"><spring:message
+                                                code="feature.techRegister.basic.title" text="기본 정보" /></h2>
+                                            <p><spring:message code="feature.techRegister.basic.description"
+                                                text="자료 식별에 필요한 분류와 송부 정보를 입력합니다." /></p>
                                         </div>
                                         <span class="sw-register-required-guide">
-                                            <em>*</em> 필수 입력
+                                            <em>*</em> <spring:message code="feature.techRegister.required.input"
+                                                text="필수 입력" />
                                         </span>
                                     </header>
                                     <form id="formSwRegisterPopup">
@@ -1183,36 +1233,39 @@
 
                                     <li class="field-requester">
                                         <!-- <label>발행자</label> --><label>
-                                            <spring:message code='label.client'></spring:message>
-                                            <span class="field-auto-badge">자동</span>
+                                            <spring:message code="feature.techRegister.field.requester" text="의뢰자" />
+                                            <span class="field-auto-badge"><spring:message
+                                                code="feature.techRegister.field.auto" text="자동" /></span>
                                         </label><input type="text" id="registerUserView" value="${registerUser}"
                                             readonly>
                                     </li>
                                     <li style="display:none;">
-                                        <label>CCB 개최일</label><input type="date" id="ccbIssueDt" name="ccbIssueDt"
+                                        <label><spring:message code="feature.techRegister.field.ccbDate"
+                                            text="CCB 개최일" /></label><input type="date" id="ccbIssueDt" name="ccbIssueDt"
                                             value="${date}">
                                     </li>
 
                                     <li class="field-data-name">
                                         <!-- <label>CCB 제목</label> -->
                                         <label>
-                                            <spring:message code='label.projectNm'></spring:message>
+                                            <spring:message code="feature.techRegister.field.requestName" text="의뢰명" />
                                             <em class="field-required">*</em>
                                         </label>
                                         <input type="text" name="dataName" id="dataName" value=""
-                                            placeholder="자료명을 입력하세요" aria-required="true" />
+                                            placeholder="<spring:message code='feature.techRegister.placeholder.requestName' text='자료명을 입력하세요' />"
+                                            aria-required="true" />
                                     </li>
 
                                     <li class="half field-type">
                                         <!-- <label>Level</label> -->
                                         <label>
-                                            <spring:message code='label.type'></spring:message>
+                                            <spring:message code="feature.techRegister.field.classificationGroup" text="자료 분류" />
                                             <em class="field-required">*</em>
                                         </label>
                                         <select id="businessTypeParentCd" name="businessTypeParentCd"
                                             aria-required="true">
                                             <option value="">
-                                                <spring:message code="combo.select" />
+                                                <spring:message code="feature.common.select" text="선택" />
                                             </option>
                                             <c:forEach var="item" items="${businessTypeParentCd}">
                                                 <option value="${item.comboVal}">${item.comboLabel}</option>
@@ -1222,12 +1275,12 @@
 
                                     <li class="half field-type-sub">
                                         <label>
-                                            <spring:message code='label.typeSub'></spring:message>
+                                            <spring:message code="feature.techRegister.field.classification" text="세부 분류" />
                                             <em class="field-required">*</em>
                                         </label>
                                         <select id="businessTypeCd" name="businessTypeCd" aria-required="true" disabled>
                                             <option value="">
-                                                <spring:message code="combo.select" />
+                                                <spring:message code="feature.common.select" text="선택" />
                                             </option>
                                             <c:forEach var="item" items="${businessTypeCd}">
                                                 <option value="${item.comboVal}" data-parent="${item.comboTooltip}">${item.comboLabel}</option>
@@ -1238,8 +1291,9 @@
                                     <li class="half field-revision">
                                         <!-- <label>Revision</label> -->
                                         <label>
-                                            <spring:message code='label.version'></spring:message>
-                                            <span class="field-auto-badge">자동</span>
+                                            <spring:message code="feature.techRegister.field.revision" text="Revision" />
+                                            <span class="field-auto-badge"><spring:message
+                                                code="feature.techRegister.field.auto" text="자동" /></span>
                                         </label>
                                         <input type="text" id="revNo" name="revNo" value="00" readonly>
                                     </li>
@@ -1247,22 +1301,27 @@
                                     <li class="field-sw-no">
                                         <!-- <label>문서번호</label> -->
                                         <label>
-                                            <spring:message code='label.sendNum'></spring:message>
+                                            <spring:message code="feature.techRegister.field.transmittalNo" text="송부번호" />
                                             <em class="field-required">*</em>
                                         </label>
                                         <input type="text" id="swNo" name="swNo" value="" maxlength="100"
-                                            placeholder="송부번호를 입력하세요" aria-required="true" />
+                                            placeholder="<spring:message code='feature.techRegister.placeholder.transmittalNo' text='송부번호를 입력하세요' />"
+                                            aria-required="true" />
                                     </li>
 
                                     <li class="half" style="display:none;">
-                                        <label>등록번호</label>
+                                        <label><spring:message code="feature.techRegister.field.registrationNo"
+                                            text="등록번호" /></label>
                                         <input type="text" id="registerNo" name="registerNo" value="" maxlength="3" />
                                     </li>
 
                                     <li class="half" style="display:none;">
-                                        <label>보드 멤버</label>
-                                        <select id="swTypeCd" name="swTypeCd" multiple="multiple" data-placeholder="선택">
-                                            <option value="__NONE__" selected>선택</option>
+                                        <label><spring:message code="feature.techRegister.field.boardMembers"
+                                            text="보드 멤버" /></label>
+                                        <select id="swTypeCd" name="swTypeCd" multiple="multiple"
+                                            data-placeholder="<spring:message code='feature.common.select' text='선택' />">
+                                            <option value="__NONE__" selected><spring:message
+                                                code="feature.common.select" text="선택" /></option>
                                             <c:forEach var="item" items="${swTypeCd}">
                                                 <option value="${item.comboVal}">${item.comboLabel}${empty
                                                     item.comboTooltip ? '' : ' ('}${empty item.comboTooltip ? '' :
@@ -1272,10 +1331,12 @@
                                     </li>
 
                                     <li class="half" style="display:none;">
-                                        <label>참여자</label>
+                                        <label><spring:message code="feature.techRegister.field.participants"
+                                            text="참여자" /></label>
                                         <select id="reviewerUser" name="reviewerUser" multiple="multiple"
-                                            data-placeholder="선택">
-                                            <option value="__NONE__" selected>선택</option>
+                                            data-placeholder="<spring:message code='feature.common.select' text='선택' />">
+                                            <option value="__NONE__" selected><spring:message
+                                                code="feature.common.select" text="선택" /></option>
                                             <c:forEach var="item" items="${swTypeCd}">
                                                 <option value="${item.comboVal}">${item.comboLabel}${empty
                                                     item.comboTooltip ? '' : ' ('}${empty item.comboTooltip ? '' :
@@ -1285,9 +1346,11 @@
                                     </li>
 
                                     <li class="half" style="display:none;">
-                                        <label>문서유형</label>
+                                        <label><spring:message code="feature.techRegister.field.documentType"
+                                            text="문서유형" /></label>
                                         <select id="distributeTypeCd" name="distributeTypeCd">
-                                            <option value="">선택</option>
+                                            <option value=""><spring:message code="feature.common.select"
+                                                text="선택" /></option>
                                             <c:forEach var="item" items="${distributeTypeCd}">
                                                 <option value="${item.comboVal}">${item.comboLabel}${empty
                                                     item.comboTooltip ? '' : ' ('}${empty item.comboTooltip ? '' :
@@ -1306,54 +1369,71 @@
                                             <i class="icon-base ti tabler-clipboard-check"></i>
                                         </span>
                                         <div>
-                                            <span class="sw-register-step">LIVE STATUS</span>
-                                            <h2 id="swRegisterSummaryTitle">입력 현황</h2>
-                                            <p>필수 항목이 채워지면 등록 준비가 완료됩니다.</p>
+                                            <span class="sw-register-step"><spring:message
+                                                code="feature.techRegister.summary.kicker" text="LIVE STATUS" /></span>
+                                            <h2 id="swRegisterSummaryTitle"><spring:message
+                                                code="feature.techRegister.summary.title" text="입력 현황" /></h2>
+                                            <p><spring:message code="feature.techRegister.summary.description"
+                                                text="필수 항목이 채워지면 등록 준비가 완료됩니다." /></p>
                                         </div>
                                     </header>
                                     <div class="sw-register-summary-progress">
                                         <div>
-                                            <span>필수항목 진행률</span>
+                                            <span><spring:message code="feature.techRegister.summary.progress"
+                                                text="필수항목 진행률" /></span>
                                             <strong id="registerProgressLabel">0 / 4</strong>
                                         </div>
                                         <div class="sw-register-progress-track" id="registerProgressTrack"
-                                            role="progressbar" aria-label="필수항목 입력 진행률"
+                                            role="progressbar"
+                                            aria-label="<spring:message code='feature.techRegister.summary.progressAria' text='필수항목 입력 진행률' />"
                                             aria-valuemin="0" aria-valuemax="4" aria-valuenow="0">
                                             <span id="registerProgressBar"></span>
                                         </div>
                                     </div>
                                     <ul class="sw-register-summary-list">
                                         <li class="sw-register-summary-item" id="summaryCheckDataName">
-                                            <span><i class="icon-base ti tabler-file-text"></i> 의뢰명</span>
+                                            <span><i class="icon-base ti tabler-file-text"></i>
+                                                <spring:message code="feature.techRegister.field.requestName" text="의뢰명" /></span>
                                             <strong class="sw-register-summary-value is-pending"
-                                                id="summaryDataName">미입력</strong>
+                                                id="summaryDataName"><spring:message
+                                                    code="feature.techRegister.summary.notEntered" text="미입력" /></strong>
                                         </li>
                                         <li class="sw-register-summary-item" id="summaryCheckType">
-                                            <span><i class="icon-base ti tabler-category"></i> 자료 분류</span>
+                                            <span><i class="icon-base ti tabler-category"></i>
+                                                <spring:message code="feature.techRegister.field.classification" text="자료 분류" /></span>
                                             <strong class="sw-register-summary-value is-pending"
-                                                id="summaryBusinessType">미선택</strong>
+                                                id="summaryBusinessType"><spring:message
+                                                    code="feature.techRegister.summary.notSelected" text="미선택" /></strong>
                                         </li>
                                         <li class="sw-register-summary-item" id="summaryCheckSwNo">
-                                            <span><i class="icon-base ti tabler-hash"></i> 송부번호</span>
+                                            <span><i class="icon-base ti tabler-hash"></i>
+                                                <spring:message code="feature.techRegister.field.transmittalNo" text="송부번호" /></span>
                                             <strong class="sw-register-summary-value is-pending"
-                                                id="summarySwNo">미입력</strong>
+                                                id="summarySwNo"><spring:message
+                                                    code="feature.techRegister.summary.notEntered" text="미입력" /></strong>
                                         </li>
                                         <li class="sw-register-summary-item" id="summaryCheckMainFile">
-                                            <span><i class="icon-base ti tabler-file-type-pdf"></i> 주파일</span>
+                                            <span><i class="icon-base ti tabler-file-type-pdf"></i>
+                                                <spring:message code="feature.techRegister.field.mainFile" text="주파일" /></span>
                                             <strong class="sw-register-summary-value is-pending"
-                                                id="summaryMainFile">미선택</strong>
+                                                id="summaryMainFile"><spring:message
+                                                    code="feature.techRegister.summary.notSelected" text="미선택" /></strong>
                                         </li>
                                         <li class="sw-register-summary-item sw-register-summary-item--optional">
-                                            <span><i class="icon-base ti tabler-files"></i> 보조파일</span>
+                                            <span><i class="icon-base ti tabler-files"></i>
+                                                <spring:message code="feature.techRegister.field.supportingFiles" text="보조파일" /></span>
                                             <strong class="sw-register-summary-value"
-                                                id="summarySubFiles">선택 안 함</strong>
+                                                id="summarySubFiles"><spring:message
+                                                    code="feature.techRegister.summary.noneSelected" text="선택 안 함" /></strong>
                                         </li>
                                     </ul>
                                     <div class="sw-register-security-note">
                                         <i class="icon-base ti tabler-shield-lock" aria-hidden="true"></i>
                                         <div>
-                                            <strong>문서등급과 접근권한</strong>
-                                            <span>등록 후 문서등급/권한 화면에서 보안등급과 사용자 권한을 설정합니다.</span>
+                                            <strong><spring:message code="feature.techRegister.security.title"
+                                                text="문서등급과 접근권한" /></strong>
+                                            <span><spring:message code="feature.techRegister.security.description"
+                                                text="등록 후 문서등급/권한 화면에서 보안등급과 사용자 권한을 설정합니다." /></span>
                                         </div>
                                     </div>
                                 </aside>
@@ -1366,9 +1446,12 @@
                                         <i class="icon-base ti tabler-paperclip"></i>
                                     </span>
                                     <div class="sw-register-section-header__copy">
-                                        <span class="sw-register-step">STEP 02</span>
-                                        <h2 id="swRegisterUploadTitle">파일 첨부</h2>
-                                        <p>원본 PDF와 함께 관리할 참고자료를 선택합니다.</p>
+                                        <span class="sw-register-step"><spring:message
+                                            code="feature.techRegister.step.upload" text="STEP 02" /></span>
+                                        <h2 id="swRegisterUploadTitle"><spring:message
+                                            code="feature.techRegister.upload.title" text="파일 첨부" /></h2>
+                                        <p><spring:message code="feature.techRegister.upload.description"
+                                            text="원본 PDF와 함께 관리할 참고자료를 선택합니다." /></p>
                                     </div>
                                 </header>
                                 <ul class="section popupFormGrid uploadOnly register-upload-grid">
@@ -1379,15 +1462,17 @@
                                         </span>
                                         <div class="upload-card-heading__copy">
                                             <label for="swRegisFile">
-                                                <spring:message code='label.attachedFileMain'></spring:message>
+                                                 <spring:message code="feature.techRegister.field.mainFile" text="주파일" />
                                             </label>
-                                            <p>등록할 원본 기술자료 PDF 파일 1개를 첨부합니다.</p>
+                                            <p><spring:message code="feature.techRegister.upload.mainDescription"
+                                                text="등록할 원본 기술자료 PDF 파일 1개를 첨부합니다." /></p>
                                         </div>
-                                        <span class="upload-card-heading__badge upload-card-badge--required">필수 · PDF</span>
+                                        <span class="upload-card-heading__badge upload-card-badge--required"><spring:message
+                                            code="feature.techRegister.upload.requiredPdf" text="필수 · PDF" /></span>
                                     </div>
                                     <%-- 파일추가 --%>
                                         <div class="uploadLine"
-                                            title="Drag and drop a file to upload it, or click the button.">
+                                            title="<spring:message code='feature.techRegister.upload.dropHint' text='파일을 끌어 놓거나 버튼을 눌러 선택하세요.' />">
                                             <form id="fileForm" name="fileForm" enctype="multipart/form-data">
                                                 <input type="file" id="swRegisFile" name="swRegisFile"
                                                     accept=".pdf,application/pdf" onchange="fileChange()"
@@ -1398,15 +1483,18 @@
                                             </span>
                                             <div class="fileNameWrap">
                                                 <input type="text" name="fileName" id="fileName"
-                                                    placeholder="PDF 파일 선택 또는 드래그앤드롭" readonly />
-                                                <button type="button" class="fileClearBtn" title="선택 파일 제거"
-                                                    aria-label="선택한 주파일 제거"
+                                                    placeholder="<spring:message code='feature.techRegister.upload.mainPlaceholder' text='PDF 파일 선택 또는 드래그앤드롭' />"
+                                                    readonly />
+                                                <button type="button" class="fileClearBtn"
+                                                    title="<spring:message code='feature.techRegister.upload.removeFile' text='선택 파일 제거' />"
+                                                    aria-label="<spring:message code='feature.techRegister.upload.removeMainFile' text='선택한 주파일 제거' />"
                                                     onclick="clearSwSelectedFile()">×</button>
                                             </div>
                                             <button type="button" class="ui-button ui-corner-all fileUploadBtn"
                                                 onclick="fileUpload()">
                                                 <i class="icon-base ti tabler-folder-open" aria-hidden="true"></i>
-                                                <span>파일 선택</span>
+                                                <span><spring:message code="feature.techRegister.upload.chooseFile"
+                                                    text="파일 선택" /></span>
                                             </button>
                                         </div>
                                 </li>
@@ -1417,14 +1505,16 @@
                                         </span>
                                         <div class="upload-card-heading__copy">
                                             <label for="swSubFiles">
-                                                <spring:message code='label.attachedFileSub'></spring:message>
+                                                 <spring:message code="feature.techRegister.field.supportingFiles" text="보조파일" />
                                             </label>
-                                            <p>설명서나 참고자료 등 관련 파일을 여러 개 첨부할 수 있습니다.</p>
+                                            <p><spring:message code="feature.techRegister.upload.supportingDescription"
+                                                text="설명서나 참고자료 등 관련 파일을 여러 개 첨부할 수 있습니다." /></p>
                                         </div>
-                                        <span class="upload-card-heading__badge">선택 · 다중</span>
+                                        <span class="upload-card-heading__badge"><spring:message
+                                            code="feature.techRegister.upload.optionalMultiple" text="선택 · 다중" /></span>
                                     </div>
                                     <div class="uploadLine"
-                                        title="Drag and drop a file to upload it, or click the button.">
+                                        title="<spring:message code='feature.techRegister.upload.dropHint' text='파일을 끌어 놓거나 버튼을 눌러 선택하세요.' />">
                                         <form id="subFileForm" name="subFileForm" enctype="multipart/form-data">
                                             <input type="file" id="swSubFiles" name="swSubFiles" multiple="multiple"
                                                 style="display: none;" />
@@ -1434,16 +1524,19 @@
                                         </span>
                                         <div class="fileNameWrap">
                                             <input type="text" name="subFileNames" id="subFileNames"
-                                                class="subFileNames" placeholder="보조파일 선택 또는 드래그앤드롭"
+                                                class="subFileNames"
+                                                placeholder="<spring:message code='feature.techRegister.upload.supportingPlaceholder' text='보조파일 선택 또는 드래그앤드롭' />"
                                                 readonly />
-                                            <button type="button" class="fileClearBtn" title="선택 파일 제거"
-                                                aria-label="선택한 보조파일 제거"
+                                            <button type="button" class="fileClearBtn"
+                                                title="<spring:message code='feature.techRegister.upload.removeFile' text='선택 파일 제거' />"
+                                                aria-label="<spring:message code='feature.techRegister.upload.removeSupportingFiles' text='선택한 보조파일 제거' />"
                                                 onclick="clearSwSubSelectedFiles()">×</button>
                                         </div>
                                         <button class="ui-button ui-corner-all fileUploadBtn" type="button"
                                             onclick="$('#swSubFiles').click();">
                                             <i class="icon-base ti tabler-folder-open" aria-hidden="true"></i>
-                                            <span>파일 선택</span>
+                                            <span><spring:message code="feature.techRegister.upload.chooseFile"
+                                                text="파일 선택" /></span>
                                         </button>
                                     </div>
                                 </li>
@@ -1453,17 +1546,20 @@
                                 <div class="left">
                                     <p class="register-action-note">
                                         <i class="icon-base ti tabler-info-circle" aria-hidden="true"></i>
-                                        <span id="registerActionProgress">필수항목 4개를 입력하면 등록할 수 있습니다.</span>
+                                        <span id="registerActionProgress"><spring:message
+                                            code="feature.techRegister.action.initial"
+                                            text="필수항목 4개를 입력하면 등록할 수 있습니다." /></span>
                                     </p>
                                 </div>
                                 <div class="right">
                                     <button type="button" class="sw-register-list-button"
                                         onclick="location.href='${pageContext.request.contextPath}/inside/distribution/swRequest/'">
                                         <i class="icon-base ti tabler-list" aria-hidden="true"></i>
-                                        목록으로
+                                        <spring:message code="feature.techRegister.action.backToList" text="목록으로" />
                                     </button>
                                     <!-- 등록 -->
-                                    <custom:popupButton function="saveX()" name="save" label="btn.register" id="save" />
+                                     <custom:popupButton function="saveX()" name="save"
+                                        label="feature.techRegister.action.register" id="save" />
                                     <!-- <custom:popupButton function="closePopup('popupDialog')" name="close" label="btn.close" id="close"/> -->
                                 </div>
                             </div>
@@ -1494,13 +1590,35 @@
                                 ? subFileInput.files.length
                                 : 0;
 
-                            updateSwRegisterSummaryValue('#summaryDataName', dataName || '미입력', !!dataName);
-                            updateSwRegisterSummaryValue('#summaryBusinessType', businessTypeText || '미선택',
+                            updateSwRegisterSummaryValue(
+                                '#summaryDataName',
+                                dataName || swRegisterMessage("feature.techRegister.summary.notEntered", "미입력"),
+                                !!dataName
+                            );
+                            updateSwRegisterSummaryValue('#summaryBusinessType',
+                                businessTypeText
+                                    || swRegisterMessage("feature.techRegister.summary.notSelected", "미선택"),
                                 !!businessTypeValue);
-                            updateSwRegisterSummaryValue('#summarySwNo', swNo || '미입력', !!swNo);
-                            updateSwRegisterSummaryValue('#summaryMainFile', mainFile ? mainFile.name : '미선택',
+                            updateSwRegisterSummaryValue(
+                                '#summarySwNo',
+                                swNo || swRegisterMessage("feature.techRegister.summary.notEntered", "미입력"),
+                                !!swNo
+                            );
+                            updateSwRegisterSummaryValue('#summaryMainFile',
+                                mainFile
+                                    ? mainFile.name
+                                    : swRegisterMessage("feature.techRegister.summary.notSelected", "미선택"),
                                 !!mainFile);
-                            $('#summarySubFiles').text(subFileCount ? subFileCount + '개 선택' : '선택 안 함');
+                            $('#summarySubFiles').text(subFileCount
+                                ? swRegisterMessage(
+                                    "feature.techRegister.summary.selectedFiles",
+                                    "{0}개 선택",
+                                    subFileCount
+                                )
+                                : swRegisterMessage(
+                                    "feature.techRegister.summary.noneSelected",
+                                    "선택 안 함"
+                                ));
 
                             var completed = [!!dataName, !!businessTypeValue, !!swNo, !!mainFile]
                                 .filter(function (value) { return value; }).length;
@@ -1509,8 +1627,15 @@
                             $('#registerProgressBar').css('width', percent + '%');
                             $('#registerProgressTrack').attr('aria-valuenow', completed);
                             $('#registerActionProgress').text(completed === 4
-                                ? '필수항목 입력이 완료되었습니다. 등록 전 내용을 한 번 더 확인해 주세요.'
-                                : '필수항목 ' + (4 - completed) + '개를 더 입력하면 등록할 수 있습니다.');
+                                ? swRegisterMessage(
+                                    "feature.techRegister.action.ready",
+                                    "필수항목 입력이 완료되었습니다. 등록 전 내용을 한 번 더 확인해 주세요."
+                                )
+                                : swRegisterMessage(
+                                    "feature.techRegister.action.remaining",
+                                    "필수항목 {0}개를 더 입력하면 등록할 수 있습니다.",
+                                    4 - completed
+                                ));
                         }
 
                         $(function () {

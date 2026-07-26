@@ -2,10 +2,14 @@ package kr.esob.fdms.commonlogic.message;
 
 import java.util.*;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
-import org.springframework.web.servlet.i18n.SessionLocaleResolver;
+import org.springframework.web.servlet.support.RequestContextUtils;
 
 public class LocaleUtil  {
+	private static final Set<String> SUPPORTED_LANGUAGES =
+			// Add "id" here when the Indonesian feature bundle and DB
+			// translations are released. Until then an id-ID browser safely
+			// falls back to the Korean default instead of showing mixed text.
+			new HashSet<String>(Arrays.asList("ko", "en", "ja", "zh"));
 
 	/**
 	 * 기본 로케일을 리턴한다. 기본은 한글이다.
@@ -24,14 +28,8 @@ public class LocaleUtil  {
 	 * @desc       :
 	 */
 	public static Locale getCurrentLocale(HttpServletRequest request) {
-		Locale locale = null;
-		HttpSession session = request.getSession();
-		locale = (Locale)session.getAttribute(SessionLocaleResolver.LOCALE_SESSION_ATTRIBUTE_NAME);
-
-		if (locale == null ) {
-			locale = getDefaultLocale();
-		}
-		return locale;
+		Locale locale = RequestContextUtils.getLocale(request);
+		return getLocale(resolveSupportedLanguage(locale));
 	}
 
 	/**
@@ -48,6 +46,15 @@ public class LocaleUtil  {
 	}
 
 	/**
+	 * jqGrid uses the legacy "kr" filename for Korean while all other bundled
+	 * locales use their standard language code.
+	 */
+	public static String getJqGridLanguage(HttpServletRequest request) {
+		String language = getCurrentLanguage(request);
+		return "ko".equals(language) ? "kr" : language;
+	}
+
+	/**
 	 * 특정 언어이름을 현재 설정된 언어로 ...
 	 * @methodname : getDisplayLanguage
 	 * @author     : younjh
@@ -58,16 +65,7 @@ public class LocaleUtil  {
 	 */
 	public static String getDisplayLanguage(HttpServletRequest request, String language) {
 		Locale locale = getLocale(language);
-
-		HttpSession session = request.getSession();
-
-		Locale currentLocale = (Locale)session.getAttribute(SessionLocaleResolver.LOCALE_SESSION_ATTRIBUTE_NAME);
-
-		if (currentLocale == null ) {
-			currentLocale = getDefaultLocale();
-		}
-
-		return locale.getDisplayLanguage(currentLocale);
+		return locale.getDisplayLanguage(getCurrentLocale(request));
 	}
 
 	public static String getDisplayLanguage(String language) {
@@ -86,19 +84,42 @@ public class LocaleUtil  {
 	 * @desc       :
 	 */
 	public static Locale getLocale(String language) {
-		Locale locale = null;
-
-		if (language.matches(Locale.KOREA.getLanguage())) {
-			locale = Locale.KOREA;
-		} else if(language.matches(Locale.JAPAN.getLanguage())){
-			locale = Locale.JAPAN;
-		} else if(language.matches(Locale.CHINA.getLanguage())){
-			locale = Locale.CHINA;
-		} else {
-			locale = Locale.US;
+		String normalized = normalizeSupportedLanguage(language);
+		if (normalized == null) {
+			return getDefaultLocale();
 		}
+		if ("ko".equals(normalized)) {
+			return Locale.KOREA;
+		}
+		if ("en".equals(normalized)) {
+			return Locale.US;
+		}
+		if ("ja".equals(normalized)) {
+			return Locale.JAPAN;
+		}
+		if ("zh".equals(normalized)) {
+			return Locale.CHINA;
+		}
+		return Locale.forLanguageTag(normalized);
+	}
 
-		return locale;
+	public static String normalizeSupportedLanguage(String language) {
+		if (language == null) {
+			return null;
+		}
+		String normalizedTag = language.trim().replace('_', '-');
+		if (!normalizedTag.matches("(?i)^[a-z]{2,3}(-[a-z]{2})?$")) {
+			return null;
+		}
+		String normalized = Locale.forLanguageTag(normalizedTag)
+				.getLanguage().toLowerCase(Locale.ROOT);
+		return SUPPORTED_LANGUAGES.contains(normalized) ? normalized : null;
+	}
+
+	public static String resolveSupportedLanguage(Locale locale) {
+		String normalized = normalizeSupportedLanguage(
+				locale == null ? null : locale.toLanguageTag());
+		return normalized == null ? getDefaultLocale().getLanguage() : normalized;
 	}
 
 }

@@ -1,15 +1,33 @@
 ﻿<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<spring:message code="feature.techDetail.untitled" text="제목 미등록" var="untitledText" />
 
 <script>
 	var mainFileRows = ${ empty mainFileJson ?'[]': mainFileJson };
 	var subFileRows = ${ empty subFileJson ?'[]': subFileJson };
 	var popupRequestNo = "${param.requestNo}";
-	var popupObjectId = "${objectId}";
-	var MAIN_GRID_BODY_HEIGHT = 52;
-	var SUB_GRID_BODY_HEIGHT = 174;
-	var APPROVAL_GRID_BODY_HEIGHT = 140;
+	var MAIN_GRID_BODY_HEIGHT = 56;
+	var SUB_GRID_BODY_HEIGHT = 168;
+
+	function swFileMessage(key, fallback) {
+		var args = Array.prototype.slice.call(arguments, 2);
+		var message = fallback || key;
+		if (window.SdmsI18n && typeof window.SdmsI18n.t === "function") {
+			message = window.SdmsI18n.t.apply(window.SdmsI18n, [key, fallback].concat(args));
+		}
+		return args.reduce(function(message, value, index) {
+			return String(message).replace(new RegExp("\\{" + index + "\\}", "g"), value);
+		}, message);
+	}
+
+	function swProcessingFileLabel() {
+		return swFileMessage("feature.techDetail.file.processing", "파일 등록중입니다.");
+	}
+
+	function isSwProcessingFileLabel(value) {
+		return value === swProcessingFileLabel() || value === "파일 등록중입니다.";
+	}
 
 	function escapeAttr(value) {
 		return String(value === undefined || value === null ? "" : value)
@@ -22,8 +40,28 @@
 
 	function getSwGradePresentation(cellValue, rowdata) {
 		var row = rowdata || {};
-		var gradeName = $.trim(String(cellValue || row.gradeNm || ""));
+		var sourceGradeName = $.trim(String(cellValue || row.gradeNm || ""));
 		var gradeCode = $.trim(String(row.gradeCd || ""));
+		var gradeName = sourceGradeName;
+		switch (gradeCode.toUpperCase()) {
+			case "GENERAL":
+				gradeName = swFileMessage("feature.documentGrade.general", "일반");
+				break;
+			case "INTERNAL":
+				gradeName = swFileMessage("feature.documentGrade.internal", "사내한");
+				break;
+			case "RESTRICTED":
+				gradeName = swFileMessage("feature.documentGrade.restricted", "제한");
+				break;
+			case "CONFIDENTIAL":
+				gradeName = swFileMessage("feature.documentGrade.confidential", "대외비");
+				break;
+			case "UNASSIGNED":
+				gradeName = swFileMessage("feature.documentGrade.unassigned", "미지정");
+				break;
+			default:
+				break;
+		}
 		var levelText = $.trim(String(row.gradeLevel === undefined || row.gradeLevel === null ? "" : row.gradeLevel));
 		var level = parseInt(levelText, 10);
 		var normalizedCode = gradeCode.toUpperCase();
@@ -38,11 +76,12 @@
 			tone = "internal";
 		}
 		return {
-			name: gradeName || "미지정",
+			name: gradeName || swFileMessage("feature.documentGrade.unassigned", "미지정"),
 			tone: tone,
 			title: gradeName
-				? "적용등급: " + gradeName + (gradeCode ? " (" + gradeCode + (levelText ? ", " + levelText : "") + ")" : "")
-				: "적용할 문서등급이 지정되지 않았습니다."
+				? swFileMessage("feature.techDetail.grade.applied", "적용등급") + ": " + gradeName
+					+ (gradeCode ? " (" + gradeCode + (levelText ? ", " + levelText : "") + ")" : "")
+				: swFileMessage("feature.techDetail.grade.notAssigned", "적용할 문서등급이 지정되지 않았습니다.")
 		};
 	}
 
@@ -62,7 +101,7 @@
 
 	function openSwFileViewer(objectId, fileNo) {
 		if (!objectId) {
-			alertMessage("파일 정보를 찾을 수 없습니다.");
+			alertMessage(swFileMessage("feature.techDetail.file.notFound", "파일 정보를 찾을 수 없습니다."));
 			return;
 		}
 		openFile("OBJECT", "SW", popupRequestNo || null, objectId, fileNo || null, "N");
@@ -72,7 +111,7 @@
 		if (!rowdata || !rowdata.objectId) {
 			return false;
 		}
-		if (!rowdata.orgFileNm || rowdata.orgFileNm === "파일 등록중입니다.") {
+		if (!rowdata.orgFileNm || isSwProcessingFileLabel(rowdata.orgFileNm)) {
 			return false;
 		}
 		if (rowdata.fileExists === false || String(rowdata.fileExists).toLowerCase() === "false") {
@@ -82,7 +121,7 @@
 	}
 
 	function formatSwFileName(cellValue, rowdata, useSubFileNo) {
-		var name = cellValue || "";
+		var name = isSwProcessingFileLabel(cellValue) ? swProcessingFileLabel() : (cellValue || "");
 		if (name === "") {
 			return "";
 		}
@@ -102,15 +141,21 @@
 		var $grid = $("#" + gridId);
 		var useSubFileNo = gridId === "gridSwSubFile";
 		var gridBodyHeight = useSubFileNo ? SUB_GRID_BODY_HEIGHT : MAIN_GRID_BODY_HEIGHT;
-		var gridTotalHeight = gridBodyHeight + 38;
+		var gridTotalHeight = gridBodyHeight + 42;
 		$grid.jqGrid({
 			datatype: "local",
 			data: rows || [],
 			colModel: [
-				{ name: "fileNo", label: "파일순번", width: 90, align: "center", sortable: false },
+				{
+					name: "fileNo",
+					label: swFileMessage("feature.techDetail.grid.fileNo", "파일순번"),
+					width: 90,
+					align: "center",
+					sortable: false
+				},
 				{
 					name: "gradeNm",
-					label: "적용등급",
+					label: swFileMessage("feature.techDetail.grid.grade", "적용등급"),
 					width: 110,
 					align: "center",
 					sortable: false,
@@ -118,14 +163,20 @@
 				},
 				{
 					name: "orgFileNm",
-					label: "파일명",
+					label: swFileMessage("feature.techDetail.grid.fileName", "파일명"),
 					width: 790,
 					sortable: false,
 					formatter: function (cellValue, options, rowdata) {
 						return formatSwFileName(cellValue, rowdata || {}, useSubFileNo);
 					}
 				},
-				{ name: "fileSize", label: "파일크기(Byte)", width: 170, align: "right", sortable: false }
+				{
+					name: "fileSize",
+					label: swFileMessage("feature.techDetail.grid.fileSize", "파일크기(Byte)"),
+					width: 170,
+					align: "right",
+					sortable: false
+				}
 			],
 			height: gridBodyHeight,
 			autowidth: true,
@@ -152,119 +203,6 @@
 		$grid.closest(".ui-jqgrid-view").css("height", gridTotalHeight + "px");
 	}
 
-	function formatCommentCell(cellValue, options, rowdata, gridId) {
-		var comment = cellValue && cellValue !== "-" ? cellValue : "승인하였습니다.";
-		if (rowdata.editable !== "Y") {
-			return escapeAttr(cellValue || "-");
-		}
-		return ''
-			+ '<input type="text" class="approval-comment-input" data-grid-id="' + escapeAttr(gridId) + '" data-row-id="' + escapeAttr(options.rowId) + '"'
-			+ ' value="' + escapeAttr(comment) + '" style="width:96%;" />';
-	}
-
-	function initApprovalStatusGrid(gridId, rows) {
-		var $grid = $("#" + gridId);
-		if ($grid[0] && $grid[0].grid) {
-			$grid.jqGrid("GridUnload");
-		}
-		$grid.jqGrid({
-			datatype: "local",
-			data: rows || [],
-			colModel: [
-				{ name: "approver", label: "이름", width: 220, sortable: false },
-				{ name: "status", label: "상태", width: 120, align: "center", sortable: false },
-				{ name: "comment", label: "코멘트", width: 360, sortable: false, formatter: function (cellValue, options, rowdata) { return formatCommentCell(cellValue, options, rowdata, gridId); } }
-			],
-			height: APPROVAL_GRID_BODY_HEIGHT,
-			autowidth: true,
-			shrinkToFit: true,
-			forceFit: true,
-			scrollOffset: 0,
-			rowNum: 9999,
-			viewrecords: false,
-			loadonce: true,
-			loadComplete: function () {
-				var $container = $grid.closest(".gridContainer");
-				if ($container.length) {
-					$grid.jqGrid("setGridWidth", $container.width(), true);
-				}
-			}
-		});
-
-		$grid.closest(".ui-jqgrid-bdiv").css({
-			height: APPROVAL_GRID_BODY_HEIGHT + "px",
-			overflowX: "auto",
-			overflowY: "auto"
-		});
-
-		var $container = $grid.closest(".gridContainer");
-		if ($container.length) {
-			$grid.jqGrid("setGridWidth", $container.width(), true);
-		}
-	}
-
-	function loadApprovalStatus() {
-		var emptyRows = [{ approver: "-", status: "-", comment: "조회 대상 없음" }];
-		if (!popupObjectId) {
-			initApprovalStatusGrid("gridSwApproverStatus", emptyRows);
-			initApprovalStatusGrid("gridSwReviewerStatus", emptyRows);
-			return;
-		}
-		callAjax(
-			{ objectId: popupObjectId },
-			"/inside/distribution/swRequest/approveStatusRows",
-			function (response) {
-				var rows = response && response.rows ? response.rows : [];
-				var approverRows = [];
-				var reviewerRows = [];
-				$.each(rows, function (idx, row) {
-					if ((row.approvalType || "").toUpperCase() === "REVIEWER") { reviewerRows.push(row); } else { approverRows.push(row); }
-				});
-				if (!approverRows.length) { approverRows = emptyRows; }
-				if (!reviewerRows.length) { reviewerRows = emptyRows; }
-				initApprovalStatusGrid("gridSwApproverStatus", approverRows);
-				initApprovalStatusGrid("gridSwReviewerStatus", reviewerRows);
-			},
-			"json"
-		);
-	}
-
-	function saveApprovalComment(gridId, rowId) {
-		var $input = $('.approval-comment-input[data-grid-id="' + gridId + '"][data-row-id="' + rowId + '"]');
-		if (!$input.length) {
-			return;
-		}
-		var comment = $.trim($input.val());
-		if (!comment) {
-			comment = "승인하였습니다.";
-			$input.val(comment);
-		}
-		callAjax(
-			{ objectId: popupObjectId, comment: comment },
-			"/inside/distribution/swRequest/saveApprovalComment",
-			function (response) {
-				if (response && response.success) {
-					alertMessage("코멘트가 저장되었습니다.", function () {
-                        $("#alertMessage").dialog("close");
-                        loadApprovalStatus();
-					});
-					return;
-				}
-				alertMessage((response && response.message) ? response.message : "코멘트 저장에 실패했습니다.");
-			},
-			"json"
-		);
-	}
-
-	function saveApprovalCommentByGrid(gridId) {
-		var $input = $('.approval-comment-input[data-grid-id="' + gridId + '"]').first();
-		if (!$input.length) {
-			alertMessage("저장 가능한 코멘트 행이 없습니다.");
-			return;
-		}
-		saveApprovalComment(gridId, $input.data("rowId"));
-	}
-
 	function downloadSelectedSwFile(gridId) {
 		var $grid = $("#" + gridId);
 		var selectedRows = $grid.jqGrid('getGridParam', 'selarrrow') || [];
@@ -275,7 +213,7 @@
 			}
 		}
 		if (!selectedRows.length) {
-			alertMessage(g_msg('msg.noSelectedItem'));
+			alertMessage(swFileMessage("feature.common.validation.noSelection", "선택된 항목이 없습니다."));
 			return;
 		}
 
@@ -284,7 +222,8 @@
 		for (var i = 0; i < selectedRows.length; i++) {
 			var data = $grid.jqGrid('getLocalRow', selectedRows[i]) || $grid.jqGrid('getRowData', selectedRows[i]);
 			if (!isDownloadableSwFile(data || {})) {
-				blockedFiles.push((data && (data.fileViewNm || data.orgFileNm || data.fileNm || data.fileName)) || "알 수 없는 파일");
+				blockedFiles.push((data && (data.fileViewNm || data.orgFileNm || data.fileNm || data.fileName))
+					|| swFileMessage("feature.techDetail.file.unknown", "알 수 없는 파일"));
 				continue;
 			}
 			var url = "/inside/distribution/swRequest/downloadFile?objectId=" + encodeURIComponent(data.objectId);
@@ -297,7 +236,7 @@
 			});
 		}
 		if (!requests.length) {
-			alertMessage("다운로드 가능한 파일이 없습니다.");
+			alertMessage(swFileMessage("feature.techDetail.download.noneAvailable", "다운로드 가능한 파일이 없습니다."));
 			return;
 		}
 
@@ -307,7 +246,11 @@
 	function downloadSwFilesSequentially(requests, idx, blockedFiles) {
 		if (!requests || idx >= requests.length) {
 			if (blockedFiles && blockedFiles.length) {
-				alertMessage("다운로드 불가능한 파일 " + blockedFiles.length + "건은 제외되었습니다.");
+				alertMessage(swFileMessage(
+					"feature.techDetail.download.excluded",
+					"다운로드 불가능한 파일 {0}건은 제외되었습니다.",
+					blockedFiles.length
+				));
 			}
 			return;
 		}
@@ -316,10 +259,11 @@
 			.then(function (response) {
 				if (!response.ok) {
 					if (response.status === 403) {
-						blockedFiles.push(req.fileName || "알 수 없는 파일");
+						blockedFiles.push(req.fileName
+							|| swFileMessage("feature.techDetail.file.unknown", "알 수 없는 파일"));
 						return;
 					}
-					alertMessage("다운로드에 실패했습니다.");
+					alertMessage(swFileMessage("feature.techDetail.download.failed", "다운로드에 실패했습니다."));
 					return;
 				}
 				var disposition = response.headers.get("Content-Disposition") || "";
@@ -329,7 +273,7 @@
 				});
 			})
 			.catch(function () {
-				alertMessage("다운로드에 실패했습니다.");
+				alertMessage(swFileMessage("feature.techDetail.download.failed", "다운로드에 실패했습니다."));
 			})
 			.finally(function () {
 				setTimeout(function () {
@@ -382,7 +326,7 @@
 		}
 		return [{
 			fileNo: "",
-			orgFileNm: "파일 등록중입니다.",
+			orgFileNm: swProcessingFileLabel(),
 			fileSize: "",
 			objectId: "",
 			gradeCd: list[0].gradeCd || "",
@@ -393,13 +337,10 @@
 
 	$(function () {
 		mainFileRows = getSwMainRowsForDisplay(mainFileRows);
-		if (mainFileRows.length && mainFileRows[0].orgFileNm === "파일 등록중입니다.") {
+		if (mainFileRows.length && isSwProcessingFileLabel(mainFileRows[0].orgFileNm)) {
 			subFileRows = [];
 		}
 		renderSwDocumentGrade(mainFileRows[0] || {});
-		if ($("#gridSwApproverStatus, #gridSwReviewerStatus").length) {
-			loadApprovalStatus();
-		}
 		initSwFileGrid("gridSwMainFile", mainFileRows);
 		initSwFileGrid("gridSwSubFile", subFileRows);
 
@@ -416,13 +357,6 @@
 			var objectId = $(this).data("objectId");
 			var fileNo = $(this).data("fileNo");
 			openSwFileViewer(objectId, fileNo);
-		});
-
-		$(document)
-			.off("click.swFilePopup", ".sw-file-popup .approval-comment-save")
-			.on("click.swFilePopup", ".sw-file-popup .approval-comment-save", function (e) {
-			e.preventDefault();
-			saveApprovalComment($(this).data("gridId"), $(this).data("rowId"));
 		});
 	});
 </script>
@@ -559,35 +493,24 @@
 		white-space: normal;
 	}
 
-	.sw-file-popup .sw-detail-state {
-		display: inline-flex;
-		align-items: center;
-		min-height: 24px;
-		padding: 3px 9px;
-		border-radius: 999px;
-		background: #eaf4ff;
-		color: #075a9c;
-		font-size: 12px;
-		font-weight: 700;
-		line-height: 1.3;
-	}
-
 	.sw-file-popup .sectionBlock {
 		margin-top: 12px;
 	}
 
 	.sw-file-popup .popupCard {
 		background: #fff;
-		border: 1px solid #dce3ee;
-		border-radius: 10px;
+		border: 1px solid #e7e5eb;
+		border-radius: 14px;
 		padding: 0;
+		overflow: hidden;
+		box-shadow: 0 5px 20px rgba(47, 43, 61, 0.055);
 	}
 
 	.sw-file-popup .dialogToolbar {
 		height: 42px;
 		padding: 0 14px;
-		border-bottom: 1px solid #e6ebf3;
-		background: #f8fafd;
+		border-bottom: 1px solid #e7e5eb;
+		background: #fff;
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
@@ -626,50 +549,105 @@
 	}
 
 	.sw-file-popup .gridContainer .ui-jqgrid-bdiv {
-		height: 174px !important;
+		height: 168px !important;
 		overflow-x: auto !important;
 		overflow-y: auto !important;
+		background: #fff;
+		scrollbar-color: #aaa7b0 transparent;
+		scrollbar-width: thin;
 	}
 
 	.sw-file-popup .mainFileSection .gridContainer .ui-jqgrid-bdiv {
-		height: 52px !important;
+		height: 56px !important;
 	}
 
 	.sw-file-popup .subFileSection .gridContainer .ui-jqgrid-bdiv {
-		height: 174px !important;
+		height: 168px !important;
 	}
 
 	.sw-file-popup .ui-jqgrid .ui-jqgrid-hdiv {
-		background: #fafafa;
-		border-color: #909090;
+		border-bottom: 1px solid #ddd9e2 !important;
+		background: #f4f2f6 !important;
 	}
 
-	.sw-file-popup .ui-jqgrid .ui-jqgrid-htable th {
-		background: #fafafa;
-		color: #333333;
-		font-weight: 700;
-		border-color: #e0e0e0;
-		height: 38px;
+	.sw-file-popup .ui-jqgrid .ui-jqgrid-htable {
+		border-collapse: separate;
+		border-spacing: 0;
+		background: #f4f2f6;
 	}
 
-	.sw-file-popup .ui-jqgrid tr.jqgrow td {
-		height: 36px;
-		border-color: #edf1f7;
+	.sw-file-popup .ui-jqgrid .ui-jqgrid-htable th,
+	.sw-file-popup .ui-jqgrid .ui-jqgrid-htable th.ui-th-column,
+	.sw-file-popup .ui-jqgrid .ui-jqgrid-htable th.ui-th-column-header {
+		height: 42px !important;
+		min-height: 42px !important;
+		padding: 9px 11px !important;
+		border: 0 !important;
+		background: #f4f2f6 !important;
+		color: #5d596c !important;
+		font-size: 11px !important;
+		font-weight: 800 !important;
+		text-align: center !important;
+		vertical-align: middle !important;
 	}
 
-	.sw-file-popup .ui-jqgrid .ui-jqgrid-bdiv tr.ui-state-hover,
-	.sw-file-popup .ui-jqgrid .ui-jqgrid-bdiv tr:hover,
-	.sw-file-popup .ui-jqgrid .ui-jqgrid-bdiv tr:nth-child(odd).ui-state-hover {
-		background: rgba(0, 127, 175, 0.25);
+	.sw-file-popup .ui-jqgrid .ui-jqgrid-htable th > div,
+	.sw-file-popup .ui-jqgrid .ui-jqgrid-htable th > div.ui-jqgrid-sortable,
+	.sw-file-popup .ui-jqgrid .ui-jqgrid-htable th div:not(.clearfix) {
+		min-height: 20px !important;
+		padding: 0 !important;
+		color: inherit !important;
+		font-size: 11px !important;
+		font-weight: 800 !important;
+		line-height: 20px !important;
+		text-align: center !important;
 	}
 
-	.sw-file-popup .ui-jqgrid .ui-jqgrid-htable th.ui-state-hover,
-	.sw-file-popup .ui-jqgrid .ui-jqgrid-htable th:hover,
-	.sw-file-popup .ui-jqgrid .ui-jqgrid-htable .ui-jqgrid-labels th.ui-state-hover,
-	.sw-file-popup .ui-jqgrid .ui-jqgrid-htable .ui-jqgrid-labels th:hover {
-		border-color: rgba(0, 127, 175, 0.25);
-		background: rgba(0, 127, 175, 0.25);
-		color: #333333;
+	.sw-file-popup .ui-jqgrid .ui-jqgrid-btable {
+		border-collapse: separate;
+		border-spacing: 0;
+		background: #fff;
+	}
+
+	.sw-file-popup .ui-jqgrid .ui-jqgrid-btable tr.jqgrow td {
+		height: 56px !important;
+		padding: 9px 11px !important;
+		border-top: 0 !important;
+		border-right: 0 !important;
+		border-bottom: 1px solid #efedf1 !important;
+		border-left: 0 !important;
+		background: #fff !important;
+		color: #4b465c !important;
+		font-size: 11px !important;
+		line-height: 1.42 !important;
+		text-align: center !important;
+		vertical-align: middle !important;
+	}
+
+	.sw-file-popup .ui-jqgrid .ui-jqgrid-btable tr.jqgrow:last-child td {
+		border-bottom: 0 !important;
+	}
+
+	.sw-file-popup .ui-jqgrid .ui-jqgrid-btable tr.jqgrow:hover td {
+		background: #fbfaff !important;
+	}
+
+	.sw-file-popup .ui-jqgrid .ui-jqgrid-btable tr.ui-state-highlight td,
+	.sw-file-popup .ui-jqgrid .ui-jqgrid-btable tr[aria-selected="true"] td {
+		background: #f1efff !important;
+		color: #403a65 !important;
+	}
+
+	.sw-file-popup .sw-file-link {
+		color: #5b50d6 !important;
+		font-weight: 800;
+		text-decoration: none;
+	}
+
+	.sw-file-popup .sw-file-link:hover,
+	.sw-file-popup .sw-file-link:focus {
+		color: #4b40c5 !important;
+		text-decoration: underline;
 	}
 
 	.sw-file-popup .ui-jqgrid input.cbox,
@@ -711,218 +689,84 @@
 
 <div class="dialogContent sw-file-popup popup-base popup-actions-center popup-type-form-grid">
 	<div class="popupHero sw-detail-hero">
-		<h2>기술자료 상세</h2>
-		<p><c:out value="${empty documentInfo.swNm ? '제목 미등록' : documentInfo.swNm}" /></p>
+		<h2><spring:message code="feature.techDetail.title" text="기술자료 상세" /></h2>
+		<p><c:out value="${empty documentInfo.swNm ? untitledText : documentInfo.swNm}" /></p>
 	</div>
 
-	<div class="sw-detail-summary" role="list" aria-label="기술자료 요약">
+	<div class="sw-detail-summary" role="list"
+		 aria-label="<spring:message code='feature.techDetail.summary.aria' text='기술자료 요약' />">
 		<span class="sw-detail-summary__chip" role="listitem">
-			CCB번호
+			<spring:message code="feature.techDetail.transmittalNo" text="송부번호" />
 			<strong><c:out value="${empty documentInfo.swNo ? '-' : documentInfo.swNo}" /></strong>
 		</span>
 		<span class="sw-detail-summary__chip" role="listitem">
-			문서등급:
+			<spring:message code="feature.techDetail.documentGrade" text="문서등급" />:
 			<span id="swPopupDocumentGrade"
-				  class="sw-document-grade-display document-grade-badge document-grade-badge--unassigned">미지정</span>
-		</span>
-		<span class="sw-detail-summary__chip" role="listitem">
-			진행상태
-			<strong><c:out value="${empty documentInfo.status ? '-' : documentInfo.status}" /></strong>
+				  class="sw-document-grade-display document-grade-badge document-grade-badge--unassigned"><spring:message
+					code="feature.documentGrade.unassigned" text="미지정" /></span>
 		</span>
 	</div>
 
 	<section class="sw-detail-panel" aria-labelledby="swDetailBasicTitle">
 		<div class="sw-detail-panel__header">
-			<h3 id="swDetailBasicTitle">문서 정보</h3>
-			<span>목록에서 숨겨진 기술자료 속성을 함께 표시합니다.</span>
+			<h3 id="swDetailBasicTitle"><spring:message code="feature.techDetail.documentInfo.title" text="문서 정보" /></h3>
+			<span><spring:message code="feature.techDetail.documentInfo.description"
+					text="기술자료의 핵심 식별 정보를 표시합니다." /></span>
 		</div>
 		<dl class="sw-detail-grid">
 			<div class="sw-detail-item">
-				<dt>CCB번호</dt>
+				<dt><spring:message code="feature.techDetail.transmittalNo" text="송부번호" /></dt>
 				<dd><c:out value="${empty documentInfo.swNo ? '-' : documentInfo.swNo}" /></dd>
 			</div>
 			<div class="sw-detail-item sw-detail-item--span-3">
-				<dt>CCB제목</dt>
+				<dt><spring:message code="feature.techDetail.requestName" text="의뢰명" /></dt>
 				<dd><c:out value="${empty documentInfo.swNm ? '-' : documentInfo.swNm}" /></dd>
 			</div>
-			<div class="sw-detail-item sw-detail-item--span-2">
-				<dt>자료분류</dt>
+			<div class="sw-detail-item sw-detail-item--span-3">
+				<dt><spring:message code="feature.techDetail.classification" text="자료분류" /></dt>
 				<dd><c:out value="${empty documentInfo.classificationPath ? '-' : documentInfo.classificationPath}" /></dd>
 			</div>
 			<div class="sw-detail-item">
-				<dt>사업단계</dt>
-				<dd><c:out value="${empty documentInfo.businessTypeNm ? '-' : documentInfo.businessTypeNm}" /></dd>
-			</div>
-			<div class="sw-detail-item">
-				<dt>파일유형</dt>
-				<dd><c:out value="${empty documentInfo.distributeTypeNm ? '-' : documentInfo.distributeTypeNm}" /></dd>
-			</div>
-			<div class="sw-detail-item">
-				<dt>Revision</dt>
-				<dd><c:out value="${empty documentInfo.revNo ? '-' : documentInfo.revNo}" /></dd>
-			</div>
-			<div class="sw-detail-item">
-				<dt>SW버전</dt>
-				<dd><c:out value="${empty documentInfo.swVersionNo ? '-' : documentInfo.swVersionNo}" /></dd>
-			</div>
-			<div class="sw-detail-item">
-				<dt>SW분류</dt>
-				<dd><c:out value="${empty documentInfo.swTypeNm ? '-' : documentInfo.swTypeNm}" /></dd>
-			</div>
-			<div class="sw-detail-item">
-				<dt>파일수</dt>
-				<dd><c:out value="${empty documentInfo.fileCount ? '0' : documentInfo.fileCount}" />건</dd>
-			</div>
-			<div class="sw-detail-item">
-				<dt>기종</dt>
-				<dd><c:out value="${empty documentInfo.productNm ? '-' : documentInfo.productNm}" /></dd>
-			</div>
-			<div class="sw-detail-item">
-				<dt>사업장</dt>
-				<dd><c:out value="${empty documentInfo.businessAreaNm ? '-' : documentInfo.businessAreaNm}" /></dd>
-			</div>
-			<div class="sw-detail-item">
-				<dt>CCB개최일</dt>
-				<dd><c:out value="${empty documentInfo.ccbDate ? '-' : documentInfo.ccbDate}" /></dd>
-			</div>
-			<div class="sw-detail-item">
-				<dt>생성일</dt>
-				<dd><c:out value="${empty documentInfo.createDt ? '-' : documentInfo.createDt}" /></dd>
+				<dt><spring:message code="feature.techDetail.fileCount" text="파일수" /></dt>
+				<dd><spring:message code="feature.common.count.items" text="{0}건"
+						arguments="${empty documentInfo.fileCount ? '0' : documentInfo.fileCount}" /></dd>
 			</div>
 		</dl>
 	</section>
 
 	<section class="sw-detail-panel" aria-labelledby="swDetailHistoryTitle">
 		<div class="sw-detail-panel__header">
-			<h3 id="swDetailHistoryTitle">등록·변경 이력</h3>
-			<span>등록, 수정, 인터페이스 및 승인일 정보를 표시합니다.</span>
+			<h3 id="swDetailHistoryTitle"><spring:message code="feature.techDetail.registrationInfo.title" text="의뢰·등록 정보" /></h3>
+			<span><spring:message code="feature.techDetail.registrationInfo.description"
+					text="의뢰자와 등록 정보를 표시합니다." /></span>
 		</div>
 		<dl class="sw-detail-grid">
 			<div class="sw-detail-item">
-				<dt>의뢰자</dt>
+				<dt><spring:message code="feature.techDetail.requester" text="의뢰자" /></dt>
 				<dd><c:out value="${empty documentInfo.registerUser ? '-' : documentInfo.registerUser}" /></dd>
 			</div>
 			<div class="sw-detail-item">
-				<dt>등록자</dt>
+				<dt><spring:message code="feature.techDetail.registrant" text="등록자" /></dt>
 				<dd><c:out value="${empty documentInfo.insertUserNm ? '-' : documentInfo.insertUserNm}" /></dd>
 			</div>
-			<div class="sw-detail-item">
-				<dt>등록팀</dt>
-				<dd><c:out value="${empty documentInfo.insertDeptNm ? '-' : documentInfo.insertDeptNm}" /></dd>
-			</div>
-			<div class="sw-detail-item">
-				<dt>등록일</dt>
+			<div class="sw-detail-item sw-detail-item--span-2">
+				<dt><spring:message code="feature.techDetail.requestDate" text="의뢰일자" /></dt>
 				<dd><c:out value="${empty documentInfo.insertDt ? '-' : documentInfo.insertDt}" /></dd>
 			</div>
-			<div class="sw-detail-item">
-				<dt>수정자</dt>
-				<dd><c:out value="${empty documentInfo.updateUserNm ? '-' : documentInfo.updateUserNm}" /></dd>
-			</div>
-			<div class="sw-detail-item">
-				<dt>수정일</dt>
-				<dd><c:out value="${empty documentInfo.updateDt ? '-' : documentInfo.updateDt}" /></dd>
-			</div>
-			<div class="sw-detail-item">
-				<dt>Interface일</dt>
-				<dd><c:out value="${empty documentInfo.interfaceDt ? '-' : documentInfo.interfaceDt}" /></dd>
-			</div>
-			<div class="sw-detail-item">
-				<dt>CO번호</dt>
-				<dd><c:out value="${empty documentInfo.ecnNo ? '-' : documentInfo.ecnNo}" /></dd>
-			</div>
-			<div class="sw-detail-item">
-				<dt>CO담당자</dt>
-				<dd><c:out value="${empty documentInfo.ecnUserNm ? '-' : documentInfo.ecnUserNm}" /></dd>
-			</div>
-			<div class="sw-detail-item">
-				<dt>규격화승인일</dt>
-				<dd><c:out value="${empty documentInfo.stdGappDt ? '-' : documentInfo.stdGappDt}" /></dd>
-			</div>
-			<div class="sw-detail-item">
-				<dt>기술변경승인일</dt>
-				<dd><c:out value="${empty documentInfo.changeGappDt ? '-' : documentInfo.changeGappDt}" /></dd>
-			</div>
 		</dl>
 	</section>
-
-	<section class="sw-detail-panel" aria-labelledby="swDetailSecurityTitle">
-		<div class="sw-detail-panel__header">
-			<h3 id="swDetailSecurityTitle">보안·승인 정보</h3>
-			<span>등급, 유효성 및 승인 참여 정보를 표시합니다.</span>
-		</div>
-		<dl class="sw-detail-grid">
-			<div class="sw-detail-item">
-				<dt>문서등급</dt>
-				<dd>
-					<span class="sw-document-grade-display document-grade-badge document-grade-badge--unassigned">미지정</span>
-				</dd>
-			</div>
-			<div class="sw-detail-item">
-				<dt>진행상태</dt>
-				<dd><span class="sw-detail-state"><c:out value="${empty documentInfo.status ? '-' : documentInfo.status}" /></span></dd>
-			</div>
-			<div class="sw-detail-item">
-				<dt>처리상태</dt>
-				<dd><span class="sw-detail-state"><c:out value="${empty documentInfo.processingStatusNm ? '-' : documentInfo.processingStatusNm}" /></span></dd>
-			</div>
-			<div class="sw-detail-item">
-				<dt>방산기술</dt>
-				<dd><c:out value="${empty documentInfo.protectYnNm ? '미지정' : documentInfo.protectYnNm}" /></dd>
-			</div>
-			<div class="sw-detail-item">
-				<dt>유효본</dt>
-				<dd><c:out value="${empty documentInfo.validTypeNm ? '-' : documentInfo.validTypeNm}" /></dd>
-			</div>
-			<div class="sw-detail-item sw-detail-item--span-3">
-				<dt>승인자</dt>
-				<dd><c:out value="${empty documentInfo.approver ? '-' : documentInfo.approver}" /></dd>
-			</div>
-			<div class="sw-detail-item sw-detail-item--span-2">
-				<dt>참여자</dt>
-				<dd><c:out value="${empty documentInfo.reviewerUser ? '-' : documentInfo.reviewerUser}" /></dd>
-			</div>
-		</dl>
-	</section>
-
-	<!-- <div class="section popupCard sectionBlock">
-		<div class="dialogToolbar">
-			<div class="left">
-				<span class="gridTitle">보드멤버 승인 상태</span>
-			</div>
-			<div class="right">
-				<button type="button" class="ui-button ui-corner-all bottomBtn"
-					onclick="saveApprovalCommentByGrid('gridSwApproverStatus')">저장</button>
-			</div>
-		</div>
-		<div class="gridContainer">
-			<table id="gridSwApproverStatus"></table>
-		</div>
-	</div>
-
-	<div class="section popupCard sectionBlock">
-		<div class="dialogToolbar">
-			<div class="left">
-				<span class="gridTitle">참여자 승인 상태</span>
-			</div>
-			<div class="right">
-				<button type="button" class="ui-button ui-corner-all bottomBtn"
-					onclick="saveApprovalCommentByGrid('gridSwReviewerStatus')">저장</button>
-			</div>
-		</div>
-		<div class="gridContainer">
-			<table id="gridSwReviewerStatus"></table>
-		</div>
-	</div> -->
 
 	<div class="section popupCard sectionBlock mainFileSection">
 		<div class="dialogToolbar">
 			<div class="left">
-				<span class="gridTitle">주파일 정보</span>
-				<span class="listCount">총 ${mainFileList.size()}건</span>
+				<span class="gridTitle"><spring:message code="feature.techDetail.mainFiles" text="주파일 정보" /></span>
+				<span class="listCount"><spring:message code="feature.common.count.totalItems" text="총 {0}건"
+						arguments="${mainFileList.size()}" /></span>
 			</div>
 			<div class="right">
 				<button type="button" class="ui-button ui-corner-all bottomBtn"
-					onclick="downloadSelectedSwFile('gridSwMainFile')">다운로드</button>
+					onclick="downloadSelectedSwFile('gridSwMainFile')"><spring:message
+						code="feature.common.button.download" text="다운로드" /></button>
 			</div>
 		</div>
 		<div class="gridContainer">
@@ -933,12 +777,14 @@
 	<div class="section popupCard sectionBlock subFileSection">
 		<div class="dialogToolbar">
 			<div class="left">
-				<span class="gridTitle">보조파일 정보</span>
-				<span class="listCount">총 ${subFileList.size()}건</span>
+				<span class="gridTitle"><spring:message code="feature.techDetail.supportingFiles" text="보조파일 정보" /></span>
+				<span class="listCount"><spring:message code="feature.common.count.totalItems" text="총 {0}건"
+						arguments="${subFileList.size()}" /></span>
 			</div>
 			<div class="right">
 				<button type="button" class="ui-button ui-corner-all bottomBtn"
-					onclick="downloadSelectedSwFile('gridSwSubFile')">다운로드</button>
+					onclick="downloadSelectedSwFile('gridSwSubFile')"><spring:message
+						code="feature.common.button.download" text="다운로드" /></button>
 			</div>
 		</div>
 		<div class="gridContainer">

@@ -19,6 +19,13 @@
 		auditLogoutSkip = true;
 	}
 
+	function changeUiLanguage(language) {
+		var target = new URL(window.location.href);
+		target.searchParams.set('lang', language);
+		markAuditInternalNavigation();
+		window.location.assign(target.toString());
+	}
+
 	function buildAuditLeaveBody() {
 		var fields = ['event=leave'];
 		if (window.SdmsCsrf) {
@@ -198,7 +205,9 @@
 						}
 					});
 				} else {
-					alert('연장에 실패했습니다.');
+					alert(window.SdmsI18n
+						? window.SdmsI18n.t('feature.session.extendFailed', '연장에 실패했습니다.')
+						: '연장에 실패했습니다.');
 				}
 			}
 		});
@@ -264,6 +273,30 @@
 			</li>
 			<li class="nav-item me-3 text-body-secondary small">
 				<span id="sessionTime"></span>
+			</li>
+			<li class="nav-item navbar-dropdown dropdown me-2">
+				<button type="button"
+						class="btn btn-sm btn-label-secondary dropdown-toggle"
+						data-bs-toggle="dropdown"
+						aria-expanded="false"
+						aria-label="<spring:message code='feature.language.selector'/>">
+					<i class="icon-base ti tabler-language me-1" aria-hidden="true"></i>
+					<span><spring:message code="feature.language.current"/></span>
+				</button>
+				<ul class="dropdown-menu dropdown-menu-end">
+					<li>
+						<a class="dropdown-item<c:if test="${sessionScope['scopedTarget.session'].sessionLang eq 'ko'}"> active</c:if>"
+						   href="javascript:void(0);"
+						   lang="ko"
+						   onclick="changeUiLanguage('ko')">한국어</a>
+					</li>
+					<li>
+						<a class="dropdown-item<c:if test="${sessionScope['scopedTarget.session'].sessionLang eq 'en'}"> active</c:if>"
+						   href="javascript:void(0);"
+						   lang="en"
+						   onclick="changeUiLanguage('en')">English</a>
+					</li>
+				</ul>
 			</li>
 			<li class="nav-item me-2">
 				<button type="button" class="btn btn-sm btn-label-primary" onclick="extendSession()"><spring:message code='btn.extend'></spring:message></button>

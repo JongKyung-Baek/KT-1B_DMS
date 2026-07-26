@@ -135,4 +135,13 @@ public class SecurityAclDao extends AbstractDao {
         param.put("resultCd", resultCd);
         return listNotUseSession(PREFIX + "selectAudit", param);
     }
+
+    @SuppressWarnings("unchecked")
+    public List<AccessAuditEventVO> selectAccessHistory(String keyword, String eventType, String resultCd) {
+        Map<String, Object> param = new HashMap<String, Object>();
+        param.put("keyword", keyword);
+        param.put("eventType", eventType);
+        param.put("resultCd", resultCd);
+        return listNotUseSession(PREFIX + "selectAccessHistory", param);
+    }
 }

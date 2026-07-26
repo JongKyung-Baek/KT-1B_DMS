@@ -18,7 +18,7 @@ function isValidation(){
 			isValidDataEmpty("userPwd", "form.pwd");
 			return false;
 		}
-		if(checkPassword($.trim($("#userPwd").val())) == true){
+		if(!checkPasswordRule($.trim($("#userPwd").val()))){
 			alertMessage(g_msg('msg.pwdNotice'));
 			return false;
 		}
@@ -46,18 +46,6 @@ function isValidation(){
 	return true;
 }
 
-function checkPassword(password){
-    if(!/^(?=.*[a-zA-Z])(?=.*[~`!@#$%^&*+=-])(?=.*[0-9]).{9,20}$/.test(password)){
-        return true;
-    }
-    var checkNumber = password.search(/[0-9]/g);
-    var checkEnglish = password.search(/[a-z]/ig);
-    if(checkNumber <0 || checkEnglish <0){
-        return true;
-    }
-    return false;
-}
-
 function requestUser(){
 	if(!isValidation()){
 		return;
@@ -80,7 +68,8 @@ function requestUserCallback(response){
 			$(this).dialog("close");
 		});
 	}else{
-		alertMessage(g_msg("msg.requestFailure"));
+		var messageKey = response && response.message;
+		alertMessage(messageKey ? g_msg(messageKey) : g_msg("msg.requestFailure"));
 	}
 }
 

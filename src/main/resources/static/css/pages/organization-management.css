@@ -1,0 +1,395 @@
+.organization-management-page {
+  --om-primary: #7367f0;
+  --om-primary-dark: #5b50d6;
+  --om-primary-soft: rgba(115, 103, 240, 0.1);
+  --om-text: #2f2b3d;
+  --om-muted: #6d6a77;
+  --om-border: #e7e5eb;
+  color: var(--om-text);
+  font-family: "Pretendard", "Noto Sans KR", sans-serif;
+}
+
+.organization-management-page *,
+.organization-management-page *::before,
+.organization-management-page *::after {
+  box-sizing: border-box;
+}
+
+.organization-management-page .organization-management-results-card {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  flex: 1 1 auto;
+  padding: 22px;
+  border: 1px solid var(--om-border);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 5px 20px rgba(47, 43, 61, 0.055);
+}
+
+.organization-management-page .organization-management-results-card > .distribution-invoice-layout {
+  gap: 16px;
+}
+
+.organization-management-page .distribution-filter-card {
+  overflow: visible;
+  border: 1px solid #ebe9ee !important;
+  border-radius: 12px;
+  background: #faf9fb;
+  box-shadow: none;
+}
+
+.organization-management-page .distribution-filter-card .card-body {
+  overflow: visible;
+  padding: 14px;
+  border-radius: inherit;
+  background: #faf9fb;
+}
+
+.organization-management-page .distribution-content-row {
+  min-height: 0;
+}
+
+.organization-management-page .distribution-grid-card {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--om-border) !important;
+  border-radius: 11px;
+  background: #fff;
+  box-shadow: none;
+}
+
+.organization-management-page .formAcceptance .formAcceptanceFields {
+  align-items: end;
+  gap: 10px;
+}
+
+.organization-management-page .formAcceptance .formAcceptanceItem > .form-label {
+  margin-bottom: 5px;
+  color: #5d596c;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.organization-management-page .formAcceptance input.form-control,
+.organization-management-page .formAcceptance select.form-select,
+.organization-management-page .formAcceptance select:not(.select2-hidden-accessible) {
+  height: 36px !important;
+  min-height: 36px !important;
+  max-height: 36px !important;
+  padding: 7px 10px !important;
+  border: 1px solid #d9d6df;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--om-text);
+  font-size: 11px;
+  line-height: 20px !important;
+}
+
+.organization-management-page .formAcceptance input.form-control:focus,
+.organization-management-page .formAcceptance select.form-select:focus,
+.organization-management-page .formAcceptance select:not(.select2-hidden-accessible):focus {
+  border-color: var(--om-primary);
+  outline: 0;
+  box-shadow: 0 0 0 3px rgba(115, 103, 240, 0.11);
+}
+
+.organization-management-page .formAcceptance .select2-container .select2-selection--single,
+.organization-management-page .formAcceptance .select2-container .select2-selection--multiple {
+  height: 36px !important;
+  min-height: 36px !important;
+  max-height: 36px !important;
+  border-color: #d9d6df;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.organization-management-page .formAcceptance .select2-container--default .select2-selection--single .select2-selection__rendered {
+  color: var(--om-text);
+  font-size: 11px;
+  line-height: 34px !important;
+}
+
+.organization-management-page .formAcceptance .select2-container--default .select2-selection--single .select2-selection__arrow {
+  height: 34px !important;
+}
+
+.organization-management-page .formAcceptance .select2-container--open .select2-selection--single,
+.organization-management-page .formAcceptance .select2-container--open .select2-selection--multiple {
+  border-color: var(--om-primary);
+  box-shadow: 0 0 0 3px rgba(115, 103, 240, 0.11);
+  transform: none;
+}
+
+.organization-management-page .formAcceptance .formAcceptanceActions.formAcceptanceItem {
+  gap: 7px;
+}
+
+.organization-management-page .formAcceptance .formAcceptanceActions .searchBtn.btn.btn-primary,
+.organization-management-page .formAcceptance .formAcceptanceActions .organization-management-reset-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: auto;
+  min-width: 78px;
+  height: 36px !important;
+  min-height: 36px !important;
+  max-height: 36px !important;
+  margin: 0;
+  padding: 7px 13px !important;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 20px !important;
+  box-shadow: none;
+}
+
+.organization-management-page .formAcceptance .formAcceptanceActions .searchBtn.btn.btn-primary {
+  border-color: var(--om-primary);
+  background: var(--om-primary);
+  color: #fff;
+}
+
+.organization-management-page .formAcceptance .formAcceptanceActions .searchBtn.btn.btn-primary:hover,
+.organization-management-page .formAcceptance .formAcceptanceActions .searchBtn.btn.btn-primary:focus {
+  border-color: var(--om-primary-dark);
+  background: var(--om-primary-dark);
+  color: #fff;
+}
+
+.organization-management-page .formAcceptance .formAcceptanceActions .organization-management-reset-btn {
+  border: 1px solid #d8d5de;
+  background: #fff;
+  color: #5d596c;
+}
+
+.organization-management-page .formAcceptance .formAcceptanceActions .organization-management-reset-btn i {
+  font-size: 15px;
+}
+
+.organization-management-page .formAcceptance .formAcceptanceActions .organization-management-reset-btn:hover,
+.organization-management-page .formAcceptance .formAcceptanceActions .organization-management-reset-btn:focus {
+  border-color: rgba(115, 103, 240, 0.34);
+  background: var(--om-primary-soft);
+  color: var(--om-primary-dark);
+}
+
+.organization-management-page .distribution-grid-card .card-datatable,
+.organization-management-page .distribution-grid-card .gridArea,
+.organization-management-page .distribution-grid-card .gridContainer,
+.organization-management-page #gbox_gridInsideUserList,
+.organization-management-page #gview_gridInsideUserList,
+.organization-management-page #gbox_gridInsideDeptList,
+.organization-management-page #gview_gridInsideDeptList {
+  border-radius: inherit;
+}
+
+.organization-management-page #gbox_gridInsideUserList,
+.organization-management-page #gbox_gridInsideDeptList {
+  overflow: hidden !important;
+  background: #fff;
+}
+
+.organization-management-page #gview_gridInsideUserList .ui-jqgrid-hdiv,
+.organization-management-page #gview_gridInsideDeptList .ui-jqgrid-hdiv {
+  border-bottom: 1px solid #ddd9e2 !important;
+  background: #f4f2f6 !important;
+}
+
+.organization-management-page #gview_gridInsideUserList .ui-jqgrid-htable,
+.organization-management-page #gview_gridInsideDeptList .ui-jqgrid-htable {
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #f4f2f6;
+}
+
+.organization-management-page #gview_gridInsideUserList .ui-jqgrid-htable th,
+.organization-management-page #gview_gridInsideUserList .ui-jqgrid-htable th.ui-th-column,
+.organization-management-page #gview_gridInsideUserList .ui-jqgrid-htable th.ui-th-column-header,
+.organization-management-page #gview_gridInsideDeptList .ui-jqgrid-htable th,
+.organization-management-page #gview_gridInsideDeptList .ui-jqgrid-htable th.ui-th-column,
+.organization-management-page #gview_gridInsideDeptList .ui-jqgrid-htable th.ui-th-column-header {
+  height: 42px !important;
+  min-height: 42px !important;
+  padding: 9px 11px !important;
+  border: 0 !important;
+  background: #f4f2f6 !important;
+  color: #5d596c !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+}
+
+.organization-management-page #gview_gridInsideUserList .ui-jqgrid-htable th > div,
+.organization-management-page #gview_gridInsideUserList .ui-jqgrid-htable th > div.ui-jqgrid-sortable,
+.organization-management-page #gview_gridInsideUserList .ui-jqgrid-htable th div:not(.clearfix),
+.organization-management-page #gview_gridInsideDeptList .ui-jqgrid-htable th > div,
+.organization-management-page #gview_gridInsideDeptList .ui-jqgrid-htable th > div.ui-jqgrid-sortable,
+.organization-management-page #gview_gridInsideDeptList .ui-jqgrid-htable th div:not(.clearfix) {
+  min-height: 20px !important;
+  padding: 0 !important;
+  overflow: visible !important;
+  color: inherit !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  line-height: 20px !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+}
+
+.organization-management-page #gview_gridInsideUserList .ui-jqgrid-btable,
+.organization-management-page #gview_gridInsideDeptList .ui-jqgrid-btable {
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #fff;
+}
+
+.organization-management-page #gview_gridInsideUserList .ui-jqgrid-btable tr.jqgrow td,
+.organization-management-page #gview_gridInsideDeptList .ui-jqgrid-btable tr.jqgrow td {
+  height: 56px !important;
+  padding: 9px 11px !important;
+  border-top: 0 !important;
+  border-right: 0 !important;
+  border-bottom: 1px solid #efedf1 !important;
+  border-left: 0 !important;
+  background: #fff !important;
+  color: #4b465c !important;
+  font-size: 11px !important;
+  line-height: 1.42 !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+}
+
+.organization-management-page #gview_gridInsideUserList .ui-jqgrid-btable tr.jqgrow:last-child td,
+.organization-management-page #gview_gridInsideDeptList .ui-jqgrid-btable tr.jqgrow:last-child td {
+  border-bottom: 0 !important;
+}
+
+.organization-management-page #gview_gridInsideUserList .ui-jqgrid-btable tr.jqgrow:hover td,
+.organization-management-page #gview_gridInsideDeptList .ui-jqgrid-btable tr.jqgrow:hover td {
+  background: #fbfaff !important;
+}
+
+.organization-management-page #gview_gridInsideUserList .ui-jqgrid-btable tr.ui-state-highlight td,
+.organization-management-page #gview_gridInsideUserList .ui-jqgrid-btable tr[aria-selected="true"] td,
+.organization-management-page #gview_gridInsideDeptList .ui-jqgrid-btable tr.ui-state-highlight td,
+.organization-management-page #gview_gridInsideDeptList .ui-jqgrid-btable tr[aria-selected="true"] td {
+  background: #f1efff !important;
+  color: #403a65 !important;
+}
+
+.organization-management-page #gridInsideUserList a,
+.organization-management-page #gridInsideDeptList a {
+  color: var(--om-primary-dark);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.organization-management-page #gridInsideUserList a:hover,
+.organization-management-page #gridInsideDeptList a:hover {
+  color: #4b40c5;
+  text-decoration: underline;
+}
+
+.organization-management-page #gview_gridInsideUserList .ui-jqgrid-bdiv,
+.organization-management-page #gview_gridInsideDeptList .ui-jqgrid-bdiv {
+  background: #fff;
+  scrollbar-color: #aaa7b0 transparent;
+  scrollbar-width: thin;
+}
+
+.organization-management-page #gridInsideUserListPager,
+.organization-management-page #gridInsideDeptListPager {
+  min-height: 48px;
+  border-top: 1px solid var(--om-border) !important;
+  background: #fff !important;
+  color: var(--om-muted);
+}
+
+.organization-management-page #gridInsideUserListPager,
+.organization-management-page #gridInsideUserListPager table,
+.organization-management-page #gridInsideUserListPager td,
+.organization-management-page #gridInsideUserListPager .pageSize,
+.organization-management-page #gridInsideDeptListPager,
+.organization-management-page #gridInsideDeptListPager table,
+.organization-management-page #gridInsideDeptListPager td,
+.organization-management-page #gridInsideDeptListPager .pageSize {
+  font-size: 11px !important;
+  vertical-align: middle;
+}
+
+.organization-management-page #gridInsideUserListPager > table > tbody > tr > td:nth-child(2),
+.organization-management-page #gridInsideDeptListPager > table > tbody > tr > td:nth-child(2) {
+  text-align: center !important;
+}
+
+.organization-management-page #gridInsideUserListPager input,
+.organization-management-page #gridInsideUserListPager select,
+.organization-management-page #gridInsideUserListPager button,
+.organization-management-page #gridInsideUserListPager .ui-pg-input,
+.organization-management-page #gridInsideUserListPager .ui-pg-selbox,
+.organization-management-page #gridInsideUserListPager .select2-selection--single,
+.organization-management-page #gridInsideDeptListPager input,
+.organization-management-page #gridInsideDeptListPager select,
+.organization-management-page #gridInsideDeptListPager button,
+.organization-management-page #gridInsideDeptListPager .ui-pg-input,
+.organization-management-page #gridInsideDeptListPager .ui-pg-selbox,
+.organization-management-page #gridInsideDeptListPager .select2-selection--single {
+  height: 28px !important;
+  min-height: 28px !important;
+  max-height: 28px !important;
+  font-size: 11px !important;
+  line-height: 26px !important;
+}
+
+.organization-management-page #gridInsideUserListPager .select2-selection__rendered,
+.organization-management-page #gridInsideDeptListPager .select2-selection__rendered {
+  font-size: 11px !important;
+  line-height: 26px !important;
+}
+
+.organization-management-page #gridInsideUserListPager .select2-selection__arrow,
+.organization-management-page #gridInsideDeptListPager .select2-selection__arrow {
+  height: 26px !important;
+}
+
+.organization-management-page #gridInsideUserListPager .customPageMoveBtn,
+.organization-management-page #gridInsideUserListPager .customPageMoveBtn > a,
+.organization-management-page #gridInsideUserListPager .customPageNumberBtn,
+.organization-management-page #gridInsideUserListPager .customPageNumberBtn > a,
+.organization-management-page #gridInsideUserListPager .ui-pg-button,
+.organization-management-page #gridInsideDeptListPager .customPageMoveBtn,
+.organization-management-page #gridInsideDeptListPager .customPageMoveBtn > a,
+.organization-management-page #gridInsideDeptListPager .customPageNumberBtn,
+.organization-management-page #gridInsideDeptListPager .customPageNumberBtn > a,
+.organization-management-page #gridInsideDeptListPager .ui-pg-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  min-height: 28px;
+  font-size: 11px !important;
+  line-height: 1;
+}
+
+@media (max-width: 575.98px) {
+  .organization-management-page .organization-management-results-card {
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  .organization-management-page .formAcceptance .formAcceptanceFields {
+    grid-template-columns: 1fr;
+  }
+
+  .organization-management-page .formAcceptance .formAcceptanceActions.formAcceptanceItem {
+    grid-column: 1;
+  }
+}

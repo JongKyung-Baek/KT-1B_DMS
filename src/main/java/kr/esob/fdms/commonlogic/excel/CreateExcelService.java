@@ -14,11 +14,14 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.lang.reflect.Method;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -59,6 +62,9 @@ import net.sf.json.JSONObject;
 @Service
 public class CreateExcelService {
 
+	private static final Pattern GENERATED_EXCEL_FILE_NAME =
+			Pattern.compile("grid_[0-9]+\\.xlsx");
+
 	protected Logger logger = LoggerFactory.getLogger(getClass());
 
 	@Inject
@@ -77,6 +83,7 @@ public class CreateExcelService {
 		Map<String, String> paramMap = requeststil.getRequestParameterToMap(request);
 
 		UserVO user = (UserVO) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+		paramMap.put("aclUserCd", user.getUserCd());
 		if("gridOutDistributionOldHistoryList".equals(paramMap.get("gridId"))) {
 			paramMap.put("companyCode", user.getCompanyCd());
 		}
@@ -88,7 +95,7 @@ public class CreateExcelService {
 		makeExcel(paramMap, excelFilePath, totalCount);
 
 		createExcelVo.setResult(Constant.RESULT_SUCCESS);
-		createExcelVo.setUrl(request.getContextPath() + "/resources/" + excelFilePath);
+		createExcelVo.setUrl(buildDownloadUrl(request, excelFilePath));
 
 		return createExcelVo;
 	}
@@ -102,7 +109,7 @@ public class CreateExcelService {
 		makeExcelLocal(param, excelFilePath);
 
 		createExcelVo.setResult(Constant.RESULT_SUCCESS);
-		createExcelVo.setUrl(request.getContextPath() + "/resources/" + excelFilePath);
+		createExcelVo.setUrl(buildDownloadUrl(request, excelFilePath));
 
 		return createExcelVo;
 	}
@@ -114,6 +121,7 @@ public class CreateExcelService {
 		Map<String, String> paramMap = requeststil.getRequestParameterToMap(request);
 
 		UserVO user = (UserVO) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+		paramMap.put("aclUserCd", user.getUserCd());
 		if("gridOutDistributionOldHistoryList".equals(paramMap.get("gridId"))) {
 			paramMap.put("companyCode", user.getCompanyCd());
 		}
@@ -125,7 +133,7 @@ public class CreateExcelService {
 		makeExcel(paramMap, excelFilePath, totalCount);
 
 		createExcelVo.setResult(Constant.RESULT_SUCCESS);
-		createExcelVo.setUrl(request.getContextPath() + "/resources/" + excelFilePath);
+		createExcelVo.setUrl(buildDownloadUrl(request, excelFilePath));
 
 		return createExcelVo;
 	}
@@ -148,9 +156,26 @@ public class CreateExcelService {
 		makeCreateExcelDuanzongPdm(paramMap, excelFilePath, totalCount, param);
 		
 		createExcelVo.setResult(Constant.RESULT_SUCCESS);
-		createExcelVo.setUrl(request.getContextPath() + "/resources/" + excelFilePath);
+		createExcelVo.setUrl(buildDownloadUrl(request, excelFilePath));
 		
 		return createExcelVo;
+	}
+
+	String buildDownloadUrl(HttpServletRequest request, String excelFilePath) {
+		String fileName = new File(excelFilePath).getName();
+		return request.getContextPath() + "/common/createExcel/download/" + fileName;
+	}
+
+	Path resolveGeneratedExcelFile(String fileName) {
+		if (fileName == null || !GENERATED_EXCEL_FILE_NAME.matcher(fileName).matches()) {
+			return null;
+		}
+
+		Path excelDirectory = Paths.get(rootAbsolutePath.toString(), "excel")
+				.toAbsolutePath()
+				.normalize();
+		Path generatedFile = excelDirectory.resolve(fileName).normalize();
+		return generatedFile.startsWith(excelDirectory) ? generatedFile : null;
 	}
 
 	private int checkExcelCount(Map<String, String> paramMap) throws Exception{

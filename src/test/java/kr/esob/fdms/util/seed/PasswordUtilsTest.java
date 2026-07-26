@@ -57,9 +57,26 @@ class PasswordUtilsTest {
 
     @Test
     void appliesSharedServerSidePasswordPolicy() {
-        assertTrue(PasswordUtils.isAcceptablePassword("Example9!"));
-        assertFalse(PasswordUtils.isAcceptablePassword("short"));
-        assertFalse(PasswordUtils.isAcceptablePassword("contains whitespace9!"));
-        assertFalse(PasswordUtils.isAcceptablePassword("123456789012345678901"));
+        // Eight alphanumeric characters require at least three special characters.
+        assertTrue(PasswordUtils.isAcceptablePassword("Abcdefg1!@#"));
+        assertTrue(PasswordUtils.isAcceptablePassword("abcdefg1!!!"));
+        assertTrue(PasswordUtils.isAcceptablePassword("ABCDEFG1()_"));
+
+        // Ten alphanumeric characters reduce the special-character requirement to two.
+        assertTrue(PasswordUtils.isAcceptablePassword("Abcdefghi1!@"));
+        assertTrue(PasswordUtils.isAcceptablePassword("Abcdefghijklmnopq1!@"));
+
+        assertFalse(PasswordUtils.isAcceptablePassword(null));
+        assertFalse(PasswordUtils.isAcceptablePassword(""));
+        assertFalse(PasswordUtils.isAcceptablePassword("Abcdef1!@#"));
+        assertFalse(PasswordUtils.isAcceptablePassword("Abcdefg1!@"));
+        assertFalse(PasswordUtils.isAcceptablePassword("Abcdefgh1!@"));
+        assertFalse(PasswordUtils.isAcceptablePassword("Abcdefghi1!"));
+        assertFalse(PasswordUtils.isAcceptablePassword("12345678!@#"));
+        assertFalse(PasswordUtils.isAcceptablePassword("Abcdefgh!@#"));
+        assertFalse(PasswordUtils.isAcceptablePassword("Abcdefg1! @#"));
+        assertFalse(PasswordUtils.isAcceptablePassword("Abcdefg1!\t@#"));
+        assertFalse(PasswordUtils.isAcceptablePassword("가Abcdefg1!@#"));
+        assertFalse(PasswordUtils.isAcceptablePassword("Abcdefghijklmnopqr1!@"));
     }
 }

@@ -25,11 +25,18 @@ public class MenuDao extends AbstractDao{
 
 		for(MenuVO vo : list) {
 			if(null != vo.getMenuUrl()) {
-				vo.setMenuUrl(vo.getMenuUrl().replaceAll("\\*", ""));
+				vo.setMenuUrl(toNavigationUrl(vo.getMenuUrl()));
 			}
 		}
 
 		return list;
+	}
+
+	static String toNavigationUrl(String securedMenuUrl) {
+		if (securedMenuUrl == null) {
+			return null;
+		}
+		return securedMenuUrl.replaceFirst("/\\*\\*$", "/");
 	}
 
 	public List<SearchComboInfoVO> getMenuCombo(String menuNm){

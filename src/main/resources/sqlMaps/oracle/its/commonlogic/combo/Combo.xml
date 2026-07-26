@@ -12,7 +12,7 @@
          , COALESCE((SELECT LANG_DESC
                      FROM DOCS_LANG
                      WHERE LANG_CD = combo.LANG_CD
-                       AND LANG_TYPE = 'ko'), combo.TEXT) AS LANG_DESC
+                       AND LANG_TYPE = #{sessionLang}), combo.TEXT) AS LANG_DESC
     FROM DOCS_COMBO combo
     WHERE USE_YN = 'Y'
 </select>
@@ -21,7 +21,7 @@
 <select id="selectComboListByCd" resultType="kr.esob.fdms.commonlogic.combo.ComboInfoVO">
     SELECT COMBO_CD as comboCd
          , VALUE AS comboVal
-         , COALESCE((SELECT LANG_DESC FROM DOCS_LANG WHERE LANG_CD = combo.LANG_CD AND LANG_TYPE = 'ko'), TEXT) AS comboLabel
+         , COALESCE((SELECT LANG_DESC FROM DOCS_LANG WHERE LANG_CD = combo.LANG_CD AND LANG_TYPE = #{sessionLang}), TEXT) AS comboLabel
          , TOOLTIP as comboTooltip
     FROM DOCS_COMBO combo
     WHERE COMBO_CD = #{comboCd}
@@ -33,9 +33,9 @@
 <select id="selectComboList" resultType="kr.esob.fdms.commonlogic.combo.ComboInfoVO">
     SELECT
     COMBO_CD as comboCd
-    , COALESCE((SELECT LANG_DESC FROM DOCS_LANG WHERE LANG_TYPE = 'ko' AND LANG_CD = A1.LANG_CD), A1.TEXT) AS comboLabel
+    , COALESCE((SELECT LANG_DESC FROM DOCS_LANG WHERE LANG_TYPE = #{sessionLang} AND LANG_CD = A1.LANG_CD), A1.TEXT) AS comboLabel
     , VALUE AS comboVal
-    , COALESCE((SELECT LANG_DESC FROM DOCS_LANG WHERE LANG_TYPE = 'ko' AND LANG_CD = A1.TOOLTIP), A1.TOOLTIP) AS comboTooltip
+    , COALESCE((SELECT LANG_DESC FROM DOCS_LANG WHERE LANG_TYPE = #{sessionLang} AND LANG_CD = A1.TOOLTIP), A1.TOOLTIP) AS comboTooltip
     FROM DOCS_COMBO A1
     WHERE COMBO_CD = #{comboCd}
     AND USE_YN = 'Y'
@@ -105,7 +105,7 @@
                COALESCE((SELECT LANG_DESC
                          FROM DOCS_LANG
                          WHERE LANG_CD = combo.LANG_CD
-                           AND LANG_TYPE = 'ko'), TEXT) AS comboLabel,
+                           AND LANG_TYPE = #{sessionLang}), TEXT) AS comboLabel,
                TOOLTIP as comboTooltip
         FROM DOCS_COMBO combo
         WHERE COMBO_CD = 'docClassCd2'
@@ -121,7 +121,7 @@
                COALESCE((SELECT LANG_DESC
                          FROM DOCS_LANG
                          WHERE LANG_CD = combo.LANG_CD
-                           AND LANG_TYPE = 'ko'), TEXT) AS comboLabel,
+                           AND LANG_TYPE = #{sessionLang}), TEXT) AS comboLabel,
                TOOLTIP as comboTooltip
         FROM DOCS_COMBO combo
         WHERE COMBO_CD = 'docClassCd2'

@@ -339,7 +339,10 @@
 
 <update id="resetPwd">
 	UPDATE DOCS_USER
-	SET USER_PWD = #{userPwd}
+	SET USER_PWD = #{userPwd},
+		PWD_UPDATE_DT = CURRENT_TIMESTAMP,
+		LOGIN_COUNT = 0,
+		LOCK_YN = 'N'
 	WHERE USER_CD = #{userCd}
 </update>
 

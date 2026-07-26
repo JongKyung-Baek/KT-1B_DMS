@@ -14,6 +14,21 @@
         END
     </sql>
 
+    <sql id="localizedMenuName">
+        COALESCE(
+            (
+                SELECT language.lang_desc
+                  FROM docs_menu menu
+                  JOIN docs_lang language
+                    ON language.lang_cd = menu.message_cd
+                   AND language.lang_type = #{sessionLang}
+                 WHERE menu.menu_cd = auditLog.menu_cd
+                 LIMIT 1
+            ),
+            auditLog.menu_nm
+        )
+    </sql>
+
     <sql id="auditFilters">
         <if test='sourceType != null and sourceType != ""'>
             AND (
@@ -44,7 +59,7 @@
             AND auditLog.menu_cd = #{menuCd}
         </if>
         <if test='menuNm != null and menuNm != ""'>
-            AND COALESCE(auditLog.menu_nm, '') ILIKE '%' || #{menuNm} || '%'
+            AND COALESCE(<include refid="localizedMenuName"/>, '') ILIKE '%' || #{menuNm} || '%'
         </if>
         <if test='actionType != null and actionType != ""'>
             AND auditLog.action_type = UPPER(#{actionType})
@@ -100,7 +115,7 @@
                auditLog.actor_user_nm AS "userName",
                auditLog.actor_user_nm AS "userNm",
                auditLog.menu_cd AS "menuCd",
-               auditLog.menu_nm AS "menuNm",
+               <include refid="localizedMenuName"/> AS "menuNm",
                auditLog.menu_url AS "menuUrl",
                auditLog.action_type AS "actionType",
                COALESCE(NULLIF(auditLog.action_nm, ''), auditLog.action_type) AS "actionNm",
@@ -162,7 +177,7 @@
                 ORDER BY auditLog.actor_user_nm
             </when>
             <when test='sortColumn != null and sortColumn.equalsIgnoreCase("menuNm")'>
-                ORDER BY auditLog.menu_nm
+                ORDER BY <include refid="localizedMenuName"/>
             </when>
             <when test='sortColumn != null and sortColumn.equalsIgnoreCase("actionType")'>
                 ORDER BY auditLog.action_type

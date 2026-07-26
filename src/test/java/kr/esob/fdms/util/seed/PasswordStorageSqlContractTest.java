@@ -76,6 +76,21 @@ class PasswordStorageSqlContractTest {
                 "AND a.approval_user_cd = #{sessionUser.userCd}"));
     }
 
+    @Test
+    void ownPasswordChangeUpdatesPasswordLifecycleState() throws IOException {
+        String mapper = resource(
+                "/sqlMaps/oracle/its/controller/login/Login.xml")
+                .replaceAll("\\s+", " ");
+
+        assertTrue(mapper.contains(
+                "<update id=\"resetPwd\"> UPDATE DOCS_USER "
+                        + "SET USER_PWD = #{userPwd}, "
+                        + "PWD_UPDATE_DT = CURRENT_TIMESTAMP, "
+                        + "LOGIN_COUNT = 0, "
+                        + "LOCK_YN = 'N' "
+                        + "WHERE USER_CD = #{userCd} </update>"));
+    }
+
     private String resource(String path) throws IOException {
         try (InputStream input = PasswordStorageSqlContractTest.class.getResourceAsStream(path)) {
             assertNotNull(input, "Missing test resource: " + path);

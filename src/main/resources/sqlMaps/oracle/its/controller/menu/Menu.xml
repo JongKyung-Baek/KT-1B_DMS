@@ -8,6 +8,8 @@
 <select id="getMenuList" resultType="kr.esob.fdms.commonlogic.menu.MenuVO">
     SELECT *
     FROM DOCS_MENU
+    WHERE USE_YN = 'Y'
+    AND DEL_YN = 'N'
     ORDER BY MENU_CD
 </select>
 

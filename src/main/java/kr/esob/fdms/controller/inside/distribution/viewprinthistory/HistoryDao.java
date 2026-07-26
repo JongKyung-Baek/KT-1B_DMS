@@ -20,6 +20,16 @@ public class HistoryDao extends AbstractDao {
 		return (Integer) obj(prefix + "selectListCount", param);
 	}
 
+	@SuppressWarnings("unchecked")
+	public List<HistoryEventVO> selectViewEvents(Map<String, Object> param) {
+		return list(prefix + "selectViewEvents", param);
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<HistoryEventVO> selectPrintEvents(Map<String, Object> param) {
+		return list(prefix + "selectPrintEvents", param);
+	}
+
 	public String inserDestoryRequest(DestroyRequestParam param) {
 		insert(prefix + "inserDestoryRequest", param);
 		return param.getDestroyRequestNo();

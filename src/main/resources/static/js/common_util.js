@@ -2032,15 +2032,46 @@ function fnSetDialogPopupTooltip(title) {
 }
 
 /**
- * 비밀번호 생성 규칙
- * 8자 이상이어야 하고, 숫자/영어/특수문자를 모두 포함해야 함
- * @param pwd
- * @returns
+ * 공통 비밀번호 규칙
+ * 영문·숫자를 각각 포함하고 아래 조합 중 하나를 충족해야 함
+ * - 영숫자 8자 이상 + 특수문자 3자 이상
+ * - 영숫자 10자 이상 + 특수문자 2자 이상
+ * @param {string} pwd
+ * @returns {boolean}
  */
 function checkPasswordRule(pwd) {
-	var reg = /^(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/;
+	if (typeof pwd !== "string" || pwd.length > 20) {
+		return false;
+	}
 
-	return reg.test(pwd);
+	var letterCount = 0;
+	var digitCount = 0;
+	var alphanumericCount = 0;
+	var specialCount = 0;
+
+	for (var i = 0; i < pwd.length; i++) {
+		var code = pwd.charCodeAt(i);
+		if (code < 33 || code > 126) {
+			return false;
+		}
+
+		if ((code >= 65 && code <= 90) || (code >= 97 && code <= 122)) {
+			letterCount++;
+			alphanumericCount++;
+		} else if (code >= 48 && code <= 57) {
+			digitCount++;
+			alphanumericCount++;
+		} else {
+			specialCount++;
+		}
+	}
+
+	if (letterCount === 0 || digitCount === 0) {
+		return false;
+	}
+
+	return (alphanumericCount >= 8 && specialCount >= 3)
+		|| (alphanumericCount >= 10 && specialCount >= 2);
 }
 
 

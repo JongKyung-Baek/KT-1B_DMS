@@ -6,7 +6,7 @@
 function loadBundles(lang, context) {
 	try {
 		jQuery.i18n.properties({
-			name:'message',
+			name:['message', 'feature'],
 			path:context+'/messages/',
 			mode:'map',
 			language:lang,
@@ -20,3 +20,18 @@ function loadBundles(lang, context) {
 }
 
 var g_msg = jQuery.i18n.prop;
+
+window.SdmsI18n = window.SdmsI18n || {
+	t: function(key, fallback) {
+		var args = Array.prototype.slice.call(arguments, 2);
+		var value;
+		try {
+			value = g_msg.apply(null, [key].concat(args));
+		} catch (e) {
+			value = null;
+		}
+		return (typeof value === 'string' && value && value !== key)
+			? value
+			: (fallback || key);
+	}
+};

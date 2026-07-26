@@ -98,7 +98,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 		http.authorizeRequests()
 				.antMatchers(HttpMethod.GET,
 						"/login/loginPage",
-						"/login/duplication").permitAll()
+						"/login/duplication",
+						"/messages/*.properties").permitAll()
 				.antMatchers(HttpMethod.POST, "/login/loginProcess").permitAll()
 				.antMatchers("/error").permitAll()
 				// Duanzong/PDM exchange is intentionally deferred. Re-enable only

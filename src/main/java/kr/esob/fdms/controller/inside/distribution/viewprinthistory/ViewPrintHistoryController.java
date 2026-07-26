@@ -12,7 +12,6 @@ import kr.esob.fdms.commonlogic.securityacl.AccessAuditEventVO;
 import kr.esob.fdms.commonlogic.securityacl.SecurityAclService;
 import kr.esob.fdms.controller.inside.authorization.AuthorizationDao;
 import kr.esob.fdms.controller.inside.authorization.AuthorizationService;
-import net.sf.json.JSONArray;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -43,15 +42,9 @@ public class ViewPrintHistoryController extends AbstractController {
 	SecurityAclService securityAclService;
 
 	@RequestMapping(value="/")
-	public String home(Model model, CommonHomeParam param) throws JsonProcessingException {
+	public String home(Model model, CommonHomeParam param) {
 		securityAclService.requireCurrentUser();
 		setHomeParam(model, param);
-		model.addAttribute("formInfo", JSONArray.fromObject(formService.selectFormInfo("formViewPrintHistoryList")));
-		// The legacy generic Excel button executed a client-provided mapper id.
-		// Access history export must use a dedicated authorized endpoint when added.
-		model.addAttribute("toolbarInfo", JSONArray.fromObject(new ArrayList<Object>()));
-		model.addAttribute("gridInfo", JSONArray.fromObject(gridService.selectGridInfo("gridViewPrintHistoryList")));
-
 		return "inside/distribution/viewPrintHistory/historyList";
 	}
 

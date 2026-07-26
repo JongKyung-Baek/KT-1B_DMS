@@ -6,6 +6,17 @@ var selected2 = null;
 var selectedDoc = null;
 var currentManageType = 'LEVEL';
 
+function treeManageMessage(key, fallback) {
+    var args = Array.prototype.slice.call(arguments, 2);
+    var message = fallback || key;
+    if (window.SdmsI18n && typeof window.SdmsI18n.t === 'function') {
+        message = window.SdmsI18n.t.apply(window.SdmsI18n, [key, fallback].concat(args));
+    }
+    return String(message).replace(/\{(\d+)\}/g, function (matched, index) {
+        return args[index] === undefined || args[index] === null ? matched : args[index];
+    });
+}
+
 $(function () {
     applyModeUi();
     loadFunction1();
@@ -165,13 +176,13 @@ function openNodeDialog(options) {
     }
 
     var includeCode = !!options.includeCode;
-    var codeLabel = options.codeLabel || '코드';
-    var nameLabel = options.nameLabel || '명칭';
+    var codeLabel = options.codeLabel || treeManageMessage('feature.treeManage.field.code', '코드');
+    var nameLabel = options.nameLabel || treeManageMessage('feature.treeManage.field.name', '명칭');
     var nameFirst = !!options.nameFirst;
     var readOnlyCode = !!options.readOnlyCode;
     var namePlaceholder = options.namePlaceholder || '';
     var codePlaceholder = options.codePlaceholder || '';
-    var headerText = options.title || '입력';
+    var headerText = options.title || treeManageMessage('feature.treeManage.dialog.input', '입력');
     var html = [];
     html.push('<div class="tree-node-dialog" style="padding:14px 10px 8px 10px;">');
     html.push('<div style="font-size:18px;font-weight:700;line-height:1.2;margin:0 0 14px 2px;color:#2f3542;">' + escHtml(headerText) + '</div>');
@@ -199,7 +210,7 @@ function openNodeDialog(options) {
     }
 
     var $dlg = $('<div id="treeNodeEditDialog"></div>').html(html.join('')).dialog({
-        title: options.title || '입력',
+        title: options.title || treeManageMessage('feature.treeManage.dialog.input', '입력'),
         modal: true,
         appendTo: 'body',
         width: 520,
@@ -237,16 +248,16 @@ function openNodeDialog(options) {
         },
         buttons: [
             {
-                text: '저장',
+                text: treeManageMessage('feature.common.button.save', '저장'),
                 click: function () {
                     var code = includeCode ? $.trim($('#treeNodeCodeInput').val()) : (options.code || '');
                     var name = $.trim($('#treeNodeNameInput').val());
                     if (includeCode && !code) {
-                        alertMessage('코드를 입력해 주세요.');
+                        alertMessage(treeManageMessage('feature.treeManage.validation.codeRequired', '코드를 입력해 주세요.'));
                         return;
                     }
                     if (!name) {
-                        alertMessage('명칭을 입력해 주세요.');
+                        alertMessage(treeManageMessage('feature.treeManage.validation.nameRequired', '명칭을 입력해 주세요.'));
                         return;
                     }
                     options.onSubmit(code, name);
@@ -254,7 +265,7 @@ function openNodeDialog(options) {
                 }
             },
             {
-                text: '닫기',
+                text: treeManageMessage('feature.common.button.close', '닫기'),
                 click: function () {
                     $(this).dialog('close');
                 }
@@ -307,13 +318,13 @@ function isValidDocTypeName(name) {
 }
 
 function addFunctionCode(parentTreeCd, doneFn, placeholders) {
-    var titleText = 'Function Code 생성';
+    var titleText = treeManageMessage('feature.treeManage.dialog.functionCreate', 'Function Code 생성');
     placeholders = placeholders || {};
     openNodeDialog({
         title: titleText,
         includeCode: true,
-        codeLabel: '번호',
-        nameLabel: 'Title',
+        codeLabel: treeManageMessage('feature.treeManage.field.number', '번호'),
+        nameLabel: treeManageMessage('feature.treeManage.field.title', 'Title'),
         nameFirst: true,
         namePlaceholder: placeholders.name || 'ex) Program Management',
         codePlaceholder: placeholders.code || 'ex) 100',
@@ -321,11 +332,11 @@ function addFunctionCode(parentTreeCd, doneFn, placeholders) {
             var n = $.trim(number);
             var t = $.trim(title);
             if (!isValidFunctionNumber(n)) {
-                alertMessage('번호는 숫자만 입력해 주세요.');
+                alertMessage(treeManageMessage('feature.treeManage.validation.numberOnly', '번호는 숫자만 입력해 주세요.'));
                 return;
             }
             if (!isValidFunctionTitle(t)) {
-                alertMessage('Title을 입력해 주세요.');
+                alertMessage(treeManageMessage('feature.treeManage.validation.titleRequired', 'Title을 입력해 주세요.'));
                 return;
             }
             callAjax({
@@ -336,10 +347,10 @@ function addFunctionCode(parentTreeCd, doneFn, placeholders) {
                 manageType: currentManageType
             }, '/inside/system/treemanage/node/add', function (response) {
                 if (response.success) {
-                    alertMessage('등록되었습니다.');
+                    alertMessage(treeManageMessage('feature.common.result.created', '등록되었습니다.'));
                     doneFn();
                 } else {
-                    alertMessage(response.failReason || '등록 실패');
+                    alertMessage(response.failReason || treeManageMessage('feature.common.result.createFailed', '등록 실패'));
                 }
             });
         }
@@ -347,17 +358,17 @@ function addFunctionCode(parentTreeCd, doneFn, placeholders) {
 }
 
 function editFunctionCode(treeCd, currentTreeNm, currentFunctionCd, doneFn, placeholders) {
-    if (!treeCd) { alertMessage('대상을 선택해 주세요.'); return; }
+    if (!treeCd) { alertMessage(treeManageMessage('feature.treeManage.validation.selectionRequired', '대상을 선택해 주세요.')); return; }
     var number = toFunctionNumber(currentFunctionCd || treeCd);
     var title = toFunctionTitle(currentFunctionCd || treeCd, currentTreeNm);
-    var titleText = 'Function Code 수정';
+    var titleText = treeManageMessage('feature.treeManage.dialog.functionEdit', 'Function Code 수정');
     placeholders = placeholders || {};
     openNodeDialog({
         title: titleText,
         includeCode: true,
         readOnlyCode: true,
-        codeLabel: '번호',
-        nameLabel: 'Title',
+        codeLabel: treeManageMessage('feature.treeManage.field.number', '번호'),
+        nameLabel: treeManageMessage('feature.treeManage.field.title', 'Title'),
         nameFirst: true,
         namePlaceholder: placeholders.name || 'ex) Program Management',
         codePlaceholder: placeholders.code || 'ex) 100',
@@ -365,7 +376,7 @@ function editFunctionCode(treeCd, currentTreeNm, currentFunctionCd, doneFn, plac
         name: title,
         onSubmit: function (fixedNumber, fixedTitle) {
             if (!isValidFunctionTitle(fixedTitle)) {
-                alertMessage('Title을 입력해 주세요.');
+                alertMessage(treeManageMessage('feature.treeManage.validation.titleRequired', 'Title을 입력해 주세요.'));
                 return;
             }
             callAjax({
@@ -374,10 +385,10 @@ function editFunctionCode(treeCd, currentTreeNm, currentFunctionCd, doneFn, plac
                 manageType: currentManageType
             }, '/inside/system/treemanage/node/update', function (response) {
                 if (response.success) {
-                    alertMessage('수정되었습니다.');
+                    alertMessage(treeManageMessage('feature.common.result.updated', '수정되었습니다.'));
                     doneFn();
                 } else {
-                    alertMessage(response.failReason || '수정 실패');
+                    alertMessage(response.failReason || treeManageMessage('feature.common.result.updateFailed', '수정 실패'));
                 }
             });
         }
@@ -391,14 +402,16 @@ function normalizeBoardLevelName(name) {
 function addBoardLevel(parentTreeCd, doneFn) {
     var isChild = !!parentTreeCd;
     openNodeDialog({
-        title: isChild ? '하위 Level 생성' : 'Level 생성',
+        title: isChild
+            ? treeManageMessage('feature.treeManage.dialog.childLevelCreate', '하위 Level 생성')
+            : treeManageMessage('feature.treeManage.dialog.levelCreate', 'Level 생성'),
         includeCode: false,
-        nameLabel: 'Level',
+        nameLabel: treeManageMessage('feature.treeManage.field.level', 'Level'),
         namePlaceholder: isChild ? 'ex) Detail Level' : 'ex) LV1',
         onSubmit: function (code, levelName) {
             var normalized = normalizeBoardLevelName(levelName);
             if (!normalized) {
-                alertMessage('Level을 입력해 주세요.');
+                alertMessage(treeManageMessage('feature.treeManage.validation.levelRequired', 'Level을 입력해 주세요.'));
                 return;
             }
             callAjax({
@@ -409,10 +422,10 @@ function addBoardLevel(parentTreeCd, doneFn) {
                 manageType: currentManageType
             }, '/inside/system/treemanage/node/add', function (response) {
                 if (response.success) {
-                    alertMessage('등록되었습니다.');
+                    alertMessage(treeManageMessage('feature.common.result.created', '등록되었습니다.'));
                     doneFn();
                 } else {
-                    alertMessage(response.failReason || '등록 실패');
+                    alertMessage(response.failReason || treeManageMessage('feature.common.result.createFailed', '등록 실패'));
                 }
             });
         }
@@ -420,17 +433,17 @@ function addBoardLevel(parentTreeCd, doneFn) {
 }
 
 function editBoardLevel(treeCd, currentTreeNm, doneFn) {
-    if (!treeCd) { alertMessage('대상을 선택해 주세요.'); return; }
+    if (!treeCd) { alertMessage(treeManageMessage('feature.treeManage.validation.selectionRequired', '대상을 선택해 주세요.')); return; }
     openNodeDialog({
-        title: 'Level 수정',
+        title: treeManageMessage('feature.treeManage.dialog.levelEdit', 'Level 수정'),
         includeCode: false,
-        nameLabel: 'Level',
+        nameLabel: treeManageMessage('feature.treeManage.field.level', 'Level'),
         namePlaceholder: 'ex) LV1',
         name: currentTreeNm || '',
         onSubmit: function (code, levelName) {
             var normalized = normalizeBoardLevelName(levelName);
             if (!normalized) {
-                alertMessage('Level을 입력해 주세요.');
+                alertMessage(treeManageMessage('feature.treeManage.validation.levelRequired', 'Level을 입력해 주세요.'));
                 return;
             }
             callAjax({
@@ -439,10 +452,10 @@ function editBoardLevel(treeCd, currentTreeNm, doneFn) {
                 manageType: currentManageType
             }, '/inside/system/treemanage/node/update', function (response) {
                 if (response.success) {
-                    alertMessage('수정되었습니다.');
+                    alertMessage(treeManageMessage('feature.common.result.updated', '수정되었습니다.'));
                     doneFn();
                 } else {
-                    alertMessage(response.failReason || '수정 실패');
+                    alertMessage(response.failReason || treeManageMessage('feature.common.result.updateFailed', '수정 실패'));
                 }
             });
         }
@@ -451,14 +464,14 @@ function editBoardLevel(treeCd, currentTreeNm, doneFn) {
 
 function addDocTypeCode(parentTreeCd, parentFunctionCd, doneFn) {
     openNodeDialog({
-        title: 'Document Type code 추가',
+        title: treeManageMessage('feature.treeManage.dialog.documentTypeAdd', 'Document Type code 추가'),
         includeCode: false,
-        nameLabel: '명칭',
+        nameLabel: treeManageMessage('feature.treeManage.field.name', '명칭'),
         namePlaceholder: 'ex) SP',
         onSubmit: function (code, name) {
             var docTypeName = normalizeDocTypeName(name);
             if (!isValidDocTypeName(docTypeName)) {
-                alertMessage('Document Type은 영문/숫자만 입력해 주세요.');
+                alertMessage(treeManageMessage('feature.treeManage.validation.documentTypePattern', 'Document Type은 영문/숫자만 입력해 주세요.'));
                 return;
             }
             callAjax({
@@ -469,10 +482,10 @@ function addDocTypeCode(parentTreeCd, parentFunctionCd, doneFn) {
                 manageType: currentManageType
             }, '/inside/system/treemanage/node/add', function (response) {
                 if (response.success) {
-                    alertMessage('등록되었습니다.');
+                    alertMessage(treeManageMessage('feature.common.result.created', '등록되었습니다.'));
                     doneFn();
                 } else {
-                    alertMessage(response.failReason || '등록 실패');
+                    alertMessage(response.failReason || treeManageMessage('feature.common.result.createFailed', '등록 실패'));
                 }
             });
         }
@@ -480,17 +493,17 @@ function addDocTypeCode(parentTreeCd, parentFunctionCd, doneFn) {
 }
 
 function editDocTypeCode(treeCd, currentName, doneFn) {
-    if (!treeCd) { alertMessage('대상을 선택해 주세요.'); return; }
+    if (!treeCd) { alertMessage(treeManageMessage('feature.treeManage.validation.selectionRequired', '대상을 선택해 주세요.')); return; }
     openNodeDialog({
-        title: 'Document Type code 수정',
+        title: treeManageMessage('feature.treeManage.dialog.documentTypeEdit', 'Document Type code 수정'),
         includeCode: false,
-        nameLabel: '명칭',
+        nameLabel: treeManageMessage('feature.treeManage.field.name', '명칭'),
         namePlaceholder: 'ex) SP',
         name: currentName || '',
         onSubmit: function (code, name) {
             var docTypeName = normalizeDocTypeName(name);
             if (!isValidDocTypeName(docTypeName)) {
-                alertMessage('Document Type은 영문/숫자만 입력해 주세요.');
+                alertMessage(treeManageMessage('feature.treeManage.validation.documentTypePattern', 'Document Type은 영문/숫자만 입력해 주세요.'));
                 return;
             }
             callAjax({
@@ -499,10 +512,10 @@ function editDocTypeCode(treeCd, currentName, doneFn) {
                 manageType: currentManageType
             }, '/inside/system/treemanage/node/update', function (response) {
                 if (response.success) {
-                    alertMessage('수정되었습니다.');
+                    alertMessage(treeManageMessage('feature.common.result.updated', '수정되었습니다.'));
                     doneFn();
                 } else {
-                    alertMessage(response.failReason || '수정 실패');
+                    alertMessage(response.failReason || treeManageMessage('feature.common.result.updateFailed', '수정 실패'));
                 }
             });
         }
@@ -510,15 +523,15 @@ function editDocTypeCode(treeCd, currentName, doneFn) {
 }
 
 function doDelete(treeCd, doneFn) {
-    if (!treeCd) { alertMessage('대상을 선택해 주세요.'); return; }
-    confirmMessage('선택한 항목을 삭제하시겠습니까?', function () {
+    if (!treeCd) { alertMessage(treeManageMessage('feature.treeManage.validation.selectionRequired', '대상을 선택해 주세요.')); return; }
+    confirmMessage(treeManageMessage('feature.treeManage.confirm.delete', '선택한 항목을 삭제하시겠습니까?'), function () {
         $('#confirmMessage').dialog('close');
         callAjax({ treeCd: treeCd, manageType: currentManageType }, '/inside/system/treemanage/node/delete', function (response) {
             if (response.success) {
-                alertMessage('삭제되었습니다.');
+                alertMessage(treeManageMessage('feature.common.result.deleted', '삭제되었습니다.'));
                 doneFn();
             } else {
-                alertMessage(response.failReason || '삭제 실패');
+                alertMessage(response.failReason || treeManageMessage('feature.common.result.deleteFailed', '삭제 실패'));
             }
         });
     });
@@ -549,7 +562,9 @@ function deleteFunction1() { doDelete(selected1, function () { selected1 = null;
 
 function addFunction2() {
     if (!selected1) {
-        alertMessage(currentManageType === 'LEVEL' ? '상위 Level을 먼저 선택해 주세요.' : 'Function Code 1을 먼저 선택해 주세요.');
+        alertMessage(currentManageType === 'LEVEL'
+            ? treeManageMessage('feature.treeManage.validation.parentLevelRequired', '상위 Level을 먼저 선택해 주세요.')
+            : treeManageMessage('feature.treeManage.validation.function1Required', 'Function Code 1을 먼저 선택해 주세요.'));
         return;
     }
     if (currentManageType === 'LEVEL') {
@@ -576,7 +591,7 @@ function deleteFunction2() {
 }
 
 function addDocType() {
-    if (!selected2) { alertMessage('Function Code 2를 먼저 선택해 주세요.'); return; }
+    if (!selected2) { alertMessage(treeManageMessage('feature.treeManage.validation.function2Required', 'Function Code 2를 먼저 선택해 주세요.')); return; }
     var parentItem = getItemById(function2, selected2);
     addDocTypeCode(selected2, parentItem ? parentItem.functionCd : selected2, loadDocTypes);
 }

@@ -75,7 +75,7 @@ public class InsideuserController extends AbstractController {
 
 		List<ComboInfoVO> deptCombo = new ArrayList<ComboInfoVO>();
 		ComboInfoVO tempDeptCombo = new ComboInfoVO();
-		tempDeptCombo.setComboLabel("선택하세요"); // 부서
+		tempDeptCombo.setComboLabel(prop.msg("feature.organization.common.selectPrompt")); // 부서
 		tempDeptCombo.setComboVal("");
 		deptCombo.add(tempDeptCombo);
 
@@ -84,7 +84,7 @@ public class InsideuserController extends AbstractController {
 
 		List<ComboInfoVO> positionCombo = new ArrayList<ComboInfoVO>();
 		ComboInfoVO tempPositionCombo = new ComboInfoVO();
-		tempPositionCombo.setComboLabel("선택하세요"); // 직급
+		tempPositionCombo.setComboLabel(prop.msg("feature.organization.common.selectPrompt")); // 직급
 		tempPositionCombo.setComboVal("");
 		positionCombo.add(tempPositionCombo);
 
@@ -93,7 +93,7 @@ public class InsideuserController extends AbstractController {
 
 		List<ComboInfoVO> roleGroupCombo = new ArrayList<ComboInfoVO>();
 		ComboInfoVO tempRoleGroupCombo = new ComboInfoVO();
-		tempRoleGroupCombo.setComboLabel("선택하세요"); // 사용자 권한
+		tempRoleGroupCombo.setComboLabel(prop.msg("feature.organization.common.selectPrompt")); // 사용자 권한
 		tempRoleGroupCombo.setComboVal("");
 		roleGroupCombo.add(tempRoleGroupCombo);
 

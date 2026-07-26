@@ -20,11 +20,11 @@
     <div class="popupHero">
         <h2>
             <c:choose>
-                <c:when test="${saveFlag == 'U' }">내부 사용자 수정</c:when>
-                <c:otherwise>내부 사용자 등록</c:otherwise>
+                <c:when test="${saveFlag == 'U' }"><spring:message code="feature.organization.user.popup.edit.title"/></c:when>
+                <c:otherwise><spring:message code="feature.organization.user.popup.create.title"/></c:otherwise>
             </c:choose>
         </h2>
-        <p>내부 사용자 기본 정보와 권한 항목을 입력하거나 수정할 수 있습니다.</p>
+        <p><spring:message code="feature.organization.user.popup.description"/></p>
     </div>
     <form id="formPopup">
         <input type="hidden" id="userCd" name="userCd" value="${info.userCd}"/>

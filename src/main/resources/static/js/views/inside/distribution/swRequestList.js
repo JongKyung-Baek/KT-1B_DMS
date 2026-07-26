@@ -1,11 +1,83 @@
 ﻿var swRequestTreeState = {
 	treeId: "swRequestExplorerTree",
 	formId: "formSwRequest",
-	selectedLabel: "전체",
+	selectedLabel: swRequestMessage("feature.techList.tree.all", "전체"),
 	nodeMap: {},
 	childrenMap: {},
-	selectedNodes: {}
+	selectedNodes: {},
+	searchQuery: "",
+	openNodesBeforeSearch: null
 };
+
+var swRequestTreeCategoryMeta = {
+	TRB000002: { key: "drawing", icon: "tabler-pencil", tone: "violet" },
+	TRB000003: { key: "spec", icon: "tabler-file-certificate", tone: "blue" },
+	TRB000004: { key: "sow", icon: "tabler-clipboard-text", tone: "teal" },
+	TRB000005: { key: "sdrl", icon: "tabler-package", tone: "amber" },
+	TRB000006: { key: "programData", icon: "tabler-briefcase", tone: "violet" },
+	TRB000007: { key: "sro", icon: "tabler-tool", tone: "rose" },
+	TRB000008: { key: "testProcedure", icon: "tabler-flask", tone: "teal" },
+	TRB000009: { key: "engineeringMemo", icon: "tabler-note", tone: "blue" },
+	TRB000010: { key: "sourceData", icon: "tabler-database", tone: "slate" },
+	TRB000011: { key: "etc", icon: "tabler-dots", tone: "slate" },
+	TRB000012: { key: "mfgData", icon: "tabler-settings", tone: "amber" }
+};
+
+function swRequestMessage(key, fallback) {
+	var args = Array.prototype.slice.call(arguments, 2);
+	var message = fallback || key;
+	if (window.SdmsPageMessages
+			&& Object.prototype.hasOwnProperty.call(window.SdmsPageMessages, key)) {
+		message = window.SdmsPageMessages[key];
+	} else if (window.SdmsI18n && typeof window.SdmsI18n.t === "function") {
+		message = window.SdmsI18n.t.apply(window.SdmsI18n, [key, fallback].concat(args));
+	}
+	return args.reduce(function(message, value, index) {
+		return String(message).replace(new RegExp("\\{" + index + "\\}", "g"), value);
+	}, message);
+}
+
+function getSwRequestTreeCategoryMeta(node) {
+	if (!node) {
+		return null;
+	}
+	return swRequestTreeCategoryMeta[String(node.id || "").toUpperCase()] || null;
+}
+
+function getLocalizedSwRequestTreeText(node) {
+	if (!node) {
+		return "";
+	}
+	var rawText = $.trim(String(node.text || ""));
+	var meta = getSwRequestTreeCategoryMeta(node);
+	if (meta) {
+		return swRequestMessage(
+			"feature.techList.tree.category." + meta.key,
+			rawText
+		);
+	}
+	return rawText;
+}
+
+function getSwRequestTreeDocumentCount(node) {
+	var count = parseInt(node && node.documentCount, 10);
+	return isNaN(count) || count < 0 ? 0 : count;
+}
+
+function formatSwRequestTreeDocumentCount(count) {
+	return swRequestMessage("feature.techList.tree.count", "{0}건", count);
+}
+
+function resolveSwRequestTreeNodeVisual(node, depthNo, hasChildren) {
+	var meta = getSwRequestTreeCategoryMeta(node);
+	if (meta) {
+		return meta;
+	}
+	return {
+		icon: hasChildren ? "tabler-folder" : "tabler-file",
+		tone: depthNo > 0 ? "slate" : "blue"
+	};
+}
 
 $(function() {
 	initSwRequestExplorerTree();
@@ -47,7 +119,10 @@ function renderSwRequestExplorerTree(treeList) {
 	}
 
 	renderSwRequestExplorerCustomTree(treeList);
-	updateSwRequestTreeSelection("기술자료", "기술자료");
+	updateSwRequestTreeSelection(
+		swRequestMessage("feature.techList.tree.root", "기술자료"),
+		swRequestMessage("feature.techList.tree.root", "기술자료")
+	);
 	clearSwRequestTreeSelection();
 	applySwRequestTreeFilter(true);
 }
@@ -55,9 +130,15 @@ function renderSwRequestExplorerTree(treeList) {
 function renderSwRequestExplorerShellFallback() {
 	var $tree = $("#" + swRequestTreeState.treeId);
 	$tree.empty().append(
-		$("<div>", { "class": "distribution-tree-placeholder" }).text("표시할 트리 데이터가 없습니다")
+		$("<div>", { "class": "distribution-tree-placeholder" })
+			.text(swRequestMessage("feature.techList.tree.empty", "표시할 트리 데이터가 없습니다"))
 	);
-	updateSwRequestTreeSelection("전체", "기술자료");
+	updateSwRequestTreeSelection(
+		swRequestMessage("feature.techList.tree.all", "전체"),
+		swRequestMessage("feature.techList.tree.root", "기술자료")
+	);
+	updateSwRequestTreeSummary();
+	bindSwRequestTreeExplorerControls();
 }
 
 function renderSwRequestExplorerCustomTree(treeList) {
@@ -66,6 +147,12 @@ function renderSwRequestExplorerCustomTree(treeList) {
 	var nodeMap = {};
 
 	$.each(treeList, function() {
+		this.displayText = getLocalizedSwRequestTreeText(this);
+		this.searchText = [
+			this.displayText,
+			$.trim(String(this.text || "")),
+			$.trim(String(this.id || ""))
+		].join(" ").toLocaleLowerCase();
 		nodeMap[this.id] = this;
 		var parentId = this.parent || "#";
 		if (!childrenMap[parentId]) {
@@ -83,7 +170,7 @@ function renderSwRequestExplorerCustomTree(treeList) {
 			if (sortA !== sortB) {
 				return sortA - sortB;
 			}
-			return (a.text || "").localeCompare(b.text || "");
+			return (a.displayText || a.text || "").localeCompare(b.displayText || b.text || "");
 		});
 	});
 
@@ -91,6 +178,8 @@ function renderSwRequestExplorerCustomTree(treeList) {
 		.off(".swRequestTreeCustom")
 		.empty()
 		.append(buildSwRequestTreeList(childrenMap, "#", false, 0));
+	updateSwRequestTreeSummary();
+	bindSwRequestTreeExplorerControls();
 
 	$tree.on("click.swRequestTreeCustom", ".drawing-tree-toggle", function(e) {
 		e.preventDefault();
@@ -99,7 +188,15 @@ function renderSwRequestExplorerCustomTree(treeList) {
 		if ($item.hasClass("is-leaf")) {
 			return;
 		}
-		$item.toggleClass("is-open");
+		var willOpen = !$item.hasClass("is-open");
+		if (willOpen && $item.hasClass("depth-0") && !swRequestTreeState.searchQuery) {
+			$item.siblings(".drawing-tree-item.depth-0").removeClass("is-open")
+				.children(".drawing-tree-row")
+				.find(".drawing-tree-toggle")
+				.attr("aria-expanded", "false");
+		}
+		$item.toggleClass("is-open", willOpen);
+		$(this).attr("aria-expanded", willOpen ? "true" : "false");
 	});
 
 	$tree.on("click.swRequestTreeCustom", ".drawing-tree-label", function(e) {
@@ -109,9 +206,191 @@ function renderSwRequestExplorerCustomTree(treeList) {
 		if (!node) {
 			return;
 		}
+		var $item = $(this).closest(".drawing-tree-item");
+		if (!$item.hasClass("is-leaf")) {
+			$item.addClass("is-open");
+			$item.children(".drawing-tree-row")
+				.find(".drawing-tree-toggle")
+				.attr("aria-expanded", "true");
+		}
 		toggleSwRequestTreeSelection(nodeId);
 		applySwRequestTreeFilter();
 	});
+}
+
+function updateSwRequestTreeSummary() {
+	var nodeMap = swRequestTreeState.nodeMap || {};
+	var totalCount = 0;
+	var rootFound = false;
+
+	$.each(nodeMap, function(nodeId, node) {
+		var normalizedId = String(nodeId || "").toUpperCase();
+		var levelNo = parseInt(node && node.level, 10);
+		if (normalizedId === "ROOT" || normalizedId === "0" || levelNo === 0) {
+			totalCount = getSwRequestTreeDocumentCount(node);
+			rootFound = true;
+			return false;
+		}
+	});
+
+	if (!rootFound) {
+		$.each(nodeMap, function(nodeId, node) {
+			var parentId = String(node && node.parent || "#").toUpperCase();
+			if (parentId === "#" || parentId === "ROOT" || parentId === "0") {
+				totalCount += getSwRequestTreeDocumentCount(node);
+			}
+		});
+	}
+
+	var countText = formatSwRequestTreeDocumentCount(totalCount);
+	$("#" + swRequestTreeState.treeId + "Total")
+		.text(countText)
+		.attr("aria-label", countText);
+	$("#" + swRequestTreeState.treeId + "AllCount")
+		.text(totalCount)
+		.attr("aria-label", countText);
+}
+
+function bindSwRequestTreeExplorerControls() {
+	var treeId = swRequestTreeState.treeId;
+	var $search = $("#" + treeId + "Search");
+	var $clear = $("#" + treeId + "SearchClear");
+	var $all = $("#" + treeId + "All");
+
+	$search
+		.off(".swRequestTreeExplorer")
+		.on("input.swRequestTreeExplorer", function() {
+			applySwRequestTreeSearch($(this).val());
+		});
+
+	$clear
+		.off(".swRequestTreeExplorer")
+		.on("click.swRequestTreeExplorer", function() {
+			$search.val("").trigger("input").trigger("focus");
+		});
+
+	$all
+		.off(".swRequestTreeExplorer")
+		.on("click.swRequestTreeExplorer", function() {
+			clearSwRequestTreeSelection();
+			applySwRequestTreeFilter();
+		});
+
+	$(document)
+		.off("click.swRequestTreeNavigator", ".tree-toolbar-navigator-clear")
+		.on("click.swRequestTreeNavigator", ".tree-toolbar-navigator-clear", function() {
+			clearSwRequestTreeSelection();
+			applySwRequestTreeFilter();
+		});
+}
+
+function collectOpenSwRequestTreeNodeIds() {
+	var result = [];
+	$("#" + swRequestTreeState.treeId)
+		.find(".drawing-tree-item.is-open")
+		.each(function() {
+			var nodeId = $(this).data("nodeId");
+			if (nodeId) {
+				result.push(String(nodeId));
+			}
+		});
+	return result;
+}
+
+function restoreOpenSwRequestTreeNodes(nodeIds) {
+	var openMap = {};
+	$.each(nodeIds || [], function(index, nodeId) {
+		openMap[String(nodeId)] = true;
+	});
+
+	$("#" + swRequestTreeState.treeId)
+		.find(".drawing-tree-item")
+		.each(function() {
+			var $item = $(this);
+			var isOpen = !!openMap[String($item.data("nodeId") || "")];
+			$item.toggleClass("is-open", isOpen);
+			$item.children(".drawing-tree-row")
+				.find(".drawing-tree-toggle")
+				.attr("aria-expanded", isOpen ? "true" : "false");
+		});
+}
+
+function applySwRequestTreeSearch(value) {
+	var query = $.trim(String(value || "")).toLocaleLowerCase();
+	var treeId = swRequestTreeState.treeId;
+	var $tree = $("#" + treeId);
+	var $items = $tree.find(".drawing-tree-item");
+	var $clear = $("#" + treeId + "SearchClear");
+	var visibleNodeIds = {};
+	var matchCount = 0;
+
+	if (query && swRequestTreeState.openNodesBeforeSearch === null) {
+		swRequestTreeState.openNodesBeforeSearch = collectOpenSwRequestTreeNodeIds();
+	}
+	swRequestTreeState.searchQuery = query;
+	$clear.toggleClass("is-visible", !!query);
+
+	if (!query) {
+		$items.removeClass("is-search-hidden");
+		restoreOpenSwRequestTreeNodes(swRequestTreeState.openNodesBeforeSearch || []);
+		swRequestTreeState.openNodesBeforeSearch = null;
+		$("#" + treeId + "NoResults").prop("hidden", true).text("");
+		return;
+	}
+
+	$.each(swRequestTreeState.nodeMap || {}, function(nodeId, node) {
+		if (shouldHideSwRootNode(node, 0) || isSwBoardNoNode(node)) {
+			return;
+		}
+		if (String(node.searchText || "").indexOf(query) === -1) {
+			return;
+		}
+		matchCount++;
+		visibleNodeIds[nodeId] = true;
+		$.each(getSwRequestAncestorNodeIds(nodeId), function(index, ancestorId) {
+			visibleNodeIds[ancestorId] = true;
+		});
+		$.each(collectSwRequestDescendantNodeIds(nodeId), function(index, descendantId) {
+			visibleNodeIds[descendantId] = true;
+		});
+	});
+
+	$items.each(function() {
+		var $item = $(this);
+		var nodeId = String($item.data("nodeId") || "");
+		$item.toggleClass("is-search-hidden", !visibleNodeIds[nodeId]);
+	});
+	$items.each(function() {
+		var $item = $(this);
+		if ($item.hasClass("is-search-hidden")) {
+			return;
+		}
+		var hasVisibleChild = $item.children(".drawing-tree-children")
+			.children(".drawing-tree-item:not(.is-search-hidden)").length > 0;
+		if (hasVisibleChild) {
+			$item.addClass("is-open")
+				.children(".drawing-tree-row")
+				.find(".drawing-tree-toggle")
+				.attr("aria-expanded", "true");
+		}
+	});
+
+	var $noResults = $("#" + treeId + "NoResults")
+		.prop("hidden", matchCount > 0)
+		.empty();
+	if (matchCount === 0) {
+		$noResults
+			.append($("<i>", {
+				"class": "icon-base ti tabler-search-off",
+				"aria-hidden": "true"
+			}))
+			.append($("<span>", {
+				text: swRequestMessage(
+					"feature.techList.tree.noMatches",
+					"일치하는 분류가 없습니다"
+				)
+			}));
+	}
 }
 
 function buildSwRequestTreeList(childrenMap, parentId, opened, depth) {
@@ -140,26 +419,55 @@ function buildSwRequestTreeList(childrenMap, parentId, opened, depth) {
 		if (isBoardNoNode && !hasChildren) {
 			return;
 		}
+		var visual = resolveSwRequestTreeNodeVisual(node, depthNo, hasChildren);
+		var documentCount = getSwRequestTreeDocumentCount(node);
 		var $item = $("<li>", {
 			"class": "drawing-tree-item depth-" + depthNo
 				+ (hasChildren && opened ? " is-open" : "")
 				+ (!hasChildren ? " is-leaf" : "")
 				+ (isBoardNoNode ? " is-board-no-node is-board-no-node-sw" : "")
+				+ (documentCount === 0 ? " is-empty" : ""),
+			"data-node-id": node.id
 		});
 		var $row = $("<div>", { "class": "drawing-tree-row" });
 
-		$row.append($("<button>", {
+		var $toggle = $("<button>", {
 			type: "button",
 			"class": "drawing-tree-toggle",
-			"aria-label": "toggle"
+			"aria-label": swRequestMessage("feature.techList.tree.toggle", "하위 분류 열기/닫기"),
+			"aria-expanded": hasChildren && opened ? "true" : "false",
+			disabled: !hasChildren
+		}).append($("<i>", {
+			"class": "icon-base ti " + (hasChildren ? "tabler-chevron-right" : "tabler-point"),
+			"aria-hidden": "true"
 		}));
+		$row.append($toggle);
 
-		$row.append($("<a>", {
-			href: "#",
+		var $label = $("<button>", {
+			type: "button",
 			"class": "drawing-tree-label",
 			"data-node-id": node.id,
-			text: $.trim(node.text || "")
-		}));
+			"aria-selected": "false",
+			title: node.displayText || $.trim(node.text || "")
+		});
+		$label
+			.append($("<span>", {
+				"class": "tree-node-icon tree-tone-" + visual.tone,
+				"aria-hidden": "true"
+			}).append($("<i>", {
+				"class": "icon-base ti " + visual.icon
+			})))
+			.append($("<span>", {
+				"class": "tree-node-text",
+				text: node.displayText || $.trim(node.text || "")
+			}))
+			.append($("<span>", {
+				"class": "tree-node-count",
+				text: documentCount,
+				title: formatSwRequestTreeDocumentCount(documentCount),
+				"aria-label": formatSwRequestTreeDocumentCount(documentCount)
+			}));
+		$row.append($label);
 
 		$item.append($row);
 
@@ -213,7 +521,7 @@ function buildSwRequestTreeFilterInfo(nodeId) {
 		filterType: node.filterType || "",
 		swTreeCd: resolveSwTreeCdForFilter(node, swRequestTreeState.nodeMap) || node.swTreeCd || node.id || "",
 		distributeTypeCd: node.distributeTypeCd || "",
-		label: $.trim(node.text || "전체"),
+		label: $.trim(node.displayText || node.text || swRequestMessage("feature.techList.tree.all", "전체")),
 		pathLabel: buildSwRequestTreePathLabel(node, swRequestTreeState.nodeMap)
 	};
 }
@@ -260,10 +568,10 @@ function setSwRequestNodeSelected(nodeId, selected) {
 	var $label = $("#" + swRequestTreeState.treeId).find(".drawing-tree-label[data-node-id='" + nodeId + "']");
 	if (selected) {
 		swRequestTreeState.selectedNodes[nodeId] = filterInfo;
-		$label.addClass("is-selected");
+		$label.addClass("is-selected").attr("aria-selected", "true");
 	} else {
 		delete swRequestTreeState.selectedNodes[nodeId];
-		$label.removeClass("is-selected");
+		$label.removeClass("is-selected").attr("aria-selected", "false");
 	}
 }
 
@@ -292,7 +600,9 @@ function toggleSwRequestTreeSelection(nodeId) {
 
 function clearSwRequestTreeSelection() {
 	swRequestTreeState.selectedNodes = {};
-	$("#" + swRequestTreeState.treeId).find(".drawing-tree-label.is-selected").removeClass("is-selected");
+	$("#" + swRequestTreeState.treeId).find(".drawing-tree-label.is-selected")
+		.removeClass("is-selected")
+		.attr("aria-selected", "false");
 }
 
 function getSelectedSwRequestTreeFilters() {
@@ -336,7 +646,7 @@ function formatSwRequestPathLabels(pathLabels) {
 		}
 	});
 	if (!paths.length) {
-		return "기술자료";
+		return swRequestMessage("feature.techList.tree.root", "기술자료");
 	}
 	if (paths.length === 1) {
 		return paths[0];
@@ -399,10 +709,17 @@ function applySwRequestTreeFilter(immediate) {
 	var pathLabels = $.map(displayFilters, function(filterInfo) {
 		return filterInfo.pathLabel || filterInfo.label;
 	});
+	var hasSelection = filters.length > 0;
 
 	setSwTreeFilterValue("swTreeCd", swTreeCds.join(","));
 	setSwTreeFilterValue("distributeTypeCd", "");
-	updateSwRequestTreeSelection(labels.length ? labels.join(", ") : "전체", formatSwRequestPathLabels(pathLabels));
+	$("#" + swRequestTreeState.treeId + "All")
+		.toggleClass("is-active", !hasSelection)
+		.attr("aria-pressed", hasSelection ? "false" : "true");
+	updateSwRequestTreeSelection(
+		labels.length ? labels.join(", ") : swRequestMessage("feature.techList.tree.all", "전체"),
+		formatSwRequestPathLabels(pathLabels)
+	);
 
 	/* gridParam = setGridParam();
 	searchList(gridParam); */
@@ -453,7 +770,11 @@ function buildSwRequestTreePathLabel(node, nodeMap) {
 	var guard = 0;
 
 	while (current && guard < 32) {
-		path.unshift($.trim(current.text || ""));
+		var currentId = String(current.id || "").toUpperCase();
+		var currentLevel = parseInt(current.level, 10);
+		if (currentId !== "ROOT" && currentId !== "0" && currentLevel !== 0) {
+			path.unshift($.trim(current.displayText || current.text || ""));
+		}
 		var parentId = current.parent || "#";
 		if (parentId === "#" || !nodeMap[parentId]) {
 			break;
@@ -466,13 +787,16 @@ function buildSwRequestTreePathLabel(node, nodeMap) {
 }
 
 function updateSwRequestTreeSelection(label, pathLabel) {
-	$("#" + swRequestTreeState.treeId + "Selection").text(label || "전체");
-	renderToolbarNavigator(pathLabel || label || "기술자료");
+	var selectedPath = pathLabel || label || swRequestMessage("feature.techList.tree.root", "기술자료");
+	$("#" + swRequestTreeState.treeId + "Selection")
+		.text(label || swRequestMessage("feature.techList.tree.all", "전체"));
+	renderToolbarNavigator(selectedPath);
 }
 
 function renderToolbarNavigator(pathLabel) {
 	var $btnArea = $(".distribution-invoice-layout > .btnArea");
 	var $right = $btnArea.find(".right");
+	var hasSelection = getSelectedSwRequestTreeFilters().length > 0;
 	if (!$right.length) {
 		setTimeout(function() { renderToolbarNavigator(pathLabel); }, 200);
 		return;
@@ -481,13 +805,34 @@ function renderToolbarNavigator(pathLabel) {
 	var $nav = $right.find(".tree-toolbar-navigator");
 	if (!$nav.length) {
 		$nav = $("<div>", { "class": "tree-toolbar-navigator" })
-			.append($("<span>", { "class": "tree-toolbar-navigator-label", text: "" }))
-			.append($("<span>", { "class": "tree-toolbar-navigator-path" }));
+			.append($("<span>", {
+				"class": "tree-toolbar-navigator-icon",
+				"aria-hidden": "true"
+			}).append($("<i>", {
+				"class": "icon-base ti tabler-category"
+			})))
+			.append($("<span>", {
+				"class": "tree-toolbar-navigator-label",
+				text: swRequestMessage("feature.techList.tree.selection", "선택 분류")
+			}))
+			.append($("<span>", { "class": "tree-toolbar-navigator-path" }))
+			.append($("<button>", {
+				type: "button",
+				"class": "tree-toolbar-navigator-clear",
+				"aria-label": swRequestMessage("feature.techList.tree.clearSelection", "분류 선택 해제")
+			}).append($("<i>", {
+				"class": "icon-base ti tabler-x",
+				"aria-hidden": "true"
+			})));
 		$right.append($nav);
 	}
 	$right.show();
 
-	$nav.find(".tree-toolbar-navigator-path").text(pathLabel || "전체");
+	$nav.toggleClass("has-selection", hasSelection);
+	$nav.find(".tree-toolbar-navigator-path")
+		.text(pathLabel || swRequestMessage("feature.techList.tree.all", "전체"));
+	$nav.find(".tree-toolbar-navigator-clear")
+		.prop("hidden", !hasSelection);
 }
 
 function requestDistribute(){
@@ -502,11 +847,11 @@ function updateFile(){
 	var gridId = 'gridSwRequestList';
 	var selectedRows = $("#" + gridId).getGridParam('selarrrow');
 	if(selectedRows.length < 1){
-		alertMessage(g_msg('msg.noSelectData'));
+		alertMessage(swRequestMessage("feature.common.validation.noSelection", "선택된 데이터가 없습니다."));
 		return false;
 	}
 	if(selectedRows.length > 1){
-		alertMessage("1개만 선택 가능합니다.");
+		alertMessage(swRequestMessage("feature.techList.validation.singleSelection", "1개만 선택 가능합니다."));
 		return false;
 	}
 	var rowId = selectedRows[0];

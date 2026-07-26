@@ -26,9 +26,11 @@
 	width: calc(100% - 48px) !important;
 	max-width: 1240px !important;
 	min-width: 0 !important;
+	height: auto !important;
+	min-height: 0 !important;
 	margin: 0 auto !important;
 	padding: 24px 0 40px !important;
-	overflow-x: hidden;
+	overflow: visible !important;
 	color: var(--register-text);
 	font-family: "Pretendard", "Noto Sans KR", sans-serif;
 }
@@ -46,8 +48,11 @@
 .sw-register-route.sw-register-page {
 	width: calc(100% - 48px) !important;
 	max-width: 1240px !important;
+	height: auto !important;
+	min-height: 0 !important;
 	margin: 0 auto !important;
 	padding: 24px 0 40px !important;
+	overflow: visible !important;
 }
 
 .technical-register-page .swRegisterPopup,
@@ -107,6 +112,7 @@
 .technical-register-page .sw-register-hero__copy,
 .sw-register-route .sw-register-hero__copy {
 	flex: 1 1 auto;
+	text-align: left;
 }
 
 .technical-register-page .sw-register-hero__eyebrow,
@@ -120,6 +126,7 @@
 	font-weight: 800;
 	letter-spacing: 0.09em;
 	line-height: 1.2;
+	text-align: left;
 	text-transform: uppercase;
 }
 

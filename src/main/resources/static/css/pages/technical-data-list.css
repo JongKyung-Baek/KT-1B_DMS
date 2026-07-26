@@ -1,0 +1,1126 @@
+.technical-data-list-page {
+  --tdl-primary: #7367f0;
+  --tdl-primary-dark: #5b50d6;
+  --tdl-primary-soft: rgba(115, 103, 240, 0.1);
+  --tdl-text: #2f2b3d;
+  --tdl-muted: #6d6a77;
+  --tdl-border: #e7e5eb;
+  --tdl-surface: #fff;
+  --tdl-info: #087e97;
+  --tdl-info-soft: #eefafd;
+  --tdl-success: #16884a;
+  --tdl-success-soft: #eef9f3;
+  gap: 0;
+  color: var(--tdl-text);
+  font-family: "Pretendard", "Noto Sans KR", sans-serif;
+}
+
+.technical-data-list-page *,
+.technical-data-list-page *::before,
+.technical-data-list-page *::after {
+  box-sizing: border-box;
+}
+
+.technical-data-list-page > .technical-data-results-card {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  padding: 22px;
+  border: 1px solid var(--tdl-border);
+  border-radius: 14px;
+  background: var(--tdl-surface);
+  box-shadow: 0 5px 20px rgba(47, 43, 61, 0.055);
+}
+
+.technical-data-list-page .technical-data-results-card > .distribution-invoice-layout {
+  display: flex;
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 0;
+  gap: 16px;
+}
+
+.technical-data-list-page .distribution-filter-card,
+.technical-data-list-page .distribution-tree-card,
+.technical-data-list-page .distribution-grid-card {
+  border: 1px solid var(--tdl-border) !important;
+  border-radius: 11px;
+  background: var(--tdl-surface);
+  box-shadow: none;
+}
+
+.technical-data-list-page .distribution-filter-card {
+  flex: 0 0 auto;
+  border-color: #ebe9ee !important;
+  border-radius: 12px;
+  background: #faf9fb;
+  overflow: visible;
+}
+
+.technical-data-list-page .distribution-filter-card .card-body {
+  padding: 14px;
+  border-radius: inherit;
+  background: #faf9fb;
+}
+
+.technical-data-list-page .distribution-content-row {
+  min-height: 0;
+}
+
+.technical-data-list-page .distribution-tree-card,
+.technical-data-list-page .distribution-grid-card {
+  overflow: hidden;
+}
+
+.technical-data-list-page .distribution-tree-card .card-body,
+.technical-data-list-page .distribution-grid-card .card-datatable {
+  background: #fff;
+}
+
+.technical-data-list-page .distribution-tree-card .card-body {
+  border-radius: inherit;
+}
+
+.technical-data-list-page .distribution-grid-card .card-datatable,
+.technical-data-list-page .distribution-grid-card .gridArea,
+.technical-data-list-page .distribution-grid-card .gridContainer,
+.technical-data-list-page #gbox_gridSwRequestList,
+.technical-data-list-page #gview_gridSwRequestList {
+  border-radius: inherit;
+}
+
+.technical-data-list-page .formAcceptance .formAcceptanceFields {
+  gap: 10px;
+}
+
+.technical-data-list-page .formAcceptance .formAcceptanceItem > .form-label {
+  margin-bottom: 5px;
+  color: #5d596c;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.technical-data-list-page .formAcceptance input.form-control,
+.technical-data-list-page .formAcceptance select.form-select {
+  height: 36px !important;
+  min-height: 36px !important;
+  max-height: 36px !important;
+  padding: 7px 10px !important;
+  border-color: #d9d6df;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--tdl-text);
+  font-size: 11px;
+  line-height: 20px !important;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.technical-data-list-page .formAcceptance input.form-control:focus,
+.technical-data-list-page .formAcceptance select.form-select:focus {
+  border-color: var(--tdl-primary);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(115, 103, 240, 0.11);
+}
+
+.technical-data-list-page .formAcceptance .select2-container .select2-selection--single,
+.technical-data-list-page .formAcceptance .select2-container .select2-selection--multiple {
+  height: 36px !important;
+  min-height: 36px !important;
+  max-height: 36px !important;
+  border-color: #d9d6df;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.technical-data-list-page .formAcceptance .select2-container--default .select2-selection--single .select2-selection__rendered {
+  padding-left: 10px !important;
+  padding-right: 30px !important;
+  color: var(--tdl-text);
+  font-size: 11px;
+  line-height: 34px !important;
+}
+
+.technical-data-list-page .formAcceptance .select2-container--default .select2-selection--single .select2-selection__arrow {
+  height: 34px !important;
+}
+
+.technical-data-list-page .formAcceptance .select2-container--focus .select2-selection--single,
+.technical-data-list-page .formAcceptance .select2-container--focus .select2-selection--multiple,
+.technical-data-list-page .formAcceptance .select2-container--open .select2-selection--single,
+.technical-data-list-page .formAcceptance .select2-container--open .select2-selection--multiple {
+  border-color: var(--tdl-primary);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(115, 103, 240, 0.11);
+  transform: none;
+}
+
+.technical-data-list-page .formAcceptance .formAcceptanceActions.formAcceptanceItem {
+  gap: 7px;
+}
+
+.technical-data-list-page .formAcceptance .formAcceptanceActions .searchBtn.btn.btn-primary,
+.technical-data-list-page .formAcceptance .formAcceptanceActions .resetBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  min-width: 75px;
+  height: 36px !important;
+  min-height: 36px !important;
+  max-height: 36px !important;
+  margin: 0;
+  padding: 7px 13px !important;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 20px !important;
+  box-shadow: none;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.technical-data-list-page .formAcceptance .formAcceptanceActions .searchBtn.btn.btn-primary {
+  border-color: var(--tdl-primary);
+  background: var(--tdl-primary);
+  color: #fff;
+}
+
+.technical-data-list-page .formAcceptance .formAcceptanceActions .searchBtn.btn.btn-primary:hover,
+.technical-data-list-page .formAcceptance .formAcceptanceActions .searchBtn.btn.btn-primary:focus {
+  border-color: var(--tdl-primary-dark);
+  background: var(--tdl-primary-dark);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.technical-data-list-page .formAcceptance .formAcceptanceActions .resetBtn {
+  border: 1px solid #d8d5de;
+  background: #fff;
+  color: #5d596c;
+}
+
+.technical-data-list-page .formAcceptance .formAcceptanceActions .resetBtn:hover,
+.technical-data-list-page .formAcceptance .formAcceptanceActions .resetBtn:focus {
+  border-color: rgba(115, 103, 240, 0.34);
+  background: var(--tdl-primary-soft);
+  color: var(--tdl-primary-dark);
+  transform: translateY(-1px);
+}
+
+.technical-data-list-page #gbox_gridSwRequestList {
+  overflow: hidden !important;
+  background: #fff;
+}
+
+.technical-data-list-page #gview_gridSwRequestList .ui-jqgrid-hdiv {
+  border-bottom: 1px solid #ddd9e2 !important;
+  background: #f4f2f6 !important;
+}
+
+.technical-data-list-page #gview_gridSwRequestList .ui-jqgrid-htable {
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #f4f2f6;
+}
+
+.technical-data-list-page #gview_gridSwRequestList .ui-jqgrid-htable th,
+.technical-data-list-page #gview_gridSwRequestList .ui-jqgrid-htable th.ui-th-column,
+.technical-data-list-page #gview_gridSwRequestList .ui-jqgrid-htable th.ui-th-column-header {
+  height: 42px !important;
+  min-height: 42px !important;
+  padding: 9px 11px !important;
+  border-top: 0 !important;
+  border-right: 0 !important;
+  border-bottom: 0 !important;
+  border-left: 0 !important;
+  background: #f4f2f6 !important;
+  color: #5d596c !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  vertical-align: middle !important;
+}
+
+.technical-data-list-page #gview_gridSwRequestList .ui-jqgrid-htable th > div,
+.technical-data-list-page #gview_gridSwRequestList .ui-jqgrid-htable th > div.ui-jqgrid-sortable,
+.technical-data-list-page #gview_gridSwRequestList .ui-jqgrid-htable th div:not(.clearfix) {
+  min-height: 20px !important;
+  padding: 0 !important;
+  color: inherit !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  line-height: 20px !important;
+}
+
+.technical-data-list-page #gview_gridSwRequestList .ui-jqgrid-btable {
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #fff;
+}
+
+.technical-data-list-page #gview_gridSwRequestList .ui-jqgrid-btable tr.jqgrow td {
+  height: 56px !important;
+  padding: 9px 11px !important;
+  border-top: 0 !important;
+  border-right: 0 !important;
+  border-bottom: 1px solid #efedf1 !important;
+  border-left: 0 !important;
+  background: #fff !important;
+  color: #4b465c !important;
+  font-size: 11px !important;
+  line-height: 1.42 !important;
+  vertical-align: middle !important;
+}
+
+.technical-data-list-page #gview_gridSwRequestList .ui-jqgrid-btable tr.jqgrow:last-child td {
+  border-bottom: 0 !important;
+}
+
+.technical-data-list-page #gview_gridSwRequestList .ui-jqgrid-btable tr.jqgrow:hover td {
+  background: #fbfaff !important;
+}
+
+.technical-data-list-page #gview_gridSwRequestList .ui-jqgrid-btable tr.ui-state-highlight td,
+.technical-data-list-page #gview_gridSwRequestList .ui-jqgrid-btable tr[aria-selected="true"] td {
+  background: #f1efff !important;
+  color: #403a65 !important;
+}
+
+.technical-data-list-page #gridSwRequestList .sw-no-link {
+  color: var(--tdl-primary-dark) !important;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.technical-data-list-page #gridSwRequestList .sw-no-link:hover,
+.technical-data-list-page #gridSwRequestList .sw-no-link:focus {
+  color: #4b40c5 !important;
+  text-decoration: underline;
+}
+
+.technical-data-list-page #gview_gridSwRequestList .ui-jqgrid-bdiv {
+  background: #fff;
+  scrollbar-color: #aaa7b0 transparent;
+  scrollbar-width: thin;
+}
+
+.technical-data-list-page #gview_gridSwRequestList .ui-jqgrid-bdiv::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.technical-data-list-page #gview_gridSwRequestList .ui-jqgrid-bdiv::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background: #aaa7b0;
+  background-clip: padding-box;
+}
+
+.technical-data-list-page #gridSwRequestListPager {
+  height: 48px !important;
+  min-height: 48px;
+  border-top: 1px solid var(--tdl-border) !important;
+  background: #fff !important;
+  color: var(--tdl-muted);
+}
+
+.technical-data-list-page #gridSwRequestListPager .ui-pager-control,
+.technical-data-list-page #gridSwRequestListPager .ui-pg-table {
+  height: 100%;
+}
+
+.technical-data-list-page #gridSwRequestListPager .customPageMoveBtn,
+.technical-data-list-page #gridSwRequestListPager .customPageNumberBtn {
+  min-width: 28px;
+  min-height: 28px;
+  margin: 0 2px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+}
+
+.technical-data-list-page #gridSwRequestListPager .customPageMoveBtn:hover,
+.technical-data-list-page #gridSwRequestListPager .customPageNumberBtn:hover {
+  background: var(--tdl-primary-soft);
+}
+
+.technical-data-list-page #gridSwRequestListPager .customPageMoveBtn > a,
+.technical-data-list-page #gridSwRequestListPager .customPageNumberBtn > a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 8px;
+  color: var(--tdl-muted);
+  font-size: 11px;
+  line-height: 28px;
+  text-decoration: none;
+}
+
+.technical-data-list-page #gridSwRequestListPager .customPageNumberBtn strong {
+  color: var(--tdl-primary-dark);
+  font-weight: 800;
+}
+
+.technical-data-list-page #gridSwRequestListPager .pageSize {
+  color: var(--tdl-muted);
+  font-size: 11px;
+}
+
+/* Technical data category tree */
+.technical-data-list-page .distribution-tree-card {
+  flex: 0 0 280px;
+  width: 280px;
+  min-width: 280px;
+  background:
+    linear-gradient(145deg, rgba(115, 103, 240, 0.045), rgba(255, 255, 255, 0) 42%),
+    var(--tdl-surface);
+}
+
+.technical-data-list-page .distribution-tree-card .card-body {
+  gap: 10px;
+  padding: 14px;
+}
+
+.technical-data-list-page .distribution-tree-card .distribution-tree-body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  overflow: hidden;
+}
+
+.technical-data-list-page .technical-tree-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+  padding: 1px 2px 3px;
+}
+
+.technical-data-list-page .technical-tree-heading {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  min-width: 0;
+  margin: 0;
+  color: var(--tdl-text);
+  line-height: 1.3;
+}
+
+.technical-data-list-page .technical-tree-heading > strong {
+  max-width: 100%;
+  color: var(--tdl-text);
+  font-size: 12px;
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.technical-data-list-page .technical-tree-heading > span:last-child {
+  min-width: 0;
+  max-width: 100%;
+  color: #817d8a;
+  font-size: 9px;
+  font-weight: 650;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.technical-data-list-page .technical-tree-icon {
+  display: inline-flex;
+  flex: 0 0 34px;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(115, 103, 240, 0.14);
+  border-radius: 10px;
+  background: linear-gradient(145deg, #8177f4, #6558dc);
+  color: #fff;
+  font-size: 18px;
+  box-shadow: 0 6px 14px rgba(91, 80, 214, 0.18);
+}
+
+.technical-data-list-page .technical-tree-icon > .ti {
+  font-size: inherit;
+}
+
+.technical-data-list-page .technical-tree-total {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  min-height: 24px;
+  padding: 3px 8px;
+  border: 1px solid #dfdcfb;
+  border-radius: 999px;
+  background: #f3f1ff;
+  color: var(--tdl-primary-dark);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.technical-data-list-page .technical-tree-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+}
+
+.technical-data-list-page .technical-tree-search > .ti-search,
+.technical-data-list-page .technical-tree-search > .tabler-search {
+  position: absolute;
+  z-index: 1;
+  left: 12px;
+  color: #8b8795;
+  font-size: 16px;
+  pointer-events: none;
+  transition: color 0.16s ease;
+}
+
+.technical-data-list-page .technical-tree-search-input {
+  width: 100%;
+  height: 38px;
+  min-height: 38px;
+  padding: 8px 38px 8px 36px;
+  border: 1px solid #dedbe4;
+  border-radius: 10px;
+  outline: 0;
+  background: #fff;
+  color: var(--tdl-text);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 20px;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease;
+}
+
+.technical-data-list-page .technical-tree-search-input::placeholder {
+  color: #9995a3;
+  font-weight: 500;
+  opacity: 1;
+}
+
+.technical-data-list-page .technical-tree-search-input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.technical-data-list-page .technical-tree-search:focus-within > .ti-search,
+.technical-data-list-page .technical-tree-search:focus-within > .tabler-search {
+  color: var(--tdl-primary);
+}
+
+.technical-data-list-page .technical-tree-search-input:focus {
+  border-color: rgba(115, 103, 240, 0.72);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(115, 103, 240, 0.11);
+}
+
+.technical-data-list-page .technical-tree-search-clear {
+  position: absolute;
+  z-index: 2;
+  right: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 27px;
+  height: 27px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #8a8694;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+}
+
+.technical-data-list-page .technical-tree-search-input:placeholder-shown + .technical-tree-search-clear {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.technical-data-list-page .technical-tree-search-clear:hover {
+  background: #f0eef4;
+  color: var(--tdl-text);
+}
+
+.technical-data-list-page .technical-tree-search-clear:focus-visible {
+  outline: 2px solid rgba(115, 103, 240, 0.48);
+  outline-offset: 1px;
+}
+
+.technical-data-list-page .technical-tree-all {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  padding: 6px 8px;
+  border: 1px solid #e4e1e8;
+  border-radius: 11px;
+  background: #fff;
+  color: #4b465c;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 1.25;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 2px 7px rgba(47, 43, 61, 0.035);
+  transition:
+    border-color 0.16s ease,
+    background-color 0.16s ease,
+    color 0.16s ease,
+    box-shadow 0.16s ease,
+    transform 0.16s ease;
+}
+
+.technical-data-list-page .technical-tree-all:hover {
+  border-color: #d7d2fa;
+  background: #faf9ff;
+  color: var(--tdl-primary-dark);
+  transform: translateY(-1px);
+}
+
+.technical-data-list-page .technical-tree-all.is-selected,
+.technical-data-list-page .technical-tree-all.is-active,
+.technical-data-list-page .technical-tree-all[aria-pressed="true"],
+.technical-data-list-page .technical-tree-all[aria-current="true"] {
+  border-color: #cec8fa;
+  background: linear-gradient(135deg, #f3f1ff, #faf9ff);
+  color: var(--tdl-primary-dark);
+  box-shadow: inset 3px 0 0 var(--tdl-primary), 0 4px 10px rgba(91, 80, 214, 0.08);
+}
+
+.technical-data-list-page .technical-tree-all:focus-visible {
+  border-color: var(--tdl-primary);
+  outline: 0;
+  box-shadow: 0 0 0 3px rgba(115, 103, 240, 0.14);
+}
+
+.technical-data-list-page .technical-tree-all-icon {
+  display: inline-flex;
+  flex: 0 0 27px;
+  align-items: center;
+  justify-content: center;
+  width: 27px;
+  height: 27px;
+  border: 1px solid #ddd8ff;
+  border-radius: 8px;
+  background: #efedff;
+  color: #6457cf;
+  font-size: 15px;
+}
+
+.technical-data-list-page .technical-tree-all-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.technical-data-list-page .technical-tree-all-count {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 21px;
+  padding: 2px 6px;
+  border: 1px solid #dfdcfb;
+  border-radius: 999px;
+  background: #f3f1ff;
+  color: var(--tdl-primary-dark);
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.technical-data-list-page .technical-tree-all .tree-node-text {
+  font-weight: 800;
+}
+
+.technical-data-list-page .technical-tree-scroll {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  padding: 7px;
+  border: 1px solid #e6e3ea;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.88);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: #c5c1cc transparent;
+  scrollbar-width: thin;
+}
+
+.technical-data-list-page .technical-tree-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.technical-data-list-page .technical-tree-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.technical-data-list-page .technical-tree-scroll::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: #c5c1cc;
+  background-clip: padding-box;
+}
+
+.technical-data-list-page .technical-tree-scroll::-webkit-scrollbar-thumb:hover {
+  background: #a9a4b2;
+  background-clip: padding-box;
+}
+
+.technical-data-list-page .technical-tree-no-results {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 150px;
+  padding: 20px 14px;
+  color: #837f8d;
+  font-size: 11px;
+  font-weight: 650;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.technical-data-list-page .technical-tree-no-results[hidden] {
+  display: none !important;
+}
+
+.technical-data-list-page .technical-tree-no-results > .ti {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: #f1eff5;
+  color: #777281;
+  font-size: 20px;
+}
+
+.technical-data-list-page #swRequestExplorerTree {
+  width: 100%;
+  min-width: 0;
+}
+
+.technical-data-list-page #swRequestExplorerTree .drawing-tree-root,
+.technical-data-list-page #swRequestExplorerTree .drawing-tree-children {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.technical-data-list-page #swRequestExplorerTree .drawing-tree-children {
+  position: relative;
+  display: none;
+  padding-left: 15px;
+}
+
+.technical-data-list-page #swRequestExplorerTree .drawing-tree-children::before {
+  position: absolute;
+  top: 1px;
+  bottom: 8px;
+  left: 6px;
+  width: 1px;
+  background: #ebe8ef;
+  content: "";
+}
+
+.technical-data-list-page #swRequestExplorerTree .drawing-tree-item.is-open > .drawing-tree-children {
+  display: block;
+}
+
+.technical-data-list-page #swRequestExplorerTree .drawing-tree-item {
+  min-width: 0;
+}
+
+.technical-data-list-page #swRequestExplorerTree .drawing-tree-row {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  width: 100%;
+  min-width: 0;
+  min-height: 37px;
+  margin: 1px 0;
+  overflow: visible;
+}
+
+.technical-data-list-page #swRequestExplorerTree .drawing-tree-toggle {
+  display: inline-flex;
+  flex: 0 0 25px;
+  align-items: center;
+  justify-content: center;
+  width: 25px;
+  height: 29px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  outline: 0;
+  background: transparent;
+  background-image: none !important;
+  color: #777281;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.technical-data-list-page #swRequestExplorerTree .drawing-tree-toggle:hover {
+  background: #f0eef4;
+  color: var(--tdl-primary-dark);
+  opacity: 1;
+}
+
+.technical-data-list-page #swRequestExplorerTree .drawing-tree-toggle:focus-visible {
+  background: #f3f1ff;
+  color: var(--tdl-primary-dark);
+  box-shadow: 0 0 0 2px rgba(115, 103, 240, 0.3);
+}
+
+.technical-data-list-page #swRequestExplorerTree .drawing-tree-toggle > .ti {
+  font-size: 15px;
+  transition: transform 0.18s ease;
+}
+
+.technical-data-list-page #swRequestExplorerTree .drawing-tree-item.is-open > .drawing-tree-row > .drawing-tree-toggle > .ti,
+.technical-data-list-page #swRequestExplorerTree .drawing-tree-toggle[aria-expanded="true"] > .ti {
+  transform: rotate(90deg);
+}
+
+.technical-data-list-page #swRequestExplorerTree .drawing-tree-item.is-leaf > .drawing-tree-row > .drawing-tree-toggle {
+  visibility: hidden;
+  cursor: default;
+  pointer-events: none;
+}
+
+.technical-data-list-page #swRequestExplorerTree .drawing-tree-label {
+  --tree-tone: #665b85;
+  --tree-tone-soft: #f1eff6;
+  --tree-tone-border: #e0dce9;
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 7px;
+  width: auto;
+  min-width: 0;
+  min-height: 35px;
+  padding: 5px 7px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  outline: 0;
+  background: transparent;
+  color: #4b465c;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
+}
+
+.technical-data-list-page #swRequestExplorerTree .drawing-tree-label:hover {
+  border-color: #e7e3f8;
+  background: #f9f8ff;
+  color: #524b76;
+  transform: translateX(1px);
+}
+
+.technical-data-list-page #swRequestExplorerTree .drawing-tree-label.is-selected,
+.technical-data-list-page #swRequestExplorerTree .drawing-tree-label[aria-selected="true"] {
+  border-color: #d7d1fb;
+  background: linear-gradient(135deg, #efedff, #f8f7ff);
+  color: #5146b8;
+  box-shadow: inset 3px 0 0 var(--tdl-primary), 0 3px 9px rgba(91, 80, 214, 0.07);
+}
+
+.technical-data-list-page #swRequestExplorerTree .drawing-tree-label:focus-visible {
+  border-color: var(--tdl-primary);
+  background: #f8f7ff;
+  color: #5146b8;
+  box-shadow: 0 0 0 3px rgba(115, 103, 240, 0.14);
+}
+
+.technical-data-list-page #swRequestExplorerTree .drawing-tree-item.is-empty .drawing-tree-label {
+  color: #7f7a88;
+}
+
+.technical-data-list-page #swRequestExplorerTree .drawing-tree-item.is-empty .tree-node-count {
+  opacity: 0.72;
+}
+
+.technical-data-list-page .tree-node-icon {
+  display: inline-flex;
+  flex: 0 0 25px;
+  align-items: center;
+  justify-content: center;
+  width: 25px;
+  height: 25px;
+  border: 1px solid var(--tree-tone-border, #e0dce9);
+  border-radius: 8px;
+  background: var(--tree-tone-soft, #f1eff6);
+  color: var(--tree-tone, #665b85);
+  font-size: 15px;
+  line-height: 1;
+}
+
+.technical-data-list-page .tree-node-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.technical-data-list-page .tree-node-count {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 20px;
+  padding: 2px 6px;
+  border: 1px solid var(--tree-tone-border, #e0dce9);
+  border-radius: 999px;
+  background: var(--tree-tone-soft, #f4f2f7);
+  color: var(--tree-tone, #665b85);
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.technical-data-list-page #swRequestExplorerTree .drawing-tree-label.is-selected .tree-node-icon,
+.technical-data-list-page #swRequestExplorerTree .drawing-tree-label.is-selected .tree-node-count {
+  border-color: #d1cbfa;
+  background: #e5e1ff;
+  color: #5146b8;
+}
+
+.technical-data-list-page .tree-tone-violet {
+  --tree-tone: #6457cf;
+  --tree-tone-soft: #efedff;
+  --tree-tone-border: #dcd7ff;
+}
+
+.technical-data-list-page .tree-tone-blue {
+  --tree-tone: #1769aa;
+  --tree-tone-soft: #eaf5ff;
+  --tree-tone-border: #cfe6f8;
+}
+
+.technical-data-list-page .tree-tone-teal {
+  --tree-tone: #11746f;
+  --tree-tone-soft: #e6f7f5;
+  --tree-tone-border: #c8e9e5;
+}
+
+.technical-data-list-page .tree-tone-amber {
+  --tree-tone: #97610b;
+  --tree-tone-soft: #fff5dc;
+  --tree-tone-border: #f0dfb5;
+}
+
+.technical-data-list-page .tree-tone-rose {
+  --tree-tone: #b54360;
+  --tree-tone-soft: #fdeef2;
+  --tree-tone-border: #f3ced8;
+}
+
+.technical-data-list-page .tree-tone-slate {
+  --tree-tone: #5c6674;
+  --tree-tone-soft: #eef1f4;
+  --tree-tone-border: #d9dfe5;
+}
+
+.technical-data-list-page .is-search-hidden {
+  display: none !important;
+}
+
+.technical-data-list-page .tree-toolbar-navigator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: min(360px, 40vw);
+  min-height: 30px;
+  margin-left: 7px;
+  padding: 5px 10px;
+  border: 1px solid #dfdbfb;
+  border-radius: 999px;
+  background: #f6f4ff;
+  color: var(--tdl-primary-dark);
+  box-shadow: 0 2px 6px rgba(91, 80, 214, 0.05);
+}
+
+.technical-data-list-page .tree-toolbar-navigator-icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  color: var(--tdl-primary);
+}
+
+.technical-data-list-page .tree-toolbar-navigator-icon > .ti {
+  flex: 0 0 auto;
+  color: var(--tdl-primary);
+  font-size: 14px;
+}
+
+.technical-data-list-page .tree-toolbar-navigator .tree-toolbar-navigator-label {
+  color: #7a7585;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.technical-data-list-page .tree-toolbar-navigator .tree-toolbar-navigator-label:empty {
+  display: none;
+}
+
+.technical-data-list-page .tree-toolbar-navigator .tree-toolbar-navigator-path {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--tdl-primary-dark);
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.25 !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.technical-data-list-page .tree-toolbar-navigator-clear {
+  display: inline-flex;
+  flex: 0 0 22px;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(115, 103, 240, 0.1);
+  color: var(--tdl-primary-dark);
+  cursor: pointer;
+}
+
+.technical-data-list-page .tree-toolbar-navigator-clear:hover,
+.technical-data-list-page .tree-toolbar-navigator-clear:focus-visible {
+  background: rgba(115, 103, 240, 0.2);
+  outline: 0;
+}
+
+.technical-data-list-page .tree-toolbar-navigator-clear[hidden] {
+  display: none !important;
+}
+
+@media (max-width: 991.98px) {
+  .technical-data-list-page {
+    gap: 12px;
+  }
+
+  .technical-data-list-page .distribution-content-row {
+    min-height: auto;
+  }
+
+  .technical-data-list-page .distribution-content-row.has-side-tree {
+    flex-direction: column;
+  }
+
+  .technical-data-list-page .distribution-tree-card {
+    flex: 0 0 360px;
+    width: 100%;
+    min-width: 0;
+    height: 360px;
+    min-height: 360px;
+    max-height: 360px;
+  }
+
+  .technical-data-list-page .distribution-tree-card .card-body {
+    min-height: 0;
+  }
+
+  .technical-data-list-page .tree-toolbar-navigator {
+    max-width: min(360px, 50vw);
+  }
+}
+
+@media (max-width: 575.98px) {
+  .technical-data-list-page > .technical-data-results-card {
+    padding: 18px;
+    border-radius: 12px;
+  }
+
+  .technical-data-list-page .distribution-filter-card,
+  .technical-data-list-page .distribution-tree-card,
+  .technical-data-list-page .distribution-grid-card {
+    border-radius: 12px;
+  }
+
+  .technical-data-list-page .distribution-tree-card {
+    flex-basis: 350px;
+    height: 350px;
+    min-height: 350px;
+    max-height: 350px;
+  }
+
+  .technical-data-list-page .distribution-tree-card .card-body {
+    padding: 12px;
+  }
+
+  .technical-data-list-page .tree-toolbar-navigator {
+    max-width: 62vw;
+    margin-left: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .technical-data-list-page .technical-tree-all,
+  .technical-data-list-page .technical-tree-search-input,
+  .technical-data-list-page #swRequestExplorerTree .drawing-tree-toggle,
+  .technical-data-list-page #swRequestExplorerTree .drawing-tree-toggle > .ti,
+  .technical-data-list-page #swRequestExplorerTree .drawing-tree-label {
+    transition: none;
+  }
+}

@@ -2,6 +2,21 @@ var customPageInfo = ""; // 페이지 정보를 나타낼 것인지 / boolean / 
 var customPageInfoType = ""; // 페이지 정보의 종류
 var pageCount = 10; // 한 페이지에 보여줄 페이지 수 (ex:1 2 3 4 5)
 var size = "" == $.trim(getCookie("rowNum")) ? 10 : $.trim(getCookie("rowNum"));
+
+function gridPagingMessage(key, fallback) {
+	var args = Array.prototype.slice.call(arguments, 2);
+	var message = fallback || key;
+	if (window.SdmsPageMessages
+			&& Object.prototype.hasOwnProperty.call(window.SdmsPageMessages, key)) {
+		message = window.SdmsPageMessages[key];
+	} else if (window.SdmsI18n && typeof window.SdmsI18n.t === "function") {
+		message = window.SdmsI18n.t.apply(window.SdmsI18n, [key, fallback].concat(args));
+	}
+	return args.reduce(function(result, value, index) {
+		return String(result).replace(new RegExp("\\{" + index + "\\}", "g"), value);
+	}, message);
+}
+
 /**
  * 그리드 페이징
  *
@@ -69,15 +84,21 @@ function initPage(param, pagerId, pI, pit, gridParamId){
 
 	// 이전 페이지 리스트가 있을 경우 (링크넣고 뚜렷한 이미지로 변경)
 	if(currentPage > 1){
-		var titleFirstPage = "첫번째 페이지로 이동";
-		var titlePrePage = (startPageList-10) + "페이지에서" + " " + (endPageList-10) + "페이지까지 이동";	/* 페이지에서 페이지까지 이동*/
+		var titleFirstPage = gridPagingMessage(
+			"feature.grid.pager.firstPage", "첫 번째 페이지로 이동");
+		var titlePrePage = gridPagingMessage(
+			"feature.grid.pager.goToPageRange",
+			"{0}페이지에서 {1}페이지까지 이동",
+			startPageList - 10,
+			endPageList - 10);
 
 		pageInner+="<span class='customPageMoveBtn'><a class='first' href='javascript:firstPage(\""+ gridId +"\");' title='"+ titleFirstPage +"'><i class='fa fa-fast-backward faPointer'></i></a></span>";
 		pageInner+="<span class='customPageMoveBtn'><a class='pre' href='javascript:prePage(\""+ gridId +"\");' title='"+ titlePrePage +"'><i class='fa fa-step-backward faPointer'></i></a></span>";
 	}
 	// 페이지 숫자를 찍으며 태그생성 (현재페이지는 강조태그)
 	for(var i=startPageList; i<=endPageList; i++){
-		var titleGoPage = i + "페이지로 이동";
+		var titleGoPage = gridPagingMessage(
+			"feature.grid.pager.goToPage", "{0}페이지로 이동", i);
 
 		if(i==currentPage){
 			pageInner = pageInner +"<span class='customPageNumberBtn'><a href='javascript:goPage(\""+ gridId +"\", "+(i)+");' id='"+(i)+"' title='"+ titleGoPage +"'><strong>"+(i)+"</strong></a></span>";
@@ -91,8 +112,13 @@ function initPage(param, pagerId, pI, pit, gridParamId){
 
 	// 다음 페이지 리스트가 있을 경우
 	if(currentPage < totalPage){
-		var titleNextPage = (startPageList+10) + "페이지에서" + " " + (endPageList+10) + "페이지로 이동";
-		var titleLastPage = "마지막 페이지로 이동";
+		var titleNextPage = gridPagingMessage(
+			"feature.grid.pager.goToPageRange",
+			"{0}페이지에서 {1}페이지까지 이동",
+			startPageList + 10,
+			endPageList + 10);
+		var titleLastPage = gridPagingMessage(
+			"feature.grid.pager.lastPage", "마지막 페이지로 이동");
 
 		pageInner+="<span class='customPageMoveBtn'><a class='next' href='javascript:nextPage(\""+ gridId +"\");' title='"+ titleNextPage +"'><i class='fa fa-step-forward faPointer'></i></a></span>";
 		pageInner+="<span class='customPageMoveBtn'><a class='last' href='javascript:lastPage(\""+ gridId +"\");' title='"+ titleLastPage +"'><i class='fa fa-fast-forward faPointer'></i></a></span>";
@@ -118,7 +144,8 @@ function initPage(param, pagerId, pI, pit, gridParamId){
 		//////////////////////////////////////////////////////////////////////////////////////////
 
 		if(totalSize == 0){
-			pageInfoText = "데이터가 없습니다.";
+			pageInfoText = gridPagingMessage(
+				"feature.grid.pager.noData", "데이터가 없습니다.");
 		}else{
 //			var totpTxt = "총" + " " + commify(totalPage) + " " + "페이지" + " / " + commify(totalSize) + " 개";
 //			var pseTxt = "( " + commify(from) + " ~ " + commify(to) + " )";
@@ -131,7 +158,8 @@ function initPage(param, pagerId, pI, pit, gridParamId){
 //				pageInfoText = totTxt;
 //			}
 
-			pageInfoText = "총" + commify(totalSize);
+			pageInfoText = gridPagingMessage(
+				"feature.grid.pager.total", "총 {0}", commify(totalSize));
 		}
 	}
 
@@ -155,7 +183,10 @@ function initPage(param, pagerId, pI, pit, gridParamId){
 			table+="<option value='" + this + "' " + (cookieRowNum === parseInt(this, 10) ? "selected='selected'" : "")+ ">" + this + "</option>";
 		});
 		table+= "</select>";
-		table+= "<span class=\"pageSize\">" + "건 표시" + "</span>";
+		table+= "<span class=\"pageSize\">"
+			+ gridPagingMessage(
+				"feature.grid.pager.rowsPerPage", "건 표시")
+			+ "</span>";
 
 	}
 	table+= "</td>";

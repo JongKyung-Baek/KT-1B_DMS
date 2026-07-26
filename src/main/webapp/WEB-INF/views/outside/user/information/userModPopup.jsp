@@ -22,10 +22,10 @@
 			isValidDataEmpty("userNewPwd", "form.newPwd");
 			return false;
 		}
-		// if(checkPassword($.trim($("#userNewPwd").val())) == true){
-		// 	alertMessage(g_msg('msg.pwdNotice'));
-		// 	return false;
-		// }
+		if(!checkPasswordRule($.trim($("#userNewPwd").val()))){
+			alertMessage(g_msg('msg.pwdNotice'));
+			return false;
+		}
 		if($.trim($("#userNewPwd2").val()) === ""){
 			isValidDataEmpty("userNewPwd2", "form.newPwdConfirm");
 			return false;
@@ -44,18 +44,6 @@
 		return true;
 	}
 
-	function checkPassword(password){
-	    if(!/^(?=.*[a-zA-Z])(?=.*[~`!@#$%^&*+=-])(?=.*[0-9]).{9,20}$/.test(password)){
-	        return true;
-	    }
-	    var checkNumber = password.search(/[0-9]/g);
-	    var checkEnglish = password.search(/[a-z]/ig);
-	    if(checkNumber <0 || checkEnglish <0){
-	        return true;
-	    }
-	    return false;
-	}
-	
 	function updateUser(){
 		if(!isValidation()){
 			return;
@@ -78,7 +66,8 @@
 				$(this).dialog("close");
 			});
 		}else{
-			alertMessage(g_msg("msg.failSave"));
+			var messageKey = response && response.message;
+			alertMessage(messageKey ? g_msg(messageKey) : g_msg("msg.failSave"));
 		}
 	}
 </script>
@@ -89,7 +78,7 @@
 	<div class="popupHero">
 		<h2><spring:message code="title.userInfo" text="사용자 정보 변경" /></h2>
 	</div>
-<%--	<p class="textCaution "><spring:message code="title.pwdNotice" />--%>
+	<p class="textCaution"><spring:message code="title.pwdNotice" /></p>
 	<form id="updateForm" name="updateForm">
 		<input type="hidden" id="userCd" name="userCd" value="${sessionUser.userCd }"/>
 
@@ -113,11 +102,11 @@
 			</li>
 			<li>
 				<label for="userNewPwd"><spring:message code="form.newPwd" text="변경 비밀번호" /></label>
-				<div><input type="password" id="userNewPwd" name="userNewPwd" placeholder="Password를 입력하세요"></div>
+				<div><input type="password" id="userNewPwd" name="userNewPwd" maxlength="20" autocomplete="new-password" placeholder="Password를 입력하세요"></div>
 			</li>
 			<li>
 				<label for="userNewPwd2"><spring:message code="form.newPwdConfirm" text="변경 비밀번호 확인" /></label>
-				<div><input type="password" id="userNewPwd2" name="userNewPwd2" placeholder="Password를 입력하세요"></div>
+				<div><input type="password" id="userNewPwd2" name="userNewPwd2" maxlength="20" autocomplete="new-password" placeholder="Password를 입력하세요"></div>
 			</li>
 		</ul>
 	</form>

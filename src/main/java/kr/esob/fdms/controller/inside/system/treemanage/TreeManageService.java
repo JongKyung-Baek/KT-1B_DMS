@@ -1,5 +1,6 @@
 package kr.esob.fdms.controller.inside.system.treemanage;
 
+import kr.esob.fdms.commonlogic.message.Prop;
 import kr.esob.fdms.commonlogic.result.ResultVO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,6 +13,9 @@ import java.util.List;
 public class TreeManageService {
 	@Inject
 	private TreeManageDao dao;
+
+	@Inject
+	private Prop prop;
 
 	public List<TreeManageNodeVO> selectFunctionCode1List(TreeManageListParam param) {
 		if (isLevelType(param == null ? null : param.getManageType())) {
@@ -40,12 +44,12 @@ public class TreeManageService {
 		result.setSuccess(false);
 
 		if (param == null || isBlank(param.getTreeNm())) {
-			result.setFailReason("명칭을 입력해 주세요.");
+			result.setFailReason(prop.msg("feature.treeManage.validation.nameRequired"));
 			return result;
 		}
 		param.setTreeNm(param.getTreeNm().trim());
 		if (!isValidTreeNm(param.getTreeNm())) {
-			result.setFailReason("명칭은 1~128자로 입력해 주세요.");
+			result.setFailReason(prop.msg("feature.treeManage.validation.nameLength"));
 			return result;
 		}
 
@@ -72,17 +76,17 @@ public class TreeManageService {
 			int dxfAffected = dao.insertBoardDxfNode(param);
 			result.setSuccess(swAffected > 0 && productAffected > 0 && dxfAffected > 0);
 			if (!result.isSuccess()) {
-				result.setFailReason("등록에 실패했습니다.");
+				result.setFailReason(prop.msg("feature.common.result.createFailed"));
 			}
 			return result;
 		}
 
 		if (isBlank(param.getFunctionCd())) {
-			result.setFailReason("코드를 입력해 주세요.");
+			result.setFailReason(prop.msg("feature.treeManage.validation.codeRequired"));
 			return result;
 		}
 		if (!isValidTreeCd(param.getFunctionCd())) {
-			result.setFailReason("코드는 영문 대문자/숫자/_ 만 입력 가능합니다.");
+			result.setFailReason(prop.msg("feature.treeManage.validation.codePattern"));
 			return result;
 		}
 
@@ -93,7 +97,7 @@ public class TreeManageService {
 		if (!isBlank(param.getParentTreeCd())) {
 			String parentTreeCdExact = dao.selectDrawingTreeCdExact(param.getParentTreeCd());
 			if (isBlank(parentTreeCdExact)) {
-				result.setFailReason("상위 코드를 찾을 수 없습니다.");
+				result.setFailReason(prop.msg("feature.treeManage.error.parentNotFound"));
 				return result;
 			}
 			param.setParentTreeCd(parentTreeCdExact);
@@ -101,7 +105,7 @@ public class TreeManageService {
 
 		int parentDepth = resolveDrawingParentDepth(param.getParentTreeCd());
 		if (!isBlank(param.getParentTreeCd()) && parentDepth <= 0) {
-			result.setFailReason("상위 코드를 찾을 수 없습니다.");
+			result.setFailReason(prop.msg("feature.treeManage.error.parentNotFound"));
 			return result;
 		}
 		boolean syncToIoc = parentDepth <= 1;
@@ -109,7 +113,7 @@ public class TreeManageService {
 		Integer drawingExists = dao.countByFunctionCd(param.getFunctionCd());
 		Integer docExists = syncToIoc ? dao.countIocByFunctionCd(param.getFunctionCd()) : 0;
 		if ((drawingExists != null && drawingExists > 0) || (syncToIoc && docExists != null && docExists > 0)) {
-			result.setFailReason("이미 사용 중인 코드입니다.");
+			result.setFailReason(prop.msg("feature.treeManage.error.duplicateCode"));
 			return result;
 		}
 
@@ -121,7 +125,7 @@ public class TreeManageService {
 		}
 		result.setSuccess(drawingAffected > 0 && docAffected > 0);
 		if (!result.isSuccess()) {
-			result.setFailReason("등록에 실패했습니다.");
+			result.setFailReason(prop.msg("feature.common.result.createFailed"));
 		}
 		return result;
 	}
@@ -132,14 +136,14 @@ public class TreeManageService {
 		result.setSuccess(false);
 
 		if (param == null || isBlank(param.getTreeCd()) || isBlank(param.getTreeNm())) {
-			result.setFailReason("수정 대상을 선택해 주세요.");
+			result.setFailReason(prop.msg("feature.treeManage.validation.updateSelectionRequired"));
 			return result;
 		}
 
 		param.setTreeCd(param.getTreeCd().trim().toUpperCase());
 		param.setTreeNm(param.getTreeNm().trim());
 		if (!isValidTreeNm(param.getTreeNm())) {
-			result.setFailReason("명칭은 1~128자로 입력해 주세요.");
+			result.setFailReason(prop.msg("feature.treeManage.validation.nameLength"));
 			return result;
 		}
 
@@ -149,7 +153,7 @@ public class TreeManageService {
 			int dxfAffected = dao.updateBoardDxfNode(param);
 			result.setSuccess(swAffected > 0 && productAffected > 0 && dxfAffected > 0);
 			if (!result.isSuccess()) {
-				result.setFailReason("수정에 실패했습니다.");
+				result.setFailReason(prop.msg("feature.common.result.updateFailed"));
 			}
 			return result;
 		}
@@ -159,7 +163,7 @@ public class TreeManageService {
 		int docAffected = (iocExists != null && iocExists > 0) ? dao.updateIocNode(param) : 1;
 		result.setSuccess(drawingAffected > 0 && docAffected > 0);
 		if (!result.isSuccess()) {
-			result.setFailReason("수정에 실패했습니다.");
+			result.setFailReason(prop.msg("feature.common.result.updateFailed"));
 		}
 		return result;
 	}
@@ -170,7 +174,7 @@ public class TreeManageService {
 		result.setSuccess(false);
 
 		if (param == null || isBlank(param.getTreeCd())) {
-			result.setFailReason("삭제 대상을 선택해 주세요.");
+			result.setFailReason(prop.msg("feature.treeManage.validation.deleteSelectionRequired"));
 			return result;
 		}
 
@@ -182,7 +186,7 @@ public class TreeManageService {
 			Integer dxfChildCount = dao.countBoardDxfChildren(treeCd);
 			if ((swChildCount != null && swChildCount > 0) || (productChildCount != null && productChildCount > 0)
 					|| (dxfChildCount != null && dxfChildCount > 0)) {
-				result.setFailReason("하위 코드가 있어 삭제할 수 없습니다.");
+				result.setFailReason(prop.msg("feature.treeManage.error.hasChildren"));
 				return result;
 			}
 
@@ -191,7 +195,7 @@ public class TreeManageService {
 			Integer dxfLinkedCount = dao.countLinkedDxf(treeCd);
 			if ((swLinkedCount != null && swLinkedCount > 0) || (productLinkedCount != null && productLinkedCount > 0)
 					|| (dxfLinkedCount != null && dxfLinkedCount > 0)) {
-				result.setFailReason("연결된 데이터가 있어 삭제할 수 없습니다.");
+				result.setFailReason(prop.msg("feature.treeManage.error.hasLinkedData"));
 				return result;
 			}
 
@@ -200,7 +204,7 @@ public class TreeManageService {
 			int dxfAffected = dao.deleteBoardDxfNode(treeCd);
 			result.setSuccess(swAffected > 0 && productAffected > 0 && dxfAffected > 0);
 			if (!result.isSuccess()) {
-				result.setFailReason("삭제에 실패했습니다.");
+				result.setFailReason(prop.msg("feature.common.result.deleteFailed"));
 			}
 			return result;
 		}
@@ -208,14 +212,14 @@ public class TreeManageService {
 		Integer drawingChildCount = dao.countChildren(treeCd);
 		Integer docChildCount = dao.countIocChildren(treeCd);
 		if ((drawingChildCount != null && drawingChildCount > 0) || (docChildCount != null && docChildCount > 0)) {
-			result.setFailReason("하위 코드가 있어 삭제할 수 없습니다.");
+			result.setFailReason(prop.msg("feature.treeManage.error.hasChildren"));
 			return result;
 		}
 
 		Integer drawingLinkedCount = dao.countLinkedDrawing(treeCd);
 		Integer docLinkedCount = dao.countLinkedDocument(treeCd);
 		if ((drawingLinkedCount != null && drawingLinkedCount > 0) || (docLinkedCount != null && docLinkedCount > 0)) {
-			result.setFailReason("연결된 데이터가 있어 삭제할 수 없습니다.");
+			result.setFailReason(prop.msg("feature.treeManage.error.hasLinkedData"));
 			return result;
 		}
 
@@ -224,7 +228,7 @@ public class TreeManageService {
 		int docAffected = (iocExists != null && iocExists > 0) ? dao.deleteIocNode(treeCd) : 1;
 		result.setSuccess(drawingAffected > 0 && docAffected > 0);
 		if (!result.isSuccess()) {
-			result.setFailReason("삭제에 실패했습니다.");
+			result.setFailReason(prop.msg("feature.common.result.deleteFailed"));
 		}
 		return result;
 	}
@@ -270,7 +274,8 @@ public class TreeManageService {
 			childParam.setManageType("DOC");
 			int affected = dao.insertNode(childParam);
 			if (affected <= 0) {
-				throw new IllegalStateException("Document Type 기본코드 생성에 실패했습니다.");
+				throw new IllegalStateException(
+						prop.msg("feature.treeManage.error.defaultDocumentTypesCreateFailed"));
 			}
 		}
 	}
@@ -278,7 +283,7 @@ public class TreeManageService {
 	private String generateUniqueTreeCd(boolean boardType) {
 		String candidate = boardType ? dao.selectNextBoardTreeCd() : dao.selectNextDocTreeCd();
 		if (isBlank(candidate)) {
-			throw new IllegalStateException("TREE_CD 생성 실패");
+			throw new IllegalStateException(prop.msg("feature.treeManage.error.treeCodeGenerationFailed"));
 		}
 
 		String prefix = boardType ? "TRB" : "TRD";
@@ -289,7 +294,7 @@ public class TreeManageService {
 				return current;
 			}
 		}
-		throw new IllegalStateException("TREE_CD 생성 실패");
+		throw new IllegalStateException(prop.msg("feature.treeManage.error.treeCodeGenerationFailed"));
 	}
 
 	private long parseTreeCdSeq(String treeCd, String prefix) {

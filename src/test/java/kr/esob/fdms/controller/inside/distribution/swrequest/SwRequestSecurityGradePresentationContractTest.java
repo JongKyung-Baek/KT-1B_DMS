@@ -61,9 +61,10 @@ class SwRequestSecurityGradePresentationContractTest {
         assertTrue(ddl.contains("formatter = 'formatDocumentGrade'"));
         assertTrue(ddl.contains("WHERE NOT EXISTS"));
         assertTrue(list.contains("function formatDocumentGrade"));
-        assertTrue(list.contains("displayName = gradeName || \"미지정\""));
+        assertTrue(list.contains("function localizeDocumentGradeName"));
+        assertTrue(list.contains("feature.documentGrade.unassigned"));
         assertTrue(popup.contains("id=\"swPopupDocumentGrade\""));
-        assertTrue(popup.contains("label: \"적용등급\""));
+        assertTrue(popup.contains("feature.techDetail.grid.grade"));
     }
 
     private String read(String path) throws Exception {

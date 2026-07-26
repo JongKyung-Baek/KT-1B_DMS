@@ -13,8 +13,11 @@ import javax.crypto.spec.PBEKeySpec;
 
 public final class PasswordUtils {
 
-    private static final int MIN_PASSWORD_LENGTH = 8;
     private static final int MAX_PASSWORD_LENGTH = 20;
+    private static final int SHORT_ALPHANUMERIC_COUNT = 8;
+    private static final int SHORT_SPECIAL_COUNT = 3;
+    private static final int LONG_ALPHANUMERIC_COUNT = 10;
+    private static final int LONG_SPECIAL_COUNT = 2;
     private static final String PBKDF2_VERSION = "pbkdf2-sha256";
     private static final String PBKDF2_PREFIX = PBKDF2_VERSION + "$";
     private static final int PBKDF2_ITERATIONS = 310_000;
@@ -72,17 +75,42 @@ public final class PasswordUtils {
     }
 
     public static boolean isAcceptablePassword(String password) {
-        if (password == null
-                || password.length() < MIN_PASSWORD_LENGTH
-                || password.length() > MAX_PASSWORD_LENGTH) {
+        if (password == null || password.length() > MAX_PASSWORD_LENGTH) {
             return false;
         }
+
+        int letterCount = 0;
+        int digitCount = 0;
+        int alphanumericCount = 0;
+        int specialCount = 0;
         for (int i = 0; i < password.length(); i++) {
-            if (Character.isWhitespace(password.charAt(i))) {
+            char character = password.charAt(i);
+            // Keep the browser and server rules deterministic: printable ASCII
+            // only, with no whitespace or control characters.
+            if (character < 33 || character > 126) {
                 return false;
             }
+            if ((character >= 'A' && character <= 'Z')
+                    || (character >= 'a' && character <= 'z')) {
+                letterCount++;
+                alphanumericCount++;
+            } else if (character >= '0' && character <= '9') {
+                digitCount++;
+                alphanumericCount++;
+            } else {
+                specialCount++;
+            }
         }
-        return true;
+
+        if (letterCount == 0 || digitCount == 0) {
+            return false;
+        }
+
+        boolean shortRule = alphanumericCount >= SHORT_ALPHANUMERIC_COUNT
+                && specialCount >= SHORT_SPECIAL_COUNT;
+        boolean longRule = alphanumericCount >= LONG_ALPHANUMERIC_COUNT
+                && specialCount >= LONG_SPECIAL_COUNT;
+        return shortRule || longRule;
     }
 
     public static boolean verifyPassword(String storedPasswordWithSalt, String originalPassword) {

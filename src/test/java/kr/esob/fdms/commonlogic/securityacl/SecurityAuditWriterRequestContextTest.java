@@ -63,8 +63,8 @@ class SecurityAuditWriterRequestContextTest {
         assertEquals("/common/viewer/pdf-cache/{ticketKey:[0-9a-fA-F]{32}}",
                 values.get(0).getRequestUri());
         assertNotEquals(ticket, values.get(0).getRequestUri());
-        assertEquals("열람", values.get(0).getActionNm());
-        assertEquals("원본 다운로드", values.get(1).getActionNm());
+        assertEquals("VIEW", values.get(0).getActionNm());
+        assertEquals("DOWNLOAD_ORIGINAL", values.get(1).getActionNm());
     }
 
     @Test
@@ -86,6 +86,32 @@ class SecurityAuditWriterRequestContextTest {
         assertEquals("AUTH", event.getValue().getMenuCd());
         assertEquals("인증 / 계정", event.getValue().getMenuNm());
         assertEquals("/login/**", event.getValue().getMenuUrl());
+        assertEquals("LOGIN", event.getValue().getActionNm());
+    }
+
+    @Test
+    void menuActionsPersistTheStableActionCodeInsteadOfTheLocalizedLabel() {
+        SecurityAclDao dao = mock(SecurityAclDao.class);
+        when(dao.insertAudit(any(AccessAuditEventVO.class))).thenReturn(1);
+        SecurityAuditWriter writer = new SecurityAuditWriter(dao);
+
+        writer.writeMenuAction(
+            actor(),
+            new AuditMenuContext("MENU_220", "기술자료관리 > 조회", "/inside/data/**", 1),
+            "READ",
+            "조회",
+            "SUCCESS",
+            null,
+            "HTTP 200",
+            Integer.valueOf(200),
+            Long.valueOf(10),
+            "{}");
+
+        ArgumentCaptor<AccessAuditEventVO> event =
+            ArgumentCaptor.forClass(AccessAuditEventVO.class);
+        verify(dao).insertAudit(event.capture());
+        assertEquals("READ", event.getValue().getActionType());
+        assertEquals("READ", event.getValue().getActionNm());
     }
 
     @Test

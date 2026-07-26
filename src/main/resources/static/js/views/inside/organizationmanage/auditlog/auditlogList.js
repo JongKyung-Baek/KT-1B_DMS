@@ -1,5 +1,43 @@
 var gridParam;
 
+function auditText(key, fallback) {
+    var args = Array.prototype.slice.call(arguments, 2);
+    var translated = fallback;
+    if (window.SdmsI18n && typeof window.SdmsI18n.t === "function") {
+        translated = window.SdmsI18n.t.apply(window.SdmsI18n, [key, fallback].concat(args));
+    }
+    if (!translated) translated = fallback || key;
+    return String(translated).replace(/\{(\d+)\}/g, function (match, index) {
+        return args[Number(index)] === undefined ? match : args[Number(index)];
+    });
+}
+
+function getAuditActionLabel(actionType) {
+    var labels = {
+        LOGIN: ["feature.audit.action.login", "로그인"],
+        LOGOUT: ["feature.audit.action.logout", "로그아웃"],
+        PASSWORD_CHANGE: ["feature.audit.action.passwordChange", "비밀번호 변경"],
+        DOWNLOAD: ["feature.audit.action.download", "다운로드"],
+        PRINT: ["feature.audit.action.print", "출력"],
+        VIEW: ["feature.audit.action.view", "열람"],
+        READ: ["feature.audit.action.read", "조회"],
+        DELETE: ["feature.audit.action.delete", "삭제"],
+        REJECT: ["feature.audit.action.reject", "반려"],
+        APPROVE: ["feature.audit.action.approve", "승인"],
+        SAVE: ["feature.audit.action.save", "저장"],
+        CREATE: ["feature.audit.action.create", "등록"],
+        UPDATE: ["feature.audit.action.update", "수정"],
+        EXECUTE: ["feature.audit.action.execute", "실행"],
+        MANAGE_GRADE: ["feature.audit.action.manageGrade", "보안등급 관리"],
+        MANAGE_CLEARANCE: ["feature.audit.action.manageClearance", "사용자 인가 관리"],
+        MANAGE_FILE_LABEL: ["feature.audit.action.manageFileLabel", "문서등급 관리"],
+        MANAGE_FILE_PERMISSION: ["feature.audit.action.manageFilePermission", "문서 권한 관리"],
+        MANAGE_ACL: ["feature.audit.action.manageAcl", "ACL 관리"]
+    };
+    var entry = labels[String(actionType || "").toUpperCase()];
+    return entry ? auditText(entry[0], entry[1]) : "";
+}
+
 function escapeAuditHtml(value) {
     if (value === null || typeof value === "undefined") {
         return "";
@@ -56,7 +94,7 @@ function buildAuditCell(primaryValue, secondaryValues, modifierClass) {
     var safeModifier = modifierClass ? " " + modifierClass : "";
 
     if (!primary) {
-        primary = "미수집";
+        primary = auditText("feature.audit.value.notCollected", "미수집");
     }
 
     var html = '<span class="audit-grid-cell' + safeModifier + '">';
@@ -98,6 +136,10 @@ function formatAuditMenu(cellValue, options, rowObject) {
     var primary = menuName || menuCode || menuPath || cellValue;
     var secondary = [];
 
+    if (String(menuCode).toUpperCase() === "AUTH") {
+        primary = auditText("feature.audit.menu.authentication", "인증 / 계정");
+    }
+
     if (menuCode && String(menuCode) !== String(primary)) {
         secondary.push(menuCode);
     }
@@ -113,7 +155,7 @@ function formatAuditAction(cellValue, options, rowObject) {
     var actionType = getAuditRowValue(rowObject, ["actionType"], "");
     var eventType = getAuditRowValue(rowObject, ["eventType"], "");
     var sourceType = getAuditRowValue(rowObject, ["sourceType"], "");
-    var primary = actionName || actionType || eventType || cellValue;
+    var primary = getAuditActionLabel(actionType) || actionName || actionType || eventType || cellValue;
     var secondary = [];
 
     if (actionType && String(actionType) !== String(primary)) {
@@ -127,60 +169,6 @@ function formatAuditAction(cellValue, options, rowObject) {
     }
 
     return buildAuditCell(primary, secondary, "audit-grid-cell--action");
-}
-
-function getAuditResultPresentation(resultCode) {
-    var code = String(resultCode || "").trim().toUpperCase();
-    var presentation = {
-        code: code,
-        label: code || "미수집",
-        tone: "neutral"
-    };
-
-    if (code === "ALLOW") {
-        presentation.label = "허용";
-        presentation.tone = "success";
-    } else if (code === "SUCCESS") {
-        presentation.label = "성공";
-        presentation.tone = "success";
-    } else if (code === "DENY") {
-        presentation.label = "거부";
-        presentation.tone = "denied";
-    } else if (code === "FAILURE" || code === "FAIL" || code === "ERROR") {
-        presentation.label = "실패";
-        presentation.tone = "failed";
-    }
-
-    return presentation;
-}
-
-function formatAuditResult(cellValue, options, rowObject) {
-    var resultCode = getAuditRowValue(rowObject, ["resultCd"], cellValue);
-    var reasonCode = getAuditRowValue(rowObject, ["reasonCd"], "");
-    var resultMessage = getAuditRowValue(rowObject, ["resultMessage"], "");
-    var httpStatus = getAuditRowValue(rowObject, ["httpStatus"], "");
-    var durationMs = getAuditRowValue(rowObject, ["durationMs"], "");
-    var presentation = getAuditResultPresentation(resultCode);
-    var secondary = getAuditUniqueValues([
-        httpStatus === "" ? "" : "HTTP " + httpStatus,
-        durationMs === "" ? "" : durationMs + "ms",
-        reasonCode,
-        resultMessage
-    ]);
-    var html = '<span class="audit-grid-result">';
-
-    html += '<span class="audit-result-badge audit-result-badge--'
-        + presentation.tone + '" title="' + escapeAuditHtml(presentation.code || presentation.label) + '">'
-        + escapeAuditHtml(presentation.label) + "</span>";
-
-    if (secondary.length > 0) {
-        var secondaryText = secondary.join(" · ");
-        html += '<small class="audit-grid-cell__meta" title="' + escapeAuditHtml(secondaryText) + '">'
-            + escapeAuditHtml(secondaryText) + "</small>";
-    }
-
-    html += "</span>";
-    return html;
 }
 
 function formatAuditTarget(cellValue, options, rowObject) {
@@ -197,16 +185,16 @@ function formatAuditTarget(cellValue, options, rowObject) {
         secondary.push(objectType);
     }
     if (objectId && String(objectId) !== String(primary)) {
-        secondary.push("대상 " + objectId);
+        secondary.push(auditText("feature.audit.target.object", "대상 {0}", objectId));
     }
     if (fileNo && String(fileNo) !== String(primary)) {
-        secondary.push("파일 " + fileNo);
+        secondary.push(auditText("feature.audit.target.file", "파일 {0}", fileNo));
     }
     if (requestNo && String(requestNo) !== String(primary)) {
-        secondary.push("요청 " + requestNo);
+        secondary.push(auditText("feature.audit.target.request", "요청 {0}", requestNo));
     }
     if (gradeCode && String(gradeCode) !== String(primary)) {
-        secondary.push("등급 " + gradeCode);
+        secondary.push(auditText("feature.audit.target.grade", "등급 {0}", gradeCode));
     }
 
     return buildAuditCell(primary, secondary, "audit-grid-cell--target");
@@ -242,10 +230,40 @@ function resetAuditLogSearch() {
     searchAuditLogList();
 }
 
+function ensureAuditLogResetButton() {
+    var $actions = $("#" + formId + " .formAcceptanceActions").first();
+    var $resetButtons = $("#" + formId + " #auditLogResetButton");
+
+    if (!$actions.length) {
+        return;
+    }
+
+    if ($resetButtons.length > 1) {
+        $resetButtons.slice(1).remove();
+    }
+
+    if (!$resetButtons.length) {
+        $("<button>", {
+            id: "auditLogResetButton",
+            type: "button",
+            class: "audit-log-reset-btn",
+            "aria-label": auditText("feature.audit.search.resetAria", "감사로그 검색조건 초기화")
+        })
+            .append($("<i>", {
+                class: "icon-base ti tabler-refresh",
+                "aria-hidden": "true"
+            }))
+            .append(document.createTextNode(auditText("feature.common.reset", "초기화")))
+            .on("click", resetAuditLogSearch)
+            .prependTo($actions);
+    }
+}
+
 function downloadAuditLogExcel() {
-    alertMessage("Excel download is not implemented yet.");
+    alertMessage(auditText("feature.audit.excel.unavailable", "엑셀 다운로드는 아직 지원하지 않습니다."));
 }
 
 $(function () {
     $('.layout-wrapper.bodyWrap .content-wrapper > .container').addClass('distribution-invoice-container');
+    ensureAuditLogResetButton();
 });

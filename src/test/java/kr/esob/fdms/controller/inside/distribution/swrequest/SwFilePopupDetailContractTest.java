@@ -24,10 +24,12 @@ class SwFilePopupDetailContractTest {
 		assertTrue(aclCheck >= 0);
 		assertTrue(detailLookup > aclCheck);
 		assertTrue(popup.contains("model.addAttribute(\"documentInfo\""));
+		assertTrue(popup.contains(
+			"documentInfo.put(\"fileCount\", mainFileList.size() + subFileList.size())"));
 	}
 
 	@Test
-	void detailQueryReturnsReadableMetadataWithoutPhysicalFileColumns() throws Exception {
+	void detailQueryReturnsOnlySupportedMetadataAndRequestDate() throws Exception {
 		String mapper = read(
 			"src/main/resources/sqlMaps/oracle/its/controller/inside/distribution/swrequest/SwRequest.xml");
 		String detail = section(
@@ -35,49 +37,134 @@ class SwFilePopupDetailContractTest {
 
 		assertTrue(detail.contains("AS \"swNm\""));
 		assertTrue(detail.contains("AS \"classificationPath\""));
-		assertTrue(detail.contains("AS \"businessTypeNm\""));
 		assertTrue(detail.contains("AS \"insertUserNm\""));
-		assertTrue(detail.contains("AS \"processingStatusNm\""));
-		assertTrue(detail.contains("AS \"protectYnNm\""));
-		assertTrue(detail.contains("AS \"validTypeNm\""));
-		assertTrue(detail.contains("TO_CHAR(sw.INSERT_DT, 'YYYY-MM-DD HH24:MI')"));
+		assertTrue(detail.contains(
+			"TO_CHAR(sw.INSERT_DT, 'YYYY-MM-DD HH24:MI'), '') AS \"insertDt\""));
+		assertTrue(detail.contains("FROM DOCS_SW_FILE countedMain"));
+		assertTrue(detail.contains("FROM DOCS_SW_SUB_FILE countedSub"));
+		assertTrue(detail.contains("COALESCE(countedSub.USE_YN, 'Y') = 'Y'"));
+
+		String[] removedAliases = {
+			"swTypeNm",
+			"revNo",
+			"swVersionNo",
+			"businessTypeNm",
+			"distributeTypeNm",
+			"businessAreaNm",
+			"createDt",
+			"ccbDate",
+			"updateUserNm",
+			"updateDt",
+			"interfaceDt",
+			"stdGappDt",
+			"changeGappDt",
+			"ecnUserNm",
+			"ecnNo",
+			"validTypeNm",
+			"reviewerUser",
+			"approver",
+			"status",
+			"processingStatusNm",
+			"protectYnNm"
+		};
+		for (String alias : removedAliases) {
+			assertFalse(detail.contains("AS \"" + alias + "\""), alias);
+		}
 		assertFalse(detail.contains("FILE_PATH_NM"));
 		assertFalse(detail.contains("CHECKSUM"));
 	}
 
 	@Test
-	void popupGroupsColumnsAndKeepsInternalIdentifiersOutOfTheDetailPanel() throws Exception {
+	void popupShowsRequestDateAndOmitsUnsupportedFields() throws Exception {
 		String page = read(
 			"src/main/webapp/WEB-INF/views/inside/distribution/swFilePopup.jsp");
 		String detailPanel = section(
-			page, "<section class=\"sw-detail-panel\"", "<!-- <div class=\"section popupCard");
+			page, "<section class=\"sw-detail-panel\"",
+			"<div class=\"section popupCard sectionBlock mainFileSection\">");
 
-		assertTrue(page.contains("<h2>기술자료 상세</h2>"));
-		assertTrue(detailPanel.contains("문서 정보"));
-		assertTrue(detailPanel.contains("등록·변경 이력"));
-		assertTrue(detailPanel.contains("보안·승인 정보"));
-		assertTrue(detailPanel.contains("<dt>CCB제목</dt>"));
-		assertTrue(detailPanel.contains("<dt>자료분류</dt>"));
-		assertTrue(detailPanel.contains("<dt>등록자</dt>"));
-		assertTrue(detailPanel.contains("<dt>문서등급</dt>"));
-		assertTrue(detailPanel.contains("<dt>승인자</dt>"));
+		assertTrue(page.contains("code=\"feature.techDetail.title\" text=\"기술자료 상세\""));
+		assertTrue(detailPanel.contains("code=\"feature.techDetail.documentInfo.title\" text=\"문서 정보\""));
+		assertTrue(detailPanel.contains("code=\"feature.techDetail.registrationInfo.title\" text=\"의뢰·등록 정보\""));
+		assertTrue(detailPanel.contains("code=\"feature.techDetail.transmittalNo\" text=\"송부번호\""));
+		assertTrue(detailPanel.contains("code=\"feature.techDetail.requestName\" text=\"의뢰명\""));
+		assertTrue(detailPanel.contains("code=\"feature.techDetail.classification\" text=\"자료분류\""));
+		assertTrue(detailPanel.contains("code=\"feature.techDetail.requestDate\" text=\"의뢰일자\""));
+		assertTrue(detailPanel.contains("documentInfo.insertDt"));
+		assertTrue(detailPanel.contains("code=\"feature.techDetail.registrant\" text=\"등록자\""));
+		assertFalse(detailPanel.contains("<dt>등록팀</dt>"));
+		assertFalse(detailPanel.contains("documentInfo.insertDeptNm"));
+		assertTrue(detailPanel.contains("sw-detail-item sw-detail-item--span-2"));
+		assertTrue(page.contains("id=\"swPopupDocumentGrade\""));
+
+		String[] removedLabels = {
+			"CCB번호",
+			"CCB제목",
+			"SW분류",
+			"Revision",
+			"SW버전",
+			"사업단계",
+			"파일유형",
+			"사업장",
+			"생성일",
+			"CCB개최일",
+			"수정자",
+			"수정일",
+			"Interface일",
+			"규격화승인일",
+			"기술변경승인일",
+			"CO담당자",
+			"CO번호",
+			"유효본",
+			"참여자",
+			"문서등급",
+			"진행상태",
+			"처리상태",
+			"방산기술",
+			"승인자",
+			"기종"
+		};
+		for (String label : removedLabels) {
+			assertFalse(detailPanel.contains("<dt>" + label + "</dt>"), label);
+		}
+
 		assertTrue(page.contains("grid-template-columns: repeat(4, minmax(0, 1fr))"));
 		assertTrue(page.contains("@media (max-width: 900px)"));
 		assertTrue(page.contains("@media (max-width: 600px)"));
 		assertFalse(detailPanel.contains("objectId"));
 		assertFalse(detailPanel.contains("filePath"));
 		assertFalse(detailPanel.contains("checkSum"));
+		assertFalse(page.contains("CCB번호"));
+		assertFalse(page.contains("CCB제목"));
+		assertFalse(page.contains("보안·승인 정보"));
+		assertFalse(page.contains("documentInfo.status"));
+		assertFalse(page.contains("documentInfo.approver"));
+		assertFalse(detailPanel.contains("documentInfo.productNm"));
 	}
 
 	@Test
-	void hiddenApprovalUiDoesNotTriggerAnExtraRequestAndHandlersStayIdempotent() throws Exception {
+	void gridMetadataRemovesUnsupportedColumnsAndLabelsInsertDateAsRequestDate() throws Exception {
+		String ddl = read("src/main/resources/sql/acl_foundation_ddl.sql");
+
+		assertTrue(ddl.contains("DELETE FROM docs_grid_info"));
+		assertTrue(ddl.contains("grid_id = 'gridSwRequestList'"));
+		assertTrue(ddl.contains("'swTypeNm'"));
+		assertTrue(ddl.contains("'revNo'"));
+		assertTrue(ddl.contains("'swVersionNo'"));
+		assertTrue(ddl.contains("'reviewerUser'"));
+		assertTrue(ddl.contains("column_nm = '의뢰일자'"));
+		assertTrue(ddl.contains("column_id = 'insertDt'"));
+	}
+
+	@Test
+	void popupContainsNoApprovalProcedureUiOrRequests() throws Exception {
 		String page = read(
 			"src/main/webapp/WEB-INF/views/inside/distribution/swFilePopup.jsp");
 
-		assertTrue(page.contains(
-			"if ($(\"#gridSwApproverStatus, #gridSwReviewerStatus\").length)"));
-		assertTrue(page.contains(".off(\"click.swFilePopup\""));
-		assertTrue(page.contains(".on(\"click.swFilePopup\""));
+		assertFalse(page.contains("gridSwApproverStatus"));
+		assertFalse(page.contains("gridSwReviewerStatus"));
+		assertFalse(page.contains("approveStatusRows"));
+		assertFalse(page.contains("saveApprovalComment"));
+		assertFalse(page.contains("approval-comment"));
 	}
 
 	private String read(String path) throws Exception {

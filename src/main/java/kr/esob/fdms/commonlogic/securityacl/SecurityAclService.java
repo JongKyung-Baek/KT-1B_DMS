@@ -1,5 +1,6 @@
 package kr.esob.fdms.commonlogic.securityacl;
 
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -7,9 +8,13 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -30,6 +35,9 @@ public class SecurityAclService {
     public static final String PRINT = "PRINT";
     public static final String MANAGE_ACL = "MANAGE_ACL";
 
+    private static final String REGISTRATION_DEFAULT_LABEL_REASON = "REGISTER_DEFAULT_GRADE";
+    private static final String REGISTRANT_PERMISSION_REASON = "REGISTERED_DOCUMENT_OWNER";
+
     private static final Set<String> ACTIONS = Collections.unmodifiableSet(new HashSet<String>(Arrays.asList(
         LIST, DETAIL, VIEW, DOWNLOAD_ORIGINAL, PRINT, MANAGE_ACL
     )));
@@ -41,6 +49,7 @@ public class SecurityAclService {
     private final SecurityAclDao dao;
     private final SecurityAuditWriter auditWriter;
     private final ObjectMapper objectMapper;
+    private MessageSource messageSource;
 
     public SecurityAclService(SecurityAclDao dao, SecurityAuditWriter auditWriter,
                               ObjectMapper objectMapper) {
@@ -49,11 +58,17 @@ public class SecurityAclService {
         this.objectMapper = objectMapper;
     }
 
+    @Autowired(required = false)
+    public void setMessageSource(MessageSource messageSource) {
+        this.messageSource = messageSource;
+    }
+
     public UserVO requireCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()
             || !(authentication.getPrincipal() instanceof UserVO)) {
-            throw new AccessDeniedException("로그인이 필요합니다.");
+            throw new AccessDeniedException(message(
+                "feature.acl.error.loginRequired", "로그인이 필요합니다."));
         }
         return (UserVO) authentication.getPrincipal();
     }
@@ -61,7 +76,8 @@ public class SecurityAclService {
     public void requireManageAcl() {
         UserVO actor = requireCurrentUser();
         if (!dao.hasActionPermission(actor.getUserCd(), MANAGE_ACL)) {
-            throw new AccessDeniedException("ACL 관리 권한이 없습니다.");
+            throw new AccessDeniedException(message(
+                "feature.acl.error.managePermissionRequired", "ACL 관리 권한이 없습니다."));
         }
     }
 
@@ -80,7 +96,7 @@ public class SecurityAclService {
         }
         requireSingleRow(dao.upsertGrade(grade, actor.getUserCd()), "save security grade");
         recordAclChange(actor, "ACL_CHANGE", "MANAGE_GRADE", "SUCCESS", null,
-            "보안등급 저장", null, grade.getGradeCd(), null, null, grade.getGradeCd(), "{}");
+            null, null, grade.getGradeCd(), null, null, grade.getGradeCd(), "{}");
     }
 
     public List<UserClearanceVO> selectUsersForManagement(String keyword) {
@@ -97,12 +113,14 @@ public class SecurityAclService {
         requireManageAcl();
         UserVO actor = requireCurrentUser();
         if (clearance == null || isBlank(clearance.getUserCd()) || isBlank(clearance.getGradeCd())) {
-            throw new IllegalArgumentException("사용자와 보안등급은 필수입니다.");
+            throw new IllegalArgumentException(message(
+                "feature.acl.error.userAndGradeRequired", "사용자와 보안등급은 필수입니다."));
         }
         clearance.setUserCd(clearance.getUserCd().trim());
         clearance.setGradeCd(normalizeCode(clearance.getGradeCd()));
         if (dao.countGrade(clearance.getGradeCd()) != 1) {
-            throw new IllegalArgumentException("사용할 수 없는 보안등급입니다.");
+            throw new IllegalArgumentException(message(
+                "feature.acl.error.gradeUnavailable", "사용할 수 없는 보안등급입니다."));
         }
         requireSingleRow(dao.upsertClearance(clearance, actor.getUserCd()), "save user clearance");
 
@@ -115,7 +133,7 @@ public class SecurityAclService {
                 "save user action permission");
         }
         recordAclChange(actor, "ACL_CHANGE", "MANAGE_CLEARANCE", "SUCCESS", null,
-            "사용자 인가등급 저장", null, clearance.getUserCd(), null, null, clearance.getGradeCd(), "{}");
+            null, null, clearance.getUserCd(), null, null, clearance.getGradeCd(), "{}");
     }
 
     public List<FileSecurityLabelVO> selectFilesForManagement(String objectType, String keyword) {
@@ -147,7 +165,8 @@ public class SecurityAclService {
     public List<AccessAuditEventVO> selectAccessHistoryForViewer(
             String keyword, String eventType, String resultCd) {
         requireCurrentUser();
-        return dao.selectAudit(trim(keyword), normalizeOptionalCode(eventType), normalizeOptionalCode(resultCd));
+        return dao.selectAccessHistory(
+                trim(keyword), normalizeOptionalCode(eventType), normalizeOptionalCode(resultCd));
     }
 
     @Transactional
@@ -155,22 +174,63 @@ public class SecurityAclService {
         requireManageAcl();
         UserVO actor = requireCurrentUser();
         if (label == null || isBlank(label.getObjectId()) || isBlank(label.getGradeCd())) {
-            throw new IllegalArgumentException("자료와 보안등급은 필수입니다.");
+            throw new IllegalArgumentException(message(
+                "feature.acl.error.resourceAndGradeRequired", "자료와 보안등급은 필수입니다."));
         }
         label.setObjectType(normalizeObjectType(label.getObjectType()));
         label.setObjectId(label.getObjectId().trim());
         label.setFileNo(isBlank(label.getFileNo()) ? "*" : label.getFileNo().trim());
         label.setGradeCd(normalizeCode(label.getGradeCd()));
         if (dao.countGrade(label.getGradeCd()) != 1) {
-            throw new IllegalArgumentException("사용할 수 없는 보안등급입니다.");
+            throw new IllegalArgumentException(message(
+                "feature.acl.error.gradeUnavailable", "사용할 수 없는 보안등급입니다."));
         }
         if (dao.countResource(label) == 0) {
-            throw new IllegalArgumentException("등급을 지정할 자료를 찾을 수 없습니다.");
+            throw new IllegalArgumentException(message(
+                "feature.acl.error.labelResourceNotFound", "등급을 지정할 자료를 찾을 수 없습니다."));
         }
         requireSingleRow(dao.upsertFileLabel(label, actor.getUserCd()), "save file security label");
         recordAclChange(actor, "ACL_CHANGE", "MANAGE_FILE_LABEL", "SUCCESS", null,
-            "파일 보안등급 저장", label.getObjectType(), label.getObjectId(), label.getFileNo(), null,
+            null, label.getObjectType(), label.getObjectId(), label.getFileNo(), null,
             label.getGradeCd(), "{}");
+    }
+
+    /**
+     * Initializes the fail-closed ACL for a newly registered technical document.
+     *
+     * The grade and grantee are deliberately derived from trusted server-side state:
+     * the single active default grade and the authenticated registrant. Administrators
+     * are not granted implicit document access.
+     */
+    @Transactional
+    public void initializeRegisteredSwAcl(String objectId) {
+        UserVO actor = requireCurrentUser();
+        FileAccessRequest resource = normalizeManagedResource("SW", objectId, "*");
+        validateManagedResource(resource);
+
+        SecurityGradeVO defaultGrade = requireActiveDefaultGrade();
+        FileSecurityLabelVO label = new FileSecurityLabelVO();
+        label.setObjectType(resource.getObjectType());
+        label.setObjectId(resource.getObjectId());
+        label.setFileNo(resource.getFileNo());
+        label.setGradeCd(defaultGrade.getGradeCd());
+        label.setLabelReason(REGISTRATION_DEFAULT_LABEL_REASON);
+        requireSingleRow(
+            dao.upsertFileLabel(label, actor.getUserCd()),
+            "initialize registered document security label");
+
+        upsertDocumentPermission(
+            resource, actor.getUserCd(), LIST, REGISTRANT_PERMISSION_REASON, actor.getUserCd());
+        upsertDocumentPermission(
+            resource, actor.getUserCd(), DETAIL, REGISTRANT_PERMISSION_REASON, actor.getUserCd());
+        upsertDocumentPermission(
+            resource, actor.getUserCd(), VIEW, REGISTRANT_PERMISSION_REASON, actor.getUserCd());
+        grantRegistrantPermissionWhenGloballyAllowed(resource, actor, DOWNLOAD_ORIGINAL);
+        grantRegistrantPermissionWhenGloballyAllowed(resource, actor, PRINT);
+
+        recordAclChange(actor, "ACL_CHANGE", "REGISTER_DOCUMENT_ACL", "SUCCESS", null,
+            null, resource.getObjectType(), resource.getObjectId(), resource.getFileNo(), null,
+            defaultGrade.getGradeCd(), "{}");
     }
 
     @Transactional
@@ -178,7 +238,9 @@ public class SecurityAclService {
         requireManageAcl();
         UserVO actor = requireCurrentUser();
         if (saveRequest == null) {
-            throw new IllegalArgumentException("Document permission request is required.");
+            throw new IllegalArgumentException(message(
+                "feature.acl.error.permissionRequestRequired",
+                "문서 권한 요청 정보는 필수입니다."));
         }
 
         FileAccessRequest resource = normalizeManagedResource(
@@ -187,10 +249,14 @@ public class SecurityAclService {
         String fileGradeCd = requireEffectiveFileGrade(resource);
         String changeReason = trim(saveRequest.getChangeReason());
         if (changeReason.isEmpty()) {
-            throw new IllegalArgumentException("Document permission change reason is required.");
+            throw new IllegalArgumentException(message(
+                "feature.acl.error.changeReasonRequired",
+                "문서 권한 변경 사유는 필수입니다."));
         }
         if (changeReason.length() > 500) {
-            throw new IllegalArgumentException("Document permission change reason is too long.");
+            throw new IllegalArgumentException(message(
+                "feature.acl.error.changeReasonTooLong",
+                "문서 권한 변경 사유가 너무 깁니다."));
         }
 
         List<FileUserPermissionVO> permissions = saveRequest.getPermissions();
@@ -198,24 +264,34 @@ public class SecurityAclService {
             permissions = Collections.emptyList();
         }
         if (permissions.isEmpty()) {
-            throw new IllegalArgumentException("Document permission entries are required.");
+            throw new IllegalArgumentException(message(
+                "feature.acl.error.permissionEntriesRequired",
+                "문서 권한 항목은 한 건 이상 필요합니다."));
         }
         if (permissions.size() > 500) {
-            throw new IllegalArgumentException("Too many document permission entries.");
+            throw new IllegalArgumentException(message(
+                "feature.acl.error.tooManyPermissionEntries",
+                "문서 권한 항목이 너무 많습니다."));
         }
 
         Set<String> users = new HashSet<String>();
         for (FileUserPermissionVO permission : permissions) {
             if (permission == null || isBlank(permission.getUserCd())) {
-                throw new IllegalArgumentException("Document permission user is required.");
+                throw new IllegalArgumentException(message(
+                    "feature.acl.error.permissionUserRequired",
+                    "문서 권한 사용자 정보는 필수입니다."));
             }
             permission.setUserCd(permission.getUserCd().trim());
             if (!users.add(permission.getUserCd())) {
-                throw new IllegalArgumentException("Duplicate document permission user.");
+                throw new IllegalArgumentException(message(
+                    "feature.acl.error.duplicatePermissionUser",
+                    "동일한 사용자를 중복하여 지정할 수 없습니다."));
             }
             boolean view = isAllowed(permission.getViewYn());
             if ((isAllowed(permission.getDownloadOriginalYn()) || isAllowed(permission.getPrintYn())) && !view) {
-                throw new IllegalArgumentException("Download and print permissions require view permission.");
+                throw new IllegalArgumentException(message(
+                    "feature.acl.error.viewRequiredForDownloadOrPrint",
+                    "다운로드 및 출력 권한을 지정하려면 열람 권한이 필요합니다."));
             }
         }
 
@@ -279,7 +355,9 @@ public class SecurityAclService {
     public FileAccessDecisionVO requireAccess(FileAccessRequest request) {
         FileAccessDecisionVO decision = checkAccess(request);
         if (!decision.isAllowed()) {
-            throw new AccessDeniedException("자료 접근이 거부되었습니다: " + decision.getReasonCd());
+            throw new AccessDeniedException(message(
+                "feature.acl.error.accessDenied", "자료 접근이 거부되었습니다: {0}",
+                decision.getReasonCd()));
         }
         return decision;
     }
@@ -316,7 +394,8 @@ public class SecurityAclService {
 
     private FileAccessRequest normalizeAccessRequest(FileAccessRequest source, String actorUserCd) {
         if (source == null || isBlank(source.getObjectId())) {
-            throw new IllegalArgumentException("자료 식별자는 필수입니다.");
+            throw new IllegalArgumentException(message(
+                "feature.acl.error.resourceIdRequired", "자료 식별자는 필수입니다."));
         }
         FileAccessRequest request = normalizeManagedResource(
             source.getObjectType(), source.getObjectId(), source.getFileNo());
@@ -328,7 +407,8 @@ public class SecurityAclService {
 
     private FileAccessRequest normalizeManagedResource(String objectType, String objectId, String fileNo) {
         if (isBlank(objectId)) {
-            throw new IllegalArgumentException("자료 식별자는 필수입니다.");
+            throw new IllegalArgumentException(message(
+                "feature.acl.error.resourceIdRequired", "자료 식별자는 필수입니다."));
         }
         FileAccessRequest request = new FileAccessRequest();
         request.setObjectType(normalizeObjectType(objectType));
@@ -354,16 +434,50 @@ public class SecurityAclService {
         label.setObjectId(resource.getObjectId());
         label.setFileNo(resource.getFileNo());
         if (dao.countResource(label) != 1) {
-            throw new IllegalArgumentException("자료를 찾을 수 없습니다.");
+            throw new IllegalArgumentException(message(
+                "feature.acl.error.resourceNotFound", "자료를 찾을 수 없습니다."));
         }
     }
 
     private String requireEffectiveFileGrade(FileAccessRequest resource) {
         String gradeCd = dao.selectEffectiveFileGradeCd(resource);
         if (isBlank(gradeCd)) {
-            throw new IllegalArgumentException("사용자 권한을 지정하기 전에 자료 보안등급을 먼저 지정하세요.");
+            throw new IllegalArgumentException(message(
+                "feature.acl.error.fileGradeRequired",
+                "사용자 권한을 지정하기 전에 자료 보안등급을 먼저 지정하세요."));
         }
         return gradeCd;
+    }
+
+    private SecurityGradeVO requireActiveDefaultGrade() {
+        SecurityGradeVO activeDefault = null;
+        List<SecurityGradeVO> grades = dao.selectGrades();
+        if (grades != null) {
+            for (SecurityGradeVO grade : grades) {
+                if (grade == null
+                    || !"Y".equalsIgnoreCase(trim(grade.getDefaultYn()))
+                    || !"Y".equalsIgnoreCase(trim(grade.getUseYn()))) {
+                    continue;
+                }
+                if (activeDefault != null) {
+                    throw new IllegalStateException("Multiple active default security grades exist.");
+                }
+                activeDefault = grade;
+            }
+        }
+        if (activeDefault == null || isBlank(activeDefault.getGradeCd())) {
+            throw new IllegalStateException("An active default security grade is required.");
+        }
+        return activeDefault;
+    }
+
+    private void grantRegistrantPermissionWhenGloballyAllowed(
+            FileAccessRequest resource, UserVO actor, String actionCd) {
+        if (dao.hasActionPermission(actor.getUserCd(), actionCd)) {
+            upsertDocumentPermission(
+                resource, actor.getUserCd(), actionCd,
+                REGISTRANT_PERMISSION_REASON, actor.getUserCd());
+        }
     }
 
     private void upsertDocumentPermission(FileAccessRequest resource, String userCd, String actionCd,
@@ -376,7 +490,8 @@ public class SecurityAclService {
     private String normalizeAction(String action) {
         String normalized = normalizeCode(action);
         if (!ACTIONS.contains(normalized) || MANAGE_ACL.equals(normalized)) {
-            throw new IllegalArgumentException("지원하지 않는 파일 행위입니다.");
+            throw new IllegalArgumentException(message(
+                "feature.acl.error.unsupportedAction", "지원하지 않는 파일 행위입니다."));
         }
         return normalized;
     }
@@ -388,21 +503,28 @@ public class SecurityAclService {
         if ("SECP".equals(normalized) || "SECP_PARTDOC".equals(normalized)) normalized = "PRODUCT_SW";
         if ("PEERREVIEW".equals(normalized)) normalized = "PEER_REVIEW";
         if (!OBJECT_TYPES.contains(normalized)) {
-            throw new IllegalArgumentException("지원하지 않는 자료 유형입니다: " + normalized);
+            throw new IllegalArgumentException(message(
+                "feature.acl.error.unsupportedObjectType", "지원하지 않는 자료 유형입니다: {0}",
+                normalized));
         }
         return normalized;
     }
 
     private void validateGrade(SecurityGradeVO grade) {
         if (grade == null || isBlank(grade.getGradeCd()) || isBlank(grade.getGradeNm()) || grade.getGradeLevel() == null) {
-            throw new IllegalArgumentException("등급코드, 등급명, 등급순위는 필수입니다.");
+            throw new IllegalArgumentException(message(
+                "feature.acl.error.gradeFieldsRequired",
+                "등급코드, 등급명, 등급순위는 필수입니다."));
         }
         grade.setGradeCd(normalizeCode(grade.getGradeCd()));
         if (!grade.getGradeCd().matches("[A-Z][A-Z0-9_]{1,29}")) {
-            throw new IllegalArgumentException("등급코드는 영문 대문자, 숫자, 밑줄만 사용할 수 있습니다.");
+            throw new IllegalArgumentException(message(
+                "feature.acl.error.gradeCodeFormat",
+                "등급코드는 영문 대문자, 숫자, 밑줄만 사용할 수 있습니다."));
         }
         if (grade.getGradeLevel().intValue() < 0) {
-            throw new IllegalArgumentException("등급순위는 0 이상이어야 합니다.");
+            throw new IllegalArgumentException(message(
+                "feature.acl.error.gradeLevelNonNegative", "등급순위는 0 이상이어야 합니다."));
         }
         grade.setDefaultYn(normalizeYn(grade.getDefaultYn(), false));
         grade.setUseYn(normalizeYn(grade.getUseYn(), true));
@@ -489,7 +611,7 @@ public class SecurityAclService {
     }
 
     private String normalizeCode(String value) {
-        return trim(value).toUpperCase();
+        return trim(value).toUpperCase(Locale.ROOT);
     }
 
     private String normalizeOptionalCode(String value) {
@@ -511,5 +633,14 @@ public class SecurityAclService {
 
     private boolean isBlank(String value) {
         return value == null || value.trim().isEmpty();
+    }
+
+    private String message(String code, String koreanFallback, Object... arguments) {
+        Locale locale = LocaleContextHolder.getLocale();
+        if (messageSource != null) {
+            return messageSource.getMessage(code, arguments, koreanFallback, locale);
+        }
+        return new MessageFormat(koreanFallback, locale).format(
+            arguments == null ? new Object[0] : arguments);
     }
 }

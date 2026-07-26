@@ -1,9 +1,21 @@
 package kr.esob.fdms.commonlogic.excel;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.CacheControl;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -64,5 +76,23 @@ public class CreateExcelController extends AbstractController {
 	@PostMapping("/createExcelDuanzongPdm")
 	public @ResponseBody CreateExcelVO createExcelDuanzongPdm(HttpServletRequest request, CommonParam param) throws Exception {
 		return service.createExcelDuanzongPdm(request, param);
+	}
+
+	@GetMapping("/download/{fileName:.+}")
+	public ResponseEntity<Resource> download(@PathVariable String fileName) throws IOException {
+		Path generatedFile = service.resolveGeneratedExcelFile(fileName);
+		if (generatedFile == null || !Files.isRegularFile(generatedFile)) {
+			return ResponseEntity.notFound().build();
+		}
+
+		Resource resource = new FileSystemResource(generatedFile.toFile());
+		return ResponseEntity.ok()
+				.cacheControl(CacheControl.noStore())
+				.contentType(MediaType.parseMediaType(
+						"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+				.contentLength(Files.size(generatedFile))
+				.header(HttpHeaders.CONTENT_DISPOSITION,
+						"attachment; filename=\"" + fileName + "\"")
+				.body(resource);
 	}
 }

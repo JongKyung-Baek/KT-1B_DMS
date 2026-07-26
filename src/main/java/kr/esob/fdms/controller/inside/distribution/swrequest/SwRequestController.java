@@ -36,6 +36,7 @@ import kr.esob.fdms.commonlogic.grid.GridResultVO;
 import kr.esob.fdms.commonlogic.securityacl.FileAccessRequest;
 import kr.esob.fdms.commonlogic.securityacl.SecurityAclService;
 import kr.esob.fdms.commonlogic.systemconfig.SystemConfig;
+import kr.esob.fdms.commonlogic.toolbar.ToolbarInfoVO;
 import kr.esob.fdms.commonlogic.toolbar.ToolbarInfoService;
 import kr.esob.fdms.commonlogic.value.RequestPopupInfo;
 import kr.esob.fdms.commonlogic.value.SearchAllPopupInfo;
@@ -80,9 +81,21 @@ public class SwRequestController extends AbstractController {
 	public String home(Model model, CommonHomeParam param) throws JsonProcessingException {
 		setHomeParam(model, param);
 		model.addAttribute("formInfo", JSONArray.fromObject(formService.selectFormInfo("formSwRequest")));
-		model.addAttribute("toolbarInfo", JSONArray.fromObject(toolbarService.selectToolbarInfo("toolbarSwRequest")));
+		List<ToolbarInfoVO> toolbarInfo = toolbarService.selectToolbarInfo("toolbarSwRequest");
+		toolbarInfo.removeIf(this::isRemovedTechnicalDataToolbarButton);
+		model.addAttribute("toolbarInfo", JSONArray.fromObject(toolbarInfo));
 		model.addAttribute("gridInfo", JSONArray.fromObject(gridService.selectGridInfo("gridSwRequestList")));
 		return "/inside/distribution/swRequestList";
+	}
+
+	private boolean isRemovedTechnicalDataToolbarButton(ToolbarInfoVO toolbar) {
+		if (toolbar == null) {
+			return false;
+		}
+		String buttonId = toolbar.getButtonId();
+		return "btnDashboard".equals(buttonId)
+				|| "btnUpdate".equals(buttonId)
+				|| "btnDelete".equals(buttonId);
 	}
 
 	@GetMapping("/dashboard")
@@ -101,6 +114,8 @@ public class SwRequestController extends AbstractController {
 
 	@RequestMapping("/selectList")
 	public @ResponseBody GridResultVO selectList(SwRequestParam param) throws Exception {
+		UserVO currentUser = securityAclService.requireCurrentUser();
+		param.setAclUserCd(currentUser.getUserCd());
 		service.setSearchAllParam(param);
 		GridResultVO result = commonSelectList(param, service);
 		return result;
@@ -108,6 +123,8 @@ public class SwRequestController extends AbstractController {
 
 	@RequestMapping("/selectTree")
 	public @ResponseBody List<SwRequestTreeVO> selectTree(@RequestBody SwRequestParam param) {
+		UserVO currentUser = securityAclService.requireCurrentUser();
+		param.setAclUserCd(currentUser.getUserCd());
 		return service.selectTree(param);
 	}
 
@@ -139,7 +156,7 @@ public class SwRequestController extends AbstractController {
 		List<Map<String, String>> list = param.get("list");
 		if (list == null || list.isEmpty()) {
 			result.put("successCount", 0);
-			result.put("error", "철회할 대상을 선택하세요.");
+			result.put("error", prop.msg("feature.techList.withdraw.selectionRequired"));
 			return result;
 		}
 
@@ -162,7 +179,7 @@ public class SwRequestController extends AbstractController {
 		}
 
 		if (success == 0) {
-			result.put("error", "철회 처리에 실패했습니다.");
+			result.put("error", prop.msg("feature.techList.withdraw.failed"));
 		}
 		result.put("successCount", success);
 		return result;
@@ -183,7 +200,7 @@ public class SwRequestController extends AbstractController {
 		if (list == null || list.isEmpty()) {
 			result.put("successCount", 0);
 			result.put("failCount", 0);
-			result.put("message", "승인할 대상을 선택하세요.");
+			result.put("message", prop.msg("feature.techList.approval.selectionRequired"));
 			return result;
 		}
 
@@ -211,6 +228,9 @@ public class SwRequestController extends AbstractController {
 			}
 		}
 
+		if (failCount > 0 && message.isEmpty()) {
+			message = prop.msg("feature.techList.approval.failed");
+		}
 		result.put("successCount", successCount);
 		result.put("failCount", failCount);
 		result.put("message", message);
@@ -253,10 +273,12 @@ public class SwRequestController extends AbstractController {
 				service.selectMainFileInfo(resolvedObjectId), "SW", false);
 		List<Map<String, Object>> subFileList = filterAccessiblePopupRows(
 				service.selectSubFileInfo(resolvedObjectId), "SW_SUB", true);
+		Map<String, Object> documentInfo = new HashMap<>(service.selectSwDetailInfo(resolvedObjectId));
+		documentInfo.put("fileCount", mainFileList.size() + subFileList.size());
 
 		model.addAttribute("objectId", resolvedObjectId);
 		model.addAttribute("swNo", firstRowValue(mainFileList, "swNo"));
-		model.addAttribute("documentInfo", service.selectSwDetailInfo(resolvedObjectId));
+		model.addAttribute("documentInfo", documentInfo);
 		model.addAttribute("mainFileList", mainFileList);
 		model.addAttribute("subFileList", subFileList);
 		model.addAttribute("mainFileJson", JSONArray.fromObject(mainFileList));

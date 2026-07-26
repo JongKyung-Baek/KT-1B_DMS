@@ -10,7 +10,7 @@
 <%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
 <sec:authentication property="principal" var="sessionUser" />
 <!doctype html>
-<html lang="kr" class="layout-menu-fixed layout-compact" dir="ltr"
+<html lang="<%=LocaleUtil.getCurrentLanguage(request) %>" class="layout-menu-fixed layout-compact" dir="ltr"
 	data-skin="default"
 	data-bs-theme="light"
 	data-template="vertical-menu-template"
@@ -55,7 +55,7 @@
 	<script src="${pageContext.request.contextPath}/vuexy/assets/js/config.js"></script>
 
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/jquery-3.4.1.min.js"></script>
-	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/i18n/grid.locale-kr.js"></script>
+	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/i18n/grid.locale-<%=LocaleUtil.getJqGridLanguage(request) %>.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/jqGrid-master/js/jquery.jqGrid.min.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/bootstrap/js/bootstrap.min.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/bootstrap/js/bootstrap-datetimepicker.js"></script>
@@ -76,7 +76,7 @@
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common_form.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common_toolbar.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common_grid.js"></script>
-	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common_grid_paging.js"></script>
+	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common_grid_paging.js?v=20260726.1"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/rsa.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/jsbn.js"></script>

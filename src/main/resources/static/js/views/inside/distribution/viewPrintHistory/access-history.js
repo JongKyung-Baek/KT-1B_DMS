@@ -9,49 +9,51 @@
     };
 
     var eventLabels = {
-        FILE_ACCESS: '자료 접근',
-        DOWNLOAD_RESULT: '다운로드 결과',
-        PRINT_RESULT: '출력 결과',
-        ACL_CHANGE: '권한 변경'
+        FILE_ACCESS: ['feature.history.event.fileAccess', '자료 접근'],
+        DOWNLOAD_RESULT: ['feature.history.event.download', '다운로드'],
+        ACL_CHANGE: ['feature.history.event.aclChange', '권한 변경']
     };
 
     var actionLabels = {
-        LIST: '목록 조회',
-        DETAIL: '상세 조회',
-        VIEW: '열람',
-        DOWNLOAD_ORIGINAL: '원본 다운로드',
-        PRINT: '출력',
-        MANAGE_GRADE: '보안등급 변경',
-        MANAGE_CLEARANCE: '사용자 인가 변경',
-        MANAGE_USER_CLEARANCE: '사용자 인가 변경',
-        MANAGE_FILE_LABEL: '문서등급 변경',
-        MANAGE_FILE_PERMISSION: '문서권한 변경',
-        MANAGE_DOCUMENT_PERMISSION: '문서권한 변경',
-        MANAGE_ACL: '접근권한 관리'
-    };
-
-    var resultLabels = {
-        ALLOW: '허용',
-        SUCCESS: '성공',
-        DENY: '차단',
-        FAIL: '실패',
-        FAILED: '실패',
-        FAILURE: '실패',
-        ERROR: '오류',
-        CANCELLED: '취소',
-        STARTED: '시작'
+        LIST: ['feature.history.action.list', '목록 조회'],
+        DETAIL: ['feature.history.action.detail', '상세 조회'],
+        DOWNLOAD_ORIGINAL: ['feature.history.action.downloadOriginal', '원본 다운로드'],
+        MANAGE_GRADE: ['feature.history.action.manageGrade', '보안등급 변경'],
+        MANAGE_CLEARANCE: ['feature.history.action.manageClearance', '사용자 인가 변경'],
+        MANAGE_USER_CLEARANCE: ['feature.history.action.manageClearance', '사용자 인가 변경'],
+        MANAGE_FILE_LABEL: ['feature.history.action.manageFileLabel', '문서등급 변경'],
+        MANAGE_FILE_PERMISSION: ['feature.history.action.manageFilePermission', '문서권한 변경'],
+        MANAGE_DOCUMENT_PERMISSION: ['feature.history.action.manageFilePermission', '문서권한 변경'],
+        MANAGE_ACL: ['feature.history.action.manageAcl', '접근권한 관리']
     };
 
     var reasonLabels = {
-        ACCESS_ALLOWED: '접근 정책 허용',
-        ACTION_NOT_ALLOWED: '행위 권한 없음',
-        CLEARANCE_TOO_LOW: '사용자 인가등급 부족',
-        FILE_GRADE_REQUIRED: '문서 보안등급 미지정',
-        FILE_PERMISSION_DENIED: '문서별 사용자 권한 없음',
-        RESOURCE_NOT_FOUND: '대상 자료를 찾을 수 없음',
-        INVALID_REQUEST: '잘못된 요청',
-        BUSINESS_FAILURE: '업무 처리 실패'
+        ACCESS_ALLOWED: ['feature.history.reason.accessAllowed', '접근 정책 허용'],
+        ACTION_NOT_ALLOWED: ['feature.history.reason.actionNotAllowed', '행위 권한 없음'],
+        CLEARANCE_TOO_LOW: ['feature.history.reason.clearanceTooLow', '사용자 인가등급 부족'],
+        FILE_GRADE_REQUIRED: ['feature.history.reason.fileGradeRequired', '문서 보안등급 미지정'],
+        FILE_PERMISSION_DENIED: ['feature.history.reason.filePermissionDenied', '문서별 사용자 권한 없음'],
+        RESOURCE_NOT_FOUND: ['feature.history.reason.resourceNotFound', '대상 자료를 찾을 수 없음'],
+        INVALID_REQUEST: ['feature.history.reason.invalidRequest', '잘못된 요청'],
+        BUSINESS_FAILURE: ['feature.history.reason.businessFailure', '업무 처리 실패']
     };
+
+    function t(key, fallback) {
+        var args = Array.prototype.slice.call(arguments, 2);
+        var translated = fallback;
+        if (window.SdmsI18n && typeof window.SdmsI18n.t === 'function') {
+            translated = window.SdmsI18n.t.apply(window.SdmsI18n, [key, fallback].concat(args));
+        }
+        if (!translated) translated = fallback || key;
+        return String(translated).replace(/\{(\d+)\}/g, function (_, index) {
+            return args[Number(index)] === undefined ? _ : args[Number(index)];
+        });
+    }
+
+    function codeLabel(labels, code) {
+        var entry = labels[String(code || '').toUpperCase()];
+        return entry ? t(entry[0], entry[1]) : '';
+    }
 
     function escapeHtml(value) {
         return $('<div>').text(value == null ? '' : String(value)).html()
@@ -76,30 +78,15 @@
     }
 
     function formatNumber(value) {
-        return Number(value || 0).toLocaleString('ko-KR');
+        return Number(value || 0).toLocaleString(document.documentElement.lang || undefined);
     }
 
     function eventLabel(code) {
-        return eventLabels[String(code || '').toUpperCase()] || text(code);
+        return codeLabel(eventLabels, code) || text(code);
     }
 
     function actionLabel(code, fallback) {
-        var normalized = String(code || '').toUpperCase();
-        return actionLabels[normalized] || text(fallback || code);
-    }
-
-    function resultLabel(code) {
-        return resultLabels[String(code || '').toUpperCase()] || text(code);
-    }
-
-    function resultClass(code) {
-        var normalized = String(code || '').toUpperCase();
-        if (normalized === 'ALLOW' || normalized === 'SUCCESS') return 'success';
-        if (normalized === 'DENY' || normalized === 'FAIL' || normalized === 'FAILED' ||
-                normalized === 'FAILURE' || normalized === 'ERROR') return 'danger';
-        if (normalized === 'STARTED') return 'info';
-        if (normalized === 'CANCELLED') return 'warning';
-        return 'neutral';
+        return codeLabel(actionLabels, code) || text(fallback || code);
     }
 
     function formatOccurredAt(value) {
@@ -125,7 +112,7 @@
     function menuHtml(row) {
         var menu = text(row.menuNm, '');
         var route = text(row.menuUrl || row.requestUri, '');
-        var primary = menu || (route ? '요청 경로' : '-');
+        var primary = menu || (route ? t('feature.history.value.requestPath', '요청 경로') : '-');
         return '<div class="ah-cell">' +
             '<span class="ah-cell__primary" title="' + escapeHtml(primary) + '">' + escapeHtml(primary) + '</span>' +
             (route
@@ -143,13 +130,6 @@
             '</div>';
     }
 
-    function resultHtml(row) {
-        var result = text(row.resultCd, '');
-        var cssClass = resultClass(result);
-        return '<span class="ah-result-chip ah-result-chip--' + cssClass + '">' +
-            escapeHtml(resultLabel(result)) + '</span>';
-    }
-
     function resourceHtml(row) {
         var type = text(row.objectType, '');
         var objectId = text(row.objectId, '');
@@ -161,7 +141,9 @@
 
         if (type) metadata.push(type);
         if (objectId && objectId !== primary) metadata.push(objectId);
-        if (fileNo && fileNo !== '*') metadata.push('파일 ' + fileNo);
+        if (fileNo && fileNo !== '*') {
+            metadata.push(t('feature.history.value.fileNumber', '파일 {0}', fileNo));
+        }
 
         return '<div class="ah-cell">' +
             '<span class="ah-cell__primary" title="' + escapeHtml(primary) + '">' + escapeHtml(primary) + '</span>' +
@@ -176,8 +158,9 @@
     function reasonHtml(row) {
         var reasonCode = text(row.reasonCd, '');
         var message = text(row.resultMessage, '');
-        var primary = message || reasonLabels[reasonCode] || reasonCode || '-';
-        var secondary = reasonCode && primary !== reasonCode ? reasonLabels[reasonCode] || reasonCode : '';
+        var localizedReason = codeLabel(reasonLabels, reasonCode);
+        var primary = localizedReason || message || reasonCode || '-';
+        var secondary = !localizedReason && reasonCode && primary !== reasonCode ? reasonCode : '';
 
         return '<div class="ah-cell">' +
             '<span class="ah-cell__primary" title="' + escapeHtml(primary) + '">' + escapeHtml(primary) + '</span>' +
@@ -197,7 +180,6 @@
                 '<td>' + actorHtml(row) + '</td>' +
                 '<td>' + menuHtml(row) + '</td>' +
                 '<td>' + actionHtml(row) + '</td>' +
-                '<td>' + resultHtml(row) + '</td>' +
                 '<td>' + resourceHtml(row) + '</td>' +
                 '<td>' + reasonHtml(row) + '</td>' +
                 '<td><span class="ah-ip">' + escapeHtml(text(row.clientIp)) + '</span></td>' +
@@ -207,29 +189,10 @@
 
         $('#accessHistoryTableBody').html(html.length
             ? html.join('')
-            : '<tr class="ah-empty-row"><td colspan="8">검색 조건에 해당하는 접근이력이 없습니다.</td></tr>');
-        $('#accessHistoryCount').text(formatNumber(state.rows.length) + '건');
-    }
-
-    function renderSummary() {
-        var success = 0;
-        var denied = 0;
-        var users = {};
-
-        $.each(state.rows, function (_, row) {
-            var result = String(row.resultCd || '').toUpperCase();
-            var user = row.actorUserCd || row.actorUserId || row.actorUserNm;
-
-            if (result === 'ALLOW' || result === 'SUCCESS') success += 1;
-            if (result === 'DENY' || result === 'FAIL' || result === 'FAILED' ||
-                    result === 'FAILURE' || result === 'ERROR') denied += 1;
-            if (user) users[user] = true;
-        });
-
-        $('#accessMetricTotal').text(formatNumber(state.rows.length));
-        $('#accessMetricSuccess').text(formatNumber(success));
-        $('#accessMetricDenied').text(formatNumber(denied));
-        $('#accessMetricUsers').text(formatNumber(Object.keys(users).length));
+            : '<tr class="ah-empty-row"><td colspan="7">' +
+                escapeHtml(t('feature.history.access.empty', '검색 조건에 해당하는 접근이력이 없습니다.')) +
+                '</td></tr>');
+        $('#accessHistoryCount').text(t('feature.common.count', '{0}건', formatNumber(state.rows.length)));
     }
 
     function showMessage(message) {
@@ -241,7 +204,8 @@
         $button.prop('disabled', loading);
         if (loading) {
             $button.data('original-html', $button.html())
-                .html('<span class="ah-spinner" aria-hidden="true"></span>조회 중');
+                .html('<span class="ah-spinner" aria-hidden="true"></span>' +
+                    escapeHtml(t('feature.common.searching', '조회 중')));
         } else if ($button.data('original-html')) {
             $button.html($button.data('original-html'));
         }
@@ -249,20 +213,30 @@
 
     function errorMessage(xhr) {
         if (xhr && xhr.status === 403) {
-            return '접근이력 메뉴 권한이 없습니다. 시스템 관리의 메뉴권한 배정을 확인해 주세요.';
+            return t('feature.history.access.forbidden',
+                '접근이력 메뉴 권한이 없습니다. 시스템 관리의 메뉴권한 배정을 확인해 주세요.');
         }
         if (xhr && xhr.responseJSON) {
-            return xhr.responseJSON.message || xhr.responseJSON.failReason || '접근이력을 불러오지 못했습니다.';
+            var fallback = t('feature.history.access.loadFailed', '접근이력을 불러오지 못했습니다.');
+            var serverMessage = xhr.responseJSON.message || xhr.responseJSON.failReason;
+            if (serverMessage && /^feature\./.test(serverMessage)) {
+                return t(serverMessage, fallback);
+            }
+            if (serverMessage && /^ko(?:-|$)/i.test(document.documentElement.lang || 'ko')) {
+                return serverMessage;
+            }
+            return fallback;
         }
-        return '접근이력을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.';
+        return t('feature.history.access.loadRetry',
+            '접근이력을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
     }
 
     function loadAccessHistory() {
         showMessage('');
         setLoading(true);
         $('#accessHistoryTableBody').html(
-            '<tr class="ah-loading-row"><td colspan="8"><span class="ah-spinner" aria-hidden="true"></span>' +
-            '접근이력을 불러오는 중입니다.</td></tr>'
+            '<tr class="ah-loading-row"><td colspan="7"><span class="ah-spinner" aria-hidden="true"></span>' +
+            escapeHtml(t('feature.history.access.loading', '접근이력을 불러오는 중입니다.')) + '</td></tr>'
         );
 
         $.ajax({
@@ -272,34 +246,22 @@
             cache: false,
             data: {
                 keyword: $.trim($('#accessKeyword').val()),
-                eventType: $('#accessEventType').val(),
-                resultCd: $('#accessResultCd').val()
+                eventType: $('#accessEventType').val()
             }
         }).done(function (response) {
             state.rows = normalizeRows(response);
             renderRows();
-            renderSummary();
-            $('#accessHistoryUpdatedAt').text(
-                '마지막 조회 ' + new Date().toLocaleString('ko-KR', {
-                    month: '2-digit',
-                    day: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                })
-            );
         }).fail(function (xhr) {
             state.rows = [];
             renderRows();
-            renderSummary();
             showMessage(errorMessage(xhr));
-            $('#accessHistoryUpdatedAt').text('조회에 실패했습니다.');
         }).always(function () {
             setLoading(false);
         });
     }
 
     function resetSearch() {
-        $('#accessEventType, #accessResultCd').val('');
+        $('#accessEventType').val('');
         $('#accessKeyword').val('');
         loadAccessHistory();
     }

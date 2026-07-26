@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -28,13 +29,15 @@ import kr.esob.fdms.controller.login.UserVO;
 
 class DocumentUserPermissionServiceTest {
     private SecurityAclDao dao;
+    private SecurityAuditWriter auditWriter;
     private SecurityAclService service;
 
     @BeforeEach
     void setUp() {
         dao = mock(SecurityAclDao.class);
+        auditWriter = mock(SecurityAuditWriter.class);
         service = new SecurityAclService(
-            dao, mock(SecurityAuditWriter.class), new ObjectMapper());
+            dao, auditWriter, new ObjectMapper());
 
         UserVO actor = new UserVO();
         actor.setUserCd("ADMIN");
@@ -78,6 +81,27 @@ class DocumentUserPermissionServiceTest {
         ordered.verify(dao).upsertDocumentUserPermission(
             any(FileAccessRequest.class), eq("USER-1"), eq(SecurityAclService.VIEW),
             eq("업무 담당자 지정"), eq("ADMIN"));
+        verify(auditWriter).writeInCurrentTransaction(
+            any(UserVO.class), eq("ACL_CHANGE"), eq("MANAGE_DOCUMENT_PERMISSION"),
+            eq("SUCCESS"), isNull(), eq("업무 담당자 지정"),
+            eq("DRAWING_SUB"), eq("OBJ-1"), eq("1"), isNull(), eq("GENERAL"),
+            anyString());
+    }
+
+    @Test
+    void gradeChangeUsesStableActionAndDoesNotPersistALocalizedSuccessMessage() {
+        when(dao.upsertGrade(any(SecurityGradeVO.class), eq("ADMIN"))).thenReturn(1);
+        SecurityGradeVO grade = new SecurityGradeVO();
+        grade.setGradeCd("GENERAL");
+        grade.setGradeNm("일반");
+        grade.setGradeLevel(Integer.valueOf(0));
+
+        service.saveGrade(grade);
+
+        verify(auditWriter).writeInCurrentTransaction(
+            any(UserVO.class), eq("ACL_CHANGE"), eq("MANAGE_GRADE"),
+            eq("SUCCESS"), isNull(), isNull(), isNull(), eq("GENERAL"),
+            isNull(), isNull(), eq("GENERAL"), eq("{}"));
     }
 
     @Test

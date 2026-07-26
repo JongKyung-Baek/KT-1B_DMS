@@ -12,4 +12,5 @@ public class SwRequestTreeVO extends TreeVO {
 	private String swNoPrefix;
 	private String swTreeCd;
 	private String distributeTypeCd;
+	private Integer documentCount;
 }

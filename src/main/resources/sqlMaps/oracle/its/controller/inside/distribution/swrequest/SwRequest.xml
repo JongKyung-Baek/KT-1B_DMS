@@ -493,6 +493,53 @@
 
 <mapper namespace="sql.swRequest">
 
+	<sql id="accessibleSwListAcl">
+		AND EXISTS (
+			SELECT 1
+			FROM DOCS_USER actor
+			JOIN DOCS_USER_SECURITY_CLEARANCE clearance
+			  ON clearance.USER_CD = actor.USER_CD
+			 AND clearance.VALID_FROM &lt;= CURRENT_TIMESTAMP
+			 AND (clearance.VALID_TO IS NULL OR clearance.VALID_TO &gt; CURRENT_TIMESTAMP)
+			JOIN DOCS_SECURITY_GRADE userGrade
+			  ON userGrade.GRADE_CD = clearance.GRADE_CD
+			 AND userGrade.USE_YN = 'Y'
+			WHERE actor.USER_CD = #{aclUserCd}
+			  AND actor.USE_YN = 'Y'
+			  AND actor.DEL_YN = 'N'
+			  AND COALESCE(actor.LOCK_YN, 'N') != 'Y'
+			  AND userGrade.GRADE_LEVEL &gt;= (
+				SELECT fileGrade.GRADE_LEVEL
+				FROM DOCS_FILE_SECURITY_LABEL documentLabel
+				JOIN DOCS_SECURITY_GRADE fileGrade
+				  ON fileGrade.GRADE_CD = documentLabel.GRADE_CD
+				 AND fileGrade.USE_YN = 'Y'
+				WHERE documentLabel.OBJECT_TYPE = 'SW'
+				  AND documentLabel.OBJECT_ID = info.OBJECT_ID
+				  AND documentLabel.FILE_NO = '*'
+				ORDER BY fileGrade.GRADE_LEVEL DESC NULLS LAST,
+				         documentLabel.LABEL_ID DESC
+				LIMIT 1
+			  )
+			  AND EXISTS (
+				SELECT 1
+				FROM DOCS_USER_ACTION_PERMISSION actionPermission
+				WHERE actionPermission.USER_CD = actor.USER_CD
+				  AND actionPermission.ACTION_CD = 'LIST'
+				  AND actionPermission.ALLOW_YN = 'Y'
+			  )
+			  AND EXISTS (
+				SELECT 1
+				FROM DOCS_OBJECT_USER_PERMISSION objectPermission
+				WHERE objectPermission.OBJECT_TYPE = 'SW'
+				  AND objectPermission.OBJECT_ID = info.OBJECT_ID
+				  AND objectPermission.USER_CD = actor.USER_CD
+				  AND objectPermission.ACTION_CD = 'LIST'
+				  AND objectPermission.ALLOW_YN = 'Y'
+			  )
+		)
+	</sql>
+
 	<select id="selectLevelParentOptions" resultType="kr.esob.fdms.commonlogic.combo.ComboInfoVO">
 		SELECT tree.TREE_CD AS comboVal
 			 , tree.TREE_NM AS comboLabel
@@ -530,7 +577,46 @@
 	</select>
 
 	<select id="selectTree" resultType="kr.esob.fdms.controller.inside.distribution.swrequest.SwRequestTreeVO">
-		<!-- 2026-03-30: docs_sw_tree 기반 처리 -->
+		WITH RECURSIVE active_tree AS (
+			SELECT tree.TREE_CD,
+			       tree.UPPER_TREE_CD,
+			       tree.TREE_NM,
+			       tree.TREE_DEPTH,
+			       tree.SORT_ORDER,
+			       tree.USE_YN,
+			       tree.TREE_PATH
+			FROM DOCS_SW_TREE tree
+			WHERE COALESCE(tree.USE_YN, 'Y') = 'Y'
+		),
+		tree_descendants (ancestor_cd, descendant_cd) AS (
+			SELECT tree.TREE_CD, tree.TREE_CD
+			FROM active_tree tree
+			UNION
+			SELECT relation.ancestor_cd, child.TREE_CD
+			FROM tree_descendants relation
+			JOIN active_tree child
+			  ON child.UPPER_TREE_CD = relation.descendant_cd
+		),
+		accessible_documents AS (
+			SELECT DISTINCT info.OBJECT_ID,
+			       COALESCE(NULLIF(info.TREE_CD, ''), NULLIF(info.BUSINESS_TYPE_CD, '')) AS TREE_CD
+			FROM DOCS_SW info
+			WHERE COALESCE(info.DELETED_YN, 'N') = 'N'
+			  AND EXISTS (
+				SELECT 1
+				FROM DOCS_SW_FILE mainFile
+				WHERE mainFile.OBJECT_ID = info.OBJECT_ID
+			  )
+			<include refid="accessibleSwListAcl"/>
+		),
+		tree_document_counts AS (
+			SELECT relation.ancestor_cd,
+			       COUNT(DISTINCT documentInfo.OBJECT_ID)::integer AS document_count
+			FROM tree_descendants relation
+			JOIN accessible_documents documentInfo
+			  ON documentInfo.TREE_CD = relation.descendant_cd
+			GROUP BY relation.ancestor_cd
+		)
 		SELECT tree.TREE_CD AS id
 			 , COALESCE(tree.UPPER_TREE_CD, '#') AS parent
 			 , tree.TREE_NM AS text
@@ -549,8 +635,10 @@
 			 , tree.TREE_NM AS filterValue
 			 , tree.TREE_CD AS swTreeCd
 			 , '' AS distributeTypeCd
-		FROM DOCS_SW_TREE tree
-		WHERE COALESCE(tree.USE_YN, 'Y') = 'Y'
+			 , COALESCE(documentCount.document_count, 0) AS "documentCount"
+		FROM active_tree tree
+		LEFT JOIN tree_document_counts documentCount
+		  ON documentCount.ancestor_cd = tree.TREE_CD
 		ORDER BY tree.TREE_PATH, tree.SORT_ORDER, tree.TREE_NM
 	</select>
 
@@ -643,7 +731,14 @@
 				info.INTERFACE_DT AS interfaceDt,
 				info.PRODUCT_CD AS productCd,
 				COALESCE(info.PRODUCT_CD, '') AS productNm,
-				(SELECT COUNT(*) FROM DOCS_SW_FILE swFile WHERE swFile.OBJECT_ID = info.OBJECT_ID) AS fileCount,
+				(
+					(SELECT COUNT(*) FROM DOCS_SW_FILE swFile
+					 WHERE swFile.OBJECT_ID = info.OBJECT_ID)
+					+
+					(SELECT COUNT(*) FROM DOCS_SW_SUB_FILE subFile
+					 WHERE subFile.PARENT_OBJECT_ID = info.OBJECT_ID
+					   AND COALESCE(subFile.USE_YN, 'Y') = 'Y')
+				) AS fileCount,
 				DENSE_RANK() OVER (PARTITION BY SW_NO ORDER BY REV_NO DESC) AS rnk,
 				fileInfo.FILE_NO AS fileNo,
 				fileInfo.ORG_FILE_NM AS fileViewNm,
@@ -711,7 +806,14 @@
 				info.INTERFACE_DT AS interfaceDt,
 				info.PRODUCT_CD AS productCd,
 				COALESCE(info.PRODUCT_CD, '') AS productNm,
-				(SELECT COUNT(*) FROM DOCS_SW_FILE swFile WHERE swFile.OBJECT_ID = info.OBJECT_ID) AS fileCount,
+				(
+					(SELECT COUNT(*) FROM DOCS_SW_FILE swFile
+					 WHERE swFile.OBJECT_ID = info.OBJECT_ID)
+					+
+					(SELECT COUNT(*) FROM DOCS_SW_SUB_FILE subFile
+					 WHERE subFile.PARENT_OBJECT_ID = info.OBJECT_ID
+					   AND COALESCE(subFile.USE_YN, 'Y') = 'Y')
+				) AS fileCount,
 				fileInfo.FILE_NO AS fileNo,
 				fileInfo.ORG_FILE_NM AS fileViewNm,
 				fileInfo.FILE_NM AS fileNm,
@@ -724,6 +826,7 @@
 			</otherwise>
 		</choose>
 		WHERE 1=1 AND info.DELETED_YN = 'N'
+		<include refid="accessibleSwListAcl"/>
 		<if test='businessTypeCd != null and !businessTypeCd.equals("")'>
 			AND BUSINESS_TYPE_CD = #{businessTypeCd}
 		</if>
@@ -889,7 +992,14 @@
 				info.INTERFACE_DT AS interfaceDt,
 				info.PRODUCT_CD AS productCd,
 				COALESCE(info.PRODUCT_CD, '') AS productNm,
-				(SELECT COUNT(*) FROM DOCS_SW_FILE swFile WHERE swFile.OBJECT_ID = info.OBJECT_ID) AS fileCount,
+				(
+					(SELECT COUNT(*) FROM DOCS_SW_FILE swFile
+					 WHERE swFile.OBJECT_ID = info.OBJECT_ID)
+					+
+					(SELECT COUNT(*) FROM DOCS_SW_SUB_FILE subFile
+					 WHERE subFile.PARENT_OBJECT_ID = info.OBJECT_ID
+					   AND COALESCE(subFile.USE_YN, 'Y') = 'Y')
+				) AS fileCount,
 				DENSE_RANK() OVER (PARTITION BY SW_NO ORDER BY REV_NO DESC) AS rnk,
 				fileInfo.FILE_NO AS fileNo,
 				fileInfo.ORG_FILE_NM AS fileViewNm,
@@ -933,7 +1043,14 @@
 				info.INTERFACE_DT AS interfaceDt,
 				info.PRODUCT_CD AS productCd,
 				COALESCE(info.PRODUCT_CD, '') AS productNm,
-				(SELECT COUNT(*) FROM DOCS_SW_FILE swFile WHERE swFile.OBJECT_ID = info.OBJECT_ID) AS fileCount,
+				(
+					(SELECT COUNT(*) FROM DOCS_SW_FILE swFile
+					 WHERE swFile.OBJECT_ID = info.OBJECT_ID)
+					+
+					(SELECT COUNT(*) FROM DOCS_SW_SUB_FILE subFile
+					 WHERE subFile.PARENT_OBJECT_ID = info.OBJECT_ID
+					   AND COALESCE(subFile.USE_YN, 'Y') = 'Y')
+				) AS fileCount,
 				fileInfo.FILE_NO AS fileNo,
 				fileInfo.ORG_FILE_NM AS fileViewNm,
 				fileInfo.FILE_NM AS fileNm,
@@ -946,6 +1063,7 @@
 			</otherwise>
 		</choose>
 		WHERE 1=1 AND info.DELETED_YN = 'N'
+		<include refid="accessibleSwListAcl"/>
 		<if test='businessTypeCd != null and !businessTypeCd.equals("")'>
 			AND BUSINESS_TYPE_CD = #{businessTypeCd}
 		</if>
@@ -1248,88 +1366,30 @@
 	<select id="selectSwDetailInfo" resultType="hashmap">
 		SELECT sw.SW_NO AS "swNo",
 		       sw.SW_NM AS "swNm",
-		       COALESCE(sw.REV_NO, '') AS "revNo",
-		       COALESCE(sw.SW_VERSION_NO, '') AS "swVersionNo",
-		       COALESCE(
-		           NULLIF(FN_GET_CD_NM('businessTypeCd', sw.BUSINESS_TYPE_CD, 'ko'), ''),
-		           NULLIF(sw.BUSINESS_PHASE, ''),
-		           NULLIF(swTree.TREE_NM, ''),
-		           NULLIF(sw.BUSINESS_TYPE_CD, ''),
-		           ''
-		       ) AS "businessTypeNm",
 		       COALESCE(
 		           NULLIF(REPLACE(TRIM(BOTH '/' FROM swTree.TREE_PATH), '/', ' > '), ''),
 		           NULLIF(swTree.TREE_NM, ''),
 		           ''
 		       ) AS "classificationPath",
-		       COALESCE(
-		           NULLIF(sw.DISTRIBUTE_TYPE_NAME, ''),
-		           NULLIF(sw.DISTRIBUTION_TYPE, ''),
-		           NULLIF(sw.DISTRIBUTE_TYPE_CD, ''),
-		           ''
-		       ) AS "distributeTypeNm",
-		       COALESCE(
-		           NULLIF(FN_GET_CD_NM('swClassCd1', sw.SW_TYPE_CD, 'ko'), ''),
-		           NULLIF(sw.SW_CLASS_NM1, ''),
-		           NULLIF(sw.SW_TYPE_CD, ''),
-		           ''
-		       ) AS "swTypeNm",
 		       COALESCE(NULLIF(sw.PRODUCT_CD, ''), NULLIF(sw.MODEL_CODE, ''), '') AS "productNm",
-		       COALESCE(NULLIF(sw.ECN_NO, ''), NULLIF(sw.CHANGE_ACTION_NO, ''), '') AS "ecnNo",
-		       COALESCE(NULLIF(ecnInsert.USER_NM, ''), NULLIF(sw.ECN_INSERT_UID, ''), '') AS "ecnUserNm",
-		       COALESCE(
-		           NULLIF(FN_GET_CD_NM('businessAreaCdAll', sw.BUSINESS_AREA_CD, 'ko'), ''),
-		           NULLIF(sw.FACTORY_REGION, ''),
-		           NULLIF(sw.BUSINESS_AREA_CD, ''),
-		           ''
-		       ) AS "businessAreaNm",
 		       COALESCE(NULLIF(sw.REGISTER_USER, ''), NULLIF(insertUser.USER_NM, ''), NULLIF(sw.INSERT_UID, ''), '') AS "registerUser",
 		       COALESCE(NULLIF(insertUser.USER_NM, ''), NULLIF(sw.REGISTER_USER, ''), NULLIF(sw.INSERT_UID, ''), '') AS "insertUserNm",
 		       COALESCE(sw.INSERT_DEPT_NM, '') AS "insertDeptNm",
 		       COALESCE(TO_CHAR(sw.INSERT_DT, 'YYYY-MM-DD HH24:MI'), '') AS "insertDt",
-		       COALESCE(NULLIF(updateUser.USER_NM, ''), NULLIF(sw.UPDATE_UID, ''), '') AS "updateUserNm",
-		       COALESCE(TO_CHAR(sw.UPDATE_DT, 'YYYY-MM-DD HH24:MI'), '') AS "updateDt",
-		       COALESCE(NULLIF(sw.CCBDATE, ''), '') AS "ccbDate",
-		       COALESCE(TO_CHAR(sw.CREATE_DT, 'YYYY-MM-DD'), '') AS "createDt",
-		       COALESCE(TO_CHAR(sw.INTERFACE_DT, 'YYYY-MM-DD HH24:MI'), '') AS "interfaceDt",
-		       COALESCE(TO_CHAR(sw.STD_GAPP_DT, 'YYYY-MM-DD'), '') AS "stdGappDt",
-		       COALESCE(TO_CHAR(sw.CHANGE_GAPP_DT, 'YYYY-MM-DD'), '') AS "changeGappDt",
-		       COALESCE(sw.APPROVER, '') AS "approver",
-		       COALESCE(sw.REVIEWERUSER, '') AS "reviewerUser",
-		       COALESCE(NULLIF(sw.STATUS, ''), '승인진행중') AS "status",
-		       CASE
-		           WHEN UPPER(COALESCE(mainFile.PROCESSING_STATUS, '')) IN ('DONE', 'SUCCESS', 'COMPLETED') THEN '완료'
-		           WHEN UPPER(COALESCE(mainFile.PROCESSING_STATUS, '')) IN ('PROCESSING', 'PENDING', 'WAITING') THEN '처리 중'
-		           WHEN UPPER(COALESCE(mainFile.PROCESSING_STATUS, '')) = 'FAIL' THEN '처리 실패'
-		           ELSE COALESCE(NULLIF(mainFile.PROCESSING_STATUS, ''), '미지정')
-		       END AS "processingStatusNm",
-		       CASE
-		           WHEN UPPER(COALESCE(sw.PROTECT_YN, '')) = 'Y' THEN '대상'
-		           WHEN UPPER(COALESCE(sw.PROTECT_YN, '')) = 'N' THEN '비대상'
-		           ELSE '미지정'
-		       END AS "protectYnNm",
-		       CASE
-		           WHEN UPPER(COALESCE(sw.VALID_TYPE, '')) = 'N' THEN '무효'
-		           ELSE '유효'
-		       END AS "validTypeNm",
 		       (
-		           SELECT COUNT(*)
-		           FROM DOCS_SW_FILE countedMain
-		           WHERE countedMain.OBJECT_ID = sw.OBJECT_ID
+		           (SELECT COUNT(*)
+		              FROM DOCS_SW_FILE countedMain
+		             WHERE countedMain.OBJECT_ID = sw.OBJECT_ID)
+		           +
+		           (SELECT COUNT(*)
+		              FROM DOCS_SW_SUB_FILE countedSub
+		             WHERE countedSub.PARENT_OBJECT_ID = sw.OBJECT_ID
+		               AND COALESCE(countedSub.USE_YN, 'Y') = 'Y')
 		       ) AS "fileCount"
 		FROM DOCS_SW sw
 		LEFT JOIN DOCS_USER insertUser ON insertUser.USER_ID = sw.INSERT_UID
-		LEFT JOIN DOCS_USER updateUser ON updateUser.USER_ID = sw.UPDATE_UID
-		LEFT JOIN DOCS_USER ecnInsert ON ecnInsert.USER_ID = sw.ECN_INSERT_UID
 		LEFT JOIN DOCS_SW_TREE swTree
 		       ON swTree.TREE_CD = COALESCE(NULLIF(sw.TREE_CD, ''), sw.BUSINESS_TYPE_CD)
-		LEFT JOIN LATERAL (
-			SELECT fileInfo.PROCESSING_STATUS
-			FROM DOCS_SW_FILE fileInfo
-			WHERE fileInfo.OBJECT_ID = sw.OBJECT_ID
-			  AND CAST(fileInfo.FILE_NO AS INTEGER) = 1
-			LIMIT 1
-		) mainFile ON TRUE
 		WHERE sw.OBJECT_ID = #{objectId}
 		  AND COALESCE(sw.DELETED_YN, 'N') = 'N'
 		LIMIT 1
@@ -1695,15 +1755,28 @@
 
 	<select id="selectDashboardStatusDistribution" resultType="hashmap">
 		WITH
-		<include refid="dashboardCommonCtes"/>
-		SELECT COALESCE(NULLIF(TRIM(documentInfo.STATUS), ''), '상태 미지정') AS "statusNm",
+		<include refid="dashboardCommonCtes"/>,
+		status_rows AS (
+			SELECT CASE UPPER(COALESCE(NULLIF(TRIM(documentInfo.STATUS), ''), 'UNASSIGNED'))
+			           WHEN '승인완료' THEN 'APPROVED'
+			           WHEN 'APPROVED' THEN 'APPROVED'
+			           WHEN '승인진행중' THEN 'IN_PROGRESS'
+			           WHEN 'APPROVAL_IN_PROGRESS' THEN 'IN_PROGRESS'
+			           WHEN 'IN_PROGRESS' THEN 'IN_PROGRESS'
+			           WHEN '상태 미지정' THEN 'UNASSIGNED'
+			           WHEN 'UNASSIGNED' THEN 'UNASSIGNED'
+			           ELSE 'OTHER'
+			       END AS status_cd
+			FROM document_scope documentInfo
+		)
+		SELECT statusRows.status_cd AS "statusCd",
 		       COUNT(*)::integer AS "documentCount",
 		       ROUND(
 			COUNT(*) * 100.0 / NULLIF(SUM(COUNT(*)) OVER (), 0)
 		       )::integer AS "percentage"
-		FROM document_scope documentInfo
-		GROUP BY COALESCE(NULLIF(TRIM(documentInfo.STATUS), ''), '상태 미지정')
-		ORDER BY COUNT(*) DESC, "statusNm"
+		FROM status_rows statusRows
+		GROUP BY statusRows.status_cd
+		ORDER BY COUNT(*) DESC, statusRows.status_cd
 	</select>
 
 	<select id="selectDashboardRecentDocuments" resultType="hashmap">
@@ -1729,10 +1802,15 @@
 			'YYYY-MM-DD'
 		       ) AS "registeredAt",
 		       (
-			SELECT COUNT(*)::integer
-			FROM DOCS_SW_FILE fileInfo
-			WHERE fileInfo.OBJECT_ID = documentInfo.OBJECT_ID
-		       ) AS "fileCount"
+			(SELECT COUNT(*)
+			   FROM DOCS_SW_FILE fileInfo
+			  WHERE fileInfo.OBJECT_ID = documentInfo.OBJECT_ID)
+			+
+			(SELECT COUNT(*)
+			   FROM DOCS_SW_SUB_FILE subFile
+			  WHERE subFile.PARENT_OBJECT_ID = documentInfo.OBJECT_ID
+			    AND COALESCE(subFile.USE_YN, 'Y') = 'Y')
+		       )::integer AS "fileCount"
 		FROM document_scope documentInfo
 		ORDER BY COALESCE(documentInfo.CREATE_DT, documentInfo.INSERT_DT, documentInfo.INPUT_DATE) DESC NULLS LAST,
 		         documentInfo.OBJECT_ID

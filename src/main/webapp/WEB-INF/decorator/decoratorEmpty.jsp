@@ -1,11 +1,12 @@
 ﻿<%@page import="org.springframework.web.servlet.i18n.SessionLocaleResolver" %>
 
 	<%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" %>
+		<%@page import="kr.esob.fdms.commonlogic.message.LocaleUtil" %>
 		<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 			<%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
 
 				<!doctype html>
-				<html lang="kr">
+				<html lang="<%=LocaleUtil.getCurrentLanguage(request) %>">
 
 
 				<head>

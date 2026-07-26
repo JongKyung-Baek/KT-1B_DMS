@@ -36,7 +36,7 @@ class InformationServiceTest {
     void hashesNewUserPasswordBeforeRequestPersistenceAndClearsDto() throws Exception {
         InformationListParam param = new InformationListParam();
         param.setRequestType("I");
-        param.setUserPwd("Registration9!");
+        param.setUserPwd("Registration9!!");
         UserVO principal = new UserVO();
         principal.setUserCd("REQUEST_USER");
         Authentication authentication = mock(Authentication.class);
@@ -51,8 +51,8 @@ class InformationServiceTest {
         ResultVO result = service.insertRequest(param, authentication);
 
         assertTrue(result.isSuccess());
-        assertNotEquals("Registration9!", persistedPassword.get());
-        assertTrue(PasswordUtils.verifyPassword(persistedPassword.get(), "Registration9!"));
+        assertNotEquals("Registration9!!", persistedPassword.get());
+        assertTrue(PasswordUtils.verifyPassword(persistedPassword.get(), "Registration9!!"));
         assertNull(param.getUserPwd());
     }
 
@@ -82,7 +82,7 @@ class InformationServiceTest {
         InformationListParam param = new InformationListParam();
         param.setUserCd("CLIENT_CONTROLLED_USER");
         param.setUserPwd("Current9!");
-        param.setUserNewPwd("Replacement9!");
+        param.setUserNewPwd("Replacement9!!");
 
         UserVO principal = new UserVO();
         principal.setUserCd("AUTHENTICATED_USER");
@@ -103,7 +103,7 @@ class InformationServiceTest {
         ResultVO result = service.updateUser(param, authentication);
 
         assertTrue(result.isSuccess());
-        assertTrue(PasswordUtils.verifyPassword(persistedPassword.get(), "Replacement9!"));
+        assertTrue(PasswordUtils.verifyPassword(persistedPassword.get(), "Replacement9!!"));
         assertEquals("AUTHENTICATED_USER", param.getUserCd());
         assertNull(param.getUserPwd());
         assertNull(param.getUserNewPwd());
@@ -113,7 +113,7 @@ class InformationServiceTest {
     void rejectsIncorrectCurrentPasswordWithoutUpdatingUser() throws Exception {
         InformationListParam param = new InformationListParam();
         param.setUserPwd("Wrong9!");
-        param.setUserNewPwd("Replacement9!");
+        param.setUserNewPwd("Replacement9!!");
 
         UserVO principal = new UserVO();
         principal.setUserCd("AUTHENTICATED_USER");

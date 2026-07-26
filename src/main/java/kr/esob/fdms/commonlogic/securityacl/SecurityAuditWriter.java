@@ -56,7 +56,7 @@ public class SecurityAuditWriter {
                                 String actionType, String actionNm, String resultCd,
                                 String reasonCd, String message, Integer httpStatus,
                                 Long durationMs, String detailJson) {
-        persist(actor, "MENU_ACTION", actionType, actionNm, resultCd, reasonCd, message,
+        persist(actor, "MENU_ACTION", actionType, resolveActionName(actionType), resultCd, reasonCd, message,
                 "MENU", menu == null ? null : menu.getMenuCd(),
                 null, null, null, httpStatus, durationMs, detailJson, menu);
     }
@@ -79,7 +79,7 @@ public class SecurityAuditWriter {
         String target = isBlank(targetUserIdentifier)
                 ? actor == null ? null : actor.getUserId()
                 : targetUserIdentifier;
-        persist(actor, "AUTH", actionType, actionNm, resultCd, reasonCd, message,
+        persist(actor, "AUTH", actionType, resolveActionName(actionType), resultCd, reasonCd, message,
                 "USER_ACCOUNT", target, null, null, null,
                 null, null, "{}", authenticationArea, fallbackClientIp, fallbackSessionId);
     }
@@ -184,30 +184,7 @@ public class SecurityAuditWriter {
 
     private String resolveActionName(String actionType) {
         String normalized = trim(actionType).toUpperCase(Locale.ROOT);
-        switch (normalized) {
-            case "MANAGE_GRADE":
-                return "보안등급 관리";
-            case "MANAGE_CLEARANCE":
-                return "사용자 인가 관리";
-            case "MANAGE_FILE_LABEL":
-                return "문서등급 관리";
-            case "MANAGE_DOCUMENT_PERMISSION":
-                return "문서 권한 관리";
-            case "MANAGE_ACL":
-                return "ACL 관리";
-            case "LIST":
-                return "목록";
-            case "DETAIL":
-                return "상세";
-            case "VIEW":
-                return "열람";
-            case "DOWNLOAD_ORIGINAL":
-                return "원본 다운로드";
-            case "PRINT":
-                return "출력";
-            default:
-                return actionType;
-        }
+        return normalized.isEmpty() ? null : normalized;
     }
 
     private HttpServletRequest currentHttpRequest() {

@@ -17,6 +17,21 @@
         selectedGradeCd: null
     };
 
+    function formatMessage(template, args) {
+        return String(template == null ? '' : template).replace(/\{(\d+)\}/g, function (match, index) {
+            return args[Number(index)] !== undefined ? args[Number(index)] : match;
+        });
+    }
+
+    function t(key, fallback) {
+        var args = Array.prototype.slice.call(arguments, 2);
+        var value = fallback || key;
+        if (window.SdmsI18n && typeof window.SdmsI18n.t === 'function') {
+            value = window.SdmsI18n.t.apply(window.SdmsI18n, [key, fallback].concat(args));
+        }
+        return formatMessage(value, args);
+    }
+
     function escapeHtml(value) {
         return $('<div>').text(value == null ? '' : String(value)).html()
             .replace(/"/g, '&quot;')
@@ -84,7 +99,9 @@
         var body = xhr && xhr.responseJSON ? xhr.responseJSON : {};
         return valueOf(body, ['message', 'failReason', 'error', 'detail'], '') ||
             (xhr && xhr.responseText ? xhr.responseText : '') ||
-            (xhr && xhr.status ? '요청 처리에 실패했습니다. (HTTP ' + xhr.status + ')' : '요청 처리에 실패했습니다.');
+            (xhr && xhr.status
+                ? t('feature.securityAccess.common.requestFailedHttp', '요청 처리에 실패했습니다. (HTTP {0})', xhr.status)
+                : t('feature.securityAccess.common.requestFailed', '요청 처리에 실패했습니다.'));
     }
 
     var messageTimer;
@@ -106,7 +123,9 @@
         if (!$button || !$button.length) return;
         if (busy) {
             if (!$button.data('normalText')) $button.data('normalText', $button.text());
-            $button.prop('disabled', true).addClass('is-loading').text(busyText || '처리 중...');
+            $button.prop('disabled', true).addClass('is-loading').text(
+                busyText || t('feature.securityAccess.common.processing', '처리 중...')
+            );
         } else {
             $button.prop('disabled', false).removeClass('is-loading').text($button.data('normalText') || $button.text());
         }
@@ -120,6 +139,25 @@
         return valueOf(grade, ['gradeNm', 'securityGradeNm', 'name'], gradeCode(grade));
     }
 
+    function localizedGradeName(code, fallback) {
+        var normalizedCode = $.trim(String(code || '')).toUpperCase();
+        var messageKeys = {
+            GENERAL: 'feature.documentGrade.general',
+            INTERNAL: 'feature.documentGrade.internal',
+            RESTRICTED: 'feature.documentGrade.restricted',
+            CONFIDENTIAL: 'feature.documentGrade.confidential'
+        };
+        var messageKey = messageKeys[normalizedCode];
+        if (messageKey) {
+            return t(messageKey, fallback || normalizedCode);
+        }
+        return fallback || normalizedCode || '-';
+    }
+
+    function gradeDisplayName(grade) {
+        return localizedGradeName(gradeCode(grade), gradeName(grade));
+    }
+
     function gradeNameByCode(code) {
         var name = code || '-';
         $.each(state.grades, function (_, grade) {
@@ -128,17 +166,18 @@
                 return false;
             }
         });
-        return name || '-';
+        return localizedGradeName(code, name);
     }
 
     function renderGradeOptions() {
         var selectedUserGrade = $('#userGradeCd').val();
         var selectedFileGrade = $('#fileGradeCd').val();
-        var options = ['<option value="">등급 선택</option>'];
+        var options = ['<option value="">' +
+            escapeHtml(t('feature.securityAccess.grade.select', '등급 선택')) + '</option>'];
         $.each(state.grades, function (_, grade) {
             if (!isYes(valueOf(grade, ['useYn', 'active'], 'Y'))) return;
             options.push('<option value="' + escapeHtml(gradeCode(grade)) + '">' +
-                escapeHtml(gradeName(grade)) + ' (' + escapeHtml(valueOf(grade, ['gradeLevel', 'level', 'rank'], '0')) + ')' +
+                escapeHtml(gradeDisplayName(grade)) + ' (' + escapeHtml(valueOf(grade, ['gradeLevel', 'level', 'rank'], '0')) + ')' +
                 '</option>');
         });
         $('#userGradeCd, #fileGradeCd').html(options.join(''));
@@ -154,12 +193,20 @@
             rows.push('<tr class="sa-selectable-row' + selected + '" tabindex="0" data-grade-index="' + index + '">' +
                 '<td><span class="sa-rank">' + escapeHtml(valueOf(grade, ['gradeLevel', 'level', 'rank'], '0')) + '</span></td>' +
                 '<td><code>' + escapeHtml(cd) + '</code></td>' +
-                '<td>' + escapeHtml(gradeName(grade)) + '</td>' +
-                '<td>' + (isYes(valueOf(grade, ['defaultYn', 'isDefault'], 'N')) ? '<span class="sa-badge sa-badge--primary">기본</span>' : '-') + '</td>' +
-                '<td>' + (isYes(valueOf(grade, ['useYn', 'active'], 'Y')) ? '<span class="sa-badge sa-badge--success">사용</span>' : '<span class="sa-badge">중지</span>') + '</td>' +
+                '<td>' + escapeHtml(gradeDisplayName(grade)) + '</td>' +
+                '<td>' + (isYes(valueOf(grade, ['defaultYn', 'isDefault'], 'N'))
+                    ? '<span class="sa-badge sa-badge--primary">' +
+                      escapeHtml(t('feature.securityAccess.common.default', '기본')) + '</span>' : '-') + '</td>' +
+                '<td>' + (isYes(valueOf(grade, ['useYn', 'active'], 'Y'))
+                    ? '<span class="sa-badge sa-badge--success">' +
+                      escapeHtml(t('feature.securityAccess.common.active', '사용')) + '</span>'
+                    : '<span class="sa-badge">' +
+                      escapeHtml(t('feature.securityAccess.common.inactive', '중지')) + '</span>') + '</td>' +
                 '</tr>');
         });
-        $('#gradeTableBody').html(rows.length ? rows.join('') : '<tr class="sa-empty-row"><td colspan="5">등록된 보안등급이 없습니다.</td></tr>');
+        $('#gradeTableBody').html(rows.length ? rows.join('') :
+            '<tr class="sa-empty-row"><td colspan="5">' +
+            escapeHtml(t('feature.securityAccess.grade.empty', '등록된 보안등급이 없습니다.')) + '</td></tr>');
         renderGradeOptions();
     }
 
@@ -186,14 +233,15 @@
     }
 
     function loadGrades() {
-        setBusy($('#gradeReloadButton'), true, '조회 중...');
+        setBusy($('#gradeReloadButton'), true, t('feature.securityAccess.common.searching', '조회 중...'));
         return apiRequest('GET', '/grades').done(function (response) {
             state.grades = normalizeList(response).sort(function (a, b) {
                 return Number(valueOf(a, ['gradeLevel', 'level', 'rank'], 0)) - Number(valueOf(b, ['gradeLevel', 'level', 'rank'], 0));
             });
             renderGrades();
         }).fail(function (xhr) {
-            $('#gradeTableBody').html('<tr class="sa-empty-row sa-empty-row--error"><td colspan="5">등급을 불러오지 못했습니다.</td></tr>');
+            $('#gradeTableBody').html('<tr class="sa-empty-row sa-empty-row--error"><td colspan="5">' +
+                escapeHtml(t('feature.securityAccess.grade.loadFailed', '등급을 불러오지 못했습니다.')) + '</td></tr>');
             showMessage('error', errorMessage(xhr));
         }).always(function () {
             setBusy($('#gradeReloadButton'), false);
@@ -205,7 +253,7 @@
         var gradeNm = $.trim($('#gradeNm').val());
         var levelText = $.trim($('#gradeLevel').val());
         if (!gradeCd || !gradeNm || levelText === '') {
-            showMessage('error', '등급 코드, 등급명, 등급 순위를 입력해 주세요.');
+            showMessage('error', t('feature.securityAccess.grade.required', '등급 코드, 등급명, 등급 순위를 입력해 주세요.'));
             return;
         }
         var payload = {
@@ -216,9 +264,9 @@
             useYn: $('#gradeUseYn').is(':checked') ? 'Y' : 'N',
             defaultYn: $('#gradeDefaultYn').is(':checked') ? 'Y' : 'N'
         };
-        setBusy($('#gradeSaveButton'), true, '저장 중...');
+        setBusy($('#gradeSaveButton'), true, t('feature.securityAccess.common.saving', '저장 중...'));
         apiRequest('POST', '/grades', payload).done(function () {
-            showMessage('success', '보안등급을 저장했습니다.');
+            showMessage('success', t('feature.securityAccess.grade.saved', '보안등급을 저장했습니다.'));
             resetGradeForm();
             loadGrades();
         }).fail(function (xhr) {
@@ -241,10 +289,16 @@
                 '<td><code>' + escapeHtml(valueOf(user, ['userId', 'username'], userCd(user))) + '</code></td>' +
                 '<td>' + escapeHtml(valueOf(user, ['userNm', 'name'], '-')) + '</td>' +
                 '<td>' + escapeHtml(valueOf(user, ['deptNm', 'departmentName', 'deptShortPath'], '-')) + '</td>' +
-                '<td><span class="sa-badge sa-badge--grade">' + escapeHtml(valueOf(user, ['gradeNm', 'securityGradeNm', 'clearanceGradeNm'], gradeNameByCode(gradeCd))) + '</span></td>' +
+                '<td><span class="sa-badge sa-badge--grade">' +
+                escapeHtml(localizedGradeName(
+                    gradeCd,
+                    valueOf(user, ['gradeNm', 'securityGradeNm', 'clearanceGradeNm'], gradeNameByCode(gradeCd)))) +
+                '</span></td>' +
                 '</tr>');
         });
-        $('#userTableBody').html(rows.length ? rows.join('') : '<tr class="sa-empty-row"><td colspan="4">조회된 사용자가 없습니다.</td></tr>');
+        $('#userTableBody').html(rows.length ? rows.join('') :
+            '<tr class="sa-empty-row"><td colspan="4">' +
+            escapeHtml(t('feature.securityAccess.user.empty', '조회된 사용자가 없습니다.')) + '</td></tr>');
     }
 
     function permissionMap(user) {
@@ -279,7 +333,8 @@
         $('#selectedUserSummary').removeClass('is-empty').html(
             '<strong>' + escapeHtml(valueOf(user, ['userNm', 'name'], '-')) + '</strong>' +
             '<span>' + escapeHtml(valueOf(user, ['userId', 'username'], userCd(user))) + ' · ' +
-            escapeHtml(valueOf(user, ['deptNm', 'departmentName', 'deptShortPath'], '부서 없음')) + '</span>'
+            escapeHtml(valueOf(user, ['deptNm', 'departmentName', 'deptShortPath'],
+                t('feature.securityAccess.user.noDepartment', '부서 없음'))) + '</span>'
         );
         $('#userGradeCd').prop('disabled', false).val(valueOf(user, ['gradeCd', 'securityGradeCd', 'clearanceGradeCd'], ''));
         $('#clearanceValidFrom').prop('disabled', false).val(dateValue(valueOf(user, ['validFrom'], '')));
@@ -294,14 +349,15 @@
     }
 
     function loadUsers() {
-        setBusy($('#userSearchButton'), true, '조회 중...');
+        setBusy($('#userSearchButton'), true, t('feature.securityAccess.common.searching', '조회 중...'));
         state.selectedUser = null;
         disableClearanceForm();
         apiRequest('GET', '/users', { keyword: $.trim($('#userKeyword').val()) }).done(function (response) {
             state.users = normalizeList(response);
             renderUsers();
         }).fail(function (xhr) {
-            $('#userTableBody').html('<tr class="sa-empty-row sa-empty-row--error"><td colspan="4">사용자를 불러오지 못했습니다.</td></tr>');
+            $('#userTableBody').html('<tr class="sa-empty-row sa-empty-row--error"><td colspan="4">' +
+                escapeHtml(t('feature.securityAccess.user.loadFailed', '사용자를 불러오지 못했습니다.')) + '</td></tr>');
             showMessage('error', errorMessage(xhr));
         }).always(function () {
             setBusy($('#userSearchButton'), false);
@@ -309,7 +365,9 @@
     }
 
     function disableClearanceForm() {
-        $('#selectedUserSummary').addClass('is-empty').text('왼쪽 목록에서 사용자를 선택하세요.');
+        $('#selectedUserSummary').addClass('is-empty').text(
+            t('feature.securityAccess.user.selectPrompt', '왼쪽 목록에서 사용자를 선택하세요.')
+        );
         $('#userGradeCd, #clearanceValidFrom, #clearanceValidTo, #clearanceGrantReason, #clearanceSaveButton').prop('disabled', true);
         $('.sa-permission-fieldset').prop('disabled', true);
         $('#clearanceForm')[0].reset();
@@ -317,7 +375,7 @@
 
     function saveClearance() {
         if (!state.selectedUser) {
-            showMessage('error', '인가정보를 설정할 사용자를 선택해 주세요.');
+            showMessage('error', t('feature.securityAccess.user.selectRequired', '인가정보를 설정할 사용자를 선택해 주세요.'));
             return;
         }
         var gradeCd = $('#userGradeCd').val();
@@ -325,15 +383,15 @@
         var validTo = $('#clearanceValidTo').val();
         var reason = $.trim($('#clearanceGrantReason').val());
         if (!gradeCd) {
-            showMessage('error', '최대 인가등급을 선택해 주세요.');
+            showMessage('error', t('feature.securityAccess.user.gradeRequired', '최대 인가등급을 선택해 주세요.'));
             return;
         }
         if (validFrom && validTo && validFrom > validTo) {
-            showMessage('error', '유효 종료일은 시작일보다 빠를 수 없습니다.');
+            showMessage('error', t('feature.securityAccess.user.invalidDateRange', '유효 종료일은 시작일보다 빠를 수 없습니다.'));
             return;
         }
         if (!reason) {
-            showMessage('error', '인가등급 부여 또는 변경 사유를 입력해 주세요.');
+            showMessage('error', t('feature.securityAccess.user.reasonRequired', '인가등급 부여 또는 변경 사유를 입력해 주세요.'));
             return;
         }
         var permissions = {};
@@ -342,7 +400,7 @@
         var anyAllowed = false;
         $.each(permissions, function (_, allowed) { if (allowed === 'Y') anyAllowed = true; });
         if (!anyAllowed) {
-            showMessage('error', '하나 이상의 행위권한을 선택해 주세요.');
+            showMessage('error', t('feature.securityAccess.user.permissionRequired', '하나 이상의 행위권한을 선택해 주세요.'));
             return;
         }
         var payload = {
@@ -353,9 +411,9 @@
             validTo: validTo || null,
             grantReason: reason
         };
-        setBusy($('#clearanceSaveButton'), true, '저장 중...');
+        setBusy($('#clearanceSaveButton'), true, t('feature.securityAccess.common.saving', '저장 중...'));
         apiRequest('POST', '/users/clearance', payload).done(function () {
-            showMessage('success', '사용자 인가정보를 저장했습니다.');
+            showMessage('success', t('feature.securityAccess.user.saved', '사용자 인가정보를 저장했습니다.'));
             loadUsers();
         }).fail(function (xhr) {
             showMessage('error', errorMessage(xhr));
@@ -383,19 +441,19 @@
 
     function fileObjectTypeLabel(objectType) {
         var labels = {
-            SW: '기술자료',
-            SW_SUB: '기술자료 보조파일',
-            DOCUMENT: '일반문서',
-            DRAWING: '도면',
-            PRODUCT_DOCUMENT: '생산기술문서',
-            PRODUCT_SW: '생산기술 소프트웨어',
-            DXF: 'DXF',
-            PEER_REVIEW: 'Peer Review',
-            DOCUMENT_SUB: '일반문서 보조파일',
-            DRAWING_SUB: '도면 보조파일',
-            PRODUCT_DOCUMENT_SUB: '생산기술문서 보조파일',
-            PRODUCT_SW_SUB: '생산기술 SW 보조파일',
-            DXF_SUB: 'DXF 보조파일'
+            SW: t('feature.securityAccess.objectType.sw', '기술자료 (주파일)'),
+            SW_SUB: t('feature.securityAccess.objectType.swSub', '기술자료 (보조파일)'),
+            DOCUMENT: t('feature.securityAccess.objectType.document', '일반문서'),
+            DRAWING: t('feature.securityAccess.objectType.drawing', '도면'),
+            PRODUCT_DOCUMENT: t('feature.securityAccess.objectType.productDocument', '생산기술문서'),
+            PRODUCT_SW: t('feature.securityAccess.objectType.productSw', '생산기술 소프트웨어'),
+            DXF: t('feature.securityAccess.objectType.dxf', 'DXF'),
+            PEER_REVIEW: t('feature.securityAccess.objectType.peerReview', 'Peer Review'),
+            DOCUMENT_SUB: t('feature.securityAccess.objectType.documentSub', '일반문서 보조파일'),
+            DRAWING_SUB: t('feature.securityAccess.objectType.drawingSub', '도면 보조파일'),
+            PRODUCT_DOCUMENT_SUB: t('feature.securityAccess.objectType.productDocumentSub', '생산기술문서 보조파일'),
+            PRODUCT_SW_SUB: t('feature.securityAccess.objectType.productSwSub', '생산기술 SW 보조파일'),
+            DXF_SUB: t('feature.securityAccess.objectType.dxfSub', 'DXF 보조파일')
         };
         return labels[objectType] || objectType || '-';
     }
@@ -422,9 +480,11 @@
     }
 
     function permissionActionName(action) {
-        if (action === 'VIEW') return '열람';
-        if (action === 'DOWNLOAD_ORIGINAL') return '원본 다운로드';
-        return '출력';
+        if (action === 'VIEW') return t('feature.securityAccess.permission.action.view', '열람');
+        if (action === 'DOWNLOAD_ORIGINAL') {
+            return t('feature.securityAccess.permission.action.downloadOriginal', '원본 다운로드');
+        }
+        return t('feature.securityAccess.permission.action.print', '출력');
     }
 
     function renderFilePermissionCheckbox(permission, index, action) {
@@ -437,13 +497,17 @@
         var checked = isYes(valueOf(permission, [filePermissionField(action)], 'N'));
         var title = '';
         if (!accountActive) {
-            title = '사용 중지·잠금·삭제 계정에는 새 권한을 부여할 수 없습니다. 전체 회수 버튼으로 기존 권한을 회수하세요.';
+            title = t('feature.securityAccess.permission.tooltip.accountInactive',
+                '사용 중지·잠금·삭제 계정에는 새 권한을 부여할 수 없습니다. 전체 회수 버튼으로 기존 권한을 회수하세요.');
         } else if (!eligible) {
-            title = '사용자 인가등급이 문서등급보다 낮습니다.';
+            title = t('feature.securityAccess.permission.tooltip.gradeIneligible',
+                '사용자 인가등급이 문서등급보다 낮습니다.');
         } else if (!globallyAllowed) {
-            title = '사용자 전역 ' + permissionActionName(action) + ' 권한이 없습니다.';
+            title = t('feature.securityAccess.permission.tooltip.globalPermissionMissing',
+                '사용자 전역 {0} 권한이 없습니다.', permissionActionName(action));
         } else if (action !== 'VIEW' && !viewAvailable) {
-            title = '사용자 전역 열람 권한이 먼저 필요합니다.';
+            title = t('feature.securityAccess.permission.tooltip.globalViewRequired',
+                '사용자 전역 열람 권한이 먼저 필요합니다.');
         }
         return '<label class="sa-matrix-check' + (disabled ? ' is-disabled' : '') + '"' +
             (title ? ' title="' + escapeHtml(title) + '"' : '') + '>' +
@@ -456,19 +520,29 @@
 
     function updateFilePermissionSummary() {
         if (!state.selectedFile) {
-            $('#filePermissionSummary').addClass('is-empty').text('위 목록에서 파일을 선택하세요.');
+            $('#filePermissionSummary').addClass('is-empty').text(
+                t('feature.securityAccess.file.permission.selectPrompt', '위 목록에서 파일을 선택하세요.')
+            );
             return;
         }
         var resource = selectedFileResource();
         var permission = state.filePermissions.length ? state.filePermissions[0] : {};
         var objectNo = valueOf(state.selectedFile, ['objectNo', 'documentNo', 'drawingNo', 'swNo'], resource.objectId);
-        var fileName = valueOf(state.selectedFile, ['orgFileNm', 'fileNm'], '파일명 없음');
-        var fileGrade = valueOf(permission, ['fileGradeNm'], '') ||
-            valueOf(state.selectedFile, ['gradeNm', 'securityGradeNm'], '미지정');
+        var fileName = valueOf(state.selectedFile, ['orgFileNm', 'fileNm'],
+            t('feature.securityAccess.file.noFileName', '파일명 없음'));
+        var fileGradeCd = valueOf(permission, ['fileGradeCd'], '') ||
+            valueOf(state.selectedFile, ['gradeCd', 'securityGradeCd'], '');
+        var fileGrade = localizedGradeName(
+            fileGradeCd,
+            valueOf(permission, ['fileGradeNm'], '') ||
+                valueOf(state.selectedFile, ['gradeNm', 'securityGradeNm'],
+                    t('feature.securityAccess.file.gradeUnassigned', '미지정')));
         $('#filePermissionSummary').removeClass('is-empty').html(
             '<strong>' + escapeHtml(objectNo) + ' · ' + escapeHtml(fileName) + '</strong>' +
-            '<span>' + escapeHtml(resource.objectType) + ' · 파일번호 ' + escapeHtml(resource.fileNo) +
-            ' · 문서등급 ' + escapeHtml(fileGrade) + '</span>'
+            '<span>' + escapeHtml(resource.objectType) + ' · ' +
+            escapeHtml(t('feature.securityAccess.file.table.fileNo', '파일번호')) + ' ' + escapeHtml(resource.fileNo) +
+            ' · ' + escapeHtml(t('feature.securityAccess.file.permission.documentGrade', '문서등급')) +
+            ' ' + escapeHtml(fileGrade) + '</span>'
         );
     }
 
@@ -482,11 +556,17 @@
             var accountActive = isYes(valueOf(permission, ['accountActiveYn'], 'N'));
             var eligible = isYes(valueOf(permission, ['gradeEligibleYn'], 'N'));
             var userGradeCd = valueOf(permission, ['userGradeCd'], '');
-            var userGradeNm = valueOf(permission, ['userGradeNm'], '') || gradeNameByCode(userGradeCd);
+            var userGradeNm = localizedGradeName(
+                userGradeCd,
+                valueOf(permission, ['userGradeNm'], '') || gradeNameByCode(userGradeCd));
             var hasPermission = isYes(valueOf(permission, ['viewYn'], 'N')) ||
                 isYes(valueOf(permission, ['downloadOriginalYn'], 'N')) ||
                 isYes(valueOf(permission, ['printYn'], 'N'));
-            var eligibilityLabel = accountActive ? (eligible ? '충족' : '미충족') : '계정중지';
+            var eligibilityLabel = accountActive
+                ? (eligible
+                    ? t('feature.securityAccess.permission.eligibility.met', '충족')
+                    : t('feature.securityAccess.permission.eligibility.notMet', '미충족'))
+                : t('feature.securityAccess.permission.eligibility.accountInactive', '계정중지');
             rows.push('<tr>' +
                 '<td><code>' + escapeHtml(valueOf(permission, ['userId'], valueOf(permission, ['userCd'], '-'))) + '</code></td>' +
                 '<td>' + escapeHtml(valueOf(permission, ['userNm'], '-')) + '</td>' +
@@ -499,12 +579,15 @@
                 '<td>' + renderFilePermissionCheckbox(permission, index, 'PRINT') + '</td>' +
                 '<td>' + (hasPermission
                     ? '<button type="button" class="sa-button sa-button--danger sa-file-permission-revoke"' +
-                      ' data-permission-index="' + index + '">회수</button>'
+                      ' data-permission-index="' + index + '">' +
+                      escapeHtml(t('feature.securityAccess.permission.revoke', '회수')) + '</button>'
                     : '-') + '</td>' +
                 '</tr>');
         });
         $('#filePermissionTableBody').html(rows.length ? rows.join('') :
-            '<tr class="sa-empty-row"><td colspan="9">권한을 지정할 사용자가 없습니다.</td></tr>');
+            '<tr class="sa-empty-row"><td colspan="9">' +
+            escapeHtml(t('feature.securityAccess.file.permission.noUsers', '권한을 지정할 사용자가 없습니다.')) +
+            '</td></tr>');
         updateFilePermissionSummary();
         $('#filePermissionCard').removeClass('is-disabled').attr('aria-disabled', 'false');
         $('#filePermissionChangeReason, #filePermissionSaveButton').prop('disabled', !rows.length);
@@ -516,7 +599,8 @@
         $('#filePermissionCard').addClass('is-disabled').attr('aria-disabled', 'true');
         $('#filePermissionTableBody').html(
             '<tr class="sa-empty-row"><td colspan="9">' +
-            escapeHtml(message || '파일을 선택하면 사용자 권한을 조회합니다.') + '</td></tr>'
+            escapeHtml(message || t('feature.securityAccess.file.permission.initial',
+                '파일을 선택하면 사용자 권한을 조회합니다.')) + '</td></tr>'
         );
         $('#filePermissionChangeReason').val('').prop('disabled', true);
         $('#filePermissionSaveButton').prop('disabled', true);
@@ -534,7 +618,9 @@
         state.filePermissions = [];
         $('#filePermissionCard').removeClass('is-disabled').attr('aria-disabled', 'false');
         $('#filePermissionTableBody').html(
-            '<tr class="sa-empty-row"><td colspan="9">사용자 권한을 불러오는 중입니다.</td></tr>'
+            '<tr class="sa-empty-row"><td colspan="9">' +
+            escapeHtml(t('feature.securityAccess.file.permission.loading', '사용자 권한을 불러오는 중입니다.')) +
+            '</td></tr>'
         );
         $('#filePermissionChangeReason').val('').prop('disabled', true);
         $('#filePermissionSaveButton').prop('disabled', true);
@@ -556,7 +642,9 @@
         }).fail(function (xhr) {
             if (state.filePermissionRequestKey !== requestKey) return;
             $('#filePermissionTableBody').html(
-                '<tr class="sa-empty-row sa-empty-row--error"><td colspan="9">사용자 권한을 불러오지 못했습니다.</td></tr>'
+                '<tr class="sa-empty-row sa-empty-row--error"><td colspan="9">' +
+                escapeHtml(t('feature.securityAccess.file.permission.loadFailed',
+                    '사용자 권한을 불러오지 못했습니다.')) + '</td></tr>'
             );
             $('#filePermissionChangeReason, #filePermissionSaveButton').prop('disabled', true);
             showMessage('error', errorMessage(xhr));
@@ -574,13 +662,19 @@
                 '<td><code>' + escapeHtml(valueOf(file, ['objectNo', 'documentNo', 'drawingNo', 'swNo'], fileId(file))) + '</code></td>' +
                 '<td>' + escapeHtml(valueOf(file, ['orgFileNm', 'fileNm'], '-')) + '</td>' +
                 '<td>' + escapeHtml(valueOf(file, ['fileNo'], '*')) + '</td>' +
-                '<td><span class="sa-badge sa-badge--grade">' + escapeHtml(valueOf(file, ['gradeNm', 'securityGradeNm'], gradeNameByCode(gradeCd))) + '</span></td>' +
+                '<td><span class="sa-badge sa-badge--grade">' +
+                escapeHtml(localizedGradeName(
+                    gradeCd,
+                    valueOf(file, ['gradeNm', 'securityGradeNm'], gradeNameByCode(gradeCd)))) +
+                '</span></td>' +
                 '</tr>');
         });
-        var selectedTypeLabel = $('#fileObjectType option:selected').text() || '선택한 자료유형';
+        var selectedTypeLabel = $('#fileObjectType option:selected').text() ||
+            t('feature.securityAccess.file.selectedObjectType', '선택한 자료유형');
         $('#fileTableBody').html(rows.length ? rows.join('') :
             '<tr class="sa-empty-row"><td colspan="5">' +
-            escapeHtml(selectedTypeLabel) + '에서 조회된 파일이 없습니다.</td></tr>');
+            escapeHtml(t('feature.securityAccess.file.emptyInType',
+                '{0}에서 조회된 파일이 없습니다.', selectedTypeLabel)) + '</td></tr>');
     }
 
     function selectFile(file, options) {
@@ -591,7 +685,8 @@
         $('#selectedFileSummary').removeClass('is-empty').html(
             '<strong>' + escapeHtml(valueOf(file, ['objectNo', 'documentNo', 'drawingNo', 'swNo'], fileId(file))) + '</strong>' +
             '<span>' + escapeHtml(fileObjectTypeLabel(fileObjectType(file))) + ' · ' +
-            escapeHtml(valueOf(file, ['objectNm', 'documentNm', 'drawingNm', 'swNm', 'fileNm', 'orgFileNm'], '자료명 없음')) + '</span>'
+            escapeHtml(valueOf(file, ['objectNm', 'documentNm', 'drawingNm', 'swNm', 'fileNm', 'orgFileNm'],
+                t('feature.securityAccess.file.noDocumentName', '자료명 없음'))) + '</span>'
         );
         $('#fileGradeCd').prop('disabled', false).val(valueOf(file, ['gradeCd', 'securityGradeCd'], ''));
         $('#fileNo').prop('disabled', false).val(state.selectedFileNo);
@@ -603,7 +698,9 @@
     function disableFileLabelForm() {
         state.selectedFile = null;
         state.selectedFileNo = null;
-        $('#selectedFileSummary').addClass('is-empty').text('왼쪽 목록에서 파일을 선택하세요.');
+        $('#selectedFileSummary').addClass('is-empty').text(
+            t('feature.securityAccess.file.selectPrompt', '왼쪽 목록에서 파일을 선택하세요.')
+        );
         $('#fileGradeCd, #fileNo, #labelReason, #fileLabelSaveButton').prop('disabled', true);
         $('#fileLabelForm')[0].reset();
         $('#fileNo').val('*');
@@ -612,7 +709,7 @@
 
     function loadFiles(options) {
         options = options || {};
-        setBusy($('#fileSearchButton'), true, '조회 중...');
+        setBusy($('#fileSearchButton'), true, t('feature.securityAccess.common.searching', '조회 중...'));
         if (!options.selectedKey) {
             disableFileLabelForm();
         }
@@ -638,7 +735,8 @@
             }
         }).fail(function (xhr) {
             disableFileLabelForm();
-            $('#fileTableBody').html('<tr class="sa-empty-row sa-empty-row--error"><td colspan="5">파일을 불러오지 못했습니다.</td></tr>');
+            $('#fileTableBody').html('<tr class="sa-empty-row sa-empty-row--error"><td colspan="5">' +
+                escapeHtml(t('feature.securityAccess.file.loadFailed', '파일을 불러오지 못했습니다.')) + '</td></tr>');
             showMessage('error', errorMessage(xhr));
         }).always(function () {
             setBusy($('#fileSearchButton'), false);
@@ -647,17 +745,17 @@
 
     function saveFileLabel() {
         if (!state.selectedFile) {
-            showMessage('error', '등급을 지정할 파일을 선택해 주세요.');
+            showMessage('error', t('feature.securityAccess.file.label.selectRequired', '등급을 지정할 파일을 선택해 주세요.'));
             return;
         }
         var gradeCd = $('#fileGradeCd').val();
         var reason = $.trim($('#labelReason').val());
         if (!gradeCd) {
-            showMessage('error', '적용할 보안등급을 선택해 주세요.');
+            showMessage('error', t('feature.securityAccess.file.label.gradeRequired', '적용할 보안등급을 선택해 주세요.'));
             return;
         }
         if (!reason) {
-            showMessage('error', '파일등급 지정 또는 변경 사유를 입력해 주세요.');
+            showMessage('error', t('feature.securityAccess.file.label.reasonRequired', '파일등급 지정 또는 변경 사유를 입력해 주세요.'));
             return;
         }
         var payload = {
@@ -668,9 +766,9 @@
             labelReason: reason
         };
         var selectedKey = fileKey(state.selectedFile);
-        setBusy($('#fileLabelSaveButton'), true, '저장 중...');
+        setBusy($('#fileLabelSaveButton'), true, t('feature.securityAccess.common.saving', '저장 중...'));
         apiRequest('POST', '/files/label', payload).done(function () {
-            showMessage('success', '파일 보안등급을 저장했습니다.');
+            showMessage('success', t('feature.securityAccess.file.label.saved', '파일 보안등급을 저장했습니다.'));
             state.selectedFileNo = payload.fileNo;
             loadFiles({ selectedKey: selectedKey, fileNo: payload.fileNo });
         }).fail(function (xhr) {
@@ -690,7 +788,7 @@
     function saveFilePermissions() {
         var resource = selectedFileResource();
         if (!resource) {
-            showMessage('error', '권한을 지정할 파일을 선택해 주세요.');
+            showMessage('error', t('feature.securityAccess.file.permission.selectRequired', '권한을 지정할 파일을 선택해 주세요.'));
             return;
         }
         var permissions = [];
@@ -708,12 +806,12 @@
             }
         });
         if (!permissions.length) {
-            showMessage('error', '변경된 사용자 권한이 없습니다.');
+            showMessage('error', t('feature.securityAccess.file.permission.noChanges', '변경된 사용자 권한이 없습니다.'));
             return;
         }
         var reason = $.trim($('#filePermissionChangeReason').val());
         if (!reason) {
-            showMessage('error', '사용자 권한 변경 사유를 입력해 주세요.');
+            showMessage('error', t('feature.securityAccess.file.permission.reasonRequired', '사용자 권한 변경 사유를 입력해 주세요.'));
             $('#filePermissionChangeReason').focus();
             return;
         }
@@ -724,10 +822,10 @@
             changeReason: reason,
             permissions: permissions
         };
-        setBusy($('#filePermissionSaveButton'), true, '저장 중...');
+        setBusy($('#filePermissionSaveButton'), true, t('feature.securityAccess.common.saving', '저장 중...'));
         $('#filePermissionTableBody .sa-file-permission-checkbox').prop('disabled', true);
         apiRequest('POST', '/files/permissions', payload).done(function () {
-            showMessage('success', '문서별 사용자 권한을 저장했습니다.');
+            showMessage('success', t('feature.securityAccess.file.permission.saved', '문서별 사용자 권한을 저장했습니다.'));
             $('#filePermissionChangeReason').val('');
             loadFilePermissions();
         }).fail(function (xhr) {
@@ -790,7 +888,8 @@
             if (editedFileNo === state.selectedFileNo) {
                 loadFilePermissions();
             } else {
-                disableFilePermissionForm('변경한 파일번호의 등급을 먼저 저장한 뒤 사용자 권한을 설정하세요.');
+                disableFilePermissionForm(t('feature.securityAccess.file.permission.saveGradeFirst',
+                    '변경한 파일번호의 등급을 먼저 저장한 뒤 사용자 권한을 설정하세요.'));
             }
         });
         $('#fileLabelForm').on('submit', function (event) { event.preventDefault(); saveFileLabel(); });

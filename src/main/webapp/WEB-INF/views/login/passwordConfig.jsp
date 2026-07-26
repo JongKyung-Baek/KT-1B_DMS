@@ -1,11 +1,13 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="spring" uri="http://www.springframework.org/tags"%>
+<spring:message code="feature.locale.code" text="ko" var="pageLocale"/>
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="${pageLocale}">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>비밀번호 재설정 | 다목적실용위성8호사업단</title>
+  <title><spring:message code="feature.password.browserTitle" text="비밀번호 재설정"/> | KT-1B</title>
   <%@ include file="/WEB-INF/jspf/csrf-meta.jspf" %>
   <%@ include file="/WEB-INF/jspf/favicon.jspf" %>
   <style>
@@ -224,6 +226,104 @@
       color: #8a95a5;
     }
 
+    .password-policy {
+      margin-top: 12px;
+      padding: 14px;
+      border: 1px solid #e4eaf1;
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .password-policy__title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+      font-size: 12px;
+      font-weight: 800;
+      color: #344054;
+    }
+
+    .password-policy__count {
+      color: #667085;
+      font-weight: 700;
+    }
+
+    .password-policy__list {
+      display: grid;
+      gap: 7px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .password-policy__item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 12px;
+      line-height: 1.4;
+      color: #667085;
+    }
+
+    .password-policy__item::before {
+      width: 18px;
+      height: 18px;
+      border: 1px solid #d0d5dd;
+      border-radius: 50%;
+      color: transparent;
+      content: "✓";
+      flex: 0 0 auto;
+      font-size: 11px;
+      font-weight: 900;
+      line-height: 16px;
+      text-align: center;
+    }
+
+    .password-policy__item.is-met {
+      color: #067647;
+      font-weight: 700;
+    }
+
+    .password-policy__item.is-met::before {
+      border-color: #12b76a;
+      background: #ecfdf3;
+      color: #067647;
+    }
+
+    .password-policy__or {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 26px;
+      height: 18px;
+      margin-right: 2px;
+      border-radius: 999px;
+      background: #eef4ff;
+      color: #175cd3;
+      font-size: 10px;
+      font-weight: 900;
+    }
+
+    .password-match {
+      min-height: 18px;
+      margin-top: 7px;
+      font-size: 12px;
+      line-height: 1.5;
+      color: #667085;
+    }
+
+    .password-match.is-match {
+      color: #067647;
+      font-weight: 700;
+    }
+
+    .password-match.is-mismatch {
+      color: #b42318;
+      font-weight: 700;
+    }
+
     .submit-btn {
       width: 100%;
       height: 52px;
@@ -246,6 +346,13 @@
 
     .submit-btn:active {
       transform: translateY(1px);
+    }
+
+    .submit-btn:disabled {
+      background: #98a2b3;
+      box-shadow: none;
+      cursor: wait;
+      transform: none;
     }
 
     .notice {
@@ -361,11 +468,11 @@
       </div>
 
       <div class="visual-title">
-        <div class="eyebrow">Secure Account</div>
-        <h2>비밀번호<br />재설정</h2>
+        <div class="eyebrow"><spring:message code="feature.password.eyebrow" text="안전한 계정"/></div>
+        <h2><spring:message code="feature.password.visualTitle" text="비밀번호 재설정"/></h2>
         <p>
-          등록된 사용자 계정에 대한 새로운 비밀번호를 설정합니다.
-          변경 완료 후 새 비밀번호로 다시 로그인해 주세요.
+          <spring:message code="feature.password.visualDescription"
+                          text="등록된 사용자 계정에 대한 새로운 비밀번호를 설정합니다. 변경 완료 후 새 비밀번호로 다시 로그인해 주세요."/>
         </p>
       </div>
 
@@ -377,12 +484,12 @@
 
     <section class="content">
       <div class="page-title">
-        <h1>새 비밀번호 설정</h1>
-        <p>아래 계정의 비밀번호를 변경합니다.</p>
+        <h1><spring:message code="feature.password.form.title" text="새 비밀번호 설정"/></h1>
+        <p><spring:message code="feature.password.form.description" text="아래 계정의 비밀번호를 변경합니다."/></p>
       </div>
 
       <div class="account-panel">
-        <div class="account-label">사용자 아이디</div>
+        <div class="account-label"><spring:message code="feature.password.account.label" text="사용자 아이디"/></div>
         <div class="account-value">
           <c:choose>
             <c:when test="${userVo.authSite == 'E'}">${userVo.userNm}</c:when>
@@ -391,42 +498,65 @@
         </div>
       </div>
 
-      <form id="passwordForm">
+      <form id="passwordForm" novalidate>
         <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
         <input type="hidden" name="authSite" value="${userVo.authSite}" />
 
         <div class="form-row">
-          <label for="newPassword">새 비밀번호</label>
+          <label for="newPassword"><spring:message code="feature.password.new.label" text="새 비밀번호"/></label>
           <input
             type="password"
             id="newPassword"
             name="userPwd"
             maxlength="20"
-            placeholder="새 비밀번호 입력"
+            placeholder="<spring:message code="feature.password.new.placeholder" text="새 비밀번호 입력"/>"
             autocomplete="new-password"
             required
           />
-          <div class="guide">영문, 숫자, 특수문자를 조합하여 입력해 주세요.</div>
+          <div class="guide"><spring:message code="feature.password.policy.guide"
+                                              text="영문과 숫자를 모두 포함하고 아래 두 조합 중 하나를 충족해야 합니다."/></div>
+          <div class="password-policy" aria-live="polite">
+            <div class="password-policy__title">
+              <span><spring:message code="feature.password.policy.title" text="비밀번호 규칙"/></span>
+              <span id="passwordCount" class="password-policy__count"><spring:message
+                      code="feature.password.policy.count" text="영숫자 {0} · 특수 {1}" arguments="0,0"/></span>
+            </div>
+            <ul class="password-policy__list">
+              <li id="policyCharacters" class="password-policy__item"><spring:message
+                      code="feature.password.policy.characters" text="영문과 숫자를 각각 1개 이상 포함"/></li>
+              <li id="policyLength" class="password-policy__item"><spring:message
+                      code="feature.password.policy.length" text="공백 없이 전체 20자 이하"/></li>
+              <li id="policyOptionA" class="password-policy__item"><spring:message
+                      code="feature.password.policy.optionA" text="영숫자 8자 이상 + 특수문자 3자 이상"/></li>
+              <li id="policyOptionB" class="password-policy__item">
+                <span class="password-policy__or"><spring:message code="feature.password.policy.or" text="또는"/></span>
+                <spring:message code="feature.password.policy.optionB"
+                                text="영숫자 10자 이상 + 특수문자 2자 이상"/>
+              </li>
+            </ul>
+          </div>
         </div>
 
         <div class="form-row">
-          <label for="confirmPassword">새 비밀번호 확인</label>
+          <label for="confirmPassword"><spring:message code="feature.password.confirm.label" text="새 비밀번호 확인"/></label>
           <input
             type="password"
             id="confirmPassword"
             maxlength="20"
-            placeholder="새 비밀번호 재입력"
+            placeholder="<spring:message code="feature.password.confirm.placeholder" text="새 비밀번호 재입력"/>"
             autocomplete="new-password"
             required
           />
+          <div id="passwordMatch" class="password-match" aria-live="polite"></div>
         </div>
 
-        <button type="button" id="saveButton" class="submit-btn">비밀번호 변경</button>
+        <button type="submit" id="saveButton" class="submit-btn"><spring:message
+                code="feature.password.action.change" text="비밀번호 변경"/></button>
       </form>
 
       <div class="notice">
-        본 페이지는 비밀번호 재설정을 위한 전용 화면입니다.
-        요청하지 않은 접근인 경우 관리자에게 문의해 주세요.
+        <spring:message code="feature.password.notice"
+                        text="본 페이지는 비밀번호 재설정을 위한 전용 화면입니다. 요청하지 않은 접근인 경우 관리자에게 문의해 주세요."/>
       </div>
     </section>
   </main>
@@ -434,21 +564,51 @@
   <div id="customModal" class="modal">
     <div class="modal-content">
       <p id="modalMessage"></p>
-      <button type="button" id="closeModalButton">확인</button>
+      <button type="button" id="closeModalButton"><spring:message code="feature.common.confirm" text="확인"/></button>
     </div>
   </div>
 
   <div id="confirmModal" class="modal">
     <div class="modal-content">
       <p id="confirmMessage"></p>
-      <button type="button" id="confirmYesButton">예</button>
-      <button type="button" id="confirmNoButton" class="cancel">아니오</button>
+      <button type="button" id="confirmYesButton"><spring:message code="feature.common.yes" text="예"/></button>
+      <button type="button" id="confirmNoButton" class="cancel"><spring:message code="feature.common.no" text="아니오"/></button>
     </div>
   </div>
 
   <script src="${pageContext.request.contextPath}/resources/js/jquery-3.4.1.min.js"></script>
   <script>
     var contextPath = "${pageContext.request.contextPath}";
+    var isSubmitting = false;
+    var passwordMessages = {
+      defaultSubmitLabel: '<spring:message code="feature.password.action.change" text="비밀번호 변경" javaScriptEscape="true"/>',
+      count: '<spring:message code="feature.password.policy.count" text="영숫자 {0} · 특수 {1}" javaScriptEscape="true"/>',
+      matched: '<spring:message code="feature.password.match.success" text="비밀번호가 일치합니다." javaScriptEscape="true"/>',
+      mismatched: '<spring:message code="feature.password.match.failure" text="비밀번호가 일치하지 않습니다." javaScriptEscape="true"/>',
+      required: '<spring:message code="feature.password.validation.required" text="새 비밀번호를 입력해 주세요." javaScriptEscape="true"/>',
+      whitespace: '<spring:message code="feature.password.validation.whitespace" text="비밀번호에는 공백을 포함할 수 없습니다." javaScriptEscape="true"/>',
+      invalidCharacters: '<spring:message code="feature.password.validation.invalidCharacters" text="비밀번호에는 영문, 숫자, ASCII 특수문자만 사용할 수 있습니다." javaScriptEscape="true"/>',
+      maxLength: '<spring:message code="feature.password.validation.maxLength" text="비밀번호는 전체 20자 이하로 입력해 주세요." javaScriptEscape="true"/>',
+      requiredCharacters: '<spring:message code="feature.password.validation.requiredCharacters" text="비밀번호에는 영문과 숫자가 각각 1개 이상 필요합니다." javaScriptEscape="true"/>',
+      combination: '<spring:message code="feature.password.validation.combination" text="영숫자 8자 이상과 특수문자 3자 이상 또는 영숫자 10자 이상과 특수문자 2자 이상을 입력해 주세요." javaScriptEscape="true"/>',
+      invalidPolicy: '<spring:message code="feature.password.error.invalidPolicy" text="비밀번호 규칙을 충족하지 않습니다." javaScriptEscape="true"/>',
+      sessionExpired: '<spring:message code="feature.password.error.sessionExpired" text="로그인 정보가 만료되었습니다. 다시 로그인해 주세요." javaScriptEscape="true"/>',
+      saveError: '<spring:message code="feature.password.error.save" text="비밀번호 저장 중 오류가 발생했습니다." javaScriptEscape="true"/>',
+      changing: '<spring:message code="feature.password.action.changing" text="변경 중..." javaScriptEscape="true"/>',
+      completed: '<spring:message code="feature.password.action.completed" text="변경 완료" javaScriptEscape="true"/>',
+      success: '<spring:message code="feature.password.message.success" text="저장되었습니다. 다시 로그인해 주세요." javaScriptEscape="true"/>',
+      saveFailed: '<spring:message code="feature.password.message.saveFailed" text="비밀번호 저장에 실패했습니다. 다시 시도해 주세요." javaScriptEscape="true"/>',
+      serverError: '<spring:message code="feature.password.message.serverError" text="서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요." javaScriptEscape="true"/>',
+      confirmSave: '<spring:message code="feature.password.message.confirmSave" text="변경 사항을 저장하시겠습니까?" javaScriptEscape="true"/>'
+    };
+    var defaultSubmitLabel = passwordMessages.defaultSubmitLabel;
+
+    function formatPasswordMessage(pattern) {
+      var args = Array.prototype.slice.call(arguments, 1);
+      return String(pattern || "").replace(/\{(\d+)\}/g, function(match, index) {
+        return args[Number(index)] === undefined ? match : args[Number(index)];
+      });
+    }
 
     function showModal(message, callback) {
       $("#modalMessage").text(message);
@@ -473,55 +633,220 @@
       });
     }
 
+    function isAsciiLetter(character) {
+      return /^[A-Za-z]$/.test(character);
+    }
+
+    function isAsciiNumber(character) {
+      return /^[0-9]$/.test(character);
+    }
+
+    function isAsciiSpecial(character) {
+      var code = character.charCodeAt(0);
+      return (code >= 33 && code <= 47)
+        || (code >= 58 && code <= 64)
+        || (code >= 91 && code <= 96)
+        || (code >= 123 && code <= 126);
+    }
+
+    function analyzePassword(password) {
+      var result = {
+        alphanumericCount: 0,
+        specialCount: 0,
+        hasLetter: false,
+        hasNumber: false,
+        hasInvalidCharacter: false,
+        hasWhitespace: false,
+        withinMaxLength: password.length <= 20
+      };
+
+      for (var i = 0; i < password.length; i++) {
+        var character = password.charAt(i);
+        if (isAsciiLetter(character)) {
+          result.hasLetter = true;
+          result.alphanumericCount += 1;
+        } else if (isAsciiNumber(character)) {
+          result.hasNumber = true;
+          result.alphanumericCount += 1;
+        } else if (/\s/.test(character)) {
+          result.hasWhitespace = true;
+        } else if (isAsciiSpecial(character)) {
+          result.specialCount += 1;
+        } else {
+          result.hasInvalidCharacter = true;
+        }
+      }
+
+      result.hasRequiredCharacters = result.hasLetter && result.hasNumber;
+      result.hasValidCharacters = !result.hasWhitespace && !result.hasInvalidCharacter;
+      result.optionA = result.alphanumericCount >= 8 && result.specialCount >= 3;
+      result.optionB = result.alphanumericCount >= 10 && result.specialCount >= 2;
+      result.isValid = password.length > 0
+        && result.withinMaxLength
+        && result.hasValidCharacters
+        && result.hasRequiredCharacters
+        && (result.optionA || result.optionB);
+      return result;
+    }
+
+    function setPolicyState(selector, isMet) {
+      $(selector).toggleClass("is-met", Boolean(isMet));
+    }
+
+    function updatePasswordStatus() {
+      var password = $("#newPassword").val();
+      var confirmation = $("#confirmPassword").val();
+      var policy = analyzePassword(password);
+
+      $("#passwordCount").text(
+        formatPasswordMessage(
+          passwordMessages.count,
+          policy.alphanumericCount,
+          policy.specialCount
+        )
+      );
+      setPolicyState("#policyCharacters", policy.hasRequiredCharacters);
+      setPolicyState(
+        "#policyLength",
+        password.length > 0 && policy.withinMaxLength && policy.hasValidCharacters
+      );
+      setPolicyState("#policyOptionA", policy.optionA);
+      setPolicyState("#policyOptionB", policy.optionB);
+
+      var $match = $("#passwordMatch");
+      $match.removeClass("is-match is-mismatch");
+      if (!confirmation) {
+        $match.text("");
+      } else if (password === confirmation) {
+        $match.addClass("is-match").text(passwordMessages.matched);
+      } else {
+        $match.addClass("is-mismatch").text(passwordMessages.mismatched);
+      }
+      return policy;
+    }
+
+    function passwordValidationMessage(password, confirmation, policy) {
+      if (!password) {
+        return passwordMessages.required;
+      }
+      if (password !== confirmation) {
+        return passwordMessages.mismatched;
+      }
+      if (policy.hasWhitespace) {
+        return passwordMessages.whitespace;
+      }
+      if (policy.hasInvalidCharacter) {
+        return passwordMessages.invalidCharacters;
+      }
+      if (!policy.withinMaxLength) {
+        return passwordMessages.maxLength;
+      }
+      if (!policy.hasRequiredCharacters) {
+        return passwordMessages.requiredCharacters;
+      }
+      if (!policy.optionA && !policy.optionB) {
+        return passwordMessages.combination;
+      }
+      return "";
+    }
+
+    function serverMessage(response, fallbackMessage) {
+      var message = response && (response.message || response.failReason);
+      var knownMessages = {
+        "feature.password.error.invalidPolicy": passwordMessages.invalidPolicy,
+        "feature.password.error.sessionExpired": passwordMessages.sessionExpired,
+        "feature.password.error.save": passwordMessages.saveError
+      };
+
+      if (knownMessages[message]) {
+        return knownMessages[message];
+      }
+      return fallbackMessage;
+    }
+
+    function setSubmitting(submitting) {
+      isSubmitting = submitting;
+      $("#saveButton")
+        .prop("disabled", submitting)
+        .text(submitting ? passwordMessages.changing : defaultSubmitLabel);
+    }
+
     function submitPasswordForm() {
-      var form = $("#passwordForm")[0];
-      var formData = new FormData(form);
+      if (isSubmitting) {
+        return;
+      }
+
+      var password = $("#newPassword").val();
+      var confirmation = $("#confirmPassword").val();
+      var policy = analyzePassword(password);
+      var validationMessage = passwordValidationMessage(password, confirmation, policy);
+      if (validationMessage) {
+        showModal(validationMessage, function() {
+          $("#newPassword").trigger("focus");
+        });
+        return;
+      }
+
       var authSite = $("input[name='authSite']").val();
       var url = contextPath + "/login/password";
+      setSubmitting(true);
 
       $.ajax({
         url: url,
         type: "POST",
-        data: formData,
-        processData: false,
-        contentType: false,
+        data: $("#passwordForm").serialize(),
+        contentType: "application/x-www-form-urlencoded; charset=UTF-8",
+        dataType: "json",
         success: function(response) {
           if (response && response.success) {
-            showModal("저장되었습니다. 다시 로그인해 주세요.", function() {
+            $("#saveButton").text(passwordMessages.completed);
+            showModal(passwordMessages.success, function() {
               window.location.href = contextPath + "/login/loginPage?url_type=" + encodeURIComponent(authSite);
             });
           } else {
-            showModal("비밀번호 저장에 실패했습니다. 다시 시도해 주세요.");
+            setSubmitting(false);
+            showModal(serverMessage(response, passwordMessages.saveFailed));
           }
         },
-        error: function() {
-          showModal("서버 오류가 발생했습니다.");
+        error: function(xhr) {
+          setSubmitting(false);
+          showModal(serverMessage(
+            xhr && xhr.responseJSON,
+            passwordMessages.serverError
+          ));
         }
       });
     }
 
-    $("#saveButton").on("click", function() {
+    $("#newPassword, #confirmPassword").on("input", updatePasswordStatus);
+    $("#newPassword, #confirmPassword").on("keydown", function(event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        $("#passwordForm").trigger("submit");
+      }
+    });
+
+    $("#passwordForm").on("submit", function(event) {
+      event.preventDefault();
+      if (isSubmitting) {
+        return;
+      }
+
       var newPassword = $("#newPassword").val();
       var confirmPassword = $("#confirmPassword").val();
-      var passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-
-      if (newPassword !== confirmPassword) {
-        showModal("비밀번호가 일치하지 않습니다.");
+      var policy = updatePasswordStatus();
+      var validationMessage = passwordValidationMessage(newPassword, confirmPassword, policy);
+      if (validationMessage) {
+        showModal(validationMessage, function() {
+          $("#newPassword").trigger("focus");
+        });
         return;
       }
 
-      if (/\s/.test(newPassword)) {
-        showModal("비밀번호에는 공백을 포함할 수 없습니다.");
-        return;
-      }
-
-      if (!passwordPattern.test(newPassword)) {
-        showConfirm("비밀번호가 권장 규칙을 충족하지 않습니다.\n그래도 저장하시겠습니까?", submitPasswordForm);
-        return;
-      }
-
-      showConfirm("변경 사항을 저장하시겠습니까?", submitPasswordForm);
+      showConfirm(passwordMessages.confirmSave, submitPasswordForm);
     });
+
+    updatePasswordStatus();
   </script>
 </body>
 </html>

@@ -817,4 +817,34 @@
          LIMIT 1000
     </select>
 
+    <select id="selectAccessHistory"
+            resultType="kr.esob.fdms.commonlogic.securityacl.AccessAuditEventVO">
+        SELECT event_id,
+               TO_CHAR(occurred_at AT TIME ZONE 'Asia/Seoul', 'YYYY-MM-DD HH24:MI:SS') AS occurred_at,
+               event_type, action_type, result_cd, reason_cd, result_message,
+               actor_user_cd, actor_user_id, actor_user_nm,
+               object_type, object_id, file_no, request_no, grade_cd,
+               menu_cd, menu_nm, menu_url, action_nm,
+               request_uri, http_method, http_status, duration_ms,
+               client_ip, session_id, correlation_id, detail_json::text AS detail_json
+          FROM docs_access_audit_log
+         WHERE event_type IN ('FILE_ACCESS', 'DOWNLOAD_RESULT', 'ACL_CHANGE')
+           AND COALESCE(action_type, '') NOT IN ('VIEW', 'PRINT')
+        <if test="eventType != null and eventType != ''">
+           AND event_type = #{eventType}
+        </if>
+        <if test="resultCd != null and resultCd != ''">
+           AND result_cd = #{resultCd}
+        </if>
+        <if test="keyword != null and keyword != ''">
+           AND (COALESCE(actor_user_id, '') ILIKE '%' || #{keyword} || '%'
+                OR COALESCE(actor_user_nm, '') ILIKE '%' || #{keyword} || '%'
+                OR COALESCE(object_id, '') ILIKE '%' || #{keyword} || '%'
+                OR COALESCE(request_no, '') ILIKE '%' || #{keyword} || '%'
+                OR COALESCE(correlation_id, '') ILIKE '%' || #{keyword} || '%')
+        </if>
+         ORDER BY event_id DESC
+         LIMIT 1000
+    </select>
+
 </mapper>

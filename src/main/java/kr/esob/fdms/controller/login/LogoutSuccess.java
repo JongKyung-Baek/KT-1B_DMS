@@ -10,7 +10,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 
-import kr.esob.fdms.commonlogic.combo.ComboLang;
 import kr.esob.fdms.commonlogic.systemconfig.SystemConfig;
 
 public class LogoutSuccess implements LogoutSuccessHandler {
@@ -26,7 +25,6 @@ public class LogoutSuccess implements LogoutSuccessHandler {
 		catch(Exception e) {}
 
 		
-		if(ComboLang.comboLang != null)ComboLang.comboLang.clear();
 		if(SystemConfig.systemConfig != null)SystemConfig.systemConfig.clear();
 		response.setStatus(HttpServletResponse.SC_OK);
 

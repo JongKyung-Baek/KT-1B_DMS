@@ -1,6 +1,7 @@
 package kr.esob.fdms.commonlogic.audit;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -51,16 +52,42 @@ class CanonicalAuditContractTest {
     }
 
     @Test
-    void securityAccessHistoryDoesNotMixInMenuOrAuthenticationNoise()
+    void securityAccessHistoryUsesExplicitScopeWithoutViewingOrPrintingNoise()
             throws Exception {
         String mapper = read(
                 "src/main/resources/sqlMaps/oracle/its/commonlogic/securityacl/SecurityAcl.xml");
-        int selectStart = mapper.indexOf("<select id=\"selectAudit\"");
-        String selectAudit = mapper.substring(selectStart, mapper.indexOf("</select>", selectStart));
+        int selectStart = mapper.indexOf("<select id=\"selectAccessHistory\"");
+        String selectAudit = mapper.substring(
+                selectStart, mapper.indexOf("</select>", selectStart));
 
         assertTrue(selectAudit.contains(
-                "event_type NOT IN ('MENU_ACTION', 'AUTH')"));
+                "event_type IN ('FILE_ACCESS', 'DOWNLOAD_RESULT', 'ACL_CHANGE')"));
+        assertTrue(selectAudit.contains(
+                "COALESCE(action_type, '') NOT IN ('VIEW', 'PRINT')"));
         assertTrue(selectAudit.contains("event_type = #{eventType}"));
+        assertFalse(selectAudit.contains("'MENU_ACTION'"));
+        assertFalse(selectAudit.contains("'AUTH'"));
+        assertFalse(selectAudit.contains("'PRINT_RESULT'"));
+    }
+
+    @Test
+    void auditLogPresentationOmitsTheMeaninglessResultField() throws Exception {
+        String page = read(
+                "src/main/webapp/WEB-INF/views/inside/organizationmanage/auditlog/auditlogList.jsp");
+        String javascript = read(
+                "src/main/resources/static/js/views/inside/organizationmanage/auditlog/auditlogList.js");
+        String ddl = read("src/main/resources/sql/audit_trail_ddl.sql");
+        String presentationMetadata = ddl.substring(
+                ddl.indexOf("-- Search form metadata."));
+
+        assertFalse(page.contains("처리 결과"));
+        assertFalse(page.contains("<strong>결과</strong>"));
+        assertFalse(page.contains("<small>Outcome</small>"));
+        assertFalse(javascript.contains("formatAuditResult"));
+        assertTrue(ddl.contains(
+                "lower(column_id) IN ('resultcd', 'result')"));
+        assertFalse(presentationMetadata.contains("'resultCd'"));
+        assertFalse(presentationMetadata.contains("'결과'"));
     }
 
     private String read(String path) throws Exception {

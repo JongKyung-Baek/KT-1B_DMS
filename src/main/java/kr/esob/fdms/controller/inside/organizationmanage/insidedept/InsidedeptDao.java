@@ -25,6 +25,17 @@ public class InsidedeptDao extends AbstractDao {
 		return (InsidedeptListVO) obj(prefix + "selectDeptInfo");
 	}
 
+	public void lockDepartmentMutation() {
+		obj(prefix + "lockDepartmentMutation");
+	}
+
+	public Integer countDeptByName(String deptNm, String excludeDeptCd) {
+		Map<String, Object> param = new HashMap<String, Object>();
+		param.put("deptNm", deptNm);
+		param.put("excludeDeptCd", excludeDeptCd);
+		return (Integer) obj(prefix + "countDeptByName", param);
+	}
+
 	public void insertRegisterDeptInfo(DeptPopupParam param) {
 		insert(prefix + "insertRegisterDeptInfo", param);
 	}

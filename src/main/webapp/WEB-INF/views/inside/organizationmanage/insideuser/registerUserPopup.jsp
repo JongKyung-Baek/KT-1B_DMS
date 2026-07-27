@@ -32,7 +32,7 @@
         <ul class="section popupCard popupFormGrid popup-grid-2 popup-gap-lg">
 
             <li>
-                <custom:popupInputText id="user_Id" name="user_Id" label="form.userId" value="${info.userId}" maxlength="40"/>
+                <custom:popupInputText id="user_Id" name="user_Id" label="form.userId" value="${info.userId}" maxlength="20"/>
             </li>
 
 <%--            <li>--%>

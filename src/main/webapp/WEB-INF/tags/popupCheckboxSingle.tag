@@ -11,6 +11,10 @@
 <%@ attribute name="labelSide" required="false" rtexprvalue="true" description="라벨의 위치" %>
 <%@ attribute name="disabled" required="false" rtexprvalue="true" description="" %>
 
+	<c:set var="resolvedLabelSide" value="right"/>
+	<c:if test="${not empty labelSide}">
+		<c:set var="resolvedLabelSide" value="${labelSide}"/>
+	</c:if>
 
 	<c:choose>
 		<c:when test="${checkedValue == value }">
@@ -20,7 +24,30 @@
 			<input type="checkbox" id="${name }" name="${name }" value="${value }" ${disabled }>
 		</c:otherwise>
 	</c:choose>
-	<label for="${name }"><spring:message code="${label }"/></label>
+	<label id="${name }_label" for="${name }"><spring:message code="${label }"/></label>
 	<script>
-	$("#${name}").prettyCheckable({labelPosition: '${labelSide}'});
+	(function() {
+		var $input = $("#${name}");
+		$input.prettyCheckable({labelPosition: '${resolvedLabelSide}'});
+
+		var $control = $input
+				.closest(".prettycheckbox, .prettyradio")
+				.children("a")
+				.first();
+		$control.siblings("label").first().attr("id", "${name}_label");
+
+		function syncAccessibleState() {
+			$control.attr("aria-checked", $input.prop("checked") ? "true" : "false");
+		}
+
+		$control.attr({
+			"role": "checkbox",
+			"aria-labelledby": "${name}_label"
+		});
+		syncAccessibleState();
+		$input.on("change.popupCheckboxAccessibility", syncAccessibleState);
+		$control.on("click.popupCheckboxAccessibility", function() {
+			window.setTimeout(syncAccessibleState, 0);
+		});
+	})();
 	</script>

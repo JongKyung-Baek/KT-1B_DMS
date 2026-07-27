@@ -107,12 +107,19 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 				.antMatchers("/outside/duanzong/**").denyAll()
 				// Native download client receives only a 128-bit, one-time capability.
 				.antMatchers(HttpMethod.GET, "/download", "/download/", "/download/*").permitAll()
-				.antMatchers("/inside/system/securityaccess/**").hasAuthority("ROLE_MENU_222");
+				.antMatchers("/inside/system/securityaccess/**").hasAuthority("ROLE_MENU_222")
+				// MENU_124 (/inside/**) precedes MENU_199 in the legacy
+				// database order. Protect this management area explicitly so
+				// the broad inside role cannot bypass department authorization.
+				.antMatchers("/inside/organizationmanage/insidedept/**")
+				.hasAuthority("ROLE_MENU_199");
 
-		// Keep the existing database-driven menu authorization rules. Register
-		// the ACL management rule first so a broad pattern cannot weaken it.
-		for(MenuVO menuVo : menuList) {
-			http.authorizeRequests().antMatchers(menuVo.getMenuUrl()).hasAuthority(menuVo.getRoleCd());
+		// Keep the legacy database order for all other menu rules. Reordering
+		// the full matrix would change established popup permissions.
+		for (MenuVO menuVo : menuList) {
+			http.authorizeRequests()
+					.antMatchers(menuVo.getMenuUrl())
+					.hasAuthority(menuVo.getRoleCd());
 		}
 		http.authorizeRequests().anyRequest().authenticated();
 

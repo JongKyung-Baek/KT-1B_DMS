@@ -10,6 +10,4 @@ public class InsidedeptListVO {
 	private String deptNm;
 	private String useYn;
 
-	private String allDeptNms;
-
 }

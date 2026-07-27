@@ -334,6 +334,11 @@
 
 <mapper namespace="sql.OrganizationmanageInsideuser">
 
+	<select id="lockUserMutation" resultType="Integer">
+		SELECT 1
+		FROM pg_advisory_xact_lock(hashtext('kt1b_docs_user_mutation'))
+	</select>
+
 	<select id="selectList" resultType="kr.esob.fdms.controller.inside.organizationmanage.insideuser.InsideuserListVO">
 		SELECT
 		B1.*
@@ -419,7 +424,7 @@
 	UPDATE DOCS_USER
 	SET LAST_LOGIN_DT = CURRENT_TIMESTAMP
 	  , LOCK_YN = 'N'
-	WHERE USER_NM = #{userNm}
+	WHERE USER_CD = #{userCd}
 </update>
 
 <update id="resetPwd">
@@ -517,8 +522,9 @@
 
 	<insert id="insertRegisterUserInfo" parameterType="kr.esob.fdms.controller.inside.organizationmanage.insideuser.UserPopupParam">
 		<selectKey keyProperty="userCd" resultType="java.lang.String" order="BEFORE">
-			SELECT 'USER_' || LPAD(CAST(COALESCE(MAX(CAST(SUBSTRING(user_cd, 6) AS INTEGER)), 0) + 1 AS TEXT), 10, '0') AS userCd
-			FROM DOCS_USER
+			SELECT 'USER_' ||
+			       LPAD(NEXTVAL('public.docs_user_cd_sequence')::TEXT, 10, '0')
+			       AS userCd
 		</selectKey>
 		INSERT INTO DOCS_USER
 		(
@@ -536,6 +542,7 @@
 		DEL_YN,
 		PROTECT_YN,
 		LOCK_YN,
+		LOGIN_COUNT,
 		BUSINESS_AREA_CD,
 		AUTH_APPROVAL_YN,
 		AUTH_APPROVAL_LEVEL
@@ -556,6 +563,7 @@
 		#{delYn},
 		#{protectYn},
 		#{lockYn},
+		0,
 		'',
 		'N',
 		-1
@@ -653,13 +661,7 @@
 			POSITION_CD = #{positionCd},
 			ROLE_GROUP = #{roleGroupCd},
 			EMAIL = #{email},
-			AUTH_SITE = #{authSite},
-			USE_YN = #{useYn},
-			DEL_YN = #{delYn},
-			PROTECT_YN = #{protectYn},
-			LOCK_YN = #{lockYn},
-			AUTH_APPROVAL_YN = 'N',
-			AUTH_APPROVAL_LEVEL = -1
+			AUTH_SITE = #{authSite}
 		</set>
 		WHERE USER_CD = #{userCd}
 	</update>
@@ -672,21 +674,10 @@
 		WHERE USER_CD = #{userCd}
 	</update>
 
-	<update id="editUserGroup" parameterType="kr.esob.fdms.controller.inside.organizationmanage.insideuser.UserPopupParam">
-		UPDATE DOCS_ROLE_GROUP_MEMBER
-		<set>
-			GROUP_CODE = #{roleGroupCd}
-		</set>
+	<delete id="deleteUserGroups" parameterType="kr.esob.fdms.controller.inside.organizationmanage.insideuser.UserPopupParam">
+		DELETE FROM DOCS_ROLE_GROUP_MEMBER
 		WHERE MEMBER_CD = #{userCd}
-		AND GROUP_TYPE = 'USER'
-		AND GROUP_CODE &lt;&gt; #{roleGroupCd}
-		AND NOT EXISTS (
-			SELECT 1
-			FROM DOCS_ROLE_GROUP_MEMBER dup
-			WHERE dup.GROUP_CODE = #{roleGroupCd}
-			AND dup.MEMBER_CD = #{userCd}
-			AND dup.GROUP_TYPE = 'USER'
-		)
-	</update>
+		  AND GROUP_TYPE = 'USER'
+	</delete>
 
 </mapper>

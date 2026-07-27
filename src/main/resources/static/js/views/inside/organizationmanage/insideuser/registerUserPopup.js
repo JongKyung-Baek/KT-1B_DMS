@@ -94,9 +94,7 @@ function saveUser() {
 function requestCrXCallback(response){
     if(response.success){
         alertMessage(g_msg('msg.registerComplete'), function() {
-            searchList(gridParam);
             closePopup('popupDialog');
-            $(this).dialog("close");
         });
     }else{
         alertMessage(g_msg(response.message));	// InsideuserService에서 띄어주는 이유 출력

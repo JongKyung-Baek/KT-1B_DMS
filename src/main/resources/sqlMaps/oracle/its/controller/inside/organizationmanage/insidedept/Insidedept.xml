@@ -334,11 +334,30 @@
 
 <mapper namespace="sql.OrganizationmanageInsidedept">
 
+<select id="lockDepartmentMutation" resultType="Integer">
+	SELECT 1
+	FROM pg_advisory_xact_lock(hashtext('kt1b_docs_dept_mutation'))
+</select>
+
 <select id="selectDeptInfo" resultType="kr.esob.fdms.controller.inside.organizationmanage.insidedept.InsidedeptListVO">
 	SELECT
-		(SELECT MAX(DEPT_CD) FROM DOCS_DEPT WHERE DEPT_CD ~ '^[A-Z0-9]*\d+$') AS deptCd,
-		STRING_AGG(DEPT_NM, ',') AS allDeptNms
-	FROM DOCS_DEPT;
+		(
+			SELECT DEPT_CD
+			FROM DOCS_DEPT
+			WHERE DEPT_CD ~ '^DMS[0-9]+$'
+			ORDER BY CAST(SUBSTRING(DEPT_CD FROM 4) AS BIGINT) DESC
+			LIMIT 1
+		) AS deptCd
+</select>
+
+<select id="countDeptByName" resultType="Integer">
+	SELECT COUNT(*)
+	FROM DOCS_DEPT
+	WHERE DEPT_NM = #{deptNm}
+	  AND DEL_YN = 'N'
+	<if test='excludeDeptCd != null and !excludeDeptCd.equals("")'>
+	  AND DEPT_CD &lt;&gt; #{excludeDeptCd}
+	</if>
 </select>
 
 	<select id="selectList" resultType="kr.esob.fdms.controller.inside.organizationmanage.insidedept.InsidedeptListVO">
@@ -368,7 +387,7 @@
 			AND A1.deptNm LIKE CONCAT('%', #{deptNm}, '%')
 		</if>
 		<if test='useYn != null and !useYn.equals("")'>
-			AND A1.useYnad = #{useYn}
+			AND A1.useYn = #{useYn}
 		</if>
 		) B1
 		WHERE 1=1
@@ -386,6 +405,9 @@
 	WHERE 1=1
 	<if test='deptCd != null and !deptCd.equals("")'>
 		AND deptInfo.DEPT_CD = #{deptCd}
+	</if>
+	<if test='deptNm != null and !deptNm.equals("")'>
+		AND deptInfo.DEPT_NM LIKE CONCAT('%', #{deptNm}, '%')
 	</if>
 	<if test='useYn != null and !useYn.equals("")'>
 		AND deptInfo.USE_YN = #{useYn}

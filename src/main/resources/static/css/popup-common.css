@@ -2020,6 +2020,67 @@ body .formAcceptanceDropdown .select2-results__option--highlighted[aria-selected
   float: none !important;
 }
 
+/* Department popup checkbox: keep the legacy plugin behavior, but render a
+   visible control even when the shared sprite cannot be loaded. */
+.ui-dialog .registerDeptPopup .prettycheckbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+}
+
+.ui-dialog .registerDeptPopup .prettycheckbox::before,
+.ui-dialog .registerDeptPopup .prettycheckbox::after {
+  display: none;
+  content: none;
+}
+
+.ui-dialog .registerDeptPopup .prettycheckbox > a {
+  position: relative;
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  border: 1px solid #c6cbd5;
+  border-radius: 6px;
+  background: #fff !important;
+  box-sizing: border-box;
+  transition: background-color 0.15s ease, border-color 0.15s ease,
+              box-shadow 0.15s ease;
+}
+
+.ui-dialog .registerDeptPopup .prettycheckbox > a:hover,
+.ui-dialog .registerDeptPopup .prettycheckbox > a:focus {
+  border-color: #034c8c;
+  box-shadow: 0 0 0 3px rgba(3, 76, 140, 0.12);
+  outline: 0;
+}
+
+.ui-dialog .registerDeptPopup .prettycheckbox > a.checked {
+  border-color: #034c8c;
+  background: #034c8c !important;
+}
+
+.ui-dialog .registerDeptPopup .prettycheckbox > a.checked::after {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 2px;
+  width: 6px;
+  height: 11px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.ui-dialog .registerDeptPopup .prettycheckbox label {
+  margin: 0;
+  padding: 0;
+  color: #4f5468;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 22px;
+}
+
 /* ===== OUTSIDE ONLY POPUP STYLE START =====
    Target pages:
    - /outside/user/information/requestPopup.jsp  (.outsideUserInfoRequestPopup)

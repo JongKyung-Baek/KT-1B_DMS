@@ -4,24 +4,22 @@ import kr.esob.fdms.commonlogic.abstractclass.CommonService;
 import kr.esob.fdms.commonlogic.result.ResultVO;
 import kr.esob.fdms.controller.inside.distribution.doc_pdf_link_request.DocPdfLinkRequestDao;
 import kr.esob.fdms.controller.login.UserVO;
-import kr.esob.fdms.util.DateUtil;
 import kr.esob.fdms.util.seed.PasswordUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import javax.inject.Inject;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Service
 public class InsideuserService implements CommonService {
 
 	@Inject
 	InsideuserDao dao;
-
-	@Inject
-	DateUtil dateUtil;
 
 	@Autowired
 	DocPdfLinkRequestDao dao_for_pwd;
@@ -69,8 +67,51 @@ public class InsideuserService implements CommonService {
 	}
 
 
+	@Transactional(rollbackFor = Exception.class)
 	public ResultVO saveRegsiterUser(MultipartHttpServletRequest request) throws Exception {
 		ResultVO resultVo = new ResultVO();
+		String saveFlag = request.getParameter("saveFlag");
+		String userCd = trim(request.getParameter("userCd"));
+		String userId = trim(request.getParameter("userId"));
+		String userNm = trim(request.getParameter("userNm"));
+		String email = trim(request.getParameter("email"));
+		String deptCd = trim(request.getParameter("deptCd"));
+		String positionCd = trim(request.getParameter("positionCd"));
+		String roleGroupCd = trim(request.getParameter("roleGroupCd"));
+
+		if (!"I".equals(saveFlag) && !"U".equals(saveFlag)
+				&& !"E".equals(saveFlag)) {
+			resultVo.setMessage("msg.error");
+			resultVo.setSuccess(false);
+			return resultVo;
+		}
+		if (isBlank(userId) || isBlank(userNm) || isBlank(email)
+				|| isBlank(deptCd) || isBlank(positionCd)
+				|| isBlank(roleGroupCd)) {
+			resultVo.setMessage("msg.selectValues");
+			resultVo.setSuccess(false);
+			return resultVo;
+		}
+		if (userId.length() > 20) {
+			resultVo.setMessage("msg.invalidUserIdLength");
+			resultVo.setSuccess(false);
+			return resultVo;
+		}
+		if (userNm.length() > 256 || email.length() > 256) {
+			resultVo.setMessage("msg.invalidInputLength");
+			resultVo.setSuccess(false);
+			return resultVo;
+		}
+		if (!email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
+			resultVo.setMessage("msg.invalidEmail");
+			resultVo.setSuccess(false);
+			return resultVo;
+		}
+		if (!"I".equals(saveFlag) && isBlank(userCd)) {
+			resultVo.setMessage("msg.userNotFound");
+			resultVo.setSuccess(false);
+			return resultVo;
+		}
 //		String hashedPassword = PasswordUtils.hashPasswordWithSalt(request.getParameter("userPwd"));
 
 		String authSite = "I";
@@ -79,7 +120,6 @@ public class InsideuserService implements CommonService {
 		String protectYn = "N";
 		String lockYn = "N";
 //		int distributionAuthCd = 0;
-		boolean newUser = false;
 
 //		if (request.getParameter("newUser") != null && request.getParameter("newUser").equals("true")) {
 //			newUser = true;
@@ -91,41 +131,41 @@ public class InsideuserService implements CommonService {
 
 		// userPopupParam 객체 만들어서 저장
 		UserPopupParam userPopupParam = UserPopupParam.builder()
-				.userId(request.getParameter("userId"))
-				.userCd(request.getParameter("userCd"))
+				.userId(userId)
+				.userCd(userCd)
 //				.userPwd(hashedPassword)
 //				.businessAreaCd(request.getParameter("businessArea"))
-				.userNm(request.getParameter("userNm"))
-				.email(request.getParameter("email"))
-				.deptCd(request.getParameter("deptCd"))
-				.positionCd(request.getParameter("positionCd"))
-				.roleGroupCd(request.getParameter("roleGroupCd"))
+				.userNm(userNm)
+				.email(email)
+				.deptCd(deptCd)
+				.positionCd(positionCd)
+				.roleGroupCd(roleGroupCd)
 //				.authApprovalLevel(distributionAuthCd)
 				.authSite(authSite)
 				.useYn(useYn)
 				.delYn(delYn)
 				.protectYn(protectYn)
 				.lockYn(lockYn)
-				.newUser(newUser)
+				.newUser(false)
 				.build();
 
-		if ( request.getParameter("saveFlag").equals("I")){ // 생성일때
+		if ("I".equals(saveFlag) || "U".equals(saveFlag)) {
+			// Keep duplicate checks and the following insert/update atomic
+			// across concurrent administrator requests.
+			dao.lockUserMutation();
+		}
 
-			if ( request.getParameter("deptCd") == null || request.getParameter("positionCd") == null || request.getParameter("roleGroupCd") == null ){
-				resultVo.setMessage("msg.plsSetValue");
-				resultVo.setSuccess(false);
-				return resultVo;
-			}
+		if ("I".equals(saveFlag)){ // 생성일때
 
-			if (dao.checkUserId(request.getParameter("userId")) != null){
+			if (dao.checkUserId(userId) != null){
 				resultVo.setMessage("msg.alrExistUser"); // "이미 존재하는 사용자 계정입니다"
 				resultVo.setSuccess(false);
 				return resultVo;
-			} else if (dao.checkUserNm(request.getParameter("userNm")) != null) {
+			} else if (dao.checkUserNm(userNm) != null) {
 				resultVo.setMessage("msg.alrExistUserName"); // "이미 존재하는 사용자 이름입니다"
 				resultVo.setSuccess(false);
 				return resultVo;
-			} else if(dao.checkEmail(request.getParameter("email")) > 0){
+			} else if(dao.checkEmail(email) > 0){
 				resultVo.setMessage("msg.alrExistEmail"); // "이미 사용중인 이메일입니다"
 				resultVo.setSuccess(false);
 				return resultVo;
@@ -147,17 +187,10 @@ public class InsideuserService implements CommonService {
 				return resultVo;
 			}
 
-		}else if( request.getParameter("saveFlag").equals("U")){ // 수정일때
+		}else if ("U".equals(saveFlag)){ // 수정일때
 
 			// 기존 사용자 정보 가져오기
-			UserListVO userPopupParam_old = dao.getUserInfoByUserCd(request.getParameter("userCd"));
-
-			// deptCd , positionCd, roleGroupCd 가 null 값이면 실패
-			if ( request.getParameter("deptCd") == null || request.getParameter("positionCd") == null || request.getParameter("roleGroupCd") == null ){
-				resultVo.setMessage("msg.plsSetValue");
-				resultVo.setSuccess(false);
-				return resultVo;
-			}
+			UserListVO userPopupParam_old = dao.getUserInfoByUserCd(userCd);
 
 			// 기존 사용자 정보가 null 값이면 실패
 			if (userPopupParam_old == null) {
@@ -168,8 +201,8 @@ public class InsideuserService implements CommonService {
 
 
 			// userId 체크. 변경됐으면, 변경값 db에서 체크. 이미 있으면 실패.
-			if (!userPopupParam_old.getUserId().equals(request.getParameter("userId"))) {
-				if (dao.checkUserId(request.getParameter("userId")) != null) {
+			if (!Objects.equals(userPopupParam_old.getUserId(), userId)) {
+				if (dao.checkUserId(userId) != null) {
 					resultVo.setMessage("msg.alrExistUser");
 					resultVo.setSuccess(false);
 					return resultVo;
@@ -177,8 +210,8 @@ public class InsideuserService implements CommonService {
 			}
 
 			// userNm 체크
-			if (!userPopupParam_old.getUserNm().equals(request.getParameter("userNm"))) {
-				if (dao.checkUserNm(request.getParameter("userNm")) != null) {
+			if (!Objects.equals(userPopupParam_old.getUserNm(), userNm)) {
+				if (dao.checkUserNm(userNm) != null) {
 					resultVo.setMessage("msg.alrExistUserName");
 					resultVo.setSuccess(false);
 					return resultVo;
@@ -186,9 +219,8 @@ public class InsideuserService implements CommonService {
 			}
 
 			// email 체크
-			if (userPopupParam_old.getEmail() != null &&
-					!userPopupParam_old.getEmail().equals(request.getParameter("email"))) {
-				if (dao.checkEmail(request.getParameter("email")) > 0) {
+			if (!Objects.equals(userPopupParam_old.getEmail(), email)) {
+				if (dao.checkEmail(email) > 0) {
 					resultVo.setMessage("msg.alrExistEmail");
 					resultVo.setSuccess(false);
 					return resultVo;
@@ -197,17 +229,10 @@ public class InsideuserService implements CommonService {
 			dao.editUserInfo(userPopupParam); // 정보 업데이트
 			resultVo.setSuccess(true);
 			return resultVo;
-			} else if( request.getParameter("saveFlag").equals("E")){ // 수정일때. 여기에만 쓰이는 플래그
+			} else if ("E".equals(saveFlag)){ // 수정일때. 여기에만 쓰이는 플래그
 
 			// 기존 사용자 정보 가져오기
-			UserListVO userPopupParam_old = dao.getUserInfoByUserCd(request.getParameter("userCd"));
-
-			// deptCd , positionCd, roleGroupCd 가 null 값이면 실패
-			if ( request.getParameter("deptCd") == null || request.getParameter("positionCd") == null || request.getParameter("roleGroupCd") == null ){
-				resultVo.setMessage("msg.plsSetValue");
-				resultVo.setSuccess(false);
-				return resultVo;
-			}
+			UserListVO userPopupParam_old = dao.getUserInfoByUserCd(userCd);
 
 			// 기존 사용자 정보가 null 값이면 실패
 			if (userPopupParam_old == null) {
@@ -218,8 +243,8 @@ public class InsideuserService implements CommonService {
 
 
 			// userId 체크. 변경됐으면, 변경값 db에서 체크. 이미 있으면 실패.
-			if (!userPopupParam_old.getUserId().equals(request.getParameter("userId"))) {
-				if (dao.checkUserId(request.getParameter("userId")) != null) {
+			if (!Objects.equals(userPopupParam_old.getUserId(), userId)) {
+				if (dao.checkUserId(userId) != null) {
 					resultVo.setMessage("msg.alrExistUser");
 					resultVo.setSuccess(false);
 					return resultVo;
@@ -227,8 +252,8 @@ public class InsideuserService implements CommonService {
 			}
 
 			// userNm 체크
-			if (!userPopupParam_old.getUserNm().equals(request.getParameter("userNm"))) {
-				if (dao.checkUserNm(request.getParameter("userNm")) != null) {
+			if (!Objects.equals(userPopupParam_old.getUserNm(), userNm)) {
+				if (dao.checkUserNm(userNm) != null) {
 					resultVo.setMessage("msg.alrExistUserName");
 					resultVo.setSuccess(false);
 					return resultVo;
@@ -236,8 +261,8 @@ public class InsideuserService implements CommonService {
 			}
 
 			// email 체크
-			if (!userPopupParam_old.getEmail().equals(request.getParameter("email"))) {
-				if (dao.checkEmail(request.getParameter("email")) > 0) {
+			if (!Objects.equals(userPopupParam_old.getEmail(), email)) {
+				if (dao.checkEmail(email) > 0) {
 					resultVo.setMessage("msg.alrExistEmail");
 					resultVo.setSuccess(false);
 					return resultVo;
@@ -287,6 +312,14 @@ public class InsideuserService implements CommonService {
 		}
 
 		return null;
+	}
+
+	private String trim(String value) {
+		return value == null ? null : value.trim();
+	}
+
+	private boolean isBlank(String value) {
+		return value == null || value.isEmpty();
 	}
 
 	}

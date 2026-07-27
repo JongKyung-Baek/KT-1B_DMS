@@ -24,6 +24,10 @@ public class InsideuserDao extends AbstractDao {
 		return (Integer) obj(prefix + "selectListCount", param);
 	}
 
+	public void lockUserMutation() {
+		obj(prefix + "lockUserMutation");
+	}
+
 	public String selectDeptCd(Object param) {
 		return (String) obj(prefix + "selectDeptCd", param);
 	}
@@ -67,7 +71,8 @@ public class InsideuserDao extends AbstractDao {
 
 	public void editUserInfo(UserPopupParam param) {
 		update(prefix + "editUserInfo", param);
-		update(prefix + "editUserGroup", param);
+		delete(prefix + "deleteUserGroups", param);
+		insert(prefix + "insertRegisterUserGroup", param);
 	}
 
 	public void editUserInfo_resetPwd(UserPopupParam param) {

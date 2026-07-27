@@ -33,15 +33,12 @@ function saveUser() {
 }
 
 function requestCrXCallback(response){
-    console.log("enterted requestCrXCallback()");
     if(response.success){
-        alertMessage(g_msg('msg.registerComplete'))
-        searchList(gridParam);
-        closePopup('popupDialog');
-        $(this).dialog("close");
+        alertMessage(g_msg('msg.registerComplete'), function() {
+            closePopup('popupDialog');
+        });
     }else{
-        console.log("enterted requestCrXCallback() - else");
-        alertMessage(g_msg(response.message));	// InsideuserService에서 넘어오는 이유 출력
+        alertMessage(g_msg(response.message));
     }
 }
 

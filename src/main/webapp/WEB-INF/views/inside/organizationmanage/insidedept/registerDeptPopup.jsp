@@ -26,7 +26,9 @@
             <c:choose>
                 <c:when test="${saveFlag == 'U'}">
                     <li class="full">
-                        <custom:popupInputText id="dept_cd" name="dept_cd" label="form.deptCd" value="${info.deptCd}" maxlength="40" readOnly="readOnly"/>
+                        <custom:popupInputText id="dept_cd_display" name="dept_cd_display"
+                                               label="form.deptCd" value="${info.deptCd}"
+                                               maxlength="40" readOnly="readOnly"/>
                     </li>
                 </c:when>
             </c:choose>
@@ -34,7 +36,8 @@
                 <custom:popupInputText id="dept_nm" name="dept_nm" label="form.deptName" value="${info.deptNm}" maxlength="40"/>
             </li>
             <li class="full">
-                <custom:popupCheckboxSingle name="use_yn" value="Y" label="form.useYn" checkedValue="${info.useYn }"/>
+                <custom:popupCheckboxSingle name="use_yn" value="Y" label="form.useYn"
+                                            checkedValue="${empty info.useYn ? 'Y' : info.useYn}"/>
             </li>
         </ul>
 

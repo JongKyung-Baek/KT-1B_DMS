@@ -50,6 +50,22 @@ class OrganizationPopupI18nContractTest {
 				">부서 코드와 부서명, 사용 여부를 입력하거나 수정할 수 있습니다.<"));
 	}
 
+	@Test
+	void newDepartmentDefaultsToActiveAndCheckboxHasAccessibleLabel()
+			throws Exception {
+		String departmentPopup = read(DEPARTMENT_POPUP);
+		String checkboxTag = read(Paths.get(
+				"src/main/webapp/WEB-INF/tags/popupCheckboxSingle.tag"));
+
+		assertTrue(departmentPopup.contains(
+				"checkedValue=\"${empty info.useYn ? 'Y' : info.useYn}\""));
+		assertTrue(checkboxTag.contains(
+				"<c:set var=\"resolvedLabelSide\" value=\"right\"/>"));
+		assertTrue(checkboxTag.contains("\"role\": \"checkbox\""));
+		assertTrue(checkboxTag.contains("\"aria-labelledby\""));
+		assertTrue(checkboxTag.contains("\"aria-checked\""));
+	}
+
 	private String read(Path path) throws Exception {
 		return new String(
 				Files.readAllBytes(path), StandardCharsets.UTF_8);

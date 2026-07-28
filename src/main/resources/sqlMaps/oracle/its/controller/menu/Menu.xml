@@ -171,15 +171,52 @@
 </select>
 
 <select id="selectTree" resultType="kr.esob.fdms.commonlogic.tree.TreeVO">
+    WITH RECURSIVE INTERNAL_MENU (
+        MENU_CD, PARENT_MENU_CD, MENU_NM, MENU_LEVEL, MENU_TYPE,
+        SORT_SEQ, USE_YN, ROLE_CD, MENU_PATH
+    ) AS (
+        SELECT
+            MENU.MENU_CD,
+            MENU.PARENT_MENU_CD,
+            MENU.MENU_NM,
+            MENU.MENU_LEVEL,
+            MENU.MENU_TYPE,
+            MENU.SORT_SEQ,
+            MENU.USE_YN,
+            MENU.ROLE_CD,
+            ARRAY[MENU.MENU_CD::TEXT]::TEXT[]
+        FROM DOCS_MENU MENU
+        WHERE MENU.DEL_YN = 'N'
+          AND MENU.MENU_TYPE IN ('T', 'M', 'P')
+          AND MENU.AUTH_SITE IN ('I', 'B')
+          AND MENU.PARENT_MENU_CD IN ('I', 'B')
+
+        UNION ALL
+
+        SELECT
+            CHILD.MENU_CD,
+            CHILD.PARENT_MENU_CD,
+            CHILD.MENU_NM,
+            CHILD.MENU_LEVEL,
+            CHILD.MENU_TYPE,
+            CHILD.SORT_SEQ,
+            CHILD.USE_YN,
+            CHILD.ROLE_CD,
+            PARENT.MENU_PATH || CHILD.MENU_CD::TEXT
+        FROM DOCS_MENU CHILD
+        JOIN INTERNAL_MENU PARENT
+          ON CHILD.PARENT_MENU_CD = PARENT.MENU_CD
+        WHERE CHILD.DEL_YN = 'N'
+          AND CHILD.MENU_TYPE IN ('T', 'M', 'P')
+          AND CHILD.AUTH_SITE IN ('I', 'B')
+          AND NOT CHILD.MENU_CD::TEXT = ANY(PARENT.MENU_PATH)
+    )
     SELECT
         'MENU_000' AS id,
-        CASE
-            WHEN #{auth} = 'I' THEN '내부메뉴'
-            WHEN #{auth} = 'E' THEN '외부메뉴'
-        END AS text,
+        #{rootText} AS text,
         '#' AS parent,
         '0' AS "level",
-        0 AS sort,
+        -1 AS sort,
         'R' AS type,
         'Y' AS useYn,
         '' AS roleCd
@@ -187,10 +224,8 @@
     SELECT
         MENU_CD AS id,
         MENU_NM AS text,
-        CASE PARENT_MENU_CD
-            WHEN 'I' THEN 'MENU_000'
-            WHEN 'E' THEN 'MENU_000'
-            WHEN 'B' THEN 'MENU_000'
+        CASE
+            WHEN PARENT_MENU_CD IN ('I', 'B') THEN 'MENU_000'
             ELSE PARENT_MENU_CD
         END AS parent,
         MENU_LEVEL AS "level",
@@ -198,17 +233,8 @@
         MENU_TYPE AS type,
         USE_YN AS useYn,
         ROLE_CD AS roleCd
-    FROM DOCS_MENU
-    WHERE DEL_YN = 'N'
-    <if test='auth != null and auth.equals("I")'>
-        AND MENU_TYPE IN ('T', 'M', 'P')
-        AND AUTH_SITE IN ('I', 'B')
-    </if>
-    <if test='auth != null and auth.equals("E")'>
-        AND MENU_TYPE IN ('T', 'M', 'P')
-        AND AUTH_SITE IN ('E', 'B')
-    </if>
-    ORDER BY sort
+    FROM INTERNAL_MENU
+    ORDER BY sort, id
 </select>
 
 <update id="updateMenu">

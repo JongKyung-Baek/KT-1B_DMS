@@ -1,10 +1,13 @@
 package kr.esob.fdms.controller.inside.system.roleassign;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.inject.Inject;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import kr.esob.fdms.commonlogic.message.Prop;
 import kr.esob.fdms.commonlogic.result.ResultVO;
@@ -16,56 +19,56 @@ public class RoleAssignService {
 	@Inject
 	Prop prop;
 
-	/**
-	 * 권한그룹 목록
-	 * @return
-	 */
 	public List<RoleGroupVO> selectRoleGroup() {
 		return dao.selectRoleGroup();
 	}
 
-	/**
-	 * 특정권한그룹에서 사용하는 메뉴 목록
-	 * @param param
-	 * @return
-	 */
 	public List<String> selectRelRoleGroup(RequestParam param) {
 		return dao.selectRelRoleGroup(param);
 	}
 
+	@Transactional
 	public ResultVO saveAssign(RequestParam param) {
 		ResultVO result = new ResultVO();
 		result.setSuccess(false);
 
-		// START 예외처리
-		if(null == param.getGroupCd() || "".equals(param.getGroupCd())) {
-			result.setSuccess(false);
+		if(param == null || param.getGroupCd() == null
+				|| param.getGroupCd().trim().isEmpty()
+				|| dao.selectRoleGroupInfo(param) == null) {
 			result.setFailReason(prop.msg("msg.notSelectedRoleGroup"));
+			return result;
 		}
-		// END 예외처리
 
-		for(RequestParam one : param.getList()) {
-			one.setGroupCd(param.getGroupCd());
+		if(param.getList() == null || param.getList().isEmpty()) {
+			result.setFailReason(prop.msg("msg.noSelectData"));
+			return result;
+		}
 
-			// START 예외처리
-			// roleCd가 존재하지 않는다면 pass
-			if(null == one.getRoleCd() || "".equals(one.getRoleCd())) {
+		// Collapse duplicate client rows so one role has one deterministic result.
+		Map<String, RequestParam> requestedRoles = new LinkedHashMap<>();
+		for(RequestParam item : param.getList()) {
+			if(item == null || item.getRoleCd() == null
+					|| item.getRoleCd().trim().isEmpty()) {
 				continue;
 			}
-			// END 예외처리
+			item.setRoleCd(item.getRoleCd().trim());
+			item.setGroupCd(param.getGroupCd());
+			requestedRoles.put(item.getRoleCd(), item);
+		}
 
+		if(requestedRoles.isEmpty()) {
+			result.setFailReason(prop.msg("msg.noSelectData"));
+			return result;
+		}
 
-			if("Y".equals(one.getSelectedYn())) {
-				// 체크되었다면 insert
-
-				if(!dao.existRelRoleGroup(one)) {
-					// 존재하지 않는다면 insert
-					dao.insertRelRoleGroup(one);
+		for(RequestParam item : requestedRoles.values()) {
+			if("Y".equals(item.getSelectedYn())) {
+				if(!dao.existRelRoleGroup(item)) {
+					dao.insertRelRoleGroup(item);
 				}
 			}
 			else {
-				// 체크해제되었다면 delete
-				dao.deleteRelRoleGroup(one.getGroupCd(), one.getRoleCd());
+				dao.deleteRelRoleGroup(item.getGroupCd(), item.getRoleCd());
 			}
 		}
 
@@ -73,11 +76,6 @@ public class RoleAssignService {
 		return result;
 	}
 
-	/**
-	 * 권한정보
-	 * @param param
-	 * @return
-	 */
 	public RoleGroupVO selectRoleGroupInfo(RequestParam param) {
 		return dao.selectRoleGroupInfo(param);
 	}

@@ -1,183 +1,175 @@
 var selectedRoleCode = "";
-var selectedNodeList = [];
+var selectedNodeList = {};
 
 (function ($, undefined) {
-"use strict";
-$.jstree.plugins.noclose = function () {
-  this.close_node = $.noop;
-};
+  "use strict";
+  $.jstree.plugins.noclose = function () {
+    this.close_node = $.noop;
+  };
 })(jQuery);
 
-$(function() {
-	setManagerGroupList();
-	//setMenuList();
-	settingToolbar(JSON.parse(toolbarInfo));
-	bindEvent();
+$(function () {
+  bindEvent();
+  settingToolbar(JSON.parse(toolbarInfo || "[]"), $(".roleassign-toolbar"));
+  setUserGradeList();
 });
 
 function bindEvent() {
-	$(document).on('click', '.listName', function() {
-		$(".listBox > li").removeClass("current");
-		selectedRoleCode = $(this).attr('groupCd');
-		setMenuList($(this).attr('groupCd'));
-		$(this).parent("li").addClass("current");
-	});
+  $(document).on("click", ".role-group-list .listName", function () {
+    selectUserGrade($(this));
+  });
 
-	$(document).on('click', ".tree-checkbox", function() {
-		$(this).toggleClass("tree-checkbox-on");
+  $(document).on("click", "#menuTree .tree-checkbox", function (event) {
+    event.preventDefault();
+    event.stopPropagation();
 
-		var tsClass = $(this).attr("class");
-		var id = $(this).attr("id");
+    var nodeId = this.id.substring(4);
+    var tree = $("#menuTree").jstree(true);
+    var node = tree.get_node(nodeId);
+    var checked = !$(this).hasClass("tree-checkbox-on");
 
-		if(tsClass.indexOf("tree-checkbox-on") > -1) {
-			selectedNodeList[id.substring(4, id.length)] = 'Y';
-		}
-		else {
-			selectedNodeList[id.substring(4, id.length)] = 'N';
-		}
-
-		var node = $("#menuTree").jstree(true).get_node(id.substring(4, id.length));
-
-		if(node.children.length > 0) {
-			$.each(node.children, function() {
-				$("#chk_" + this).removeClass("tree-checkbox-on");
-				selectedNodeList[this] = 'N';
-
-				if(tsClass.indexOf("tree-checkbox-on") > -1) {
-					$("#chk_" + this).addClass("tree-checkbox-on");
-					selectedNodeList[this] = 'Y';
-				}
-			});
-		}
-	});
+    setNodeAndDescendants(node, checked);
+    syncAncestorNodes(node);
+    renderCheckedNodes();
+  });
 }
 
-/**
- * 메뉴 tree를 화면에 표시
- * @returns
- */
+function selectUserGrade($button) {
+  $(".role-group-list > li").removeClass("current");
+  $button.closest("li").addClass("current");
+  selectedRoleCode = $button.attr("data-group-cd");
+  setMenuList(selectedRoleCode);
+}
+
 function setMenuList(groupCd) {
-	var param = {
-			authSite: 'I'	/* 내부 목록만 표시*/
-			, groupCd: groupCd
-	};
+  callAjax(
+    { authSite: "I", groupCd: groupCd },
+    "/inside/system/roleassign/getAssignedMenuList",
+    function (response) {
+      selectedNodeList = response.selectedValue || {};
 
-	//console.log(param);
-
-	callAjax(param, '/inside/system/roleassign/getAssignedMenuList', function(response){
-		var treeParam = {
-				list: response.menuList,
-				useCheckbox: false,
-				customCheckbox: true,
-				dragDrop: false,
-				openLevel: 0,
-				noClose: false,
-				multiple: false,
-				//selectedValue: response.selectedValue
-		};
-
-		settingTree("menuTree", treeParam);
-
-		selectedNodeList = response.selectedValue;
-
-		setValue();
-	});
+      settingTree("menuTree", {
+        list: response.menuList || [],
+        useCheckbox: false,
+        customCheckbox: true,
+        dragDrop: false,
+        openLevel: 2,
+        noClose: false,
+        multiple: false,
+        onReady: renderCheckedNodes
+      });
+    }
+  );
 }
 
-function setValue() {
-	$.each(selectedNodeList, function(id, value) {
-		//console.log(id + ", " + value);
-		if('Y' === value) {
-			$("#chk_" + id).addClass("tree-checkbox-on");
-		}
-	});
+function setNodeAndDescendants(node, checked) {
+  var nodeIds = [node.id].concat(node.children_d || []);
+  $.each(nodeIds, function (_, nodeId) {
+    if (nodeId !== "MENU_000") {
+      selectedNodeList[nodeId] = checked ? "Y" : "N";
+    }
+  });
 }
 
-/**
- * 권한그룹 목록을 화면에 표시
- * @returns
- */
-function setManagerGroupList() {
+function syncAncestorNodes(node) {
+  var tree = $("#menuTree").jstree(true);
 
-	var param = {};
+  $.each(node.parents || [], function (_, parentId) {
+    if (parentId === "#" || parentId === "MENU_000") {
+      return;
+    }
 
-	callAjax(param, '/inside/system/roleassign/getRoleGroupList', function(response){
-  		var html = [];
-  		$.each(response, function() {
-  			html.push('<li>');
-  			html.push('	<div class="listName" groupCd="' + this.groupCd + '"><span>' + this.groupNm + '</span></div>');
-//  			html.push('	<button type="button" class="detailBtn" onclick="modGroup(\'' + this.groupCd + '\')">상세보기</button>');
-  			html.push('</li>');
-  		});
+    var parentNode = tree.get_node(parentId);
+    var hasCheckedDescendant = $.grep(
+      parentNode.children_d || [],
+      function (childId) {
+        return selectedNodeList[childId] === "Y";
+      }
+    ).length > 0;
 
-  		$(".listBox").html(html.join(''));
-  		$("#managerCount").text(response.length);
-	})
+    selectedNodeList[parentId] = hasCheckedDescendant ? "Y" : "N";
+  });
+}
+
+function renderCheckedNodes() {
+  $("#menuTree .tree-checkbox").removeClass("tree-checkbox-on");
+  $.each(selectedNodeList, function (id, value) {
+    if (value === "Y") {
+      $("#chk_" + id).addClass("tree-checkbox-on");
+    }
+  });
+}
+
+function setUserGradeList() {
+  callAjax({}, "/inside/system/roleassign/getRoleGroupList", function (response) {
+    var $list = $(".role-group-list").empty();
+
+    $.each(response || [], function () {
+      var $button = $("<button>", {
+        type: "button",
+        class: "listName",
+        "data-group-cd": this.groupCd
+      }).append($("<span>").text(this.groupNm));
+
+      $list.append($("<li>").append($button));
+    });
+
+    $("#managerCount").text((response || []).length);
+
+    var $firstButton = $list.find(".listName").first();
+    if ($firstButton.length === 1) {
+      selectUserGrade($firstButton);
+    }
+  });
 }
 
 function saveRole() {
-	if("" === selectedRoleCode) {
-		alertMessage("선택된 그룹이 없습니다.");
-		return;
-	}
-	var param = getParam();
+  if (!selectedRoleCode) {
+    alertMessage(g_msg("msg.notSelectedRoleGroup"));
+    return;
+  }
 
-	//console.log(param);
+  var param = getParam();
+  if (param.list.length === 0) {
+    alertMessage(g_msg("msg.noSelectData"));
+    return;
+  }
 
-//	return;
+  callAjax(param, "/inside/system/roleassign/saveAssign", function (response) {
+    if (!response.success) {
+      alertMessage(response.failReason || g_msg("msg.error"));
+      return;
+    }
 
-	callAjax(param, '/inside/system/roleassign/saveAssign', function(response){
-		if(response.success) {
-			alertMessage(g_msg("msg.completeSave"));
-			setMenuList(selectedRoleCode);
-		}
-		else {
-			alertMessage(response.failReason);
-		}
-	});
+    alertMessage(g_msg("msg.completeSave"));
+    setMenuList(selectedRoleCode);
+  });
 }
 
-/**
- * 저장할 param을 구함.
- * @returns
- */
 function getParam() {
-	var checkedNode = [];
-	var i=0;
+  var tree = $("#menuTree").jstree(true);
+  if (!tree) {
+    return { list: [], groupCd: selectedRoleCode };
+  }
 
-	var root = $('#menuTree').jstree(true).get_node('#');
-	var arrAllNode = root.children_d;
-	var getSelected = function(node) {
-		if(node.state.selected) {
-			return "Y";
-		}
+  var root = tree.get_node("#");
+  var checkedNode = [];
 
-		// 체크상태가 아니더라도, child node가 하나라도 체크되어 있다면 Y이어야 함.
-		// jstree-undetermined class가 존재한다면 child node가 하나라도 있는 것임
-		if($("#" + node.id + "_anchor > i").eq(0).attr("class").indexOf("jstree-undetermined") > -1) {
-			return "Y";
-		}
+  $.each(root.children_d || [], function (_, nodeId) {
+    var node = tree.get_node(nodeId);
+    if (!node.original.roleCd) {
+      return;
+    }
 
-		return "N";
+    checkedNode.push({
+      menuCd: node.id,
+      roleCd: node.original.roleCd,
+      selectedYn: selectedNodeList[node.id] === "Y" ? "Y" : "N"
+    });
+  });
 
-	};
-	//var node = $('#menuTree').jstree(true).get_node('MENU_001');
-
-	for(i=0; i<arrAllNode.length; i++) {
-		var node = $('#menuTree').jstree(true).get_node(arrAllNode[i]);
-
-		//console.log(node);
-
-		checkedNode.push({
-			menuCd: node.id,
-			roleCd: node.original.roleCd,
-			selectedYn: undefined === selectedNodeList[node.id] ? 'N' : selectedNodeList[node.id]
-		});
-	}
-
-	return {
-		list: checkedNode,
-		groupCd: selectedRoleCode
-	};
+  return {
+    list: checkedNode,
+    groupCd: selectedRoleCode
+  };
 }
-

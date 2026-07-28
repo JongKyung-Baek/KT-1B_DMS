@@ -3,8 +3,6 @@ package kr.esob.fdms.controller.inside.system.menu;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import kr.esob.fdms.commonlogic.abstractclass.AbstractController;
 import kr.esob.fdms.commonlogic.abstractclass.CommonHomeParam;
-import kr.esob.fdms.commonlogic.combo.ComboInfoVO;
-import kr.esob.fdms.commonlogic.combo.ComboService;
 import kr.esob.fdms.commonlogic.result.ResultVO;
 import kr.esob.fdms.commonlogic.value.Constant;
 import net.sf.json.JSONArray;
@@ -17,8 +15,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * 메뉴관리
@@ -32,19 +28,11 @@ public class MenuController extends AbstractController {
 	@Inject
 	MenuService service;
 
-	@Inject
-	ComboService comboService;
-
 	@RequestMapping("/")
 	public String inside(Model model, CommonHomeParam param) throws JsonProcessingException {
 		setHomeParam(model, param);
-		model.addAttribute("insideToolbarInfo", JSONArray.fromObject(toolbarService.selectToolbarInfo("toolbarSystemInsideMenu")));
-		model.addAttribute("outsideToolbarInfo", JSONArray.fromObject(toolbarService.selectToolbarInfo("toolbarSystemOutsideMenu")));
-
-		ComboInfoVO combo = new ComboInfoVO();
-		combo.setComboCd("authSite");
-		model.addAttribute("authSite", comboService.selectComboList(combo));
-		//model.addAttribute("selectedNodeList", JSONObject.fromObject(selectedNode));
+		model.addAttribute("toolbarInfo",
+				JSONArray.fromObject(toolbarService.selectToolbarInfo("toolbarSystemInsideMenu")));
 
 		return "inside/system/menu/menuList";
 	}
@@ -58,6 +46,7 @@ public class MenuController extends AbstractController {
 	 */
 	@RequestMapping({"/menuAddPopup", "/menuModPopup"})
 	public String menuPopup(Model model, MenuSaveRequestParam param, HttpServletRequest request) {
+		param.setAuthSite("I");
 
 		MenuVO menuVo = null;
 		String saveFlag = request.getRequestURI().indexOf("menuAddPopup") > -1 ? "I" : "U";
@@ -79,26 +68,14 @@ public class MenuController extends AbstractController {
 		}
 
 		model.addAttribute("saveFlag", saveFlag);
-		model.addAttribute("authSite", param.getAuthSite());
 		model.addAttribute("menuVo", menuVo);
-
-		List<ComboInfoVO> comboList = comboService.selectComboList("authSite");
-		List<ComboInfoVO> resultComboList = new ArrayList<>();
-
-
-		for(ComboInfoVO combo : comboList) {
-			if(combo.getComboVal().equals(param.getAuthSite()) || combo.getComboVal().equals("B")) {
-				resultComboList.add(combo);
-			}
-		}
-
-		model.addAttribute("authSite", resultComboList);
 
 		return "inside/system/menu/menuPopup";
 	}
 
 	@RequestMapping(value="/saveMenu", method=RequestMethod.POST)
 	public @ResponseBody ResultVO saveMenu(@RequestBody MenuSaveRequestParam param) throws Exception {
+		param.setAuthSite("I");
 		return service.saveMenu(param);
 	}
 
@@ -109,7 +86,7 @@ public class MenuController extends AbstractController {
 
 	@RequestMapping(value="/getTreeList", method=RequestMethod.POST)
 	public @ResponseBody JSONArray getTreeList(@RequestBody RequestParam param) throws Exception {
-		return JSONArray.fromObject(service.selectTree(param.getAuthSite()));
+		return JSONArray.fromObject(service.selectTree("I"));
 	}
 }
 

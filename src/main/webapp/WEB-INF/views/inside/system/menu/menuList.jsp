@@ -10,16 +10,14 @@
 <title>CollabHub</title>
 <link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/distribution-invoice.css" media="screen" />
 <script>
-	var insideTreeList = '${insideTreeList}';
-	var outsideTreeList = '${outsideTreeList}';
-	var insideToolbarInfo = '${insideToolbarInfo }';
-	var outsideToolbarInfo = '${outsideToolbarInfo }';
+	var menuTreeList = [];
+	var toolbarInfo = '${toolbarInfo}';
 
 	$(function () {
 		$('.layout-wrapper.bodyWrap .content-wrapper > .container').addClass('distribution-invoice-container');
 	});
 </script>
-<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/views/inside/system/menu/menuList-vuexy.js"></script>
+<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/views/inside/system/menu/menuList-vuexy.js?v=20260728.1"></script>
 <style>
 	.system-menu-page .system-menu-card {
 		border: 0;
@@ -214,32 +212,10 @@
 	<div class="system-menu-page">
 		<div class="card system-menu-card">
 			<div class="card-body">
-				<div class="nav-align-top">
-					<ul class="nav nav-pills" role="tablist">
-						<li class="nav-item" role="presentation">
-							<button type="button" class="nav-link active" id="inside-menu-tab" data-bs-toggle="tab" data-bs-target="#inside-menu-pane" role="tab" aria-controls="inside-menu-pane" aria-selected="true">내부메뉴 수정</button>
-						</li>
-						<li class="nav-item" role="presentation">
-							<button type="button" class="nav-link" id="outside-menu-tab" data-bs-toggle="tab" data-bs-target="#outside-menu-pane" role="tab" aria-controls="outside-menu-pane" aria-selected="false">외부메뉴 수정</button>
-						</li>
-					</ul>
-					<div class="tab-content">
-						<div class="tab-pane fade show active" id="inside-menu-pane" role="tabpanel" aria-labelledby="inside-menu-tab">
-							<div class="menu-pane">
-								<div class="btnArea" id="insideBtnArea"></div>
-								<div class="tree-card">
-									<div id="insideMenuTree"></div>
-								</div>
-							</div>
-						</div>
-						<div class="tab-pane fade" id="outside-menu-pane" role="tabpanel" aria-labelledby="outside-menu-tab">
-							<div class="menu-pane">
-								<div class="btnArea" id="outsideBtnArea"></div>
-								<div class="tree-card">
-									<div id="outsideMenuTree"></div>
-								</div>
-							</div>
-						</div>
+				<div class="menu-pane">
+					<div class="btnArea" id="menuBtnArea"></div>
+					<div class="tree-card">
+						<div id="menuTree"></div>
 					</div>
 				</div>
 			</div>

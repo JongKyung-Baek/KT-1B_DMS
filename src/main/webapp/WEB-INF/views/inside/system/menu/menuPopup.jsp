@@ -14,12 +14,9 @@
 		<input type="hidden" id="menuCd" name="menuCd" value="${menuVo.menuCd}"/>
 		<input type="hidden" id="parentMenuCd" name="parentMenuCd" value="${menuVo.parentMenuCd}"/>
 		<input type="hidden" id="saveFlag" name="saveFlag" value="${saveFlag}"/>
+		<input type="hidden" id="authSite" name="authSite" value="I"/>
 
 		<ul class="section popupCard popupFormGrid popup-grid-2">
-			<li>
-				<!-- 내부/외부 -->
-				<custom:popupSelectBox options="${authSite }" name="authSite" label="label.authSite" id="authSite"/>
-			</li>
 			<li>
 				<!-- 상위메뉴 -->
 				<custom:popupInputText name="parentMenuNm" id="parentMenuNm" label="form.parentMenuNm" value="${menuVo.parentMenuNm }" disabled="disabled=\"disabeld\""/>

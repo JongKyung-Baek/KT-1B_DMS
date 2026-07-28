@@ -4,9 +4,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.inject.Inject;
+
 import org.springframework.stereotype.Repository;
 
 import kr.esob.fdms.commonlogic.abstractclass.AbstractDao;
+import kr.esob.fdms.commonlogic.message.Prop;
 import kr.esob.fdms.commonlogic.tree.TreeVO;
 
 /**
@@ -18,6 +21,9 @@ import kr.esob.fdms.commonlogic.tree.TreeVO;
 public class MenuDao extends AbstractDao {
 	private String prefix = "sql.Menu.";
 
+	@Inject
+	Prop menuMessage;
+
 	/**
 	 * 메뉴 TREE 목
 	 * @return
@@ -25,7 +31,8 @@ public class MenuDao extends AbstractDao {
 	@SuppressWarnings("unchecked")
 	public List<TreeVO> selectTree(String auth) {
 		Map<String, Object> param = new HashMap<>();
-		param.put("auth", auth);
+		param.put("auth", "I");
+		param.put("rootText", menuMessage.msg("label.allMenus"));
 
 		return list(prefix + "selectTree", param);
 	}

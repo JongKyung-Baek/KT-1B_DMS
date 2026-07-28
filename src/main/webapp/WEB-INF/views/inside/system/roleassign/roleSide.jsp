@@ -17,7 +17,7 @@
 		$('.layout-wrapper.bodyWrap .content-wrapper > .container').addClass('distribution-invoice-container');
 	});
 </script>
-<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/views/inside/system/roleassign/roleSide.js"></script>
+<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/views/inside/system/roleassign/roleSide.js?v=20260728.1"></script>
 </head>
 <body>
 	<div class="row roleassign-page">
@@ -25,7 +25,7 @@
 			<div class="card roleassign-card h-100">
 				<div class="card-header d-flex justify-content-between align-items-center">
 					<div>
-						<h5 class="card-title mb-0"><spring:message code="label.managerGroup"/></h5>
+						<h5 class="card-title mb-0"><spring:message code="label.userGrades"/></h5>
 					</div>
 					<span id="managerCount" class="badge bg-label-primary rounded-pill">0</span>
 				</div>

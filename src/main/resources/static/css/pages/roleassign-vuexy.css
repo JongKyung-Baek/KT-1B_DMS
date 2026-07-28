@@ -53,8 +53,12 @@
 
 .role-group-list .listName {
   display: block;
+  width: 100%;
   padding: 1rem 1.25rem;
+  border: 0;
+  background: transparent;
   color: var(--bs-body-color);
+  font: inherit;
   cursor: pointer;
   text-align: left;
   transition: background-color 0.2s ease, color 0.2s ease;

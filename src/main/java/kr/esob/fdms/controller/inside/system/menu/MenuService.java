@@ -6,6 +6,7 @@ import kr.esob.fdms.commonlogic.tree.TreeVO;
 import kr.esob.fdms.commonlogic.value.Constant;
 import kr.esob.fdms.controller.inside.system.roleassign.RoleAssignDao;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.inject.Inject;
 import java.util.HashMap;
@@ -32,7 +33,7 @@ public class MenuService {
 	 * @return
 	 */
 	public List<TreeVO> selectTree(String auth) {
-		return dao.selectTree(auth);
+		return dao.selectTree("I");
 	}
 
 	/**
@@ -44,8 +45,18 @@ public class MenuService {
 		return dao.selectMenuInfo(param);
 	}
 
+	@Transactional
 	public ResultVO saveMenu(MenuSaveRequestParam param) {
 		ResultVO result = new ResultVO();
+		result.setSuccess(false);
+
+		if(param == null || param.getSaveFlag() == null) {
+			result.setFailReason("Invalid menu request.");
+			return result;
+		}
+
+		// This system exposes one internal menu catalog only.
+		param.setAuthSite("I");
 
 		if("I".equals(param.getSaveFlag())) {
 			// 메뉴 추가(내/외부 공통)
@@ -74,7 +85,7 @@ public class MenuService {
 			dao.updateMenu(param);
 
 			// 버튼형 메뉴 사용 여부 업데이트
-			if(param.getPopupYn().equals("Y") && param.getMenuCd() != null){
+			if("Y".equals(param.getPopupYn()) && param.getMenuCd() != null){
 				Map<String, Object> map = new HashMap<>();
 				map.put("systemClassGroup", param.getMenuCd());
 				map.put("useYn", param.getUseYn());
@@ -108,14 +119,19 @@ public class MenuService {
 			}
 
 			// 버튼형 메뉴 사용 여부 업데이트
-			if(param.getMenuType().equals("P") && param.getMenuCd() != null){
+			if("P".equals(param.getMenuType()) && param.getMenuCd() != null){
 				Map<String, Object> map = new HashMap<>();
 				map.put("systemClassGroup", param.getMenuCd());
 				map.put("useYn", "N");
 				toolbarDao.updateToolbar(map);
 			}
 		}
+		else {
+			result.setFailReason("Invalid menu save mode.");
+			return result;
+		}
 
+		result.setSuccess(true);
 		return result;
 	}
 
@@ -125,10 +141,6 @@ public class MenuService {
 	 * @param roleCd
 	 */
 	private void insertRelRoleGroup(String groupCd, String roleCd) {
-		RequestParam tmp = new RequestParam();
-		tmp.setGroupCd(groupCd);
-		tmp.setRoleCd(roleCd);
-
 		roleAssignDao.insertRelRoleGroup(groupCd, roleCd);
 	}
 
@@ -176,12 +188,14 @@ public class MenuService {
 		return String.valueOf(Integer.parseInt(menu.getMenuLevel()) + 1);
 	}
 
+	@Transactional
 	public ResultVO saveMenuSort(SortRequestParam param) {
 		ResultVO result = new ResultVO();
 
-		if(0 == param.getList().size()) {
+		if(param == null || param.getList() == null || param.getList().isEmpty()) {
 			result.setSuccess(false);
 			result.setFailReason("데이터가 존재하지 않습니다.");
+			return result;
 		}
 
 		for(int i=0; i<param.getList().size(); i++) {

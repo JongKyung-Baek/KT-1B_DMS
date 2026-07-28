@@ -68,7 +68,7 @@
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common_toolbar.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common_grid.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common_grid_paging.js?v=20260726.1"></script>
-	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common_tree.js"></script>
+	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common_tree.js?v=20260728.1"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/prettyCheck/prettyCheckable.min.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/select2-master/dist/js/select2.full.min.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/rsa.js"></script>

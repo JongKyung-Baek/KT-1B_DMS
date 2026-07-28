@@ -1,0 +1,6 @@
+deployment/windows-demo/*.bat text eol=crlf
+deployment/windows-demo/**/*.bat text eol=crlf
+deployment/windows-demo/*.BAT text eol=crlf
+deployment/windows-demo/**/*.BAT text eol=crlf
+deployment/windows-demo/**/*.sh text eol=lf
+deployment/windows-demo/**/*.sql text eol=lf

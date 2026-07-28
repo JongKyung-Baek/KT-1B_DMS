@@ -27,9 +27,13 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.util.StringUtils;
 
 import javax.inject.Inject;
+import java.util.Comparator;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @Configuration
@@ -90,7 +94,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
-		List<MenuVO> menuList = menuDao.getMenuList();
+		List<MenuVO> menuList = orderMenuRules(menuDao.getMenuList());
 		http.headers().frameOptions().sameOrigin();
 
 		// Authentication bootstrap endpoints are the only application URLs that
@@ -114,8 +118,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 				.antMatchers("/inside/organizationmanage/insidedept/**")
 				.hasAuthority("ROLE_MENU_199");
 
-		// Keep the legacy database order for all other menu rules. Reordering
-		// the full matrix would change established popup permissions.
+		// Spring Security uses the first matching pattern. Specific menu routes
+		// must therefore precede broad fallbacks such as /inside/**, otherwise a
+		// group either bypasses every child ACL or can never use an assigned one.
 		for (MenuVO menuVo : menuList) {
 			http.authorizeRequests()
 					.antMatchers(menuVo.getMenuUrl())
@@ -164,6 +169,41 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 		http.csrf();
 		http.addFilterBefore(requestAuditFilter, FilterSecurityInterceptor.class);
 
+	}
+
+	static List<MenuVO> orderMenuRules(List<MenuVO> menuList) {
+		if (menuList == null) {
+			return Collections.emptyList();
+		}
+
+		return menuList.stream()
+				.filter(menu -> menu != null
+						&& StringUtils.hasText(menu.getMenuUrl())
+						&& StringUtils.hasText(menu.getRoleCd()))
+				.sorted(Comparator
+						.comparingInt((MenuVO menu) ->
+								literalPathLength(menu.getMenuUrl()))
+						.reversed()
+						.thenComparingInt(menu ->
+								wildcardCount(menu.getMenuUrl()))
+						.thenComparing(MenuVO::getMenuCd,
+								Comparator.nullsLast(String::compareTo)))
+				.collect(Collectors.toList());
+	}
+
+	private static int literalPathLength(String pattern) {
+		return pattern.replace("*", "").replace("?", "").length();
+	}
+
+	private static int wildcardCount(String pattern) {
+		int count = 0;
+		for (int i = 0; i < pattern.length(); i++) {
+			char value = pattern.charAt(i);
+			if (value == '*' || value == '?') {
+				count++;
+			}
+		}
+		return count;
 	}
 
 	/**

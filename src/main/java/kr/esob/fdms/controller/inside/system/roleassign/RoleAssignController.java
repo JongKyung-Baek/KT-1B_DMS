@@ -5,8 +5,6 @@ import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
-
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -22,7 +20,6 @@ import kr.esob.fdms.commonlogic.result.ResultVO;
 import kr.esob.fdms.commonlogic.tree.TreeVO;
 import kr.esob.fdms.controller.inside.system.menu.MenuService;
 import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
 
 @Controller
 @RequestMapping("/inside/system/roleassign")
@@ -59,7 +56,8 @@ public class RoleAssignController extends AbstractController {
 	 */
 	@RequestMapping(value="/getAssignedMenuList", method=RequestMethod.POST)
 	public @ResponseBody Map<String, Object> getMenuList(@RequestBody RequestParam param) throws Exception {
-		List<TreeVO> menuList = menuService.selectTree(param.getAuthSite());
+		param.setAuthSite("I");
+		List<TreeVO> menuList = menuService.selectTree("I");
 		List<String> selectedValue = service.selectRelRoleGroup(param);
 
 		Map<String, String> selectedNode = new HashMap<String, String>();
@@ -70,7 +68,7 @@ public class RoleAssignController extends AbstractController {
 
 		Map<String, Object> result = new HashMap<>();
 		result.put("menuList", menuList);
-		result.put("selectedValue", JSONObject.fromObject(selectedNode));
+		result.put("selectedValue", selectedNode);
 
 		return result;
 	}

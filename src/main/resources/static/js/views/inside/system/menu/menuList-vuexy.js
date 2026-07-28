@@ -1,164 +1,144 @@
-var selectedNodeList = [];
+var ROOT_MENU_ID = "MENU_000";
+var MENU_TREE_ID = "menuTree";
 
 $(function () {
-  settingToolbar(JSON.parse(insideToolbarInfo), $("#insideBtnArea"));
-  settingToolbar(JSON.parse(outsideToolbarInfo), $("#outsideBtnArea"));
+  settingToolbar(JSON.parse(toolbarInfo || "[]"), $("#menuBtnArea"));
   setTree();
-  bindEvent();
 });
 
-function bindEvent() {
-  $('button[data-bs-toggle="tab"]').on("shown.bs.tab", function (event) {
-    var targetSelector = $(event.target).data("bsTarget");
-    var treeId = targetSelector === "#inside-menu-pane" ? "insideMenuTree" : "outsideMenuTree";
-    refreshTree(treeId);
-  });
-}
-
-function addInsideMenu() { addMenu('I'); }
-function modInsideMenu() { modMenu('I'); }
-function delInsideMenu() { delMenu('I'); }
-function saveInsideMenu() { saveMenu('I'); }
-
-function addOutsideMenu() { addMenu('E'); }
-function modOutsideMenu() { modMenu('E'); }
-function delOutsideMenu() { delMenu('E'); }
-function saveOutsideMenu() { saveMenu('E'); }
+// Keep the existing toolbar function names while exposing one internal menu tree.
+function addInsideMenu() { addMenu(); }
+function modInsideMenu() { modMenu(); }
+function delInsideMenu() { delMenu(); }
+function saveInsideMenu() { saveMenu(); }
 
 function setTree() {
-  callAjax({ authSite: 'I' }, '/inside/system/menu/getTreeList', function (response) {
-    insideTreeList = response;
-
-    var insideTreeParam = {
-      list: insideTreeList,
+  callAjax({}, "/inside/system/menu/getTreeList", function (response) {
+    menuTreeList = response || [];
+    settingTree(MENU_TREE_ID, {
+      list: menuTreeList,
       useCheckbox: false,
       dragDrop: true,
       openLevel: 2,
       customCheckbox: false
-    };
-
-    settingTree("insideMenuTree", insideTreeParam);
-    refreshTree("insideMenuTree");
-  });
-
-  callAjax({ authSite: 'E' }, '/inside/system/menu/getTreeList', function (response) {
-    outsideTreeList = response;
-
-    var outsideTreeParam = {
-      list: outsideTreeList,
-      useCheckbox: false,
-      dragDrop: true,
-      openLevel: 2,
-      customCheckbox: false
-    };
-
-    settingTree("outsideMenuTree", outsideTreeParam);
+    });
   });
 }
 
-function refreshTree(treeId) {
-  var tree = $("#" + treeId).jstree(true);
-  if (tree) {
-    tree.redraw(true);
-  }
-}
+function saveMenu() {
+  var param = { list: getParam() };
 
-function getTreeId(auth) {
-  if ('I' === auth) return "insideMenuTree";
-  return "outsideMenuTree";
-}
+  callAjax(param, "/inside/system/menu/saveMenuSort", function (response) {
+    if (!response.success) {
+      alertMessage(response.failReason || g_msg("msg.error"));
+      return;
+    }
 
-function saveMenu(auth) {
-  var treeId = getTreeId(auth);
-  var param = { list: getParam(treeId) };
-
-  callAjax(param, '/inside/system/menu/saveMenuSort', function () {
-    alertMessage(g_msg('msg.completeSave'), function () {
+    alertMessage(g_msg("msg.completeSave"), function () {
       $(this).dialog("close");
     });
-
     setTree();
   });
 }
 
-function addMenu(auth) {
-  var treeId = getTreeId(auth);
-  var selectedNode = $("#" + treeId).jstree("get_selected");
+function addMenu() {
+  var selectedNode = $("#" + MENU_TREE_ID).jstree("get_selected");
 
   if (selectedNode.length === 0) {
-    alertMessage(g_msg('msg.plzSelectParentMenu'), function () {
+    alertMessage(g_msg("msg.plzSelectParentMenu"), function () {
       $(this).dialog("close");
     });
     return;
   }
 
-  openDialogPopup("/inside/system/menu/menuAddPopup", { menuCd: selectedNode[0], authSite: auth }, "popupDialog", 'm', 270, true, 'popup-common popup-menu');
+  openDialogPopup(
+    "/inside/system/menu/menuAddPopup",
+    { menuCd: selectedNode[0] },
+    "popupDialog",
+    "m",
+    270,
+    true,
+    "popup-common popup-menu"
+  );
 }
 
-function modMenu(auth) {
-  var treeId = getTreeId(auth);
-  var selectedNode = $("#" + treeId).jstree("get_selected");
+function modMenu() {
+  var selectedNode = $("#" + MENU_TREE_ID).jstree("get_selected");
 
-  if (selectedNode.length === 0) {
-    alertMessage(g_msg('msg.plzSelectMenu'), function () {
+  if (selectedNode.length === 0 || selectedNode[0] === ROOT_MENU_ID) {
+    alertMessage(g_msg("msg.plzSelectMenu"), function () {
       $(this).dialog("close");
     });
     return;
   }
 
-  openDialogPopup("/inside/system/menu/menuModPopup", { menuCd: selectedNode[0], authSite: auth }, "popupDialog", 'm', 270, true, 'popup-common popup-menu');
+  openDialogPopup(
+    "/inside/system/menu/menuModPopup",
+    { menuCd: selectedNode[0] },
+    "popupDialog",
+    "m",
+    270,
+    true,
+    "popup-common popup-menu"
+  );
 }
 
-function delMenu(auth) {
-  var treeId = getTreeId(auth);
-  var selectedNode = $("#" + treeId).jstree("get_selected");
+function delMenu() {
+  var selectedNode = $("#" + MENU_TREE_ID).jstree("get_selected");
 
-  if (selectedNode.length === 0) {
-    alertMessage(g_msg('msg.plzSelectMenu'), function () {
+  if (selectedNode.length === 0 || selectedNode[0] === ROOT_MENU_ID) {
+    alertMessage(g_msg("msg.plzSelectMenu"), function () {
       $(this).dialog("close");
     });
     return;
   }
 
-  var node = $("#" + treeId).jstree(true).get_node(selectedNode[0]);
-  var menuType = node.original.type;
-
+  var node = $("#" + MENU_TREE_ID).jstree(true).get_node(selectedNode[0]);
   var param = {
     menuCd: selectedNode[0],
     children: node.children_d,
-    saveFlag: 'D',
-    menuType: menuType
+    saveFlag: "D",
+    menuType: node.original.type
   };
 
-  confirmMessage("선택하신 메뉴와 그 하위메뉴를 모두 삭제하시겠습니까?", function () {
+  confirmMessage(g_msg("msg.confirmDeleteMenuTree"), function () {
     $("#confirmMessage").dialog("close");
 
-    callAjax(param, '/inside/system/menu/saveMenu', function () {
-      alertMessage(g_msg('msg.completeSave'), function () {
+    callAjax(param, "/inside/system/menu/saveMenu", function (response) {
+      if (!response.success) {
+        alertMessage(response.failReason || g_msg("msg.error"));
+        return;
+      }
+
+      alertMessage(g_msg("msg.completeSave"), function () {
         $(this).dialog("close");
       });
-
       setTree();
     });
   });
 }
 
-function getParam(treeId) {
-  var node = $("#" + treeId).jstree(true).get_node('#');
+function getParam() {
+  var root = $("#" + MENU_TREE_ID).jstree(true).get_node("#");
   var param = [];
 
-  setRecursiveNode(treeId, node, param);
+  setRecursiveNode(root, param);
   return param;
 }
 
-function setRecursiveNode(treeId, node, param) {
-  if ('#' !== node.id) {
-    param.push({ id: node.id, parent: node.parent, menuLevel: node.parents.length - 1 });
-  }
-
-  if (node.children.length > -1) {
-    $.each(node.children, function () {
-      setRecursiveNode(treeId, $("#" + treeId).jstree(true).get_node(this), param);
+function setRecursiveNode(node, param) {
+  if ("#" !== node.id) {
+    param.push({
+      id: node.id,
+      parent: node.parent,
+      menuLevel: node.parents.length - 1
     });
   }
+
+  $.each(node.children, function () {
+    setRecursiveNode(
+      $("#" + MENU_TREE_ID).jstree(true).get_node(this),
+      param
+    );
+  });
 }

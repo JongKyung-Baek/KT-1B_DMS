@@ -71,7 +71,7 @@
 
 <mapper namespace="sql.RoleAssign">
 
-<select id="selectRoleGroup" resultType="kr.esob.fdms.controller.inside.system.role.RoleGroupVO">
+<select id="selectRoleGroup" resultType="kr.esob.fdms.controller.inside.system.roleassign.RoleGroupVO">
 	SELECT
 		GROUP_CODE AS groupCd,
 		GROUP_NM AS groupNm
@@ -81,12 +81,14 @@
 	ORDER BY INSERT_ORDER
 </select>
 
-<select id="selectRoleGroupInfo" resultType="kr.esob.fdms.controller.inside.system.role.RoleGroupVO">
+<select id="selectRoleGroupInfo" resultType="kr.esob.fdms.controller.inside.system.roleassign.RoleGroupVO">
 	SELECT
 		GROUP_CODE AS groupCd,
 		GROUP_NM AS groupNm
 	FROM DOCS_ROLE_GROUP
 	WHERE GROUP_CODE = #{groupCd}
+	  AND GROUP_CODE NOT IN ('RG_006', 'RG_001')
+	  AND USE_YN = 'Y'
 </select>
 
 <select id="selectRelRoleGroup" resultType="java.lang.String">
@@ -96,6 +98,9 @@
 	FROM DOCS_REL_ROLE_GROUP rel
 			 INNER JOIN DOCS_MENU menu ON menu.ROLE_CD = rel.ROLE_CD
 	WHERE GROUP_CD = #{groupCd}
+	  AND menu.DEL_YN = 'N'
+	  AND menu.MENU_TYPE IN ('T', 'M', 'P')
+	  AND menu.AUTH_SITE IN ('I', 'B')
 	ORDER BY MENU_CD
 </select>
 

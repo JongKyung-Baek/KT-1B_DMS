@@ -1085,4 +1085,85 @@ VALUES
 ON CONFLICT (lang_type, lang_cd) DO UPDATE
    SET lang_desc = EXCLUDED.lang_desc;
 
+-- ---------------------------------------------------------------------------
+-- Internal menu ACL repair
+-- ---------------------------------------------------------------------------
+-- These disconnected rows belong to the removed request-approval,
+-- external-company and user-approval workflows. Keeping them active creates
+-- parentless jsTree nodes and exposes a workflow that this system does not use.
+UPDATE docs_menu
+   SET use_yn = 'N',
+       del_yn = 'Y'
+ WHERE menu_cd IN (
+       'MENU_019', 'MENU_074', 'MENU_075', 'MENU_076', 'MENU_077',
+       'MENU_079'
+   );
+
+DELETE FROM docs_rel_role_group
+ WHERE role_cd IN (
+       'ROLE_MENU_019', 'ROLE_MENU_074', 'ROLE_MENU_075',
+       'ROLE_MENU_076', 'ROLE_MENU_077', 'ROLE_MENU_079'
+   );
+
+-- The administrator owns every active internal/shared menu role.
+INSERT INTO docs_rel_role_group (
+    group_cd, role_cd, insert_user_cd, update_user_cd, insert_dt, update_dt
+)
+SELECT 'RG_001',
+       menu.role_cd,
+       'SYSTEM',
+       'SYSTEM',
+       CURRENT_TIMESTAMP,
+       CURRENT_TIMESTAMP
+  FROM docs_menu menu
+ WHERE menu.del_yn = 'N'
+   AND menu.use_yn = 'Y'
+   AND menu.auth_site IN ('I', 'B')
+   AND NULLIF(BTRIM(menu.role_cd), '') IS NOT NULL
+ON CONFLICT (group_cd, role_cd) DO NOTHING;
+
+-- Fail deployment if an assignable internal menu is disconnected from the
+-- I/B root. Runtime queries are defensive too, but bad ACL data must not pass
+-- an installation unnoticed.
+DO $$
+BEGIN
+    IF EXISTS (
+        WITH RECURSIVE eligible AS (
+            SELECT menu_cd, parent_menu_cd
+              FROM docs_menu
+             WHERE del_yn = 'N'
+               AND menu_type IN ('T', 'M', 'P')
+               AND auth_site IN ('I', 'B')
+        ),
+        connected AS (
+            SELECT menu_cd,
+                   parent_menu_cd,
+                   ARRAY[menu_cd::TEXT]::TEXT[] AS path
+              FROM eligible
+             WHERE parent_menu_cd IN ('I', 'B')
+
+            UNION ALL
+
+            SELECT child.menu_cd,
+                   child.parent_menu_cd,
+                   parent.path || child.menu_cd::TEXT
+              FROM eligible child
+              JOIN connected parent
+                ON child.parent_menu_cd = parent.menu_cd
+             WHERE NOT child.menu_cd::TEXT = ANY(parent.path)
+        )
+        SELECT 1
+          FROM eligible menu
+         WHERE NOT EXISTS (
+               SELECT 1
+                 FROM connected
+                WHERE connected.menu_cd = menu.menu_cd
+         )
+    ) THEN
+        RAISE EXCEPTION
+            'Active internal menu tree contains disconnected nodes.';
+    END IF;
+END
+$$;
+
 COMMIT;

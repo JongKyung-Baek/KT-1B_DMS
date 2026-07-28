@@ -106,7 +106,6 @@ TRUNCATE TABLE
     docs_conf_qna,
     docs_mail_revision,
     docs_mail,
-    docs_bbs,
     public."CV_VIEW_SELECTED",
     public."CV_VIEW_SPEECHBUBBLE_TEXT",
     public."CV_VIEW_SPEECHBUBBLE",

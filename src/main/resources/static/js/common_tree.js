@@ -73,7 +73,7 @@ function settingTree(id, param) {
 				}
 			}
 		}
-		else if("insideMenuTree" == id || "outsideMenuTree" == id) {
+		else if("menuTree" == id || "insideMenuTree" == id || "outsideMenuTree" == id) {
 			p.core['check_callback'] = function(operation, node, node_parent, node_position, more) {
 				if(operation === 'move_node') {
 				//	console.log(node);
@@ -133,6 +133,10 @@ function settingTree(id, param) {
 				}
 
 				ref.select_node(param.selectedValue);
+			}
+
+			if('function' === typeof param.onReady) {
+				param.onReady(data);
 			}
 		});
 

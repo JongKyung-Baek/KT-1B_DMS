@@ -4,8 +4,11 @@ param(
     [string]$SourceDbContainer = 'kt1b-postgres',
     [string]$SourceDbName = 'kt1b',
     [string]$SourceDbUser = 'myuser',
+    [string]$OutputRoot,
+    [string]$PackagePrefix = 'KT1B-DMS-DEMO-WINDOWS',
     [switch]$SkipBuild,
-    [switch]$RunTests
+    [switch]$RunTests,
+    [switch]$SkipArchive
 )
 
 $ErrorActionPreference = 'Stop'
@@ -41,8 +44,12 @@ function Assert-File {
 }
 
 $projectRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..'))
-$releaseRoot = Join-Path $projectRoot 'release'
-$packageName = "KT1B-DMS-DEMO-WINDOWS-$Version"
+if ([string]::IsNullOrWhiteSpace($OutputRoot)) {
+    $releaseRoot = Join-Path $projectRoot 'release'
+} else {
+    $releaseRoot = [IO.Path]::GetFullPath($OutputRoot)
+}
+$packageName = "$PackagePrefix-$Version"
 $packageDirectory = Join-Path $releaseRoot $packageName
 $zipPath = Join-Path $releaseRoot "$packageName.zip"
 $warSource = Join-Path $projectRoot 'target\SDMS-KT-1B.war'
@@ -87,7 +94,7 @@ Write-Host '[2/6] Preparing the release folder...'
 if (Test-Path -LiteralPath $packageDirectory) {
     throw "Release folder already exists: $packageDirectory"
 }
-if (Test-Path -LiteralPath $zipPath) {
+if (-not $SkipArchive -and (Test-Path -LiteralPath $zipPath)) {
     throw "Release ZIP already exists: $zipPath"
 }
 
@@ -301,12 +308,18 @@ $checksumLines = Get-ChildItem -LiteralPath $packageDirectory -File -Recurse |
     [Text.Encoding]::ASCII
 )
 
-Write-Host '[5/6] Creating the ZIP archive...'
-Compress-Archive -LiteralPath $packageDirectory `
-    -DestinationPath $zipPath `
-    -CompressionLevel Optimal
+if ($SkipArchive) {
+    Write-Host '[5/6] Skipping the ZIP archive for staging use.'
+} else {
+    Write-Host '[5/6] Creating the ZIP archive...'
+    Compress-Archive -LiteralPath $packageDirectory `
+        -DestinationPath $zipPath `
+        -CompressionLevel Optimal
+}
 
 Write-Host '[6/6] Package completed.'
 Write-Host "Folder: $packageDirectory"
-Write-Host "ZIP:    $zipPath"
-Write-Host "SHA256: $((Get-FileHash -LiteralPath $zipPath -Algorithm SHA256).Hash)"
+if (-not $SkipArchive) {
+    Write-Host "ZIP:    $zipPath"
+    Write-Host "SHA256: $((Get-FileHash -LiteralPath $zipPath -Algorithm SHA256).Hash)"
+}

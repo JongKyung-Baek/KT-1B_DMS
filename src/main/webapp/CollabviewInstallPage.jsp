@@ -88,9 +88,7 @@
     console.log("Connected");
 
 
-    // window.location.href = "http://collabhub.esob.kr:80/login/loginPage#";
-    // window.location.href = "http://demo.esob.kr:80/login/loginPage#";
-    window.location.href = "https://demo.esob.kr:443/login/loginPage#";
+    window.location.href = "${pageContext.request.contextPath}/login/loginPage";
 
     // 로그인 페이지 호출
   };

@@ -1441,136 +1441,98 @@ function cleanupDownload(wsSeq) {
     );
 }
 
+function issueSameOriginDownload(downloadTicket) {
+	if (!/^[0-9a-fA-F]{32}$/.test(downloadTicket || "")) {
+		throw new Error("Invalid download capability.");
+	}
+
+	var downloadContextPath =
+		typeof CONTEXT_PATH === "string" ? CONTEXT_PATH.replace(/\/+$/, "") : "";
+	if (downloadContextPath && (downloadContextPath.charAt(0) !== "/"
+			|| downloadContextPath.indexOf("//") === 0)) {
+		downloadContextPath = "";
+	}
+	var link = document.createElement("a");
+	link.style.display = "none";
+	link.href = window.location.origin + downloadContextPath
+		+ "/download/" + encodeURIComponent(downloadTicket);
+	link.setAttribute("download", "");
+	(document.body || document.documentElement).appendChild(link);
+	link.click();
+	setTimeout(function() {
+		if (link.parentNode) {
+			link.parentNode.removeChild(link);
+		}
+	}, 0);
+}
+
 function callDownload(response){
 	resetDownloadRuntimeState();
 	bindDownloadCleanupOnUnload();
-	var webSocket = new WebSocket("ws://localhost:39229");
-	var webSocketOpened = false;
-	var webSocketFailureHandled = false;
 
-	function handleWebSocketConnectionFailure(reason) {
-		if (webSocketFailureHandled) {
-			return;
-		}
-		webSocketFailureHandled = true;
-		downloadFinalNotified = true;
-		suppressDownloadFinalAlert = true;
-		webSocket.onerror = null;
-		webSocket.onclose = null;
-		webSocket.onmessage = null;
-		try {
-			webSocket.close();
-		} catch (e) {}
-		failDownloadRowsWithoutSeq(response && response.list ? response.list : [], reason);
-		failPendingDownloads(reason);
-		alertMessage(g_msg('msg.websockerFailed'), function() {
-			$(this).dialog("close");
-			if (typeof window.closeDownloadPopup === 'function') {
-				window.closeDownloadPopup();
-				return;
-			}
-			if (typeof closePopup === 'function') {
-				closePopup('popupDialog');
-			}
-		});
-	}
+	var fileList = response && response.list ? response.list : [];
+	$("input[name=downloadVolume]").val(
+		response && response.downloadVolume ? response.downloadVolume : "");
+	$("input[name=ShowArray]").val("");
 
-	webSocket.onerror = function() {
-		if (!webSocketOpened) {
-			handleWebSocketConnectionFailure('websocket connection failed');
-			return;
-		}
-		failPendingDownloads('websocket connection failed');
-		alertMessage(g_msg('msg.websockerFailed'));
-	};
+	for (var i = 0; i < fileList.length; i++) {
+		(function(item, rowIndex) {
+			var wsSeq = makeLegacySequence();
+			var fileLabel = item.orgFileNm || item.fileNm || ("row-" + rowIndex);
+			downloadMetaBySeq[wsSeq] = {
+				rowKey: item._downloadRowKey || rowIndex,
+				fileNm: item.fileNm || "",
+				orgFileNm: item.orgFileNm || "",
+				requestNo: item.requestNo || "",
+				dataNo: item.dataNo || "",
+				docSeq: item.docSeq || item.dataOfferDocSeq
+					|| item.delvyCnfirmDocSeq || "",
+				folderName: item.folderName || ""
+			};
 
-	webSocket.onclose = function() {
-		if (!webSocketOpened) {
-			handleWebSocketConnectionFailure('websocket connection closed');
-			return;
-		}
-		failPendingDownloads('websocket connection closed');
-	};
+			downloadTotalCount++;
+			reportFileStatus(wsSeq, 'QUEUED');
 
-	webSocket.onopen = function(){
-		webSocketOpened = true;
-		$("input[name=downloadVolume]").val(response.downloadVolume);
-
-			var arrFileList = [];
-
-			for (var i = 0; i < response.list.length; i++) {
-				(function(item, rowIndex) {
-					var arrFileInfo = [];
-					arrFileInfo.push(rowIndex);
-					arrFileInfo.push(item.fileNm);
-					arrFileInfo.push(item.orgFileNm);
-					arrFileInfo.push(item.fileSize);
-					// V2 uses an opaque, one-time ticket; never expose a server path.
-					arrFileInfo.push("");
-					arrFileInfo.push("31");
-					arrFileInfo.push(item.endDate);
-					arrFileList.push(arrFileInfo.join('|'));
-
-					var wsSeq = makeLegacySequence();
-					var fileLabel = item.orgFileNm || item.fileNm || ("row-" + rowIndex);
-					downloadMetaBySeq[wsSeq] = {
-						rowKey: item._downloadRowKey || rowIndex,
-						fileNm: item.fileNm || "",
-						orgFileNm: item.orgFileNm || "",
-						requestNo: item.requestNo || "",
-						dataNo: item.dataNo || "",
-						docSeq: item.docSeq || item.dataOfferDocSeq || item.delvyCnfirmDocSeq || "",
-						folderName: item.folderName || ""
-					};
-
-					downloadTotalCount++;
-					reportFileStatus(wsSeq, 'QUEUED');
-
-					// 서버가 requestNo/docSeq/fileNo 등으로 REST 요청용 seq 조회/파일 수신
-					registerDownloadStart(wsSeq, item, 'DISTRIBUTION', function(startRes) {
-						// 웹소켓 DATA 구간에는 URL-safe 원본 파일명을 우선 사용하고,
-						// 원본명이 비어 있을 때만 temp 저장 파일명으로 fallback 한다.
-						var wsDownloadFileName = buildWsDownloadRequestName(item, startRes);
-						var wsFolderName = item.folderName || "";
-						downloadMetaBySeq[wsSeq].savedFileName = startRes && startRes.savedFileName ? startRes.savedFileName : "";
-						if (!wsDownloadFileName) {
-							completeOneFile(wsSeq, 'FAILED', { reason: 'download requestName missing', fileLabel: fileLabel });
-							return;
-						}
-						var packetResult = buildLegacyDownloadPacket(wsDownloadFileName, wsSeq, wsFolderName);
-						if (!packetResult.ok) {
-							completeOneFile(wsSeq, 'FAILED', { reason: packetResult.error, fileLabel: fileLabel });
-							return;
-						}
-						reportFileStatus(wsSeq, 'DOWNLOADING');
-						var buffer = toLegacyArrayBuffer(packetResult.packet);
-						webSocket.send(buffer);
-						pollDownloadStatus(wsSeq, function(finalState) {
-							if (finalState && finalState.status) {
-								completeOneFile(wsSeq, finalState.status, finalState);
-							} else {
-								completeOneFile(wsSeq, 'FAILED', { reason: 'status empty' });
-							}
-						});
-					}, function(errorMessage) {
-						completeOneFile(wsSeq, 'FAILED', { reason: errorMessage || 'start failed' });
+			registerDownloadStart(wsSeq, item, 'DISTRIBUTION', function(startRes) {
+				var downloadTicket = startRes && startRes.downloadRequestKey
+					? String(startRes.downloadRequestKey) : "";
+				downloadMetaBySeq[wsSeq].savedFileName =
+					startRes && startRes.savedFileName
+						? startRes.savedFileName : "";
+				if (!/^[0-9a-fA-F]{32}$/.test(downloadTicket)) {
+					completeOneFile(wsSeq, 'FAILED', {
+						reason: 'download capability missing',
+						fileLabel: fileLabel
 					});
-
-					sleep(100);
-				})(response.list[i], i);
-			}
-
-			$("input[name=ShowArray]").val(arrFileList.join('|'));
-
-			webSocket.onmessage = function(event) {
-				// event.data 예: "174710000012300C:/temp/a.svg"
-				var msg = typeof event.data === 'string' ? event.data : '';
-				// 웹소켓 송수신 확인용: 수신 원문 로그
-				if (!msg || msg.length < 34) {
 					return;
 				}
 
-				notifyWsResultToServer(msg);
-			};
+				reportFileStatus(wsSeq, 'DOWNLOADING');
+				try {
+					issueSameOriginDownload(downloadTicket);
+				} catch (downloadError) {
+					completeOneFile(wsSeq, 'FAILED', {
+						reason: downloadError && downloadError.message
+							? downloadError.message : 'download request failed',
+						fileLabel: fileLabel
+					});
+					return;
+				}
+
+				pollDownloadStatus(wsSeq, function(finalState) {
+					if (finalState && finalState.status) {
+						completeOneFile(wsSeq, finalState.status, finalState);
+					} else {
+						completeOneFile(
+							wsSeq, 'FAILED', { reason: 'status empty' });
+					}
+				});
+			}, function(errorMessage) {
+				completeOneFile(wsSeq, 'FAILED', {
+					reason: errorMessage || 'start failed',
+					fileLabel: fileLabel
+				});
+			});
+		})(fileList[i], i);
 	}
 }

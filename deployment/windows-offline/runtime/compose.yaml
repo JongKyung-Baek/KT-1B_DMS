@@ -1,0 +1,77 @@
+name: kt1b-dms-offline
+
+services:
+  db:
+    image: ${KT1B_DB_IMAGE}
+    pull_policy: never
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: kt1b
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: kt1b_demo_bootstrap_2026
+      APP_DB_USER: kt1b_demo
+      APP_DB_PASSWORD: kt1b_demo_local_2026
+      KT1B_DEMO_PORT: ${KT1B_DEMO_PORT:-3508}
+      POSTGRES_INITDB_ARGS: --encoding=UTF8
+      TZ: Asia/Seoul
+      PGTZ: Asia/Seoul
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ../database:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          psql -U "$$POSTGRES_USER" -d "$$POSTGRES_DB" -Atqc
+          "SELECT COUNT(*) FROM docs_system_config
+          WHERE system_config_group='DEMO_CONFIG'
+          AND system_config_cd='READY'
+          AND system_config_value='Y';" | grep -qx 1
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+  app:
+    image: ${KT1B_APP_IMAGE}
+    pull_policy: never
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      KT1B_DB_URL: jdbc:postgresql://db:5432/kt1b
+      KT1B_DB_USERNAME: kt1b_demo
+      KT1B_DB_PASSWORD: kt1b_demo_local_2026
+      LOG_DIR: /var/log/kt1b
+      JAVA_TOOL_OPTIONS: -Dfile.encoding=UTF-8 -Duser.language=ko -Duser.country=KR -Duser.timezone=Asia/Seoul -Djava.io.tmpdir=/data/kt1b/tmp
+      UPDATE_DISTRIBUTION_SCHEDULER_ENABLED: "false"
+      FILE_AUTO_INSERT_SCHEDULER_ENABLED: "false"
+      SEND_MAIL_SCHEDULER_ENABLED: "false"
+      TZ: Asia/Seoul
+    ports:
+      - "127.0.0.1:${KT1B_DEMO_PORT:-3508}:3508"
+    volumes:
+      - ../storage:/data/kt1b/files
+      - ../logs:/var/log/kt1b
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent --show-error http://127.0.0.1:3508/login/loginPage > /dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+    stop_grace_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+volumes:
+  db-data:
+    name: kt1b-dms-offline-db-data

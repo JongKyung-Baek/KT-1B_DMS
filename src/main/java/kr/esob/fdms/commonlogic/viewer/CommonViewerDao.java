@@ -27,11 +27,6 @@ public class CommonViewerDao extends AbstractDao {
 	}
 
 	@SuppressWarnings("unchecked")
-	public List<CommonViewerVO> selectUnregFileInfo(CommonViewerParam param) {
-		return list(prefix + "selectUnregFileInfo", param);
-	}
-
-	@SuppressWarnings("unchecked")
 	public List<CommonViewerVO> selectProductFileInfo(CommonViewerParam param) {
 		return list(prefix + "selectProductFileInfo", param);
 	}
@@ -42,10 +37,6 @@ public class CommonViewerDao extends AbstractDao {
 
 	public CommonViewerVO getObjectFileInfo(CommonViewerParam param) {
 		return (CommonViewerVO) obj(prefix + "getObjectFileInfo", param);
-	}
-
-	public CommonViewerVO getUnregFileInfo(CommonViewerParam param) {
-		return (CommonViewerVO) obj(prefix + "getUnregFileInfo", param);
 	}
 
 	public CommonViewerVO getProductFileInfo(CommonViewerParam param) {

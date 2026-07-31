@@ -775,7 +775,7 @@
 
 
 <!--	&lt;!&ndash; Mapping 테이블에 입력할 아이템 리스트 조회 [2019.11.07(최금영)] &ndash;&gt;-->
-<!--	<select id="selectMappingList" resultType="kr.esob.fdms.controller.outside.commonrequest.RequestMappingParam">-->
+<!--	<select id="selectMappingList" resultType="kr.esob.fdms.commonlogic.distribution.model.RequestMappingParam">-->
 <!--		/* Mapping 테이블에 입력할 아이템 리스트 조회 */-->
 <!--		SELECT fileInfo.OBJECT_ID			AS objectId-->
 <!--			, BUSINESS_AREA_CD				AS businessAreaCd-->
@@ -826,7 +826,7 @@
 <!--		</foreach>-->
 <!--	</select>-->
 
-<!--	<select id="selectFileList" resultType="kr.esob.fdms.controller.outside.commonrequest.RequestFileParam">-->
+<!--	<select id="selectFileList" resultType="kr.esob.fdms.commonlogic.distribution.model.RequestFileParam">-->
 <!--		SELECT *-->
 <!--		<if test="'DOC'.equals(objectType)">-->
 <!--		FROM DOCS_PRODUCT_DOCUMENT_FILE-->
@@ -1592,7 +1592,7 @@
 	</foreach>
 </insert>
 
-<select id="selectMappingList" resultType="kr.esob.fdms.controller.outside.commonrequest.RequestMappingParam">
+<select id="selectMappingList" resultType="kr.esob.fdms.commonlogic.distribution.model.RequestMappingParam">
 	SELECT fileInfo.OBJECT_ID AS objectId
 	, BUSINESS_AREA_CD AS businessAreaCd
 	, BUSINESS_TYPE_CD AS businessTypeCd
@@ -1643,7 +1643,7 @@
 	)
 </select>
 
-<select id="selectFileList" resultType="kr.esob.fdms.controller.outside.commonrequest.RequestFileParam">
+<select id="selectFileList" resultType="kr.esob.fdms.commonlogic.distribution.model.RequestFileParam">
 	SELECT *
 	<if test="'DOC'.equals(objectType)">
 		FROM DOCS_PRODUCT_DOCUMENT_FILE

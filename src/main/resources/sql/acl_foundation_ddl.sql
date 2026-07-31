@@ -32,8 +32,14 @@ INSERT INTO docs_company (
     company_cd, company_nm, company_type, biz_no,
     use_start_dt, use_end_dt, use_yn, del_yn
 )
-VALUES ('COMP_0000000999', 'KAI', 'I', NULL, '19000101', '99991231', 'Y', 'N')
-ON CONFLICT (company_cd) DO NOTHING;
+VALUES ('COMP_0000000999', 'KT-1B', 'I', NULL, '19000101', '99991231', 'Y', 'N')
+ON CONFLICT (company_cd) DO UPDATE SET
+    company_nm = EXCLUDED.company_nm,
+    company_type = EXCLUDED.company_type,
+    use_yn = 'Y',
+    del_yn = 'N',
+    update_user_cd = 'SYSTEM',
+    update_dt = CURRENT_TIMESTAMP;
 
 CREATE TABLE IF NOT EXISTS docs_document_member (
     cn_serial   integer,
@@ -1118,12 +1124,12 @@ SELECT 'RG_001',
   FROM docs_menu menu
  WHERE menu.del_yn = 'N'
    AND menu.use_yn = 'Y'
-   AND menu.auth_site IN ('I', 'B')
+   AND menu.auth_site = 'I'
    AND NULLIF(BTRIM(menu.role_cd), '') IS NOT NULL
 ON CONFLICT (group_cd, role_cd) DO NOTHING;
 
 -- Fail deployment if an assignable internal menu is disconnected from the
--- I/B root. Runtime queries are defensive too, but bad ACL data must not pass
+-- I root. Runtime queries are defensive too, but bad ACL data must not pass
 -- an installation unnoticed.
 DO $$
 BEGIN
@@ -1133,14 +1139,14 @@ BEGIN
               FROM docs_menu
              WHERE del_yn = 'N'
                AND menu_type IN ('T', 'M', 'P')
-               AND auth_site IN ('I', 'B')
+               AND auth_site = 'I'
         ),
         connected AS (
             SELECT menu_cd,
                    parent_menu_cd,
                    ARRAY[menu_cd::TEXT]::TEXT[] AS path
               FROM eligible
-             WHERE parent_menu_cd IN ('I', 'B')
+             WHERE parent_menu_cd = 'I'
 
             UNION ALL
 

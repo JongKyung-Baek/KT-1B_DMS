@@ -7,9 +7,9 @@ import org.springframework.stereotype.Repository;
 import kr.esob.fdms.commonlogic.abstractclass.AbstractDao;
 import kr.esob.fdms.controller.inside.production.common.DeployInfoVO;
 import kr.esob.fdms.controller.inside.production.common.ProductStatusVO;
-import kr.esob.fdms.controller.outside.commonrequest.RequestFileParam;
-import kr.esob.fdms.controller.outside.commonrequest.RequestMappingParam;
-import kr.esob.fdms.controller.outside.commonrequest.RequestParam;
+import kr.esob.fdms.commonlogic.distribution.model.RequestFileParam;
+import kr.esob.fdms.commonlogic.distribution.model.RequestMappingParam;
+import kr.esob.fdms.commonlogic.distribution.model.RequestParam;
 @Repository
 public class RequestDao extends AbstractDao {
 	private String prefix = "sql.ProductionRequest.";

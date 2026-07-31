@@ -53,8 +53,10 @@ $packageName = "$PackagePrefix-$Version"
 $packageDirectory = Join-Path $releaseRoot $packageName
 $zipPath = Join-Path $releaseRoot "$packageName.zip"
 $warSource = Join-Path $projectRoot 'target\SDMS-KT-1B.war'
-$samplePdfSource = Join-Path $projectRoot 'E_PDF\file.pdf'
+$samplePdfSource = Join-Path $projectRoot 'deployment\windows-demo\assets\demo-document.pdf'
 $sampleSqlSource = Join-Path $projectRoot 'src\main\resources\sql\sample_demo_data.sql'
+$internalOnlyCleanupSqlSource = Join-Path $projectRoot `
+    'src\main\resources\sql\internal_only_cleanup_ddl.sql'
 $portabilitySqlSource = Join-Path $PSScriptRoot 'database\30-demo-portability.sql'
 
 if (-not $SkipBuild) {
@@ -78,6 +80,8 @@ if (-not $SkipBuild) {
 Assert-File -Path $warSource -Description 'Application WAR'
 Assert-File -Path $samplePdfSource -Description 'Demo PDF'
 Assert-File -Path $sampleSqlSource -Description 'Sample data SQL'
+Assert-File -Path $internalOnlyCleanupSqlSource `
+    -Description 'Internal-only database cleanup SQL'
 Assert-File -Path $portabilitySqlSource -Description 'Demo sanitization SQL'
 
 $pdfBytes = [IO.File]::ReadAllBytes($samplePdfSource)
@@ -168,6 +172,7 @@ Invoke-NativeTool -Executable 'docker' -Arguments @(
 $temporaryDatabase = "kt1b_demo_package_$PID"
 $sourceBackupInContainer = "/tmp/kt1b-demo-source-$PID.backup"
 $sampleSqlInContainer = "/tmp/sample-demo-data-$PID.sql"
+$internalOnlyCleanupSqlInContainer = "/tmp/internal-only-cleanup-$PID.sql"
 $portabilitySqlInContainer = "/tmp/demo-portability-$PID.sql"
 $demoBackupInContainer = "/tmp/kt1b-demo-$PID.backup"
 $demoBackupDestination = Join-Path $packageDirectory 'database\kt1b-demo.backup'
@@ -208,10 +213,23 @@ try {
         "${SourceDbContainer}:$sampleSqlInContainer"
     )
     Invoke-NativeTool -Executable 'docker' -Arguments @(
+        'cp', $internalOnlyCleanupSqlSource,
+        "${SourceDbContainer}:$internalOnlyCleanupSqlInContainer"
+    )
+    Invoke-NativeTool -Executable 'docker' -Arguments @(
         'cp', $portabilitySqlSource,
         "${SourceDbContainer}:$portabilitySqlInContainer"
     )
 
+    # Remove external portal/menu data before rebuilding the internal demo data.
+    Invoke-NativeTool -Executable 'docker' -Arguments @(
+        'exec', $SourceDbContainer,
+        'psql',
+        '-U', $SourceDbUser,
+        '-d', $temporaryDatabase,
+        '-v', 'ON_ERROR_STOP=1',
+        '-f', $internalOnlyCleanupSqlInContainer
+    )
     Invoke-NativeTool -Executable 'docker' -Arguments @(
         'exec', $SourceDbContainer,
         'psql',
@@ -271,6 +289,7 @@ SELECT concat_ws(
         rm -f `
         $sourceBackupInContainer `
         $sampleSqlInContainer `
+        $internalOnlyCleanupSqlInContainer `
         $portabilitySqlInContainer `
         $demoBackupInContainer | Out-Null
 }

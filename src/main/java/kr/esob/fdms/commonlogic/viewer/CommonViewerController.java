@@ -8,7 +8,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -94,11 +93,6 @@ public class CommonViewerController extends AbstractController {
 		return printAuditService.complete(param);
 	}
 
-	@GetMapping("/collabInstallPage")
-	public String collabInstallPage(){
-		// 폴더 경로 views 생략
-		return "viewer/collabViewInstallPage";
-	}
 
 	@GetMapping("/pdf-cache/{ticketKey:[0-9a-fA-F]{32}}")
 	public void pdfCache(@PathVariable String ticketKey, HttpServletResponse response) throws IOException {

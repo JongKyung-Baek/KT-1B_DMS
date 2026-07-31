@@ -80,30 +80,17 @@ public class Constant {
 	public static final String DISTRIBUTION_APPROVAL_URL = "/inside/distribution/approval/";
 	public static final String DISTRIBUTION_ACCEPTANCE_URL = "/inside/distribution/acceptance/";
 	public static final String DISTRIBUTION_DISPOSAL_ACCEPTANCE_URL = "/inside/distribution/disposalacceptance/";
-	public static final String DISTRIBUTION_DRAWING_STATUS_URL = "/outside/drawing/approvalStatus/";
-	public static final String DISTRIBUTION_DRAWING_REQUEST_URL = "/outside/drawing/request/";
-	public static final String DISTRIBUTION_DOC_STATUS_URL = "/outside/doc/approvalStatus/";
-	public static final String DISTRIBUTION_SW_STATUS_URL = "/outside/sw/approvalStatus/";
-	public static final String DISTRIBUTION_PRODUCT_STATUS_URL = "/outside/product/approvalStatus/";
 	public static final String DISTRIBUTION_PRINT_APPROVAL_URL = "/inside/distribution/printApproval/";
 	public static final String DISTRIBUTION_PRINT_HISTORY_URL = "/inside/distribution/printHistory/";
 	public static final String DISTRIBUTION_DELETE_COMPANY_URL = "/main/";
 	public static final String DISTRIBUTION_VALID_TERM_OVER_URL = "/main/";
 	public static final String CR_APPROVAL_URL = "/inside/cr/approval/";
-	public static final String CR_STATUS_URL = "/outside/cr/request/";
-	public static final String UNREG_APPROVAL_URL = "/inside/unregisted/approval/";
-	public static final String UNREG_STATUS_URL = "/outside/unregisted/status/";
 	public static final String PRODUCT_APPROVAL_URL = "/inside/production/approval/";
 	public static final String PRODUCT_STATUS_URL = "/inside/production/requeststatus/";
 	public static final String PRODUCT_ACCEPT_URL = "/inside/production/acceptance/";
 	public static final String PRODUCT_DISPOSAL_APPROVAL_URL = "/inside/production/disposalApproval/";
 	public static final String PRODUCT_PRINT_APPROVAL_URL = "/inside/production/approval/";
 	public static final String PRODUCT_PRINT_STATUS_URL = "/inside/production/requeststatus/";
-	public static final String USER_APPROVAL_URL = "/inside/organizationmanage/approval/";
-	public static final String DESTROY_APPROVAL_URL = "/inside/organizationmanage/approval/";
-	public static final String DUANZONG_DOCS_URL = "/outside/duanzong/fdms/";
-
-	public static final String GROUP_CD_OUTSIDE = "RG_006";
 	public static final String GROUP_CD_ADMIN = "RG_001";
 	public static final String ROOT_MENU_CD = "MENU_000";
 

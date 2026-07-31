@@ -69,34 +69,11 @@
 	)
 </select>
 
-<select id="selectUnregSecurityUserInfo" resultType="string">
-	SELECT EMAIL
-	FROM DOCS_USER
-	WHERE USER_CD IN (
-		WITH USERLIST AS (
-			SELECT DEPLOY_EMAIL_CC USER_CD
-			FROM DOCS_REQUEST_DEPLOY
-			WHERE REQUEST_NO = #{requestNo}
-		)
-		SELECT TRIM(REGEXP_SUBSTR(USER_CD, '[^,]+', 1, LEVEL)) AS USER_CD
-		FROM USERLIST
-		CONNECT BY INSTR(USER_CD, ',', 1, LEVEL - 1) > 0
-	)
-</select>
-
 <select id="selectCompanyUserList" resultType="mailInfoVO">
 	SELECT docsUser.USER_ID AS toUserId,
 		   docsUser.EMAIL AS toEmail
 	FROM DOCS_USER docsUser
 	WHERE docsUser.COMPANY_CD = #{companyCd}
-</select>
-
-<select id="selectUserInfo" resultType="kr.esob.fdms.controller.login.UserVO">
-	SELECT AUTH_SITE AS authSite,
-		   DOCS_COMPANY.COMPANY_NM AS companyNm
-	FROM DOCS_USER
-			 LEFT JOIN DOCS_COMPANY ON DOCS_COMPANY.COMPANY_CD = DOCS_USER.COMPANY_CD
-	WHERE USER_ID = #{userId}
 </select>
 
 <select id="selectPurchaserEmail" resultType="string">
@@ -139,7 +116,7 @@
 	WHERE MAIL_ID = #{processSeq}
 </update>
 
-	<select id="selectRevisionCoreData" resultType="kr.esob.fdms.controller.outside.drawing.request.RequestListVO">
+	<select id="selectRevisionCoreData" resultType="kr.esob.fdms.commonlogic.distribution.model.RequestListVO">
 		SELECT DRAWING_NO AS drawingNo,
 			   DRAWING_NM AS drawingNm,
 			   REV_NO AS revNo

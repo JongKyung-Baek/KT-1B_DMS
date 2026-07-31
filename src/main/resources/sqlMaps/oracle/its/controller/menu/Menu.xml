@@ -48,7 +48,7 @@
     AND lang.LANG_TYPE = #{sessionLang}
     WHERE menu.TREE_TYPE = 'root'
     AND menu.MENU_TYPE != 'H'
-    AND menu.AUTH_SITE IN (#{url_type}, 'B')
+    AND menu.AUTH_SITE = 'I'
     AND role.GROUP_CD = #{roleGroup}
     AND DEL_YN = 'N'
     AND USE_YN = 'Y'
@@ -82,7 +82,7 @@
         LEFT JOIN DOCS_LANG lang
         ON lang.LANG_CD = menu.MESSAGE_CD
         AND lang.LANG_TYPE = #{sessionLang}
-        WHERE AUTH_SITE IN (#{url_type}, 'B')
+        WHERE AUTH_SITE = 'I'
         AND MENU.TREE_TYPE = 'root'
         AND MENU.USE_YN = 'Y'
         AND MENU.DEL_YN = 'N'

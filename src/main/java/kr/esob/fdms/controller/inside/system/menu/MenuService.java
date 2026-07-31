@@ -20,6 +20,8 @@ import java.util.Map;
  */
 @Service
 public class MenuService {
+	public static final String PORTAL_ROOT_CD = "ROOT";
+
 	@Inject
 	MenuDao dao;
 	@Inject
@@ -32,8 +34,8 @@ public class MenuService {
 	 * @param auth - I:내부사용자/E:외부사용자
 	 * @return
 	 */
-	public List<TreeVO> selectTree(String auth) {
-		return dao.selectTree("I");
+	public List<TreeVO> selectTree() {
+		return dao.selectTree();
 	}
 
 	/**
@@ -55,10 +57,10 @@ public class MenuService {
 			return result;
 		}
 
-		// This system exposes one internal menu catalog only.
-		param.setAuthSite("I");
-
 		if("I".equals(param.getSaveFlag())) {
+			if(Constant.ROOT_MENU_CD.equals(param.getParentMenuCd())) {
+				param.setParentMenuCd(PORTAL_ROOT_CD);
+			}
 			// 메뉴 추가(내/외부 공통)
 			// URL이 변경되면 ROLE_CD가 변경되기 때문에 ROLE_CD를 사용할 수 없음.
 			//param.setRoleCd("ROLE_"+Integer.toHexString(param.getMenuUrl().hashCode()).toUpperCase());
@@ -68,10 +70,6 @@ public class MenuService {
 
 			dao.insertMenu(param);
 
-			if(param.getAuthSite().equals("E") || param.getAuthSite().equals("B")) {
-				// 외부사용자 메뉴의 경우 rel_role_group에 insert해야 함.
-				insertRelRoleGroup(Constant.GROUP_CD_OUTSIDE, "ROLE_" + param.getMenuCd());
-			}
 
 			// 관리자는 모든 메뉴에 권한이 있음
 			insertRelRoleGroup(Constant.GROUP_CD_ADMIN, "ROLE_" + param.getMenuCd());
@@ -84,6 +82,14 @@ public class MenuService {
 
 			dao.updateMenu(param);
 
+			if("Y".equals(param.getUseYn())) {
+				insertRelRoleGroup(Constant.GROUP_CD_ADMIN,
+						"ROLE_" + param.getMenuCd());
+			}
+			else {
+				roleAssignDao.deleteRelRoleGroup("ROLE_" + param.getMenuCd());
+			}
+
 			// 버튼형 메뉴 사용 여부 업데이트
 			if("Y".equals(param.getPopupYn()) && param.getMenuCd() != null){
 				Map<String, Object> map = new HashMap<>();
@@ -92,18 +98,6 @@ public class MenuService {
 				toolbarDao.updateToolbar(map);
 			}
 
-			if(param.getAuthSite().equals("E") || param.getAuthSite().equals("B")) {
-				// 외부사용자의 경우 사용 사용하지 않는 메뉴는 권한에서 삭제
-				//groupCd, roleCd;
-
-				if("N".equals(param.getUseYn())) {
-					roleAssignDao.deleteRelRoleGroup(Constant.GROUP_CD_OUTSIDE, "ROLE_" + param.getMenuCd());
-				}
-				else {
-					insertRelRoleGroup(Constant.GROUP_CD_OUTSIDE, "ROLE_" + param.getMenuCd());
-				}
-
-			}
 		}
 		else if("D".equals(param.getSaveFlag())) {
 			// 메뉴 삭제
@@ -177,7 +171,8 @@ public class MenuService {
 	 */
 	private String getMenuLevel(MenuSaveRequestParam param) {
 
-		if(Constant.ROOT_MENU_CD.equals(param.getParentMenuCd())) {
+		if(PORTAL_ROOT_CD.equals(param.getParentMenuCd())
+				|| Constant.ROOT_MENU_CD.equals(param.getParentMenuCd())) {
 			return "1";
 		}
 
@@ -225,107 +220,10 @@ public class MenuService {
 	 */
 	private String getParent(SortRequestParam vo) {
 		if(vo.getMenuLevel().equals("1")) {
-			MenuSaveRequestParam param = new MenuSaveRequestParam();
-			param.setMenuCd(vo.getId());
-			MenuVO menu = dao.selectMenuInfo(param);
-
-			return menu.getAuthSite();
+			return PORTAL_ROOT_CD;
 		}
 
 		return vo.getParent();
 	}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//	public ResultVO saveOutsideMenu(RequestParam param) {
-//		ResultVO result = new ResultVO();
-//
-//		if(0 == param.getList().size()) {
-//			result.setSuccess(false);
-//			result.setFailReason("데이터가 존재하지 않습니다.");
-//		}
-//
-//		// groupCd
-//		RequestParam tmp = new RequestParam();
-//		tmp.setGroupCd(Constant.GROUP_CD_OUTSIDE);
-//		//dao.deleteRelRoleGroup(tmp);
-//		insertMainPage(tmp);
-//
-//		for(int i=0; i<param.getList().size(); i++) {
-//			RequestParam vo = param.getList().get(i);
-//
-//			// 외부사용자용 메뉴는 1000부터
-//			vo.setSortSeq(1000 + i);
-//			vo.setGroupCd(Constant.GROUP_CD_OUTSIDE);
-//
-//			//dao.updateMenu(vo);
-//
-//			if("Y".equals(vo.getUseYn())) {
-//				dao.insertRelRoleGroup(vo);
-//			}
-//		}
-//
-//		result.setSuccess(true);
-//
-//		return result;
-//	}
-
-	public ResultVO saveInsideMenu(RequestParam param) {
-		ResultVO result = new ResultVO();
-
-		if(0 == param.getList().size()) {
-			result.setSuccess(false);
-			result.setFailReason("데이터가 존재하지 않습니다.");
-		}
-
-		for(int i=0; i<param.getList().size(); i++) {
-			RequestParam vo = param.getList().get(i);
-
-			vo.setSortSeq(i);
-
-			//dao.updateMenu(vo);
-		}
-
-		result.setSuccess(true);
-
-		return result;
-	}
-
-//	/**
-//	 * insert 메인 페이지
-//	 * @param tmp
-//	 */
-//	public void insertMainPage(RequestParam tmp) {
-//		List<TreeVO> list = dao.selectMainMenu();
-//
-//		for(TreeVO vo : list) {
-//			tmp.setRoleCd(vo.getRoleCd());
-//
-//			dao.insertRelRoleGroup(tmp);
-//		}
-//	}
 }

@@ -21,7 +21,7 @@ import kr.esob.fdms.commonlogic.grid.GridResultVO;
 import kr.esob.fdms.commonlogic.result.ResultVO;
 import kr.esob.fdms.controller.inside.authorization.AuthorizationDao;
 import kr.esob.fdms.controller.inside.authorization.AuthorizationService;
-import kr.esob.fdms.controller.outside.commondestroystatus.DestroyFileDownloadParam;
+import kr.esob.fdms.commonlogic.distribution.model.DestroyFileDownloadParam;
 import net.sf.json.JSONArray;
 
 @Controller

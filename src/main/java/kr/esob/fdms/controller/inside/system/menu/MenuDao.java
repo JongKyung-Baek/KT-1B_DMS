@@ -29,9 +29,8 @@ public class MenuDao extends AbstractDao {
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public List<TreeVO> selectTree(String auth) {
+	public List<TreeVO> selectTree() {
 		Map<String, Object> param = new HashMap<>();
-		param.put("auth", "I");
 		param.put("rootText", menuMessage.msg("label.allMenus"));
 
 		return list(prefix + "selectTree", param);

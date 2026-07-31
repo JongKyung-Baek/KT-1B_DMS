@@ -7,7 +7,7 @@
 <html lang="kr">
 <head>
 <meta charset="UTF-8">
-<title>CollabHub</title>
+<title>KT-1B DMS</title>
 <script>
 var multiflag;
 var user = '${sessionUser.roleGroup}';

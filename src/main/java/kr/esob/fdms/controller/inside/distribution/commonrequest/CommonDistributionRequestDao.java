@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 
 import kr.esob.fdms.commonlogic.abstractclass.AbstractDao;
 import kr.esob.fdms.controller.login.UserVO;
-import kr.esob.fdms.controller.outside.commonrequest.RequestFileParam;
+import kr.esob.fdms.commonlogic.distribution.model.RequestFileParam;
 
 @Repository
 public class CommonDistributionRequestDao extends AbstractDao {

@@ -50,7 +50,7 @@ public class CommonDistributionRequestService {
 	private ResultVO productTeamApprovalRequest(CommonDistributionRequestParam param) {
 		ResultVO resultVo = new ResultVO();
 		List<CommonDistributionRequestParam> arrNonProtect = new ArrayList<CommonDistributionRequestParam>();
-		DocsMailEnum mailEnum = DocsMailEnum.DISTRIBUTION_PRODUCT_APPROVAL_OUTSIDE;
+		DocsMailEnum mailEnum = DocsMailEnum.DISTRIBUTION_PRODUCT_APPROVAL;
 		for(CommonDistributionRequestParam tempParam : param.getList()) {
 			arrNonProtect.add(tempParam);
 		}
@@ -60,7 +60,7 @@ public class CommonDistributionRequestService {
 		param.setDeploySpecialYn("N");
 		param.setObjectType(param.getRequestType());
 		param.setProtectYn("N");
-		param.setApprovalLineId("9"); //생산기술자료 외부사용자용 배포 APPROVAL_LINE 번호
+		param.setApprovalLineId("9"); // 생산기술자료 배포 APPROVAL_LINE 번호
 		param.setCurrentProcessSeqNo("2");
 
 		insertRequest(param, arrNonProtect);

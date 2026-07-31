@@ -278,15 +278,6 @@
 		WHERE mapping.REQUEST_NO = #{requestNo}
 	</select>
 
-	<update id="updateList" parameterType="kr.esob.fdms.controller.inside.pdm.deployhistory.PdmDeployHistoryParam">
-		UPDATE docs_SEND
-		SET TITLE='111'
-		WHERE
-		<foreach collection="list" open="(" close=")" separator="," item="PdmDeployHistoryParam">
-			SEND_ID IN #{PdmDeployHistoryParam.sendId}
-		</foreach>
-	</update>
-
 	<!-- 배포요청 정보 조회 [2019.09.11(최금영)] -->
 	<select id="getDocRequestData" resultType="kr.esob.fdms.controller.inside.distribution.acceptance.AcceptanceVO">
 		SELECT (SELECT REQ.REQUEST_DESC FROM DOCS_REQUEST_DETAIL REQ WHERE REQ.REQUEST_NO = #{requestNo} AND REQ.APPROVAL_STATUS_CD = 'REQUEST') AS requestDesc

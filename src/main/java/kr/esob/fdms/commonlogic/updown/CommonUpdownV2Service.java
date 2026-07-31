@@ -19,8 +19,6 @@ import kr.esob.fdms.commonlogic.filecache.ExternalFileApiClient;
 import kr.esob.fdms.commonlogic.systemconfig.SystemConfig;
 import kr.esob.fdms.commonlogic.securityacl.SecurityAclService;
 import kr.esob.fdms.controller.login.UserVO;
-/* import kr.esob.fdms.controller.outside.secp.request.SecpRequestService;
-import kr.esob.fdms.controller.outside.sw.request.RequestService; */
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -28,10 +26,6 @@ import lombok.extern.slf4j.Slf4j;
 public class CommonUpdownV2Service {
     @Inject private CommonUpdownDao commonUpdownDao;
     @Inject private ExternalFileApiClient apiClient;
-    /* @Inject private RequestService swRequestService; */
-/*     @Inject private SecpRequestService secpRequestService;
-    @Inject private DistributionActLogDao distActLogDao; */
-    @Inject private OutsideDistributionDeliveryConfirmService outsideDistributionDeliveryConfirmService;
     @Inject private SecurityAclService securityAclService;
 
     public ResolvedDownloadResource resolveAuthorizedResource(CommonUpdownV2StartParam param, UserVO actor) {
@@ -104,9 +98,9 @@ public class CommonUpdownV2Service {
         }
 
         log.info("[V2-LOCAL][MISS] objectType={}, fallback=REST", objectType);
-        String apiUrl = SystemConfig.getSystemConfigValue("KAI_DOWNLOAD");
+        String apiUrl = SystemConfig.getSystemConfigValue("FILE_DOWNLOAD_URL");
         if (isBlank(apiUrl)) { apiUrl = SystemConfig.getSystemConfigValue("REST_DELIVERY_FILE_DOWNLOAD_URL"); }
-        if (isBlank(apiUrl)) { throw new IllegalStateException("KAI_DOWNLOAD API URL is empty."); }
+        if (isBlank(apiUrl)) { throw new IllegalStateException("FILE_DOWNLOAD_URL is empty."); }
 
         byte[] bytes = apiClient.requestOriginalBySeq(apiUrl, restSeq);
         if (bytes == null || bytes.length == 0) { throw new IllegalStateException("REST API returned empty file bytes."); }
@@ -215,7 +209,7 @@ public class CommonUpdownV2Service {
 
     private boolean isBlank(String s) { return s == null || s.trim().isEmpty(); }
 
-    public boolean saveOutsideDistributionDownloadActLog(Object userObj, DownloadRuntimeState state, String status, String errorMessage) {
+    public boolean saveDownloadAudit(Object userObj, DownloadRuntimeState state, String status, String errorMessage) {
         try {
             if (!(userObj instanceof kr.esob.fdms.controller.login.UserVO)) {
                 return false;
@@ -240,30 +234,6 @@ public class CommonUpdownV2Service {
                 status,
                 e.getClass().getSimpleName());
             return false;
-        }
-    }
-
-    public void updateOutsideDistributionDeliveryConfirm(DownloadRuntimeState state, String status) {
-        try {
-            if (state == null) { return; }
-
-            String requestType = nvl(state.getRequestType()).toUpperCase();
-            String objectType = nvl(state.getObjectType()).toUpperCase(Locale.ROOT);
-            if (!"DISTRIBUTION".equals(requestType)) { return; }
-            if (!"DOCUMENT".equals(objectType) && !"DRAWING".equals(objectType)) { return; }
-            if (!"COMPLETED".equalsIgnoreCase(status)) { return; }
-
-            outsideDistributionDeliveryConfirmService.markConfirmed(
-                state.getRequestNo(),
-                state.getDocSeq(),
-                "DOCUMENT".equals(objectType) ? "DOC" : objectType,
-                isBlank(state.getFileSeq()) ? state.getFileNo() : state.getFileSeq()
-            );
-        } catch (Exception e) {
-            log.warn("[DELIVERY-CONFIRM][DOWNLOAD][SKIP] objectType={}, status={}, cause={}",
-                state == null ? null : state.getObjectType(),
-                status,
-                e.getClass().getSimpleName());
         }
     }
 

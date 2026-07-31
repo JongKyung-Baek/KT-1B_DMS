@@ -99,17 +99,10 @@ psql -h <pg17-host> -p 5432 -U "$KT1B_DB_USERNAME" -d kt1b \
   -f /opt/kt1b/sql/acl_foundation_ddl.sql
 psql -h <pg17-host> -p 5432 -U "$KT1B_DB_USERNAME" -d kt1b \
   -v ON_ERROR_STOP=1 \
-  -f /opt/kt1b/sql/docs_user_request_ddl.sql
+  -f /opt/kt1b/sql/internal_only_cleanup_ddl.sql
 ```
 
-두 스크립트는 재실행 가능하게 작성되어 있다. 적용 후 요청 테이블의 CHECK/FK가 모두 검증되었는지 확인한다.
-
-```sql
-SELECT conname, convalidated
-FROM pg_constraint
-WHERE conrelid = 'public.docs_user_request'::regclass
-ORDER BY conname;
-```
+두 스크립트는 재실행 가능하게 작성되어 있다. 적용 후 메뉴와 사용자 구분값이 모두 내부(`I`)로 정규화되고, 폐기된 외부 사용자 요청 테이블과 시퀀스가 남지 않았는지 확인한다.
 
 ## 5. 외부 인터페이스의 명시적 활성화
 

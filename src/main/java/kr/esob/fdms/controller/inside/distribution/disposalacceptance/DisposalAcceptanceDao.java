@@ -5,8 +5,8 @@ import java.util.List;
 import org.springframework.stereotype.Repository;
 
 import kr.esob.fdms.commonlogic.abstractclass.AbstractDao;
-import kr.esob.fdms.controller.outside.commondestroystatus.DestroyFileDownloadParam;
-import kr.esob.fdms.controller.outside.commondestroystatus.DestroyFileVO;
+import kr.esob.fdms.commonlogic.distribution.model.DestroyFileDownloadParam;
+import kr.esob.fdms.commonlogic.distribution.model.DestroyFileVO;
 
 @Repository
 public class DisposalAcceptanceDao extends AbstractDao {

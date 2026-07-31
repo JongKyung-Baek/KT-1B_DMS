@@ -27,11 +27,9 @@ import kr.esob.fdms.commonlogic.result.ResultVO;
 import kr.esob.fdms.commonlogic.systemconfig.SystemConfig;
 import kr.esob.fdms.controller.login.UserVO;
 import kr.esob.fdms.util.DateUtil;
-import kr.esob.fdms.util.FileUtil;
 import kr.esob.fdms.util.ObjectUtil;
 import kr.esob.fdms.util.StringUtil;
 import kr.esob.fdms.util.StoragePathUtils;
-import net.sf.json.JSONObject;
 
 @Service
 public class BbsNoticeService implements CommonService{
@@ -95,17 +93,6 @@ public class BbsNoticeService implements CommonService{
 			bbsParam.setFileNm(orgName);
 			bbsParam.setFileSize(String.valueOf(mf.getSize()));
 			mf.transferTo(file);
-
-			@SuppressWarnings("deprecation")
-			JSONObject result = FileUtil.callSender(
-					FileUtil.encryptTransferArgument(SystemConfig.getSystemConfigValue("SERVER_URL_INSIDE"))
-					,FileUtil.encryptTransferArgument(SystemConfig.getSystemConfigValue("SERVER_URL_OUTSIDE"))
-					,FileUtil.encryptTransferArgument(file.getPath())
-					,FileUtil.encryptTransferArgument(filePath.getPath())
-					,FileUtil.encryptTransferArgument(orgName));
-			String transferredFileName = FileUtil.requireSuccessfulTransferFileName(result);
-			bbsParam.setFilePathOutside(
-					StoragePathUtils.resolve(filePath.getPath(), transferredFileName).toString());
 			dao.insertNoticeFile(bbsParam);
 		}
 		resultVo.setSuccess(true);
@@ -175,20 +162,6 @@ public class BbsNoticeService implements CommonService{
 			bbsParam.setFileNm(orgName);
 			bbsParam.setFileSize(String.valueOf(mf.getSize()));
 			mf.transferTo(file);
-
-			JSONObject result = FileUtil.callSender(
-					FileUtil.encryptTransferArgument(SystemConfig.getSystemConfigValue("SERVER_URL_INSIDE"))
-					,FileUtil.encryptTransferArgument(SystemConfig.getSystemConfigValue("SERVER_URL_OUTSIDE"))
-					,FileUtil.encryptTransferArgument(file.getPath())
-					,FileUtil.encryptTransferArgument(filePath.getPath())
-					,FileUtil.encryptTransferArgument(orgName));
-			String transferredFileName = FileUtil.requireSuccessfulTransferFileName(result);
-			bbsParam.setFilePathOutside(
-					StoragePathUtils.resolve(filePath.getPath(), transferredFileName).toString());
-			// Delete only the old DB row after the replacement has reached the
-			// remote server. Physical cleanup cannot participate in the DB
-			// transaction and is intentionally deferred to avoid losing the old
-			// file when transfer validation fails.
 			dao.deleteNoticeFile(bbsParam);
 			dao.insertNoticeFile(bbsParam);
 		}
@@ -217,14 +190,7 @@ public class BbsNoticeService implements CommonService{
 	public void fileDownload(BbsNoticeFileVO param, HttpServletResponse response, HttpServletRequest request) throws IOException {
 		BbsNoticeFileVO vo = dao.selectFilePath(param);
 
-		File file = null;
-
-		if (param.getSessionUser().getAuthSite().equals("I")) {
-			file = new File(vo.getFilePath());
-		}
-		else {
-			file = new File(vo.getFilePathOutside());
-		}
+		File file = new File(vo.getFilePath());
 
 		String mimeType = URLConnection.guessContentTypeFromName(vo.getFileNm());
 		if (mimeType == null) {

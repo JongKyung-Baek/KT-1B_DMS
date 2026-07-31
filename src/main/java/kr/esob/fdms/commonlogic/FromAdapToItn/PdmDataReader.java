@@ -20,7 +20,6 @@ import java.sql.Connection;
   @Slf4j
   @Service
   public class PdmDataReader {
-    //[KAI]
       private final DataSource dataSource;
 
       public PdmDataReader(DataSource dataSource) {

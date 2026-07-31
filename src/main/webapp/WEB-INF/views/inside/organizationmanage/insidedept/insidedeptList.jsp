@@ -3,14 +3,14 @@
 <%@ taglib prefix="custom" tagdir="/WEB-INF/tags" %>
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
 <spring:message code="feature.locale.code" text="ko" var="pageLocale"/>
-<spring:message code="feature.organization.department.browserTitle" text="내부 부서 관리" var="pageTitle"/>
-<spring:message code="feature.organization.department.resultsAria" text="내부 부서 검색 및 목록" var="resultsAria"/>
+<spring:message code="feature.organization.department.browserTitle" text="부서 관리" var="pageTitle"/>
+<spring:message code="feature.organization.department.resultsAria" text="부서 검색 및 목록" var="resultsAria"/>
 <!doctype html>
 <html lang="${pageLocale}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${pageTitle} - CollabHub</title>
+<title>${pageTitle} - KT-1B DMS</title>
 <link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/distribution-invoice.css" media="screen" />
 <link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/organization-management.css?v=20260726.2" media="screen" />
 <script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/views/inside/distribution/acceptance/common-form-vuexy.js"></script>

@@ -108,7 +108,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 				.antMatchers("/error").permitAll()
 				// Duanzong/PDM exchange is intentionally deferred. Re-enable only
 				// after signed, replay-safe POST contracts are implemented.
-				.antMatchers("/outside/duanzong/**").denyAll()
+				.antMatchers("/outside", "/outside/**").denyAll()
 				// Native download client receives only a 128-bit, one-time capability.
 				.antMatchers(HttpMethod.GET, "/download", "/download/", "/download/*").permitAll()
 				.antMatchers("/inside/system/securityaccess/**").hasAuthority("ROLE_MENU_222")

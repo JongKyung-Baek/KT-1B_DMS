@@ -56,7 +56,6 @@ public class LoginFailure implements AuthenticationFailureHandler {
 	public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
 			AuthenticationException exception) throws IOException, ServletException {
 		String userId = request.getParameter(loginName);
-		String bizNo = request.getParameter("bizNo");
 		String errorMsg = "";
 		String redirectUrl = failureUrl;
 
@@ -68,11 +67,7 @@ public class LoginFailure implements AuthenticationFailureHandler {
 	        TransactionStatus transactionStatus = transactionManager.getTransaction(transactionDefinition);
 
 			try {
-				if("E".equals(request.getParameter("url_type"))) {
-					loginFailureOutside(userId, bizNo);
-				}else {
-					loginFailure(userId);
-				}
+				loginFailure(userId);
 				transactionManager.commit(transactionStatus);
 			} catch (RuntimeException transactionException) {
 				if (!transactionStatus.isCompleted()) {
@@ -102,8 +97,7 @@ public class LoginFailure implements AuthenticationFailureHandler {
 			errorMsg = prop.msg("msg.alreadyLogin");
 		}
 		request.getSession(true).setAttribute(LOGIN_ERROR_SESSION_KEY, errorMsg);
-		String urlType = "E".equals(request.getParameter("url_type")) ? "E" : "I";
-		redirectStrategy.sendRedirect(request, response, redirectUrl + "?url_type=" + urlType);
+		redirectStrategy.sendRedirect(request, response, redirectUrl);
 	}
 	
 	private void loginFailure(String userId) {
@@ -113,19 +107,6 @@ public class LoginFailure implements AuthenticationFailureHandler {
 			dao.updateLock(userId);
 		}
 	}
-	private void loginFailureOutside(String userId, String bizNo) {
-		UserVO userVo = new UserVO();
-		userVo.setBizNo(bizNo);
-		userVo.setUserId(userId);
-		String loginUserId = dao.selectUserId(userVo);
-		dao.updateLoginFailureOutside(loginUserId);
-		
-		int count = dao.checkFailedCount(loginUserId);
-		if(count >= 3) {
-			dao.updateLock(loginUserId);
-		}
-	}
-
 	private String normalizeBlank(String value) {
 		if(value == null) {
 			return null;

@@ -40,7 +40,7 @@
 <%--            </li>--%>
 
             <li>
-                <custom:popupInputText id="user_Nm" name="user_Nm" label="form.userNm" value="${info.userNm}" maxlength="40" placeholder="msg.exEsobuser"/>
+                <custom:popupInputText id="user_Nm" name="user_Nm" label="form.userNm" value="${info.userNm}" maxlength="40" placeholder="msg.exUser"/>
             </li>
 
             <li>

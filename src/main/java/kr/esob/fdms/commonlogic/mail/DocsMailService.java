@@ -2,12 +2,11 @@ package kr.esob.fdms.commonlogic.mail;
 
 import kr.esob.fdms.commonlogic.result.ResultVO;
 import kr.esob.fdms.commonlogic.seq.SeqDao;
-import kr.esob.fdms.commonlogic.value.Constant;
 import kr.esob.fdms.controller.inside.cr.CrParam;
 import kr.esob.fdms.controller.inside.distribution.commonrequest.CommonApprovalParam;
 import kr.esob.fdms.controller.login.LoginDao;
 import kr.esob.fdms.controller.login.UserVO;
-import kr.esob.fdms.controller.outside.drawing.request.RequestListVO;
+import kr.esob.fdms.commonlogic.distribution.model.RequestListVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -21,7 +20,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -83,7 +81,6 @@ public class DocsMailService {
 
 
 			mailSender.send(message);                        			// 실행
-			//		String END_POINT_URL = "http://circle.hanwha-ds.com/api/axis/services/MailService";
 			//        MailServiceProxy mailServiceProxy = new MailServiceProxy();
 			//        mailServiceProxy.setEndpoint(END_POINT_URL);
 			result = "S";
@@ -164,8 +161,7 @@ public class DocsMailService {
 	}
 
 	/**
-	 * 내부사용자 자료배포-검색 및 배포요청- 배포요청 시 호출
-	 * 외부사용자 배포요청 후 구매담당자 접수 시 호출
+	 * 기술자료 배포 요청을 접수할 때 메일 큐를 생성한다.
 	 * @param param
 	 * @return
 	 * @throws UnsupportedEncodingException
@@ -197,14 +193,6 @@ public class DocsMailService {
 			}
 			StringBuffer contentbuffer = new StringBuffer();
 
-			if(param.getMailEnum().getUrl().equals(Constant.DISTRIBUTION_ACCEPTANCE_URL)) {
-				Map<String, String> tmp = new HashMap<String, String>();
-				tmp.put("userId", userVo.getUserId());
-
-				UserVO sender = dao.selectUserInfo(tmp);
-
-//				contentbuffer.append("[" + sender.getCompanyNm() + "]");
-			}
 			boolean hasCustomContent = param.getContent() != null && !param.getContent().trim().isEmpty();
 			if (hasCustomContent) {
 				contentbuffer.append(param.getContent());
@@ -217,25 +205,6 @@ public class DocsMailService {
 
 			contentbuffer.append(param.getAppendContent());
 
-//			if("I".equals(param.getMailEnum().getUrlType())) {
-//				//idocs
-//				contentbuffer.append("<a href=\"" + linkUrl + "\">" + linkUrl + "</a>");
-//			}
-			//??  ::  외부 "E"일경우 SYSTEMCONFIG.OUT의 값,doc주소를 추가해야하는가
-
-//			else {
-//				//fdms
-//				contentbuffer.append("<a href=\"" + linkUrl + "\">" + linkUrl + "</a>");
-//			}
-
-//			if("E".equals(userVo.getAuthSite())) {
-//				//param.setToMail(param.getToMail().replace("-ds.com", ".com"));
-//				// 발신자가 외부사용자일 경우 발신자 email을 변경
-//				param.setFromMail(SystemConfig.getSystemConfigValue("SENDER_EMAIL"));
-//	        }
-//	        if("E".equals(param.getMailEnum().getUrlType())) {
-//	        	param.setFromMail(param.getFromMail().replace("-ds.com", ".com"));
-//	        }
 			if (param.getTitle() == null || param.getTitle().trim().isEmpty()) {
 				param.setTitle(param.getMailEnum().getTitle());
 			}
@@ -347,13 +316,6 @@ public class DocsMailService {
 			}
 			StringBuffer contentbuffer = new StringBuffer();
 
-			if(param.getMailEnum().getUrl().equals(Constant.DISTRIBUTION_ACCEPTANCE_URL)) {
-				Map<String, String> tmp = new HashMap<String, String>();
-				tmp.put("userId", userVo.getUserId());
-
-				UserVO sender = dao.selectUserInfo(tmp);
-
-			}
 			boolean hasCustomContent = param.getContent() != null && !param.getContent().trim().isEmpty();
 			if (hasCustomContent) {
 				contentbuffer.append(param.getContent());
@@ -401,10 +363,6 @@ public class DocsMailService {
 
 	public MailInfoVO selectCrRequestUserInfo(CrParam param) {
 		return dao.selectCrRequestUserInfo(param);
-	}
-
-	public List<String> selectUnregSecurityUserInfo(Object param){
-		return dao.selectUnregSecurityUserInfo(param);
 	}
 
 	public List<MailInfoVO> selectCompanyUserList(Object param){

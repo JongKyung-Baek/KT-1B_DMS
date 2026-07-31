@@ -3,6 +3,7 @@ package kr.esob.fdms.controller.inside.system.menu;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import kr.esob.fdms.commonlogic.abstractclass.AbstractController;
 import kr.esob.fdms.commonlogic.abstractclass.CommonHomeParam;
+import kr.esob.fdms.commonlogic.message.Prop;
 import kr.esob.fdms.commonlogic.result.ResultVO;
 import kr.esob.fdms.commonlogic.value.Constant;
 import net.sf.json.JSONArray;
@@ -27,12 +28,14 @@ public class MenuController extends AbstractController {
 
 	@Inject
 	MenuService service;
+	@Inject
+	Prop menuMessage;
 
 	@RequestMapping("/")
-	public String inside(Model model, CommonHomeParam param) throws JsonProcessingException {
+	public String index(Model model, CommonHomeParam param) throws JsonProcessingException {
 		setHomeParam(model, param);
 		model.addAttribute("toolbarInfo",
-				JSONArray.fromObject(toolbarService.selectToolbarInfo("toolbarSystemInsideMenu")));
+				JSONArray.fromObject(toolbarService.selectToolbarInfo("toolbarSystemMenu")));
 
 		return "inside/system/menu/menuList";
 	}
@@ -46,15 +49,14 @@ public class MenuController extends AbstractController {
 	 */
 	@RequestMapping({"/menuAddPopup", "/menuModPopup"})
 	public String menuPopup(Model model, MenuSaveRequestParam param, HttpServletRequest request) {
-		param.setAuthSite("I");
-
 		MenuVO menuVo = null;
 		String saveFlag = request.getRequestURI().indexOf("menuAddPopup") > -1 ? "I" : "U";
 
 		if(Constant.ROOT_MENU_CD.equals(param.getMenuCd())) {
 			// ROOT를 클릭했을 경우
 			menuVo = new MenuVO();
-			menuVo.setParentMenuCd(param.getMenuCd());
+			menuVo.setParentMenuCd(MenuService.PORTAL_ROOT_CD);
+			menuVo.setParentMenuNm(menuMessage.msg("label.allMenus"));
 		}
 		else if(request.getRequestURI().indexOf("menuAddPopup") > -1) {
 			// 등록일 경우 param으로 넘어온 메뉴가 부모메뉴임
@@ -75,7 +77,6 @@ public class MenuController extends AbstractController {
 
 	@RequestMapping(value="/saveMenu", method=RequestMethod.POST)
 	public @ResponseBody ResultVO saveMenu(@RequestBody MenuSaveRequestParam param) throws Exception {
-		param.setAuthSite("I");
 		return service.saveMenu(param);
 	}
 
@@ -86,7 +87,7 @@ public class MenuController extends AbstractController {
 
 	@RequestMapping(value="/getTreeList", method=RequestMethod.POST)
 	public @ResponseBody JSONArray getTreeList(@RequestBody RequestParam param) throws Exception {
-		return JSONArray.fromObject(service.selectTree("I"));
+		return JSONArray.fromObject(service.selectTree());
 	}
 }
 

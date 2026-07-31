@@ -34,10 +34,6 @@ public class CommonCrService {
 		download(commonCrDao.selectInsideDownloadResource(trusted(param)), response);
 	}
 
-	public void downloadOutside(CrFileDownloadParam param, HttpServletResponse response) throws IOException {
-		download(commonCrDao.selectOutsideDownloadResource(trusted(param)), response);
-	}
-
 	private CrFileDownloadParam trusted(CrFileDownloadParam param) {
 		if (param == null || blank(param.getCrNo()) || param.getFileNo() <= 0) {
 			throw notFound();

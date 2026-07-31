@@ -24,8 +24,8 @@ import kr.esob.fdms.commonlogic.result.ResultVO;
 import kr.esob.fdms.commonlogic.securityacl.FileAccessRequest;
 import kr.esob.fdms.commonlogic.securityacl.SecurityAclService;
 import kr.esob.fdms.controller.login.UserVO;
-import kr.esob.fdms.controller.outside.commondestroystatus.DestroyFileDownloadParam;
-import kr.esob.fdms.controller.outside.commondestroystatus.DestroyFileVO;
+import kr.esob.fdms.commonlogic.distribution.model.DestroyFileDownloadParam;
+import kr.esob.fdms.commonlogic.distribution.model.DestroyFileVO;
 import kr.esob.fdms.util.DateUtil;
 
 @Service

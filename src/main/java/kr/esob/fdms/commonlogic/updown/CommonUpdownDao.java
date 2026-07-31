@@ -87,7 +87,7 @@ public class CommonUpdownDao extends AbstractDao {
 	}
 
 
-	// KAI - 다운로드 로직 추가
+	// 다운로드 이력 저장
 	public String selectDocRestRequestSeq(String requestNo, String docSeq) {
 		Map<String, Object> params = new HashMap<>();
 		params.put("requestNo", requestNo);
@@ -151,7 +151,7 @@ public class CommonUpdownDao extends AbstractDao {
 		return (String) obj(prefix + "selectDrawingPdfFileSeqByDocSeq", p);
 	}
 
-	//KAI-문서행위로그-다운로드
+	// 문서행위로그-다운로드
 	public Map<String, Object> selectActLogBase(String requestNo, String docSeq, String orgFilePath, String userCd) {
 		Map<String, Object> params = new HashMap<>();
 		params.put("requestNo", requestNo);

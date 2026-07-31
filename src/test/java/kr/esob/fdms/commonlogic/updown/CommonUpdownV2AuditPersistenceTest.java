@@ -40,7 +40,7 @@ class CommonUpdownV2AuditPersistenceTest {
                 actor, "SUCCESS", null, "DOCUMENT", "DOC-1", "FILE-1", "REQ-1",
                 "Download completed.");
 
-        assertFalse(service.saveOutsideDistributionDownloadActLog(
+        assertFalse(service.saveDownloadAudit(
                 actor, state, state.getStatus().name(), "client supplied path"));
         assertFalse(state.isActLogSaved());
     }
@@ -53,7 +53,7 @@ class CommonUpdownV2AuditPersistenceTest {
         UserVO actor = actor();
         DownloadRuntimeState state = completedState();
 
-        assertTrue(service.saveOutsideDistributionDownloadActLog(
+        assertTrue(service.saveDownloadAudit(
                 actor, state, state.getStatus().name(), "C:\\sensitive\\client-path.pdf"));
         verify(acl).recordDownloadResult(
                 actor, "SUCCESS", null, "DOCUMENT", "DOC-1", "FILE-1", "REQ-1",
@@ -144,7 +144,7 @@ class CommonUpdownV2AuditPersistenceTest {
                 "REST-4", temporaryFile.toString(), "restart.pdf"));
 
         CommonUpdownV2Service auditService = mock(CommonUpdownV2Service.class);
-        when(auditService.saveOutsideDistributionDownloadActLog(
+        when(auditService.saveDownloadAudit(
                 org.mockito.ArgumentMatchers.any(UserVO.class),
                 org.mockito.ArgumentMatchers.any(DownloadRuntimeState.class),
                 org.mockito.ArgumentMatchers.eq("FAILED"),
@@ -160,7 +160,7 @@ class CommonUpdownV2AuditPersistenceTest {
         assertEquals(1, scheduler.recoverPersistedRuntimeNow());
         assertFalse(Files.exists(temporaryFile));
         assertFalse(store.exists(state.getWsSeq()));
-        verify(auditService).saveOutsideDistributionDownloadActLog(
+        verify(auditService).saveDownloadAudit(
             org.mockito.ArgumentMatchers.any(UserVO.class),
             org.mockito.ArgumentMatchers.any(DownloadRuntimeState.class),
             org.mockito.ArgumentMatchers.eq("FAILED"),

@@ -19,6 +19,5 @@ public class BbsNoticeAddParam extends CommonParam {
 	private String filePath;
 	private String fileSize;
 	private String fileNo;
-	private String filePathOutside;
 }
 

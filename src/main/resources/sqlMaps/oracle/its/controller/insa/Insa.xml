@@ -140,9 +140,7 @@
 <!--    		, POSITION_CD = #{POSITION_CD}-->
 <!--    		</if>-->
 <!--    		<if test='EMAIL != null and !EMAIL.equals("")'>-->
-<!--    	    , EMAIL =  CASE WHEN USER_CD IN ('USER_0000012187','USER_0000012137') THEN 'df.wanggeun.lee@hanwha-ds.com'-->
-<!--    		           ELSE #{EMAIL}-->
-<!--    		           END-->
+<!--    	    , EMAIL = #{EMAIL}-->
 <!--    		</if>-->
 <!--    		, USE_YN = #{USE_YN}-->
 <!--    		, DEL_YN = 'N'-->
@@ -157,15 +155,11 @@
 <!--	</update>-->
 
 <!--	&lt;!&ndash; <delete id="deleteDocsUser">-->
-<!--		DELETE FROM DOCS_USER WHERE AUTH_SITE IN ('I', 'B')-->
+<!--		DELETE FROM DOCS_USER WHERE AUTH_SITE = 'I'-->
 <!--	</delete> &ndash;&gt;-->
 
 <!--	<insert id="insertDocsAdmin">-->
-<!--		Insert into DOCS_USER (USER_CD,USER_ID,USER_NM,USER_PWD,COMPANY_CD,DEPT_CD,POSITION_CD,EMAIL,AUTH_LEVEL,AUTH_APPROVAL_YN,FIRST_LOGIN_DT,LAST_LOGIN_DT,LAST_LOGIN_IP,USE_YN,DEL_YN,INSERT_UID,INSERT_DT,UPDATE_UID,UPDATE_DT,PWD_UPDATE_DT,AUTH_SITE,LOGIN_COUNT,ROLE_GROUP,BUSINESS_AREA_CD,PROTECT_YN,WORK_PLACE_CD) values ('USER_0000000001','admin','담당자','1','COMP_0000000999','D1DJ150',null,'admin@admin.com',4,'N',null,to_date('19/08/20','RR/MM/DD'),'0:0:0:0:0:0:0:1','Y','N',null,null,null,null,to_date('19/03/13','RR/MM/DD'),'B',0,'RG_001','1210',null,'L0329')-->
-<!--	</insert>-->
-
-<!--	<insert id="insertDocsOutuser">-->
-<!--		Insert into DOCS_USER (USER_CD,USER_ID,USER_NM,USER_PWD,COMPANY_CD,DEPT_CD,POSITION_CD,EMAIL,AUTH_LEVEL,AUTH_APPROVAL_YN,FIRST_LOGIN_DT,LAST_LOGIN_DT,LAST_LOGIN_IP,USE_YN,DEL_YN,INSERT_UID,INSERT_DT,UPDATE_UID,UPDATE_DT,PWD_UPDATE_DT,AUTH_SITE,LOGIN_COUNT,ROLE_GROUP,BUSINESS_AREA_CD,PROTECT_YN,WORK_PLACE_CD) values ('USER_0000000002','outuser','와우소프트','1','COMP_0000001039','0000000003',null,'esob@esob.kr',null,null,null,to_date('19/08/20','RR/MM/DD'),null,'Y','N',null,null,null,null,to_date('19/04/19','RR/MM/DD'),'B',null,'RG_001','1210',null,null)-->
+<!--		Insert into DOCS_USER (USER_CD,USER_ID,USER_NM,USER_PWD,COMPANY_CD,DEPT_CD,POSITION_CD,EMAIL,AUTH_LEVEL,AUTH_APPROVAL_YN,FIRST_LOGIN_DT,LAST_LOGIN_DT,LAST_LOGIN_IP,USE_YN,DEL_YN,INSERT_UID,INSERT_DT,UPDATE_UID,UPDATE_DT,PWD_UPDATE_DT,AUTH_SITE,LOGIN_COUNT,ROLE_GROUP,BUSINESS_AREA_CD,PROTECT_YN,WORK_PLACE_CD) values ('USER_0000000001','admin','담당자','1','COMP_0000000999','D1DJ150',null,'admin@admin.com',4,'N',null,to_date('19/08/20','RR/MM/DD'),'0:0:0:0:0:0:0:1','Y','N',null,null,null,null,to_date('19/03/13','RR/MM/DD'),'I',0,'RG_001','1210',null,'L0329')-->
 <!--	</insert>-->
 
 <!--	<select id="selectUserCdFromUserId" resultType="String">-->
@@ -707,9 +701,7 @@
 		, POSITION_CD = #{POSITION_CD}
 	</if>
 	<if test='EMAIL != null and !EMAIL.equals("")'>
-		, EMAIL =  CASE WHEN USER_CD IN ('USER_0000012187','USER_0000012137') THEN 'df.wanggeun.lee@hanwha-ds.com'
-		ELSE #{EMAIL}
-		END
+		, EMAIL = #{EMAIL}
 	</if>
 	, USE_YN = #{USE_YN}
 	, DEL_YN = 'N'
@@ -724,17 +716,12 @@
 </update>
 
 <!-- <delete id="deleteDocsUser">
-    DELETE FROM DOCS_USER WHERE AUTH_SITE IN ('I', 'B')
+    DELETE FROM DOCS_USER WHERE AUTH_SITE = 'I'
 </delete> -->
 
 <insert id="insertDocsAdmin">
 	INSERT INTO DOCS_USER (USER_CD,USER_ID,USER_NM,USER_PWD,COMPANY_CD,DEPT_CD,POSITION_CD,EMAIL,AUTH_LEVEL,AUTH_APPROVAL_YN,FIRST_LOGIN_DT,LAST_LOGIN_DT,LAST_LOGIN_IP,USE_YN,DEL_YN,INSERT_UID,INSERT_DT,UPDATE_UID,UPDATE_DT,PWD_UPDATE_DT,AUTH_SITE,LOGIN_COUNT,ROLE_GROUP,BUSINESS_AREA_CD,PROTECT_YN,WORK_PLACE_CD)
-	VALUES ('USER_0000000001','admin','담당자','1','COMP_0000000999','D1DJ150',null,'admin@admin.com',4,'N',null,to_date('19/08/20','RR/MM/DD'),'0:0:0:0:0:0:0:1','Y','N',null,null,null,null,to_date('19/03/13','RR/MM/DD'),'B',0,'RG_001','1210',null,'L0329')
-</insert>
-
-<insert id="insertDocsOutuser">
-	INSERT INTO DOCS_USER (USER_CD,USER_ID,USER_NM,USER_PWD,COMPANY_CD,DEPT_CD,POSITION_CD,EMAIL,AUTH_LEVEL,AUTH_APPROVAL_YN,FIRST_LOGIN_DT,LAST_LOGIN_DT,LAST_LOGIN_IP,USE_YN,DEL_YN,INSERT_UID,INSERT_DT,UPDATE_UID,UPDATE_DT,PWD_UPDATE_DT,AUTH_SITE,LOGIN_COUNT,ROLE_GROUP,BUSINESS_AREA_CD,PROTECT_YN,WORK_PLACE_CD)
-	VALUES ('USER_0000000002','outuser','와우소프트','1','COMP_0000001039','0000000003',null,'esob@esob.kr',null,null,null,to_date('19/08/20','RR/MM/DD'),null,'Y','N',null,null,null,null,to_date('19/04/19','RR/MM/DD'),'B',null,'RG_001','1210',null,null)
+	VALUES ('USER_0000000001','admin','담당자','1','COMP_0000000999','D1DJ150',null,'admin@admin.com',4,'N',null,to_date('19/08/20','RR/MM/DD'),'0:0:0:0:0:0:0:1','Y','N',null,null,null,null,to_date('19/03/13','RR/MM/DD'),'I',0,'RG_001','1210',null,'L0329')
 </insert>
 
 <select id="selectUserCdFromUserId" resultType="String">

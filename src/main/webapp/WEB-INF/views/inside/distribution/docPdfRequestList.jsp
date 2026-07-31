@@ -5,7 +5,7 @@
 <html lang="kr">
 <head>
 <meta charset="UTF-8">
-<title>CollabHub</title>
+<title>KT-1B DMS</title>
 <script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/views/inside/distribution/docPdfRequestList.js"></script>
 <script>
 var gridId = 'gridDocPdfRequestList';

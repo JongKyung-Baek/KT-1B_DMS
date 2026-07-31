@@ -12,5 +12,4 @@ public class BbsNoticeFileVO  extends CommonParam {
 	private String filePath;
 	private String fileSize;
 	private String fileNo;
-	private String filePathOutside;
 }

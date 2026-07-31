@@ -6,7 +6,7 @@ import org.springframework.stereotype.Repository;
 
 import kr.esob.fdms.commonlogic.abstractclass.AbstractDao;
 import kr.esob.fdms.controller.inside.distribution.commonrequest.ApprovalLineDetailVO;
-import kr.esob.fdms.controller.outside.commondestroyrequest.DestroyRequestParam;
+import kr.esob.fdms.commonlogic.distribution.model.DestroyRequestParam;
 
 @Repository
 public class HistoryDao extends AbstractDao {

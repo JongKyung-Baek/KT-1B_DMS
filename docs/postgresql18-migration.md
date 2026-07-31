@@ -33,7 +33,7 @@ docker compose -f docker-compose.postgres18.yml ps
 
 ```powershell
 docker exec kt1b-postgres18 psql -U $env:KT1B_PG18_USERNAME -d $env:KT1B_PG18_DATABASE -Atc "select version();"
-docker cp .\260701dumpdb3.backup kt1b-postgres18:/tmp/260701dumpdb3.backup
+docker cp .\db\260701dumpdb3.backup kt1b-postgres18:/tmp/260701dumpdb3.backup
 ```
 
 신규 DB가 비어 있는 최초 1회에만 복원합니다.

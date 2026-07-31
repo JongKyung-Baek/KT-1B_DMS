@@ -132,7 +132,7 @@
 
 <!--	<select id="selectUserCombo"-->
 <!--			resultType="kr.esob.fdms.commonlogic.combo.SearchComboInfoVO">-->
-<!--		&lt;!&ndash; sql.OrganizationmanageInsideuser.selectUserCombo 사용자목록combo - 한화에서 ID를 쓰기 때문에 USER_ID를 ID로 사용 &ndash;&gt;-->
+<!--		&lt;!&ndash; 사용자목록 combo는 USER_ID를 식별자로 사용 &ndash;&gt;-->
 <!--		SELECT X.*-->
 <!--          FROM (-->
 <!--		        SELECT USER_ID AS id-->

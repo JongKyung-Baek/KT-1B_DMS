@@ -6,18 +6,11 @@ import javax.inject.Inject;
 
 import org.springframework.stereotype.Service;
 
-import kr.esob.fdms.commonlogic.mail.DocsMailEnum;
-import kr.esob.fdms.commonlogic.mail.DocsMailService;
-import kr.esob.fdms.commonlogic.mail.MailInfoVO;
-
 @Service
 public class ValidTermOverService {
 
 	@Inject
 	ValidTermOverDao dao;
-
-	@Inject
-	DocsMailService mailService;
 
 	public void run() throws Exception {
 		try {
@@ -28,11 +21,6 @@ public class ValidTermOverService {
 
 			for(ValidTermOverListVO tmp : list) {
 				dao.updateValidTermOver(tmp);
-//				if(param.getSendEmailYn().isBooleanValue()) {
-//					MailInfoVO mailInfoVo = mailService.selectDeployUserInfo(tmp);
-//					mailInfoVo.setMailEnum(DocsMailEnum.DISTRIBUTION_VALID_TERM_OVER);
-//					mailService.sendDocsMail(mailInfoVo);
-//				}
 			}
 
 			dao.updateValidTermOverNoReg();

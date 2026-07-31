@@ -26,7 +26,7 @@ import net.sf.json.JSONArray;
  *
  */
 @Controller
-@RequestMapping({"/inside/distribution/oldhistory", "/outside/distribution/oldhistory"})
+@RequestMapping("/inside/distribution/oldhistory")
 public class HistoryController extends AbstractController {
 	@Inject
 	HistoryService service;

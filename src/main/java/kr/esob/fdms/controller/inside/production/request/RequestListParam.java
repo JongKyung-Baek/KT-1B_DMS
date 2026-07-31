@@ -4,7 +4,7 @@ import java.util.List;
 
 import kr.esob.fdms.commonlogic.abstractclass.CommonParam;
 import kr.esob.fdms.controller.inside.production.common.ProductionInfoVO;
-import kr.esob.fdms.controller.outside.drawing.request.DrawingInfoVO;
+import kr.esob.fdms.commonlogic.distribution.model.DrawingInfoVO;
 import lombok.Getter;
 import lombok.Setter;
 

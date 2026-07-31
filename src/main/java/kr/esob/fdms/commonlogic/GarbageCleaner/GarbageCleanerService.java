@@ -9,7 +9,6 @@ import javax.inject.Inject;
 
 import org.springframework.stereotype.Service;
 
-import kr.esob.fdms.controller.outside.commonrequest.CommonRequestService;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -18,9 +17,6 @@ public class GarbageCleanerService
 {
 	@Inject
 	GarbageCleanerDao dao;
-
-	@Inject
-	CommonRequestService commonRequestService;	
 
 	public void GarbageCleaner() throws Exception 
 	{

@@ -85,15 +85,13 @@ class WindowsOfflinePackageContractTest {
     }
 
     @Test
-    void activePagesDoNotLoadTheKnownExternalRuntimeResources()
+    void activePagesUseBundledResourcesAndLegacyViewerIsAbsent()
             throws IOException {
         String sessionPage = Files.readString(Path.of(
                 "src", "main", "webapp", "WEB-INF", "views", "inside",
                 "system", "session", "sessionManagement.jsp"),
                 StandardCharsets.UTF_8);
-        String collabPage = Files.readString(Path.of(
-                "src", "main", "webapp", "CollabviewInstallPage.jsp"),
-                StandardCharsets.UTF_8);
+        Path webappRoot = Path.of("src", "main", "webapp");
         String customFont = Files.readString(Path.of(
                 "src", "main", "resources", "static", "css",
                 "custom-font.css"), StandardCharsets.UTF_8);
@@ -102,9 +100,13 @@ class WindowsOfflinePackageContractTest {
                 "https://code.jquery.com/jquery-3.6.0.min.js"));
         assertTrue(sessionPage.contains(
                 "/resources/js/jquery-3.4.1.min.js"));
-        assertFalse(collabPage.contains("demo.esob.kr"));
-        assertTrue(collabPage.contains(
-                "${pageContext.request.contextPath}/login/loginPage"));
+        assertFalse(Files.exists(webappRoot.resolve(
+                "CollabviewInstallPage.jsp")));
+        assertFalse(Files.exists(webappRoot.resolve(Path.of(
+                "WEB-INF", "views", "viewer",
+                "collabViewInstallPage.jsp"))));
+        assertFalse(Files.exists(webappRoot.resolve(Path.of(
+                "install", "COLLABVIEW_COMMON.exe"))));
         assertFalse(customFont.contains(
                 "/resources/fonts/pretendard/"));
         assertTrue(customFont.contains(

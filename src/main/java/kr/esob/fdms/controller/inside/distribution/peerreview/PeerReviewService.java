@@ -416,7 +416,7 @@ public class PeerReviewService implements CommonService {
 
     private String loadRegistrationMailTemplate() {
         try {
-            ClassPathResource resource = new ClassPathResource("templates/mail/mps8_kari_document_notification_email_template.html");
+            ClassPathResource resource = new ClassPathResource("templates/mail/kt1b_document_notification_email_template.html");
             return StreamUtils.copyToString(resource.getInputStream(), StandardCharsets.UTF_8);
         } catch (Exception e) {
             return "";

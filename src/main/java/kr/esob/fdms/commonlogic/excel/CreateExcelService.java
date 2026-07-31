@@ -1,12 +1,3 @@
-/**
- * Esob Document External
- *
- * (Copyright ⓒ 2023 Esob Co., Ltd. All Rights Reserved)
- *
- * $Revision: 414 $
- * $LastChangedDate: 2023-03-19 09:50:35 +0900 (수, 19 3 2023) $
- * $LastChangedBy: younjh $
- */
 package kr.esob.fdms.commonlogic.excel;
 
 import java.awt.Color;

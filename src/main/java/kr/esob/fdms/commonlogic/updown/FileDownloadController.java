@@ -77,7 +77,7 @@ public class FileDownloadController {
                 throw new IllegalStateException("Download completion was not persisted.");
             }
 
-            boolean auditSaved = updownV2Service.saveOutsideDistributionDownloadActLog(
+            boolean auditSaved = updownV2Service.saveDownloadAudit(
                 actor, completedState, DownloadRuntimeStatus.COMPLETED.name(), null);
             if (!auditSaved) {
                 log.error("[DOWNLOAD][DENY] success audit persistence failed");
@@ -91,8 +91,6 @@ public class FileDownloadController {
                     "Download audit checkpoint was not persisted.");
             }
 
-            updownV2Service.updateOutsideDistributionDeliveryConfirm(
-                completedState, DownloadRuntimeStatus.COMPLETED.name());
         } catch (Exception exception) {
             log.error("[DOWNLOAD][DENY] completion persistence failed. type={}",
                 exception.getClass().getSimpleName());

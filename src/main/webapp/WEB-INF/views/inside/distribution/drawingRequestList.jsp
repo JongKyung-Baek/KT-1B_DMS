@@ -7,7 +7,7 @@
 
 			<head>
 				<meta charset="UTF-8">
-				<title>CollabHub</title>
+				<title>KT-1B DMS</title>
 				<style>
 					.ch-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;line-height:1.4}
 					.ch-badge-processing{background:#fff4cc;color:#8a6d00}

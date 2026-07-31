@@ -1,7 +1,7 @@
 package kr.esob.fdms.controller.inside.distribution.drawingrequest;
 
 import kr.esob.fdms.commonlogic.abstractclass.CommonParam;
-import kr.esob.fdms.controller.outside.drawing.request.DrawingInfoVO;
+import kr.esob.fdms.commonlogic.distribution.model.DrawingInfoVO;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;

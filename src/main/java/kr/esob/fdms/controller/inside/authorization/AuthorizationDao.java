@@ -12,7 +12,6 @@ import kr.esob.fdms.commonlogic.combo.ComboInfoVO;
 import kr.esob.fdms.commonlogic.combo.SearchComboInfoVO;
 import kr.esob.fdms.commonlogic.combo.SearchComboParamVO;
 import kr.esob.fdms.controller.inside.distribution.approval.ApprovalPopupParam;
-import kr.esob.fdms.controller.inside.unregisted.request.DistributionRequestPopupParam;
 import kr.esob.fdms.controller.login.UserVO;
 
 @Repository
@@ -64,11 +63,6 @@ public class AuthorizationDao extends AbstractDao {
 		return list(prefix + "selectDefenseTeamLeaderList");
 	}
 
-
-	@SuppressWarnings("unchecked")
-	public List<ComboInfoVO> getTeamLeader(DistributionRequestPopupParam param) {
-		return list(prefix + "selectTeamLeader");
-	}
 
 	@SuppressWarnings("unchecked")
 	public List<ComboInfoVO> selectDeptComboListByBusinessArea(SearchComboParamVO vo){

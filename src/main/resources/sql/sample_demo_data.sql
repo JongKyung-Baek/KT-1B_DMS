@@ -14,6 +14,8 @@
 --
 -- Local demo users use the password supplied separately with the development
 -- environment. Never run this script in production.
+-- Run internal_only_cleanup_ddl.sql first; the Windows package builder does so
+-- automatically before applying this reset.
 
 \set ON_ERROR_STOP on
 
@@ -95,8 +97,6 @@ TRUNCATE TABLE
     docs_request_detail,
     docs_request_deploy,
     docs_request,
-    docs_user_request_number,
-    docs_user_request,
     docs_notice_file,
     docs_notice,
     docs_conf_notice_file,
@@ -129,6 +129,19 @@ DELETE FROM docs_role_group_member
 
 DELETE FROM docs_user
  WHERE user_cd <> 'USER_0000000001';
+
+-- The closed-network demo contains one neutral internal organization only.
+DELETE FROM docs_company
+ WHERE company_cd <> 'COMP_0000000999';
+
+UPDATE docs_company
+   SET company_nm = 'KT-1B',
+       company_type = 'I',
+       use_yn = 'Y',
+       del_yn = 'N',
+       update_user_cd = 'admin',
+       update_dt = CURRENT_TIMESTAMP
+ WHERE company_cd = 'COMP_0000000999';
 
 TRUNCATE TABLE docs_dept;
 
@@ -523,7 +536,7 @@ INSERT INTO docs_sw_file (
 SELECT document.seq_no,
        document.object_id,
        '1',
-       'E:/_src/_other/KT-1B_DMS/E_PDF/file.pdf',
+       'deployment/windows-demo/assets/demo-document.pdf',
        document.main_file_nm,
        lower(replace(document.object_id, '-', '_')) || '.pdf',
        '47093',
@@ -556,7 +569,7 @@ SELECT document.sub_object_id,
        document.object_id,
        1,
        document.sub_file_nm,
-       'E:/_src/_other/KT-1B_DMS/E_PDF/file.pdf',
+       'deployment/windows-demo/assets/demo-document.pdf',
        47093,
        'Y',
        document.owner_user_id,
@@ -1156,6 +1169,46 @@ BEGIN
            AND group_code = 'RG_001'
     ) <> 1 THEN
         RAISE EXCEPTION 'The admin role membership was not preserved.';
+    END IF;
+
+    IF (
+        SELECT COUNT(*)
+          FROM docs_company
+         WHERE company_cd = 'COMP_0000000999'
+           AND company_nm = 'KT-1B'
+           AND company_type = 'I'
+           AND use_yn = 'Y'
+           AND del_yn = 'N'
+    ) <> 1 OR (SELECT COUNT(*) FROM docs_company) <> 1 THEN
+        RAISE EXCEPTION 'The demo must contain only the neutral KT-1B company.';
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+          FROM docs_menu
+         WHERE auth_site IS DISTINCT FROM 'I'
+            OR parent_menu_cd = 'E'
+            OR COALESCE(menu_url, '') ~* '(^|/)outside/'
+            OR COALESCE(menu_url, '') ~*
+               '^/inside/(unregisted|outregisted)(/|$)'
+            OR COALESCE(menu_url, '') ~*
+               '^/inside/organizationmanage/(outsideuser|approval)(/|$)'
+    ) THEN
+        RAISE EXCEPTION 'The demo contains a retired external menu.';
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+          FROM docs_user
+         WHERE auth_site IS DISTINCT FROM 'I'
+    ) THEN
+        RAISE EXCEPTION 'The demo contains a non-internal user marker.';
+    END IF;
+
+    IF to_regclass('public.docs_user_request') IS NOT NULL
+       OR to_regclass('public.docs_user_request_number') IS NOT NULL
+       OR to_regclass('public.docs_external_user_id_sequence') IS NOT NULL THEN
+        RAISE EXCEPTION 'External-user request database objects remain.';
     END IF;
 
     IF (

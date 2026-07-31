@@ -147,7 +147,7 @@ public class DownloadRuntimeCleanupScheduler {
         actor.setUserCd(state.getOwnerUserCd());
         actor.setUserId(state.getOwnerUserId());
         actor.setUserNm(state.getOwnerUserNm());
-        if (!updownV2Service.saveOutsideDistributionDownloadActLog(
+        if (!updownV2Service.saveDownloadAudit(
                 actor, state, state.getStatus().name(), state.getErrorMessage())) {
             return false;
         }

@@ -199,7 +199,6 @@
 		, FILE_NO
 		, FILE_NM
 		, FILE_PATH
-		, FILE_PATH_OUTSIDE
 		, FILE_SIZE
 		, UPLOAD_USER_CD
 		, UPLOAD_DT
@@ -212,7 +211,6 @@
 		, CAST(#{fileNo} AS INTEGER)
 		, #{fileNm}
 		, #{filePath}
-		, #{filePathOutside}
 		, CAST(#{fileSize} AS INTEGER)
 		, #{sessionUser.userCd}
 		, CURRENT_TIMESTAMP
@@ -222,14 +220,22 @@
 	</insert>
 
 	<select id="selectFilePath" resultType="kr.esob.fdms.controller.bbs.notice.BbsNoticeFileVO">
-		SELECT *
+		SELECT NOTICE_CD AS noticeCd
+			 , FILE_NO AS fileNo
+			 , FILE_NM AS fileNm
+			 , FILE_PATH AS filePath
+			 , FILE_SIZE AS fileSize
 		FROM DOCS_NOTICE_FILE
 		WHERE NOTICE_CD = #{noticeCd}
 		  AND FILE_NO = CAST(#{fileNo} AS INTEGER)
 	</select>
 
 	<select id="selectNoticeFileList" resultType="kr.esob.fdms.controller.bbs.notice.BbsNoticeFileVO">
-		SELECT *
+		SELECT NOTICE_CD AS noticeCd
+			 , FILE_NO AS fileNo
+			 , FILE_NM AS fileNm
+			 , FILE_PATH AS filePath
+			 , FILE_SIZE AS fileSize
 		FROM DOCS_NOTICE_FILE
 		WHERE NOTICE_CD = #{noticeCd}
 	</select>

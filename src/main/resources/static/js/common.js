@@ -355,26 +355,13 @@ function openFile(requestType, objectType, requestNo, objectId, fileNo, protectY
 		return;
 	}
 
-	if (!getOutsideCompanyAuthYn()) {
-		alertMessage(g_msg('msg.stopDealCompany'));
-		isProcessing = false;
-		return;
-	}
 
 	if ("Y" === protectYn && "UNREG" !== requestType && "PRODUCT" !== requestType) {
 		var protectList = [objectId];
 
-		if ('E' === AUTH_SITE) {
-			if (!getOutsideProtectYn()) {
-				alertMessage(g_msg('msg.noAuthProtectRequest'));
-				isProcessing = false;
-				return;
-			}
-		} else {
-			if (!getProtectAuthYn(objectType, protectList)) {
-				isProcessing = false;
-				return;
-			}
+		if (!getProtectAuthYn(objectType, protectList)) {
+			isProcessing = false;
+			return;
 		}
 	}
 
@@ -433,7 +420,6 @@ function openPrintViewer(requestType, gridId, userType){
 	var protectList = [];	// 방산기술자료 - 방산기술자료 체크할 목록
 	var auth = true;		// 방산기술자료 - 권한
 	var objectType = '';	// 방산기술자료 - 자료유형
-	var outsideAuth = getOutsideProtectYn();	// 방산기술자료 - 외부사용자 권한
 	
 	var objectId = '';
 
@@ -479,7 +465,6 @@ function openPrintViewer(requestType, gridId, userType){
 			return false;
 		}
 
-		if('I' === AUTH_SITE) {
 			if(data.printCount >= 3){ // 0>1 , 1>2 , 2>3 .  2초과 또는 3이상일때 프린트 횟수 막아야함
 			   alertMessage(g_msg('msg.printCount'));  // 출력횟수 초과
 				auth = false;
@@ -497,32 +482,12 @@ function openPrintViewer(requestType, gridId, userType){
 				auth = false;
 				return false;
 			}
-		}
 
-
-
-		else if('E' === AUTH_SITE) {
-			if(!getOutsideCompanyAuthYn()) {
-				alertMessage(g_msg('msg.stopDealCompany'));
-				auth = false;
+		if ("Y" === data.protectYn && "PRODUCT" !== requestType && requestType != "PRINT") {
+			protectList = [data.objectId];
+			auth = getProtectAuthYn(data.objectType, protectList);
+			if (!auth) {
 				return false;
-			}
-		}
-
-		if( "Y"===data.protectYn && "UNREG" !== requestType && "PRODUCT" !== requestType){
-			if('E' === AUTH_SITE && !outsideAuth) {
-				alertMessage(g_msg('msg.noAuthProtectRequest'));
-				auth = false;
-				return false;
-			}
-			else if('I' === AUTH_SITE) {
-				if(requestType != "PRINT") {
-					protectList = [data.objectId];
-					auth = getProtectAuthYn(data.objectType, protectList);
-					if(!auth) {
-						return false;
-					}
-				}
 			}
 		}
 	});
@@ -1014,41 +979,13 @@ function checkVersionInsideUser(objectType, gridId) {
 	openDialogPopup(url, data, "popupDialog", 'l', popupHeight, true, 'popup-common popup-version-check');
 }
 
-function checkVersionOutsideUser(objectType, gridId) {
-	var selectedRows = $("#" + gridId).getGridParam('selarrrow');
-
-	if(selectedRows.length < 1){
-		alertMessage(g_msg('msg.noSelectData'));
-		return false;
-	}
-
-	if(selectedRows.length > 1){
-		alertMessage(g_msg('msg.chooseOneDrawing'));
-		return false;
-	}
-
-	var url = '/outside/drawing/approvalStatus/' + objectType.toLowerCase() + 'VersionCheckPopup';
-	var data = $("#" + gridId).jqGrid('getRowData', selectedRows[0]);
-
-	openDialogPopup(url, data, "popupDialog", 'm', 500, true, 'popup-common popup-version-check');
-}
 
 /**
  * 이용가능한 업체인지 확인
  * @returns
  */
 function getOutsideCompanyAuthYn() {
-	var protectParam = {};
-
-	var auth = true;
-
-	callAjax(protectParam, '/inside/authorization/getOutsideCompanyAuthYn', function(response){
-		if("N" !== response.delYn) {
-			auth = false;
-		}
-	}, 'json', false);
-
-	return auth;
+	return true;
 }
 
 /**
@@ -1056,17 +993,7 @@ function getOutsideCompanyAuthYn() {
  * @returns
  */
 function getOutsideProtectYn() {
-	var protectParam = {};
-
-	var auth = true;
-
-	callAjax(protectParam, '/inside/authorization/checkOutsideProtectAuth', function(response){
-		if("Y" !== response.protectYn) {
-			auth = false;
-		}
-	}, 'json', false);
-
-	return auth;
+	return true;
 }
 
 /**
@@ -1099,7 +1026,7 @@ function getDeployTerm(purpose, distributeTypeCd) {
 
 	return '3';
 }
-/*[KAI] DownLoad*/
+/* Download */
 var HEADER_FILE_DOWNLOAD = "0001";
 var I_WS_SIZE_HEADER = 4;
 var I_WS_SIZE_UUID = 32;

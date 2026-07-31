@@ -7,16 +7,12 @@ import kr.esob.fdms.commonlogic.message.CommonMessageContainer;
 import kr.esob.fdms.commonlogic.securityacl.FileAccessRequest;
 import kr.esob.fdms.commonlogic.securityacl.SecurityAclService;
 import kr.esob.fdms.commonlogic.systemconfig.SystemConfig;
-import kr.esob.fdms.commonlogic.value.Constant;
 import kr.esob.fdms.controller.inside.distribution.doc_pdf_link_request.DocPdfLinkRequestDao;
-import kr.esob.fdms.controller.inside.unregisted.request.UnregisterRequestDao;
-import kr.esob.fdms.controller.outside.commonrequest.CommonRequestDao;
-import kr.esob.fdms.controller.outside.commonrequest.RequestParam;
 import kr.esob.fdms.controller.login.UserVO;
 import kr.esob.fdms.util.FileUtil;
 import kr.esob.fdms.util.StoragePathUtils;
-import kr.esob.fdms.util.seed.seed.Seed128Cipher;
 import net.sf.json.JSONObject;
+import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -50,12 +46,6 @@ public class CommonViewerService implements CommonService{
 	CommonMessageContainer msg;
 
 	@Inject
-	CommonRequestDao commonRequestDao;
-
-	@Inject
-	UnregisterRequestDao unregisterRequestDao;
-
-	@Inject
 	SecurityAclService securityAclService;
 
 	@Inject
@@ -79,11 +69,17 @@ public class CommonViewerService implements CommonService{
 			"출력 성공 결과를 검증하는 뷰어 연계가 완료될 때까지 출력 기능을 사용할 수 없습니다.";
 
 	private CommonViewerVO getFileInfo(CommonViewerParam param) {
+		if (param.getRequestType() != null
+				&& param.getRequestType().startsWith("UNREG")) {
+			throw new IllegalArgumentException(
+					"Unregistered-material viewing is no longer supported.");
+		}
 		CommonViewerVO tempFileInfo = new CommonViewerVO();
 		if("OBJECT".equals(param.getRequestType())) {                //도면,문서,SW 아이템
 			tempFileInfo = dao.getObjectFileInfo(param);
 		}else if("UNREG".equals(param.getRequestType())) {            //미등록자료
-			tempFileInfo = dao.getUnregFileInfo(param);
+			throw new IllegalArgumentException(
+					"Unregistered-material viewing is no longer supported.");
 		}else if("PRODUCT".equals(param.getRequestType())) {        //생산기술자료
 			if(null == param.getRequestNo() || "".equals(param.getRequestNo())) {
 				tempFileInfo = dao.getProductFileInfo(param);
@@ -205,207 +201,66 @@ public boolean getDestroyStatus(CommonViewerParam param) throws ParseException, 
 		bindActorAndRequire(param, SecurityAclService.VIEW);
 		CommonViewerVO result = new CommonViewerVO();
 		result.setSuccess(false);
-		//파일 정보 조회
-		CommonViewerVO tempFileInfo = getFileInfo(param);
 		result.setRequestType(param.getRequestType());
-
-		//파일 Copy
-//		File orgFile = new File(SystemConfig.getSystemConfigValue("VIEWER_NETWORK_PATH") + tempFileInfo.getFilePath());
-
-		if( null==tempFileInfo ) {            //파일이 없을경우
+		CommonViewerVO fileInfo = getFileInfo(param);
+		if (fileInfo == null) {
 			log.debug("[VIEWER] file metadata not found");
-			result.setSuccess(false);
-		} else if(tempFileInfo.getDestroyStatusCd() != null && ("1".equals(tempFileInfo.getDestroyStatusCd()) || "2".equals(tempFileInfo.getDestroyStatusCd()) || "3".equals(tempFileInfo.getDestroyStatusCd()))) {
-			// 1: 폐기중, 2: 폐기요청, 3: 폐기승인
-			// 폐기상태일 경우 출력 불가
-			result.setSuccess(false);
+			return result;
+		}
+		if ("1".equals(fileInfo.getDestroyStatusCd())
+				|| "2".equals(fileInfo.getDestroyStatusCd())
+				|| "3".equals(fileInfo.getDestroyStatusCd())) {
 			result.setFailType("DESTROY");
-			result.setFailReason("폐기상태인 자료는 VIEW 할 수 없습니다.");
-		} else {
-			String ext = tempFileInfo.getFileOrgNm().substring(tempFileInfo.getFileOrgNm().lastIndexOf(".")+1, tempFileInfo.getFileOrgNm().length());
-			for(String exceptionExt : EXCEPTION_EXT) {
-				if(ext.equals(exceptionExt)) {
-					result.setSuccess(false);
-					result.setFailType("NO_SUPPORT_EXT");
-					result.setFailReason(exceptionExt);
-					return result;
-				}
-			}
-//			String tempPath = SystemConfig.getSystemConfigValue("VIEWER_TEMP_PATH").replace("$", "");
-//			String tempFileNm = tempFileInfo.getFileNm() + "." + ext;
-//			String copyPath = tempPath + tempFileNm;
-//			File temp = new File(tempPath);
-//			if(temp.isDirectory()) {
-//				temp.mkdir();
-//			}
-			String orgPath = "";
-			String orgPathOut = "";
-			boolean fileApiSource = "SW".equals(param.getObjectType()) && isFileApiPath(tempFileInfo.getFilePath());
-			if (fileApiSource) {
-				log.debug("[FILE_API_VIEWER] source detected");
-				orgPath = cacheFileApiFileForViewer(tempFileInfo.getFilePath(), tempFileInfo.getFileOrgNm());
-				orgPathOut = orgPath;
-			} else if( ("UNREG".equals(param.getRequestType())) || ("UNREG_DISTRIBUTION".equals(param.getRequestType())) ) {
-				orgPath = StoragePathUtils.toPath(tempFileInfo.getFilePath()).toString();
-			}else {
-				orgPath = StoragePathUtils.resolve(
-						SystemConfig.getSystemConfigValue("VIEWER_NETWORK_PATH"),
-						tempFileInfo.getFilePath()).toString();
-				orgPathOut = tempFileInfo.getFilePath();
-//				orgPath = SystemConfig.getSystemConfigValue("VIEWER_NETWORK_PATH") +  tempFileInfo.getFileNm();
-			}
-
-
-//			if(copyFile(orgPath, copyPath)) {
-//				String rtnFilePath = "";
-//				if( ("".equals(SystemConfig.getSystemConfigValue("VIEWER_PATH"))) || (null == SystemConfig.getSystemConfigValue("VIEWER_PATH") ) ) {
-//					rtnFilePath = SystemConfig.getSystemConfigValue("VIEWER_TEMP_PATH") + tempFileNm;
-//				}else {
-//					rtnFilePath = SystemConfig.getSystemConfigValue("VIEWER_PATH") + tempFileNm;
-//				}
-//				rtnFilePath = rtnFilePath.replaceAll("/", "\\\\\\\\");
-//				orgPath = orgPath.replaceAll("/", "\\\\\\\\");
-//				orgPath = orgPath.replaceAll("/", "\\\\");
-
-//				String sViewerPath = URLEncoder.encode(SystemConfig.getSystemConfigValue("VIEWER_URL") + orgPath);
-
-			result.setAuthLevel(param.getSessionUser().getAuthLevel());
-
-			String sViewerServerIp = SystemConfig.getSystemConfigValue("SERVER_URL_INSIDE");
-			String oViewerServerIp = SystemConfig.getSystemConfigValue("SERVER_URL_OUTSIDE");
-
-			if (fileApiSource) {
-				String viewerTicket = viewerTicketService.issue(param, new File(orgPath).getName());
-				String viewerPath = buildAdapPdfViewerUrl(viewerTicket);
-				result.setFilePath(viewerPath);
-				result.setFileNm(tempFileInfo.getFileOrgNm());
-				result.setSuccess(true);
-				log.info("[VIEWER] file-api viewer prepared");
-			} else if(param.getSessionUser().getAuthSite().equals("E")) {
-				//외부서버에 옮겨질 파일 경로
-				String outServerFilepath = SystemConfig.getSystemConfigValue("VIEWER_UPDOWN_PATH");
-				String orgPathOutTemp = outServerFilepath.replace("\\\\", "\\");
-				//http://211.197.235.163:9001/DaVuForEG/DaViewSvc?ediauto=T&filename=$D:\\DOCS\\FILE\\general\\ff\\f2\\UA20030925_1_D_0_01.PLT
-
-				//외부서버로 파일 Copy 요청
-				JSONObject fileCall = FileUtil.callSender(
-						Seed128Cipher.encrypt(sViewerServerIp, Constant.legacyCryptoKeyBytes(), Constant.SEED_ENCODING)
-						, Seed128Cipher.encrypt(oViewerServerIp, Constant.legacyCryptoKeyBytes(), Constant.SEED_ENCODING)
-						, Seed128Cipher.encrypt(orgPath, Constant.legacyCryptoKeyBytes(), Constant.SEED_ENCODING)
-						, Seed128Cipher.encrypt(outServerFilepath, Constant.legacyCryptoKeyBytes(), Constant.SEED_ENCODING)
-						, Seed128Cipher.encrypt(tempFileInfo.getFileOrgNm(), Constant.legacyCryptoKeyBytes(), Constant.SEED_ENCODING));
-				String transferredFileName = FileUtil.requireSuccessfulTransferFileName(fileCall);
-				log.info("[VIEWER] legacy transfer prepared");
-
-				//외부서버 뷰어 호출 URL
-				//String oViewerPath = null;
-				String oViewerPath = orgPathOutTemp + transferredFileName;
-
-				// 외부 서버로 파일을 옮긴 다음 파일 분할
-				if(ext.equalsIgnoreCase("SVG")) {
-					List<String> svgList = ViewerUtil.executeSvgFileParser(orgPathOutTemp + transferredFileName);
-
-					if(svgList.size() > 0) {
-						StringBuilder sb = new StringBuilder();
-
-						for(String v: svgList) {
-							if(!"".equals(sb.toString())) {
-								sb.append("|");
-								File f = new File(v);
-								sb.append(f.getName());
-							} else {
-								sb.append(v);
-							}
-						}
-
-						oViewerPath = sb.toString();
-					}
-				}
-
-				result.setFilePath(SystemConfig.getSystemConfigValue("VIEWER_URL_OUT") + oViewerPath);
-				result.setFileNm(tempFileInfo.getFileOrgNm());
-				result.setSuccess(true);
-				log.info("[VIEWER] external viewer prepared");
-			} else {
-				//내부서버 뷰어 호출 URL
-				String sViewerPath = SystemConfig.getSystemConfigValue("VIEWER_URL") + orgPath;
-				//String sViewerPath = null;
-
-				// 파일 분할
-				if(ext.equalsIgnoreCase("SVG")) {
-					List<String> svgList = ViewerUtil.executeSvgFileParser(orgPath);
-
-					if(svgList.size() > 0) {
-						StringBuilder sb = new StringBuilder();
-
-						for(String v: svgList) {
-							if(!"".equals(sb.toString())) {
-								sb.append("|");
-								File f = new File(v);
-								sb.append(f.getName());
-							} else {
-								sb.append(v);
-							}
-
-						}
-
-						sViewerPath = SystemConfig.getSystemConfigValue("VIEWER_URL") + sb.toString();
-					}
-				}
-
-				result.setFilePath(sViewerPath);
-				result.setFileNm(tempFileInfo.getFileOrgNm());
-				result.setSuccess(true);
-				log.info("[VIEWER] internal viewer prepared");
-			}
-
-//			}else {
-//				result.setSuccess(false);
-//			}
-			if(result.isSuccess()) {
-				if(param.getSessionUser().getAuthSite().equals("E")) {
-					CommonViewerParam watermarkParam = new CommonViewerParam();
-					CommonViewerVO viewFileInfo = new CommonViewerVO();
-					viewFileInfo = dao.selectFileInfo(param);
-					if("Y".equals(tempFileInfo.getProtectYn())) {
-						// 외부사용자 중  경우 워터마크만
-						watermarkParam.setUserType("OUT");
-						watermarkParam.setWatermarkType("GENERALPROTECT");
-						watermarkParam.setRequestNo(param.getRequestNo());
-						watermarkParam.setFileNo(param.getFileNo());
-						watermarkParam.setObjectId(param.getObjectId());
-					}else {
-						// 외부사용자 중 방산기술일 경우 방산기술 + 워터마크
-						watermarkParam.setUserType("OUT");
-						watermarkParam.setWatermarkType("GENERAL");
-						watermarkParam.setRequestNo(param.getRequestNo());
-						watermarkParam.setFileNo(param.getFileNo());
-						watermarkParam.setObjectId(param.getObjectId());
-					}
-					result.setWatermarkInfo(getWatermarkInfo(watermarkParam, viewFileInfo));
-				}else {
-					CommonViewerParam watermarkParam = new CommonViewerParam();
-
-					if("Y".equals(tempFileInfo.getProtectYn())) {        //방산기술일 경우 뷰어에도 워터마크 표기
-						watermarkParam.setWatermarkType("PROTECT");
-					} else {
-						watermarkParam.setWatermarkType("ITEM");
-					}
-					watermarkParam.setUserType("IN");
-					result.setWatermarkInfo(getWatermarkInfo(watermarkParam, tempFileInfo));
-					//}
-				}
-			}
-
-
-			log.debug("[VIEWER] source resolved");
+			result.setFailReason("Destroyed documents cannot be viewed.");
+			return result;
 		}
 
-		log.debug("[VIEWER] response prepared");
+		String originalName = fileInfo.getFileOrgNm();
+		String ext = FilenameUtils.getExtension(originalName);
+		for (String unsupportedExt : EXCEPTION_EXT) {
+			if (unsupportedExt.equalsIgnoreCase(ext)) {
+				result.setFailType("NO_SUPPORT_EXT");
+				result.setFailReason(unsupportedExt);
+				return result;
+			}
+		}
 
+		boolean fileApiSource = "SW".equals(param.getObjectType())
+				&& isFileApiPath(fileInfo.getFilePath());
+		String sourcePath = fileApiSource
+				? cacheFileApiFileForViewer(fileInfo.getFilePath(), originalName)
+				: StoragePathUtils.resolve(
+						SystemConfig.getSystemConfigValue("VIEWER_NETWORK_PATH"),
+						fileInfo.getFilePath()).toString();
+
+		result.setAuthLevel(param.getSessionUser().getAuthLevel());
+		if (fileApiSource) {
+			String viewerTicket = viewerTicketService.issue(param, new File(sourcePath).getName());
+			result.setFilePath(buildAdapPdfViewerUrl(viewerTicket));
+		} else {
+			String viewerPath = SystemConfig.getSystemConfigValue("VIEWER_URL") + sourcePath;
+			if ("SVG".equalsIgnoreCase(ext)) {
+				List<String> svgFiles = ViewerUtil.executeSvgFileParser(sourcePath);
+				if (!svgFiles.isEmpty()) {
+					StringJoiner joined = new StringJoiner("|");
+					for (String svgFile : svgFiles) {
+						joined.add(new File(svgFile).getName());
+					}
+					viewerPath = SystemConfig.getSystemConfigValue("VIEWER_URL") + joined;
+				}
+			}
+			result.setFilePath(viewerPath);
+		}
+		result.setFileNm(originalName);
+		result.setSuccess(true);
+
+		CommonViewerParam watermarkParam = new CommonViewerParam();
+		watermarkParam.setWatermarkType("Y".equals(fileInfo.getProtectYn()) ? "PROTECT" : "ITEM");
+		watermarkParam.setUserType("IN");
+		result.setWatermarkInfo(getWatermarkInfo(watermarkParam, fileInfo));
+		log.debug("[VIEWER] response prepared");
 		return result;
 	}
-
 
 	public boolean copyFile(String orgPath, String targetPath) {
 		boolean ret = true;
@@ -859,240 +714,8 @@ public boolean getDestroyStatus(CommonViewerParam param) throws ParseException, 
 	}
 
 	@SuppressWarnings("unused")
-	private CommonViewerVO prepareLegacyPrintInfo(CommonViewerParam param) throws ParseException {
-		bindActorAndRequire(param, SecurityAclService.PRINT);
-		CommonViewerVO result = new CommonViewerVO();
-
-		try {
-			String outServerFilepath = SystemConfig.getSystemConfigValue("UPDOWN_PRINT_PATH");
-
-			String filePath = "";
-			String filePathOut = "";
-			CommonViewerVO fileInfo = new CommonViewerVO();
-
-			fileInfo = getFileInfo(param);
-
-			if( null == fileInfo ) {            //파일이 없을경우
-				result.setSuccess(false);
-			}
-//			else if( fileInfo.getPrintCount() >= Integer.parseInt(SystemConfig.getSystemConfigValue("PRINT_COUNT")) ) {
-//				result.setSuccess(false);
-//				result.setFailType("OVER_PRINT_COUNT");
-//				result.setFailReason(fileInfo.getFileOrgNm());
-//			}
-			else if("1".equals(fileInfo.getDestroyStatusCd()) || "2".equals(fileInfo.getDestroyStatusCd()) || "3".equals(fileInfo.getDestroyStatusCd())) {
-				// 1: 폐기중, 2: 폐기요청, 3: 폐기승인
-				// 폐기상태일 경우 출력 불가
-				result.setSuccess(false);
-				result.setFailType("DESTROY");
-				result.setFailReason("폐기상태인 자료는 출력할 수 없습니다.");
-			} else {                                //파일이 있는경우
-				String ext = fileInfo.getFileOrgNm().substring(fileInfo.getFileOrgNm().lastIndexOf(".")+1, fileInfo.getFileOrgNm().length());
-				if (!"PDF".equalsIgnoreCase(ext)) {
-					throw new UnsupportedOperationException(
-							"Printing is limited to ticket-backed PDF files.");
-				}
-//			for(CommonViewerVO tempFileInfo : fileInfo) {
-//				String ext = fileInfo.getFileOrgNm().substring(fileInfo.getFileOrgNm().lastIndexOf(".")+1, fileInfo.getFileOrgNm().length());
-//				String tempPath = SystemConfig.getSystemConfigValue("VIEWER_TEMP_PATH").replace("$", "");
-//				String copyPath = tempPath + fileInfo.getFileOrgNm();
-//				String tempFileNm = fileInfo.getFileNm() + "." + ext;
-//				String copyPath = tempPath + tempFileNm;
-
-//				File temp = new File(tempPath);
-//				if(temp.isDirectory()) {
-//					temp.mkdir();
-//				}
-//				String orgPath = "";
-				if( ("UNREG".equals(param.getRequestType())) || ("UNREG_DISTRIBUTION".equals(param.getRequestType())) ) {
-					filePath = fileInfo.getFilePath();
-				}else {
-					filePath = StoragePathUtils.resolve(
-							SystemConfig.getSystemConfigValue("VIEWER_NETWORK_PATH"),
-							fileInfo.getFilePath()).toString();
-					filePathOut = outServerFilepath + fileInfo.getFileOrgNm();
-//						orgPath = SystemConfig.getSystemConfigValue("VIEWER_NETWORK_PATH") + tempFileInfo.getFileNm();
-				}
-
-				//내부서버 네트워크 드라이브 원본 경로
-				String orgPath = StoragePathUtils.resolve(
-						SystemConfig.getSystemConfigValue("VIEWER_NETWORK_PATH"),
-						fileInfo.getFilePath()).toString();
-				String sViewerServerIp = SystemConfig.getSystemConfigValue("SERVER_URL_INSIDE");
-				String oViewerServerIp = SystemConfig.getSystemConfigValue("SERVER_URL_OUTSIDE");
-				String fileTransId = "";
-				if(param.getSessionUser().getAuthSite().equals("E") && !"PDF".equalsIgnoreCase(ext)) {
-					//외부서버 출력
-					result.setFileOrgNm(fileInfo.getFileOrgNm());
-					log.debug("[PRINT_VIEWER] external source prepared");
-					//http://211.197.235.163:9001/DaVuForEG/DaViewSvc?ediauto=T&filename=$D:\\DOCS\\FILE\\general\\ff\\f2\\UA20030925_1_D_0_01.PLT
-
-					//외부서버로 파일 Copy 요청
-					JSONObject fileCall = FileUtil.callSender(
-							Seed128Cipher.encrypt(sViewerServerIp, Constant.legacyCryptoKeyBytes(), Constant.SEED_ENCODING),
-							Seed128Cipher.encrypt(oViewerServerIp, Constant.legacyCryptoKeyBytes(), Constant.SEED_ENCODING),
-							Seed128Cipher.encrypt(orgPath, Constant.legacyCryptoKeyBytes(), Constant.SEED_ENCODING),
-							Seed128Cipher.encrypt(outServerFilepath, Constant.legacyCryptoKeyBytes(), Constant.SEED_ENCODING),
-							Seed128Cipher.encrypt(fileInfo.getFileOrgNm(), Constant.legacyCryptoKeyBytes(), Constant.SEED_ENCODING));
-					fileTransId = requireSuccessfulTransfer(fileCall);
-
-//					String oViewerPath = orgPathOutTemp + fileCall.get("fileNm");
-//
-//					// 외부 서버로 파일을 옮긴 다음 파일 분할
-//					if(ext.equalsIgnoreCase("SVG")) {
-//						List<String> svgList = ViewerUtil.executeSvgFileParser(orgPathOutTemp + fileCall.get("fileNm"));
-//
-//						if(svgList.size() > 0) {
-//							StringBuilder sb = new StringBuilder();
-//
-//							for(String v: svgList) {
-//								if(!"".equals(sb.toString())) {
-//									sb.append("|");
-//									File f = new File(v);
-//									sb.append(f.getName());
-//								}
-//								else {
-//									sb.append(v);
-//								}
-//							}
-//
-//							oViewerPath = sb.toString();
-//						}
-//					}
-//
-//					result.setFilePath(SystemConfig.getSystemConfigValue("VIEWER_URL_OUT") + oViewerPath);
-
-					log.info("[PRINT_VIEWER] legacy transfer prepared");
-				}else {
-					//내부서버 출력
-					result.setFileOrgNm(fileInfo.getFileOrgNm());
-					log.debug("[PRINT_VIEWER] internal source prepared");
-				}
-
-//				log.info("copyPath : " + copyPath);
-//				if(copyFile(orgPath, copyPath)) {
-//					log.info("copy 성공");
-//					String rtnFilePath = "";
-//					if("".equals(filePath)) {
-//						if( ("".equals(SystemConfig.getSystemConfigValue("VIEWER_PATH"))) || (null == SystemConfig.getSystemConfigValue("VIEWER_PATH") ) ) {
-//							rtnFilePath = SystemConfig.getSystemConfigValue("VIEWER_TEMP_PATH") + tempFileNm;
-//						}else {
-//							rtnFilePath = SystemConfig.getSystemConfigValue("VIEWER_PATH") + tempFileNm;
-//						}
-//						filePath = rtnFilePath;
-//					}else {
-//						filePath += '|' + fileInfo.getFileOrgNm();
-//					}
-
-//					filePath = orgPath;
-
-//				}else {
-//					result.setSuccess(false);
-//				}
-//			}
-
-				if(!isBlankValue(result.getFileOrgNm())) {
-					//워터마크
-					filePath = StoragePathUtils.toPath(filePath).toString();
-//					filePath = filePath.replaceAll("a2085qdfpkgoaqow3mamhtmyn8hupqsbiqf8d1t8p6c.g4w", "111.txt");
-					log.debug("[PRINT_VIEWER] source normalized");
-
-					String viewerCallUrl = "";
-
-					if(param.getSessionUser().getAuthSite().equals("E") && !"PDF".equalsIgnoreCase(ext)) {
-						//viewerCallUrl = SystemConfig.getSystemConfigValue("VIEWER_URL_OUT") + outServerFilepath + fileTransId;
-
-						viewerCallUrl = outServerFilepath + fileTransId;
-
-						// 외부 서버로 파일을 옮긴 다음 파일 분할
-						if(ext.equalsIgnoreCase("SVG")) {
-							List<String> svgList = ViewerUtil.executeSvgFileParser(viewerCallUrl);
-
-							if(svgList.size() > 0) {
-								StringBuilder sb = new StringBuilder();
-
-								for(String v: svgList) {
-									if(!"".equals(sb.toString())) {
-										sb.append("|");
-										File f = new File(v);
-										sb.append(f.getName());
-									} else {
-										sb.append(v);
-									}
-								}
-
-								viewerCallUrl = sb.toString();
-							}
-						}
-
-						result.setFilePath(SystemConfig.getSystemConfigValue("VIEWER_URL_OUT") + viewerCallUrl);
-					}else {
-						viewerCallUrl = SystemConfig.getSystemConfigValue("VIEWER_URL") + filePath;
-
-						//내부서버 뷰어 호출 URL
-//						String sViewerPath = SystemConfig.getSystemConfigValue("VIEWER_URL") + orgPath;
-						//String sViewerPath = null;
-
-						// 파일 분할
-						if(ext.equalsIgnoreCase("SVG")) {
-							List<String> svgList = ViewerUtil.executeSvgFileParser(orgPath);
-
-							if(svgList.size() > 0) {
-								StringBuilder sb = new StringBuilder();
-
-								for(String v: svgList) {
-									if(!"".equals(sb.toString())) {
-										sb.append("|");
-										File f = new File(v);
-										sb.append(f.getName());
-									} else {
-										sb.append(v);
-									}
-
-								}
-
-								viewerCallUrl = SystemConfig.getSystemConfigValue("VIEWER_URL") + sb.toString();
-							}
-						}
-
-						result.setFilePath(viewerCallUrl);
-					}
-
-					String cachedPdfName = cacheLocalPdfForViewer(filePath);
-					String viewerTicket = viewerTicketService.issue(param, cachedPdfName);
-					result.setFilePath(buildAdapPdfViewerUrl(viewerTicket));
-					log.info("[PRINT_VIEWER] ticket-backed viewer prepared");
-					CommonViewerParam watermarkParam = new CommonViewerParam();
-					watermarkParam.setUserType(param.getUserType());
-					watermarkParam.setWatermarkType(param.getWatermarkType());
-					result.setWatermarkInfo(getWatermarkInfo(watermarkParam, fileInfo));
-
-					log.debug("[PRINT_VIEWER] response prepared");
-
-					// 실제 성공 콜백 전에는 출력 횟수를 올리지 않는다.
-					if (isBlankValue(result.getFilePath())) {
-						throw new IllegalStateException("Print viewer path was not prepared.");
-					}
-					result.setPrintJobId(printAuditService.start(param));
-					result.setSuccess(true);
-				}else {
-
-				}
-			}
-		} catch (Constant.LegacyCryptoConfigurationException e) {
-			log.error("Legacy print encryption is unavailable; configure KT1B_LEGACY_CRYPTO_KEY");
-			throw e;
-		} catch(Exception e) {
-			log.error("[PRINT_VIEWER] failed type={}", e.getClass().getSimpleName());
-			result.setSuccess(false);
-			result.setPrintJobId(null);
-			result.setFilePath(null);
-			result.setFileOrgNm(null);
-			result.setFailType("PRINT_PREPARE_FAILED");
-			result.setFailReason("Print file preparation failed.");
-		}
-
-		return result;
+	private CommonViewerVO prepareLegacyPrintInfo(CommonViewerParam param) {
+		throw new UnsupportedOperationException("Legacy print preparation is disabled.");
 	}
 
 	static String requireSuccessfulTransfer(JSONObject transfer) {
@@ -1159,9 +782,7 @@ public boolean getDestroyStatus(CommonViewerParam param) throws ParseException, 
 						}else if("distributeTypeNm".equals(strTemp)) {                            // 배포유형
 							strItemValue = fileInfo.getDistributeTypeNm();
 						}else if("purchaserAppDate".equals(strTemp)) {                            // 구매담당자 승인일
-							if(param.getSessionUser().getAuthSite().equals("E")) {
-								strItemValue = fileInfo.getPurchaserAppDate();
-							}
+							strItemValue = fileInfo.getPurchaserAppDate();
 						}else if("requestUserNm".equals(strTemp)) {                                // 요청자
 							strItemValue = fileInfo.getRequestUserNm();
 						}else if("requestPurpose".equals(strTemp)) {
@@ -1185,17 +806,6 @@ public boolean getDestroyStatus(CommonViewerParam param) throws ParseException, 
 		}
 
 		return watermarkInfo;
-	}
-
-
-	public void insertRequest(RequestParam param) {
-		commonRequestDao.insertDocsRequest(param);
-		commonRequestDao.insertDocsRequestMapping(param);
-		commonRequestDao.insertDocsRequestDetail(param);
-		commonRequestDao.insertDocsRequestDeploy(param);
-		if("DISTRIBUTION".equals(param.getRequestType())) {
-			commonRequestDao.insertDocsRequestFile(param);
-		}
 	}
 
 

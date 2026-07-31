@@ -271,7 +271,7 @@
 		  )
 	</select>
 
-	<select id="selectDisposalFileList" resultType="kr.esob.fdms.controller.outside.commondestroystatus.DestroyFileVO">
+	<select id="selectDisposalFileList" resultType="kr.esob.fdms.commonlogic.distribution.model.DestroyFileVO">
 		SELECT destroyRequest.DESTROY_REQUEST_NO
 			 , destroyFile.DESTROY_NO
 			 , destroyFile.DESTROY_FILE_SEQ
@@ -295,7 +295,7 @@
 	</select>
 
 
-	<select id="selectAuthorizedDownloadTargets" resultType="kr.esob.fdms.controller.outside.commondestroystatus.DestroyFileVO">
+	<select id="selectAuthorizedDownloadTargets" resultType="kr.esob.fdms.commonlogic.distribution.model.DestroyFileVO">
 		SELECT DISTINCT
 			   destroyRequest.DESTROY_REQUEST_NO
 			 , destroyFile.DESTROY_NO

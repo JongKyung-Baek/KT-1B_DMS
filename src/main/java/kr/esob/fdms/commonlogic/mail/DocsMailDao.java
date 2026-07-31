@@ -3,8 +3,7 @@ package kr.esob.fdms.commonlogic.mail;
 import kr.esob.fdms.commonlogic.abstractclass.AbstractDao;
 import kr.esob.fdms.controller.inside.cr.CrParam;
 import kr.esob.fdms.controller.inside.distribution.commonrequest.CommonApprovalParam;
-import kr.esob.fdms.controller.login.UserVO;
-import kr.esob.fdms.controller.outside.drawing.request.RequestListVO;
+import kr.esob.fdms.commonlogic.distribution.model.RequestListVO;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -37,24 +36,8 @@ public class DocsMailDao extends AbstractDao{
 		return (MailInfoVO) obj(prefix + "selectCrRequestUserInfo", param);
 	}
 
-	@SuppressWarnings("unchecked")
-	public List<String> selectUnregSecurityUserInfo(Object param){
-		return list(prefix + "selectUnregSecurityUserInfo", param);
-	}
-
 	public List<MailInfoVO> selectCompanyUserList(Object param){
 		return list(prefix + "selectCompanyUserList", param);
-	}
-
-	public UserVO selectUserInfo(Object param){
-		@SuppressWarnings("unchecked")
-		List<UserVO> list = list(prefix + "selectUserInfo", param);
-
-		if(null != list && list.size() > 0) {
-			return list.get(0);
-		}
-
-		return null;
 	}
 
 	public String selectPurchaserEmail(Object param) {

@@ -463,8 +463,8 @@
   <main class="wrap">
     <section class="visual">
       <div class="brand">
-        <div class="brand-ko">KAI</div>
-        <div class="brand-en">KT-1B</div>
+        <div class="brand-ko">KT-1B</div>
+        <div class="brand-en">DMS</div>
       </div>
 
       <div class="visual-title">
@@ -477,7 +477,7 @@
       </div>
 
       <div class="visual-footer">
-        Korea Aerospace Industries<br />
+        KT-1B<br />
         Technical Data Management System
       </div>
     </section>
@@ -801,7 +801,7 @@
           if (response && response.success) {
             $("#saveButton").text(passwordMessages.completed);
             showModal(passwordMessages.success, function() {
-              window.location.href = contextPath + "/login/loginPage?url_type=" + encodeURIComponent(authSite);
+              window.location.href = contextPath + "/login/loginPage";
             });
           } else {
             setSubmitting(false);

@@ -10,7 +10,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${pageTitle} - CollabHub</title>
+<title>${pageTitle} - KT-1B DMS</title>
 <link type="text/css" rel="stylesheet"
       href="${pageContext.request.contextPath}/resources/css/pages/distribution-invoice.css" media="screen">
 <link type="text/css" rel="stylesheet"

@@ -498,7 +498,7 @@
 
 
 
-<!--	<select id="getDrawingInfoList" resultType="kr.esob.fdms.controller.outside.drawing.request.DrawingInfoVO">-->
+<!--	<select id="getDrawingInfoList" resultType="kr.esob.fdms.commonlogic.distribution.model.DrawingInfoVO">-->
 <!--        SELECT *-->
 <!--        FROM DOCS_DRAWING-->
 <!--        WHERE DRAWING_NO IN-->
@@ -507,7 +507,7 @@
 <!--        </foreach>-->
 <!--	</select>-->
 
-<!--	<select id="getDrawingInfo" resultType="kr.esob.fdms.controller.outside.drawing.request.DrawingInfoVO">-->
+<!--	<select id="getDrawingInfo" resultType="kr.esob.fdms.commonlogic.distribution.model.DrawingInfoVO">-->
 <!--		SELECT 'Y' AS inspectionYn, info.*-->
 <!--		FROM DOCS_DRAWING info-->
 <!--		WHERE DRAWING_NO = #{drawingNo}-->
@@ -1139,7 +1139,7 @@
 	</select>
 
 
-	<select id="getDrawingInfoList" resultType="kr.esob.fdms.controller.outside.drawing.request.DrawingInfoVO">
+	<select id="getDrawingInfoList" resultType="kr.esob.fdms.commonlogic.distribution.model.DrawingInfoVO">
 		SELECT *
 		FROM DOCS_DRAWING
 		WHERE DRAWING_NO IN (
@@ -1150,7 +1150,7 @@
 	</select>
 
 
-	<select id="getDrawingInfo" resultType="kr.esob.fdms.controller.outside.drawing.request.DrawingInfoVO">
+	<select id="getDrawingInfo" resultType="kr.esob.fdms.commonlogic.distribution.model.DrawingInfoVO">
 		SELECT 'Y' AS inspectionYn, info.*
 		FROM DOCS_DRAWING info
 		WHERE DRAWING_NO = #{drawingNo}

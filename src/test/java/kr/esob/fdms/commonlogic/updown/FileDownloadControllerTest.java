@@ -79,7 +79,7 @@ class FileDownloadControllerTest {
         Path temporaryFile = Files.write(tempDir.resolve("drawing.pdf"), expected);
         RequestContext context = requestContext("USER-CD");
         prepareRuntime(temporaryFile, context.session.getId());
-        when(updownV2Service.saveOutsideDistributionDownloadActLog(
+        when(updownV2Service.saveDownloadAudit(
                 eq(context.actor), any(DownloadRuntimeState.class),
                 eq("COMPLETED"), isNull())).thenReturn(true);
 
@@ -90,8 +90,6 @@ class FileDownloadControllerTest {
         DownloadRuntimeState persisted = runtimeStore.get(WS_SEQ);
         assertEquals(DownloadRuntimeStatus.COMPLETED, persisted.getStatus());
         assertTrue(persisted.isActLogSaved());
-        verify(updownV2Service).updateOutsideDistributionDeliveryConfirm(
-            any(DownloadRuntimeState.class), eq("COMPLETED"));
 
         InputStreamResource resource = (InputStreamResource) response.getBody();
         try (InputStream input = resource.getInputStream()) {
@@ -111,7 +109,7 @@ class FileDownloadControllerTest {
             tempDir.resolve("blocked.pdf"), new byte[] { 5, 6, 7 });
         RequestContext context = requestContext("USER-CD");
         prepareRuntime(temporaryFile, context.session.getId());
-        when(updownV2Service.saveOutsideDistributionDownloadActLog(
+        when(updownV2Service.saveDownloadAudit(
                 eq(context.actor), any(DownloadRuntimeState.class),
                 eq("COMPLETED"), isNull())).thenReturn(false);
 
@@ -124,8 +122,6 @@ class FileDownloadControllerTest {
         DownloadRuntimeState persisted = runtimeStore.get(WS_SEQ);
         assertEquals(DownloadRuntimeStatus.FAILED, persisted.getStatus());
         assertFalse(persisted.isActLogSaved());
-        verify(updownV2Service, never()).updateOutsideDistributionDeliveryConfirm(
-            any(DownloadRuntimeState.class), any(String.class));
     }
 
     @Test
@@ -144,7 +140,7 @@ class FileDownloadControllerTest {
         assertTrue(Files.exists(temporaryFile));
         assertEquals(
             DownloadRuntimeStatus.FAILED, runtimeStore.get(WS_SEQ).getStatus());
-        verify(updownV2Service, never()).saveOutsideDistributionDownloadActLog(
+        verify(updownV2Service, never()).saveDownloadAudit(
             any(), any(), any(), any());
     }
 

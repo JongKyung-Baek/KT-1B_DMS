@@ -162,7 +162,7 @@ public class CommonUpdownV2Controller {
                     runtimeStore.update(param.getWsSeq(), s -> s.markFailed(clientMessage));
                     DownloadRuntimeState failedState = runtimeStore.get(param.getWsSeq());
                     if (failedState != null && userVo != null) {
-                        if (v2Service.saveOutsideDistributionDownloadActLog(
+                        if (v2Service.saveDownloadAudit(
                                 userVo, failedState, "FAILED", clientMessage)) {
                             runtimeStore.update(
                                 param.getWsSeq(), DownloadRuntimeState::markActLogSaved);
@@ -348,7 +348,7 @@ public class CommonUpdownV2Controller {
         // 실패한 다운로드를 성공으로 기록할 수 없어야 한다.
         String status = state.getStatus().name();
         String errorMessage = state.getErrorMessage();
-        boolean saved = v2Service.saveOutsideDistributionDownloadActLog(userVo, state, status, errorMessage);
+        boolean saved = v2Service.saveDownloadAudit(userVo, state, status, errorMessage);
         if (saved) {
             runtimeStore.update(param.getWsSeq(), DownloadRuntimeState::markActLogSaved);
         }
@@ -473,7 +473,7 @@ public class CommonUpdownV2Controller {
         if (actor == null) {
             return false;
         }
-        boolean saved = v2Service.saveOutsideDistributionDownloadActLog(
+        boolean saved = v2Service.saveDownloadAudit(
                 actor, state, state.getStatus().name(), state.getErrorMessage());
         if (saved) {
             runtimeStore.update(wsSeq, DownloadRuntimeState::markActLogSaved);

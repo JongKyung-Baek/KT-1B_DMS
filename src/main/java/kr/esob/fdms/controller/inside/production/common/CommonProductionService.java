@@ -12,9 +12,9 @@ import org.springframework.stereotype.Service;
 
 import kr.esob.fdms.commonlogic.result.ResultVO;
 import kr.esob.fdms.commonlogic.value.ObjectType;
-import kr.esob.fdms.controller.outside.commonrequest.RequestFileParam;
-import kr.esob.fdms.controller.outside.commonrequest.RequestMappingParam;
-import kr.esob.fdms.controller.outside.commonrequest.RequestParam;
+import kr.esob.fdms.commonlogic.distribution.model.RequestFileParam;
+import kr.esob.fdms.commonlogic.distribution.model.RequestMappingParam;
+import kr.esob.fdms.commonlogic.distribution.model.RequestParam;
 import kr.esob.fdms.util.DateUtil;
 import kr.esob.fdms.util.ObjectUtil;
 

@@ -7,9 +7,9 @@ import org.springframework.stereotype.Repository;
 import kr.esob.fdms.commonlogic.abstractclass.AbstractDao;
 import kr.esob.fdms.commonlogic.viewer.CommonViewerParam;
 import kr.esob.fdms.commonlogic.viewer.CommonViewerVO;
-import kr.esob.fdms.controller.outside.commonrequest.RequestFileParam;
-import kr.esob.fdms.controller.outside.commonrequest.RequestMappingParam;
-import kr.esob.fdms.controller.outside.commonrequest.RequestParam;
+import kr.esob.fdms.commonlogic.distribution.model.RequestFileParam;
+import kr.esob.fdms.commonlogic.distribution.model.RequestMappingParam;
+import kr.esob.fdms.commonlogic.distribution.model.RequestParam;
 
 @Repository
 public class CommonProductionDao extends AbstractDao {

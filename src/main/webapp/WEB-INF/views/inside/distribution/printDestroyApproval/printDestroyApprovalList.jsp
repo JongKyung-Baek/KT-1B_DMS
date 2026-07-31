@@ -5,7 +5,7 @@
 <html lang="kr">
 <head>
 <meta charset="UTF-8">
-<title>CollabHub</title>
+<title>KT-1B DMS</title>
 <link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/distribution-invoice.css" media="screen" />
 <script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/views/inside/distribution/acceptance/common-form-vuexy.js"></script>
 <script>

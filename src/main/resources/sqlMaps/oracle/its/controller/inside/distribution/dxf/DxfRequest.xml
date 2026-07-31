@@ -980,7 +980,7 @@
 
 
 <!--	&lt;!&ndash; Mapping 테이블에 입력된 데이터 리스트 조회 [2019.11.07(최종수정)] &ndash;&gt;-->
-<!--	<select id="selectMappingList" resultType="kr.esob.fdms.controller.outside.commonrequest.RequestMappingParam">-->
+<!--	<select id="selectMappingList" resultType="kr.esob.fdms.commonlogic.distribution.model.RequestMappingParam">-->
 <!--		/* Mapping 테이블에 입력된 데이터 리스트 조회 */-->
 <!--		SELECT OBJECT_ID					AS objectId-->
 <!--			, BUSINESS_AREA_CD				AS businessAreaCd-->
@@ -1766,7 +1766,7 @@
 		</foreach>
 	</insert>
 
-	<select id="selectMappingList" resultType="kr.esob.fdms.controller.outside.commonrequest.RequestMappingParam">
+	<select id="selectMappingList" resultType="kr.esob.fdms.commonlogic.distribution.model.RequestMappingParam">
 		SELECT OBJECT_ID AS objectId,
 		BUSINESS_AREA_CD AS businessAreaCd,
 		BUSINESS_TYPE_CD AS businessTypeCd,

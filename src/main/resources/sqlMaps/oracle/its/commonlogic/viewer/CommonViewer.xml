@@ -56,15 +56,6 @@
 </select>
 
 <!-- 미등록자료 파일 정보 조회 [2019.11.14(최금영)] -->
-<select id="selectUnregFileInfo" parameterType="kr.esob.fdms.commonlogic.viewer.CommonViewerParam" resultType="kr.esob.fdms.commonlogic.viewer.CommonViewerVO">
-	SELECT FILE_PATH AS filePath
-		 , FILE_UPLOAD_NM AS fileNm
-		 , FILE_NM AS fileOrgNm
-	FROM DOCS_FILE
-	WHERE FILE_CD = #{objectId}
-	  AND FILE_NO = #{fileNo}
-</select>
-
 <!-- 생산기술자료 파일 정보 조회 [2019.11.14(최금영)] -->
 <select id="selectProductFileInfo" parameterType="kr.esob.fdms.commonlogic.viewer.CommonViewerParam" resultType="kr.esob.fdms.commonlogic.viewer.CommonViewerVO">
 	SELECT FILE_PATH_NM AS filePath
@@ -126,7 +117,7 @@
 </select>
 
 <!-- 미등록자료 파일 정보 조회 [2019.11.19(최금영)] -->
-<select id="getUnregFileInfo" parameterType="kr.esob.fdms.commonlogic.viewer.CommonViewerParam" resultType="kr.esob.fdms.commonlogic.viewer.CommonViewerVO">
+<!-- Removed legacy unregistered-material lookup.
 	/* 미등록자료 파일 정보 조회  */
 	SELECT FILE_PATH AS filePath
 		 , FILE_NM AS fileNm
@@ -134,7 +125,7 @@
 	FROM DOCS_FILE
 	WHERE FILE_CD = #{objectId}
 	  AND FILE_NO = #{fileNo}
-</select>
+-->
 
 <!-- 생산기술자료 파일 정보 조회 [2019.11.19(최금영)] -->
 <select id="getProductFileInfo" parameterType="kr.esob.fdms.commonlogic.viewer.CommonViewerParam" resultType="kr.esob.fdms.commonlogic.viewer.CommonViewerVO">

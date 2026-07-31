@@ -15,8 +15,6 @@ import org.springframework.stereotype.Service;
 import kr.esob.fdms.commonlogic.FromItnToDocs.FromItnToDocsDao.ITN_TYPE;
 import kr.esob.fdms.commonlogic.abstractclass.CommonService;
 import kr.esob.fdms.commonlogic.value.StatusYn;
-import kr.esob.fdms.controller.outside.commonrequest.CommonRequestService;
-import kr.esob.fdms.controller.outside.commonrequest.RequestParam;
 import kr.esob.fdms.util.DateUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -44,9 +42,6 @@ public class FromItnToDocsService2 implements CommonService{
 
 	@Inject
 	FromItnToDocsDao dao;
-
-	@Inject
-	CommonRequestService commonRequestService;
 
 	//private Integer errorCount = 0;
 
@@ -109,7 +104,7 @@ public class FromItnToDocsService2 implements CommonService{
 					ITN_TYPE.ECO_HISTORY,
 					ITN_TYPE.ITEM
 
-					/* 최초 Migration용, 주석 풀지 말것 By Esob 최창운
+					/* 최초 Migration용, 주석 풀지 말것
 					 * Procedure를 통해 ITN_XX_FILE TABle의 DB Data 먼저 이동후
 					 * 본 서비스 프로그램을 통해 File만 복사하도록 하기 위한 Type임.
 					,ITN_TYPE.PRODUCT_SW_FILE2

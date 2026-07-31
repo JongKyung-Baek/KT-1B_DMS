@@ -1,7 +1,6 @@
 package kr.esob.fdms.controller.inside.distribution.drawingrequest;
 
 import kr.esob.fdms.commonlogic.abstractclass.AbstractDao;
-import kr.esob.fdms.controller.outside.drawing.approvalstatus.ApprovalStatusListVO;
 import org.apache.ibatis.session.SqlSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -24,10 +23,6 @@ public class DrawingRequestDao extends AbstractDao {
 
 	public List<DrawingRequestVO> selectPopupListInside(Object param){
 		return list(prefix + "selectPopupListInside", param);
-	}
-
-	public List<ApprovalStatusListVO> selectPopupListOutside(Object param){
-		return list("sql.ApprovalStatus.selectPopupListOutside", param);
 	}
 
 	public Integer selectListCount(Object param){

@@ -24,9 +24,9 @@ import kr.esob.fdms.controller.inside.production.common.AcceptanceInfoVO;
 import kr.esob.fdms.controller.inside.production.common.DeployInfoVO;
 import kr.esob.fdms.controller.inside.production.common.ProductionInfoVO;
 import kr.esob.fdms.controller.inside.production.productionstatus.ProductionStatusService;
-import kr.esob.fdms.controller.outside.commonrequest.RequestFileParam;
-import kr.esob.fdms.controller.outside.commonrequest.RequestMappingParam;
-import kr.esob.fdms.controller.outside.commonrequest.RequestParam;
+import kr.esob.fdms.commonlogic.distribution.model.RequestFileParam;
+import kr.esob.fdms.commonlogic.distribution.model.RequestMappingParam;
+import kr.esob.fdms.commonlogic.distribution.model.RequestParam;
 import kr.esob.fdms.util.DateUtil;
 import kr.esob.fdms.util.ObjectUtil;
 

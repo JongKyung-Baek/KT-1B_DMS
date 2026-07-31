@@ -16,7 +16,7 @@ import kr.esob.fdms.controller.inside.distribution.acceptance.AcceptancePopupLis
 import kr.esob.fdms.controller.inside.distribution.drawingrequest.DrawingPopupRequestService;
 import kr.esob.fdms.controller.inside.distribution.drawingrequest.DrawingRequestParam;
 import kr.esob.fdms.controller.inside.distribution.drawingrequest.DrawingRequestService;
-import kr.esob.fdms.controller.outside.commonrequest.RequestParam;
+import kr.esob.fdms.commonlogic.distribution.model.RequestParam;
 import net.sf.json.JSONArray;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.text.StringEscapeUtils;

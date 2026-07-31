@@ -1,7 +1,7 @@
 package kr.esob.fdms.controller.inside.distribution.dxf;
 
 import kr.esob.fdms.commonlogic.abstractclass.CommonParam;
-import kr.esob.fdms.controller.outside.dxf.request.DxfInfoVO;
+import kr.esob.fdms.commonlogic.distribution.model.DxfInfoVO;
 import lombok.Getter;
 import lombok.Setter;
 

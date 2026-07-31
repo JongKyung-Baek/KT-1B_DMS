@@ -17,7 +17,7 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title><spring:message code="feature.techDashboard.pageTitle" text="기술자료 대시보드 - CollabHub" /></title>
+	<title><spring:message code="feature.techDashboard.pageTitle" text="기술자료 대시보드 - KT-1B DMS" /></title>
 	<link type="text/css" rel="stylesheet"
 		  href="${pageContext.request.contextPath}/resources/css/pages/distribution-invoice.css?v=20260726.1">
 	<link type="text/css" rel="stylesheet"

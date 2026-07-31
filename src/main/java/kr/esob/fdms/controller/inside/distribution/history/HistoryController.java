@@ -20,7 +20,7 @@ import kr.esob.fdms.commonlogic.abstractclass.CommonHomeParam;
 import kr.esob.fdms.commonlogic.grid.GridResultVO;
 import kr.esob.fdms.commonlogic.result.ResultVO;
 import kr.esob.fdms.commonlogic.value.SearchAllPopupInfo;
-import kr.esob.fdms.controller.outside.commondestroyrequest.DestroyRequestParam;
+import kr.esob.fdms.commonlogic.distribution.model.DestroyRequestParam;
 import net.sf.json.JSONArray;
 
 /**

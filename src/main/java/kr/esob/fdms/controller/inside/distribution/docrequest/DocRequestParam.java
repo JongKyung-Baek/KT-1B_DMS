@@ -3,7 +3,7 @@ package kr.esob.fdms.controller.inside.distribution.docrequest;
 import java.util.List;
 
 import kr.esob.fdms.commonlogic.abstractclass.CommonParam;
-import kr.esob.fdms.controller.outside.doc.request.DocInfoVO;
+import kr.esob.fdms.commonlogic.distribution.model.DocInfoVO;
 import lombok.Getter;
 import lombok.Setter;
 

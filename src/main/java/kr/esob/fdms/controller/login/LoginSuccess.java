@@ -13,7 +13,6 @@ import kr.esob.fdms.commonlogic.systemconfig.SystemConfigDao;
 import kr.esob.fdms.commonlogic.systemconfig.SystemConfigVO;
 import kr.esob.fdms.commonlogic.value.Constant;
 import kr.esob.fdms.commonlogic.value.SessionValue;
-import kr.esob.fdms.config.Property;
 import kr.esob.fdms.config.SessionExtendController;
 import kr.esob.fdms.controller.inside.organizationmanage.auditlog.AuditLogService;
 import kr.esob.fdms.controller.inside.distribution.doc_pdf_link_request.DocPdfLinkRequestDao;
@@ -90,7 +89,7 @@ public class LoginSuccess implements AuthenticationSuccessHandler {
 		String basicPassword = findBasicPassword(dao_for_pwd.selectDbConfig());
 
 
-		String urlType = request.getParameter("url_type");
+		String urlType = "I";
 		String mainUrl = "/main";
 		UserVO userVo = (UserVO) authentication.getPrincipal();
 		HttpSession session = request.getSession();
@@ -120,7 +119,6 @@ public class LoginSuccess implements AuthenticationSuccessHandler {
 			return;
 		}
 
-		userVo.setUrl_type(urlType);
 //		userVo.setRoleGroup(roleGroup);
 		List<MenuVO> menuTopList = menuDao.getMenuTopList(userVo);
 		List<MenuVO> menuSubList = menuDao.getMenuSubList(userVo);
@@ -151,10 +149,7 @@ public class LoginSuccess implements AuthenticationSuccessHandler {
 		redirectStrategy.sendRedirect(request, response, mainUrl);
 		
 //		I일때만 실행
-		Property property = new Property();
-		if(property.getProperty("location").equals("I")) {
-			LoginManager.loginUser.put(userVo.getUserId(), request.getRemoteAddr());
-		}
+		LoginManager.loginUser.put(userVo.getUserId(), request.getRemoteAddr());
 	}
 
 	private int parseSessionTime(String timeoutSecond) {

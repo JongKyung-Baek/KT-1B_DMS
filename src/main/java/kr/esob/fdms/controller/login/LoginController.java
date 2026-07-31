@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import kr.esob.fdms.commonlogic.grid.GridInfoService;
 import kr.esob.fdms.commonlogic.grid.GridResultVO;
-import kr.esob.fdms.config.Property;
 import net.sf.json.JSONArray;
 
 @Controller
@@ -42,24 +41,7 @@ public class LoginController {
 		String loginUrl = "404"; //실운영시에 사용
 		//		String loginUrl = "/login/login";
 
-		Property property = new Property();
-		String location = property.getProperty("location");
-
-		if("I".equals(request.getParameter("url_type"))) {
-			loginUrl = "/login/login";
-		}else if("E".equals(request.getParameter("url_type"))) {
-			loginUrl = "/login/login_out";
-		}
-		else if(request.getParameter("url_type") == null || "".equals(request.getParameter("url_type"))) {
-			loginUrl = "/login/login";
-		}
-		else if("I".equals(location)) {
-			loginUrl = "/login/login";
-		}
-		else if("E".equals(location)) {
-			loginUrl = "/login/login_out";
-		}
-		return loginUrl;
+		return "/login/login";
 	}
 
 	@GetMapping("/duplication")

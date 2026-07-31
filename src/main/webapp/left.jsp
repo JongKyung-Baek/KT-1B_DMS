@@ -63,17 +63,10 @@
 
 			<aside id="layout-menu" class="layout-menu menu-vertical menu">
 				<div class="app-brand demo">
-					<!-- <a href="/main" class="app-brand-link">
-			<span class="app-brand-text demo menu-text fw-bold ms-2">CollabHub</span>
-		</a>
-		<a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
-			<i class="icon-base ti menu-toggle-icon d-none d-xl-block"></i>
-			<i class="icon-base ti tabler-x d-block d-xl-none"></i>
-		</a> -->
-					<!-- <a href="${pageContext.request.contextPath}/main" class="app-brand-link"> -->
-						<a href="${pageContext.request.contextPath}/inside/distribution/swRequest/dashboard" class="app-brand-link">
-						<img src="${pageContext.request.contextPath}/resources/images/KAI/KAI-logo.png"
-							alt="KAI" style="max-height: 40px; width: auto;"/> </a>
+					<a href="${pageContext.request.contextPath}/inside/distribution/swRequest/dashboard" class="app-brand-link"
+					   aria-label="KT-1B DMS dashboard">
+						<span class="app-brand-text demo menu-text fw-bold ms-2">KT-1B DMS</span>
+					</a>
 						<a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
 							<i class="icon-base ti menu-toggle-icon d-none d-xl-block"></i>
 							<i class="icon-base ti tabler-x d-block d-xl-none"></i>

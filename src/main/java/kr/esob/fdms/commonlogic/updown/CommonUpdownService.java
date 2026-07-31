@@ -14,11 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 import kr.esob.fdms.commonlogic.abstractclass.CommonService;
 import kr.esob.fdms.commonlogic.securityacl.FileAccessRequest;
 import kr.esob.fdms.commonlogic.securityacl.SecurityAclService;
-import kr.esob.fdms.commonlogic.systemconfig.SystemConfig;
-import kr.esob.fdms.commonlogic.value.Constant;
 import kr.esob.fdms.controller.login.UserVO;
 import kr.esob.fdms.util.FileUtil;
-import kr.esob.fdms.util.seed.seed.Seed128Cipher;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.json.JSONObject;
 
@@ -107,92 +104,15 @@ public class CommonUpdownService implements CommonService {
 
 	private void prepareLegacyDownload(CommonUpdownParam param, UserVO actor,
 			CommonUpdownFileVO resource, String userName) {
-		String srcUrl = SystemConfig.getSystemConfigValue("SERVER_URL_INSIDE");
-		String dstUrl = SystemConfig.getSystemConfigValue("SERVER_URL_OUTSIDE");
-		String sourceFilePath;
-		String targetFileName;
-		String targetFilePath = SystemConfig.getSystemConfigValue("UPDOWN_PATH");
-		if ("DISTRIBUTION".equals(param.getReqType())) {
-			sourceFilePath = resource.getFilePathNm();
-			targetFileName = targetFilePath + resource.getOrgFileNm();
-		} else if ("UNREG".equals(param.getReqType())) {
-			sourceFilePath = resource.getFilePathNm();
-			targetFileName = resource.getFileNm();
-		} else {
-			throw new IllegalArgumentException("Unsupported legacy download request type.");
-		}
-		requireConfigured(srcUrl, "SERVER_URL_INSIDE");
-		requireConfigured(dstUrl, "SERVER_URL_OUTSIDE");
-		requireConfigured(sourceFilePath, "source file path");
-		requireConfigured(targetFilePath, "UPDOWN_PATH");
-		requireConfigured(targetFileName, "target file name");
-
-		Integer currentDownloadCount = dao.getDownloadCount(
-				resource.getRequestNo(), resource.getObjectId(), resource.getFileNo());
-		if (currentDownloadCount == null) {
-			throw new IllegalStateException("Download counter target was not found.");
-		}
-		if (currentDownloadCount.intValue() >= 3) {
-			throw new IllegalStateException("Download count limit has been reached.");
-		}
-
-		try {
-			JSONObject transfer = FileUtil.callSender(
-					Seed128Cipher.encrypt(srcUrl, Constant.legacyCryptoKeyBytes(), Constant.SEED_ENCODING),
-					Seed128Cipher.encrypt(dstUrl, Constant.legacyCryptoKeyBytes(), Constant.SEED_ENCODING),
-					Seed128Cipher.encrypt(sourceFilePath, Constant.legacyCryptoKeyBytes(), Constant.SEED_ENCODING),
-					Seed128Cipher.encrypt(targetFilePath, Constant.legacyCryptoKeyBytes(), Constant.SEED_ENCODING),
-					Seed128Cipher.encrypt(targetFileName, Constant.legacyCryptoKeyBytes(), Constant.SEED_ENCODING));
-			String downloadedName = requireSuccessfulTransfer(transfer);
-
-			if (dao.plusDownloadCount(
-					resource.getRequestNo(), resource.getObjectId(), resource.getFileNo()) != 1) {
-				throw new IllegalStateException("Download counter update failed.");
-			}
-			Integer updatedDownloadCount = dao.getDownloadCount(
-					resource.getRequestNo(), resource.getObjectId(), resource.getFileNo());
-			if (updatedDownloadCount == null) {
-				throw new IllegalStateException("Updated download counter was not found.");
-			}
-			Map<String, Object> objectInfo =
-					dao.getObjectNoObjectNm(resource.getRequestNo(), resource.getObjectId());
-			if (objectInfo == null) {
-				throw new IllegalStateException("Download history subject was not found.");
-			}
-			if (dao.addToDownHistory(
-					resource.getRequestNo(), resource.getObjectId(), updatedDownloadCount,
-					(String) objectInfo.get("objectNo"), (String) objectInfo.get("objectNm"),
-					userName, new java.util.Date(), downloadedName) != 1) {
-				throw new IllegalStateException("Download history insert failed.");
-			}
-			securityAclService.recordDownloadResult(actor, "SUCCESS", null,
-					resource.getObjectType(), resource.getObjectId(), resource.getFileNo(),
-					resource.getRequestNo(), "Legacy download file prepared.");
-
-			resource.setFilePathNm(targetFilePath);
-			resource.setFileNm(downloadedName);
-		} catch (Constant.LegacyCryptoConfigurationException e) {
-			log.error("Legacy download encryption is unavailable; configure KT1B_LEGACY_CRYPTO_KEY");
-			throw e;
-		} catch (RuntimeException e) {
-			log.warn("Failed to prepare a legacy download file. cause={}",
-					e.getClass().getSimpleName());
-			throw e;
-		} catch (Exception e) {
-			log.warn("Failed to prepare a legacy download file. cause={}",
-					e.getClass().getSimpleName());
-			throw new IllegalStateException("Legacy download file preparation failed.", e);
-		}
+		securityAclService.recordDownloadResult(actor, "FAIL", "LEGACY_TRANSFER_DISABLED",
+				resource.getObjectType(), resource.getObjectId(), resource.getFileNo(),
+				resource.getRequestNo(), "Legacy transfer download is disabled.");
+		throw new UnsupportedOperationException(
+				"Legacy transfer download is disabled; use the V2 download endpoint.");
 	}
 
 	static String requireSuccessfulTransfer(JSONObject transfer) {
 		return FileUtil.requireSuccessfulTransferFileName(transfer);
-	}
-
-	private void requireConfigured(String value, String name) {
-		if (isBlank(value)) {
-			throw new IllegalStateException(name + " is not configured.");
-		}
 	}
 
 	private boolean isBlank(String value) {

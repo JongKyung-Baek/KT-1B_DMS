@@ -19,9 +19,9 @@ import kr.esob.fdms.commonlogic.value.ObjectType;
 import kr.esob.fdms.controller.inside.production.common.AcceptanceInfoVO;
 import kr.esob.fdms.controller.inside.production.common.DeployInfoVO;
 import kr.esob.fdms.controller.inside.production.request.RequestDao;
-import kr.esob.fdms.controller.outside.commonrequest.RequestFileParam;
-import kr.esob.fdms.controller.outside.commonrequest.RequestMappingParam;
-import kr.esob.fdms.controller.outside.commonrequest.RequestParam;
+import kr.esob.fdms.commonlogic.distribution.model.RequestFileParam;
+import kr.esob.fdms.commonlogic.distribution.model.RequestMappingParam;
+import kr.esob.fdms.commonlogic.distribution.model.RequestParam;
 import kr.esob.fdms.util.ObjectUtil;
 
 @Service

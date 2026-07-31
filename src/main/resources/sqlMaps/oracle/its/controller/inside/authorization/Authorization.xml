@@ -320,7 +320,7 @@
 <!--			SELECT COMPANY.COMPANY_NM AS text-->
 <!--			     , COMPANY.COMPANY_CD AS id-->
 <!--			  FROM DOCS_COMPANY COMPANY-->
-<!--			 WHERE COMPANY_CD != 'COMP_0000000999'		/* 한화디펜스는 나오면 안됨. */-->
+<!--			 WHERE COMPANY_CD != 'COMP_0000000999'		/* 내부 기준업체 제외 */-->
 <!--			<if test='term != null and !"".equals(term)'>-->
 <!--		       AND COMPANY.COMPANY_NM LIKE '%' || #{term} || '%'-->
 <!--		    </if>-->

@@ -48,7 +48,7 @@ UPDATE docs_system_config
 UPDATE docs_system_config
    SET system_config_value = ''
  WHERE COALESCE(system_config_value, '') ~*
-       '(hanwha|gmail|esob[.]kr|192[.]168|175[.]113|^[a-z]:[\\/]|\\\\|^//)';
+       '(@|192[.]168|175[.]113|^[a-z]:[\\/]|\\\\|^//)';
 
 -- Values intentionally available inside this local-only demo.
 UPDATE docs_system_config
@@ -102,7 +102,7 @@ BEGIN
       INTO unsafe_config_count
       FROM docs_system_config
      WHERE COALESCE(system_config_value, '') ~*
-           '(hanwha|gmail|esob[.]kr|192[.]168|175[.]113|^[a-z]:[\\/]|\\\\|^//)';
+           '(@|192[.]168|175[.]113|^[a-z]:[\\/]|\\\\|^//)';
 
     IF unsafe_config_count <> 0 THEN
         RAISE EXCEPTION 'Unsafe system configuration values remain: %',

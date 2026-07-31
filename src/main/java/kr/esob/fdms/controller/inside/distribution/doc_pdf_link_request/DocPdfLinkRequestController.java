@@ -273,7 +273,7 @@ public class DocPdfLinkRequestController extends AbstractController {
 			Date now = new Date();
 			// DOCS_VIEWER_KEY table removed: skip key persistence.
 
-			// CollabView thread에서 사용자cd가 아닌 이름을 보여주기 위한 인자전달.
+			// 뷰어에서 사용자 코드 대신 사용자 이름을 표시하기 위한 인자 전달.
 			String encodedUserName = URLEncoder.encode(userVo.getUsername(), StandardCharsets.UTF_8.toString());
 
 //			dirUrl = adapPdfUrl + "?file=" + "/out/destfile/" + URLEncoder.encode(objectID) + ".esob&user_name=" + userVo.getUserCd() + "&disposable_key=" + disposableKey + "&object_ID=" + objectID ;
@@ -329,14 +329,10 @@ public class DocPdfLinkRequestController extends AbstractController {
 							// 소프트 웨어
 							else if(false && configCD.equals("SW_PATH")){
 								intCvrt = 20;
-//								fileDownloadUrl = "http://collabhub.esob.kr:80/download/?fileName="+orgFileNm;
-//								fileDownloadUrl = "http://collabhub.esob.kr:80/download/?fileName="+orgFileNm;
-//								fileDownloadUrl = "http://demo.esob.kr:80/download/?fileName="+orgFileNm;
 								fileDownloadUrl = swDonwUrl + "download/?fileName="+orgFileNm;
 
 								UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(fileDownloadUrl).build();
 								return "redirect:" + uriComponents.encode().toUri();
-//								fileDownloadUrl = "http://collabhub.iptime.org:80/download/?fileName="+uriComponents.encode().toUri();
 							}
 						}
 						// 23.06.29 (yskim) unreg인 경우
@@ -787,7 +783,6 @@ public class DocPdfLinkRequestController extends AbstractController {
 		for(Map<String,Object> config : dbConfig) {
 			if("ADAP_PDF_PATH".equals(getConfigCd(config))) {
 				adapPdfPath = getConfigValue(config);
-//				adapPdfPath = "C:\\Users\\nobut\\esob\\TG\\collabview\\public\\OUT\\destFile";
 
 			}
 		}

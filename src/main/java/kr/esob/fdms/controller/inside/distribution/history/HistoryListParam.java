@@ -4,9 +4,9 @@ import java.util.List;
 import java.util.Map;
 
 import kr.esob.fdms.commonlogic.abstractclass.CommonParam;
-import kr.esob.fdms.controller.outside.doc.request.DocInfoVO;
-import kr.esob.fdms.controller.outside.drawing.request.DrawingInfoVO;
-import kr.esob.fdms.controller.outside.sw.request.SwInfoVO;
+import kr.esob.fdms.commonlogic.distribution.model.DocInfoVO;
+import kr.esob.fdms.commonlogic.distribution.model.DrawingInfoVO;
+import kr.esob.fdms.commonlogic.distribution.model.SwInfoVO;
 import lombok.Getter;
 import lombok.Setter;
 

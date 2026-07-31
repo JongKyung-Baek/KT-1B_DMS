@@ -31,7 +31,6 @@ public class SitemeshFilter extends ConfigurableSiteMeshFilter{
 		builder.addDecoratorPath("/*/*/*Popup", "/WEB-INF/decorator/decoratorEmpty.jsp");
 		builder.addDecoratorPath("/*/*/*/*Popup", "/WEB-INF/decorator/decoratorEmpty.jsp");
 		builder.addDecoratorPath("/*/*/*/*/*Popup", "/WEB-INF/decorator/decoratorEmpty.jsp");
-		builder.addDecoratorPath("/inside/organizationmanage/outsideuser/", "/WEB-INF/decorator/decoratorHalf.jsp"); // outsideuser
 		builder.addDecoratorPath("/inside/system/role/", "/WEB-INF/decorator/decoratorSide.jsp"); // role
 		builder.addDecoratorPath("/inside/system/roleassign/", "/WEB-INF/decorator/decoratorSide.jsp"); // roleassign
 		builder.addDecoratorPath("/inside/system/menu/", "/WEB-INF/decorator/decoratorTree.jsp"); // menu
@@ -43,8 +42,6 @@ public class SitemeshFilter extends ConfigurableSiteMeshFilter{
 		builder.addDecoratorPath("/inside/production/disposalApproval/", "/WEB-INF/decorator/decoratorProductTab.jsp");
 		builder.addDecoratorPath("/inside/production/disposal/", "/WEB-INF/decorator/decoratorDisposalTab.jsp");
 		builder.addDecoratorPath("/inside/production/disposalStatus/", "/WEB-INF/decorator/decoratorDisposalTab.jsp");
-		// 23.06.12 (yskim) install page
-		builder.addDecoratorPath("/downloadpage", "/WEB-INF/decorator/CollabviewInstallPage.jsp");
 		builder.addExcludedPath("/menu");
 		builder.addExcludedPath("/login*");
 		builder.addExcludedPath("/inside/distribution/docPdfLinkRequest/selectItem2");

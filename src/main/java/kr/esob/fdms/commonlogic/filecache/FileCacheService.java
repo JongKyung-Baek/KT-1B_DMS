@@ -51,8 +51,8 @@ public class FileCacheService {
         }
 
         // 시스템설정에서 REST API URL 설정
-        String originalApiUrl = SystemConfig.getSystemConfigValue("KAI_DOWNLOAD");
-        String pdfApiUrl = SystemConfig.getSystemConfigValue("KAI_VIEW");
+        String originalApiUrl = SystemConfig.getSystemConfigValue("FILE_DOWNLOAD_URL");
+        String pdfApiUrl = SystemConfig.getSystemConfigValue("FILE_VIEW_URL");
         // backward compatibility
         if (originalApiUrl == null || "".equals(originalApiUrl)) {
             originalApiUrl = SystemConfig.getSystemConfigValue("REST_DELIVERY_FILE_DOWNLOAD_URL");
@@ -122,8 +122,8 @@ public class FileCacheService {
             return cached;
         }
 
-        String originalApiUrl = SystemConfig.getSystemConfigValue("KAI_DOWNLOAD");
-        String pdfApiUrl = SystemConfig.getSystemConfigValue("KAI_VIEW");
+        String originalApiUrl = SystemConfig.getSystemConfigValue("FILE_DOWNLOAD_URL");
+        String pdfApiUrl = SystemConfig.getSystemConfigValue("FILE_VIEW_URL");
         if (originalApiUrl == null || "".equals(originalApiUrl)) {
             originalApiUrl = SystemConfig.getSystemConfigValue("REST_DELIVERY_FILE_DOWNLOAD_URL");
         }
@@ -211,8 +211,8 @@ public class FileCacheService {
             throw new IllegalStateException("DOC_SEQ not found. fileSeq=" + fileSeq + ", objectType=" + objectType);
         }
 
-        String originalApiUrl = SystemConfig.getSystemConfigValue("KAI_DOWNLOAD");
-        String pdfApiUrl = SystemConfig.getSystemConfigValue("KAI_VIEW");
+        String originalApiUrl = SystemConfig.getSystemConfigValue("FILE_DOWNLOAD_URL");
+        String pdfApiUrl = SystemConfig.getSystemConfigValue("FILE_VIEW_URL");
         if (originalApiUrl == null || "".equals(originalApiUrl)) {
             originalApiUrl = SystemConfig.getSystemConfigValue("REST_DELIVERY_FILE_DOWNLOAD_URL");
         }

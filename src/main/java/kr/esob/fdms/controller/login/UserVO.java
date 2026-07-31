@@ -17,7 +17,6 @@ import java.util.List;
 @EqualsAndHashCode(of= {"userCd"})
 public class UserVO implements UserDetails{
 	private static final long serialVersionUID = 3163522928774314714L;
-	private String url_type;
 	private String userCd;
 	private String userId;
 	private String userNm;
@@ -116,12 +115,7 @@ public class UserVO implements UserDetails{
 
 		Property property = new Property();
 
-		if("I".equals(userVo.getAuthSite())) {
-			cal.add(Calendar.DATE, Integer.parseInt(property.getProperty("last.loginDt.term.inside")));
-		}
-		else {
-			cal.add(Calendar.DATE, Integer.parseInt(property.getProperty("last.loginDt.term.outside")));
-		}
+		cal.add(Calendar.DATE, Integer.parseInt(property.getProperty("last.loginDt.term")));
 
 		if(-1 == cal.getTime().compareTo(new Date())) {
 			return false;
@@ -140,22 +134,8 @@ public class UserVO implements UserDetails{
 	}
 	@Override
 	public boolean isCredentialsNonExpired() {
-		if("I".equals(this.authSite)) {
-			this.pwdExpiredYn = "N";
-			return true;
-		}else {
-			if(this.getPwdUpdateDt() == null)setPwdUpdateDt(new Date());
-			Calendar cal = Calendar.getInstance();
-			cal.setTime(this.getPwdUpdateDt());
-			cal.add(Calendar.DATE, 90);
-			if(-1 == cal.getTime().compareTo(new Date())) {
-				this.pwdExpiredYn = "Y";
-				return false;
-			}else {
-				this.pwdExpiredYn = "N";
-				return true;
-			}
-		}
+		this.pwdExpiredYn = "N";
+		return true;
 	}
 	@Override
 	public boolean isEnabled() {

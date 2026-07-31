@@ -65,14 +65,6 @@ public class AuthorizationController extends AbstractController {
 	}
 
 
-	@RequestMapping("/selectOutsideUserCombo")
-	public @ResponseBody String selectOutsideUserCombo(SearchComboParamVO vo) {
-		UserVO sessionUser = (UserVO) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-
-		vo.setCompanyCd(sessionUser.getCompanyCd());
-		vo.setQueryId("sql.Authorization.selectOutsideUserCombo");
-		return JSONObject.fromObject(service.selectSearchCombo(vo)).toString();
-	}
 
 	@RequestMapping("/selectInsideUserCombo")
 	public @ResponseBody String selectInsideUserCombo(SearchComboParamVO vo) {
@@ -215,36 +207,12 @@ public class AuthorizationController extends AbstractController {
 	 * @param vo
 	 * @return
 	 */
-	@RequestMapping("/checkOutsideProtectAuth")
-	public @ResponseBody String checkOutsideProtectAuth(@RequestBody ProtectObjectVO vo) {
-		Map<String, Object> map = new HashMap<String, Object>();
-		UserVO actor = (UserVO) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-		map.put("protectYn", actor.getProtectYn());
-
-		return JSONObject.fromObject(map).toString();
-	}
 
 	/**
 	 * 외부사용자 - 이용가능한 업체인지 확인
 	 * @param vo
 	 * @return
 	 */
-	@RequestMapping("/getOutsideCompanyAuthYn")
-	public @ResponseBody String getOutsideCompanyAuthYn(@RequestBody ProtectObjectVO vo) {
-		Map<String, Object> map = new HashMap<String, Object>();
-		UserVO actor = (UserVO) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-		map.put("delYn", actor.getCompanyDelYn());
-
-		/*
-		 * 오픈때문에 급하게 수정(Viewer 또는 파일 다운로드시 "거래중단 업체" 메시지 출력됨)
-		 * 차후 검토 필요 2020.01.06 yongjulee
-		 * */
-		if(null == map.get("delYn")){
-			map.put("delYn", "N");
-		}
-
-		return JSONObject.fromObject(map).toString();
-	}
 
 	@RequestMapping("/selectUserCombo")
 	public @ResponseBody String selectUserCombo(SearchComboParamVO vo) {
@@ -257,11 +225,6 @@ public class AuthorizationController extends AbstractController {
 	 * @param vo
 	 * @return
 	 */
-	@RequestMapping("/selectAllOutsideUserIdCombo")
-	public @ResponseBody String selectAllOutsideUserIdCombo(SearchComboParamVO vo) {
-		vo.setQueryId("sql.Authorization.selectAllOutsideUserIdCombo");
-		return JSONObject.fromObject(service.selectSearchCombo(vo)).toString();
-	}
 
 	/**
 	 * 모든 내부사용자 -ID기준

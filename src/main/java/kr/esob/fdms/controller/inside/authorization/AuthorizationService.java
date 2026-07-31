@@ -18,7 +18,6 @@ import kr.esob.fdms.commonlogic.securityacl.FileAccessDecisionVO;
 import kr.esob.fdms.commonlogic.securityacl.FileAccessRequest;
 import kr.esob.fdms.commonlogic.securityacl.SecurityAclService;
 import kr.esob.fdms.commonlogic.value.Constant;
-import kr.esob.fdms.controller.inside.unregisted.request.DistributionRequestPopupParam;
 import kr.esob.fdms.controller.login.UserVO;
 
 @Service

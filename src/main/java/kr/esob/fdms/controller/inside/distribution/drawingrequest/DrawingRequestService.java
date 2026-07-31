@@ -11,8 +11,8 @@ import kr.esob.fdms.commonlogic.result.ResultVO;
 import kr.esob.fdms.commonlogic.systemconfig.SystemConfig;
 import kr.esob.fdms.controller.inside.distribution.doc_pdf_link_request.DocPdfLinkRequestDao;
 import kr.esob.fdms.controller.login.UserVO;
-import kr.esob.fdms.controller.outside.commonrequest.RequestParam;
-import kr.esob.fdms.controller.outside.drawing.request.DrawingInfoVO;
+import kr.esob.fdms.commonlogic.distribution.model.RequestParam;
+import kr.esob.fdms.commonlogic.distribution.model.DrawingInfoVO;
 import kr.esob.fdms.util.RandomStringGenerator;
 import kr.esob.fdms.util.StoragePathUtils;
 import kr.esob.fdms.util.StringUtil;
@@ -648,7 +648,7 @@ public class DrawingRequestService implements CommonService{
 
 	private String loadRegistrationMailTemplate() {
 		try {
-			ClassPathResource resource = new ClassPathResource("templates/mail/mps8_kari_document_notification_email_template.html");
+			ClassPathResource resource = new ClassPathResource("templates/mail/kt1b_document_notification_email_template.html");
 			return StreamUtils.copyToString(resource.getInputStream(), StandardCharsets.UTF_8);
 		} catch (Exception e) {
 			return "";
@@ -960,7 +960,7 @@ public class DrawingRequestService implements CommonService{
 						+ "&Cur_Path=" + convertedCurFilePath
 						+ "&Prev_DisplayLabel=" + prevRevNo
 						+ "&Cur_DisplayLabel=" + curRevNo
-						+ "&Request_Flag=collabhub";
+						+ "&Request_Flag=kt1b_dms";
 
 				log.info("[DRAWING_REQUEST] redirect prepared");
 				return "redirect:" + redirectUrl;

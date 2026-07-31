@@ -43,7 +43,6 @@ public class UserVO implements UserDetails{
 	private Date updateDt;
 	private Date pwdUpdate;
 	private Date pwdUpdateDt;
-	private String authSite;
 	private int loginCount;
 	private String roleGroup;
 	private String companyNm;

@@ -180,7 +180,6 @@
 	<script>
 	var CONTEXT_PATH = "${pageContext.request.contextPath}";
 	var gridParam;
-	var AUTH_SITE = '<%=userVo.getAuthSite() %>';
 	var USER_CD = '<%=userVo.getUserCd() %>';
 	var USER_NM = '<%=userVo.getUserNm() %>';
 	var DEPT_CD = '<%=userVo.getDeptCd() %>';

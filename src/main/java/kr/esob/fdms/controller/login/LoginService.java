@@ -28,10 +28,6 @@ public class LoginService implements UserDetailsService {
         }
     }
 
-    public UserVO getOutUser(UserVO userVo) {
-        return loginDao.getOutUser(userVo);
-    }
-
     public UserVO getInUser(String userId) {
         return loginDao.getInUser(userId);
     }

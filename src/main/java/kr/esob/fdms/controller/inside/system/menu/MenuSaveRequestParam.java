@@ -20,7 +20,6 @@ public class MenuSaveRequestParam extends CommonParam {
 	private String useYn;
 	private String popupYn;
 	private String roleCd;
-	private String authSite;
 	private String saveFlag;
 	private String menuIcon;
 	private List<String> children;		// 삭제할 때 사용. 선택한 메뉴의 하위메뉴들

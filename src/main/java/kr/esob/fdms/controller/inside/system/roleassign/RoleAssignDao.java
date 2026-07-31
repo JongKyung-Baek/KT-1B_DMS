@@ -32,6 +32,11 @@ public class RoleAssignDao extends AbstractDao {
 		return list(prefix + "selectRelRoleGroup", param);
 	}
 
+	@SuppressWarnings("unchecked")
+	public List<String> selectAssignableRoleCodes() {
+		return list(prefix + "selectAssignableRoleCodes");
+	}
+
 	/**
 	 * REL_ROLE_GROUP 테이블에 데이터가 존재하는지 여부. 존재한다면 true
 	 * @param param
@@ -81,6 +86,12 @@ public class RoleAssignDao extends AbstractDao {
 		param.put("roleCd", roleCd);
 
 		delete(prefix + "deleteRelRoleGroup", param);
+	}
+
+	public void deleteMenuRoleAssignments(String groupCd) {
+		Map<String, String> param = new HashMap<>();
+		param.put("groupCd", groupCd);
+		delete(prefix + "deleteMenuRoleAssignments", param);
 	}
 
 	/**

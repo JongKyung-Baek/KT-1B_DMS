@@ -27,21 +27,7 @@
     formBbsQna: true,
     formInsideUser: true,
     formInsideDept: true,
-    formInsideAuditLog: true,
-    formOrganizationmanageApproval: true,
-    formOutsideCompany: true,
-    formOutsideUser: true,
-    formOutsideUserInformation: true,
-    formOutsideUserStatus: true,
-    formOutsideDrawingRequest: true,
-    formOutsideDrawingApprovalStatus: true,
-    formOutsideDocRequest: true,
-    formOutsideDocApprovalStatus: true,
-    formOutsideSwRequest: true,
-    formOutsideSwApprovalStatus: true,
-    formOutsideCrRequest: true,
-    formOutsideProductionRequest: true,
-    formOutsideProductionApprovalStatus: true
+    formInsideAuditLog: true
   };
 
   window.settingForm = function (formData, $container) {

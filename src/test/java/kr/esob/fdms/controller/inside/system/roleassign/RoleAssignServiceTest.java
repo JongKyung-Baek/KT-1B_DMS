@@ -29,6 +29,8 @@ class RoleAssignServiceTest {
 				.thenReturn("Select a user grade.");
 		when(prop.msg("msg.noSelectData"))
 				.thenReturn("No permission data.");
+		when(prop.msg("msg.menuPermissionChanged"))
+				.thenReturn("Menu configuration changed.");
 
 		service = new RoleAssignService();
 		service.dao = dao;
@@ -66,13 +68,15 @@ class RoleAssignServiceTest {
 		request.setList(Arrays.asList(selected, cleared));
 
 		when(dao.selectRoleGroupInfo(request)).thenReturn(new RoleGroupVO());
-		when(dao.existRelRoleGroup(selected)).thenReturn(false);
+		when(dao.selectAssignableRoleCodes()).thenReturn(
+				Arrays.asList("ROLE_MENU_138", "ROLE_MENU_160"));
 
 		ResultVO result = service.saveAssign(request);
 
 		assertTrue(result.isSuccess());
+		verify(dao).deleteMenuRoleAssignments("RG_011");
 		verify(dao).insertRelRoleGroup(selected);
-		verify(dao).deleteRelRoleGroup("RG_011", "ROLE_MENU_160");
+		verify(dao, never()).insertRelRoleGroup(cleared);
 	}
 
 	private RequestParam requestFor(String groupCd) {

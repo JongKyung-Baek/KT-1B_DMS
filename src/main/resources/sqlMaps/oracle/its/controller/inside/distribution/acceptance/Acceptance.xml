@@ -86,11 +86,9 @@
 		INNER JOIN DOCS_USER purchaserUser ON purchaserUser.USER_CD = accDetail.ORIGINAL_USER_CD
 		INNER JOIN DOCS_REQUEST_DEPLOY deploy ON request.REQUEST_NO = deploy.REQUEST_NO
 		INNER JOIN DOCS_USER insertUser ON insertUser.USER_CD = request.INSERT_USER_CD
-		AND (insertUser.AUTH_SITE ='E' OR
-		insertUser.DEPT_CD IN (SELECT DEPT_CD
+		AND insertUser.DEPT_CD IN (SELECT DEPT_CD
 		FROM DOCS_INSA_DEPT_CD
 		WHERE COLUMN_NM = 'PRODUCT_TEAM_YN')
-		)
 		WHERE request.REQUEST_TYPE = 'DISTRIBUTION'        /* 요청 유형이 배포, 생산기술자료인 것만 조회 */
 		<if test='requestStartDt != null and !requestStartDt.equals("")'>
 			AND request.INSERT_DT BETWEEN #{requestStartDt}::DATE
@@ -195,11 +193,9 @@
 		INNER JOIN DOCS_USER purchaserUser ON purchaserUser.USER_CD = accDetail.ORIGINAL_USER_CD
 		INNER JOIN DOCS_REQUEST_DEPLOY deploy ON request.REQUEST_NO = deploy.REQUEST_NO
 		INNER JOIN DOCS_USER insertUser ON insertUser.USER_CD = request.INSERT_USER_CD
-		AND (insertUser.AUTH_SITE ='E' OR
-		insertUser.DEPT_CD IN (SELECT DEPT_CD
+		AND insertUser.DEPT_CD IN (SELECT DEPT_CD
 		FROM DOCS_INSA_DEPT_CD
 		WHERE COLUMN_NM = 'PRODUCT_TEAM_YN')
-		)
 		WHERE request.REQUEST_TYPE = 'DISTRIBUTION'        /* 요청 유형이 배포, 생산기술자료인 것만 조회 */
 		<if test='requestStartDt != null and !requestStartDt.equals("")'>
 			AND request.INSERT_DT BETWEEN #{requestStartDt}::DATE

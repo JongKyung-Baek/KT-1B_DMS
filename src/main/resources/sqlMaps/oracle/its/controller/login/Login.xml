@@ -58,45 +58,6 @@
 <!--	     ) A1-->
 <!--	</select>-->
 
-<!--	<select id="getOutUser" resultType="kr.esob.fdms.controller.login.UserVO">-->
-<!--        SELECT-->
-<!--        	docsUser.*-->
-<!--        	, 'RG_006' roleGroup	/* ?몃??낆껜??臾댁“嫄?006*/-->
-<!--        	, company.COMPANY_NM-->
-<!--        	, company.BIZ_NO-->
-<!--        	, dept.TEAM_LEADER_USER_CD AS teamLeaderUid-->
-<!--        	, CASE WHEN protectUser.BUSINESS_TYPE_CD = 'Development' THEN 'Y'-->
-<!--                ELSE 'N'-->
-<!--            END AS passUseYn-->
-<!--            , dept.PURCHASE_YN AS purchaseYn-->
-<!--            , dept.ILS_TEAM_YN AS ilsTeamYn-->
-<!--            , dept.PRODUCT_TEAM_YN AS productTeamYn-->
-<!--            , dept.PURCHASE_TEAM_YN AS purchaseTeamYn-->
-<!--            , dept.PURCHASE_PLAN_TEAM_YN AS purchasePlanTeamYn-->
-<!--            , dept.DEPT_TYPE AS deptType-->
-<!--            , CASE-->
-<!--		      WHEN dept.TEAM_LEADER_USER_CD = docsUser.USER_CD THEN 'Y'                                                          /* ???*/-->
-<!--		      WHEN (SELECT COUNT(*) FROM DOCS_INSTEAD_USER tmp WHERE tmp.INSTEAD_USER_CD = docsUser.USER_CD) > 0 THEN 'Y'        /* ?寃곗옄 */-->
-<!--		      WHEN (SELECT COUNT(*) FROM DOCS_DEF_INSTEAD_USER tmp WHERE tmp.INSTEAD_USER_CD = docsUser.USER_CD) > 0 THEN 'Y'    /* 諛⑹궛 ?寃곗옄 */-->
-<!--		      WHEN (SELECT COUNT(*) FROM DOCS_PROTECT_USER tmp WHERE tmp.USER_CD = docsUser.USER_CD) > 0 THEN 'Y'                /* 諛⑹궛 寃곗옱??/-->
-<!--		      ELSE 'N'-->
-<!--		    END approverYn-->
-<!--	    	, CASE WHEN docsUser.USER_CD = company.APPROVAL_USER_CD THEN 'Y'-->
-<!--	   			ELSE 'N'-->
-<!--   				END approvalYn-->
-<!--   			, company.APPROVAL_USER_CD 	AS companyApprovalUser-->
-<!--   			, docsUser.PROTECT_YN		AS protectYn			/* 諛⑹궛湲곗닠?먮즺 沅뚰븳 ?щ?(?몃??ъ슂???꾩슜) */-->
-<!--        FROM DOCS_USER docsUser-->
-<!--        LEFT JOIN DOCS_COMPANY company-->
-<!--        ON docsUser.COMPANY_CD = company.COMPANY_CD-->
-<!--        LEFT JOIN DOCS_DEPT dept-->
-<!--        ON docsUser.DEPT_CD = dept.DEPT_CD-->
-<!--        LEFT JOIN DOCS_PROTECT_USER protectUser-->
-<!--        ON protectUser.USER_CD = docsUser.USER_CD-->
-<!--        WHERE docsUser.USER_NM = #{userNm}-->
-<!--        AND company.BIZ_NO = #{bizNo}-->
-<!--	</select>-->
-
 <!--	<select id="getRoleCodeList" resultType="kr.esob.fdms.controller.login.RoleVO">-->
 <!--		SELECT rel.ROLE_CD AS roleCd-->
 <!--			, menu.MENU_TYPE-->
@@ -260,34 +221,6 @@
                       LEFT JOIN DOCS_POSITION position ON docsUser.POSITION_CD = position.POSITION_CD
 			 WHERE docsUser.USER_ID = #{userId}
 		 ) A1
-</select>
-
-<select id="getOutUser" resultType="kr.esob.fdms.controller.login.UserVO">
-	SELECT
-		docsUser.*,
-        position.POSITION_NM AS positionNm,
-		'RG_006' AS roleGroup, /* ?몃??낆껜??臾댁“嫄?006 */
-		'' AS COMPANY_NM,
-		'' AS BIZ_NO,
-		dept.TEAM_LEADER_USER_CD AS teamLeaderUid,
-		'N' AS passUseYn,
-		dept.PURCHASE_YN AS purchaseYn,
-		dept.ILS_TEAM_YN AS ilsTeamYn,
-		dept.PRODUCT_TEAM_YN AS productTeamYn,
-		dept.PURCHASE_TEAM_YN AS purchaseTeamYn,
-		dept.PURCHASE_PLAN_TEAM_YN AS purchasePlanTeamYn,
-		dept.DEPT_TYPE AS deptType,
-		CASE
-			WHEN dept.TEAM_LEADER_USER_CD = docsUser.USER_CD THEN 'Y' /* ???*/
-			ELSE 'N'
-			END approverYn,
-		'N' AS approvalYn,
-		'' AS companyApprovalUser,
-		docsUser.PROTECT_YN AS protectYn /* 諛⑹궛湲곗닠?먮즺 沅뚰븳 ?щ?(?몃??ъ슂???꾩슜) */
-	FROM DOCS_USER docsUser
-			 LEFT JOIN DOCS_DEPT dept ON docsUser.DEPT_CD = dept.DEPT_CD
-             LEFT JOIN DOCS_POSITION position ON docsUser.POSITION_CD = position.POSITION_CD
-	WHERE docsUser.USER_NM = #{userNm}
 </select>
 
 <select id="getRoleCodeList" resultType="kr.esob.fdms.controller.login.RoleVO">

@@ -20,8 +20,10 @@ WITH RECURSIVE removed_menu (
            menu.parent_menu_cd,
            menu.role_cd,
            menu.menu_url
-      FROM docs_menu menu
-     WHERE menu.auth_site = 'E'
+     FROM docs_menu menu
+     WHERE COALESCE(menu.use_yn, 'N') <> 'Y'
+        OR COALESCE(menu.del_yn, 'Y') <> 'N'
+        OR menu.auth_site = 'E'
         OR menu.parent_menu_cd = 'E'
         OR COALESCE(menu.menu_url, '') ~* '(^|/)outside/'
         OR COALESCE(menu.menu_url, '') ~*
@@ -29,12 +31,25 @@ WITH RECURSIVE removed_menu (
         OR COALESCE(menu.menu_url, '') ~*
            '^/inside/organizationmanage/(outsideuser|approval)(/|$)'
         OR menu.menu_cd IN (
+           'MENU_124',
            'MENU_041', 'MENU_042', 'MENU_043', 'MENU_044', 'MENU_045',
            'MENU_046', 'MENU_047', 'MENU_048', 'MENU_049',
            'MENU_073', 'MENU_074', 'MENU_075', 'MENU_076', 'MENU_077',
            'MENU_078', 'MENU_079',
            'MENU_151', 'MENU_152', 'MENU_153', 'MENU_154',
            'MENU_155', 'MENU_156', 'MENU_157'
+         )
+        OR (
+           menu.tree_type = 'root'
+           AND menu.menu_type IN ('T', 'M', 'P')
+           AND menu.menu_cd NOT IN (
+               'MENU_013', 'MENU_071', 'MENU_214', 'MENU_223'
+           )
+        )
+        OR (
+           COALESCE(BTRIM(menu.parent_menu_cd), '') IN ('', 'MENU_000')
+           AND menu.menu_type IN ('T', 'M', 'P')
+           AND menu.menu_cd NOT IN ('MENU_189', 'MENU_190')
         )
 
     UNION
@@ -61,6 +76,12 @@ DELETE FROM docs_role_mapping mapping
  USING kt1b_removed_menu removed
  WHERE mapping.menu_url = removed.menu_url;
 
+-- MENU_124 was a legacy broad /inside/** authority. It must not survive as a
+-- catch-all rule in the single-portal ACL model, including duplicate mappings
+-- that may not carry the original menu role code.
+DELETE FROM docs_role_mapping
+ WHERE menu_url = '/inside/**';
+
 DELETE FROM docs_role_mapping
  WHERE group_cd = 'RG_006'
     OR COALESCE(menu_url, '') ~* '(^|/)outside/'
@@ -78,6 +99,19 @@ DELETE FROM docs_role_group_member
 DELETE FROM docs_menu menu
  USING kt1b_removed_menu removed
  WHERE menu.menu_cd = removed.menu_cd;
+
+-- REL_ROLE_GROUP is a menu-role relation. Remove every historical assignment
+-- that no longer resolves to one retained active menu role, including dumps
+-- that stored MENU_* identifiers instead of ROLE_MENU_* identifiers.
+DELETE FROM docs_rel_role_group assignment
+ WHERE NOT EXISTS (
+       SELECT 1
+         FROM docs_menu menu
+        WHERE menu.del_yn = 'N'
+          AND menu.use_yn = 'Y'
+          AND NULLIF(BTRIM(menu.role_cd), '') IS NOT NULL
+          AND menu.role_cd = assignment.role_cd
+   );
 
 DELETE FROM docs_role_group
  WHERE group_code = 'RG_006';
@@ -100,14 +134,93 @@ UPDATE docs_user
     OR BTRIM(auth_site) = '';
 
 UPDATE docs_menu
-   SET auth_site = 'I'
- WHERE auth_site = 'B'
-    OR auth_site IS NULL
-    OR BTRIM(auth_site) = '';
+   SET parent_menu_cd = 'ROOT'
+ WHERE parent_menu_cd IN ('I', 'B');
+
+-- AUTH_SITE was a portal selector. The application now has one menu catalog,
+-- so retained menu rows carry no internal/external marker.
+UPDATE docs_menu
+   SET auth_site = NULL;
+
+-- Two active user-management actions were orphaned in the legacy dump. Attach
+-- them to the current user-management menu so assignment and runtime ACLs use
+-- the same tree.
+UPDATE docs_menu
+   SET parent_menu_cd = 'MENU_072',
+       menu_nm = CASE menu_cd
+           WHEN 'MENU_189' THEN '사용자 생성'
+           WHEN 'MENU_190' THEN '사용자 정보 수정'
+       END,
+       message_cd = CASE menu_cd
+           WHEN 'MENU_189' THEN 'menu.userCreate'
+           WHEN 'MENU_190' THEN 'menu.userEdit'
+       END,
+       menu_level = '3',
+       tree_type = 'leaf',
+       role_cd = 'ROLE_' || menu_cd,
+       use_yn = 'Y',
+       del_yn = 'N'
+ WHERE menu_cd IN ('MENU_189', 'MENU_190');
 
 UPDATE docs_menu
-   SET parent_menu_cd = 'I'
- WHERE parent_menu_cd = 'B';
+   SET menu_nm = CASE menu_cd
+           WHEN 'MENU_072' THEN '사용자 관리'
+           WHEN 'MENU_199' THEN '부서 관리'
+       END
+ WHERE menu_cd IN ('MENU_072', 'MENU_199');
+
+INSERT INTO docs_lang (lang_type, lang_cd, lang_desc)
+VALUES
+    ('ko', 'menu.userCreate', '사용자 생성'),
+    ('en', 'menu.userCreate', 'Create User'),
+    ('ko', 'menu.userEdit', '사용자 정보 수정'),
+    ('en', 'menu.userEdit', 'Edit User')
+ON CONFLICT (lang_type, lang_cd) DO UPDATE
+   SET lang_desc = EXCLUDED.lang_desc;
+
+INSERT INTO docs_rel_role_group (
+    group_cd, role_cd, insert_user_cd, update_user_cd, insert_dt, update_dt
+)
+SELECT 'RG_001', menu.role_cd, 'SYSTEM', 'SYSTEM',
+       CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+  FROM docs_menu menu
+ WHERE menu.menu_cd IN ('MENU_189', 'MENU_190')
+ON CONFLICT (group_cd, role_cd) DO NOTHING;
+
+-- Replace the legacy portal-specific toolbar and callback names with one
+-- neutral menu-administration toolbar.
+INSERT INTO docs_toolbar_info (
+    toolbar_id, button_id, button_seq, button_label, button_img,
+    button_align, call_func, use_yn, lang_cd, button_type,
+    system_class_group, role_cd
+)
+VALUES
+    ('toolbarSystemMenu', 'btnAdd', 10, '추가', '', 'right',
+     'addMenu()', 'Y', '', 'save', '', NULL),
+    ('toolbarSystemMenu', 'btnEdit', 20, '수정', '', 'right',
+     'modMenu()', 'Y', '', 'save', '', NULL),
+    ('toolbarSystemMenu', 'btnDelete', 30, '삭제', '', 'right',
+     'delMenu()', 'Y', '', 'save', '', NULL),
+    ('toolbarSystemMenu', 'btnSaveOrder', 100, '메뉴순서저장', '', 'right',
+     'saveMenu()', 'Y', '', 'save', '', NULL)
+ON CONFLICT (toolbar_id, button_id) DO UPDATE SET
+    button_seq = EXCLUDED.button_seq,
+    button_label = EXCLUDED.button_label,
+    button_img = EXCLUDED.button_img,
+    button_align = EXCLUDED.button_align,
+    call_func = EXCLUDED.call_func,
+    use_yn = EXCLUDED.use_yn,
+    lang_cd = EXCLUDED.lang_cd,
+    button_type = EXCLUDED.button_type,
+    system_class_group = EXCLUDED.system_class_group,
+    role_cd = EXCLUDED.role_cd;
+
+DELETE FROM docs_toolbar_info
+ WHERE toolbar_id IN (
+       'toolbarSystemInsideMenu',
+       'toolbarSystemOutsideMenu',
+       'toolbarSystemMenuOutside'
+   );
 
 -- Keep the established key because it is referenced throughout the dump, but
 -- remove the former customer identity from the company master.
@@ -173,15 +286,101 @@ BEGIN
     IF EXISTS (
         SELECT 1
           FROM docs_menu
-         WHERE auth_site IS DISTINCT FROM 'I'
-            OR parent_menu_cd = 'E'
+         WHERE auth_site IS NOT NULL
+            OR parent_menu_cd IN ('I', 'B', 'E')
             OR COALESCE(menu_url, '') ~* '(^|/)outside/'
             OR COALESCE(menu_url, '') ~*
                '^/inside/(unregisted|outregisted)(/|$)'
             OR COALESCE(menu_url, '') ~*
                '^/inside/organizationmanage/(outsideuser|approval)(/|$)'
     ) THEN
-        RAISE EXCEPTION 'An external menu remains after internal-only cleanup.';
+        RAISE EXCEPTION 'A legacy portal marker remains in the menu catalog.';
+    END IF;
+
+    IF (
+        SELECT ARRAY_AGG(menu_cd ORDER BY menu_cd)
+          FROM docs_menu
+         WHERE tree_type = 'root'
+           AND menu_type IN ('T', 'M', 'P')
+           AND use_yn = 'Y'
+           AND del_yn = 'N'
+           AND parent_menu_cd = 'ROOT'
+    ) IS DISTINCT FROM ARRAY[
+        'MENU_013', 'MENU_071', 'MENU_214', 'MENU_223'
+    ]::varchar[] THEN
+        RAISE EXCEPTION 'The active menu roots do not match the four current navigation roots.';
+    END IF;
+
+    IF EXISTS (
+        WITH RECURSIVE eligible AS (
+            SELECT menu_cd, parent_menu_cd
+              FROM docs_menu
+             WHERE del_yn = 'N'
+               AND use_yn = 'Y'
+               AND menu_type IN ('T', 'M', 'P')
+        ), connected AS (
+            SELECT menu_cd, parent_menu_cd,
+                   ARRAY[menu_cd::TEXT]::TEXT[] AS path
+              FROM eligible
+             WHERE parent_menu_cd = 'ROOT'
+            UNION ALL
+            SELECT child.menu_cd, child.parent_menu_cd,
+                   parent.path || child.menu_cd::TEXT
+              FROM eligible child
+              JOIN connected parent ON child.parent_menu_cd = parent.menu_cd
+             WHERE NOT child.menu_cd::TEXT = ANY(parent.path)
+        )
+        SELECT 1
+          FROM eligible menu
+         WHERE NOT EXISTS (
+               SELECT 1 FROM connected
+                WHERE connected.menu_cd = menu.menu_cd
+         )
+    ) THEN
+        RAISE EXCEPTION 'The active permission tree contains a disconnected menu.';
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+          FROM docs_toolbar_info
+         WHERE toolbar_id IN (
+               'toolbarSystemInsideMenu',
+               'toolbarSystemOutsideMenu',
+               'toolbarSystemMenuOutside'
+           )
+            OR (toolbar_id = 'toolbarSystemMenu'
+                AND (button_id ~* '(inside|outside)'
+                     OR call_func ~* '(inside|outside)'))
+    ) THEN
+        RAISE EXCEPTION 'A portal-specific menu toolbar remains.';
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+          FROM docs_menu
+         WHERE menu_cd = 'MENU_124'
+            OR menu_url = '/inside/**'
+    ) OR EXISTS (
+        SELECT 1
+          FROM docs_role_mapping
+         WHERE menu_url = '/inside/**'
+    ) THEN
+        RAISE EXCEPTION 'The retired broad portal ACL remains.';
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+          FROM docs_rel_role_group assignment
+         WHERE NOT EXISTS (
+               SELECT 1
+                 FROM docs_menu menu
+                WHERE menu.del_yn = 'N'
+                  AND menu.use_yn = 'Y'
+                  AND NULLIF(BTRIM(menu.role_cd), '') IS NOT NULL
+                  AND menu.role_cd = assignment.role_cd
+         )
+    ) THEN
+        RAISE EXCEPTION 'An orphan menu-role assignment remains.';
     END IF;
 
     IF EXISTS (

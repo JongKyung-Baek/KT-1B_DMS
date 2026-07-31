@@ -8,7 +8,6 @@ import kr.esob.fdms.commonlogic.combo.ComboService;
 import kr.esob.fdms.commonlogic.grid.GridResultVO;
 import kr.esob.fdms.commonlogic.result.ResultVO;
 import kr.esob.fdms.commonlogic.systemconfig.SystemConfig;
-import kr.esob.fdms.commonlogic.value.RequestPopupInfo;
 import kr.esob.fdms.commonlogic.value.SearchAllPopupInfo;
 import kr.esob.fdms.controller.inside.authorization.AuthorizationDao;
 import kr.esob.fdms.controller.inside.authorization.AuthorizationService;
@@ -454,10 +453,6 @@ public class CommonRequestController extends AbstractController {
 	public String commonVersionCheckPopup(CommonDistributionRequestParam param, Model model, HttpServletRequest request) throws JsonProcessingException {
 
 		model.addAttribute("gridInfo", JSONArray.fromObject(gridService.selectGridInfo("gridDrawingRequestList")));
-		model.addAttribute("popupInfo", new ObjectMapper().writeValueAsString(RequestPopupInfo.DRAWING));
-//		model.addAttribute("popupInfo", new ObjectMapper().writeValueAsString(SearchAllPopupInfo.DRAWING));
-		model.addAttribute("listTitle", RequestPopupInfo.DRAWING.getListTitle());
-		model.addAttribute("dataType", RequestPopupInfo.DRAWING.getDataType());
 		model.addAttribute("drawingNo", request.getParameter("drawingNo"));
 		return "/inside/distribution/drawingVersionCheckPopup";
 	}

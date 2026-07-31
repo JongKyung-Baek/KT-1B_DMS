@@ -490,17 +490,11 @@
 
       <div class="account-panel">
         <div class="account-label"><spring:message code="feature.password.account.label" text="사용자 아이디"/></div>
-        <div class="account-value">
-          <c:choose>
-            <c:when test="${userVo.authSite == 'E'}">${userVo.userNm}</c:when>
-            <c:otherwise>${userVo.userId}</c:otherwise>
-          </c:choose>
-        </div>
+      <div class="account-value">${userVo.userId}</div>
       </div>
 
       <form id="passwordForm" novalidate>
         <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
-        <input type="hidden" name="authSite" value="${userVo.authSite}" />
 
         <div class="form-row">
           <label for="newPassword"><spring:message code="feature.password.new.label" text="새 비밀번호"/></label>
@@ -787,7 +781,6 @@
         return;
       }
 
-      var authSite = $("input[name='authSite']").val();
       var url = contextPath + "/login/password";
       setSubmitting(true);
 

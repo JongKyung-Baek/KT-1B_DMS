@@ -164,27 +164,6 @@
      LIMIT 1
 </select>
 
-<select id="selectOutsideDistributionActLogBase" resultType="map">
-    SELECT rf.REQUEST_NO AS "requestNo",
-           r.REQUEST_TYPE AS "requestType",
-           rf.OBJECT_ID AS "objectId",
-           rf.FILE_NO::text AS "fileNo",
-           r.OBJECT_TYPE AS "objectType",
-           COALESCE(r.PROTECT_YN, 'N') AS "protectYn",
-           rf.ORG_FILE_NM AS "orgFileNm",
-           rm.OBJECT_NO AS "objectNo",
-           rm.OBJECT_NM AS "objectNm"
-      FROM DOCS_REQUEST_FILE rf
-      JOIN DOCS_REQUEST r ON r.REQUEST_NO = rf.REQUEST_NO
-      LEFT JOIN DOCS_REQUEST_MAPPING rm
-        ON rm.REQUEST_NO = rf.REQUEST_NO AND rm.OBJECT_ID = rf.OBJECT_ID
-     WHERE rf.REQUEST_NO = #{requestNo}
-       AND rf.OBJECT_ID = #{docSeq}
-       AND (NULLIF(#{fileSeq}, '') IS NULL OR rf.FILE_NO::text = #{fileSeq})
-     ORDER BY rf.FILE_NO
-     LIMIT 1
-</select>
-
 <select id="countDownloadBusinessAccess" resultType="int">
     SELECT COUNT(*)
       FROM DOCS_REQUEST_FILE rf

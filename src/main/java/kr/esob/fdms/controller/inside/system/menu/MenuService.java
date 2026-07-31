@@ -61,7 +61,7 @@ public class MenuService {
 			if(Constant.ROOT_MENU_CD.equals(param.getParentMenuCd())) {
 				param.setParentMenuCd(PORTAL_ROOT_CD);
 			}
-			// 메뉴 추가(내/외부 공통)
+			// 메뉴 추가
 			// URL이 변경되면 ROLE_CD가 변경되기 때문에 ROLE_CD를 사용할 수 없음.
 			//param.setRoleCd("ROLE_"+Integer.toHexString(param.getMenuUrl().hashCode()).toUpperCase());
 			param.setMenuLevel(getMenuLevel(param));
@@ -202,7 +202,7 @@ public class MenuService {
 
 			vo.setSortSeq(i);
 			vo.setMenuType(vo.getMenuLevel().equals("1") ? "T" : "");
-			vo.setParent(getParent(vo));	// menu level이 1일 경우 내/외부 문자가 parent에 들어감
+			vo.setParent(getParent(vo));
 			vo.setTreeType(vo.getMenuLevel().equals("1") ? "root" : "");						// menu level이 1일 경우 root임
 
 			dao.updateMenuSort(vo);
@@ -214,7 +214,7 @@ public class MenuService {
 	}
 
 	/**
-	 * parent코드를 구한다. level이 1일 경우 authsite와 같은 값이 들어가야 함.
+	 * Top-level menus always use the neutral portal root.
 	 * @param vo
 	 * @return
 	 */

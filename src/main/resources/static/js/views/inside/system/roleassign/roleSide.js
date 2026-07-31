@@ -43,7 +43,7 @@ function selectUserGrade($button) {
 
 function setMenuList(groupCd) {
   callAjax(
-    { authSite: "I", groupCd: groupCd },
+    { groupCd: groupCd },
     "/inside/system/roleassign/getAssignedMenuList",
     function (response) {
       selectedNodeList = response.selectedValue || {};

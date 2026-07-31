@@ -37,9 +37,7 @@ class BbsNoticeStorageContractTest {
         BbsNoticeFileVO requestParam = new BbsNoticeFileVO();
         requestParam.setNoticeCd(10L);
         requestParam.setFileNo("1");
-        UserVO internalUser = new UserVO();
-        internalUser.setAuthSite("I");
-        requestParam.setSessionUser(internalUser);
+        requestParam.setSessionUser(new UserVO());
 
         BbsNoticeFileVO stored = new BbsNoticeFileVO();
         stored.setFilePath(storedFile.toString());

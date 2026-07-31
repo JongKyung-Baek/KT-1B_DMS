@@ -17,6 +17,5 @@ public class RequestParam extends CommonParam {
 	private String roleCd;
 	private String groupCd;
 	private String saveFlag;
-	private String authSite;
 	private List<RequestParam> list;
 }

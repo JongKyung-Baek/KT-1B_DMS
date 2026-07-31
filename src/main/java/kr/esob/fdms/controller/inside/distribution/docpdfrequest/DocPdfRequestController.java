@@ -13,7 +13,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.esob.fdms.commonlogic.abstractclass.AbstractController;
 import kr.esob.fdms.commonlogic.abstractclass.CommonHomeParam;
 import kr.esob.fdms.commonlogic.grid.GridResultVO;
-import kr.esob.fdms.commonlogic.value.RequestPopupInfo;
 import kr.esob.fdms.commonlogic.value.SearchAllPopupInfo;
 import net.sf.json.JSONArray;
 

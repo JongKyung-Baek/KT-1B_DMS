@@ -6,10 +6,81 @@
 <mapper namespace="sql.Menu">
 
 <select id="getMenuList" resultType="kr.esob.fdms.commonlogic.menu.MenuVO">
-    SELECT *
-    FROM DOCS_MENU
-    WHERE USE_YN = 'Y'
-    AND DEL_YN = 'N'
+    WITH RECURSIVE ACTIVE_MENU (
+        MENU_CD, PARENT_MENU_CD, MENU_NM, MESSAGE_CD, MENU_LEVEL, MENU_TYPE,
+        MENU_URL, SORT_SEQ, TREE_TYPE, DEL_YN, USE_YN, TOOLTIP, MENU_DESC,
+        ROLE_CD, MENU_ICON, MENU_PATH
+    ) AS (
+        SELECT
+            MENU.MENU_CD,
+            MENU.PARENT_MENU_CD,
+            MENU.MENU_NM,
+            MENU.MESSAGE_CD,
+            MENU.MENU_LEVEL,
+            MENU.MENU_TYPE,
+            MENU.MENU_URL,
+            MENU.SORT_SEQ,
+            MENU.TREE_TYPE,
+            MENU.DEL_YN,
+            MENU.USE_YN,
+            MENU.TOOLTIP,
+            MENU.MENU_DESC,
+            MENU.ROLE_CD,
+            MENU.MENU_ICON,
+            ARRAY[MENU.MENU_CD::TEXT]::TEXT[]
+        FROM DOCS_MENU MENU
+        WHERE MENU.PARENT_MENU_CD = 'ROOT'
+          AND MENU.TREE_TYPE = 'root'
+          AND MENU.MENU_TYPE IN ('T', 'M', 'P')
+          AND MENU.USE_YN = 'Y'
+          AND MENU.DEL_YN = 'N'
+
+        UNION ALL
+
+        SELECT
+            CHILD.MENU_CD,
+            CHILD.PARENT_MENU_CD,
+            CHILD.MENU_NM,
+            CHILD.MESSAGE_CD,
+            CHILD.MENU_LEVEL,
+            CHILD.MENU_TYPE,
+            CHILD.MENU_URL,
+            CHILD.SORT_SEQ,
+            CHILD.TREE_TYPE,
+            CHILD.DEL_YN,
+            CHILD.USE_YN,
+            CHILD.TOOLTIP,
+            CHILD.MENU_DESC,
+            CHILD.ROLE_CD,
+            CHILD.MENU_ICON,
+            PARENT.MENU_PATH || CHILD.MENU_CD::TEXT
+        FROM DOCS_MENU CHILD
+        JOIN ACTIVE_MENU PARENT
+          ON CHILD.PARENT_MENU_CD = PARENT.MENU_CD
+        WHERE CHILD.MENU_TYPE IN ('T', 'M', 'P')
+          AND CHILD.USE_YN = 'Y'
+          AND CHILD.DEL_YN = 'N'
+          AND NOT CHILD.MENU_CD::TEXT = ANY(PARENT.MENU_PATH)
+    )
+    SELECT
+        MENU_CD,
+        PARENT_MENU_CD,
+        MENU_NM,
+        MESSAGE_CD,
+        MENU_LEVEL,
+        MENU_TYPE,
+        MENU_URL,
+        SORT_SEQ,
+        TREE_TYPE,
+        DEL_YN,
+        USE_YN,
+        TOOLTIP,
+        MENU_DESC,
+        ROLE_CD,
+        MENU_ICON
+    FROM ACTIVE_MENU
+    WHERE NULLIF(BTRIM(MENU_URL), '') IS NOT NULL
+      AND NULLIF(BTRIM(ROLE_CD), '') IS NOT NULL
     ORDER BY MENU_CD
 </select>
 
@@ -47,8 +118,8 @@
     ON lang.LANG_CD = menu.MESSAGE_CD
     AND lang.LANG_TYPE = #{sessionLang}
     WHERE menu.TREE_TYPE = 'root'
+    AND menu.PARENT_MENU_CD = 'ROOT'
     AND menu.MENU_TYPE != 'H'
-    AND menu.AUTH_SITE = 'I'
     AND role.GROUP_CD = #{roleGroup}
     AND DEL_YN = 'N'
     AND USE_YN = 'Y'
@@ -82,8 +153,8 @@
         LEFT JOIN DOCS_LANG lang
         ON lang.LANG_CD = menu.MESSAGE_CD
         AND lang.LANG_TYPE = #{sessionLang}
-        WHERE AUTH_SITE = 'I'
-        AND MENU.TREE_TYPE = 'root'
+        WHERE MENU.TREE_TYPE = 'root'
+        AND MENU.PARENT_MENU_CD = 'ROOT'
         AND MENU.USE_YN = 'Y'
         AND MENU.DEL_YN = 'N'
         AND roleGroup.GROUP_CD = #{roleGroup}
@@ -133,7 +204,9 @@
                MENU_TYPE,
                MENU_CD AS MAIN_CODE
         FROM DOCS_MENU
-        WHERE PARENT_MENU_CD IN ('I', 'B', 'O')
+        WHERE PARENT_MENU_CD = 'ROOT'
+          AND USE_YN = 'Y'
+          AND DEL_YN = 'N'
         UNION ALL
         SELECT MENU.MENU_CD,
                MENU.PARENT_MENU_CD,
@@ -144,6 +217,8 @@
                PARENT.MAIN_CODE AS MAIN_CODE
         FROM DOCS_MENU MENU
         JOIN PARENT ON MENU.PARENT_MENU_CD = PARENT.MENU_CD
+        WHERE MENU.USE_YN = 'Y'
+          AND MENU.DEL_YN = 'N'
     )
     SELECT MENU_CD AS id,
            MENU_NM AS text
@@ -171,14 +246,14 @@
 </select>
 
 <select id="selectTree" resultType="kr.esob.fdms.commonlogic.tree.TreeVO">
-    WITH RECURSIVE INTERNAL_MENU (
+    WITH RECURSIVE ACTIVE_MENU (
         MENU_CD, PARENT_MENU_CD, MENU_NM, MENU_LEVEL, MENU_TYPE,
         SORT_SEQ, USE_YN, ROLE_CD, MENU_PATH
     ) AS (
         SELECT
             MENU.MENU_CD,
             MENU.PARENT_MENU_CD,
-            MENU.MENU_NM,
+            COALESCE(LANG.LANG_DESC, MENU.MENU_NM),
             MENU.MENU_LEVEL,
             MENU.MENU_TYPE,
             MENU.SORT_SEQ,
@@ -186,17 +261,21 @@
             MENU.ROLE_CD,
             ARRAY[MENU.MENU_CD::TEXT]::TEXT[]
         FROM DOCS_MENU MENU
+        LEFT JOIN DOCS_LANG LANG
+          ON LANG.LANG_CD = MENU.MESSAGE_CD
+         AND LANG.LANG_TYPE = #{sessionLang}
         WHERE MENU.DEL_YN = 'N'
+          AND MENU.USE_YN = 'Y'
           AND MENU.MENU_TYPE IN ('T', 'M', 'P')
-          AND MENU.AUTH_SITE IN ('I', 'B')
-          AND MENU.PARENT_MENU_CD IN ('I', 'B')
+          AND MENU.TREE_TYPE = 'root'
+          AND MENU.PARENT_MENU_CD = 'ROOT'
 
         UNION ALL
 
         SELECT
             CHILD.MENU_CD,
             CHILD.PARENT_MENU_CD,
-            CHILD.MENU_NM,
+            COALESCE(LANG.LANG_DESC, CHILD.MENU_NM),
             CHILD.MENU_LEVEL,
             CHILD.MENU_TYPE,
             CHILD.SORT_SEQ,
@@ -204,11 +283,14 @@
             CHILD.ROLE_CD,
             PARENT.MENU_PATH || CHILD.MENU_CD::TEXT
         FROM DOCS_MENU CHILD
-        JOIN INTERNAL_MENU PARENT
+        JOIN ACTIVE_MENU PARENT
           ON CHILD.PARENT_MENU_CD = PARENT.MENU_CD
+        LEFT JOIN DOCS_LANG LANG
+          ON LANG.LANG_CD = CHILD.MESSAGE_CD
+         AND LANG.LANG_TYPE = #{sessionLang}
         WHERE CHILD.DEL_YN = 'N'
+          AND CHILD.USE_YN = 'Y'
           AND CHILD.MENU_TYPE IN ('T', 'M', 'P')
-          AND CHILD.AUTH_SITE IN ('I', 'B')
           AND NOT CHILD.MENU_CD::TEXT = ANY(PARENT.MENU_PATH)
     )
     SELECT
@@ -225,7 +307,7 @@
         MENU_CD AS id,
         MENU_NM AS text,
         CASE
-            WHEN PARENT_MENU_CD IN ('I', 'B') THEN 'MENU_000'
+            WHEN PARENT_MENU_CD = 'ROOT' THEN 'MENU_000'
             ELSE PARENT_MENU_CD
         END AS parent,
         MENU_LEVEL AS "level",
@@ -233,7 +315,7 @@
         MENU_TYPE AS type,
         USE_YN AS useYn,
         ROLE_CD AS roleCd
-    FROM INTERNAL_MENU
+    FROM ACTIVE_MENU
     ORDER BY sort, id
 </select>
 
@@ -241,7 +323,6 @@
     UPDATE DOCS_MENU
     SET MENU_NM = #{menuNm},
         MENU_URL = #{menuUrl},
-        AUTH_SITE = #{authSite},
         USE_YN = #{useYn},
         MENU_TYPE = #{menuType},
         MENU_ICON = #{menuIcon}
@@ -256,7 +337,6 @@
            CASE MENU_TYPE WHEN 'P' THEN 'Y' ELSE 'N' END AS popupYn,
            MENU_URL AS menuUrl,
            USE_YN AS useYn,
-           AUTH_SITE AS authSite,
            MENU_LEVEL AS menuLevel,
            MENU_ICON AS menuIcon
     FROM DOCS_MENU menu
@@ -271,11 +351,13 @@
     </selectKey>
 
     INSERT INTO DOCS_MENU(
-        MENU_CD, PARENT_MENU_CD, MENU_NM, MENU_LEVEL, MENU_TYPE, MENU_URL, SORT_SEQ, TREE_TYPE, DEL_YN, USE_YN, ROLE_CD, AUTH_SITE, MENU_ICON
+        MENU_CD, PARENT_MENU_CD, MENU_NM, MENU_LEVEL, MENU_TYPE, MENU_URL,
+        SORT_SEQ, TREE_TYPE, DEL_YN, USE_YN, ROLE_CD, MENU_ICON
     )
     VALUES(
         #{menuCd}, #{parentMenuCd}, #{menuNm}, #{menuLevel}, #{menuType}, #{menuUrl},
-        (SELECT COALESCE(MAX(SORT_SEQ), 0) + 1 FROM DOCS_MENU), #{treeType}, 'N', #{useYn}, 'ROLE_' || #{menuCd}, #{authSite}, #{menuIcon}
+        (SELECT COALESCE(MAX(SORT_SEQ), 0) + 1 FROM DOCS_MENU),
+        #{treeType}, 'N', #{useYn}, 'ROLE_' || #{menuCd}, #{menuIcon}
     )
 </insert>
 

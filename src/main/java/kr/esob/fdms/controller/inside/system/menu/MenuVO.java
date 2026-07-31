@@ -14,7 +14,6 @@ public class MenuVO {
 	private String useYn;				// 사용여부
 	private String popupYn;				// popup여부(menuType이 P이면 Y, 아니면 N
 	private String roleCd;				// 권한코드
-	private String authSite;			// 내외부
 	private String menuLevel;			// 메뉴 레벨
 	private String menuIcon;
 }

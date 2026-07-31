@@ -242,32 +242,9 @@
 <!--	</select>-->
 
 
-<!--	<select id="selectOutsideUserCombo"-->
-<!--			resultType="kr.esob.fdms.commonlogic.combo.SearchComboInfoVO">-->
-<!--		&lt;!&ndash; sql.sql.Authorization."selectOutsideUserCombo" 외부사용자목록combo &ndash;&gt;-->
-<!--		SELECT X.*-->
-<!--          FROM (-->
-<!--		        SELECT USER_CD AS id-->
-<!--		         	 , USER_NM || '[' || USER_ID || ']' AS text-->
-<!--		         	 , USER_NM || '[' || USER_ID || ']' AS title-->
-<!--		         	 , ROW_NUMBER() OVER(ORDER BY USER_NM) AS pageindex-->
-<!--		          FROM DOCS_USER-->
-<!--		         WHERE COMPANY_CD != #{companyCd} /* 로그인한 사용자의 companyCd*/-->
-<!--				 <if test='term != null and !"".equals(term)'>-->
-<!--		           AND USER_NM LIKE '%' || #{term} || '%'-->
-<!--		         </if>-->
-<!--		         AND DEL_YN = 'N'-->
-<!--				 AND USE_YN = 'Y'-->
-<!--          		) X-->
-<!--		<if test='page != null and !page.equals("")'>-->
-<!--			WHERE PAGEINDEX BETWEEN #{posStart}-->
-<!--			  AND #{count} * #{page}-->
-<!--		</if>-->
-<!--	</select>-->
 
 <!--	<select id="selectInsideUserCombo"-->
 <!--			resultType="kr.esob.fdms.commonlogic.combo.SearchComboInfoVO">-->
-<!--		&lt;!&ndash; sql.sql.Authorization."selectOutsideUserCombo" 외부사용자목록combo &ndash;&gt;-->
 <!--		SELECT X.*-->
 <!--          FROM (-->
 <!--		        SELECT USER_CD AS id-->
@@ -291,7 +268,6 @@
 
 <!--	<select id="selectUserCombo"-->
 <!--			resultType="kr.esob.fdms.commonlogic.combo.SearchComboInfoVO">-->
-<!--		&lt;!&ndash; sql.sql.Authorization."selectOutsideUserCombo" 외부사용자목록combo &ndash;&gt;-->
 <!--		SELECT X.*-->
 <!--          FROM (-->
 <!--		        SELECT USER_CD AS id-->
@@ -567,7 +543,6 @@
 
 <!--	<select id="selectInsideUserComboByDept"-->
 <!--			resultType="kr.esob.fdms.commonlogic.combo.SearchComboInfoVO">-->
-<!--		&lt;!&ndash; sql.sql.Authorization."selectOutsideUserCombo" 외부사용자목록combo &ndash;&gt;-->
 <!--		SELECT X.*-->
 <!--			 , ROW_NUMBER() OVER(ORDER BY text) AS pageindex-->
 <!--          FROM (-->
@@ -816,12 +791,11 @@
 <!--		WHERE USER_CD != #{sessionUser.userCd}-->
 <!--		AND docsUser.USE_YN = 'Y'-->
 <!--		AND docsUser.DEL_YN = 'N'-->
-<!--		AND docsUser.AUTH_SITE = 'I'-->
 <!--		AND docsUser.BUSINESS_AREA_CD = #{sessionUser.businessAreaCd}-->
 <!--	  ORDER BY docsUser.USER_NM-->
 <!--	</select>-->
 
-<!--	&lt;!&ndash; 모든 내부사용자 조회 &ndash;&gt;-->
+<!--	&lt;!&ndash; 모든 사용자 조회 &ndash;&gt;-->
 <!--	<select id="selectUserAll" resultType="comboInfoVo">-->
 <!--		SELECT docsUser.USER_CD		AS comboVal-->
 <!--		     , docsUser.USER_NM || '[' || docsDept.DEPT_NM || ']'   AS comboLabel-->
@@ -830,7 +804,6 @@
 <!--		WHERE docsUser.DEPT_CD = docsDept.DEPT_CD-->
 <!--		AND docsUser.USE_YN = 'Y'-->
 <!--		AND docsUser.DEL_YN = 'N'-->
-<!--		AND docsUser.AUTH_SITE = 'I'-->
 <!--		AND docsUser.Position_Cd IS NOT NULL-->
 <!--	  ORDER BY docsUser.USER_NM-->
 <!--	</select>-->
@@ -862,32 +835,10 @@
 <!--		AND company.DEL_YN = 'N'-->
 <!--	</select>-->
 
-<!--	<select id="selectAllOutsideUserIdCombo"-->
-<!--			resultType="kr.esob.fdms.commonlogic.combo.SearchComboInfoVO">-->
-<!--		&lt;!&ndash; 외부 사용자목록combo - USER_ID를 ID로 사용 &ndash;&gt;-->
-<!--		SELECT X.*-->
-<!--          FROM (-->
-<!--		        SELECT USER_ID AS id-->
-<!--		         	 , USER_NM || '[' || USER_ID || ']' AS text-->
-<!--		         	 , USER_NM || '[' || USER_ID || ']' AS title-->
-<!--		         	 , ROW_NUMBER() OVER(ORDER BY USER_NM) AS pageindex-->
-<!--		          FROM DOCS_USER-->
-<!--		         WHERE AUTH_SITE='E'-->
-<!--		           AND USE_YN = 'Y'-->
-<!--				   AND DEL_YN = 'N'-->
-<!--				 <if test='term != null and !"".equals(term)'>-->
-<!--		           AND USER_NM LIKE '%' || #{term} || '%'-->
-<!--		         </if>-->
-<!--          		) X-->
-<!--		<if test='page != null and !page.equals("")'>-->
-<!--			WHERE PAGEINDEX BETWEEN #{posStart}-->
-<!--			  AND #{count} * #{page}-->
-<!--		</if>-->
-<!--	</select>-->
 
 <!--	<select id="selectAllInsideUserIdCombo"-->
 <!--			resultType="kr.esob.fdms.commonlogic.combo.SearchComboInfoVO">-->
-<!--		&lt;!&ndash; 내부 사용자목록combo - USER_ID를 ID로 사용 &ndash;&gt;-->
+<!--		&lt;!&ndash; 사용자 목록 combo - USER_ID를 ID로 사용 &ndash;&gt;-->
 <!--		SELECT X.*-->
 <!--          FROM (-->
 <!--		        SELECT USER_ID AS id-->
@@ -895,8 +846,7 @@
 <!--		         	 , USER_NM || '[' || USER_ID || ']' AS title-->
 <!--		         	 , ROW_NUMBER() OVER(ORDER BY USER_NM) AS pageindex-->
 <!--		          FROM DOCS_USER-->
-<!--		         WHERE AUTH_SITE='I'-->
-<!--		           AND USE_YN = 'Y'-->
+<!--		         WHERE USE_YN = 'Y'-->
 <!--				   AND DEL_YN = 'N'-->
 <!--				 <if test='term != null and !"".equals(term)'>-->
 <!--		           AND USER_NM LIKE '%' || #{term} || '%'-->
@@ -920,7 +870,7 @@
 
 <!--	<select id="selectAllInsideUserCdCombo"-->
 <!--			resultType="kr.esob.fdms.commonlogic.combo.SearchComboInfoVO">-->
-<!--		&lt;!&ndash; 내부 사용자목록combo - USER_ID를 ID로 사용 &ndash;&gt;-->
+<!--		&lt;!&ndash; 사용자 목록 combo - USER_ID를 ID로 사용 &ndash;&gt;-->
 <!--		SELECT X.*-->
 <!--          FROM (-->
 <!--		        SELECT USER_CD AS id-->
@@ -928,8 +878,7 @@
 <!--		         	 , USER_NM || '[' || USER_ID || ']' AS title-->
 <!--		         	 , ROW_NUMBER() OVER(ORDER BY USER_NM) AS pageindex-->
 <!--		          FROM DOCS_USER-->
-<!--		         WHERE AUTH_SITE='I'-->
-<!--		           AND USE_YN = 'Y'-->
+<!--		         WHERE USE_YN = 'Y'-->
 <!--				   AND DEL_YN = 'N'-->
 <!--				 <if test='term != null and !"".equals(term)'>-->
 <!--		           AND USER_NM LIKE '%' || #{term} || '%'-->
@@ -1168,32 +1117,9 @@
 	WHERE docsUser.COMPANY_CD = #{sessionUser.companyCd}
 </select>
 
-<select id="selectOutsideUserCombo"
-		resultType="kr.esob.fdms.commonlogic.combo.SearchComboInfoVO">
-	<!-- sql.sql.Authorization."selectOutsideUserCombo" 외부사용자목록combo -->
-	SELECT X.*
-	FROM (
-	SELECT USER_CD AS id
-	, USER_NM || '[' || USER_ID || ']' AS text
-	, USER_NM || '[' || USER_ID || ']' AS title
-	, ROW_NUMBER() OVER(ORDER BY USER_NM) AS pageindex
-	FROM DOCS_USER
-	WHERE COMPANY_CD != #{companyCd} /* 로그인한 사용자의 companyCd*/
-	<if test='term != null and !"".equals(term)'>
-		AND USER_NM LIKE '%' || #{term} || '%'
-	</if>
-	AND DEL_YN = 'N'
-	AND USE_YN = 'Y'
-	) X
-	<if test='page != null and !page.equals("")'>
-		WHERE PAGEINDEX BETWEEN #{posStart}
-		AND #{count} * #{page}
-	</if>
-</select>
 
 <select id="selectInsideUserCombo"
 		resultType="kr.esob.fdms.commonlogic.combo.SearchComboInfoVO">
-	<!-- sql.sql.Authorization."selectOutsideUserCombo" 외부사용자목록combo -->
 	SELECT X.*
 	FROM (
 	SELECT USER_CD AS id
@@ -1216,7 +1142,6 @@
 
 <select id="selectUserCombo"
 		resultType="kr.esob.fdms.commonlogic.combo.SearchComboInfoVO">
-	<!-- sql.sql.Authorization."selectOutsideUserCombo" 외부사용자목록combo -->
 	SELECT X.*
 	FROM (
 	SELECT USER_CD AS id
@@ -1433,7 +1358,6 @@
 
 <select id="selectInsideUserComboByDept"
 		resultType="kr.esob.fdms.commonlogic.combo.SearchComboInfoVO">
-	<!-- sql.sql.Authorization."selectOutsideUserCombo" 외부사용자목록combo -->
 	SELECT X.*
 	, ROW_NUMBER() OVER(ORDER BY text) AS pageindex
 	FROM (
@@ -1670,12 +1594,11 @@
 	WHERE USER_CD != #{sessionUser.userCd}
 	  AND docsUser.USE_YN = 'Y'
 	  AND docsUser.DEL_YN = 'N'
-	  AND docsUser.AUTH_SITE = 'I'
 	  AND docsUser.BUSINESS_AREA_CD = #{sessionUser.businessAreaCd}
 	ORDER BY docsUser.USER_NM
 </select>
 
-<!-- 모든 내부사용자 조회 -->
+<!-- 모든 사용자 조회 -->
 <select id="selectUserAll" resultType="comboInfoVo">
 	SELECT docsUser.USER_CD        AS comboVal
 		 , docsUser.USER_NM || '[' || docsDept.DEPT_NM || ']'   AS comboLabel
@@ -1684,7 +1607,6 @@
 	WHERE docsUser.DEPT_CD = docsDept.DEPT_CD
 	  AND docsUser.USE_YN = 'Y'
 	  AND docsUser.DEL_YN = 'N'
-	  AND docsUser.AUTH_SITE = 'I'
 	  AND docsUser.Position_Cd IS NOT NULL
 	ORDER BY docsUser.USER_NM
 </select>
@@ -1710,32 +1632,10 @@
 	WHERE 1=0
 </select>
 
-<select id="selectAllOutsideUserIdCombo"
-		resultType="kr.esob.fdms.commonlogic.combo.SearchComboInfoVO">
-	<!-- 외부 사용자목록combo - USER_ID를 ID로 사용 -->
-	SELECT X.*
-	FROM (
-	SELECT USER_ID AS id
-	, USER_NM || '[' || USER_ID || ']' AS text
-	, USER_NM || '[' || USER_ID || ']' AS title
-	, ROW_NUMBER() OVER(ORDER BY USER_NM) AS pageindex
-	FROM DOCS_USER
-	WHERE AUTH_SITE='E'
-	AND USE_YN = 'Y'
-	AND DEL_YN = 'N'
-	<if test='term != null and !"".equals(term)'>
-		AND USER_NM LIKE '%' || #{term} || '%'
-	</if>
-	) X
-	<if test='page != null and !page.equals("")'>
-		WHERE PAGEINDEX BETWEEN #{posStart}
-		AND #{count} * #{page}
-	</if>
-</select>
 
 <select id="selectAllInsideUserIdCombo"
 		resultType="kr.esob.fdms.commonlogic.combo.SearchComboInfoVO">
-	<!-- 내부 사용자목록combo - USER_ID를 ID로 사용 -->
+	<!-- 사용자 목록 combo - USER_ID를 ID로 사용 -->
 	SELECT X.*
 	FROM (
 	SELECT USER_ID AS id
@@ -1743,8 +1643,7 @@
 	, USER_NM || '[' || USER_ID || ']' AS title
 	, ROW_NUMBER() OVER(ORDER BY USER_NM) AS pageindex
 	FROM DOCS_USER
-	WHERE AUTH_SITE='I'
-	AND USE_YN = 'Y'
+	WHERE USE_YN = 'Y'
 	AND DEL_YN = 'N'
 	<if test='term != null and !"".equals(term)'>
 		AND USER_NM LIKE '%' || #{term} || '%'
@@ -1768,7 +1667,7 @@
 
 <select id="selectAllInsideUserCdCombo"
 		resultType="kr.esob.fdms.commonlogic.combo.SearchComboInfoVO">
-	<!-- 내부 사용자목록combo - USER_ID를 ID로 사용 -->
+	<!-- 사용자 목록 combo - USER_ID를 ID로 사용 -->
 	SELECT X.*
 	FROM (
 	SELECT USER_CD AS id
@@ -1776,8 +1675,7 @@
 	, USER_NM || '[' || USER_ID || ']' AS title
 	, ROW_NUMBER() OVER(ORDER BY USER_NM) AS pageindex
 	FROM DOCS_USER
-	WHERE AUTH_SITE='I'
-	AND USE_YN = 'Y'
+	WHERE USE_YN = 'Y'
 	AND DEL_YN = 'N'
 	<if test='term != null and !"".equals(term)'>
 		AND USER_NM LIKE '%' || #{term} || '%'

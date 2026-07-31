@@ -1,8 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
 <%@ taglib prefix="custom" tagdir="/WEB-INF/tags" %>
-<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
-<sec:authentication property="principal" var="sessionUser" />
 <!doctype html>
 <html lang="kr">
 <head>
@@ -13,9 +11,6 @@ var gridId = '${gridId}';
 var formId = '${formId}';
 
 var url = '/inside/distribution/oldhistory/selectList';
-if('${sessionUser.authSite}' == 'E'){
-	url = '/outside/distribution/oldhistory/selectList';
-}
 
 	function setGridParam(){
 		gridParam = {

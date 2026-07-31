@@ -161,15 +161,6 @@ public class CommonUpdownDao extends AbstractDao {
 		return sqlSession.selectOne(prefix + "selectActLogBase", params);
 	}
 
-	public Map<String, Object> selectOutsideDistributionActLogBase(String requestNo, String docSeq, String objectType, String fileSeq) {
-		Map<String, Object> params = new HashMap<>();
-		params.put("requestNo", requestNo);
-		params.put("docSeq", docSeq);
-		params.put("objectType", objectType);
-		params.put("fileSeq", fileSeq);
-		return sqlSession.selectOne(prefix + "selectOutsideDistributionActLogBase", params);
-	}
-
 	public int countDownloadBusinessAccess(String requestNo, String objectId, String fileNo, String userCd) {
 		Map<String, Object> params = new HashMap<>();
 		params.put("requestNo", requestNo);
@@ -178,27 +169,5 @@ public class CommonUpdownDao extends AbstractDao {
 		params.put("userCd", userCd);
 		return (Integer) objNotUseSession(prefix + "countDownloadBusinessAccess", params);
 	}
-
-	public int updateOutsideDistributionDeliveryConfirmDoc(String objectId, String objectType) {
-		Map<String, Object> params = new HashMap<>();
-		params.put("objectId", objectId);
-		params.put("objectType", objectType);
-		return sqlSession.update(prefix + "updateOutsideDistributionDeliveryConfirmDoc", params);
-	}
-
-	public Integer countOutsideDistributionPendingDeliveryConfirmDocs(String objectId, String objectType) {
-		Map<String, Object> params = new HashMap<>();
-		params.put("objectId", objectId);
-		params.put("objectType", objectType);
-		return sqlSession.selectOne(prefix + "countOutsideDistributionPendingDeliveryConfirmDocs", params);
-	}
-
-	public int updateOutsideDistributionDeliveryConfirmHeader(String objectId, String objectType) {
-		Map<String, Object> params = new HashMap<>();
-		params.put("objectId", objectId);
-		params.put("objectType", objectType);
-		return sqlSession.update(prefix + "updateOutsideDistributionDeliveryConfirmHeader", params);
-	}
-
 
 }

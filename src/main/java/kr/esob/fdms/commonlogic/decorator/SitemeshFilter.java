@@ -24,7 +24,6 @@ public class SitemeshFilter extends ConfigurableSiteMeshFilter{
 	protected void applyCustomConfiguration(SiteMeshFilterBuilder builder) {
 		builder.addDecoratorPath("/main*", "/WEB-INF/decorator/decoratorMain.jsp");
 		builder.addDecoratorPath("/inside*", "/WEB-INF/decorator/decoratorList.jsp");
-		builder.addDecoratorPath("/outside*", "/WEB-INF/decorator/decoratorList.jsp");
 		builder.addDecoratorPath("/bbs*", "/WEB-INF/decorator/decoratorList.jsp");
 		builder.addDecoratorPath("/configuration*", "/WEB-INF/decorator/decoratorList.jsp");
 		builder.addDecoratorPath("/configuration*/*/*Popup", "/WEB-INF/decorator/decoratorEmpty.jsp");

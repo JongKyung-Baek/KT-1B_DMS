@@ -15,10 +15,6 @@ public class LoginDao extends AbstractDao {
 		return (UserVO) obj(prefix + "getInUser", userId);
 	}
 
-	public UserVO getOutUser(UserVO userVo) {
-		return (UserVO) obj(prefix + "getOutUser", userVo);
-	}
-
 	@SuppressWarnings("unchecked")
 	public List<RoleVO> getRoleCodeList(String roleGroup){
 		return list(prefix + "getRoleCodeList", roleGroup);
@@ -30,10 +26,6 @@ public class LoginDao extends AbstractDao {
 
 	public String selectUserId(UserVO userVo) {
 		return (String) obj(prefix + "selectUserId", userVo);
-	}
-
-	public void updateLoginFailureOutside(String userId) {
-		update(prefix + "updateLoginFailure", userId);
 	}
 
 	public void resetLoginCount(String userId) {

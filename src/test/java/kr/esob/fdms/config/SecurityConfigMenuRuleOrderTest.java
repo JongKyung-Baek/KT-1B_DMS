@@ -12,9 +12,12 @@ import kr.esob.fdms.commonlogic.menu.MenuVO;
 class SecurityConfigMenuRuleOrderTest {
 
 	@Test
-	void specificMenuRulePrecedesBroadInsideFallback() {
-		MenuVO broad = menu("MENU_124", "/inside/**", "ROLE_MENU_124");
-		MenuVO assignment = menu(
+	void exactMenuRulePrecedesItsWildcardRoute() {
+		MenuVO exact = menu(
+				"MENU_161",
+				"/inside/system/roleassign/getMenuList",
+				"ROLE_MENU_161");
+		MenuVO wildcard = menu(
 				"MENU_160",
 				"/inside/system/roleassign/**",
 				"ROLE_MENU_160");
@@ -24,11 +27,11 @@ class SecurityConfigMenuRuleOrderTest {
 				"ROLE_MENU_138");
 
 		List<MenuVO> ordered = SecurityConfig.orderMenuRules(
-				Arrays.asList(broad, assignment, menuAdmin));
+				Arrays.asList(wildcard, menuAdmin, exact));
 
-		assertEquals("MENU_160", ordered.get(0).getMenuCd());
-		assertEquals("MENU_138", ordered.get(1).getMenuCd());
-		assertEquals("MENU_124", ordered.get(2).getMenuCd());
+		assertEquals("MENU_161", ordered.get(0).getMenuCd());
+		assertEquals("MENU_160", ordered.get(1).getMenuCd());
+		assertEquals("MENU_138", ordered.get(2).getMenuCd());
 	}
 
 	@Test

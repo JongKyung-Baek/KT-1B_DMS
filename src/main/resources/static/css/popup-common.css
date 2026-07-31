@@ -826,7 +826,6 @@
 
 [id^="select2-businessTypeCd"][id$="-results"] .select2-results__option,
 [id^="select2-distributeTypeCd"][id$="-results"] .select2-results__option,
-[id^="select2-authSite"][id$="-results"] .select2-results__option,
 [id^="select2-requestPurpose"][id$="-results"] .select2-results__option,
 [id^="select2-vendorUid"][id$="-results"] .select2-results__option,
 [id^="select2-approvalUser"][id$="-results"] .select2-results__option,
@@ -846,7 +845,6 @@ body .formAcceptanceDropdown .select2-results__option {
 
 [id^="select2-businessTypeCd"][id$="-results"] .select2-results__option--highlighted[aria-selected="false"],
 [id^="select2-distributeTypeCd"][id$="-results"] .select2-results__option--highlighted[aria-selected="false"],
-[id^="select2-authSite"][id$="-results"] .select2-results__option--highlighted[aria-selected="false"],
 [id^="select2-requestPurpose"][id$="-results"] .select2-results__option--highlighted[aria-selected="false"],
 [id^="select2-vendorUid"][id$="-results"] .select2-results__option--highlighted[aria-selected="false"],
 [id^="select2-approvalUser"][id$="-results"] .select2-results__option--highlighted[aria-selected="false"],
@@ -866,9 +864,6 @@ body .formAcceptanceDropdown .select2-results__option--highlighted {
 [id^="select2-distributeTypeCd"][id$="-results"] .select2-results__option[aria-selected="true"],
 [id^="select2-distributeTypeCd"][id$="-results"] .select2-results__option--highlighted[aria-selected="true"],
 [id^="select2-distributeTypeCd"][id$="-results"] .select2-results__option--highlighted[aria-selected="false"].select2-results__option--selected,
-[id^="select2-authSite"][id$="-results"] .select2-results__option[aria-selected="true"],
-[id^="select2-authSite"][id$="-results"] .select2-results__option--highlighted[aria-selected="true"],
-[id^="select2-authSite"][id$="-results"] .select2-results__option--highlighted[aria-selected="false"].select2-results__option--selected,
 [id^="select2-requestPurpose"][id$="-results"] .select2-results__option[aria-selected="true"],
 [id^="select2-requestPurpose"][id$="-results"] .select2-results__option--highlighted[aria-selected="true"],
 [id^="select2-requestPurpose"][id$="-results"] .select2-results__option--highlighted[aria-selected="false"].select2-results__option--selected,
@@ -899,10 +894,6 @@ body .formAcceptanceDropdown .select2-results__option--highlighted[aria-selected
 }
 
 /* Shared styles for request/version popups */
-/* OUTSIDE scope note:
-   - /outside/user/information/requestPopup.jsp
-   - /outside/user/information/userModPopup.jsp
-   These popups primarily use `.commonRequestPopup` styles in this section. */
 .commonRequestPopup,
 .commonPrintRequestPopup,
 .annotationPopup,
@@ -1992,9 +1983,6 @@ body .formAcceptanceDropdown .select2-results__option--highlighted[aria-selected
   width: 100% !important;
 }
 
-/* OUTSIDE layout base:
-   requestPopup/userModPopup use `popup-base`, `popupFormGrid`, `popup-actions-center`.
-   If outside popup spacing/alignment needs adjustment, start from this block. */
 .ui-dialog.popup-common .dialogContent.popup-actions-center + .dialogBtnSet {
   margin-top: 4px;
   padding-top: 0;
@@ -2080,102 +2068,6 @@ body .formAcceptanceDropdown .select2-results__option--highlighted[aria-selected
   font-weight: 600;
   line-height: 22px;
 }
-
-/* ===== OUTSIDE ONLY POPUP STYLE START =====
-   Target pages:
-   - /outside/user/information/requestPopup.jsp  (.outsideUserInfoRequestPopup)
-   - /outside/user/information/userModPopup.jsp  (.outsideUserModPopup)
-*/
-.ui-dialog.popup-common .dialogContent.outsideCrRequestPopup {
-  max-height: none !important;
-  overflow: visible !important;
-  padding-bottom: 4px !important;
-}
-
-.ui-dialog.popup-common .dialogContent.outsideCrRequestPopup .textCaution {
-  margin-left: 0 !important;
-  margin-right: 0 !important;
-}
-
-.ui-dialog.popup-common .dialogContent.outsideCrRequestPopup + .dialogBtnSet {
-  margin-top: 4px !important;
-  padding-top: 0 !important;
-}
-
-/* outside CR request popup grid: match drawingVersionCheckPopup grid look */
-.outsideCrRequestPopup .gridContainer {
-  background: transparent;
-  border: 0 !important;
-  border-radius: 0 !important;
-}
-
-.outsideCrRequestPopup .gridContainer .ui-jqgrid {
-  height: 230px !important;
-  border: 0 !important;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.outsideCrRequestPopup .ui-jqgrid .ui-jqgrid-view {
-  height: 100% !important;
-}
-
-.outsideCrRequestPopup .ui-jqgrid .ui-jqgrid-hdiv {
-  border-bottom: 1px solid #ebe9f1;
-  overflow-x: hidden !important;
-}
-
-.outsideCrRequestPopup .ui-jqgrid .ui-jqgrid-htable,
-.outsideCrRequestPopup .ui-jqgrid .ui-jqgrid-btable {
-  table-layout: fixed !important;
-}
-
-.outsideCrRequestPopup .ui-jqgrid .ui-jqgrid-htable th div:not(.clearfix),
-.outsideCrRequestPopup .ui-jqgrid .ui-jqgrid-btable td {
-  white-space: nowrap !important;
-}
-
-.outsideCrRequestPopup .ui-jqgrid .ui-jqgrid-bdiv {
-  height: calc(100% - 40px) !important;
-  max-height: none;
-  overflow-x: auto !important;
-  overflow-y: auto !important;
-}
-
-/* partNo inspection input/button alignment fix */
-.outsideCrRequestPopup label[for="partNo"] + div {
-  display: flex;
-  align-items: stretch;
-}
-
-.outsideCrRequestPopup #partNo.rightBtn {
-  width: calc(100% - 34px) !important;
-  height: 32px !important;
-  line-height: 32px !important;
-}
-
-.outsideCrRequestPopup #partNo + .checkBtn.rightBtn {
-  width: 34px !important;
-  min-width: 34px !important;
-  height: 32px !important;
-  min-height: 32px !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  display: inline-flex !important;
-  align-items: center;
-  justify-content: center;
-  border-top-left-radius: 0 !important;
-  border-bottom-left-radius: 0 !important;
-  border-color: #d8d6de !important;
-  border-left-color: #d8d6de !important;
-}
-
-.outsideCrRequestPopup #partNo + .checkBtn.rightBtn:before {
-  margin: 0;
-}
-
-
-/* ===== OUTSIDE ONLY POPUP STYLE END ===== */
 
 /* destroyPopup (history) : keep same modal spacing pattern */
 .ui-dialog.popup-common .dialogContent.destroyPopup {
@@ -2378,7 +2270,7 @@ body .formAcceptanceDropdown .select2-results__option--highlighted[aria-selected
   box-shadow: 0 0 0 2px rgba(115, 103, 240, 0.15) !important;
 }
 
-/* v3 select2 option list (some outside popups still render this markup) */
+/* Select2 v3 option list */
 .ui-dialog.popup-common .select2-drop .select2-results,
 .ui-dialog[class*=" popup-"] .select2-drop .select2-results,
 #popupDialoga .select2-drop .select2-results {
@@ -3341,31 +3233,9 @@ body .select2-drop.select2-drop-active {
   padding-bottom: 12px !important;
 }
 
-.ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup.popup-actions-center.popup-type-form-grid + .dialogBtnSet,
-.ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup.popup-actions-center.popup-type-form-grid + .dialogBtnSet {
-  padding-bottom: 24px !important;
-}
-
-.ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup.popup-type-form-grid .section.popupCard:last-of-type,
-.ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup.popup-type-form-grid .section.popupCard:last-of-type {
-  padding-top: 8px !important;
-  padding-bottom: 8px !important;
-}
-
-.ui-dialog.popup-common .dialogContent.outsideUserModPopup.popup-actions-center.popup-type-form-grid + .dialogBtnSet,
-.ui-dialog[class*=" popup-"] .dialogContent.outsideUserModPopup.popup-actions-center.popup-type-form-grid + .dialogBtnSet {
-  padding-bottom: 24px !important;
-}
-
 .ui-dialog.popup-common .dialogContent.menuPopup.popup-actions-center.popup-type-form-grid + .dialogBtnSet,
 .ui-dialog[class*=" popup-"] .dialogContent.menuPopup.popup-actions-center.popup-type-form-grid + .dialogBtnSet {
   padding-bottom: 24px !important;
-}
-
-.ui-dialog.popup-common .dialogContent.outsideUserModPopup.popup-type-form-grid .section.popupCard:last-of-type,
-.ui-dialog[class*=" popup-"] .dialogContent.outsideUserModPopup.popup-type-form-grid .section.popupCard:last-of-type {
-  padding-top: 8px !important;
-  padding-bottom: 8px !important;
 }
 
 .ui-dialog.popup-common .dialogContent.qnaAddPopup.popup-actions-center + .dialogBtnSet,
@@ -3385,122 +3255,6 @@ body .select2-drop.select2-drop-active {
   padding-bottom: 24px !important;
 }
 
-.ui-dialog.popup-common .dialogContent.outsideUserModPopup .section + .section,
-.ui-dialog.popup-common .dialogContent.outsideUserModPopup .sbr + .section,
-.ui-dialog.popup-common .dialogContent.outsideUserModPopup form + .section,
-.ui-dialog.popup-common .dialogContent.outsideUserModPopup .section + form,
-.ui-dialog[class*=" popup-"] .dialogContent.outsideUserModPopup .section + .section,
-.ui-dialog[class*=" popup-"] .dialogContent.outsideUserModPopup .sbr + .section,
-.ui-dialog[class*=" popup-"] .dialogContent.outsideUserModPopup form + .section,
-.ui-dialog[class*=" popup-"] .dialogContent.outsideUserModPopup .section + form {
-  margin-top: 0 !important;
-}
-
-.ui-dialog.popup-common .dialogContent.outsideCrRequestPopup.popup-actions-center.popup-type-form-grid + .dialogBtnSet,
-.ui-dialog[class*=" popup-"] .dialogContent.outsideCrRequestPopup.popup-actions-center.popup-type-form-grid + .dialogBtnSet {
-  padding-bottom: 24px !important;
-}
-
-.ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup .section + .section,
-.ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup .sbr + .section,
-.ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup form + .section,
-.ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup .section + form,
-.ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup .section + .section,
-.ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup .sbr + .section,
-.ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup form + .section,
-.ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup .section + form {
-  margin-top: 0 !important;
-}
-
-.ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup .permissionCheckField.has-pretty-child > .clearfix,
-.ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup .permissionCheckField.has-pretty-child > .clearfix {
-  width: 100% !important;
-  margin-left: 0 !important;
-  padding-right: 0 !important;
-  display: inline-flex !important;
-  align-items: center;
-}
-
-.ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup .permissionCheckField.has-pretty-child > .clearfix label,
-.ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup .permissionCheckField.has-pretty-child > .clearfix label {
-  min-width: 0 !important;
-  max-width: none !important;
-  margin-left: 8px !important;
-  line-height: 22px !important;
-  vertical-align: middle !important;
-}
-
-.ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup .permissionCheckField.has-pretty-child > .clearfix a,
-.ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup .permissionCheckField.has-pretty-child > .clearfix a {
-  vertical-align: middle !important;
-}
-
-.ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup .permissionRequestGrid,
-.ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup .permissionRequestGrid {
-  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-}
-
-.ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup .requestTypeField > div,
-.ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup .requestTypeField > div {
-  width: auto !important;
-  display: inline-flex !important;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup .requestTypeField > label:not(.ui-controlgroup-item),
-.ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup .requestTypeField > label:not(.ui-controlgroup-item) {
-  display: inline-flex !important;
-  align-items: center;
-  margin: 0 12px 0 0 !important;
-  vertical-align: middle !important;
-}
-
-.ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup .requestTypeField > label:not(.ui-controlgroup-item) + div,
-.ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup .requestTypeField > label:not(.ui-controlgroup-item) + div {
-  width: auto !important;
-  display: inline-flex !important;
-  vertical-align: middle !important;
-}
-
-.ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup .requestTypeField,
-.ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup .requestTypeField {
-  display: block;
-}
-
-.ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup .requestTypeField .requestTypeInline,
-.ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup .requestTypeField .requestTypeInline {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup .requestTypeField .requestTypeInline > label:not(.ui-controlgroup-item),
-.ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup .requestTypeField .requestTypeInline > label:not(.ui-controlgroup-item) {
-  display: inline-flex !important;
-  align-items: center;
-  margin: 0 12px 0 0 !important;
-  vertical-align: middle !important;
-}
-
-.ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup .requestTypeField .requestTypeInline > div,
-.ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup .requestTypeField .requestTypeInline > div {
-  width: auto !important;
-  display: inline-flex !important;
-  align-items: center;
-  vertical-align: middle !important;
-}
-
-.ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup .requestTypeField .prettyradio,
-.ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup .requestTypeField .prettyradio {
-  margin-right: 0 !important;
-  display: inline-flex !important;
-  align-items: center;
-  padding: 6px 10px;
-}
-
 .ui-dialog.popup-common .dialogToolbar .gridTitle,
 .ui-dialog[class*=" popup-"] .dialogToolbar .gridTitle {
   font-size: 15px;
@@ -3514,52 +3268,6 @@ body .select2-drop.select2-drop-active {
 .ui-dialog.popup-common .gridContainer .ui-jqgrid-btable td,
 .ui-dialog[class*=" popup-"] .gridContainer .ui-jqgrid-btable td {
   font-size: 13px;
-}
-
-.ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup .requestTypeField .has-pretty-child,
-.ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup .requestTypeField .has-pretty-child {
-  width: auto !important;
-  display: inline-flex !important;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup .requestTypeField .has-pretty-child > .clearfix,
-.ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup .requestTypeField .has-pretty-child > .clearfix {
-  width: auto !important;
-  margin-left: 0 !important;
-  display: inline-flex !important;
-  align-items: center;
-}
-
-.ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup .popup-grid-3 .requestTypeFieldGrid,
-.ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup .popup-grid-3 .requestTypeFieldGrid {
-  width: 100%;
-}
-
-.ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup .popup-grid-3 .requestTypeFieldGrid > .requestTypeInline,
-.ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup .popup-grid-3 .requestTypeFieldGrid > .requestTypeInline {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup .popup-grid-3 .requestTypeFieldGrid > .requestTypeInline > label:not(.ui-controlgroup-item),
-.ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup .popup-grid-3 .requestTypeFieldGrid > .requestTypeInline > label:not(.ui-controlgroup-item) {
-  display: block !important;
-  margin: 0 !important;
-  font-size: 14px !important;
-  font-weight: 600 !important;
-}
-
-.ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup .popup-grid-3 .requestTypeFieldGrid > .requestTypeInline > div,
-.ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup .popup-grid-3 .requestTypeFieldGrid > .requestTypeInline > div {
-  width: auto !important;
-  display: inline-flex !important;
-  align-items: center;
 }
 
 .ui-dialog.popup-request-status .dialogContent.commonRequestStatusPopup .permissionCheckField.has-pretty-child > .clearfix,
@@ -3589,11 +3297,6 @@ body .select2-drop.select2-drop-active {
 }
 
 @media (max-width: 1280px) {
-  .ui-dialog.popup-common .dialogContent.outsideUserInfoRequestPopup .permissionRequestGrid,
-  .ui-dialog[class*=" popup-"] .dialogContent.outsideUserInfoRequestPopup .permissionRequestGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  }
-
   .ui-dialog.popup-request-status .dialogContent.commonRequestStatusPopup.popup-type-form-grid .popupFormGrid,
   .ui-dialog.popup-common .dialogContent.commonRequestStatusPopup.popup-type-form-grid .popupFormGrid,
   .ui-dialog[class*=" popup-"] .dialogContent.commonRequestStatusPopup.popup-type-form-grid .popupFormGrid {

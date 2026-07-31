@@ -44,14 +44,6 @@
 <!--					     FROM DOCS_REQUEST_FILE fileInfo-->
 <!--					   WHERE fileInfo.REQUEST_NO = request.REQUEST_NO-->
 <!--					  )                                                                         AS useEndYmd/* 유효기간 */-->
-<!--					, CASE line.OUTSIDE_YN-->
-<!--						WHEN 'Y' THEN accUser.USER_NM-->
-<!--						ELSE reqUser.USER_NM-->
-<!--					END 																		AS purchaserUserNm	/* 구매담당자 */-->
-<!--					, CASE line.OUTSIDE_YN-->
-<!--						WHEN 'Y' THEN accUser.USER_CD-->
-<!--						ELSE reqUser.USER_CD-->
-<!--					END 																		AS purchaserUserCd	/* 구매담당자 */-->
 <!--					, request.BUSINESS_AREA_CD													AS businessAreaCd	/* 사업장 */-->
 <!--					, FN_GET_CD_NM('businessAreaCd', request.BUSINESS_AREA_CD, #{sessionLang}) 	AS businessAreaNm-->
 <!--					, request.PROTECT_YN														AS protectYn-->
@@ -133,14 +125,6 @@
 <!--						     FROM DOCS_REQUEST_FILE fileInfo-->
 <!--						   WHERE fileInfo.REQUEST_NO = request.REQUEST_NO-->
 <!--						  )                                                                         AS useEndYmd/* 유효기간 */-->
-<!--						, CASE line.OUTSIDE_YN-->
-<!--							WHEN 'Y' THEN accUser.USER_NM-->
-<!--							ELSE reqUser.USER_NM-->
-<!--						END 													AS purchaserUserNm	/* 구매담당자 */-->
-<!--						, CASE line.OUTSIDE_YN-->
-<!--							WHEN 'Y' THEN accUser.USER_CD-->
-<!--							ELSE reqUser.USER_CD-->
-<!--						END 													AS purchaserUserCd	/* 구매담당자 */-->
 <!--						, request.BUSINESS_AREA_CD								AS businessAreaCd	/* 사업장 */-->
 <!--						, request.PROTECT_YN									AS protectYn-->
 <!--					FROM DOCS_REQUEST request-->
@@ -226,14 +210,8 @@
 		FROM DOCS_REQUEST_FILE fileInfo
 		WHERE fileInfo.REQUEST_NO = request.REQUEST_NO
 		) AS useEndYmd, /* 유효기간 */
-		CASE line.OUTSIDE_YN
-		WHEN 'Y' THEN accUser.USER_NM
-		ELSE reqUser.USER_NM
-		END AS purchaserUserNm, /* 구매담당자 */
-		CASE line.OUTSIDE_YN
-		WHEN 'Y' THEN accUser.USER_CD
-		ELSE reqUser.USER_CD
-		END AS purchaserUserCd, /* 구매담당자 */
+		reqUser.USER_NM AS purchaserUserNm, /* 구매담당자 */
+		reqUser.USER_CD AS purchaserUserCd, /* 구매담당자 */
 		request.BUSINESS_AREA_CD AS businessAreaCd, /* 사업장 */
 		FN_GET_CD_NM('businessAreaCd', request.BUSINESS_AREA_CD, #{sessionLang}) AS businessAreaNm,
 		request.PROTECT_YN AS protectYn
@@ -312,14 +290,8 @@
 		FROM DOCS_REQUEST_FILE fileInfo
 		WHERE fileInfo.REQUEST_NO = request.REQUEST_NO
 		) AS useEndYmd, /* 유효기간 */
-		CASE line.OUTSIDE_YN
-		WHEN 'Y' THEN accUser.USER_NM
-		ELSE reqUser.USER_NM
-		END AS purchaserUserNm, /* 구매담당자 */
-		CASE line.OUTSIDE_YN
-		WHEN 'Y' THEN accUser.USER_CD
-		ELSE reqUser.USER_CD
-		END AS purchaserUserCd, /* 구매담당자 */
+		reqUser.USER_NM AS purchaserUserNm, /* 구매담당자 */
+		reqUser.USER_CD AS purchaserUserCd, /* 구매담당자 */
 		request.BUSINESS_AREA_CD AS businessAreaCd, /* 사업장 */
 		request.PROTECT_YN AS protectYn
 		FROM DOCS_REQUEST request

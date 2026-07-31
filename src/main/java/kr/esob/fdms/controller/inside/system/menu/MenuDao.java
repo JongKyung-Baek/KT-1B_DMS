@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 import kr.esob.fdms.commonlogic.abstractclass.AbstractDao;
 import kr.esob.fdms.commonlogic.message.Prop;
 import kr.esob.fdms.commonlogic.tree.TreeVO;
+import kr.esob.fdms.commonlogic.value.SessionValue;
 
 /**
  * 메뉴관리
@@ -23,6 +24,8 @@ public class MenuDao extends AbstractDao {
 
 	@Inject
 	Prop menuMessage;
+	@Inject
+	SessionValue sessionValue;
 
 	/**
 	 * 메뉴 TREE 목
@@ -32,6 +35,7 @@ public class MenuDao extends AbstractDao {
 	public List<TreeVO> selectTree() {
 		Map<String, Object> param = new HashMap<>();
 		param.put("rootText", menuMessage.msg("label.allMenus"));
+		param.put("sessionLang", sessionValue.getSessionLang());
 
 		return list(prefix + "selectTree", param);
 	}

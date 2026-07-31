@@ -35,7 +35,7 @@
 	.rightSide > .br{width:calc(100% - 310px);} /* main */
 	.rightSide > .br:last-child{width:300px;}
 
-	.half > .br:first-child{width:600px;} /* inside/outsideuser/ */
+	.half > .br:first-child{width:600px;}
 	.half > .center + .br{width:calc(100% - 640px);}
 
 	.sideTree > .br:not(.center){width:calc(50% - 25px);}/* menuList */
@@ -323,10 +323,6 @@
 	.section1 .deadlineArea{height:100%; font-size:0; line-height:0;}
 	.section1 .deadlineArea > div{display:inline-block; width:calc(50% - 5px); height:100%; vertical-align:top;}
 	.section1 .deadlineArea > div:first-child{margin-right:10px;}
-	.outside .section1 .deadlineArea{overflow:hidden;}
-	.outside .section1 .deadlineArea > div{display:block; width:100%; height:100%;}
-	.outside .section1 .deadlineArea > div:first-child{margin-right:0;}
-	.outside .section1 .deadlineArea h4 .moreBtn{display:none;}
 
 	.section2 .quickMenuArea > ul{width:100%; height:calc(100% - 40px); margin-bottom:10px; padding:10px 0; font-size:0; line-height:0;}
 	.section2 .quickMenuArea > ul li{display:inline-block; width:25%; height:100%; padding:0 10px 40px; border-right:1px solid #e0e0e0; position:relative; vertical-align:top;}
@@ -1203,20 +1199,10 @@
 		}
 	}
 
-	/* outside/cr/request/ td color */
-	td span.tdBlue{color:#007ce6;}
-
-	/* outside/user/information/ */
-	.ui-dialog.sizeM ul.section li.half.clearfixCheck.has-pretty-child > .clearfix{width:calc(50% - 10px); margin-left:0; padding-right:20px; vertical-align:top;}
-	.ui-dialog.sizeM ul.section li.half.clearfixCheck.has-pretty-child > .clearfix label{min-width:150px; max-width:calc(100% - 30px); font-weight:600; line-height:1.5; vertical-align:top !important;}
-	.ui-dialog.sizeM ul.section li.half.clearfixCheck.has-pretty-child > .clearfix a{vertical-align:top;}
-	.ui-dialog.sizeM ul.section li.half.clearfixCheck.has-pretty-child > .clearfix + script + .clearfix{margin-left:20px;}
-
 	.ui-jqgrid tr.jqgrow td[aria-describedby="gridDistributionOldHistoryList_requestPurposeOut"],
 	.ui-jqgrid tr.jqgrow td[aria-describedby="gridOldCrHistoryList_cnResult"]{text-overflow:ellipsis; white-space:nowrap; overflow:hidden;}
 
 	/* letter spacing */
-	.outside .header .right button:first-child,
 	.statusArea .statusCount{letter-spacing:1px;}
 	input, select, textarea, .fileDownBtn,
 	.input-append input, .input-prepend input,

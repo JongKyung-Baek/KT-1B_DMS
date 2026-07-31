@@ -8,7 +8,7 @@
 - 서버 런타임은 ePDF JNI DLL/클래스에 의존하지 않는 현재 빌드를 사용한다. Windows DLL이나 `java.library.path`를 다시 추가하지 않는다.
 - 외부 인터페이스(Oracle, MSSQL, ADAP 등)는 이번 배포의 합격 범위에서 제외하고 마지막 단계에서 별도로 연계한다.
 
-현재 Windows/Docker 기능 시험과 AIX 최초 배포의 기준은 PostgreSQL 17이다. PostgreSQL 18은 아직 운영 기준이 아니며, AIX 최초 배포와 동시에 전환하지 않는다. PostgreSQL 17로 로그인·ACL·업로드·조회·다운로드·출력·이력 기능을 먼저 안정화한 뒤 별도 변경 창에서 [PostgreSQL 18 병행 전환 가이드](postgresql18-migration.md)에 따라 복원 비교, 회귀 시험, 전환 승인을 수행한다.
+현재 Windows/Docker 기능 시험과 AIX 최초 배포의 데이터베이스 기준은 PostgreSQL 17로 통일한다. 신규 환경은 추적 중인 기본 덤프를 복원한 뒤 전체 마이그레이션과 환경별 초기 데이터를 적용하여 생성한다.
 
 ## 2. JVM 및 운영체제 준비
 
@@ -110,9 +110,9 @@ psql -h <pg17-host> -p 5432 -U "$KT1B_DB_USERNAME" -d kt1b \
 
 ### 5.1 HTTPS 전송·뷰어 URL
 
-- 레거시 파일 전송에 사용하는 `SERVER_URL_INSIDE`와 `SERVER_URL_OUTSIDE`는 `https://<host>[:port]/<base-path>` 형태의 HTTPS base URL이어야 한다.
+- 레거시 파일 전송에 사용하는 `SERVER_URL_INSIDE`는 `https://<host>[:port]/<base-path>` 형태의 HTTPS base URL이어야 한다.
 - 전송 base URL에는 사용자정보(`user:password@`), query string, fragment를 넣지 않는다. 애플리케이션이 전송 endpoint 경로를 뒤에 추가한다.
-- 운영의 `ADAP_PDF_URL`, `VIEWER_URL`, `VIEWER_URL_OUT` 및 그 밖의 `ADAP_*_URL` 뷰어 endpoint는 HTTPS로 구성한다. 코드가 허용하는 loopback HTTP 예외는 Windows 로컬 개발용일 뿐 AIX 운영 설정에 사용하지 않는다.
+- 운영의 `ADAP_PDF_URL`, `VIEWER_URL` 및 그 밖의 `ADAP_*_URL` 뷰어 endpoint는 HTTPS로 구성한다. 코드가 허용하는 loopback HTTP 예외는 Windows 로컬 개발용일 뿐 AIX 운영 설정에 사용하지 않는다.
 - 브라우저가 접근하는 공개 애플리케이션 URL과 뷰어가 다시 호출하는 파일 URL도 HTTPS여야 하며, reverse proxy의 외부 host·port·context path와 일치해야 한다.
 - 상대 서버 인증서 체인을 AIX JVM의 전용 truststore에 등록하고 `javax.net.ssl.trustStore` 계열 옵션으로 지정한다. 인증서 또는 호스트명 검증을 우회하지 않는다. 자체서명 인증서를 사용한다면 운영 승인된 CA 또는 인증서를 먼저 배포한다.
 
@@ -120,10 +120,8 @@ URL 예시는 실제 주소가 아닌 placeholder만 사용한다.
 
 ```text
 SERVER_URL_INSIDE=https://<inside-transfer-host>/<base-path>/
-SERVER_URL_OUTSIDE=https://<outside-transfer-host>/<base-path>/
 ADAP_PDF_URL=https://<viewer-host>/<viewer-path>
 VIEWER_URL=https://<viewer-host>/<viewer-path>/
-VIEWER_URL_OUT=https://<outside-viewer-host>/<viewer-path>/
 ```
 
 ### 5.2 외부연계 스케줄러
@@ -202,4 +200,4 @@ Windows 테스트는 AIX의 OpenJ9, 대소문자 구분, 파일 권한과 경로
 
 - 이전 WAR, 환경변수 목록, `DOCS_SYSTEM_CONFIG` 경로값과 PostgreSQL 백업을 배포 전에 보관한다.
 - 기동 실패, 저장소 이탈, ACL 우회, 감사 로그 유실이 발생하면 서비스를 중지하고 이전 WAR와 설정으로 복귀한다.
-- PostgreSQL 18 전환 실패는 AIX 애플리케이션 롤백과 섞지 않고 별도 마이그레이션 절차로 복구한다.
+- 데이터베이스 마이그레이션 실패 시 신규 데이터베이스를 폐기하고, 배포 전에 보관한 백업으로 복구한다.

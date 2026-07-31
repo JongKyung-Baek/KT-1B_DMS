@@ -577,7 +577,6 @@ function openPrintViewer_old(requestType, gridId, userType){
 	var protectList = [];	// 방산기술자료 - 방산기술자료 체크할 목록
 	var auth = true;		// 방산기술자료 - 권한
 	var objectType = '';	// 방산기술자료 - 자료유형
-	var outsideAuth = getOutsideProtectYn();	// 방산기술자료 - 외부사용자 권한
 
 	var $grid = $("#" + gridId);
 	var arr = $grid.getGridParam('selarrrow');
@@ -603,54 +602,6 @@ function openPrintViewer_old(requestType, gridId, userType){
 			}
 		}
 
-//		if('I' === AUTH_SITE) {
-//			if(data.destroyStatusCd == '3'){
-//			   alertMessage(g_msg('msg.printDestroy'));
-//				auth = false;
-//				return false;
-//			}
-//			if(data.printCount > 3){
-//			   alertMessage(g_msg('msg.printCount'));
-//				auth = false;
-//				return false;
-//			}
-//
-//			if(data.useEndYmdYn == 'Y'){
-//				alertMessage(g_msg('msg.printUseEndYmd'));
-//				auth = false;
-//				return false;
-//			}
-//
-//			if(USER_CD != data.requestUserCd){
-//				alertMessage(g_msg('msg.noAuthPrint'));
-//				auth = false;
-//				return false;
-//			}
-//		}
-//		else if('E' === AUTH_SITE) {
-//			if(!getOutsideCompanyAuthYn()) {
-//				alertMessage(g_msg('msg.stopDealCompany'));
-//				auth = false;
-//				return false;
-//			}
-//		}
-//
-//		if( "Y"===data.protectYn && "UNREG" !== requestType && "PRODUCT" !== requestType){
-//			if('E' === AUTH_SITE && !outsideAuth) {
-//				alertMessage(g_msg('msg.noAuthProtectRequest'));
-//				auth = false;
-//				return false;
-//			}
-//			else if('I' === AUTH_SITE) {
-//				if(requestType != "PRINT") {
-//					protectList = [data.objectId];
-//					auth = getProtectAuthYn(data.objectType, protectList);
-//					if(!auth) {
-//						return false;
-//					}
-//				}
-//			}
-//		}
 	});
 
 //	if(!auth) {
@@ -762,23 +713,6 @@ function download(gridId, type){
 
 		if(undefined == protectYn) {
 			protectYn = 'N';
-		}
-
-		if('E' === AUTH_SITE) {
-			if('Y' === protectYn && !getOutsideProtectYn()) {
-				alertMessage(g_msg('msg.noAuthProtectRequest'));
-				isSuccess = false;
-				return false;
-			}
-
-			if(!getOutsideCompanyAuthYn()) {
-				alertMessage(g_msg('msg.stopDealCompany'));
-				isSuccess = false;
-				return false;
-			}
-		}
-		else {
-			//auth = getProtectAuthYn(objectType, protectList);
 		}
 
 //		console.log(data);
@@ -984,18 +918,10 @@ function checkVersionInsideUser(objectType, gridId) {
  * 이용가능한 업체인지 확인
  * @returns
  */
-function getOutsideCompanyAuthYn() {
-	return true;
-}
-
 /**
  * 방산기술 권한이 있는지 여부 ( 외부사용자. true/false )
  * @returns
  */
-function getOutsideProtectYn() {
-	return true;
-}
-
 /**
  * 배포방식, 배포유형으로 유효기간을 구한다.
  * @param purpose - 배포유형

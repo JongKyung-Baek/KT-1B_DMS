@@ -637,11 +637,11 @@ INSERT INTO docs_menu (
     role_cd, auth_site, menu_icon
 )
 VALUES (
-    'MENU_223', 'I', '이력관리', '', '1', 'T',
+    'MENU_223', 'ROOT', '이력관리', '', '1', 'T',
     '/inside/history/', 115, 'root', 'N', 'Y',
     '접근·열람·출력 이력 관리',
     '보안 접근 판정과 실제 열람·출력 결과를 구분하여 조회',
-    'ROLE_MENU_223', 'I', ''
+    'ROLE_MENU_223', NULL, ''
 )
 ON CONFLICT (menu_cd) DO UPDATE SET
     parent_menu_cd = EXCLUDED.parent_menu_cd,
@@ -671,7 +671,7 @@ VALUES (
     '/inside/distribution/viewPrintHistory/**', 116, 'leaf', 'N', 'Y',
     '자료 접근 및 권한 변경 이력',
     '자료 접근 판정, 다운로드 결과 및 권한 변경 결과 조회',
-    'ROLE_MENU_206', 'I', ''
+    'ROLE_MENU_206', NULL, ''
 )
 ON CONFLICT (menu_cd) DO UPDATE SET
     parent_menu_cd = EXCLUDED.parent_menu_cd,
@@ -700,14 +700,14 @@ VALUES
         '/inside/history/view/**', 117, 'leaf', 'N', 'Y',
         '기술자료 열람 이력',
         '사용자별 기술자료 열람 허용·차단 및 이전 시스템 열람 기록 조회',
-        'ROLE_MENU_224', 'I', ''
+        'ROLE_MENU_224', NULL, ''
     ),
     (
         'MENU_225', 'MENU_223', '출력이력', '', '2', 'M',
         '/inside/history/print/**', 118, 'leaf', 'N', 'Y',
         '기술자료 출력 이력',
         '사용자별 출력 요청과 검증된 성공·실패 결과 조회',
-        'ROLE_MENU_225', 'I', ''
+        'ROLE_MENU_225', NULL, ''
     )
 ON CONFLICT (menu_cd) DO UPDATE SET
     parent_menu_cd = EXCLUDED.parent_menu_cd,
@@ -777,7 +777,7 @@ INSERT INTO docs_menu (
 VALUES (
     'MENU_222', 'MENU_214', '보안등급/인가 관리', '', '2', 'M',
     '/inside/system/securityaccess/', 2, 'leaf', 'N', 'Y', '',
-    '파일 보안등급과 사용자 인가등급 관리', 'ROLE_MENU_222', 'I', ''
+    '파일 보안등급과 사용자 인가등급 관리', 'ROLE_MENU_222', NULL, ''
 )
 ON CONFLICT (menu_cd) DO UPDATE SET
     parent_menu_cd = EXCLUDED.parent_menu_cd,
@@ -1092,7 +1092,7 @@ ON CONFLICT (lang_type, lang_cd) DO UPDATE
    SET lang_desc = EXCLUDED.lang_desc;
 
 -- ---------------------------------------------------------------------------
--- Internal menu ACL repair
+-- Current menu ACL repair
 -- ---------------------------------------------------------------------------
 -- These disconnected rows belong to the removed request-approval,
 -- external-company and user-approval workflows. Keeping them active creates
@@ -1124,7 +1124,7 @@ SELECT 'RG_001',
   FROM docs_menu menu
  WHERE menu.del_yn = 'N'
    AND menu.use_yn = 'Y'
-   AND menu.auth_site = 'I'
+   AND (menu.auth_site IS NULL OR menu.auth_site IN ('I', 'B'))
    AND NULLIF(BTRIM(menu.role_cd), '') IS NOT NULL
 ON CONFLICT (group_cd, role_cd) DO NOTHING;
 
@@ -1133,20 +1133,24 @@ ON CONFLICT (group_cd, role_cd) DO NOTHING;
 -- an installation unnoticed.
 DO $$
 BEGIN
-    IF EXISTS (
+    IF NOT EXISTS (
+        SELECT 1
+          FROM docs_menu
+         WHERE auth_site IS NOT NULL
+            OR parent_menu_cd IN ('I', 'B', 'E')
+    ) AND EXISTS (
         WITH RECURSIVE eligible AS (
             SELECT menu_cd, parent_menu_cd
               FROM docs_menu
              WHERE del_yn = 'N'
                AND menu_type IN ('T', 'M', 'P')
-               AND auth_site = 'I'
         ),
         connected AS (
             SELECT menu_cd,
                    parent_menu_cd,
                    ARRAY[menu_cd::TEXT]::TEXT[] AS path
               FROM eligible
-             WHERE parent_menu_cd = 'I'
+             WHERE parent_menu_cd = 'ROOT'
 
             UNION ALL
 

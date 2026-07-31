@@ -56,9 +56,7 @@ UPDATE docs_system_config
  WHERE system_config_group = 'SYSTEM_CONFIG'
    AND system_config_cd IN (
        'SERVER_DOMAIN_IN',
-       'SERVER_DOMAIN_OUT',
-       'SERVER_URL_INSIDE',
-       'SERVER_URL_OUTSIDE'
+       'SERVER_URL_INSIDE'
    );
 
 UPDATE docs_system_config

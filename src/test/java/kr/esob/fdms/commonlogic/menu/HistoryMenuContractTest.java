@@ -17,11 +17,11 @@ class HistoryMenuContractTest {
         String ddl = read("src/main/resources/sql/acl_foundation_ddl.sql");
 
         assertTrue(ddl.contains(
-                "'MENU_223', 'I', '이력관리', '', '1', 'T'"));
+                "'MENU_223', 'ROOT', '이력관리', '', '1', 'T'"));
         assertTrue(ddl.contains(
                 "'/inside/history/', 115, 'root', 'N', 'Y'"));
         assertFalse(ddl.contains(
-                "'MENU_223', 'I', '이력관리', '', '1', 'T',"
+                "'MENU_223', 'ROOT', '이력관리', '', '1', 'T',"
                         + System.lineSeparator()
                         + "    '/inside/history/**'"));
 
@@ -29,19 +29,19 @@ class HistoryMenuContractTest {
                 "'MENU_206', 'MENU_223', '접근이력', '', '2', 'M'"));
         assertTrue(ddl.contains(
                 "'/inside/distribution/viewPrintHistory/**', 116, 'leaf'"));
-        assertTrue(ddl.contains("'ROLE_MENU_206', 'I', ''"));
+        assertTrue(ddl.contains("'ROLE_MENU_206', NULL, ''"));
 
         assertTrue(ddl.contains(
                 "'MENU_224', 'MENU_223', '열람이력', '', '2', 'M'"));
         assertTrue(ddl.contains(
                 "'/inside/history/view/**', 117, 'leaf'"));
-        assertTrue(ddl.contains("'ROLE_MENU_224', 'I', ''"));
+        assertTrue(ddl.contains("'ROLE_MENU_224', NULL, ''"));
 
         assertTrue(ddl.contains(
                 "'MENU_225', 'MENU_223', '출력이력', '', '2', 'M'"));
         assertTrue(ddl.contains(
                 "'/inside/history/print/**', 118, 'leaf'"));
-        assertTrue(ddl.contains("'ROLE_MENU_225', 'I', ''"));
+        assertTrue(ddl.contains("'ROLE_MENU_225', NULL, ''"));
         assertTrue(ddl.contains(
                 "SET menu_nm = '출력 승인/폐기 관리'"));
     }
@@ -63,7 +63,7 @@ class HistoryMenuContractTest {
     }
 
     @Test
-    void securityMenuSourceReturnsOnlyActiveNonDeletedRoutes()
+    void securityMenuSourceReturnsOnlyConnectedActiveRoutes()
             throws Exception {
         String mapper = read(
                 "src/main/resources/sqlMaps/oracle/its/controller/menu/Menu.xml");
@@ -71,8 +71,19 @@ class HistoryMenuContractTest {
         int selectEnd = mapper.indexOf("</select>", selectStart);
         String getMenuList = mapper.substring(selectStart, selectEnd);
 
-        assertTrue(getMenuList.contains("WHERE USE_YN = 'Y'"));
-        assertTrue(getMenuList.contains("AND DEL_YN = 'N'"));
+        assertTrue(getMenuList.contains("WITH RECURSIVE ACTIVE_MENU"));
+        assertTrue(getMenuList.contains("MENU.PARENT_MENU_CD = 'ROOT'"));
+        assertTrue(getMenuList.contains("MENU.TREE_TYPE = 'root'"));
+        assertTrue(getMenuList.contains("MENU.MENU_TYPE IN ('T', 'M', 'P')"));
+        assertTrue(getMenuList.contains("MENU.USE_YN = 'Y'"));
+        assertTrue(getMenuList.contains("MENU.DEL_YN = 'N'"));
+        assertTrue(getMenuList.contains(
+                "NOT CHILD.MENU_CD::TEXT = ANY(PARENT.MENU_PATH)"));
+        assertTrue(getMenuList.contains(
+                "NULLIF(BTRIM(MENU_URL), '') IS NOT NULL"));
+        assertTrue(getMenuList.contains(
+                "NULLIF(BTRIM(ROLE_CD), '') IS NOT NULL"));
+        assertFalse(getMenuList.contains("SELECT *"));
     }
 
     private String read(String path) throws Exception {

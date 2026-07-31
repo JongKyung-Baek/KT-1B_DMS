@@ -114,7 +114,6 @@ public class InsideuserService implements CommonService {
 		}
 //		String hashedPassword = PasswordUtils.hashPasswordWithSalt(request.getParameter("userPwd"));
 
-		String authSite = "I";
 		String useYn = "Y";
 		String delYn = "N";
 		String protectYn = "N";
@@ -141,7 +140,6 @@ public class InsideuserService implements CommonService {
 				.positionCd(positionCd)
 				.roleGroupCd(roleGroupCd)
 //				.authApprovalLevel(distributionAuthCd)
-				.authSite(authSite)
 				.useYn(useYn)
 				.delYn(delYn)
 				.protectYn(protectYn)

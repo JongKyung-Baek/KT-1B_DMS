@@ -13,7 +13,6 @@ public class SortRequestParam extends CommonParam {
 	private int sortSeq;
 	private String parent;
 	private String menuType;
-	private String authSite;
 	private String menuLevel;
 	private String treeType;
 	private List<SortRequestParam> list;

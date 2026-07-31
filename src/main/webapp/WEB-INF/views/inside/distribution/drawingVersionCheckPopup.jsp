@@ -4,7 +4,6 @@
 <%--<%@ taglib prefix="spring" uri="http://www.springframework.org/tags"%>--%>
 <%--<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>--%>
 <%--<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>--%>
-<%--<script type="text/javascript" src="/resources/js/views/outside/commonrequest/commonRequestPopup.js"></script>--%>
 <%--<script type="text/javascript" src="/resources/js/views/inside/distribution/drawingRequest/drawingVersionCheckPopup.js"></script>--%>
 <%--<script type="text/javascript" src="/resources/js/views/inside/common/clipboard.js"></script>--%>
 <%--<sec:authentication property="principal" var="sessionUser" />--%>

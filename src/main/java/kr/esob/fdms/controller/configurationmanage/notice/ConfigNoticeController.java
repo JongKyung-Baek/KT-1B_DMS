@@ -35,12 +35,8 @@ public class ConfigNoticeController extends AbstractController {
 
 	@RequestMapping(value="/")
 	public String home(ConfigNoticeListParam param, Model model) throws JsonProcessingException {
-		UserVO user = param.getSessionUser();
 		model.addAttribute("formInfo", JSONArray.fromObject(formService.selectFormInfo("formConfigNotice")));
-		
-		if("I".equals(user.getAuthSite())) {
-			model.addAttribute("toolbarInfo", JSONArray.fromObject(toolbarService.selectToolbarInfo("toolbarConfigNotice")));
-		}
+		model.addAttribute("toolbarInfo", JSONArray.fromObject(toolbarService.selectToolbarInfo("toolbarConfigNotice")));
 
 		model.addAttribute("gridInfo", JSONArray.fromObject(gridService.selectGridInfo("gridConfigNoticeList")));
 
@@ -50,7 +46,7 @@ public class ConfigNoticeController extends AbstractController {
 	@RequestMapping("/selectList")
 	public @ResponseBody GridResultVO selectList(ConfigNoticeListParam param) throws Exception {
 		UserVO user = param.getSessionUser();
-		if("I".equals(user.getAuthSite()) && param.getInsertUserNm().equals("")) {
+		if(param.getInsertUserNm().equals("")) {
 			param.setInsertUserNm(user.getUserCd());
 		}
 		GridResultVO result = commonSelectList(param, service);
@@ -81,15 +77,7 @@ public class ConfigNoticeController extends AbstractController {
 	 * */
 	@PostMapping("/noticePopup")
 	public String noticePopup(ConfigNoticePopupVO param, Model model) throws JsonProcessingException {
-		UserVO user = param.getSessionUser();
-		String updateFlag = null;
-
-		if("E".equals(user.getAuthSite())) {
-			updateFlag = "Y";
-			model.addAttribute("hitCount", service.updateHitCount(param));
-		} else {
-			updateFlag = "N";
-		}
+		String updateFlag = "N";
 		
 		model.addAttribute("gridInfo", JSONArray.fromObject(gridService.selectGridInfo("gridConfigNoticePopup")));
 		model.addAttribute("formData", JSONObject.fromObject(service.selectNoticeFileInfo(param)));

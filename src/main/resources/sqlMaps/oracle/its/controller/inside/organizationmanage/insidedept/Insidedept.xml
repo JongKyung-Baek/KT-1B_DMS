@@ -220,7 +220,6 @@
 <!--		, #{positionCd}-->
 <!--		, #{roleGroupCd}-->
 <!--		, #{email}-->
-<!--		, #{authSite}-->
 <!--		, #{useYn}-->
 <!--		, #{delYn}-->
 <!--		, #{protectYn}-->
@@ -311,7 +310,6 @@
 <!--		    POSITION_CD = #{positionCd},-->
 <!--		    ROLE_GROUP = #{roleGroupCd},-->
 <!--			EMAIL= #{email},-->
-<!--			AUTH_SITE = #{authSite},-->
 <!--			USE_YN = #{useYn},-->
 <!--			DEL_YN = #{delYn},-->
 <!--			PROTECT_YN = #{protectYn},-->

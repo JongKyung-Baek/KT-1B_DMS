@@ -1,8 +1,10 @@
 package kr.esob.fdms.controller.inside.system.roleassign;
 
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.inject.Inject;
 
@@ -61,14 +63,21 @@ public class RoleAssignService {
 			return result;
 		}
 
+		List<String> assignableRoleList = dao.selectAssignableRoleCodes();
+		Set<String> assignableRoles = assignableRoleList == null
+				? new LinkedHashSet<>()
+				: new LinkedHashSet<>(assignableRoleList);
+		if(assignableRoles.isEmpty()
+				|| !assignableRoles.equals(requestedRoles.keySet())) {
+			result.setFailReason(prop.msg("msg.menuPermissionChanged"));
+			return result;
+		}
+
+		// Replace only menu roles. Non-menu roles owned by the same grade remain.
+		dao.deleteMenuRoleAssignments(param.getGroupCd());
 		for(RequestParam item : requestedRoles.values()) {
 			if("Y".equals(item.getSelectedYn())) {
-				if(!dao.existRelRoleGroup(item)) {
-					dao.insertRelRoleGroup(item);
-				}
-			}
-			else {
-				dao.deleteRelRoleGroup(item.getGroupCd(), item.getRoleCd());
+				dao.insertRelRoleGroup(item);
 			}
 		}
 

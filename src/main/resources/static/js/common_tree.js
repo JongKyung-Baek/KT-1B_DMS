@@ -73,7 +73,7 @@ function settingTree(id, param) {
 				}
 			}
 		}
-		else if("menuTree" == id || "insideMenuTree" == id || "outsideMenuTree" == id) {
+		else if("menuTree" == id || "insideMenuTree" == id) {
 			p.core['check_callback'] = function(operation, node, node_parent, node_position, more) {
 				if(operation === 'move_node') {
 				//	console.log(node);

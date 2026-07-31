@@ -97,9 +97,6 @@ function openDialogPopup(url, param, dialogId, width, height, modal, extraDialog
 		url === "/inside/distribution/commonRequest/approvalStatusPopup";
 	var useAutoContentHeight =
 		isDialogMinHeightException ||
-		url === "/outside/user/information/requestPopup" ||
-		url === "/outside/user/information/userModPopup" ||
-		url === "/outside/user/status/statusPopup" ||
 		url === "/bbs/qna/addPopup" ||
 		url === "/configurationmanage/qna/addPopup" ||
 		url === "/configurationmanage/notice/addPopup" ||

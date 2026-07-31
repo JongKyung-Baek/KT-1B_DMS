@@ -34,15 +34,23 @@ class InternalOnlyDatabaseCleanupContractTest {
         assertTrue(sql.contains(
                 "'^/inside/organizationmanage/(outsideuser|approval)(/|$)'"));
         assertTrue(sql.contains("'MENU_041'"));
+        assertTrue(sql.contains("'MENU_124'"));
         assertTrue(sql.contains("'MENU_079'"));
         assertTrue(sql.contains("'MENU_157'"));
         assertTrue(sql.contains("DELETE FROM docs_rel_role_group"));
         assertTrue(sql.contains("DELETE FROM docs_role_mapping"));
+        assertTrue(sql.contains("WHERE menu_url = '/inside/**'"));
         assertTrue(sql.contains("DELETE FROM docs_menu menu"));
+        assertTrue(sql.contains(
+                "menu.role_cd = assignment.role_cd"));
+        assertTrue(sql.contains(
+                "An orphan menu-role assignment remains."));
         assertTrue(sql.contains("DELETE FROM docs_role_group"));
         assertTrue(sql.contains("group_code = 'RG_006'"));
-        assertTrue(sql.contains("SET auth_site = 'I'"));
-        assertTrue(sql.contains("SET parent_menu_cd = 'I'"));
+        assertTrue(sql.contains("SET auth_site = NULL"));
+        assertTrue(sql.contains("SET parent_menu_cd = 'ROOT'"));
+        assertTrue(sql.contains("'MENU_013', 'MENU_071', 'MENU_214', 'MENU_223'"));
+        assertTrue(sql.contains("toolbarSystemMenu"));
     }
 
     @Test
@@ -93,7 +101,7 @@ class InternalOnlyDatabaseCleanupContractTest {
         assertTrue(cleanupExecution >= 0);
         assertTrue(sampleExecution > cleanupExecution);
         assertTrue(sample.contains("company_nm = 'KT-1B'"));
-        assertTrue(sample.contains("auth_site IS DISTINCT FROM 'I'"));
+        assertTrue(sample.contains("auth_site IS NOT NULL"));
         assertFalse(sample.contains("docs_user_request,"));
         assertFalse(sample.contains("docs_user_request_number,"));
     }

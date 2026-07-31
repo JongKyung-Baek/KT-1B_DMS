@@ -30,7 +30,7 @@ public class RoleAssignController extends AbstractController {
 	MenuService menuService;
 
 	@RequestMapping("/")
-	public String inside(Model model, CommonHomeParam param) throws JsonProcessingException {
+	public String index(Model model, CommonHomeParam param) throws JsonProcessingException {
 		setHomeParam(model, param);
 
 		model.addAttribute("toolbarInfo", JSONArray.fromObject(toolbarService.selectToolbarInfo("toolbarSystemRoleAssign")));
@@ -56,8 +56,7 @@ public class RoleAssignController extends AbstractController {
 	 */
 	@RequestMapping(value="/getAssignedMenuList", method=RequestMethod.POST)
 	public @ResponseBody Map<String, Object> getMenuList(@RequestBody RequestParam param) throws Exception {
-		param.setAuthSite("I");
-		List<TreeVO> menuList = menuService.selectTree("I");
+		List<TreeVO> menuList = menuService.selectTree();
 		List<String> selectedValue = service.selectRelRoleGroup(param);
 
 		Map<String, String> selectedNode = new HashMap<String, String>();

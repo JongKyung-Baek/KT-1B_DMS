@@ -21,7 +21,6 @@ public class UserPopupParam extends CommonParam {
 
     private String businessAreaCd; // 사업장 코드
 
-    private String authSite; // 내부/외부
     private String saveFlag;
 
     private String deptCd; // 부서

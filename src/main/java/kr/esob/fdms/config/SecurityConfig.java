@@ -111,16 +111,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 				.antMatchers("/outside", "/outside/**").denyAll()
 				// Native download client receives only a 128-bit, one-time capability.
 				.antMatchers(HttpMethod.GET, "/download", "/download/", "/download/*").permitAll()
+				// Keep sensitive management routes explicit as defense in depth. The
+				// dynamic source is restricted to the active ROOT-connected menu tree.
 				.antMatchers("/inside/system/securityaccess/**").hasAuthority("ROLE_MENU_222")
-				// MENU_124 (/inside/**) precedes MENU_199 in the legacy
-				// database order. Protect this management area explicitly so
-				// the broad inside role cannot bypass department authorization.
 				.antMatchers("/inside/organizationmanage/insidedept/**")
 				.hasAuthority("ROLE_MENU_199");
 
-		// Spring Security uses the first matching pattern. Specific menu routes
-		// must therefore precede broad fallbacks such as /inside/**, otherwise a
-		// group either bypasses every child ACL or can never use an assigned one.
+		// Spring Security uses the first matching pattern. Put longer, more
+		// specific menu routes first so parent patterns cannot shadow children.
 		for (MenuVO menuVo : menuList) {
 			http.authorizeRequests()
 					.antMatchers(menuVo.getMenuUrl())

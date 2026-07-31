@@ -9,7 +9,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class RequestParam extends CommonParam {
-	private String authSite;
 	private String groupCd;
 	private String groupNm;
 

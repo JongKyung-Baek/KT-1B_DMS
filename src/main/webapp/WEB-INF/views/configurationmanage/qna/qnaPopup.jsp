@@ -4,8 +4,6 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags"%>
-<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
-<sec:authentication property="principal" var="sessionUser" />
 <script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/views/configurationmanage/qna/qnaPopup.js"></script>
 <!-- QnA 팝업(QnA 상세보기)-->
 <script>
@@ -26,12 +24,7 @@ $(function() {
 	.qnaDetailPopup.drawingRegisterPopup .popupFormGrid.singleFileUpload,
 	.qnaDetailPopup.drawingRegisterPopup .popupFormGrid.singleFileUpload .singleFileUpload { display:none; }
 </style>
-<c:if test="${'Q' eq data.status && 'I' ne sessionUser.authSite && not empty formData.fileList}">
-	<style>
-		textarea#contents{height:210px;}
-	</style>
-</c:if>
-<c:if test="${'Q' eq data.status && 'I' eq sessionUser.authSite}">
+<c:if test="${'Q' eq data.status}">
 	<style>
 		textarea#contents{height:auto; min-height:65px;}
 		textarea#answer{height:110px; min-height:110px;}
@@ -73,7 +66,7 @@ $(function() {
 	</c:otherwise>
 </c:choose>
 <c:choose>
-	<c:when test="${'I' eq sessionUser.authSite && 'Q' eq data.status}">
+	<c:when test="${'Q' eq data.status}">
 		<c:set var="answerWaiting" value="disabled"/>
 		<c:set var="answerWaitingYn" value="Y"/>
 		<c:set var="answerComplete" value=""/>
@@ -117,21 +110,12 @@ $(function() {
 					<c:forEach items="${formData.fileList}" var="fileInfo">
 					<button type="button" class="ui-button ui-corner-all fileDownBtn" onclick='fileDownload( ${fileInfo.qnaCd}, ${fileInfo.fileNo}, "${fileInfo.fileNm}")' ><span>${fileInfo.fileNm}</span></button>
 					</c:forEach>
-					<c:if test="${'I' ne sessionUser.authSite && 'Q' eq data.status}">
-					<button type="button" class="ui-button ui-corner-all removeBtn" onclick='removeFile()' ><span></span></button>
-					</c:if>
 				</div>
 			</li>
 			</c:if>
 		</ul>
-		<c:if test="${empty formData.fileList && 'I' ne sessionUser.authSite && 'Q' eq data.status}">
-			<script>
-				$(".singleFileUpload").show();
-			</script>
-		</c:if>
-
 		<%-- 답변 --%>
-		<c:if test="${('I' eq sessionUser.authSite && 'Q' eq data.status) || ('A' eq data.status)}">
+		<c:if test="${('Q' eq data.status) || ('A' eq data.status)}">
 		<ul class="section popupCard popupFormGrid" style="margin-top:2px; margin-bottom:6px;">
 			<li class="half">
 				<custom:popupInputText name="answerUserNm" label="form.answerUserNm"  value="${data.answerUserNm}" id="answerUserNm" disabled="${answerComplete}"/>
@@ -142,38 +126,14 @@ $(function() {
 		</ul>
 		</c:if>
 	</form>
-	<ul class="section popupCard popupFormGrid singleFileUpload uploadOnly">
-		<li class="singleFileUpload full">
-			<%--  파일추가 --%>
-			<label><spring:message code="grid.appendFile"/></label>
-			<div class="uploadLine">
-				<form id="fileForm" name="fileForm" enctype="multipart/form-data">
-					<input type="file" id="qnaFile" name="qnaFile" onchange="fileChange()" style="display: none;"/>
-				</form>
-				<input type="text" name="fileName" id="fileName" readonly="readonly"/>
-				<button class="ui-button ui-corner-all fileUploadBtn" onclick="fileUpload()"><spring:message code="btn.fileUpload"/></button>
-			</div>
-		</li>
-	</ul>
 </div>
 
 <div class="dialogBtnSet">
 	<div class="left"></div>
 	<div class="right">
 		<c:if test="${'Q' eq data.status}">
-			<c:choose>
-				<c:when test="${'I' eq sessionUser.authSite}">
-					<button class="ui-button ui-corner-all bottomBtn" onclick="saveReplyQna()"><spring:message code="btnReply" /></button>
-				</c:when>
-				<c:otherwise>
-					<button class="ui-button ui-corner-all bottomBtn" onclick="updateQna()"><spring:message code="btnUpdate"/></button>
-				</c:otherwise>
-			</c:choose>
+			<button class="ui-button ui-corner-all bottomBtn" onclick="saveReplyQna()"><spring:message code="btnReply" /></button>
 		</c:if>
 		<custom:popupButton function="closePopup('qnaPopup')" name="close" label="btn.close" id="close"/>
 	</div>
 </div>
-
-<iframe name="hiddenFrame" style="display: none;"></iframe>
-	<form name="tmpForm">
-</form>

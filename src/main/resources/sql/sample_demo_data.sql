@@ -1186,8 +1186,8 @@ BEGIN
     IF EXISTS (
         SELECT 1
           FROM docs_menu
-         WHERE auth_site IS DISTINCT FROM 'I'
-            OR parent_menu_cd = 'E'
+         WHERE auth_site IS NOT NULL
+            OR parent_menu_cd IN ('I', 'B', 'E')
             OR COALESCE(menu_url, '') ~* '(^|/)outside/'
             OR COALESCE(menu_url, '') ~*
                '^/inside/(unregisted|outregisted)(/|$)'
@@ -1195,6 +1195,20 @@ BEGIN
                '^/inside/organizationmanage/(outsideuser|approval)(/|$)'
     ) THEN
         RAISE EXCEPTION 'The demo contains a retired external menu.';
+    END IF;
+
+    IF (
+        SELECT ARRAY_AGG(menu_cd ORDER BY menu_cd)
+          FROM docs_menu
+         WHERE tree_type = 'root'
+           AND menu_type IN ('T', 'M', 'P')
+           AND use_yn = 'Y'
+           AND del_yn = 'N'
+           AND parent_menu_cd = 'ROOT'
+    ) IS DISTINCT FROM ARRAY[
+        'MENU_013', 'MENU_071', 'MENU_214', 'MENU_223'
+    ]::varchar[] THEN
+        RAISE EXCEPTION 'The demo menu roots do not match current navigation.';
     END IF;
 
     IF EXISTS (

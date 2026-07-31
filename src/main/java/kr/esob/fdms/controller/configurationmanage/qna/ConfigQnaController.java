@@ -40,10 +40,8 @@ public class ConfigQnaController extends AbstractController {
 	public String home(ConfigQnaListParam param, Model model) throws JsonProcessingException {
 		UserVO user = param.getSessionUser();
 		model.addAttribute("formInfo", JSONArray.fromObject(formService.selectFormInfo("formConfigQna")));
-		
-		if(!"E".equals(user.getAuthSite()) || "RG_001".equals(user.getRoleGroup())) {
-			toolbarService.selectToolbarInfo("toolbarConfigQna").remove(0);
-		}
+
+		toolbarService.selectToolbarInfo("toolbarConfigQna").remove(0);
 		
 		if(!"RG_001".equals(user.getRoleGroup())) {
 			toolbarService.selectToolbarInfo("toolbarConfigQna").remove(1);
@@ -87,9 +85,7 @@ public class ConfigQnaController extends AbstractController {
 		UserVO user = param.getSessionUser();
 		ConfigQnaPopupVO data = service.getQnaInfo(param);
 		
-		if("I".equals(user.getAuthSite())) {
-			data.setAnswerUserNm(user.getUserNm());
-		}
+		data.setAnswerUserNm(user.getUserNm());
 		
 		model.addAttribute("companyNm", data.getCompanyNm());
 		model.addAttribute("insertUserNm", data.getInsertUserNm());

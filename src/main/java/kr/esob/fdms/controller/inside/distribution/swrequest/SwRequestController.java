@@ -38,7 +38,6 @@ import kr.esob.fdms.commonlogic.securityacl.SecurityAclService;
 import kr.esob.fdms.commonlogic.systemconfig.SystemConfig;
 import kr.esob.fdms.commonlogic.toolbar.ToolbarInfoVO;
 import kr.esob.fdms.commonlogic.toolbar.ToolbarInfoService;
-import kr.esob.fdms.commonlogic.value.RequestPopupInfo;
 import kr.esob.fdms.commonlogic.value.SearchAllPopupInfo;
 import kr.esob.fdms.controller.inside.distribution.drawingrequest.DrawingRequestParam;
 import kr.esob.fdms.controller.inside.distribution.drawingrequest.DrawingRequestService;

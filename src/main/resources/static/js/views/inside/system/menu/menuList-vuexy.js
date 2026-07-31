@@ -6,12 +6,6 @@ $(function () {
   setTree();
 });
 
-// Keep the existing toolbar function names while exposing one internal menu tree.
-function addInsideMenu() { addMenu(); }
-function modInsideMenu() { modMenu(); }
-function delInsideMenu() { delMenu(); }
-function saveInsideMenu() { saveMenu(); }
-
 function setTree() {
   callAjax({}, "/inside/system/menu/getTreeList", function (response) {
     menuTreeList = response || [];

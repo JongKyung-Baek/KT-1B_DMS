@@ -9,6 +9,7 @@ import java.time.Instant;
 import java.util.Base64;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
@@ -31,6 +32,7 @@ public class ViewerIntegrationClient {
     private final ObjectMapper objectMapper;
     private final Clock clock;
 
+    @Autowired
     public ViewerIntegrationClient(ViewerIntegrationProperties properties, ObjectMapper objectMapper) {
         this(properties, objectMapper, Clock.systemUTC());
     }

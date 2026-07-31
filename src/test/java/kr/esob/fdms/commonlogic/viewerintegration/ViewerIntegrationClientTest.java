@@ -18,6 +18,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -27,6 +28,19 @@ import com.sun.net.httpserver.HttpServer;
 class ViewerIntegrationClientTest {
     @TempDir
     Path tempDir;
+
+    @Test
+    void productionConstructorCanBeCreatedBySpring() {
+        try (AnnotationConfigApplicationContext context =
+                     new AnnotationConfigApplicationContext()) {
+            context.registerBean(ViewerIntegrationProperties.class);
+            context.registerBean(ObjectMapper.class, () -> new ObjectMapper());
+            context.register(ViewerIntegrationClient.class);
+            context.refresh();
+
+            assertNotNull(context.getBean(ViewerIntegrationClient.class));
+        }
+    }
 
     @Test
     void streamsPdfWithSignedMetadataContract() throws Exception {

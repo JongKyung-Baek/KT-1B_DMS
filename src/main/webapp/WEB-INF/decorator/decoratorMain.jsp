@@ -77,7 +77,7 @@
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common_toolbar.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common_grid.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common_grid_paging.js?v=20260726.1"></script>
-	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common.js"></script>
+	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common.js?v=20260801.1"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/rsa.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/jsbn.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/prng4.js"></script>

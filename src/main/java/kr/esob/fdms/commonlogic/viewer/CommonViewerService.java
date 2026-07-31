@@ -836,13 +836,33 @@ public boolean getDestroyStatus(CommonViewerParam param) throws ParseException, 
 	}
 
 	private void requireFileAccess(CommonViewerParam param, String actionCd) {
+		String baseObjectType = securityAclService.normalizeObjectType(
+				toAclObjectType(param.getObjectType(), param.getRequestType()));
+		String aclObjectType = baseObjectType;
+		String aclObjectId = param.getObjectId();
+		String subFileParent = pdao.selectSubFileParent(
+				baseObjectType, aclObjectId, param.getFileNo());
+		if (!isBlankValue(subFileParent)) {
+			aclObjectType = subFileObjectType(baseObjectType);
+			aclObjectId = subFileParent.trim();
+		}
+
 		FileAccessRequest request = new FileAccessRequest();
 		request.setActionCd(actionCd);
-		request.setObjectType(toAclObjectType(param.getObjectType(), param.getRequestType()));
-		request.setObjectId(param.getObjectId());
+		request.setObjectType(aclObjectType);
+		request.setObjectId(aclObjectId);
 		request.setFileNo(param.getFileNo());
 		request.setRequestNo(param.getRequestNo());
 		securityAclService.requireAccess(request);
+	}
+
+	private String subFileObjectType(String baseType) {
+		if ("DOCUMENT".equals(baseType)) return "DOCUMENT_SUB";
+		if ("DRAWING".equals(baseType)) return "DRAWING_SUB";
+		if ("SW".equals(baseType)) return "SW_SUB";
+		if ("PRODUCT_DOCUMENT".equals(baseType)) return "PRODUCT_DOCUMENT_SUB";
+		if ("DXF".equals(baseType)) return "DXF_SUB";
+		return baseType;
 	}
 
 	private List<CommonViewerParam> buildMergePrintItems(CommonViewerParam param) {

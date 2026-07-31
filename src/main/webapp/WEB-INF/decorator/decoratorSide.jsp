@@ -60,7 +60,7 @@
 	<script>
 	loadBundles('<%=LocaleUtil.getCurrentLanguage(request) %>', '${pageContext.request.contextPath}');
 	</script>
-	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common.js"></script>
+	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common.js?v=20260801.1"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common_util.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common_dialog.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common_form.js"></script>

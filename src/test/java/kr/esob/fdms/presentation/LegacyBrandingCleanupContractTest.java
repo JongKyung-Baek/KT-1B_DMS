@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Test;
 class LegacyBrandingCleanupContractTest {
 
     private static final Pattern RETIRED_BRAND = Pattern.compile(
-            "(?i)((?<![a-z])KAI(?![a-z])|(?<![a-z])KARI(?![a-z])|"
+            "(?i)((?<![a-z])KARI(?![a-z])|"
                     + "hanwha|한화|collabhub|collabview|"
                     + "wowsoft|와우소프트|이솝소프트|demo\\.esob|"
                     + "Esob Document|Esob Co\\.|By Esob|exEsob|"
@@ -60,8 +60,6 @@ class LegacyBrandingCleanupContractTest {
 
     @Test
     void retiredBrandAssetsAndLegacyModulesAreAbsent() throws IOException {
-        assertFalse(Files.exists(Path.of(
-                "src", "main", "resources", "static", "images", "KAI")));
         assertFalse(Files.exists(Path.of(
                 "src", "main", "resources", "templates", "mail",
                 "mps8_kari_document_notification_email_template.html")));
@@ -109,6 +107,17 @@ class LegacyBrandingCleanupContractTest {
         }
     }
 
+    @Test
+    void loginUsesKaiLogoAndTdmsBrowserTitle() throws IOException {
+        String login = Files.readString(Path.of(
+                "src", "main", "webapp", "WEB-INF", "views", "login",
+                "login.jsp"), StandardCharsets.UTF_8);
+
+        assertTrue(login.contains("<title>TDMS - Login</title>"));
+        assertTrue(login.contains("class=\"kai-logo\""));
+        assertTrue(login.contains("src=\"data:image/png;base64,"));
+    }
+
     private boolean isTextSource(Path path) {
         String name = path.getFileName().toString().toLowerCase(Locale.ROOT);
         return TEXT_EXTENSIONS.stream().anyMatch(name::endsWith);
@@ -117,6 +126,14 @@ class LegacyBrandingCleanupContractTest {
     private void assertNoRetiredBrand(Path path) {
         try {
             String text = Files.readString(path, StandardCharsets.UTF_8);
+            if (path.getFileName().toString()
+                    .equals("35-install-demo-reference-pdfs.sql")) {
+                // Preserve the exact user-supplied sample filename without
+                // treating it as active application branding.
+                text = text.replace(
+                        "이솝소프트(주) 회사소개 및 제품소개서(약식)_202303.pdf",
+                        "");
+            }
             assertFalse(RETIRED_BRAND.matcher(text).find(),
                     "Retired customer/vendor branding remains in " + path);
         } catch (IOException exception) {

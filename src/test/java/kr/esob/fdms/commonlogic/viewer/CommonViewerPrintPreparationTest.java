@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -86,6 +87,10 @@ class CommonViewerPrintPreparationTest {
 		UserVO actor = new UserVO();
 		actor.setUserCd("USER-1");
 		when(aclService.requireCurrentUser()).thenReturn(actor);
+		when(aclService.normalizeObjectType(anyString())).thenAnswer(invocation -> {
+			String objectType = invocation.getArgument(0);
+			return "DOC".equals(objectType) ? "DOCUMENT" : objectType;
+		});
 		ReflectionTestUtils.setField(service, "securityAclService", aclService);
 		ReflectionTestUtils.setField(service, "printAuditService", auditService);
 		ReflectionTestUtils.setField(service, "pdao", pdfDao);
@@ -128,7 +133,9 @@ class CommonViewerPrintPreparationTest {
 		assertEquals("DRAW-1", accessRequests.get(1).getObjectId());
 		assertEquals("FILE-2", accessRequests.get(1).getFileNo());
 		assertEquals("REQ-2", accessRequests.get(1).getRequestNo());
-		verifyNoInteractions(auditService, pdfDao);
+		verify(pdfDao).selectSubFileParent("DOCUMENT", "DOC-1", "FILE-1");
+		verify(pdfDao).selectSubFileParent("DRAWING", "DRAW-1", "FILE-2");
+		verifyNoInteractions(auditService);
 	}
 
 	@Test

@@ -340,8 +340,8 @@ function openFile(requestType, objectType, requestNo, objectId, fileNo, protectY
 		protectYn = 'N';
 	}
 
-	let bRet = checkBoolean({ objectId: objectId, objectType: objectType, requestType: requestType, requestNo: requestNo }, "/common/viewer/getDestroyStatus");
-	let bRet_printHistory = checkBoolean({ objectId: objectId, objectType: objectType, requestType: requestType, requestNo: requestNo }, "/common/viewer/getDestroyStatus_printHistory");
+	let bRet = checkBoolean({ objectId: objectId, objectType: objectType, requestType: requestType, requestNo: requestNo, fileNo: fileNo }, "/common/viewer/getDestroyStatus");
+	let bRet_printHistory = checkBoolean({ objectId: objectId, objectType: objectType, requestType: requestType, requestNo: requestNo, fileNo: fileNo }, "/common/viewer/getDestroyStatus_printHistory");
 
 	if (bRet === true) {
 		alertMessage(g_msg('msg.printDestroy'));

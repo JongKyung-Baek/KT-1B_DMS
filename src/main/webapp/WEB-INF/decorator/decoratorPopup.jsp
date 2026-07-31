@@ -37,7 +37,7 @@
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common_grid_paging.js?v=20260726.1"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/prettyCheck/prettyCheckable.min.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/select2-master/dist/js/select2.full.min.js"></script>
-	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common.js"></script>
+	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common.js?v=20260801.1"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common_validation.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common_util.js"></script>
 

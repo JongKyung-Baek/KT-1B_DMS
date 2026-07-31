@@ -37,7 +37,7 @@ services:
         max-file: "3"
 
   app:
-    image: kt1b-dms-demo-app:20260727
+    image: kt1b-dms-demo-app:singleportal
     build:
       context: ..
       dockerfile: Dockerfile

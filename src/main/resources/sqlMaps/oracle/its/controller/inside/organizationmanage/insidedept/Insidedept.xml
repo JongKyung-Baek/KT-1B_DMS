@@ -32,7 +32,6 @@
 <!--			  ON  userInfo.POSITION_CD = dPostion.POSITION_CD-->
 <!--			  LEFT JOIN DOCS_ROLE_GROUP dRoleGroup-->
 <!--			  ON userInfo.ROLE_GROUP = dRoleGroup.GROUP_CODE-->
-<!--			  WHERE AUTH_SITE IN ('I', 'B')-->
 <!--			) A1-->
 <!--			WHERE 1=1-->
 <!--			<if test='userId != null and !userId.equals("")'>-->
@@ -64,7 +63,6 @@
 <!--      LEFT JOIN DOCS_POSITION dPostion-->
 <!--      ON  userInfo.POSITION_CD = dPostion.POSITION_CD-->
 <!--  		WHERE 1=1-->
-<!--  		AND AUTH_SITE IN ('I', 'B')-->
 <!--		<if test='userId != null and !userId.equals("")'>-->
 <!--		AND userInfo.user_Id LIKE '%' || #{userId} || '%'-->
 <!--		</if>-->
@@ -204,7 +202,6 @@
 <!--		, POSITION_CD-->
 <!--		, ROLE_GROUP-->
 <!--		, EMAIL-->
-<!--		, AUTH_SITE-->
 <!--		, USE_YN-->
 <!--		, DEL_YN-->
 <!--		, PROTECT_YN-->

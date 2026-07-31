@@ -5,7 +5,6 @@ import javax.inject.Inject;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import kr.esob.fdms.commonlogic.insa.InsaService;
 import kr.esob.fdms.commonlogic.validTermOver.ValidTermOverService;
 import lombok.extern.slf4j.Slf4j;
 

@@ -1,6 +1,7 @@
 package kr.esob.fdms.commonlogic.updown;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -93,7 +94,7 @@ class CommonUpdownAtomicityTest {
 	}
 
 	@Test
-	void legacyResponseOrderingAndCounterSqlAreAtomicAndRaceSafe() throws Exception {
+	void disabledLegacyTransferCannotReturnBeforeFailureAudit() throws Exception {
 		Transactional transactional = CommonUpdownService.class
 				.getMethod("selectList", Object.class)
 				.getAnnotation(Transactional.class);
@@ -104,10 +105,19 @@ class CommonUpdownAtomicityTest {
 				"src/main/java/kr/esob/fdms/commonlogic/updown/CommonUpdownService.java");
 		int call = source.indexOf("prepareLegacyDownload(param");
 		int responseAdd = source.indexOf("response.add(resource);", call);
-		int history = source.indexOf("dao.addToDownHistory(", responseAdd);
-		int audit = source.indexOf("securityAclService.recordDownloadResult(", history);
 		assertTrue(call >= 0 && responseAdd > call);
-		assertTrue(history > responseAdd && audit > history);
+
+		int method = source.indexOf("private void prepareLegacyDownload(");
+		int failureAudit = source.indexOf(
+				"securityAclService.recordDownloadResult(actor, \"FAIL\"", method);
+		int disabled = source.indexOf("throw new UnsupportedOperationException(",
+				failureAudit);
+		assertTrue(method >= 0 && failureAudit > method && disabled > failureAudit);
+		assertFalse(source.substring(method).contains("dao.addToDownHistory("));
+	}
+
+	@Test
+	void downloadCounterSqlIsAtomicAndRaceSafe() throws Exception {
 
 		String mapper = read(
 				"src/main/resources/sqlMaps/oracle/its/commonlogic/updown/CommonUpdown.xml");

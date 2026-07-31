@@ -107,16 +107,10 @@ class InternalOnlyDatabaseCleanupContractTest {
     }
 
     @Test
-    void legacyHrMapperHasNoVendorSpecificIdentityOverrideOrOutsideSeed()
-            throws IOException {
-        String mapper = read(Path.of(
+    void retiredHrSynchronizationMapperIsRemoved() {
+        assertFalse(Files.exists(Path.of(
                 "src", "main", "resources", "sqlMaps", "oracle", "its",
-                "controller", "insa", "Insa.xml"));
-
-        assertFalse(mapper.contains("insertDocsOutuser"));
-        assertFalse(mapper.contains("outuser"));
-        assertFalse(mapper.contains("CASE WHEN USER_CD IN"));
-        assertFalse(RETIRED_BRAND.matcher(mapper).find());
+                "controller", "insa", "Insa.xml")));
     }
 
     @Test

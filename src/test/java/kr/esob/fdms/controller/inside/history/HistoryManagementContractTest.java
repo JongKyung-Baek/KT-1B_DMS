@@ -98,6 +98,11 @@ class HistoryManagementContractTest {
         assertTrue(mapper.contains("INSERT_DATE"));
         assertTrue(mapper.contains("USER_ID"));
         assertTrue(mapper.contains("OBJECT_ID"));
+        assertTrue(mapper.contains("FILE_NO AS FILE_NO"));
+        assertTrue(mapper.contains("AS MENU_CD"));
+        assertTrue(mapper.contains("'VIEW' AS ACTION_TYPE"));
+        assertFalse(mapper.contains("'SUCCESS' AS STATUS_CD"),
+                "열람이력에는 항상 성공인 의미 없는 상태 필드를 만들지 않습니다.");
     }
 
     @Test
@@ -242,6 +247,27 @@ class HistoryManagementContractTest {
         assertFalse(recordJavascript.contains("statusLabels"));
         assertFalse(recordJavascript.contains("resultHtml"));
         assertFalse(recordJavascript.contains("row.statusCd"));
+    }
+
+    @Test
+    void viewingHistoryGridMapsUserMenuActionDocumentFileNumberAndTime()
+            throws Exception {
+        String jsp = read(RECORD_JSP);
+        String javascript = read(RECORD_JS);
+
+        assertTrue(jsp.contains("code=\"feature.history.column.time\""));
+        assertTrue(jsp.contains("code=\"feature.history.column.user\""));
+        assertTrue(jsp.contains("code=\"feature.history.column.menu\""));
+        assertTrue(jsp.contains("code=\"feature.history.column.action\""));
+        assertTrue(jsp.contains("code=\"feature.history.column.document\""));
+        assertTrue(jsp.contains("code=\"feature.history.column.fileNumber\""));
+
+        assertTrue(javascript.contains("row.occurredAt"));
+        assertTrue(javascript.contains("row.actorUserId"));
+        assertTrue(javascript.contains("row.menuCd"));
+        assertTrue(javascript.contains("row.actionType"));
+        assertTrue(javascript.contains("row.drawingNo || row.objectId"));
+        assertTrue(javascript.contains("return cellHtml(row.fileNo"));
     }
 
     private void assertNoLegacyGrid(String jsp) {

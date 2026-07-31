@@ -13,7 +13,7 @@
 <c:set var="historyKeywordCode"
        value="${printMode ? 'feature.history.print.keywordPlaceholder' : 'feature.history.view.keywordPlaceholder'}"/>
 <spring:message code="${historyKeywordCode}"
-                text="${printMode ? '사용자, 작업 ID, 자료 ID, 파일번호, 프린터' : '사용자, 문서번호, 자료 ID, 파일명'}"
+                text="${printMode ? '사용자, 작업 ID, 자료 ID, 파일번호, 프린터' : '사용자, 문서번호, 자료 ID, 파일명, 파일번호'}"
                 var="historyKeywordPlaceholder"/>
 <spring:message code="feature.history.listTitle" text="{0} 목록"
                 arguments="${historyTitle}" var="historyListTitle"/>
@@ -26,7 +26,7 @@
 <link type="text/css" rel="stylesheet"
       href="${pageContext.request.contextPath}/resources/css/pages/distribution-invoice.css" media="screen">
 <link type="text/css" rel="stylesheet"
-      href="${pageContext.request.contextPath}/resources/css/pages/access-history.css?v=20260726.7" media="screen">
+      href="${pageContext.request.contextPath}/resources/css/pages/access-history.css?v=20260731.1" media="screen">
 <script>
     window.recordHistoryConfig = {
         contextPath: '${pageContext.request.contextPath}',
@@ -40,7 +40,7 @@
     });
 </script>
 <script type="text/javascript"
-        src="${pageContext.request.contextPath}/resources/js/views/inside/distribution/viewPrintHistory/record-history.js?v=20260726.4"></script>
+        src="${pageContext.request.contextPath}/resources/js/views/inside/distribution/viewPrintHistory/record-history.js?v=20260731.1"></script>
 </head>
 <body>
 <main class="distribution-invoice-page access-history-page record-history-page record-history-page--${historyMode}"
@@ -86,19 +86,37 @@
         <div class="ah-table-wrap">
             <table class="ah-table record-history-table" aria-label="${historyListTitle}">
                 <colgroup>
-                    <col class="rh-col-time"><col class="rh-col-user"><col class="rh-col-type">
-                    <col class="rh-col-resource"><col class="rh-col-file">
-                    <c:if test="${printMode}"><col class="rh-col-detail"></c:if><col class="rh-col-ip">
+                    <col class="rh-col-time"><col class="rh-col-user">
+                    <c:choose>
+                        <c:when test="${printMode}">
+                            <col class="rh-col-type"><col class="rh-col-resource"><col class="rh-col-file">
+                            <col class="rh-col-detail"><col class="rh-col-ip">
+                        </c:when>
+                        <c:otherwise>
+                            <col class="rh-col-menu"><col class="rh-col-action">
+                            <col class="rh-col-resource"><col class="rh-col-file-no">
+                        </c:otherwise>
+                    </c:choose>
                 </colgroup>
                 <thead>
                 <tr>
                     <th scope="col"><spring:message code="feature.history.column.time" text="일시"/></th>
                     <th scope="col"><spring:message code="feature.history.column.user" text="사용자"/></th>
-                    <th scope="col"><spring:message code="feature.history.column.scope" text="자료 구분"/></th>
-                    <th scope="col"><spring:message code="feature.history.column.resource" text="대상 자료"/></th>
-                    <th scope="col"><spring:message code="feature.history.column.file" text="파일"/></th>
-                    <c:if test="${printMode}"><th scope="col"><spring:message code="feature.history.column.detail" text="상세"/></th></c:if>
-                    <th scope="col"><spring:message code="feature.history.column.ip" text="IP"/></th>
+                    <c:choose>
+                        <c:when test="${printMode}">
+                            <th scope="col"><spring:message code="feature.history.column.scope" text="자료 구분"/></th>
+                            <th scope="col"><spring:message code="feature.history.column.resource" text="대상 자료"/></th>
+                            <th scope="col"><spring:message code="feature.history.column.file" text="파일"/></th>
+                            <th scope="col"><spring:message code="feature.history.column.detail" text="상세"/></th>
+                            <th scope="col"><spring:message code="feature.history.column.ip" text="IP"/></th>
+                        </c:when>
+                        <c:otherwise>
+                            <th scope="col"><spring:message code="feature.history.column.menu" text="메뉴"/></th>
+                            <th scope="col"><spring:message code="feature.history.column.action" text="행위"/></th>
+                            <th scope="col"><spring:message code="feature.history.column.document" text="문서"/></th>
+                            <th scope="col"><spring:message code="feature.history.column.fileNumber" text="파일번호"/></th>
+                        </c:otherwise>
+                    </c:choose>
                 </tr>
                 </thead>
                 <tbody id="recordHistoryTableBody">

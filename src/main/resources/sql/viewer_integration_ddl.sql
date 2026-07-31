@@ -2,6 +2,11 @@ BEGIN;
 
 -- Durable TDMS <-> external viewer integration state. Endpoint paths are owned by
 -- the application contract and credentials are supplied only at runtime.
+-- The legacy history ledger did not identify the exact file. Keep existing rows
+-- compatible while allowing signed viewer callbacks to persist that identity.
+ALTER TABLE public.docs_history
+    ADD COLUMN IF NOT EXISTS file_no varchar(60);
+
 CREATE TABLE IF NOT EXISTS docs_viewer_launch (
     correlation_id     varchar(64) PRIMARY KEY,
     object_type        varchar(30) NOT NULL,
@@ -73,6 +78,8 @@ COMMENT ON TABLE docs_viewer_event IS
     'Signed, idempotent viewer callbacks accepted by TDMS';
 COMMENT ON TABLE docs_viewer_callback_nonce IS
     'Replay-protection nonces for signed external viewer callbacks';
+COMMENT ON COLUMN public.docs_history.file_no IS
+    'Exact file number for a persisted view or file-level history event';
 
 -- Retire only the loopback ADAP endpoints from old development dumps. A
 -- non-loopback row is retained for emergency rollback, but the new integration

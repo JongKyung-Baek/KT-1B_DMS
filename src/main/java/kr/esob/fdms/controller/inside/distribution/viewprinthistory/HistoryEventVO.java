@@ -12,6 +12,8 @@ public class HistoryEventVO {
     private String actorUserCd;
     private String actorUserId;
     private String actorUserNm;
+    private String menuCd;
+    private String actionType;
     private String distributionType;
     private String drawingNo;
     private String objectType;

@@ -21,6 +21,8 @@ class ViewerIntegrationMigrationContractTest {
         String sql = Files.readString(VIEWER_MIGRATION, StandardCharsets.UTF_8);
 
         assertThat(sql)
+                .contains("ALTER TABLE public.docs_history")
+                .contains("ADD COLUMN IF NOT EXISTS file_no varchar(60)")
                 .contains("CREATE TABLE IF NOT EXISTS docs_viewer_launch")
                 .contains("CREATE TABLE IF NOT EXISTS docs_viewer_event")
                 .contains("CREATE TABLE IF NOT EXISTS docs_viewer_callback_nonce")
@@ -68,7 +70,7 @@ class ViewerIntegrationMigrationContractTest {
 
         assertThat(properties)
                 .contains("tdms.viewer.enabled=${TDMS_VIEWER_ENABLED:false}")
-                .contains("tdms.viewer.base-url=${TDMS_VIEWER_BASE_URL:https://demo.esob.kr:7442}")
+                .contains("tdms.viewer.base-url=${TDMS_VIEWER_BASE_URL:}")
                 .contains("tdms.viewer.client-id=${TDMS_VIEWER_CLIENT_ID:}")
                 .contains("tdms.viewer.callback-client-id=${TDMS_VIEWER_CALLBACK_CLIENT_ID:}")
                 .contains("tdms.viewer.shared-secret=${TDMS_VIEWER_SHARED_SECRET:}")
@@ -98,5 +100,19 @@ class ViewerIntegrationMigrationContractTest {
                 .contains("DELETE FROM docs_viewer_launch")
                 .contains("CAST(#{value} AS integer) * INTERVAL '1 day'")
                 .contains("TO_CHAR(created_at AT TIME ZONE 'UTC'");
+    }
+
+    @Test
+    void authenticatedViewCallbackPersistsItsExactFileNumberInHistory()
+            throws IOException {
+        String mapper = Files.readString(Path.of(
+                "src/main/resources/sqlMaps/oracle/its/commonlogic/viewerintegration/ViewerIntegration.xml"),
+                StandardCharsets.UTF_8);
+
+        assertThat(mapper)
+                .contains("<insert id=\"insertViewHistory\">")
+                .contains("revision, file_no, user_id, insert_date, user_nm, log_type")
+                .contains("#{launch.fileNo}, #{launch.actorUserId}")
+                .contains("#{launch.actorUserNm}, 'VIEWING'");
     }
 }

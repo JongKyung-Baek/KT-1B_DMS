@@ -690,6 +690,7 @@ INSERT INTO docs_history (
     object_id,
     org_file_nm,
     revision,
+    file_no,
     user_id,
     insert_date,
     user_nm,
@@ -703,6 +704,7 @@ SELECT 'CCB',
        document.object_id,
        document.main_file_nm,
        'A',
+       '1',
        actor.user_id,
        CURRENT_TIMESTAMP
            - make_interval(days => (selected.user_order + selected.user_row)::integer)

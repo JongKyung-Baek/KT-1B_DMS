@@ -60,11 +60,12 @@
     <insert id="insertViewHistory">
         INSERT INTO docs_history (
             distribution_type, drawing_no, object_id, org_file_nm,
-            revision, user_id, insert_date, user_nm, log_type
+            revision, file_no, user_id, insert_date, user_nm, log_type
         ) VALUES (
             NULLIF(#{launch.distributionType}, ''), NULLIF(#{launch.drawingNo}, ''),
             #{launch.objectId}, #{launch.orgFileNm}, NULLIF(#{launch.revision}, ''),
-            #{launch.actorUserId}, CAST(#{event.occurredAt} AS timestamp with time zone),
+            #{launch.fileNo}, #{launch.actorUserId},
+            CAST(#{event.occurredAt} AS timestamp with time zone),
             #{launch.actorUserNm}, 'VIEWING'
         )
     </insert>

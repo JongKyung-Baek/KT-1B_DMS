@@ -375,8 +375,11 @@
 .rh-col-time { width: 170px; }
 .rh-col-user { width: 145px; }
 .rh-col-type { width: 115px; }
+.rh-col-menu { width: 190px; }
+.rh-col-action { width: 95px; }
 .rh-col-resource { width: 210px; }
 .rh-col-file { width: 185px; }
+.rh-col-file-no { width: 170px; }
 .rh-col-detail { width: 220px; }
 .rh-col-ip { width: 110px; }
 

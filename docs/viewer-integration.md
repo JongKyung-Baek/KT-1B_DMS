@@ -2,7 +2,7 @@
 
 ## 1. 연동 범위
 
-TDMS는 문서 ACL을 먼저 확인한 뒤 외부 뷰어에 파일을 전달하고, 짧은 수명의 실행 상관관계 ID를 발급한다. 서명·nonce·상관관계 검증을 수행하는 callback 수신부도 준비되어 있다. 다만 CV의 outbound `VIEW_OPENED` 송신은 외부 전송 승인 전까지 미구현·비활성 상태이므로, 현재 단계에서는 CV의 로컬 최초 열람 시각만 기록되고 TDMS 열람 이력은 callback으로 생성되지 않는다.
+TDMS는 문서 ACL을 먼저 확인한 뒤 외부 뷰어에 파일을 전달하고, 짧은 수명의 실행 상관관계 ID를 발급한다. CV는 PDF가 처음 정상 전송된 시점에 HMAC 서명된 `VIEW_OPENED` callback을 전송하며, TDMS는 서명·nonce·상관관계·사용자·파일 일치를 검증한 뒤 열람이력에 한 번만 저장한다.
 
 개발·운영 뷰어 주소는 환경변수로 관리하되 아래 경로는 양쪽 애플리케이션의 고정 계약이므로 설정값으로 변경하지 않는다.
 
@@ -39,7 +39,7 @@ TDMS는 문서 ACL을 먼저 확인한 뒤 외부 뷰어에 파일을 전달하�
 | `CV_TDMS_CLIENT_ID` | TDMS의 `TDMS_VIEWER_CALLBACK_CLIENT_ID`와 동일 |
 | `TDMS_CALLBACK_URL` | `https://<tdms-host>/api/integrations/cv/v1/events` |
 
-마지막 두 callback 설정은 현재 예약 계약이며 CV 송신 구현 승인 전에는 설정하거나 동작한다고 가정하지 않는다.
+마지막 두 callback 설정을 함께 지정하면 CV의 최초 열람 이벤트 송신이 활성화된다. 운영 환경의 callback URL은 CV 서버에서 접근 가능한 TDMS HTTPS 주소여야 하며 localhost를 사용하면 안 된다.
 
 ### 2.1 VIEW와 원본 다운로드의 경계
 

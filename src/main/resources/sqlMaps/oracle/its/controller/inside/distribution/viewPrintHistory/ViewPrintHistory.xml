@@ -220,6 +220,11 @@
                info.USER_ID AS actor_user_id,
                info.USER_NM AS actor_user_nm,
                CASE
+                   WHEN info.DISTRIBUTION_TYPE = 'FunctionCode' THEN 'DOCUMENT_SEARCH'
+                   ELSE 'TECHNICAL_DATA_SEARCH'
+               END AS menu_cd,
+               'VIEW' AS action_type,
+               CASE
                    WHEN info.DISTRIBUTION_TYPE = 'FunctionCode' THEN 'Documents'
                    WHEN info.DISTRIBUTION_TYPE = 'CCB' THEN '기술자료관리'
                    ELSE info.DISTRIBUTION_TYPE
@@ -228,7 +233,7 @@
                info.OBJECT_ID AS object_id,
                info.ORG_FILE_NM AS org_file_nm,
                info.REVISION AS revision,
-               'SUCCESS' AS status_cd
+               info.FILE_NO AS file_no
           FROM DOCS_HISTORY info
          WHERE info.LOG_TYPE = 'VIEWING'
         <if test="distributionType != null and distributionType != ''">
@@ -249,7 +254,8 @@
                  OR COALESCE(info.USER_NM, '') ILIKE '%' || #{keyword} || '%'
                  OR COALESCE(info.DRAWING_NO, '') ILIKE '%' || #{keyword} || '%'
                  OR COALESCE(info.OBJECT_ID, '') ILIKE '%' || #{keyword} || '%'
-                 OR COALESCE(info.ORG_FILE_NM, '') ILIKE '%' || #{keyword} || '%')
+                 OR COALESCE(info.ORG_FILE_NM, '') ILIKE '%' || #{keyword} || '%'
+                 OR COALESCE(info.FILE_NO, '') ILIKE '%' || #{keyword} || '%')
         </if>
          ORDER BY info.INSERT_DATE DESC
          LIMIT 1000

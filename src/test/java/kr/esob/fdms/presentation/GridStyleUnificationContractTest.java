@@ -28,7 +28,7 @@ class GridStyleUnificationContractTest {
         assertTrue(styleBlock(css, ".ah-cell {").contains("align-items: center"));
         assertTrue(styleBlock(css, ".rh-detail-chips {").contains("justify-content: center"));
         assertTrue(accessPage.contains("access-history.css?v=20260726.7"));
-        assertTrue(recordPage.contains("access-history.css?v=20260726.7"));
+        assertTrue(recordPage.contains("access-history.css?v=20260731.1"));
     }
 
     @Test

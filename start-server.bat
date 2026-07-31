@@ -5,6 +5,19 @@ title KT-1B DMS Server Start
 set "APP_HOME=%~dp0"
 if "%APP_HOME:~-1%"=="\" set "APP_HOME=%APP_HOME:~0,-1%"
 
+set "LOCAL_ENV_FILE=%APP_HOME%\.env.local"
+if exist "%LOCAL_ENV_FILE%" (
+    echo [INFO] Loading local integration settings from ".env.local"...
+    for /f "usebackq eol=# tokens=1,* delims==" %%A in ("%LOCAL_ENV_FILE%") do (
+        if /i "%%A"=="TDMS_VIEWER_ENABLED" set "TDMS_VIEWER_ENABLED=%%B"
+        if /i "%%A"=="TDMS_VIEWER_BASE_URL" set "TDMS_VIEWER_BASE_URL=%%B"
+        if /i "%%A"=="TDMS_VIEWER_CLIENT_ID" set "TDMS_VIEWER_CLIENT_ID=%%B"
+        if /i "%%A"=="TDMS_VIEWER_CALLBACK_CLIENT_ID" set "TDMS_VIEWER_CALLBACK_CLIENT_ID=%%B"
+        if /i "%%A"=="TDMS_VIEWER_SHARED_SECRET" set "TDMS_VIEWER_SHARED_SECRET=%%B"
+        if /i "%%A"=="TDMS_VIEWER_WORK_DIR" set "TDMS_VIEWER_WORK_DIR=%%B"
+    )
+)
+
 set "DB_CONTAINER=kt1b-postgres"
 set "SERVER_PORT=3508"
 set "APP_URL=http://127.0.0.1:%SERVER_PORT%/login/loginPage"
@@ -66,7 +79,7 @@ if /i not "%DB_RUNNING%"=="true" (
 echo [INFO] Waiting for PostgreSQL...
 for /l %%I in (1,1,45) do (
     docker exec "%DB_CONTAINER%" pg_isready -q >nul 2>&1 && goto :database_ready
-    timeout /t 1 /nobreak >nul
+    ping.exe -n 2 127.0.0.1 >nul
 )
 
 echo [ERROR] PostgreSQL did not become ready within 45 seconds.
@@ -148,7 +161,7 @@ if errorlevel 1 (
 echo [INFO] Waiting for the web server...
 for /l %%I in (1,1,90) do (
     curl.exe -fsS --connect-timeout 2 -o NUL "%APP_URL%" >nul 2>&1 && goto :server_ready
-    timeout /t 1 /nobreak >nul
+    ping.exe -n 2 127.0.0.1 >nul
 )
 
 echo [ERROR] The web server did not become ready within 90 seconds.

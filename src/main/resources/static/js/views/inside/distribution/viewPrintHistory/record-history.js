@@ -17,6 +17,15 @@
         DOCUMENTS: ['feature.history.type.document', '문서']
     };
 
+    var viewMenuLabels = {
+        TECHNICAL_DATA_SEARCH: ['feature.history.menu.technicalDataSearch', '기술자료관리 > 조회'],
+        DOCUMENT_SEARCH: ['feature.history.menu.documentSearch', '문서 > 조회']
+    };
+
+    var viewActionLabels = {
+        VIEW: ['feature.history.action.view', '열람']
+    };
+
     function t(key, fallback) {
         var args = Array.prototype.slice.call(arguments, 2);
         var translated = fallback;
@@ -31,6 +40,11 @@
 
     function localizedType(value, fallback) {
         var entry = typeLabels[String(value || '').toUpperCase()];
+        return entry ? t(entry[0], entry[1]) : text(value, fallback);
+    }
+
+    function localizedCode(labels, value, fallback) {
+        var entry = labels[String(value || '').toUpperCase()];
         return entry ? t(entry[0], entry[1]) : text(value, fallback);
     }
 
@@ -98,11 +112,6 @@
     }
 
     function typeHtml(row) {
-        if (mode === 'view') {
-            return '<span class="ah-event-chip">' +
-                escapeHtml(localizedType(row.distributionType,
-                    t('feature.history.type.technicalData', '기술자료'))) + '</span>';
-        }
         var raw = String(row.objectType || '').toUpperCase();
         var label = localizedType(raw || row.requestType,
             t('feature.history.type.technicalData', '기술자료'));
@@ -110,9 +119,6 @@
     }
 
     function resourceHtml(row) {
-        if (mode === 'view') {
-            return cellHtml(row.drawingNo || row.objectId, row.objectId);
-        }
         return cellHtml(
             row.requestNo || row.objectId || row.printJobId,
             row.printJobId
@@ -121,9 +127,6 @@
     }
 
     function fileHtml(row) {
-        if (mode === 'view') {
-            return cellHtml(row.orgFileNm, row.revision ? 'Revision ' + row.revision : '');
-        }
         var secondary = [];
         if (row.itemSeq != null) {
             secondary.push(t('feature.history.value.item', '항목 {0}', row.itemSeq));
@@ -131,6 +134,30 @@
         if (Number(row.itemCount || 0) > 1) {
             secondary.push(t('feature.history.value.totalItems', '총 {0}개', row.itemCount));
         }
+        return cellHtml(row.fileNo, secondary.join(' · '));
+    }
+
+    function viewMenuHtml(row) {
+        return cellHtml(localizedCode(
+            viewMenuLabels,
+            row.menuCd,
+            localizedType(row.distributionType,
+                t('feature.history.type.technicalData', '기술자료'))));
+    }
+
+    function viewActionHtml(row) {
+        return '<span class="ah-event-chip">' + escapeHtml(localizedCode(
+            viewActionLabels, row.actionType, t('feature.history.action.view', '열람'))) + '</span>';
+    }
+
+    function viewDocumentHtml(row) {
+        return cellHtml(row.drawingNo || row.objectId, row.objectId);
+    }
+
+    function viewFileNumberHtml(row) {
+        var secondary = [];
+        if (row.orgFileNm) secondary.push(row.orgFileNm);
+        if (row.revision) secondary.push('Revision ' + row.revision);
         return cellHtml(row.fileNo, secondary.join(' · '));
     }
 
@@ -158,6 +185,20 @@
         var html = [];
 
         $.each(state.rows, function (_, row) {
+            if (mode === 'view') {
+                html.push(
+                    '<tr>' +
+                    '<td>' + timeHtml(row) + '</td>' +
+                    '<td>' + actorHtml(row) + '</td>' +
+                    '<td>' + viewMenuHtml(row) + '</td>' +
+                    '<td>' + viewActionHtml(row) + '</td>' +
+                    '<td>' + viewDocumentHtml(row) + '</td>' +
+                    '<td>' + viewFileNumberHtml(row) + '</td>' +
+                    '</tr>'
+                );
+                return;
+            }
+
             html.push(
                 '<tr>' +
                 '<td>' + timeHtml(row) + '</td>' +
@@ -165,7 +206,7 @@
                 '<td>' + typeHtml(row) + '</td>' +
                 '<td>' + resourceHtml(row) + '</td>' +
                 '<td>' + fileHtml(row) + '</td>' +
-                (mode === 'print' ? '<td>' + detailHtml(row) + '</td>' : '') +
+                '<td>' + detailHtml(row) + '</td>' +
                 '<td><span class="ah-ip">' + escapeHtml(text(row.clientIp)) + '</span></td>' +
                 '</tr>'
             );

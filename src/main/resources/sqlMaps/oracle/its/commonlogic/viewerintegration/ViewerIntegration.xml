@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="sql.ViewerIntegration">
+
+    <insert id="insertLaunch">
+        INSERT INTO docs_viewer_launch (
+            correlation_id, object_type, object_id, acl_object_type, acl_object_id,
+            file_no, request_no, actor_user_cd, actor_user_id, actor_user_nm,
+            distribution_type, drawing_no, org_file_nm, revision, expires_at
+        ) VALUES (
+            #{correlationId}, #{objectType}, #{objectId}, #{aclObjectType}, #{aclObjectId},
+            #{fileNo}, NULLIF(#{requestNo}, ''), #{actorUserCd}, #{actorUserId}, #{actorUserNm},
+            NULLIF(#{distributionType}, ''), NULLIF(#{drawingNo}, ''), #{orgFileNm},
+            NULLIF(#{revision}, ''), CAST(#{expiresAt} AS timestamp with time zone)
+        )
+    </insert>
+
+    <select id="selectLaunch"
+            resultType="kr.esob.fdms.commonlogic.viewerintegration.ViewerLaunchRecord">
+        SELECT correlation_id, object_type, object_id, acl_object_type, acl_object_id,
+               file_no, request_no, actor_user_cd, actor_user_id, actor_user_nm,
+               distribution_type, drawing_no, org_file_nm, revision,
+               expires_at::text AS expires_at,
+               TO_CHAR(created_at AT TIME ZONE 'UTC',
+                       'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS created_at
+          FROM docs_viewer_launch
+         WHERE correlation_id = #{value}
+    </select>
+
+    <delete id="deleteExpiredState">
+        DELETE FROM docs_viewer_launch
+         WHERE expires_at &lt; CURRENT_TIMESTAMP
+                           - (CAST(#{value} AS integer) * INTERVAL '1 day')
+    </delete>
+
+    <delete id="deleteOldNonces">
+        DELETE FROM docs_viewer_callback_nonce
+         WHERE created_at &lt; CURRENT_TIMESTAMP - INTERVAL '1 day'
+    </delete>
+
+    <insert id="insertNonce">
+        INSERT INTO docs_viewer_callback_nonce (client_id, nonce)
+        VALUES (#{clientId}, CAST(#{nonce} AS uuid))
+        ON CONFLICT (client_id, nonce) DO NOTHING
+    </insert>
+
+    <insert id="insertEvent">
+        INSERT INTO docs_viewer_event (
+            event_id, correlation_id, event_type, occurred_at,
+            object_id, file_no, user_id, content_sha256
+        ) VALUES (
+            CAST(#{eventId} AS uuid), #{correlationId}, #{eventType},
+            CAST(#{occurredAt} AS timestamp with time zone),
+            #{objectId}, #{fileNo}, #{userId}, #{contentSha256}
+        )
+        ON CONFLICT (correlation_id, event_type) DO NOTHING
+    </insert>
+
+    <insert id="insertViewHistory">
+        INSERT INTO docs_history (
+            distribution_type, drawing_no, object_id, org_file_nm,
+            revision, user_id, insert_date, user_nm, log_type
+        ) VALUES (
+            NULLIF(#{launch.distributionType}, ''), NULLIF(#{launch.drawingNo}, ''),
+            #{launch.objectId}, #{launch.orgFileNm}, NULLIF(#{launch.revision}, ''),
+            #{launch.actorUserId}, CAST(#{event.occurredAt} AS timestamp with time zone),
+            #{launch.actorUserNm}, 'VIEWING'
+        )
+    </insert>
+
+    <update id="markViewed">
+        UPDATE docs_viewer_launch
+           SET viewed_at = COALESCE(
+                   viewed_at, CAST(#{occurredAt} AS timestamp with time zone))
+         WHERE correlation_id = #{correlationId}
+    </update>
+
+</mapper>

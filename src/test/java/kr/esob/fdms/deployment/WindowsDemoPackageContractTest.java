@@ -93,6 +93,20 @@ class WindowsDemoPackageContractTest {
         assertFalse(sampleSql.contains("docs_bbs"));
     }
 
+    @Test
+    void builderAppliesFullFreshMigrationAndRejectsPortalSelectorColumns()
+            throws IOException {
+        String builder = text("Build-DemoPackage.ps1");
+
+        assertTrue(builder.contains("fresh_database_migration.psql"));
+        assertTrue(builder.contains("'include_sample_data=true'"));
+        assertTrue(builder.contains(
+                "table_name IN ('docs_menu', 'docs_user')"));
+        assertTrue(builder.contains("6,6,16,16,16,16,0"));
+        assertFalse(builder.contains("$internalOnlyCleanupSqlInContainer"));
+        assertFalse(builder.contains("$sampleSqlInContainer"));
+    }
+
     private String text(String first, String... more) throws IOException {
         Path path = DEMO_ROOT.resolve(Path.of(first, more));
         return Files.readString(path, StandardCharsets.UTF_8);

@@ -227,7 +227,10 @@ SELECT concat_ws('|',
         AND COALESCE(del_yn, 'Y') = 'N'
         AND role_cd IS NOT NULL
         AND menu_type IN ('T', 'M', 'P')),
-    (SELECT COUNT(*) FROM docs_menu WHERE auth_site IS NOT NULL),
+    (SELECT COUNT(*) FROM information_schema.columns
+      WHERE table_schema = 'public'
+        AND table_name IN ('docs_menu', 'docs_user')
+        AND column_name = 'auth_site'),
     ((SELECT COUNT(*) FROM docs_menu
        WHERE COALESCE(menu_url, '') ~* '(^|/)outside/')
      +
@@ -286,7 +289,7 @@ SELECT concat_ws('|',
     if ($values[6] -ne '0' -or
         $values[7] -ne '0' -or
         $values[8] -ne '0') {
-        throw "Portal-specific menu state remains: $validationResult"
+        throw "Portal-specific schema or menu state remains: $validationResult"
     }
     if ($values[9] -ne '0' -or $values[10] -ne '0') {
         throw "Menu role assignment integrity check failed: $validationResult"
@@ -301,7 +304,7 @@ SELECT concat_ws('|',
 
     Write-Host 'Fresh KT-1B database is ready.'
     Write-Host ('server|tables|activeMenus|visibleRoots|rootMenuCodes|' +
-        'assignableMenus|menuAuthMarkers|outsideUrls|broadPortalAcls|' +
+        'assignableMenus|portalSelectorColumns|outsideUrls|broadPortalAcls|' +
         'missingAdminRoles|orphanRoles|grades|users|departments|documents|' +
         'mainFiles|subFiles')
     Write-Host $validationResult

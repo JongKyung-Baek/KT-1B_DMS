@@ -200,7 +200,6 @@ INSERT INTO docs_user (
     update_uid,
     update_dt,
     pwd_update_dt,
-    auth_site,
     login_count,
     role_group,
     business_area_cd,
@@ -214,35 +213,35 @@ INSERT INTO docs_user (
         'pbkdf2-sha256$310000$fG44JoZOEoE4y58-ub2ZBA$WGJe4792UzdhLVGY6jw3AOYca41610dTG1hZ5IQ0Wqk',
         'COMP_0000000999', 'DMS100', 'POSI_0000000008', 'general.han@kt1b.local',
         4, 'N', 'Y', 'N', 'admin', CURRENT_TIMESTAMP, 'admin', CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP, 'I', 0, 'RG_011', '1210', 'N', 'L0329', 'N', 'N'
+        CURRENT_TIMESTAMP, 0, 'RG_011', '1210', 'N', 'L0329', 'N', 'N'
     ),
     (
-        'USER_0000020002', 'internal.park', '박서준',
+        'USER_0000020002', 'design.park', '박서준',
         'pbkdf2-sha256$310000$T2Dyvwms60wFMtZbl-NJEw$skbWAZHsnabyJl6mu_DvHIOO8BhefoHWphgyS-OBlA0',
-        'COMP_0000000999', 'DMS300', 'POSI_0000000004', 'internal.park@kt1b.local',
+        'COMP_0000000999', 'DMS300', 'POSI_0000000004', 'design.park@kt1b.local',
         4, 'N', 'Y', 'N', 'admin', CURRENT_TIMESTAMP, 'admin', CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP, 'I', 0, 'RG_011', '1210', 'N', 'L0329', 'N', 'N'
+        CURRENT_TIMESTAMP, 0, 'RG_011', '1210', 'N', 'L0329', 'N', 'N'
     ),
     (
         'USER_0000020003', 'restricted.lee', '이수빈',
         'pbkdf2-sha256$310000$tnyQjC6sR-nOxusu88oJqg$3Q34S273EM10pXzIykT1uGJiDZqK555I8e-co-hySs4',
         'COMP_0000000999', 'DMS200', 'POSI_0000000002', 'restricted.lee@kt1b.local',
         4, 'N', 'Y', 'N', 'admin', CURRENT_TIMESTAMP, 'admin', CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP, 'I', 0, 'RG_011', '1210', 'N', 'L0329', 'N', 'N'
+        CURRENT_TIMESTAMP, 0, 'RG_011', '1210', 'N', 'L0329', 'N', 'N'
     ),
     (
         'USER_0000020004', 'confidential.kim', '김도현',
         'pbkdf2-sha256$310000$WCwwy53KLhCw6-Mj7r8Xtw$OXce3BOeWF_Qqgpoi-gos_9lQlA-RXO1FaSU_N3qHIs',
         'COMP_0000000999', 'DMS100', 'POSI_0000000001', 'confidential.kim@kt1b.local',
         4, 'N', 'Y', 'N', 'admin', CURRENT_TIMESTAMP, 'admin', CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP, 'I', 0, 'RG_011', '1210', 'N', 'L0329', 'N', 'N'
+        CURRENT_TIMESTAMP, 0, 'RG_011', '1210', 'N', 'L0329', 'N', 'N'
     ),
     (
         'USER_0000020005', 'security.yoon', '윤하늘',
         'pbkdf2-sha256$310000$Jif9LE_bol0fW-gL8mvt_Q$0WWFmD1G1cL8QP61LHMckQ21OTzdWj65GRK8zX5UUuU',
         'COMP_0000000999', 'DMS500', 'POSI_0000000002', 'security.yoon@kt1b.local',
         4, 'N', 'Y', 'N', 'admin', CURRENT_TIMESTAMP, 'admin', CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP, 'I', 0, 'RG_011', '1210', 'N', 'L0329', 'N', 'N'
+        CURRENT_TIMESTAMP, 0, 'RG_011', '1210', 'N', 'L0329', 'N', 'N'
     );
 
 INSERT INTO docs_role_group_member (group_code, member_cd, group_type)
@@ -388,7 +387,7 @@ INSERT INTO sample_document VALUES
      'KT1B_General_Arrangement_RevA.pdf', 'KT1B_General_Arrangement_Checklist.pdf'),
     (2,  'KT1B-SAMPLE-DOC-002', 'KT1B-SAMPLE-ATT-002',
      'KT1B-TR-2026-002', 'REQ-2026-002', '탑재체 인터페이스 제어도',
-     'TRB000013', 'internal.park', '박서준', '기체설계팀', 'INTERNAL', 4,
+     'TRB000013', 'design.park', '박서준', '기체설계팀', 'INTERNAL', 4,
      'KT1B_Payload_Interface_Drawing_RevA.pdf', 'KT1B_Payload_Interface_Notes.pdf'),
     (3,  'KT1B-SAMPLE-DOC-003', 'KT1B-SAMPLE-ATT-003',
      'KT1B-TR-2026-003', 'REQ-2026-003', '체계 요구조건 규격서',
@@ -400,7 +399,7 @@ INSERT INTO sample_document VALUES
      'KT1B_SAR_Payload_Interface_Specification.pdf', 'KT1B_SAR_Interface_Verification.pdf'),
     (5,  'KT1B-SAMPLE-DOC-005', 'KT1B-SAMPLE-ATT-005',
      'KT1B-TR-2026-005', 'REQ-2026-005', '지상체 통합 업무기술서',
-     'TRB000017', 'internal.park', '박서준', '기체설계팀', 'INTERNAL', 10,
+     'TRB000017', 'design.park', '박서준', '기체설계팀', 'INTERNAL', 10,
      'KT1B_Ground_Segment_Integration_SOW.pdf', 'KT1B_Integration_Milestone_Plan.pdf'),
     (6,  'KT1B-SAMPLE-DOC-006', 'KT1B-SAMPLE-ATT-006',
      'KT1B-TR-2026-006', 'REQ-2026-006', '상세설계검토 납품자료 패키지',
@@ -416,7 +415,7 @@ INSERT INTO sample_document VALUES
      'KT1B_Monthly_Program_Report.pdf', 'KT1B_Program_Schedule_Snapshot.pdf'),
     (9,  'KT1B-SAMPLE-DOC-009', 'KT1B-SAMPLE-ATT-009',
      'KT1B-TR-2026-009', 'REQ-2026-009', '위험관리 및 대응계획',
-     'TRB000022', 'internal.park', '박서준', '기체설계팀', 'INTERNAL', 18,
+     'TRB000022', 'design.park', '박서준', '기체설계팀', 'INTERNAL', 18,
      'KT1B_Risk_Management_Plan.pdf', 'KT1B_Risk_Register.pdf'),
     (10, 'KT1B-SAMPLE-DOC-010', 'KT1B-SAMPLE-ATT-010',
      'KT1B-TR-2026-010', 'REQ-2026-010', '열진공시험 특별작업지시서',
@@ -424,7 +423,7 @@ INSERT INTO sample_document VALUES
      'KT1B_Thermal_Vacuum_Special_Order.pdf', 'KT1B_TVAC_Safety_Checklist.pdf'),
     (11, 'KT1B-SAMPLE-DOC-011', 'KT1B-SAMPLE-ATT-011',
      'KT1B-TR-2026-011', 'REQ-2026-011', '위성 기능시험 절차서',
-     'TRB000025', 'internal.park', '박서준', '기체설계팀', 'INTERNAL', 22,
+     'TRB000025', 'design.park', '박서준', '기체설계팀', 'INTERNAL', 22,
      'KT1B_Satellite_Functional_Test_Procedure.pdf', 'KT1B_Functional_Test_Data_Sheet.pdf'),
     (12, 'KT1B-SAMPLE-DOC-012', 'KT1B-SAMPLE-ATT-012',
      'KT1B-TR-2026-012', 'REQ-2026-012', 'EMC 적합성 시험 절차서',
@@ -1186,8 +1185,7 @@ BEGIN
     IF EXISTS (
         SELECT 1
           FROM docs_menu
-         WHERE auth_site IS NOT NULL
-            OR parent_menu_cd IN ('I', 'B', 'E')
+         WHERE parent_menu_cd IN ('I', 'B', 'E')
             OR COALESCE(menu_url, '') ~* '(^|/)outside/'
             OR COALESCE(menu_url, '') ~*
                '^/inside/(unregisted|outregisted)(/|$)'
@@ -1213,10 +1211,12 @@ BEGIN
 
     IF EXISTS (
         SELECT 1
-          FROM docs_user
-         WHERE auth_site IS DISTINCT FROM 'I'
+          FROM information_schema.columns
+         WHERE table_schema = 'public'
+           AND table_name IN ('docs_menu', 'docs_user')
+           AND column_name = 'auth_site'
     ) THEN
-        RAISE EXCEPTION 'The demo contains a non-internal user marker.';
+        RAISE EXCEPTION 'The demo schema contains a retired portal selector.';
     END IF;
 
     IF to_regclass('public.docs_user_request') IS NOT NULL

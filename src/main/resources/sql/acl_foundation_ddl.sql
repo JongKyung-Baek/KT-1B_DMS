@@ -634,14 +634,14 @@ CREATE INDEX IF NOT EXISTS idx_print_job_item_object
 INSERT INTO docs_menu (
     menu_cd, parent_menu_cd, menu_nm, message_cd, menu_level, menu_type,
     menu_url, sort_seq, tree_type, del_yn, use_yn, tooltip, menu_desc,
-    role_cd, auth_site, menu_icon
+    role_cd, menu_icon
 )
 VALUES (
     'MENU_223', 'ROOT', '이력관리', '', '1', 'T',
     '/inside/history/', 115, 'root', 'N', 'Y',
     '접근·열람·출력 이력 관리',
     '보안 접근 판정과 실제 열람·출력 결과를 구분하여 조회',
-    'ROLE_MENU_223', NULL, ''
+    'ROLE_MENU_223', ''
 )
 ON CONFLICT (menu_cd) DO UPDATE SET
     parent_menu_cd = EXCLUDED.parent_menu_cd,
@@ -655,7 +655,6 @@ ON CONFLICT (menu_cd) DO UPDATE SET
     tooltip = EXCLUDED.tooltip,
     menu_desc = EXCLUDED.menu_desc,
     role_cd = EXCLUDED.role_cd,
-    auth_site = EXCLUDED.auth_site,
     use_yn = 'Y',
     del_yn = 'N';
 
@@ -664,14 +663,14 @@ ON CONFLICT (menu_cd) DO UPDATE SET
 INSERT INTO docs_menu (
     menu_cd, parent_menu_cd, menu_nm, message_cd, menu_level, menu_type,
     menu_url, sort_seq, tree_type, del_yn, use_yn, tooltip, menu_desc,
-    role_cd, auth_site, menu_icon
+    role_cd, menu_icon
 )
 VALUES (
     'MENU_206', 'MENU_223', '접근이력', '', '2', 'M',
     '/inside/distribution/viewPrintHistory/**', 116, 'leaf', 'N', 'Y',
     '자료 접근 및 권한 변경 이력',
     '자료 접근 판정, 다운로드 결과 및 권한 변경 결과 조회',
-    'ROLE_MENU_206', NULL, ''
+    'ROLE_MENU_206', ''
 )
 ON CONFLICT (menu_cd) DO UPDATE SET
     parent_menu_cd = EXCLUDED.parent_menu_cd,
@@ -685,14 +684,13 @@ ON CONFLICT (menu_cd) DO UPDATE SET
     tooltip = EXCLUDED.tooltip,
     menu_desc = EXCLUDED.menu_desc,
     role_cd = EXCLUDED.role_cd,
-    auth_site = EXCLUDED.auth_site,
     use_yn = 'Y',
     del_yn = 'N';
 
 INSERT INTO docs_menu (
     menu_cd, parent_menu_cd, menu_nm, message_cd, menu_level, menu_type,
     menu_url, sort_seq, tree_type, del_yn, use_yn, tooltip, menu_desc,
-    role_cd, auth_site, menu_icon
+    role_cd, menu_icon
 )
 VALUES
     (
@@ -700,14 +698,14 @@ VALUES
         '/inside/history/view/**', 117, 'leaf', 'N', 'Y',
         '기술자료 열람 이력',
         '사용자별 기술자료 열람 허용·차단 및 이전 시스템 열람 기록 조회',
-        'ROLE_MENU_224', NULL, ''
+        'ROLE_MENU_224', ''
     ),
     (
         'MENU_225', 'MENU_223', '출력이력', '', '2', 'M',
         '/inside/history/print/**', 118, 'leaf', 'N', 'Y',
         '기술자료 출력 이력',
         '사용자별 출력 요청과 검증된 성공·실패 결과 조회',
-        'ROLE_MENU_225', NULL, ''
+        'ROLE_MENU_225', ''
     )
 ON CONFLICT (menu_cd) DO UPDATE SET
     parent_menu_cd = EXCLUDED.parent_menu_cd,
@@ -721,7 +719,6 @@ ON CONFLICT (menu_cd) DO UPDATE SET
     tooltip = EXCLUDED.tooltip,
     menu_desc = EXCLUDED.menu_desc,
     role_cd = EXCLUDED.role_cd,
-    auth_site = EXCLUDED.auth_site,
     use_yn = 'Y',
     del_yn = 'N';
 
@@ -772,12 +769,12 @@ UPDATE docs_toolbar_info
 INSERT INTO docs_menu (
     menu_cd, parent_menu_cd, menu_nm, message_cd, menu_level, menu_type,
     menu_url, sort_seq, tree_type, del_yn, use_yn, tooltip, menu_desc,
-    role_cd, auth_site, menu_icon
+    role_cd, menu_icon
 )
 VALUES (
     'MENU_222', 'MENU_214', '보안등급/인가 관리', '', '2', 'M',
     '/inside/system/securityaccess/', 2, 'leaf', 'N', 'Y', '',
-    '파일 보안등급과 사용자 인가등급 관리', 'ROLE_MENU_222', NULL, ''
+    '파일 보안등급과 사용자 인가등급 관리', 'ROLE_MENU_222', ''
 )
 ON CONFLICT (menu_cd) DO UPDATE SET
     parent_menu_cd = EXCLUDED.parent_menu_cd,
@@ -789,7 +786,6 @@ ON CONFLICT (menu_cd) DO UPDATE SET
     tree_type = EXCLUDED.tree_type,
     menu_desc = EXCLUDED.menu_desc,
     role_cd = EXCLUDED.role_cd,
-    auth_site = EXCLUDED.auth_site,
     use_yn = 'Y',
     del_yn = 'N';
 
@@ -1124,20 +1120,18 @@ SELECT 'RG_001',
   FROM docs_menu menu
  WHERE menu.del_yn = 'N'
    AND menu.use_yn = 'Y'
-   AND (menu.auth_site IS NULL OR menu.auth_site IN ('I', 'B'))
    AND NULLIF(BTRIM(menu.role_cd), '') IS NOT NULL
 ON CONFLICT (group_cd, role_cd) DO NOTHING;
 
--- Fail deployment if an assignable internal menu is disconnected from the
--- I root. Runtime queries are defensive too, but bad ACL data must not pass
+-- Fail deployment if an assignable menu is disconnected from the current
+-- ROOT tree. Runtime queries are defensive too, but bad ACL data must not pass
 -- an installation unnoticed.
 DO $$
 BEGIN
     IF NOT EXISTS (
         SELECT 1
           FROM docs_menu
-         WHERE auth_site IS NOT NULL
-            OR parent_menu_cd IN ('I', 'B', 'E')
+         WHERE parent_menu_cd IN ('I', 'B', 'E')
     ) AND EXISTS (
         WITH RECURSIVE eligible AS (
             SELECT menu_cd, parent_menu_cd

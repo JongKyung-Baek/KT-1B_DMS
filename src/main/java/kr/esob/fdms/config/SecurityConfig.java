@@ -3,6 +3,7 @@ package kr.esob.fdms.config;
 import kr.esob.fdms.commonlogic.audit.RequestAuditFilter;
 import kr.esob.fdms.commonlogic.menu.MenuDao;
 import kr.esob.fdms.commonlogic.menu.MenuVO;
+import kr.esob.fdms.commonlogic.viewerintegration.ViewerIntegrationProperties;
 import kr.esob.fdms.controller.inside.organizationmanage.auditlog.AuditLogSessionListener;
 import kr.esob.fdms.controller.login.*;
 import lombok.AllArgsConstructor;
@@ -100,6 +101,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 		// Authentication bootstrap endpoints are the only application URLs that
 		// remain public. Static resources are excluded in configure(WebSecurity).
 		http.authorizeRequests()
+				.antMatchers(HttpMethod.POST,
+						ViewerIntegrationProperties.CALLBACK_PATH).permitAll()
+				.antMatchers(ViewerIntegrationProperties.CALLBACK_PATH).denyAll()
 				.antMatchers(HttpMethod.GET,
 						"/login/loginPage",
 						"/login/duplication",
@@ -161,10 +165,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 			.logoutSuccessHandler(logoutSuccessHandler())
 			.invalidateHttpSession(true)
 			.deleteCookies("JSESSIONID");
-		// All browser mutations use the session-backed token rendered by the
-		// shared JSP fragment. External callbacks remain denied until their
-		// signed interface contract is implemented.
-		http.csrf();
+		// Browser mutations use the session-backed token rendered by the shared
+		// JSP fragment. Only the exact HMAC-authenticated viewer callback path is
+		// excluded from CSRF because it has no browser session.
+		http.csrf().ignoringAntMatchers(ViewerIntegrationProperties.CALLBACK_PATH);
 		http.addFilterBefore(requestAuditFilter, FilterSecurityInterceptor.class);
 
 	}

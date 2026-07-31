@@ -8,9 +8,11 @@ import kr.esob.fdms.commonlogic.fileapi.FileApiClient;
 import kr.esob.fdms.commonlogic.securityacl.FileAccessRequest;
 import kr.esob.fdms.commonlogic.securityacl.SecurityAclService;
 import kr.esob.fdms.commonlogic.systemconfig.SystemConfig;
+import kr.esob.fdms.commonlogic.viewerintegration.ViewerDocumentMetadata;
+import kr.esob.fdms.commonlogic.viewerintegration.ViewerIntegrationService;
+import kr.esob.fdms.commonlogic.viewerintegration.ViewerPreparedLaunch;
 import kr.esob.fdms.commonlogic.viewer.CommonViewerParam;
 import kr.esob.fdms.commonlogic.viewer.CommonViewerService;
-import kr.esob.fdms.commonlogic.viewer.ViewerTicketService;
 import kr.esob.fdms.controller.login.UserVO;
 import kr.esob.fdms.util.StoragePathUtils;
 import lombok.extern.log4j.Log4j2;
@@ -66,7 +68,7 @@ public class DocPdfLinkRequestController extends AbstractController {
 	SecurityAclService securityAclService;
 
 	@Autowired
-	ViewerTicketService viewerTicketService;
+	ViewerIntegrationService viewerIntegrationService;
 
 	private final FileApiClient fileApiClient = new FileApiClient();
 
@@ -133,7 +135,6 @@ public class DocPdfLinkRequestController extends AbstractController {
 
 	//
 
-	@SuppressWarnings("deprecation")
 	@RequestMapping(value="/selectItem2", method=RequestMethod.POST)
 	public String selectItem2(
 			@RequestParam("file") String file,
@@ -141,449 +142,202 @@ public class DocPdfLinkRequestController extends AbstractController {
 			@RequestParam("requestNo") String requestNo,
 			@RequestParam("fileNo") String fileNo,
 			Authentication authentication,
-			Model model) throws UnsupportedEncodingException, ParseException {
-
-		//if(!PortCheck.isPortListening()){
-		//	log.info("asdasdasd");
-		//	return "redirect:/";
-		//}
-
+			Model model) {
 		UserVO userVo = (UserVO) authentication.getPrincipal();
-		//config table에서, 대상파일 경로 조희
-		List<Map<String,Object>> dbConfig = dao.selectDbConfig();
-		String adapDocFilePath="";
-		String adapRepoPath="";
-		String adapViewerPath="";
-		String adapPdfPath="";
-		String adapPdfUrl = "";
-		String orgFileNm="";
-		String cvrtFileNm="";
-		String chkcvrtFilePathNm="";
-		String orgFilePathNm="";
-		String cvrtFilePathNm="";
-		String cvrtFileUrl = "";
-		String dirUrl = "";
-		String swDonwUrl = "";
-		String adapPostUrl = "";
-		String useRedirectMultiple = "";
+		String sourceObjectId = requireText(file, "object identifier");
+		String normalizedFileNo = isPeerReviewType(objectType)
+				? defaultText(fileNo, "1") : requirePositiveFileNo(fileNo);
+		String correlationId = UUID.randomUUID().toString();
 
-		String objectID = "";
-		objectID = file;
+		Map<String, Object> fileParam = new HashMap<String, Object>();
+		fileParam.put("OBJECT_ID", sourceObjectId);
+		fileParam.put("FILE_NO", normalizedFileNo);
 
-		for(Map<String,Object> config : dbConfig) {
-			if("ADAP_ORG_FILE_PATH".equals(getConfigCd(config))) {
-				adapDocFilePath = getConfigValue(config);
-			}
-			if("ADAP_REPO_PATH".equals(getConfigCd(config))) {
-				adapRepoPath = getConfigValue(config);
-			}
-			if("ADAP_VIEWER_PATH".equals(getConfigCd(config))) {
-				adapViewerPath = getConfigValue(config);
-			}
-			if("ADAP_PDF_PATH".equals(getConfigCd(config))) {
-				adapPdfPath = getConfigValue(config);
-			}
-			if("ADAP_PDF_URL".equals(getConfigCd(config))) {
-				adapPdfUrl = getConfigValue(config);
-			}
-			if("SW_DOWN_URL".equals(getConfigCd(config))){
-				swDonwUrl = getConfigValue(config);
-			}
-			if("ADAP_POST_URL".equals(getConfigCd(config))){
-				adapPostUrl = getConfigValue(config);
-			}
-			if("CV_REVISION_LIST_YN".equals(getConfigCd(config))){
-				useRedirectMultiple = getConfigValue(config);
-			}
-		}
-
-		Map<String, Object> map = new HashMap<String, Object>();
-		map.put("OBJECT_ID",objectID);
-		map.put("FILE_NO", fileNo);
-		String aclObjectType = null;
-		if (objectType.equals("DOC") || objectType.equals("문서")) {
-			orgFileNm = dao.selectFilePathNmDoc(map);
-			aclObjectType = "DOCUMENT";
-		} else if (objectType.equals("DRAWING") || objectType.equals("도면")) {
-			orgFileNm = dao.selectFilePathNmDrawing(map);
-			// 경로까지 넣어줘야함
-			orgFileNm = dao.selectFilePathNmDrawing(map);
-			aclObjectType = "DRAWING";
+		String orgFileNm;
+		String baseAclObjectType;
+		if (isDocumentType(objectType)) {
+			orgFileNm = dao.selectFilePathNmDoc(fileParam);
+			baseAclObjectType = "DOCUMENT";
+		} else if (isDrawingType(objectType)) {
+			orgFileNm = dao.selectFilePathNmDrawing(fileParam);
+			baseAclObjectType = "DRAWING";
 		} else if ("SW".equalsIgnoreCase(objectType)) {
-			orgFileNm = dao.selectSwFile(map);
-			// 경로까지 넣어줘야함
-			orgFileNm = dao.selectSwFile(map);
-			aclObjectType = "SW";
-		} else if ("Production".equalsIgnoreCase(objectType)) {
-			orgFileNm = dao.selectProduction(map);
-			// 경로까지 넣어줘야함
-			orgFileNm = dao.selectProduction(map);
-			aclObjectType = "PRODUCT_DOCUMENT";
-		} else if ("Dxf".equalsIgnoreCase(objectType) || "DXF".equalsIgnoreCase(objectType)) {
-			orgFileNm = dao.selectDxf(map);
-			// 경로까지 넣어줘야함
-			orgFileNm = dao.selectDxf(map);
-			aclObjectType = "DXF";
-		} else if ("PEERREVIEW".equalsIgnoreCase(objectType) || "PeerReview".equalsIgnoreCase(objectType)) {
-			orgFileNm = dao.selectPeerReview(map);
-			aclObjectType = "PEER_REVIEW";
-		}
-//		else if (objectType.equals("Dxf")) {
-//			System.out.println("objectType= Dxf = "+objectType);
-//			// 경로까지 넣어줘야함
-//			orgFileNm = dao.selectDxf(map);
-//		}
-		else {
-			// 미등록에 있으면 한번 가져와보자
-//			System.out.println("yskim_test: 미등록자료 호출");
-
-			Map<String, Object> unregParam = new HashMap<String, Object>();
-			unregParam.put("FILE_CD", objectID);
-			unregParam.put("FILE_NO", fileNo);
-
-			orgFileNm = dao.selectFilePathNmUnReg(unregParam);
-//			commonViewerService.getViewFilePath(CommonViewerParam.builder()
-//					.objectId(file)
-//					.fileNo(fileNo)
-//					.objectType("objectType")
-//					.requestType("UNREG")
-//					.build()
-//			);
-
-			objectID = objectID + "_" + fileNo;
-		}
-
-		if (orgFileNm == null || orgFileNm.trim().isEmpty() || aclObjectType == null) {
-			throw new AccessDeniedException("ACL이 적용된 기술자료만 열람할 수 있습니다.");
-		}
-		requireViewAccess(aclObjectType, file, fileNo, requestNo);
-
-		orgFilePathNm = /*adapViewerPath + */orgFileNm;
-			//cvrtFilePathNm = adapPdfPath + orgFileNm+".pdf";
-			//cvrtFileUrl =  adapPdfUrl + "?file=" + "/out/destfile" + orgFileNm + ".esob";
-			//dirUrl = adapPdfUrl + "?file=" + "/out/destfile" + URLEncoder.encode(orgFileNm) + ".esob";
-			cvrtFilePathNm = StoragePathUtils.resolve(
-					adapPdfPath.replace("$", ""), objectID + ".pdf").toString();
-
-			chkcvrtFilePathNm = cvrtFilePathNm;
-			cvrtFileUrl = "";
-			//키 생성 & DOCS_VIEWER_KEY에 insert
-			String disposableKey = "";
-
-			Date now = new Date();
-			// DOCS_VIEWER_KEY table removed: skip key persistence.
-
-			// 뷰어에서 사용자 코드 대신 사용자 이름을 표시하기 위한 인자 전달.
-			String encodedUserName = URLEncoder.encode(userVo.getUsername(), StandardCharsets.UTF_8.toString());
-
-//			dirUrl = adapPdfUrl + "?file=" + "/out/destfile/" + URLEncoder.encode(objectID) + ".esob&user_name=" + userVo.getUserCd() + "&disposable_key=" + disposableKey + "&object_ID=" + objectID ;
-		dirUrl = "";
-
-		if ("SW".equalsIgnoreCase(objectType)) {
-			cacheSwFileApiPdfForViewer(orgFileNm, adapPdfPath, objectID);
-		}
-
-		String fileDownloadUrl = "";
-
-
-		int intCvrt = 10;
-		//intCvrt = cvrtFile.pdfconvert(orgFilePathNm,cvrtFilePathNm);
-
-		File fileExist = new File(chkcvrtFilePathNm);
-
-		if (fileExist.isFile()) {
-			map.put("PATH_NM", fileExist.getPath());
-			map.put("ORG_FILE_NM", fileExist.getName());
-			map.put("FILE_SIZE", fileExist.length());
-			map.put("USER_ID", userVo.getUserCd());
-			map.put("CONVERT_TYPE", "2D");
-			map.put("RESULT_CODE", intCvrt);
-			// convert_log table removed: skip convert log insert.
+			orgFileNm = dao.selectSwFile(fileParam);
+			baseAclObjectType = "SW";
+		} else if (isProductionType(objectType)) {
+			orgFileNm = dao.selectProduction(fileParam);
+			baseAclObjectType = "PRODUCT_DOCUMENT";
+		} else if ("DXF".equalsIgnoreCase(objectType)) {
+			orgFileNm = dao.selectDxf(fileParam);
+			baseAclObjectType = "DXF";
+		} else if (isPeerReviewType(objectType)) {
+			orgFileNm = dao.selectPeerReview(fileParam);
+			baseAclObjectType = "PEER_REVIEW";
 		} else {
-			try{
-//				System.out.println("이게 뭔데 -> " + orgFilePathNm );
-//				System.out.println("이게 뭔데2 -> " + orgFileNm );
-				File fileOrgFilePath = new File(orgFileNm);
-				if(fileOrgFilePath.exists()){
+			throw new AccessDeniedException(
+					"This resource type is not available in the secured viewer.");
+		}
+		if (orgFileNm == null || orgFileNm.trim().isEmpty()) {
+			throw new AccessDeniedException("The secured viewer source file is unavailable.");
+		}
 
-					map.put("PATH_NM", fileOrgFilePath.getPath());
-					map.put("ORG_FILE_NM", fileOrgFilePath.getName());
-					map.put("FILE_SIZE", fileOrgFilePath.length());
-					map.put("USER_ID", userVo.getUserCd());
+		String aclObjectId = sourceObjectId;
+		String aclObjectType = baseAclObjectType;
+		String subFileParent = dao.selectSubFileParent(
+				baseAclObjectType, sourceObjectId, normalizedFileNo);
+		if (subFileParent != null && !subFileParent.trim().isEmpty()) {
+			aclObjectId = subFileParent.trim();
+			aclObjectType = subFileObjectType(baseAclObjectType);
+		}
+		requireViewAccess(aclObjectType, aclObjectId, normalizedFileNo, requestNo);
 
-					for(Map<String,Object> config : dbConfig) {
-						String path = getConfigValue(config);
-						String configCD = getConfigCd(config);
-
-						// 해당 파일의 경로와 디비 상에 있는 경로가 일치할 경우
-						if(path.equals(fileOrgFilePath.getParent())){
-
-							// 2D 라면
-							if(configCD.equals("2D_FILE_PATH") || configCD.equals("DOCUMENT_PATH")||configCD.equals("PRODUCTION_PATH")||configCD.equals("DXF_PATH")||configCD.equals("SW_PATH")){
-								intCvrt = convertToViewerPdf(fileOrgFilePath, cvrtFilePathNm, adapPdfPath, objectID);
-								map.put("CONVERT_TYPE", "2D");
-								map.put("RESULT_CODE", intCvrt);
-								// convert_log table removed: skip convert log insert.
-							}
-
-							// 소프트 웨어
-							else if(false && configCD.equals("SW_PATH")){
-								intCvrt = 20;
-								fileDownloadUrl = swDonwUrl + "download/?fileName="+orgFileNm;
-
-								UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(fileDownloadUrl).build();
-								return "redirect:" + uriComponents.encode().toUri();
-							}
-						}
-						// 23.06.29 (yskim) unreg인 경우
-						else if (fileOrgFilePath.getPath().contains(path)) {
-							if(configCD.equals("UNREG_FILE_PATH")) {
-								intCvrt = convertToViewerPdf(fileOrgFilePath, cvrtFilePathNm, adapPdfPath, objectID);
-								map.put("CONVERT_TYPE", "UNREG");
-								map.put("RESULT_CODE", intCvrt);
-								// convert_log table removed: skip convert log insert.
-
-							}
-
-						} else {
-							// 나머지 Production, SW 등등..
-						}
-					}
-				} else {
-					// 파일이 존재하지 않는다면
-//					System.out.println("로그 체크1");
-//					intCvrt = cvrtFile.pdfconvert(orgFilePathNm,cvrtFilePathNm);
+		java.nio.file.Path requestPdf = viewerIntegrationService.createRequestPdf(correlationId);
+		String cvrtFilePathNm = requestPdf.toString();
+		String viewerWorkDirectory = requestPdf.getParent().toString();
+		try {
+			boolean prepared = false;
+			if ("SW".equals(baseAclObjectType)) {
+				prepared = cacheSwFileApiPdfForViewer(orgFileNm, requestPdf);
+			}
+			if (!prepared) {
+				File sourceFile = new File(orgFileNm);
+				if (convertToViewerPdf(
+						sourceFile, cvrtFilePathNm, viewerWorkDirectory, correlationId) == 0) {
+					model.addAttribute("convertFailRestricted", "Y");
+					return "/inside/distribution/docConvertFail";
 				}
-
-			}catch(Exception e){
 			}
-		}
-
-
-
-
-		if (intCvrt == 0 || !new File(cvrtFilePathNm).isFile()) {
-			model.addAttribute("convertFailRestricted", "Y");
-			return "/inside/distribution/docConvertFail";
-		} else {
-			CommonViewerParam param = new CommonViewerParam();
-			param.setObjectId(objectID);
-			param.setRequestNo(requestNo);
-			param.setFileNo(fileNo);
-			param.setFileNo(fileNo);
-
-			Date downDate = new Date();
-//			commonViewerService.updatePrintCnt(param);
-
-			Map<String, String> paramMap = new HashMap<>();
-			paramMap.put("OBJECT_ID", objectID);
-			paramMap.put("object_id", objectID);
-
-			if (objectType.equals("DOC") || objectType.equals("문서")) {
-				paramMap.put("table", "docs_document");
-			} else if (objectType.equals("DRAWING") || objectType.equals("도면")) {
-				paramMap.put("table", "docs_drawing");
-			} else if (objectType.equals("Production")) {
-				paramMap.put("table", "docs_product_document");
-			}else if (objectType.equals("Dxf")) {
-				paramMap.put("table", "docs_dxf_document");
-			} else if ("PEERREVIEW".equalsIgnoreCase(objectType) || "PeerReview".equalsIgnoreCase(objectType)) {
-				paramMap.put("table", "docs_peerreview");
+			if (!Files.isRegularFile(requestPdf)) {
+				model.addAttribute("convertFailRestricted", "Y");
+				return "/inside/distribution/docConvertFail";
 			}
 
-			CommonViewerParam ticketResource = new CommonViewerParam();
-			ticketResource.setObjectType(aclObjectType);
-			ticketResource.setObjectId(file);
-			ticketResource.setFileNo(fileNo);
-			ticketResource.setRequestNo(requestNo);
-			String ticketKey = viewerTicketService.issue(ticketResource, objectID + ".pdf");
-			String protectedFileUrl = ServletUriComponentsBuilder.fromCurrentContextPath()
-					.path("/common/viewer/pdf-cache/")
-					.path(ticketKey)
-					.build()
-					.toUriString();
-			dirUrl = requireSecureViewerUrl(adapPdfUrl)
-					+ "?file=" + URLEncoder.encode(protectedFileUrl, StandardCharsets.UTF_8.toString())
-					+ "&user_name=" + URLEncoder.encode(userVo.getUsername(), StandardCharsets.UTF_8.toString())
-					+ "&object_ID=" + URLEncoder.encode(objectID, StandardCharsets.UTF_8.toString());
-
-			String insertDt = dao.selectInsertDt(paramMap);
-			String formattedInsertDt = "";
-			if (insertDt != null && !insertDt.isEmpty()) {
-				formattedInsertDt = formatInsertDt(insertDt);
-				dirUrl += "&insert_dt=" + formattedInsertDt;
-			}
-
-			// DOCS_VIEWER_LOG에 viewer 정보 추가
-			dao.insertViewerData(objectID, userVo.getUserCd(), downDate);
-
-
-//			// DOCS_VIEWER_KEY에 있는 key 삭제
-//			dao.deleteKey(objectID,disposableKey);
-
+			Map<String, String> metadataParam = new HashMap<String, String>();
+			metadataParam.put("OBJECT_ID", sourceObjectId);
+			metadataParam.put("FILE_NO", normalizedFileNo);
 			String distributionType = "";
 			String drawingNo = "";
 			String fileName = "";
 			String revision = "";
-
-			Map<String, String> paramsMap = new HashMap<>();
-			paramsMap.put("OBJECT_ID", objectID);
-			paramsMap.put("FILE_NO", fileNo);
-
-			List<Map<String, Object>> revisionList = new ArrayList<>();
-
-			List<Map<String, Object>> revisions =  Collections.emptyList();
-			if (objectType.equals("DOC") || objectType.equals("문서")) {
+			if ("DOCUMENT".equals(baseAclObjectType)) {
 				distributionType = "IOC";
-				drawingNo = dao.selectDocumentNoDoc(paramsMap);
-				fileName = dao.selectFileNmDoc(paramsMap);
-				revision = null;
-			} else if (objectType.equals("DRAWING") || objectType.equals("도면") || objectType.equals("도면/공정서")) {
+				drawingNo = dao.selectDocumentNoDoc(metadataParam);
+				fileName = dao.selectFileNmDoc(metadataParam);
+			} else if ("DRAWING".equals(baseAclObjectType)) {
 				distributionType = "FunctionCode";
-				drawingNo = dao.selectDrawingNoDrawing(paramsMap);
-				fileName = dao.selectFileNmDrawing(paramsMap);
-				revision = dao.selectRevisionDrawing(paramsMap);
-				if("true".equalsIgnoreCase(useRedirectMultiple)){
-					revisions = dao.selectRevisionListDrawing(paramsMap);
-				}
-
-				if (revisions != null && revisions.size() > 1) {
-					// 여러 리비전이 존재하면 revisionList 채움
-					for (Map<String, Object> rev : revisions) {
-						Map<String, Object> revMap = new HashMap<>();
-						revMap.put("objectID", rev.get("OBJECT_ID"));
-						revMap.put("revision", rev.get("REV_NO"));
-						revisionList.add(revMap);
-					}
-				}
-
-			} else if ("Production".equalsIgnoreCase(objectType) || objectType.equals("생산기술자료")) {
+				drawingNo = dao.selectDrawingNoDrawing(metadataParam);
+				fileName = dao.selectFileNmDrawing(metadataParam);
+				revision = dao.selectRevisionDrawing(metadataParam);
+			} else if ("PRODUCT_DOCUMENT".equals(baseAclObjectType)) {
 				distributionType = "MRB";
-				drawingNo = dao.selectDrawingNoCP(paramsMap);
-				fileName = dao.selectFileNmCP(paramsMap);
-				revision = dao.selectRevisionCP(paramsMap);
-
-				if("true".equalsIgnoreCase(useRedirectMultiple)) {
-					revisions = dao.selectRevisionListCP(paramsMap);
-				}
-				if (revisions != null && revisions.size() > 1) {
-					// 여러 리비전이 존재하면 revisionList 채움
-					for (Map<String, Object> rev : revisions) {
-						Map<String, Object> revMap = new HashMap<>();
-						revMap.put("objectID", rev.get("OBJECT_ID"));
-						revMap.put("revision", rev.get("REV_NO"));
-						revisionList.add(revMap);
-					}
-				}
-
-			} else if ("Dxf".equalsIgnoreCase(objectType) || "DXF".equalsIgnoreCase(objectType)) {
+				drawingNo = dao.selectDrawingNoCP(metadataParam);
+				fileName = dao.selectFileNmCP(metadataParam);
+				revision = dao.selectRevisionCP(metadataParam);
+			} else if ("DXF".equals(baseAclObjectType)) {
 				distributionType = "PMPCB";
-				drawingNo = dao.selectDrawingNoDXF(paramsMap);
-				fileName = dao.selectFileNmDXF(paramsMap);
-				revision = dao.selectRevisionDXF(paramsMap);
-
-				if("true".equalsIgnoreCase(useRedirectMultiple)) {
-					revisions = dao.selectRevisionListDXF(paramsMap);
-				}
-				if (revisions != null && revisions.size() > 1) {
-					// 여러 리비전이 존재하면 revisionList 채움
-					for (Map<String, Object> rev : revisions) {
-						Map<String, Object> revMap = new HashMap<>();
-						revMap.put("objectID", rev.get("OBJECT_ID"));
-						revMap.put("revision", rev.get("REV_NO"));
-						revisionList.add(revMap);
-					}
-				}
-			} else if ("PEERREVIEW".equalsIgnoreCase(objectType) || "PeerReview".equalsIgnoreCase(objectType)) {
+				drawingNo = dao.selectDrawingNoDXF(metadataParam);
+				fileName = dao.selectFileNmDXF(metadataParam);
+				revision = dao.selectRevisionDXF(metadataParam);
+			} else if ("PEER_REVIEW".equals(baseAclObjectType)) {
 				distributionType = "PEERREVIEW";
-				drawingNo = dao.selectPeerReviewNo(paramsMap);
-				fileName = dao.selectFileNmPeerReview(paramsMap);
-				revision = null;
-
-			}
-			// 2개 이상의 리비전을 가진 파일이라면, 전부 전송
-			if ("SW".equalsIgnoreCase(objectType)) {
+				drawingNo = dao.selectPeerReviewNo(metadataParam);
+				fileName = dao.selectFileNmPeerReview(metadataParam);
+			} else if ("SW".equals(baseAclObjectType)) {
 				distributionType = "CCB";
-				drawingNo = dao.selectSwNo(paramsMap);
-				fileName = dao.selectFileNmSW(paramsMap);
-				revision = dao.selectRevisionSW(paramsMap);
+				drawingNo = dao.selectSwNo(metadataParam);
+				fileName = dao.selectFileNmSW(metadataParam);
+				revision = dao.selectRevisionSW(metadataParam);
 			}
 
-			String historyFileName = (fileName != null && !fileName.isEmpty()) ? fileName : orgFileNm;
-			historyFileName = toFileNameOnly(historyFileName);
-			dao.insertViewPrintHistory(
-					distributionType,
-					drawingNo,
-					objectID,
-					historyFileName,
-					revision,
-					userVo.getUserId(),
-					userVo.getUserNm(),
-					"VIEWING",
-					downDate
-			);
+			ViewerDocumentMetadata metadata = new ViewerDocumentMetadata();
+			metadata.setCorrelationId(correlationId);
+			metadata.setObjectType(baseAclObjectType);
+			metadata.setObjectId(sourceObjectId);
+			metadata.setAclObjectType(aclObjectType);
+			metadata.setAclObjectId(aclObjectId);
+			metadata.setFileNo(normalizedFileNo);
+			metadata.setFileName(toFileNameOnly(firstNonBlank(fileName, orgFileNm)));
+			metadata.setUserCd(userVo.getUserCd());
+			metadata.setUserId(userVo.getUserId());
+			metadata.setUserName(firstNonBlank(userVo.getUserNm(), userVo.getUserId()));
+			metadata.setAuthority("2");
+			metadata.setRevision(revision);
+			metadata.setRequestNo(requestNo);
+			metadata.setDistributionType(distributionType);
+			metadata.setDrawingNo(drawingNo);
 
-			String viewerAuthority = "77";
-			if ("PEERREVIEW".equalsIgnoreCase(distributionType)) {
-				Map<String, Object> authorityInfo = dao.selectPeerReviewAuthorityInfo(paramsMap);
-				String loginUserNm = Optional.ofNullable(userVo.getUserNm()).orElse("").trim();
-				String insertUserNm = Optional.ofNullable(authorityInfo)
-						.map(m -> m.get("INSERT_USER_NM") != null ? m.get("INSERT_USER_NM") : m.get("insert_user_nm"))
-						.map(String::valueOf)
-						.orElse("")
-						.trim();
-				String approver = Optional.ofNullable(authorityInfo)
-						.map(m -> m.get("APPROVER") != null ? m.get("APPROVER") : m.get("approver"))
-						.map(String::valueOf)
-						.orElse("");
-
-				boolean isRegistrant = !loginUserNm.isEmpty() && loginUserNm.equalsIgnoreCase(insertUserNm);
-				boolean isApprover = Arrays.stream(approver.split(","))
-						.map(String::trim)
-						.filter(s -> !s.isEmpty())
-						.anyMatch(id -> id.equalsIgnoreCase(loginUserNm));
-
-				viewerAuthority = (isRegistrant || isApprover) ? "112" : "111";
-			}
-
-			if (false && !revisionList.isEmpty()) {
-				Map<String, Object> revisionParams  = new HashMap<>();
-				revisionParams .put("authority", viewerAuthority);
-				revisionParams .put("userName", userVo.getUserNm());
-				revisionParams .put("userID", userVo.getUserId());
-				revisionParams .put("revisionList", revisionList);
-				revisionParams.put("objectID", objectID);
-				revisionParams.put("finalURL", dirUrl); // 최신 리비전 기준 URL
-				revisionParams.put("releasedToRIWatermarkYn", getReleasedToRIWatermarkYn(userVo));//260630 kt1b
-				model.addAttribute("params", revisionParams );
-				return handleRedirectMultiple(revisionParams , model);
-			}
-
-			Map<String, String> params = new HashMap<>();
-			params.put("finalURL", dirUrl);
-			params.put("url", requireSecureViewerUrl(adapPostUrl));
-			params.put("userName", userVo.getUserNm());
-			params.put("userNameBase64", Base64.getEncoder().encodeToString(
-					Optional.ofNullable(userVo.getUserNm()).orElse("")
-							.getBytes(StandardCharsets.UTF_8)));
-			params.put("userID", userVo.getUserId());
-			params.put("objectID", objectID);
-			params.put("requestNo", requestNo);
-			params.put("distributionType", distributionType);
-			params.put("orgFileNm", orgFileNm);
-			params.put("drawingNo", drawingNo);
-			params.put("fileName", toFileNameOnly(fileName));
-			params.put("revision", revision);
-			params.put("insertDt", formattedInsertDt);
-			params.put("authority", viewerAuthority);
-			params.put("filePath","");
-			params.put("releasedToRIWatermarkYn", getReleasedToRIWatermarkYn(userVo));//260630 kt1b
+			ViewerPreparedLaunch launch =
+					viewerIntegrationService.prepareLaunch(requestPdf, metadata);
+			Map<String, String> params = new LinkedHashMap<String, String>();
+			params.put("url", launch.getLaunchUri().toString());
+			params.put("launchToken", launch.getLaunchToken());
 			return handleRedirect(params, model);
-
-//			return "redirect:"+dirUrl;
+		} finally {
+			try {
+				Files.deleteIfExists(requestPdf);
+			} catch (Exception exception) {
+				log.warn("Viewer request PDF cleanup failed. correlationId={}", correlationId);
+			}
 		}
-		//return "redirect:http://192.168.190.1:7442/web/viewer.html?file="+adapViewerPath;
+	}
 
+	boolean isDocumentType(String objectType) {
+		return "DOC".equalsIgnoreCase(objectType)
+				|| "DOCUMENT".equalsIgnoreCase(objectType)
+				|| "문서".equals(objectType);
+	}
+
+	boolean isDrawingType(String objectType) {
+		return "DRAWING".equalsIgnoreCase(objectType)
+				|| "도면".equals(objectType)
+				|| "도면·공정서".equals(objectType)
+				|| "도면/공정서".equals(objectType);
+	}
+
+	boolean isProductionType(String objectType) {
+		return "PRODUCTION".equalsIgnoreCase(objectType)
+				|| "PRODUCT_DOCUMENT".equalsIgnoreCase(objectType)
+				|| "생산기술자료".equals(objectType);
+	}
+
+	private boolean isPeerReviewType(String objectType) {
+		return "PEERREVIEW".equalsIgnoreCase(objectType)
+				|| "PEER_REVIEW".equalsIgnoreCase(objectType);
+	}
+
+	private String subFileObjectType(String baseType) {
+		if ("DOCUMENT".equals(baseType)) return "DOCUMENT_SUB";
+		if ("DRAWING".equals(baseType)) return "DRAWING_SUB";
+		if ("SW".equals(baseType)) return "SW_SUB";
+		if ("PRODUCT_DOCUMENT".equals(baseType)) return "PRODUCT_DOCUMENT_SUB";
+		if ("DXF".equals(baseType)) return "DXF_SUB";
+		return baseType;
+	}
+
+	private String requireText(String value, String label) {
+		String normalized = value == null ? "" : value.trim();
+		if (normalized.isEmpty()) {
+			throw new IllegalArgumentException(label + " is required.");
+		}
+		return normalized;
+	}
+
+	private String defaultText(String value, String fallback) {
+		String normalized = value == null ? "" : value.trim();
+		return normalized.isEmpty() ? fallback : normalized;
+	}
+
+	private String requirePositiveFileNo(String value) {
+		String normalized = requireText(value, "file number");
+		if (!normalized.matches("[1-9][0-9]{0,9}")) {
+			throw new IllegalArgumentException("file number must be a positive integer.");
+		}
+		return normalized;
+	}
+
+	private String firstNonBlank(String first, String second) {
+		return first == null || first.trim().isEmpty()
+				? defaultText(second, "") : first.trim();
 	}
 
 	private String handleRedirect(Map<String, String> params, Model model) {
@@ -620,8 +374,14 @@ public class DocPdfLinkRequestController extends AbstractController {
 				return 0;
 			}
 
-			Files.copy(convertedFile.toPath(), targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-			return targetFile.isFile() ? 1 : 0;
+			try {
+				Files.copy(convertedFile.toPath(), targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+				return targetFile.isFile() ? 1 : 0;
+			} finally {
+				if (!convertedFile.toPath().equals(targetFile.toPath())) {
+					Files.deleteIfExists(convertedFile.toPath());
+				}
+			}
 		} catch (Exception e) {
 			log.error("Viewer PDF convert failed. input={}, target={}", inputFile, targetPdfPath, e);
 			return 0;
@@ -876,28 +636,29 @@ public class DocPdfLinkRequestController extends AbstractController {
 		return result;
 	}
 	
-	private void cacheSwFileApiPdfForViewer(String filePathNm, String adapPdfPath, String objectId) {
+	private boolean cacheSwFileApiPdfForViewer(
+			String filePathNm, java.nio.file.Path requestPdf) {
+		try {
+			if (filePathNm != null && Files.isRegularFile(java.nio.file.Path.of(filePathNm.trim()))) {
+				return false;
+			}
+		} catch (java.nio.file.InvalidPathException ignored) {
+			// Non-local repository identifiers are parsed by splitFileApiPath below.
+		}
 		String[] fileApiPath = splitFileApiPath(filePathNm);
 		if (fileApiPath == null) {
-			return;
-		}
-		if (adapPdfPath == null || adapPdfPath.trim().isEmpty()) {
-			throw new IllegalStateException("ADAP_PDF_PATH is empty");
-		}
-		String targetFileName = objectId + ".pdf";
-		File dir = new File(adapPdfPath.replace("$", "").trim());
-		if (!dir.exists() && !dir.mkdirs()) {
-			throw new IllegalStateException("Viewer cache directory cannot be created: " + dir.getAbsolutePath());
-		}
-		File target = new File(dir, targetFileName);
-		if (target.isFile() && target.length() > 0) {
-			return;
+			return false;
 		}
 		byte[] bytes = fileApiClient.download(fileApiPath[1], fileApiPath[0]);
 		try {
-			Files.write(target.toPath(), bytes);
+			java.nio.file.Path parent = requestPdf.getParent();
+			if (parent != null) {
+				Files.createDirectories(parent);
+			}
+			Files.write(requestPdf, bytes);
+			return true;
 		} catch (Exception e) {
-			throw new IllegalStateException("Viewer cache write failed: " + target.getAbsolutePath(), e);
+			throw new IllegalStateException("Viewer request PDF write failed.", e);
 		}
 	}
 

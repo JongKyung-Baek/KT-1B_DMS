@@ -51,6 +51,12 @@ class FreshDatabaseMigrationContractTest {
     @Test
     void aclAndPortalCleanupRunBeforeSampleReset() throws IOException {
         String manifest = Files.readString(MANIFEST, StandardCharsets.UTF_8);
+        String cleanup = Files.readString(
+                SQL_DIRECTORY.resolve("internal_only_cleanup_ddl.sql"),
+                StandardCharsets.UTF_8);
+        String runner = Files.readString(
+                Path.of("db", "Recreate-Kt1bDatabase.ps1"),
+                StandardCharsets.UTF_8);
 
         assertThat(manifest.indexOf("acl_foundation_ddl.sql"))
                 .isLessThan(manifest.indexOf("internal_only_cleanup_ddl.sql"));
@@ -59,5 +65,12 @@ class FreshDatabaseMigrationContractTest {
         assertThat(manifest)
                 .contains("\\set ON_ERROR_STOP on")
                 .contains("\\if :include_sample_data");
+        assertThat(cleanup)
+                .contains("ALTER TABLE public.docs_menu DROP COLUMN IF EXISTS auth_site")
+                .contains("ALTER TABLE public.docs_user DROP COLUMN IF EXISTS auth_site")
+                .contains("information_schema.columns");
+        assertThat(runner)
+                .contains("table_name IN ('docs_menu', 'docs_user')")
+                .contains("portalSelectorColumns");
     }
 }

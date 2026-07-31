@@ -51,6 +51,14 @@ public class DocPdfLinkRequestDao extends AbstractDao {
 		return (String) obj(prefix + "selectPeerReview", param);
 	}
 
+	public String selectSubFileParent(String objectType, String objectId, String fileNo) {
+		Map<String, Object> param = new HashMap<String, Object>();
+		param.put("objectType", objectType);
+		param.put("objectId", objectId);
+		param.put("fileNo", fileNo);
+		return (String) obj(prefix + "selectSubFileParent", param);
+	}
+
 	public List<DocPdfLinkRequestVO> selectList(Object param){
 		return list(prefix + "selectList", param);
 	}

@@ -9,6 +9,32 @@
 
 BEGIN;
 
+-- Capture external menu markers only while upgrading the legacy dump. The
+-- physical selector column is removed later, so repeat runs must not reference
+-- it statically.
+CREATE TEMP TABLE kt1b_legacy_external_menu (
+    menu_cd varchar(32) PRIMARY KEY
+) ON COMMIT DROP;
+
+DO $capture_external_menu$
+BEGIN
+    IF EXISTS (
+        SELECT 1
+          FROM information_schema.columns
+         WHERE table_schema = 'public'
+           AND table_name = 'docs_menu'
+           AND column_name = 'auth_site'
+    ) THEN
+        EXECUTE $sql$
+            INSERT INTO kt1b_legacy_external_menu (menu_cd)
+            SELECT menu_cd
+              FROM public.docs_menu
+             WHERE auth_site = 'E'
+        $sql$;
+    END IF;
+END
+$capture_external_menu$;
+
 CREATE TEMP TABLE kt1b_removed_menu ON COMMIT DROP AS
 WITH RECURSIVE removed_menu (
     menu_cd,
@@ -23,7 +49,7 @@ WITH RECURSIVE removed_menu (
      FROM docs_menu menu
      WHERE COALESCE(menu.use_yn, 'N') <> 'Y'
         OR COALESCE(menu.del_yn, 'Y') <> 'N'
-        OR menu.auth_site = 'E'
+        OR menu.menu_cd IN (SELECT menu_cd FROM kt1b_legacy_external_menu)
         OR menu.parent_menu_cd = 'E'
         OR COALESCE(menu.menu_url, '') ~* '(^|/)outside/'
         OR COALESCE(menu.menu_url, '') ~*
@@ -116,31 +142,44 @@ DELETE FROM docs_rel_role_group assignment
 DELETE FROM docs_role_group
  WHERE group_code = 'RG_006';
 
--- Shared rows become ordinary internal rows. Retained external identities are
--- disabled before their marker is normalized so historical foreign-key
--- references do not force destructive user deletion.
-UPDATE docs_user
-   SET use_yn = 'N',
-       del_yn = 'Y',
-       role_group = NULL,
-       auth_site = 'I'
- WHERE auth_site = 'E'
-    OR role_group = 'RG_006';
-
-UPDATE docs_user
-   SET auth_site = 'I'
- WHERE auth_site = 'B'
-    OR auth_site IS NULL
-    OR BTRIM(auth_site) = '';
+-- Disable retained external identities before removing the legacy user portal
+-- selector. Dynamic SQL keeps this migration repeatable after the column has
+-- already been removed.
+DO $cleanup_external_user$
+BEGIN
+    IF EXISTS (
+        SELECT 1
+          FROM information_schema.columns
+         WHERE table_schema = 'public'
+           AND table_name = 'docs_user'
+           AND column_name = 'auth_site'
+    ) THEN
+        EXECUTE $sql$
+            UPDATE public.docs_user
+               SET use_yn = 'N',
+                   del_yn = 'Y',
+                   role_group = NULL
+             WHERE auth_site = 'E'
+                OR role_group = 'RG_006'
+        $sql$;
+    ELSE
+        UPDATE public.docs_user
+           SET use_yn = 'N',
+               del_yn = 'Y',
+               role_group = NULL
+         WHERE role_group = 'RG_006';
+    END IF;
+END
+$cleanup_external_user$;
 
 UPDATE docs_menu
    SET parent_menu_cd = 'ROOT'
  WHERE parent_menu_cd IN ('I', 'B');
 
--- AUTH_SITE was a portal selector. The application now has one menu catalog,
--- so retained menu rows carry no internal/external marker.
-UPDATE docs_menu
-   SET auth_site = NULL;
+-- The application now has one portal. Remove both physical selector columns
+-- after their legacy values have served the one-time cleanup above.
+ALTER TABLE public.docs_menu DROP COLUMN IF EXISTS auth_site;
+ALTER TABLE public.docs_user DROP COLUMN IF EXISTS auth_site;
 
 -- Two active user-management actions were orphaned in the legacy dump. Attach
 -- them to the current user-management menu so assignment and runtime ACLs use
@@ -286,8 +325,7 @@ BEGIN
     IF EXISTS (
         SELECT 1
           FROM docs_menu
-         WHERE auth_site IS NOT NULL
-            OR parent_menu_cd IN ('I', 'B', 'E')
+         WHERE parent_menu_cd IN ('I', 'B', 'E')
             OR COALESCE(menu_url, '') ~* '(^|/)outside/'
             OR COALESCE(menu_url, '') ~*
                '^/inside/(unregisted|outregisted)(/|$)'
@@ -385,10 +423,12 @@ BEGIN
 
     IF EXISTS (
         SELECT 1
-          FROM docs_user
-         WHERE auth_site IS DISTINCT FROM 'I'
+          FROM information_schema.columns
+         WHERE table_schema = 'public'
+           AND table_name IN ('docs_menu', 'docs_user')
+           AND column_name = 'auth_site'
     ) THEN
-        RAISE EXCEPTION 'A non-internal user marker remains after cleanup.';
+        RAISE EXCEPTION 'A retired portal selector column remains after cleanup.';
     END IF;
 
     IF EXISTS (

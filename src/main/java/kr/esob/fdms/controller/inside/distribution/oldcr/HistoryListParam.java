@@ -14,5 +14,4 @@ public class HistoryListParam extends CommonParam {
 	private String state2;					// 진행상태
 	private String startCreationDate;		// 요청일
 	private String closeCreationDate;		// 요청일
-	private String outUserYn;				// 외부사용자여부
 }

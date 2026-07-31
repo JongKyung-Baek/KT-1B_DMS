@@ -41,5 +41,6 @@ psql -U myuser -d kt1b -v ON_ERROR_STOP=1 \
 
 The local sample postcondition is 26 active database menu records, four
 visible navigation roots, 25 assignable menu roles, no portal-wide wildcard
-ACL, four security grades, six users, six departments, and 16 documents with
-one main and one supplementary file each.
+ACL, no `AUTH_SITE` column on `DOCS_MENU` or `DOCS_USER`, four security grades,
+six users, six departments, and 16 documents with one main and one
+supplementary file each.

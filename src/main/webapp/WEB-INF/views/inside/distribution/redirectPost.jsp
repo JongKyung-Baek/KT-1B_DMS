@@ -1,5 +1,4 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <!DOCTYPE html>
 <html lang="ko">
@@ -16,13 +15,8 @@
 <body>
 <div class="loader">Please wait...</div>
 <form id="postForm" action="${fn:escapeXml(params.url)}" method="POST" accept-charset="UTF-8">
-    <c:forEach items="${params}" var="entry">
-        <c:if test="${entry.key ne 'url' and entry.key ne 'userName'}">
-            <input type="hidden"
-                   name="${fn:escapeXml(entry.key)}"
-                   value="${fn:escapeXml(entry.value)}">
-        </c:if>
-    </c:forEach>
+    <input type="hidden" name="launchToken"
+           value="${fn:escapeXml(params.launchToken)}">
 </form>
 <script>
     window.addEventListener('load', function () {

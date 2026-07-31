@@ -184,7 +184,6 @@
 <!--			GROUP_CODE AS groupCd-->
 <!--			, GROUP_NM AS groupNm-->
 <!--		FROM DOCS_ROLE_GROUP-->
-<!--		WHERE GROUP_CODE != 'RG_006'	/* 외부업체 */-->
 <!--		AND GROUP_CODE != 'RG_001'		/* 관리자 */-->
 <!--		AND GROUP_CODE != 'RG_009'		/* 일반사용자 */-->
 <!--		AND USE_YN = 'Y'-->
@@ -364,8 +363,7 @@
 		GROUP_CODE AS groupCd,
 		GROUP_NM AS groupNm
 	FROM DOCS_ROLE_GROUP
-	WHERE GROUP_CODE NOT IN ('RG_006')
-	  AND USE_YN = 'Y'
+	WHERE USE_YN = 'Y'
 	ORDER BY INSERT_ORDER
 </select>
 

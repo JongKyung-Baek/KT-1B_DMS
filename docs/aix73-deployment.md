@@ -110,19 +110,19 @@ psql -h <pg17-host> -p 5432 -U "$KT1B_DB_USERNAME" -d kt1b \
 
 ### 5.1 HTTPS 전송·뷰어 URL
 
-- 레거시 파일 전송에 사용하는 `SERVER_URL_INSIDE`는 `https://<host>[:port]/<base-path>` 형태의 HTTPS base URL이어야 한다.
-- 전송 base URL에는 사용자정보(`user:password@`), query string, fragment를 넣지 않는다. 애플리케이션이 전송 endpoint 경로를 뒤에 추가한다.
-- 운영의 `ADAP_PDF_URL`, `VIEWER_URL` 및 그 밖의 `ADAP_*_URL` 뷰어 endpoint는 HTTPS로 구성한다. 코드가 허용하는 loopback HTTP 예외는 Windows 로컬 개발용일 뿐 AIX 운영 설정에 사용하지 않는다.
+- 신규 외부 뷰어 연동은 `TDMS_VIEWER_BASE_URL`에 HTTPS origin만 설정하고, `/api/integrations/tdms/v1/documents`, `/api/integrations/tdms/v1/launch`, `/api/integrations/cv/v1/events` 고정 경로를 사용한다.
+- `ADAP_PDF_URL`, `ADAP_POST_URL` 및 `/cv_post`는 신규 연동에서 사용하지 않는다. 받은 덤프의 loopback ADAP 주소는 `viewer_integration_ddl.sql`이 제거한다.
 - 브라우저가 접근하는 공개 애플리케이션 URL과 뷰어가 다시 호출하는 파일 URL도 HTTPS여야 하며, reverse proxy의 외부 host·port·context path와 일치해야 한다.
 - 상대 서버 인증서 체인을 AIX JVM의 전용 truststore에 등록하고 `javax.net.ssl.trustStore` 계열 옵션으로 지정한다. 인증서 또는 호스트명 검증을 우회하지 않는다. 자체서명 인증서를 사용한다면 운영 승인된 CA 또는 인증서를 먼저 배포한다.
 
 URL 예시는 실제 주소가 아닌 placeholder만 사용한다.
 
 ```text
-SERVER_URL_INSIDE=https://<inside-transfer-host>/<base-path>/
-ADAP_PDF_URL=https://<viewer-host>/<viewer-path>
-VIEWER_URL=https://<viewer-host>/<viewer-path>/
+TDMS_VIEWER_BASE_URL=https://<viewer-host>:<port>
+TDMS_VIEWER_ENABLED=false
 ```
+
+client ID, callback client ID, shared secret 및 Windows/AIX 활성화 절차는 [viewer-integration.md](viewer-integration.md)를 따른다. shared secret은 DB나 이 파일에 저장하지 않는다.
 
 ### 5.2 외부연계 스케줄러
 

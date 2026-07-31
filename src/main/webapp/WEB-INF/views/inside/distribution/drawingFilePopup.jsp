@@ -50,7 +50,7 @@
 				}
 
 				var objectId = rowdata.objectId || "";
-				var fileNo = useSubFileNo ? (rowdata.fileNo || "") : "";
+				var fileNo = rowdata.fileNo || "";
 
 				return '<a href="javascript:void(0);" class="drawing-file-link"'
 					+ ' data-object-id="' + escapeAttr(objectId) + '"'

@@ -75,10 +75,6 @@ public class CreateExcelService {
 
 		UserVO user = (UserVO) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 		paramMap.put("aclUserCd", user.getUserCd());
-		if("gridOutDistributionOldHistoryList".equals(paramMap.get("gridId"))) {
-			paramMap.put("companyCode", user.getCompanyCd());
-		}
-
 		int totalCount = checkExcelCount(paramMap);
 
 		String excelFilePath = getExcelFileName(rootAbsolutePath.toString());
@@ -113,10 +109,6 @@ public class CreateExcelService {
 
 		UserVO user = (UserVO) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 		paramMap.put("aclUserCd", user.getUserCd());
-		if("gridOutDistributionOldHistoryList".equals(paramMap.get("gridId"))) {
-			paramMap.put("companyCode", user.getCompanyCd());
-		}
-
 		int totalCount = checkExcelCount(paramMap);
 
 		String excelFilePath = getExcelFileName(rootAbsolutePath.toString());

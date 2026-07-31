@@ -28,7 +28,8 @@ class InternalOnlyDatabaseCleanupContractTest {
         String sql = read(CLEANUP);
 
         assertTrue(sql.contains("WITH RECURSIVE removed_menu"));
-        assertTrue(sql.contains("menu.auth_site = 'E'"));
+        assertTrue(sql.contains("WHERE auth_site = 'E'"));
+        assertTrue(sql.contains("kt1b_legacy_external_menu"));
         assertTrue(sql.contains("'(^|/)outside/'"));
         assertTrue(sql.contains("'^/inside/(unregisted|outregisted)(/|$)'"));
         assertTrue(sql.contains(
@@ -47,7 +48,10 @@ class InternalOnlyDatabaseCleanupContractTest {
                 "An orphan menu-role assignment remains."));
         assertTrue(sql.contains("DELETE FROM docs_role_group"));
         assertTrue(sql.contains("group_code = 'RG_006'"));
-        assertTrue(sql.contains("SET auth_site = NULL"));
+        assertTrue(sql.contains(
+                "ALTER TABLE public.docs_menu DROP COLUMN IF EXISTS auth_site"));
+        assertTrue(sql.contains(
+                "ALTER TABLE public.docs_user DROP COLUMN IF EXISTS auth_site"));
         assertTrue(sql.contains("SET parent_menu_cd = 'ROOT'"));
         assertTrue(sql.contains("'MENU_013', 'MENU_071', 'MENU_214', 'MENU_223'"));
         assertTrue(sql.contains("toolbarSystemMenu"));
@@ -88,20 +92,18 @@ class InternalOnlyDatabaseCleanupContractTest {
     }
 
     @Test
-    void demoBuilderRunsCleanupBeforeCreatingSampleData() throws IOException {
+    void demoBuilderRunsFreshManifestAndSampleDoesNotPersistPortalMarkers()
+            throws IOException {
         String builder = read(Path.of(
                 "deployment", "windows-demo", "Build-DemoPackage.ps1"));
         String sample = read(Path.of(
                 "src", "main", "resources", "sql", "sample_demo_data.sql"));
 
-        int cleanupExecution = builder.indexOf(
-                "'-f', $internalOnlyCleanupSqlInContainer");
-        int sampleExecution = builder.indexOf("'-f', $sampleSqlInContainer");
-
-        assertTrue(cleanupExecution >= 0);
-        assertTrue(sampleExecution > cleanupExecution);
+        assertTrue(builder.contains("fresh_database_migration.psql"));
+        assertTrue(builder.contains("'include_sample_data=true'"));
         assertTrue(sample.contains("company_nm = 'KT-1B'"));
-        assertTrue(sample.contains("auth_site IS NOT NULL"));
+        assertFalse(sample.contains("    auth_site,"));
+        assertTrue(sample.contains("table_name IN ('docs_menu', 'docs_user')"));
         assertFalse(sample.contains("docs_user_request,"));
         assertFalse(sample.contains("docs_user_request_number,"));
     }

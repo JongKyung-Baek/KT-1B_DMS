@@ -9,6 +9,7 @@ import java.util.Arrays;
 
 import org.junit.jupiter.api.Test;
 
+import kr.esob.fdms.controller.inside.distribution.oldcr.HistoryListParam;
 import kr.esob.fdms.controller.inside.system.role.RequestParam;
 import kr.esob.fdms.controller.login.UserVO;
 
@@ -36,6 +37,19 @@ class SinglePortalUserContractTest {
         assertFalse(controller.contains("formOutDistributionOldHistory"));
         assertFalse(controller.contains("gridOutDistributionOldHistoryList"));
         assertFalse(controller.contains("setCompanyCode"));
+    }
+
+    @Test
+    void formerOutsideOnlyRuntimeBranchesAreGone() throws Exception {
+        assertFalse(hasField(HistoryListParam.class, "outUserYn"));
+        assertFalse(read("src/main/java/kr/esob/fdms/commonlogic/excel/CreateExcelService.java")
+                .contains("gridOutDistributionOldHistoryList"));
+        assertFalse(read("src/main/resources/static/js/views/inside/distribution/drawingRequest/drawingVersionCheckPopup.js")
+                .contains("compareImageOutside"));
+        assertFalse(read("src/main/resources/sqlMaps/oracle/its/controller/inside/system/roleassign/RoleAssign.xml")
+                .contains("RG_006"));
+        assertFalse(read("src/main/resources/sqlMaps/oracle/its/controller/inside/system/role/Role.xml")
+                .contains("RG_006"));
     }
 
     private boolean hasField(Class<?> type, String name) {

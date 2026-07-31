@@ -54,9 +54,9 @@ $packageDirectory = Join-Path $releaseRoot $packageName
 $zipPath = Join-Path $releaseRoot "$packageName.zip"
 $warSource = Join-Path $projectRoot 'target\SDMS-KT-1B.war'
 $samplePdfSource = Join-Path $projectRoot 'deployment\windows-demo\assets\demo-document.pdf'
-$sampleSqlSource = Join-Path $projectRoot 'src\main\resources\sql\sample_demo_data.sql'
-$internalOnlyCleanupSqlSource = Join-Path $projectRoot `
-    'src\main\resources\sql\internal_only_cleanup_ddl.sql'
+$sqlDirectorySource = Join-Path $projectRoot 'src\main\resources\sql'
+$migrationManifestSource = Join-Path $sqlDirectorySource `
+    'fresh_database_migration.psql'
 $portabilitySqlSource = Join-Path $PSScriptRoot 'database\30-demo-portability.sql'
 
 if (-not $SkipBuild) {
@@ -79,9 +79,8 @@ if (-not $SkipBuild) {
 
 Assert-File -Path $warSource -Description 'Application WAR'
 Assert-File -Path $samplePdfSource -Description 'Demo PDF'
-Assert-File -Path $sampleSqlSource -Description 'Sample data SQL'
-Assert-File -Path $internalOnlyCleanupSqlSource `
-    -Description 'Internal-only database cleanup SQL'
+Assert-File -Path $migrationManifestSource `
+    -Description 'Fresh database migration manifest'
 Assert-File -Path $portabilitySqlSource -Description 'Demo sanitization SQL'
 
 $pdfBytes = [IO.File]::ReadAllBytes($samplePdfSource)
@@ -171,8 +170,7 @@ Invoke-NativeTool -Executable 'docker' -Arguments @(
 
 $temporaryDatabase = "kt1b_demo_package_$PID"
 $sourceBackupInContainer = "/tmp/kt1b-demo-source-$PID.backup"
-$sampleSqlInContainer = "/tmp/sample-demo-data-$PID.sql"
-$internalOnlyCleanupSqlInContainer = "/tmp/internal-only-cleanup-$PID.sql"
+$migrationSqlDirectory = "/tmp/kt1b-demo-migration-$PID"
 $portabilitySqlInContainer = "/tmp/demo-portability-$PID.sql"
 $demoBackupInContainer = "/tmp/kt1b-demo-$PID.backup"
 $demoBackupDestination = Join-Path $packageDirectory 'database\kt1b-demo.backup'
@@ -209,34 +207,29 @@ try {
     )
 
     Invoke-NativeTool -Executable 'docker' -Arguments @(
-        'cp', $sampleSqlSource,
-        "${SourceDbContainer}:$sampleSqlInContainer"
+        'exec', $SourceDbContainer, 'mkdir', '-p', $migrationSqlDirectory
     )
-    Invoke-NativeTool -Executable 'docker' -Arguments @(
-        'cp', $internalOnlyCleanupSqlSource,
-        "${SourceDbContainer}:$internalOnlyCleanupSqlInContainer"
-    )
+    foreach ($sqlFile in Get-ChildItem -LiteralPath $sqlDirectorySource -File) {
+        Invoke-NativeTool -Executable 'docker' -Arguments @(
+            'cp', $sqlFile.FullName,
+            "${SourceDbContainer}:$migrationSqlDirectory/$($sqlFile.Name)"
+        )
+    }
     Invoke-NativeTool -Executable 'docker' -Arguments @(
         'cp', $portabilitySqlSource,
         "${SourceDbContainer}:$portabilitySqlInContainer"
     )
 
-    # Remove external portal/menu data before rebuilding the internal demo data.
+    # Apply the same complete, ordered schema migration used for a fresh local
+    # database, including the single-portal cleanup and sample reset.
     Invoke-NativeTool -Executable 'docker' -Arguments @(
         'exec', $SourceDbContainer,
         'psql',
         '-U', $SourceDbUser,
         '-d', $temporaryDatabase,
         '-v', 'ON_ERROR_STOP=1',
-        '-f', $internalOnlyCleanupSqlInContainer
-    )
-    Invoke-NativeTool -Executable 'docker' -Arguments @(
-        'exec', $SourceDbContainer,
-        'psql',
-        '-U', $SourceDbUser,
-        '-d', $temporaryDatabase,
-        '-v', 'ON_ERROR_STOP=1',
-        '-f', $sampleSqlInContainer
+        '-v', 'include_sample_data=true',
+        '-f', "$migrationSqlDirectory/fresh_database_migration.psql"
     )
     Invoke-NativeTool -Executable 'docker' -Arguments @(
         'exec', $SourceDbContainer,
@@ -255,7 +248,11 @@ SELECT concat_ws(
     (SELECT COUNT(*) FROM docs_sw),
     (SELECT COUNT(*) FROM docs_sw_file),
     (SELECT COUNT(*) FROM docs_sw_sub_file),
-    (SELECT COUNT(*) FROM docs_file_security_label)
+    (SELECT COUNT(*) FROM docs_file_security_label),
+    (SELECT COUNT(*) FROM information_schema.columns
+      WHERE table_schema = 'public'
+        AND table_name IN ('docs_menu', 'docs_user')
+        AND column_name = 'auth_site')
 );
 '@
     $validationOutput = & docker exec $SourceDbContainer `
@@ -263,7 +260,7 @@ SELECT concat_ws(
     if ($LASTEXITCODE -ne 0) {
         throw 'Demo database validation query failed.'
     }
-    if ($validationOutput.Trim() -ne '6,6,16,16,16,16') {
+    if ($validationOutput.Trim() -ne '6,6,16,16,16,16,0') {
         throw "Unexpected demo database counts: $validationOutput"
     }
 
@@ -286,10 +283,9 @@ SELECT concat_ws(
     & docker exec $SourceDbContainer `
         dropdb -U $SourceDbUser --if-exists $temporaryDatabase | Out-Null
     & docker exec $SourceDbContainer `
-        rm -f `
+        rm -rf `
         $sourceBackupInContainer `
-        $sampleSqlInContainer `
-        $internalOnlyCleanupSqlInContainer `
+        $migrationSqlDirectory `
         $portabilitySqlInContainer `
         $demoBackupInContainer | Out-Null
 }

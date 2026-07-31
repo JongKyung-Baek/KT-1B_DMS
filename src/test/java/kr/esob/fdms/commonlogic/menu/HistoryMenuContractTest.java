@@ -29,19 +29,20 @@ class HistoryMenuContractTest {
                 "'MENU_206', 'MENU_223', '접근이력', '', '2', 'M'"));
         assertTrue(ddl.contains(
                 "'/inside/distribution/viewPrintHistory/**', 116, 'leaf'"));
-        assertTrue(ddl.contains("'ROLE_MENU_206', NULL, ''"));
+        assertTrue(ddl.contains("'ROLE_MENU_206', ''"));
 
         assertTrue(ddl.contains(
                 "'MENU_224', 'MENU_223', '열람이력', '', '2', 'M'"));
         assertTrue(ddl.contains(
                 "'/inside/history/view/**', 117, 'leaf'"));
-        assertTrue(ddl.contains("'ROLE_MENU_224', NULL, ''"));
+        assertTrue(ddl.contains("'ROLE_MENU_224', ''"));
 
         assertTrue(ddl.contains(
                 "'MENU_225', 'MENU_223', '출력이력', '', '2', 'M'"));
         assertTrue(ddl.contains(
                 "'/inside/history/print/**', 118, 'leaf'"));
-        assertTrue(ddl.contains("'ROLE_MENU_225', NULL, ''"));
+        assertTrue(ddl.contains("'ROLE_MENU_225', ''"));
+        assertFalse(ddl.contains("auth_site"));
         assertTrue(ddl.contains(
                 "SET menu_nm = '출력 승인/폐기 관리'"));
     }

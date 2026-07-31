@@ -877,6 +877,24 @@
 	box-shadow: 0 0 0 3px rgba(3, 76, 140, 0.09);
 }
 
+.technical-register-page .upload-format-help,
+.sw-register-route .upload-format-help {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+	margin: 12px 2px 0;
+	color: var(--register-muted);
+	font-size: 12px;
+	line-height: 1.55;
+}
+
+.technical-register-page .upload-format-help i,
+.sw-register-route .upload-format-help i {
+	flex: 0 0 auto;
+	margin-top: 2px;
+	color: var(--register-primary);
+}
+
 .technical-register-page .uploadLine > form,
 .sw-register-route .uploadLine > form {
 	display: none !important;

@@ -119,7 +119,20 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 				// dynamic source is restricted to the active ROOT-connected menu tree.
 				.antMatchers("/inside/system/securityaccess/**").hasAuthority("ROLE_MENU_222")
 				.antMatchers("/inside/organizationmanage/insidedept/**")
-				.hasAuthority("ROLE_MENU_199");
+				.hasAuthority("ROLE_MENU_199")
+				// Logout lifecycle callbacks are used by every authenticated session,
+				// independently of access/audit-history menu permission.
+				.antMatchers(HttpMethod.POST,
+						"/inside/organizationmanage/auditlog/notifyLogoutOnLeave",
+						"/inside/organizationmanage/auditlog/clearPendingLogoutOnStay")
+				.authenticated()
+				// Only the retired access-history root remains as a compatibility
+				// redirect. No legacy child API is exposed to the combined role.
+				.antMatchers(HttpMethod.GET,
+						"/inside/distribution/viewPrintHistory",
+						"/inside/distribution/viewPrintHistory/")
+				.hasAuthority("ROLE_MENU_218")
+				.antMatchers("/inside/distribution/viewPrintHistory/**").denyAll();
 
 		// Spring Security uses the first matching pattern. Put longer, more
 		// specific menu routes first so parent patterns cannot shadow children.

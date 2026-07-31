@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 class HistoryMenuContractTest {
 
     @Test
-    void historyMenusUseOneExactRootAndThreeIndependentlyAuthorizedChildren()
+    void historyMenusUseOneCombinedAccessAuditChildAndSeparateViewPrintChildren()
             throws Exception {
         String ddl = read("src/main/resources/sql/acl_foundation_ddl.sql");
 
@@ -26,10 +26,13 @@ class HistoryMenuContractTest {
                         + "    '/inside/history/**'"));
 
         assertTrue(ddl.contains(
-                "'MENU_206', 'MENU_223', '접근이력', '', '2', 'M'"));
+                "'MENU_218', 'MENU_223', '접근·감사이력', 'menu.accessAuditHistory', '2', 'M'"));
         assertTrue(ddl.contains(
-                "'/inside/distribution/viewPrintHistory/**', 116, 'leaf'"));
-        assertTrue(ddl.contains("'ROLE_MENU_206', ''"));
+                "'/inside/organizationmanage/auditlog/**', 116, 'leaf'"));
+        assertTrue(ddl.contains("'ROLE_MENU_218', ''"));
+
+        assertTrue(ddl.contains("DELETE FROM docs_menu"));
+        assertTrue(ddl.contains("WHERE menu_cd = 'MENU_206'"));
 
         assertTrue(ddl.contains(
                 "'MENU_224', 'MENU_223', '열람이력', '', '2', 'M'"));
@@ -48,7 +51,7 @@ class HistoryMenuContractTest {
     }
 
     @Test
-    void newHistoryRolesIdempotentlyInheritEveryAccessHistoryGroup()
+    void combinedHistoryInheritsBothFormerAudiencesAndRemovesStaleRoleLinks()
             throws Exception {
         String ddl = read("src/main/resources/sql/acl_foundation_ddl.sql");
 
@@ -59,6 +62,13 @@ class HistoryMenuContractTest {
         assertTrue(ddl.contains("('ROLE_MENU_225')"));
         assertTrue(ddl.contains(
                 "WHERE source.role_cd = 'ROLE_MENU_206'"));
+        assertTrue(ddl.contains("'ROLE_MENU_218'"));
+        assertTrue(ddl.contains(
+                "WHERE source.role_cd = 'ROLE_MENU_218'"));
+        assertTrue(ddl.contains(
+                "DELETE FROM docs_rel_role_group"));
+        assertTrue(ddl.contains(
+                "WHERE role_cd = 'ROLE_MENU_206'"));
         assertTrue(ddl.contains(
                 "ON CONFLICT (group_cd, role_cd) DO NOTHING"));
     }

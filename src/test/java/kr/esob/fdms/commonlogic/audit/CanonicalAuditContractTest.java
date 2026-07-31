@@ -39,7 +39,7 @@ class CanonicalAuditContractTest {
     }
 
     @Test
-    void loginAndAuditDashboardAreConnectedToCanonicalIdentityAndSummary()
+    void loginUsesCanonicalIdentityAndCombinedScreenDoesNotLoadSummaryCards()
             throws Exception {
         String login = read("src/main/java/kr/esob/fdms/controller/login/LoginSuccess.java");
         String controller = read(
@@ -47,27 +47,22 @@ class CanonicalAuditContractTest {
 
         assertTrue(login.contains(
                 "session, userVo.getUserCd(), userVo.getUserId(), userVo.getUserNm(), request"));
-        assertTrue(controller.contains(
-                "model.addAttribute(\"dashboardSummary\", service.selectSummary())"));
+        assertFalse(controller.contains("dashboardSummary"));
     }
 
     @Test
-    void securityAccessHistoryUsesExplicitScopeWithoutViewingOrPrintingNoise()
+    void combinedAccessAuditQueryReadsTheCompleteCanonicalLedger()
             throws Exception {
         String mapper = read(
-                "src/main/resources/sqlMaps/oracle/its/commonlogic/securityacl/SecurityAcl.xml");
-        int selectStart = mapper.indexOf("<select id=\"selectAccessHistory\"");
+                "src/main/resources/sqlMaps/oracle/its/controller/inside/organizationmanage/auditlog/auditLog.xml");
+        int selectStart = mapper.indexOf("<select id=\"selectList\"");
         String selectAudit = mapper.substring(
                 selectStart, mapper.indexOf("</select>", selectStart));
 
-        assertTrue(selectAudit.contains(
-                "event_type IN ('FILE_ACCESS', 'DOWNLOAD_RESULT', 'ACL_CHANGE')"));
-        assertTrue(selectAudit.contains(
-                "COALESCE(action_type, '') NOT IN ('VIEW', 'PRINT')"));
-        assertTrue(selectAudit.contains("event_type = #{eventType}"));
-        assertFalse(selectAudit.contains("'MENU_ACTION'"));
-        assertFalse(selectAudit.contains("'AUTH'"));
-        assertFalse(selectAudit.contains("'PRINT_RESULT'"));
+        assertTrue(selectAudit.contains("FROM docs_access_audit_log auditLog"));
+        assertTrue(selectAudit.contains("<include refid=\"auditFilters\"/>"));
+        assertFalse(selectAudit.contains("event_type IN ("));
+        assertFalse(selectAudit.contains("action_type, '') NOT IN"));
     }
 
     @Test
@@ -83,11 +78,27 @@ class CanonicalAuditContractTest {
         assertFalse(page.contains("처리 결과"));
         assertFalse(page.contains("<strong>결과</strong>"));
         assertFalse(page.contains("<small>Outcome</small>"));
+        assertFalse(page.contains("audit-log-summary"));
         assertFalse(javascript.contains("formatAuditResult"));
         assertTrue(ddl.contains(
                 "lower(column_id) IN ('resultcd', 'result')"));
         assertFalse(presentationMetadata.contains("'resultCd'"));
         assertFalse(presentationMetadata.contains("'결과'"));
+    }
+
+    @Test
+    void combinedHistoryLocalizesPasswordResetActions() throws Exception {
+        String javascript = read(
+                "src/main/resources/static/js/views/inside/organizationmanage/auditlog/auditlogList.js");
+        String korean = read("src/main/webapp/messages/feature.properties");
+        String english = read("src/main/webapp/messages/feature_en.properties");
+
+        assertTrue(javascript.contains(
+                "PASSWORD_RESET: [\"feature.audit.action.passwordReset\""));
+        assertTrue(korean.contains(
+                "feature.audit.action.passwordReset=비밀번호 초기화"));
+        assertTrue(english.contains(
+                "feature.audit.action.passwordReset=Password Reset"));
     }
 
     private String read(String path) throws Exception {

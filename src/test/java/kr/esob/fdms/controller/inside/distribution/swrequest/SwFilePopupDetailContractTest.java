@@ -85,7 +85,7 @@ class SwFilePopupDetailContractTest {
 		assertTrue(page.contains("code=\"feature.techDetail.title\" text=\"기술자료 상세\""));
 		assertTrue(detailPanel.contains("code=\"feature.techDetail.documentInfo.title\" text=\"문서 정보\""));
 		assertTrue(detailPanel.contains("code=\"feature.techDetail.registrationInfo.title\" text=\"의뢰·등록 정보\""));
-		assertTrue(detailPanel.contains("code=\"feature.techDetail.transmittalNo\" text=\"송부번호\""));
+		assertTrue(detailPanel.contains("code=\"feature.techDetail.transmittalNo\" text=\"자료번호\""));
 		assertTrue(detailPanel.contains("code=\"feature.techDetail.requestName\" text=\"의뢰명\""));
 		assertTrue(detailPanel.contains("code=\"feature.techDetail.classification\" text=\"자료분류\""));
 		assertTrue(detailPanel.contains("code=\"feature.techDetail.requestDate\" text=\"의뢰일자\""));

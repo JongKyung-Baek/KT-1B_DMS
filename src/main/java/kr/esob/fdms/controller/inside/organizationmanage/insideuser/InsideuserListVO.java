@@ -17,6 +17,12 @@ public class InsideuserListVO {
 	private String accountLockYn;	// 계정잠금여부
 	private String loginCount;	   	    // 비밀번호틀린횟수
 	private String roleGroup;		    // 사용자권한
+	private String clearanceGradeCd;
+	private String clearanceGradeNm;
+	private Integer clearanceGradeLevel;
+	private String clearanceValidFrom;
+	private String clearanceValidTo;
+	private String clearanceStatus;
 
 	public String getLastLoginDt() {
 		return DateUtil.getYmd(lastLoginDt);

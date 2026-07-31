@@ -20,7 +20,7 @@ class SwRegisterPageLayoutContractTest {
 		assertTrue(css.contains("height: auto !important;"));
 		assertTrue(css.contains("min-height: 0 !important;"));
 		assertTrue(css.contains("overflow: visible !important;"));
-		assertTrue(page.contains("technical-data-register.css?v=20260726.4"));
+		assertTrue(page.contains("technical-data-register.css?v=20260801.1"));
 	}
 
 	private String read(String path) throws Exception {

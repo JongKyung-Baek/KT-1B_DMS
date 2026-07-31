@@ -21,7 +21,7 @@
 		.ch-badge-fail{background:#fdeaea;color:#a12828}
 	</style>
 	<link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/distribution-invoice.css?v=20260726.1" media="screen" />
-	<link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/technical-data-list.css?v=20260726.4" media="screen" />
+	<link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/technical-data-list.css?v=20260801.1" media="screen" />
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common_tree.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/views/inside/distribution/acceptance/common-form-vuexy.js"></script>
 	<script>
@@ -173,6 +173,23 @@
 				+ '" title="' + escapeSwGridHtml(detail)
 				+ '" aria-label="' + escapeSwGridHtml(detail) + '">'
 				+ escapeSwGridHtml(displayName) + '</span>';
+		}
+
+		function formatFileExtensions(cellValue) {
+			var extensions = $.map(String(cellValue || '').split(','), function (value) {
+				var extension = $.trim(value).toUpperCase();
+				return extension ? extension : null;
+			});
+			if (!extensions.length) {
+				return '<span class="file-extension-empty">-</span>';
+			}
+			var title = escapeSwGridHtml(extensions.join(', '));
+			var badges = $.map(extensions, function (extension) {
+				return '<span class="file-extension-badge">'
+					+ escapeSwGridHtml(extension) + '</span>';
+			}).join('');
+			return '<span class="file-extension-list" title="' + title
+				+ '" aria-label="' + title + '">' + badges + '</span>';
 		}
 
 		function formatViewFile(cellValue, options, rowdata, action) {

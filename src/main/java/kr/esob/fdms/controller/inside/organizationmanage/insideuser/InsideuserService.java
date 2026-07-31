@@ -2,17 +2,16 @@ package kr.esob.fdms.controller.inside.organizationmanage.insideuser;
 
 import kr.esob.fdms.commonlogic.abstractclass.CommonService;
 import kr.esob.fdms.commonlogic.result.ResultVO;
-import kr.esob.fdms.controller.inside.distribution.doc_pdf_link_request.DocPdfLinkRequestDao;
+import kr.esob.fdms.commonlogic.systemconfig.SystemConfigDao;
+import kr.esob.fdms.commonlogic.systemconfig.SystemConfigVO;
 import kr.esob.fdms.controller.login.UserVO;
 import kr.esob.fdms.util.seed.PasswordUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import javax.inject.Inject;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 @Service
@@ -21,8 +20,8 @@ public class InsideuserService implements CommonService {
 	@Inject
 	InsideuserDao dao;
 
-	@Autowired
-	DocPdfLinkRequestDao dao_for_pwd;
+	@Inject
+	SystemConfigDao systemConfigDao;
 
 
 	@SuppressWarnings("rawtypes")
@@ -45,19 +44,30 @@ public class InsideuserService implements CommonService {
 
 	public ResultVO resetPwd(UserVO userVo) {
 		ResultVO resultVo = new ResultVO();
+		resultVo.setSuccess(false);
 
-		List<Map<String,Object>> dbConfig = dao_for_pwd.selectDbConfig();
-		String basicPassword = findBasicPassword(dbConfig);
+		if (userVo == null || isBlank(trim(userVo.getUserCd()))) {
+			resultVo.setMessage("msg.userNotFound");
+			return resultVo;
+		}
+		userVo.setUserCd(trim(userVo.getUserCd()));
+
+		String basicPassword = findBasicPassword(systemConfigDao.selectSystemConfig());
 		if (basicPassword == null || basicPassword.isEmpty()) {
-			resultVo.setMessage("msg.error");
-			resultVo.setSuccess(false);
+			resultVo.setMessage("feature.organization.user.passwordReset.configMissing");
 			return resultVo;
 		}
 
 		String hashedPassword = PasswordUtils.hashPasswordWithSalt(basicPassword);
 		userVo.setUserPwd(hashedPassword);
 
-		dao.resetPwd(userVo);
+		if (dao.resetPwd(userVo) != 1) {
+			resultVo.setMessage("msg.userNotFound");
+			return resultVo;
+		}
+
+		resultVo.setData(basicPassword);
+		resultVo.setMessage("feature.organization.user.passwordReset.completed");
 		resultVo.setSuccess(true);
 		return resultVo;
 	}
@@ -169,8 +179,7 @@ public class InsideuserService implements CommonService {
 				return resultVo;
 			} else {
 
-				List<Map<String,Object>> dbConfig = dao_for_pwd.selectDbConfig();
-				String basicPassword = findBasicPassword(dbConfig);
+				String basicPassword = findBasicPassword(systemConfigDao.selectSystemConfig());
 				if (basicPassword == null || basicPassword.isEmpty()) {
 					resultVo.setMessage("msg.error");
 					resultVo.setSuccess(false);
@@ -280,33 +289,21 @@ public class InsideuserService implements CommonService {
 
 		}
 
-	private String findBasicPassword(List<Map<String, Object>> dbConfig) {
+	private String findBasicPassword(List<SystemConfigVO> dbConfig) {
 		if (dbConfig == null) {
 			return null;
 		}
 
-		for (Map<String, Object> config : dbConfig) {
+		for (SystemConfigVO config : dbConfig) {
 			if (config == null) {
 				continue;
 			}
 
-			String configCd = strVal(config, "SYSTEM_CONFIG_CD", "system_config_cd");
-			if (!"BASIC_PASSWORD".equals(configCd)) {
+			if (!"BASIC_PASSWORD".equals(config.getSystemConfigCd())) {
 				continue;
 			}
 
-			return strVal(config, "SYSTEM_CONFIG_VALUE", "system_config_value");
-		}
-
-		return null;
-	}
-
-	private String strVal(Map<String, Object> config, String... keys) {
-		for (String key : keys) {
-			Object value = config.get(key);
-			if (value != null) {
-				return String.valueOf(value);
-			}
+			return config.getSystemConfigValue();
 		}
 
 		return null;

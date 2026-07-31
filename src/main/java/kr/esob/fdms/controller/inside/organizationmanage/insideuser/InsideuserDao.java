@@ -36,8 +36,8 @@ public class InsideuserDao extends AbstractDao {
 		update(prefix + "updateUnlock", userVo);
 	}
 
-	public void resetPwd(UserVO userVo) {
-		update(prefix + "resetPwd", userVo);
+	public int resetPwd(UserVO userVo) {
+		return update(prefix + "resetPwd", userVo);
 	}
 
 	public void insertRegisterUserInfo(UserPopupParam param) {

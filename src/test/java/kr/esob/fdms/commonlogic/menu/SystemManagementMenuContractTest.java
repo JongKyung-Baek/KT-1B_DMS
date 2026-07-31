@@ -37,15 +37,19 @@ class SystemManagementMenuContractTest {
     }
 
     @Test
-    void auditLogMovesUnderHistoryAndKeepsItsExistingGroupAssignments()
+    void accessAndAuditHistoriesBecomeOneMenuAndKeepBothGroupAudiences()
             throws Exception {
         String ddl = read("src/main/resources/sql/acl_foundation_ddl.sql");
 
-        assertTrue(ddl.contains("menu_nm = '감사로그'"));
-        assertTrue(ddl.contains("WHERE menu_cd = 'MENU_218'"));
-        assertTrue(ddl.contains("parent_menu_cd = 'MENU_223'"));
+        assertTrue(ddl.contains(
+                "'MENU_218', 'MENU_223', '접근·감사이력', 'menu.accessAuditHistory'"));
+        assertTrue(ddl.contains(
+                "'/inside/organizationmanage/auditlog/**', 116, 'leaf'"));
+        assertTrue(ddl.contains("WHERE source.role_cd = 'ROLE_MENU_206'"));
         assertTrue(ddl.contains("WHERE source.role_cd = 'ROLE_MENU_218'"));
         assertTrue(ddl.contains("'ROLE_MENU_223'"));
+        assertTrue(ddl.contains("WHERE role_cd = 'ROLE_MENU_206'"));
+        assertTrue(ddl.contains("WHERE menu_cd = 'MENU_206'"));
         assertTrue(ddl.contains(
                 "ON CONFLICT (group_cd, role_cd) DO NOTHING"));
     }

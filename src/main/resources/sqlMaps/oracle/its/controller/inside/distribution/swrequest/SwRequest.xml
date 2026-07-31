@@ -667,6 +667,7 @@
 		FROM (
 		SELECT
 		info.*,
+		fileTypes.file_extensions AS fileExtensions,
 		securityGrade.grade_cd AS gradeCd,
 		securityGrade.grade_nm AS gradeNm,
 		securityGrade.grade_level AS gradeLevel,
@@ -914,6 +915,83 @@
 		LEFT JOIN DOCS_USER insertUser ON insertUser.USER_ID = info.insertUid
 		LEFT JOIN DOCS_USER updateUser ON updateUser.USER_ID = info.updateUid
 		LEFT JOIN DOCS_USER ecnInsert ON ecnInsert.USER_ID = info.ecn_insert_uid
+		LEFT JOIN LATERAL (
+			SELECT STRING_AGG(extension.file_extension, ', ' ORDER BY extension.file_extension) AS file_extensions
+			FROM (
+				SELECT DISTINCT
+					UPPER(SUBSTRING(TRIM(accessibleFile.org_file_nm) FROM '[.]([^.]+)$')) AS file_extension
+				FROM (
+					SELECT 'SW'::varchar AS object_type,
+					       mainFile.FILE_NO::varchar AS file_no,
+					       mainFile.ORG_FILE_NM AS org_file_nm
+					FROM DOCS_SW_FILE mainFile
+					WHERE mainFile.OBJECT_ID = info.objectId
+					UNION ALL
+					SELECT 'SW_SUB'::varchar AS object_type,
+					       subFile.FILE_NO::varchar AS file_no,
+					       subFile.ORG_FILE_NM AS org_file_nm
+					FROM DOCS_SW_SUB_FILE subFile
+					WHERE subFile.PARENT_OBJECT_ID = info.objectId
+					  AND COALESCE(subFile.USE_YN, 'Y') = 'Y'
+				) accessibleFile
+				JOIN DOCS_USER extensionActor
+				  ON extensionActor.USER_CD = #{aclUserCd}
+				 AND extensionActor.USE_YN = 'Y'
+				 AND extensionActor.DEL_YN = 'N'
+				 AND COALESCE(extensionActor.LOCK_YN, 'N') != 'Y'
+				JOIN DOCS_USER_SECURITY_CLEARANCE extensionClearance
+				  ON extensionClearance.USER_CD = extensionActor.USER_CD
+				 AND extensionClearance.VALID_FROM &lt;= CURRENT_TIMESTAMP
+				 AND (extensionClearance.VALID_TO IS NULL
+				      OR extensionClearance.VALID_TO &gt; CURRENT_TIMESTAMP)
+				JOIN DOCS_SECURITY_GRADE extensionUserGrade
+				  ON extensionUserGrade.GRADE_CD = extensionClearance.GRADE_CD
+				 AND extensionUserGrade.USE_YN = 'Y'
+				JOIN DOCS_USER_ACTION_PERMISSION extensionActionPermission
+				  ON extensionActionPermission.USER_CD = extensionActor.USER_CD
+				 AND extensionActionPermission.ACTION_CD = 'VIEW'
+				 AND extensionActionPermission.ALLOW_YN = 'Y'
+				JOIN DOCS_OBJECT_USER_PERMISSION extensionObjectPermission
+				  ON extensionObjectPermission.OBJECT_TYPE = 'SW'
+				 AND extensionObjectPermission.OBJECT_ID = info.objectId
+				 AND extensionObjectPermission.USER_CD = extensionActor.USER_CD
+				 AND extensionObjectPermission.ACTION_CD = 'VIEW'
+				 AND extensionObjectPermission.ALLOW_YN = 'Y'
+				JOIN LATERAL (
+					SELECT extensionLabel.GRADE_CD
+					FROM DOCS_FILE_SECURITY_LABEL extensionLabel
+					LEFT JOIN DOCS_SECURITY_GRADE extensionCandidateGrade
+					  ON extensionCandidateGrade.GRADE_CD = extensionLabel.GRADE_CD
+					WHERE extensionLabel.OBJECT_ID = info.objectId
+					  AND (
+							(
+								extensionLabel.OBJECT_TYPE = accessibleFile.object_type
+								AND extensionLabel.FILE_NO IN (accessibleFile.file_no, '*')
+							)
+							OR (
+								accessibleFile.object_type = 'SW_SUB'
+								AND extensionLabel.OBJECT_TYPE = 'SW'
+								AND extensionLabel.FILE_NO = '*'
+							)
+						)
+					ORDER BY extensionCandidateGrade.GRADE_LEVEL DESC NULLS LAST,
+					         CASE
+								 WHEN extensionLabel.OBJECT_TYPE = accessibleFile.object_type
+								  AND extensionLabel.FILE_NO = accessibleFile.file_no THEN 0
+								 WHEN extensionLabel.OBJECT_TYPE = accessibleFile.object_type
+								  AND extensionLabel.FILE_NO = '*' THEN 1
+								 ELSE 2
+							 END
+					LIMIT 1
+				) effectiveExtensionLabel ON TRUE
+				JOIN DOCS_SECURITY_GRADE extensionFileGrade
+				  ON extensionFileGrade.GRADE_CD = effectiveExtensionLabel.GRADE_CD
+				 AND extensionFileGrade.USE_YN = 'Y'
+				WHERE extensionUserGrade.GRADE_LEVEL &gt;= extensionFileGrade.GRADE_LEVEL
+			) extension
+			WHERE extension.file_extension IS NOT NULL
+			  AND extension.file_extension != ''
+		) fileTypes ON TRUE
 		LEFT JOIN LATERAL (
 			SELECT label.grade_cd,
 			       grade.grade_nm,

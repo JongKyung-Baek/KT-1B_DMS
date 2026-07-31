@@ -27,6 +27,104 @@ var formId = 'formInsideUser';
 			: fallback;
 	}
 
+	function escapeOrganizationHtml(value) {
+		return String(value === undefined || value === null ? '' : value)
+			.replace(/&/g, '&amp;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;')
+			.replace(/"/g, '&quot;')
+			.replace(/'/g, '&#39;');
+	}
+
+	function localizeUserClearanceGrade(gradeCode, gradeName) {
+		var normalizedCode = $.trim(String(gradeCode || '')).toUpperCase();
+		switch (normalizedCode) {
+			case 'GENERAL':
+				return organizationText('feature.documentGrade.general', '일반');
+			case 'INTERNAL':
+				return organizationText('feature.documentGrade.internal', '사내한');
+			case 'RESTRICTED':
+				return organizationText('feature.documentGrade.restricted', '제한');
+			case 'CONFIDENTIAL':
+				return organizationText('feature.documentGrade.confidential', '대외비');
+			default:
+				return $.trim(String(gradeName || ''));
+		}
+	}
+
+	function resolveUserClearanceTone(rowdata) {
+		var level = parseInt(rowdata && rowdata.clearanceGradeLevel, 10);
+		var code = $.trim(String(rowdata && rowdata.clearanceGradeCd || '')).toUpperCase();
+		if ((!isNaN(level) && level >= 40) || code === 'CONFIDENTIAL') return 'confidential';
+		if ((!isNaN(level) && level >= 30) || code === 'RESTRICTED') return 'restricted';
+		if ((!isNaN(level) && level >= 20) || code === 'INTERNAL') return 'internal';
+		return 'general';
+	}
+
+	function formatUserClearance(cellValue, options, rowdata) {
+		var row = rowdata || {};
+		var status = $.trim(String(row.clearanceStatus || 'UNASSIGNED')).toUpperCase();
+		var gradeName = localizeUserClearanceGrade(
+			row.clearanceGradeCd,
+			cellValue || row.clearanceGradeNm
+		);
+		var displayName = gradeName;
+		var tone = resolveUserClearanceTone(row);
+		var title = organizationText(
+			'feature.securityAccess.user.table.currentGrade',
+			'현재 인가등급'
+		);
+
+		if (status !== 'ACTIVE' || !gradeName) {
+			switch (status) {
+				case 'EXPIRED':
+					displayName = organizationText(
+						'feature.organization.user.clearance.expired',
+						'만료'
+					);
+					tone = 'confidential';
+					break;
+				case 'SCHEDULED':
+					displayName = organizationText(
+						'feature.organization.user.clearance.scheduled',
+						'적용 예정'
+					);
+					tone = 'internal';
+					break;
+				case 'INACTIVE_GRADE':
+					displayName = organizationText(
+						'feature.organization.user.clearance.inactiveGrade',
+						'중지 등급'
+					);
+					tone = 'restricted';
+					break;
+				default:
+					displayName = organizationText(
+						'feature.organization.user.clearance.unassigned',
+						'미인가'
+					);
+					tone = 'unassigned';
+			}
+			title = displayName;
+			if (gradeName) title += ' · ' + gradeName;
+		} else {
+			title += ': ' + gradeName;
+		}
+
+		if (row.clearanceValidTo) {
+			var validUntil = organizationText(
+				'feature.organization.user.clearance.validUntil',
+				'유효기간 {0}까지'
+			).replace('{0}', row.clearanceValidTo);
+			title += ' · ' + validUntil;
+		}
+
+		return '<span class="document-grade-badge document-grade-badge--' + tone
+			+ '" title="' + escapeOrganizationHtml(title)
+			+ '" aria-label="' + escapeOrganizationHtml(title) + '">'
+			+ escapeOrganizationHtml(displayName) + '</span>';
+	}
+
 	function setGridParam(){
 		gridParam = {
 				gridId : gridId,
@@ -63,7 +161,7 @@ var formId = 'formInsideUser';
 			$.each($("#"+ gridId).getGridParam('selarrrow'), function(index, item){
 				var data = $("#" + gridId).jqGrid('getRowData', item);
 				//if(data.accountLockYn === 'Y'){
-					var param = data;
+					var param = { userCd: data.userCd };
 					callAjax(param, '/inside/organizationmanage/insideuser/update', unlockAccountCallback);
 				//}
 			});
@@ -78,7 +176,7 @@ var formId = 'formInsideUser';
 		}else{
 			$.each($("#"+ gridId).getGridParam('selarrrow'), function(index, item){
 				var data = $("#" + gridId).jqGrid('getRowData', item);
-				var param = data;
+				var param = { userCd: data.userCd };
 				callAjax(param, '/inside/organizationmanage/insideuser/resetPwd', resetPwdCallback);
 			});
 		}
@@ -105,11 +203,14 @@ var formId = 'formInsideUser';
 	function resetPwdCallback(response){
 		if(response.success){
 			infoMessage((function(){
-				var resetPwdMessage = '초기화가 완료되었습니다. <br/>초기 비밀번호는 "0000" 입니다.';
+				var initialPassword = escapeOrganizationHtml(response.data || '');
+				var resetPwdMessage = '초기화가 완료되었습니다. <br/>초기 비밀번호는 "'
+					+ initialPassword + '" 입니다.';
 				if(window.SdmsI18n && typeof window.SdmsI18n.t === 'function') {
 					resetPwdMessage = window.SdmsI18n.t(
 						'feature.organization.user.passwordReset.completed',
-						resetPwdMessage
+						resetPwdMessage,
+						initialPassword
 					);
 				}
 				return resetPwdMessage;
@@ -119,7 +220,12 @@ var formId = 'formInsideUser';
 				$(this).dialog("close");
 			});
 		}else{
-			alertMessage(organizationText('feature.common.requestFailed', '요청이 실패했습니다.'));
+			alertMessage(organizationText(
+				response && response.message
+					? response.message
+					: 'feature.common.requestFailed',
+				'요청이 실패했습니다.'
+			));
 		}
 	}
 

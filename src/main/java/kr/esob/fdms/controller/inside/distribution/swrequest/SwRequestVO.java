@@ -22,6 +22,7 @@ public class SwRequestVO {
 	private String gradeNm;
 	private Integer gradeLevel;
 	private Integer fileCount;
+	private String fileExtensions;
 	private String insertUserNm;
 	private String updateUserNm;
 	private String insertDeptNm;

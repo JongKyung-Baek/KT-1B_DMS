@@ -639,38 +639,9 @@ INSERT INTO docs_menu (
 VALUES (
     'MENU_223', 'ROOT', '이력관리', '', '1', 'T',
     '/inside/history/', 115, 'root', 'N', 'Y',
-    '접근·열람·출력 이력 관리',
-    '보안 접근 판정과 실제 열람·출력 결과를 구분하여 조회',
+    '접근·감사·열람·출력 이력 관리',
+    '인증·메뉴·보안 접근 감사와 실제 열람·출력 기록을 구분하여 조회',
     'ROLE_MENU_223', ''
-)
-ON CONFLICT (menu_cd) DO UPDATE SET
-    parent_menu_cd = EXCLUDED.parent_menu_cd,
-    menu_nm = EXCLUDED.menu_nm,
-    message_cd = EXCLUDED.message_cd,
-    menu_level = EXCLUDED.menu_level,
-    menu_type = EXCLUDED.menu_type,
-    menu_url = EXCLUDED.menu_url,
-    sort_seq = EXCLUDED.sort_seq,
-    tree_type = EXCLUDED.tree_type,
-    tooltip = EXCLUDED.tooltip,
-    menu_desc = EXCLUDED.menu_desc,
-    role_cd = EXCLUDED.role_cd,
-    use_yn = 'Y',
-    del_yn = 'N';
-
--- Retain the access-history URL and role so existing permission assignments
--- remain valid, but move it below the history-management root.
-INSERT INTO docs_menu (
-    menu_cd, parent_menu_cd, menu_nm, message_cd, menu_level, menu_type,
-    menu_url, sort_seq, tree_type, del_yn, use_yn, tooltip, menu_desc,
-    role_cd, menu_icon
-)
-VALUES (
-    'MENU_206', 'MENU_223', '접근이력', '', '2', 'M',
-    '/inside/distribution/viewPrintHistory/**', 116, 'leaf', 'N', 'Y',
-    '자료 접근 및 권한 변경 이력',
-    '자료 접근 판정, 다운로드 결과 및 권한 변경 결과 조회',
-    'ROLE_MENU_206', ''
 )
 ON CONFLICT (menu_cd) DO UPDATE SET
     parent_menu_cd = EXCLUDED.parent_menu_cd,
@@ -858,6 +829,118 @@ WHERE NOT EXISTS (
        AND column_id = 'gradeLevel'
 );
 
+-- Technical-data list: show the distinct extensions of every active file in
+-- the transmittal without requiring the user to open the detail popup.
+UPDATE docs_grid_info
+   SET column_nm = '파일 확장자',
+       column_seq = 54,
+       column_size = 170,
+       column_type = 'ro',
+       column_align = 'center',
+       column_format = 'str',
+       column_hidden = 'N',
+       sort_yn = 'N',
+       formatter = 'formatFileExtensions',
+       column_editable = 'N',
+       lang_cd = 'grid.fileExtensions'
+ WHERE grid_id = 'gridSwRequestList'
+   AND column_id = 'fileExtensions';
+
+INSERT INTO docs_grid_info (
+    grid_id, column_id, column_nm, column_seq, column_size,
+    column_type, column_align, column_format, column_hidden,
+    sort_yn, formatter, column_editable, lang_cd
+)
+SELECT
+    'gridSwRequestList', 'fileExtensions', '파일 확장자', 54, 170,
+    'ro', 'center', 'str', 'N',
+    'N', 'formatFileExtensions', 'N', 'grid.fileExtensions'
+WHERE NOT EXISTS (
+    SELECT 1
+      FROM docs_grid_info
+     WHERE grid_id = 'gridSwRequestList'
+       AND column_id = 'fileExtensions'
+);
+
+INSERT INTO docs_lang (lang_type, lang_cd, lang_desc)
+VALUES
+    ('ko', 'grid.fileExtensions', '파일 확장자'),
+    ('en', 'grid.fileExtensions', 'File Extensions')
+ON CONFLICT (lang_type, lang_cd) DO UPDATE
+   SET lang_desc = EXCLUDED.lang_desc;
+
+-- User management: expose the user's assigned clearance together with enough
+-- hidden metadata for a locale-aware, validity-aware grade formatter.
+UPDATE docs_grid_info
+   SET column_seq = 65
+ WHERE grid_id = 'gridInsideUserList'
+   AND column_id = 'lastLoginDt';
+
+WITH clearance_columns (
+    column_id, column_nm, column_seq, column_size,
+    column_hidden, formatter, lang_cd
+) AS (
+    VALUES
+        ('clearanceGradeNm',    '현재 인가등급', 64, 14, 'N', 'formatUserClearance', 'grid.currentClearance'),
+        ('clearanceGradeCd',    'clearanceGradeCd', 91, 0, 'Y', NULL, NULL),
+        ('clearanceGradeLevel', 'clearanceGradeLevel', 92, 0, 'Y', NULL, NULL),
+        ('clearanceStatus',     'clearanceStatus', 93, 0, 'Y', NULL, NULL),
+        ('clearanceValidFrom',  'clearanceValidFrom', 94, 0, 'Y', NULL, NULL),
+        ('clearanceValidTo',    'clearanceValidTo', 95, 0, 'Y', NULL, NULL)
+)
+UPDATE docs_grid_info grid
+   SET column_nm = clearance.column_nm,
+       column_seq = clearance.column_seq,
+       column_size = clearance.column_size,
+       column_type = 'ro',
+       column_align = 'center',
+       column_format = 'str',
+       column_hidden = clearance.column_hidden,
+       sort_yn = 'N',
+       formatter = clearance.formatter,
+       column_editable = 'N',
+       lang_cd = clearance.lang_cd
+  FROM clearance_columns clearance
+ WHERE grid.grid_id = 'gridInsideUserList'
+   AND grid.column_id = clearance.column_id;
+
+WITH clearance_columns (
+    column_id, column_nm, column_seq, column_size,
+    column_hidden, formatter, lang_cd
+) AS (
+    VALUES
+        ('clearanceGradeNm',    '현재 인가등급', 64, 14, 'N', 'formatUserClearance', 'grid.currentClearance'),
+        ('clearanceGradeCd',    'clearanceGradeCd', 91, 0, 'Y', NULL, NULL),
+        ('clearanceGradeLevel', 'clearanceGradeLevel', 92, 0, 'Y', NULL, NULL),
+        ('clearanceStatus',     'clearanceStatus', 93, 0, 'Y', NULL, NULL),
+        ('clearanceValidFrom',  'clearanceValidFrom', 94, 0, 'Y', NULL, NULL),
+        ('clearanceValidTo',    'clearanceValidTo', 95, 0, 'Y', NULL, NULL)
+)
+INSERT INTO docs_grid_info (
+    grid_id, column_id, column_nm, column_seq, column_size,
+    column_type, column_align, column_format, column_hidden,
+    sort_yn, formatter, column_editable, lang_cd
+)
+SELECT
+    'gridInsideUserList', clearance.column_id, clearance.column_nm,
+    clearance.column_seq, clearance.column_size,
+    'ro', 'center', 'str', clearance.column_hidden,
+    'N', clearance.formatter, 'N', clearance.lang_cd
+  FROM clearance_columns clearance
+ WHERE NOT EXISTS (
+    SELECT 1
+      FROM docs_grid_info grid
+     WHERE grid.grid_id = 'gridInsideUserList'
+       AND grid.column_id = clearance.column_id
+);
+
+INSERT INTO docs_lang (lang_type, lang_cd, lang_desc)
+VALUES
+    ('ko', 'grid.currentClearance', '현재 인가등급'),
+    ('en', 'grid.currentClearance', 'Current Clearance')
+ON CONFLICT (lang_type, lang_cd) DO UPDATE
+   SET lang_desc = EXCLUDED.lang_desc;
+
 -- Technical-data status: remove fields that are not part of the current screen.
 DELETE FROM docs_grid_info
  WHERE grid_id = 'gridSwRequestList'
@@ -960,19 +1043,52 @@ UPDATE docs_menu
    SET sort_seq = 5
  WHERE menu_cd = 'MENU_222';
 
--- Audit log is an operational history, so it belongs under history management.
-UPDATE docs_menu
-   SET parent_menu_cd = 'MENU_223',
-       menu_nm = '감사로그',
-       menu_level = '2',
-       sort_seq = 119,
-       tree_type = 'leaf',
-       use_yn = 'Y',
-       del_yn = 'N'
- WHERE menu_cd = 'MENU_218';
+-- Authentication/menu actions and document ACL decisions already share the
+-- canonical docs_access_audit_log ledger. Expose that complete ledger through
+-- one history menu and retire the former access-only subset screen.
+INSERT INTO docs_menu (
+    menu_cd, parent_menu_cd, menu_nm, message_cd, menu_level, menu_type,
+    menu_url, sort_seq, tree_type, del_yn, use_yn, tooltip, menu_desc,
+    role_cd, menu_icon
+)
+VALUES (
+    'MENU_218', 'MENU_223', '접근·감사이력', 'menu.accessAuditHistory', '2', 'M',
+    '/inside/organizationmanage/auditlog/**', 116, 'leaf', 'N', 'Y',
+    '사용자 접근 및 운영 감사 이력',
+    '인증·메뉴 행위와 문서 ACL 접근 이벤트를 한 화면에서 조회',
+    'ROLE_MENU_218', ''
+)
+ON CONFLICT (menu_cd) DO UPDATE SET
+    parent_menu_cd = EXCLUDED.parent_menu_cd,
+    menu_nm = EXCLUDED.menu_nm,
+    message_cd = EXCLUDED.message_cd,
+    menu_level = EXCLUDED.menu_level,
+    menu_type = EXCLUDED.menu_type,
+    menu_url = EXCLUDED.menu_url,
+    sort_seq = EXCLUDED.sort_seq,
+    tree_type = EXCLUDED.tree_type,
+    tooltip = EXCLUDED.tooltip,
+    menu_desc = EXCLUDED.menu_desc,
+    role_cd = EXCLUDED.role_cd,
+    use_yn = 'Y',
+    del_yn = 'N';
+
+-- Preserve the union of both former menu audiences before removing the stale
+-- ROLE_MENU_206 group links.
+INSERT INTO docs_rel_role_group
+    (group_cd, role_cd, insert_user_cd, update_user_cd, insert_dt, update_dt)
+SELECT source.group_cd,
+       'ROLE_MENU_218',
+       'SYSTEM',
+       'SYSTEM',
+       CURRENT_TIMESTAMP,
+       CURRENT_TIMESTAMP
+  FROM docs_rel_role_group source
+ WHERE source.role_cd = 'ROLE_MENU_206'
+ON CONFLICT (group_cd, role_cd) DO NOTHING;
 
 -- A group must own both the root and child role for the recursive navigation
--- query. Preserve every established audit-log assignment after the move.
+-- query. Preserve every established assignment on the combined menu.
 INSERT INTO docs_rel_role_group
     (group_cd, role_cd, insert_user_cd, update_user_cd, insert_dt, update_dt)
 SELECT source.group_cd,
@@ -985,13 +1101,18 @@ SELECT source.group_cd,
  WHERE source.role_cd = 'ROLE_MENU_218'
 ON CONFLICT (group_cd, role_cd) DO NOTHING;
 
+DELETE FROM docs_rel_role_group
+ WHERE role_cd = 'ROLE_MENU_206';
+
+DELETE FROM docs_menu
+ WHERE menu_cd = 'MENU_206';
+
 -- Reader-facing navigation and the metadata introduced by this migration must
 -- use stable message codes. A future Indonesian rollout only needs matching
 -- LANG_TYPE='id' rows; no menu or grid schema change is required.
 WITH menu_i18n (menu_cd, message_cd) AS (
     VALUES
         ('MENU_223', 'menu.historyManagement'),
-        ('MENU_206', 'menu.accessHistory'),
         ('MENU_224', 'menu.viewHistory'),
         ('MENU_225', 'menu.printHistory'),
         ('MENU_222', 'menu.securityAccess'),
@@ -1000,7 +1121,7 @@ WITH menu_i18n (menu_cd, message_cd) AS (
         ('MENU_141', 'menu.userGrade'),
         ('MENU_160', 'menu.menuPermissionAssignment'),
         ('MENU_032', 'menu.printApprovalDisposal'),
-        ('MENU_218', 'menu.auditlog')
+        ('MENU_218', 'menu.accessAuditHistory')
 )
 UPDATE docs_menu menu
    SET message_cd = menu_i18n.message_cd
@@ -1009,7 +1130,7 @@ UPDATE docs_menu menu
 
 UPDATE docs_grid_info
    SET column_nm = CASE column_id
-       WHEN 'swNo' THEN '송부번호'
+       WHEN 'swNo' THEN '자료번호'
        WHEN 'swNm' THEN '의뢰명'
        ELSE column_nm
    END,
@@ -1028,7 +1149,11 @@ UPDATE docs_grid_info
    );
 
 UPDATE docs_form_info
-   SET lang_cd = CASE column_id
+   SET column_nm = CASE column_id
+       WHEN 'swNo' THEN '자료번호'
+       ELSE column_nm
+   END,
+       lang_cd = CASE column_id
        WHEN 'swNo' THEN 'form.transmittalNo'
        WHEN 'swNm' THEN 'form.requestName'
        WHEN 'insertStartDt,insertEndDt' THEN 'form.requestDate'
@@ -1046,8 +1171,8 @@ INSERT INTO docs_lang (lang_type, lang_cd, lang_desc)
 VALUES
     ('ko', 'menu.historyManagement', '이력관리'),
     ('en', 'menu.historyManagement', 'History Management'),
-    ('ko', 'menu.accessHistory', '접근이력'),
-    ('en', 'menu.accessHistory', 'Access History'),
+    ('ko', 'menu.accessAuditHistory', '접근·감사이력'),
+    ('en', 'menu.accessAuditHistory', 'Access & Audit History'),
     ('ko', 'menu.viewHistory', '열람이력'),
     ('en', 'menu.viewHistory', 'View History'),
     ('ko', 'menu.printHistory', '출력이력'),
@@ -1064,20 +1189,18 @@ VALUES
     ('en', 'menu.menuPermissionAssignment', 'Menu Permission Assignment'),
     ('ko', 'menu.printApprovalDisposal', '출력 승인/폐기 관리'),
     ('en', 'menu.printApprovalDisposal', 'Print Approval / Disposal'),
-    ('ko', 'menu.auditlog', '감사로그'),
-    ('en', 'menu.auditlog', 'Audit Log'),
     ('ko', 'grid.documentGrade', '문서등급'),
     ('en', 'grid.documentGrade', 'Document Grade'),
-    ('ko', 'grid.transmittalNo', '송부번호'),
-    ('en', 'grid.transmittalNo', 'Transmittal No.'),
+    ('ko', 'grid.transmittalNo', '자료번호'),
+    ('en', 'grid.transmittalNo', 'Data No.'),
     ('ko', 'grid.requestName', '의뢰명'),
     ('en', 'grid.requestName', 'Request Name'),
     ('ko', 'grid.requestDate', '의뢰일자'),
     ('en', 'grid.requestDate', 'Request Date'),
     ('ko', 'grid.registrant', '등록자'),
     ('en', 'grid.registrant', 'Registered By'),
-    ('ko', 'form.transmittalNo', '송부번호'),
-    ('en', 'form.transmittalNo', 'Transmittal No.'),
+    ('ko', 'form.transmittalNo', '자료번호'),
+    ('en', 'form.transmittalNo', 'Data No.'),
     ('ko', 'form.requestName', '의뢰명'),
     ('en', 'form.requestName', 'Request Name'),
     ('ko', 'form.requestDate', '의뢰일자'),
@@ -1086,6 +1209,9 @@ VALUES
     ('en', 'toolbar.excel', 'Excel')
 ON CONFLICT (lang_type, lang_cd) DO UPDATE
    SET lang_desc = EXCLUDED.lang_desc;
+
+DELETE FROM docs_lang
+ WHERE lang_cd IN ('menu.accessHistory', 'menu.auditlog');
 
 -- ---------------------------------------------------------------------------
 -- Current menu ACL repair

@@ -29,7 +29,7 @@ public class HistoryManagementController extends AbstractController {
     @RequestMapping(value = "/", method = RequestMethod.GET)
     public String home() {
         securityAclService.requireCurrentUser();
-        return "redirect:/inside/distribution/viewPrintHistory/";
+        return "redirect:/inside/organizationmanage/auditlog/";
     }
 
     @RequestMapping(value = "/view/", method = RequestMethod.GET)

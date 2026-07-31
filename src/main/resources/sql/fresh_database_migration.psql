@@ -13,6 +13,7 @@
 \echo '[KT-1B] Applying user integrity, ACL, audit and download migrations...'
 \ir organization_management_integrity_ddl.sql
 \ir acl_foundation_ddl.sql
+\ir distribution_workflow_ddl.sql
 \ir audit_trail_ddl.sql
 \ir download_runtime_ddl.sql
 

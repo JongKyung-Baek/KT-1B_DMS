@@ -333,7 +333,7 @@
                         }
                     </style>
                     <link rel="stylesheet"
-                        href="${pageContext.request.contextPath}/resources/css/pages/technical-data-register.css?v=20260726.4" />
+                        href="${pageContext.request.contextPath}/resources/css/pages/technical-data-register.css?v=20260801.1" />
                 </head>
 
                 <body>
@@ -350,7 +350,7 @@
                                 </h1>
                                 <p>
                                     <spring:message code="feature.techRegister.description"
-                                        text="송부 정보와 필수 정보를 입력하고 원본 PDF를 첨부해 주세요." />
+                                        text="자료 정보와 필수 정보를 입력하고 원본 파일을 첨부해 주세요." />
                                 </p>
                             </div>
                             <div class="sw-register-hero__chips"
@@ -360,8 +360,8 @@
                                     <spring:message code="feature.techRegister.required.count" text="필수 4개 항목" />
                                 </span>
                                 <span class="sw-register-chip sw-register-chip--accent">
-                                    <i class="icon-base ti tabler-file-type-pdf" aria-hidden="true"></i>
-                                    <spring:message code="feature.techRegister.required.mainPdf" text="주파일 PDF" />
+                                    <i class="icon-base ti tabler-file" aria-hidden="true"></i>
+                                    <spring:message code="feature.techRegister.required.mainFile" text="주파일 첨부" />
                                 </span>
                             </div>
                         </header>
@@ -831,10 +831,10 @@
                                     return false;
                                 }
                                 if ($.trim($swPopupField("#swNo").val()) === "") {
-                                    /* alertMessage("송부번호를 확인하세요."); */
+                                    /* alertMessage("자료번호를 확인하세요."); */
                                     alertMessage(swRegisterMessage(
                                         "feature.techRegister.validation.transmittalNo",
-                                        "송부번호를 입력하세요."
+                                        "자료번호를 입력하세요."
                                     ));
                                     return false;
                                 }
@@ -944,28 +944,28 @@
                                     });
                                 }
 
-                                infoMessage(swRegisterMessage(
-                                    "feature.techRegister.result.complete",
-                                    "등록이 완료되었습니다."
-                                ), function () {
-                                    if (IS_SW_REGISTER_PAGE) {
-                                        location.href = "/inside/distribution/swRequest/";
-                                        return;
-                                    }
-                                    try {
-                                        if (parent && typeof parent.searchList === "function") {
-                                            parent.searchList(parent.gridParam);
-                                        }
-                                    } catch (e) { }
-                                    closePopup('popupDialog');
-                                });
                                 callAjaxUpload(formData, "/inside/distribution/swRequest/uploadSwRegisFile", requestCrXCallback);
                             }
 
                             function requestCrXCallback(response) {
-                                if (response.success) {
+                                if (response && response.success) {
+                                    infoMessage(response.message || swRegisterMessage(
+                                        "feature.techRegister.result.complete",
+                                        "등록이 완료되었습니다."
+                                    ), function () {
+                                        if (IS_SW_REGISTER_PAGE) {
+                                            location.href = "/inside/distribution/swRequest/";
+                                            return;
+                                        }
+                                        try {
+                                            if (parent && typeof parent.searchList === "function") {
+                                                parent.searchList(parent.gridParam);
+                                            }
+                                        } catch (e) { }
+                                        closePopup('popupDialog');
+                                    });
                                 } else {
-                                    alertMessage(swRegisterMessage(
+                                    alertMessage((response && response.message) || swRegisterMessage(
                                         "feature.techRegister.result.failed",
                                         "등록에 실패했습니다."
                                     ));
@@ -1219,7 +1219,7 @@
                                             <h2 id="swRegisterInfoTitle"><spring:message
                                                 code="feature.techRegister.basic.title" text="기본 정보" /></h2>
                                             <p><spring:message code="feature.techRegister.basic.description"
-                                                text="자료 식별에 필요한 분류와 송부 정보를 입력합니다." /></p>
+                                                text="자료 식별에 필요한 분류와 자료 정보를 입력합니다." /></p>
                                         </div>
                                         <span class="sw-register-required-guide">
                                             <em>*</em> <spring:message code="feature.techRegister.required.input"
@@ -1301,11 +1301,11 @@
                                     <li class="field-sw-no">
                                         <!-- <label>문서번호</label> -->
                                         <label>
-                                            <spring:message code="feature.techRegister.field.transmittalNo" text="송부번호" />
+                                            <spring:message code="feature.techRegister.field.transmittalNo" text="자료번호" />
                                             <em class="field-required">*</em>
                                         </label>
                                         <input type="text" id="swNo" name="swNo" value="" maxlength="100"
-                                            placeholder="<spring:message code='feature.techRegister.placeholder.transmittalNo' text='송부번호를 입력하세요' />"
+                                            placeholder="<spring:message code='feature.techRegister.placeholder.transmittalNo' text='자료번호를 입력하세요' />"
                                             aria-required="true" />
                                     </li>
 
@@ -1407,13 +1407,13 @@
                                         </li>
                                         <li class="sw-register-summary-item" id="summaryCheckSwNo">
                                             <span><i class="icon-base ti tabler-hash"></i>
-                                                <spring:message code="feature.techRegister.field.transmittalNo" text="송부번호" /></span>
+                                                <spring:message code="feature.techRegister.field.transmittalNo" text="자료번호" /></span>
                                             <strong class="sw-register-summary-value is-pending"
                                                 id="summarySwNo"><spring:message
                                                     code="feature.techRegister.summary.notEntered" text="미입력" /></strong>
                                         </li>
                                         <li class="sw-register-summary-item" id="summaryCheckMainFile">
-                                            <span><i class="icon-base ti tabler-file-type-pdf"></i>
+                                            <span><i class="icon-base ti tabler-file"></i>
                                                 <spring:message code="feature.techRegister.field.mainFile" text="주파일" /></span>
                                             <strong class="sw-register-summary-value is-pending"
                                                 id="summaryMainFile"><spring:message
@@ -1451,31 +1451,31 @@
                                         <h2 id="swRegisterUploadTitle"><spring:message
                                             code="feature.techRegister.upload.title" text="파일 첨부" /></h2>
                                         <p><spring:message code="feature.techRegister.upload.description"
-                                            text="원본 PDF와 함께 관리할 참고자료를 선택합니다." /></p>
+                                            text="원본 파일과 함께 관리할 참고자료를 선택합니다." /></p>
                                     </div>
                                 </header>
                                 <ul class="section popupFormGrid uploadOnly register-upload-grid">
                                 <li class="singleFileUpload full">
                                     <div class="upload-card-heading">
                                         <span class="upload-card-heading__icon" aria-hidden="true">
-                                            <i class="icon-base ti tabler-file-type-pdf"></i>
+                                            <i class="icon-base ti tabler-file"></i>
                                         </span>
                                         <div class="upload-card-heading__copy">
                                             <label for="swRegisFile">
                                                  <spring:message code="feature.techRegister.field.mainFile" text="주파일" />
                                             </label>
                                             <p><spring:message code="feature.techRegister.upload.mainDescription"
-                                                text="등록할 원본 기술자료 PDF 파일 1개를 첨부합니다." /></p>
+                                                text="등록할 원본 기술자료 파일 1개를 첨부합니다." /></p>
                                         </div>
                                         <span class="upload-card-heading__badge upload-card-badge--required"><spring:message
-                                            code="feature.techRegister.upload.requiredPdf" text="필수 · PDF" /></span>
+                                            code="feature.techRegister.upload.requiredFile" text="필수 · 파일" /></span>
                                     </div>
                                     <%-- 파일추가 --%>
                                         <div class="uploadLine"
                                             title="<spring:message code='feature.techRegister.upload.dropHint' text='파일을 끌어 놓거나 버튼을 눌러 선택하세요.' />">
                                             <form id="fileForm" name="fileForm" enctype="multipart/form-data">
                                                 <input type="file" id="swRegisFile" name="swRegisFile"
-                                                    accept=".pdf,application/pdf" onchange="fileChange()"
+                                                    accept="${allowedTechnicalFileExtensions}" onchange="fileChange()"
                                                     style="display: none;" />
                                             </form>
                                             <span class="upload-line-icon" aria-hidden="true">
@@ -1483,7 +1483,7 @@
                                             </span>
                                             <div class="fileNameWrap">
                                                 <input type="text" name="fileName" id="fileName"
-                                                    placeholder="<spring:message code='feature.techRegister.upload.mainPlaceholder' text='PDF 파일 선택 또는 드래그앤드롭' />"
+                                                    placeholder="<spring:message code='feature.techRegister.upload.mainPlaceholder' text='파일 선택 또는 드래그앤드롭' />"
                                                     readonly />
                                                 <button type="button" class="fileClearBtn"
                                                     title="<spring:message code='feature.techRegister.upload.removeFile' text='선택 파일 제거' />"
@@ -1517,6 +1517,7 @@
                                         title="<spring:message code='feature.techRegister.upload.dropHint' text='파일을 끌어 놓거나 버튼을 눌러 선택하세요.' />">
                                         <form id="subFileForm" name="subFileForm" enctype="multipart/form-data">
                                             <input type="file" id="swSubFiles" name="swSubFiles" multiple="multiple"
+                                                accept="${allowedTechnicalFileExtensions}"
                                                 style="display: none;" />
                                         </form>
                                         <span class="upload-line-icon" aria-hidden="true">
@@ -1541,6 +1542,11 @@
                                     </div>
                                 </li>
                             </ul>
+                            <p class="upload-format-help">
+                                <i class="icon-base ti tabler-info-circle" aria-hidden="true"></i>
+                                <spring:message code="feature.techRegister.upload.allowedTypes"
+                                    text="문서, 한글, 표, 프레젠테이션, 이미지와 텍스트 파일을 등록할 수 있습니다. PDF만 보안 뷰어 미리보기를 지원합니다." />
+                            </p>
                             </section>
                             <div class="dialogBtnSet">
                                 <div class="left">

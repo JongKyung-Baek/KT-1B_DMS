@@ -219,6 +219,9 @@ public class RequestAuditFilter extends OncePerRequestFilter {
         if (containsAny(source, "viewer", "/view", "preview")) {
             return new Action("VIEW", "열람");
         }
+        if (containsAny(source, "resetpwd", "passwordreset", "resetpassword")) {
+            return new Action("PASSWORD_RESET", "비밀번호 초기화");
+        }
         if ("GET".equalsIgnoreCase(request.getMethod())
                 || "HEAD".equalsIgnoreCase(request.getMethod())) {
             return new Action("READ", "조회");

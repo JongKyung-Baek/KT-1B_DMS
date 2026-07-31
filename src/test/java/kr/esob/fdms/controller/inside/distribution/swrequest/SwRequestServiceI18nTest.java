@@ -35,29 +35,32 @@ class SwRequestServiceI18nTest {
 	}
 
 	@Test
-	void mainFileValidationUsesKoreanAndEnglishRequestLocales() throws Exception {
+	void mainFileValidationUsesActualMultipartNameAndRequestLocale() throws Exception {
 		SwRequestService service = serviceWithMessages(mock(SwRequestDao.class));
-		MockMultipartHttpServletRequest request = registrationRequest("drawing.txt");
+		MockMultipartHttpServletRequest request = registrationRequest("malware.exe");
+		request.setParameter("orgFileNm", "spoofed.pdf");
 
 		LocaleContextHolder.setLocale(Locale.KOREAN);
-		assertEquals("PDF 파일만 등록할 수 있습니다.", service.saveSwRegisterFileX2(request).getMessage());
+		assertEquals("허용되지 않는 주파일 형식입니다: malware.exe",
+				service.saveSwRegisterFileX2(request).getMessage());
 
 		LocaleContextHolder.setLocale(Locale.ENGLISH);
-		assertEquals("Only PDF files can be registered.", service.saveSwRegisterFileX2(request).getMessage());
+		assertEquals("The main file type is not allowed: malware.exe",
+				service.saveSwRegisterFileX2(request).getMessage());
 	}
 
 	@Test
 	void supportingFileValidationPreservesFileNameInLocalizedMessage() {
 		SwRequestService service = serviceWithMessages(mock(SwRequestDao.class));
 		List<MultipartFile> files = Arrays.asList(
-				new MockMultipartFile("subFiles", "notes.txt", "text/plain", new byte[] { 1 }));
+				new MockMultipartFile("subFiles", "run.cmd", "application/octet-stream", new byte[] { 1 }));
 
 		LocaleContextHolder.setLocale(Locale.ENGLISH);
 		IllegalArgumentException error = assertThrows(
 				IllegalArgumentException.class,
 				() -> ReflectionTestUtils.invokeMethod(service, "saveSwSubFiles", files, "DOC-1", "TYPE"));
 
-		assertEquals("Only PDF supporting files can be registered: notes.txt", error.getMessage());
+		assertEquals("The supporting file type is not allowed: run.cmd", error.getMessage());
 	}
 
 	@Test
@@ -154,8 +157,8 @@ class SwRequestServiceI18nTest {
 
 	private Map<String, String> koreanMessages() {
 		Map<String, String> messages = new HashMap<>();
-		messages.put("feature.techRegister.validation.pdfOnly", "PDF 파일만 등록할 수 있습니다.");
-		messages.put("feature.techRegister.validation.supportingPdfOnly", "PDF 보조파일만 등록할 수 있습니다: {0}");
+		messages.put("feature.techRegister.validation.unsupportedFileType", "허용되지 않는 주파일 형식입니다: {0}");
+		messages.put("feature.techRegister.validation.unsupportedSupportingFileType", "허용되지 않는 보조파일 형식입니다: {0}");
 		messages.put("feature.techList.withdraw.selectionRequired", "철회할 대상을 선택하세요.");
 		messages.put("feature.techList.approval.deletedDocument", "삭제된 문서는 승인할 수 없습니다.");
 		messages.put("feature.techList.approval.status.notApproved", "미승인");
@@ -166,10 +169,10 @@ class SwRequestServiceI18nTest {
 
 	private Map<String, String> englishMessages() {
 		Map<String, String> messages = new HashMap<>();
-		messages.put("feature.techRegister.validation.pdfOnly", "Only PDF files can be registered.");
+		messages.put("feature.techRegister.validation.unsupportedFileType", "The main file type is not allowed: {0}");
 		messages.put(
-				"feature.techRegister.validation.supportingPdfOnly",
-				"Only PDF supporting files can be registered: {0}");
+				"feature.techRegister.validation.unsupportedSupportingFileType",
+				"The supporting file type is not allowed: {0}");
 		messages.put("feature.techList.withdraw.selectionRequired", "Select an item to withdraw.");
 		messages.put(
 				"feature.techList.approval.deletedDocument",

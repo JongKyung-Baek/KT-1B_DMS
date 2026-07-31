@@ -12,14 +12,11 @@ import org.junit.jupiter.api.Test;
 class GridStyleUnificationContractTest {
 
     @Test
-    void accessViewAndPrintHistoryStartAtUnifiedCardsAndUseCenteredTables() throws Exception {
+    void viewAndPrintHistoryStartAtUnifiedCardsAndUseCenteredTables() throws Exception {
         String css = read("src/main/resources/static/css/pages/access-history.css");
-        String accessPage = read(
-                "src/main/webapp/WEB-INF/views/inside/distribution/viewPrintHistory/historyList.jsp");
         String recordPage = read(
                 "src/main/webapp/WEB-INF/views/inside/distribution/viewPrintHistory/recordHistory.jsp");
 
-        assertFalse(accessPage.contains("ah-hero"));
         assertFalse(recordPage.contains("ah-hero"));
         assertFalse(css.contains(".ah-hero"));
         assertTrue(css.contains(".ah-log-card__header > div"));
@@ -27,12 +24,11 @@ class GridStyleUnificationContractTest {
         assertTrue(styleBlock(css, ".ah-table td {").contains("text-align: center"));
         assertTrue(styleBlock(css, ".ah-cell {").contains("align-items: center"));
         assertTrue(styleBlock(css, ".rh-detail-chips {").contains("justify-content: center"));
-        assertTrue(accessPage.contains("access-history.css?v=20260726.7"));
         assertTrue(recordPage.contains("access-history.css?v=20260731.1"));
     }
 
     @Test
-    void auditLogStartsWithSummaryAndGroupsSearchAndGridInOneCard() throws Exception {
+    void combinedAccessAuditStartsWithSearchAndGridInOneCard() throws Exception {
         String page = read(
                 "src/main/webapp/WEB-INF/views/inside/organizationmanage/auditlog/auditlogList.jsp");
         String css = read("src/main/resources/static/css/pages/audit-log.css");
@@ -43,8 +39,8 @@ class GridStyleUnificationContractTest {
         assertFalse(page.contains("class=\"audit-log-flow\""));
         assertFalse(page.contains("class=\"audit-log-hero\""));
         assertFalse(css.contains(".audit-log-page .audit-log-hero"));
-        assertTrue(page.indexOf("class=\"audit-log-summary\"")
-                < page.indexOf("class=\"audit-log-results-card\""));
+        assertFalse(page.contains("class=\"audit-log-summary\""));
+        assertFalse(css.contains(".audit-log-page .audit-log-summary"));
         assertTrue(page.contains(
                 "<section class=\"audit-log-results-card\" aria-label=\"${resultsAria}\">"));
         assertTrue(page.contains("code=\"feature.audit.results.aria\""));
@@ -88,8 +84,8 @@ class GridStyleUnificationContractTest {
                 ".audit-log-page #gridInsideAuditLogListPager input,")
                 .contains("font-size: 11px !important"));
         assertTrue(css.contains("background: #f1efff !important"));
-        assertTrue(page.contains("audit-log.css?v=20260726.5"));
-        assertTrue(page.contains("auditlogList.js?v=20260726.2"));
+        assertTrue(page.contains("audit-log.css?v=20260801.1"));
+        assertTrue(page.contains("auditlogList.js?v=20260801.1"));
     }
 
     @Test

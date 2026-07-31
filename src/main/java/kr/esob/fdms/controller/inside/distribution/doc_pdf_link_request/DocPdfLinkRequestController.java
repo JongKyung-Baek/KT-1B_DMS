@@ -10,6 +10,7 @@ import kr.esob.fdms.commonlogic.securityacl.SecurityAclService;
 import kr.esob.fdms.commonlogic.systemconfig.SystemConfig;
 import kr.esob.fdms.commonlogic.viewerintegration.ViewerDocumentMetadata;
 import kr.esob.fdms.commonlogic.viewerintegration.ViewerIntegrationService;
+import kr.esob.fdms.controller.inside.distribution.swrequest.TechnicalFileTypePolicy;
 import kr.esob.fdms.commonlogic.viewerintegration.ViewerPreparedLaunch;
 import kr.esob.fdms.commonlogic.viewer.CommonViewerParam;
 import kr.esob.fdms.commonlogic.viewer.CommonViewerService;
@@ -190,6 +191,10 @@ public class DocPdfLinkRequestController extends AbstractController {
 			aclObjectType = subFileObjectType(baseAclObjectType);
 		}
 		requireViewAccess(aclObjectType, aclObjectId, normalizedFileNo, requestNo);
+		if ("SW".equals(baseAclObjectType) && !TechnicalFileTypePolicy.isPdf(orgFileNm)) {
+			throw new AccessDeniedException(
+					"Only PDF technical-data files are available in the secured viewer.");
+		}
 
 		java.nio.file.Path requestPdf = viewerIntegrationService.createRequestPdf(correlationId);
 		String cvrtFilePathNm = requestPdf.toString();

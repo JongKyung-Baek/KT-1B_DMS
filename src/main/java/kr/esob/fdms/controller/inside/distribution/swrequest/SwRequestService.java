@@ -119,10 +119,28 @@ public class SwRequestService implements CommonService{
 		log.debug("[SW_REGISTER] request received");
 		MultipartFile file = request.getFile("file");
 		List<MultipartFile> subFiles = request.getFiles("subFiles");
+		if (file == null || file.isEmpty()) {
+			resultVo.setSuccess(false);
+			resultVo.setMessage(prop.msg("feature.techRegister.validation.mainFile"));
+			return resultVo;
+		}
 
-
-
-
+		String originalFileName = sanitizeFileName(file.getOriginalFilename());
+		if (!TechnicalFileTypePolicy.isAllowedFileName(originalFileName)) {
+			resultVo.setSuccess(false);
+			resultVo.setMessage(prop.messagesFormat(
+					"feature.techRegister.validation.unsupportedFileType",
+					LocaleContextHolder.getLocale(), originalFileName));
+			return resultVo;
+		}
+		String unsupportedSubFileName = findUnsupportedSubFileName(subFiles);
+		if (!unsupportedSubFileName.isEmpty()) {
+			resultVo.setSuccess(false);
+			resultVo.setMessage(prop.messagesFormat(
+					"feature.techRegister.validation.unsupportedSupportingFileType",
+					LocaleContextHolder.getLocale(), unsupportedSubFileName));
+			return resultVo;
+		}
 		String objectId = RandomStringGenerator.generateRandomString(32);
 
 		String currentPageNo = "1";
@@ -147,21 +165,12 @@ public class SwRequestService implements CommonService{
 		reviewerUser = reviewerUser.replace(SWTYPE_EMPTY_VALUE, "").replace(",,", ",");
 		reviewerUser = trimCsv(reviewerUser);
 
-		String originalFileName = sanitizeFileName(request.getParameter("orgFileNm"));
-		if (originalFileName.isEmpty() && file != null) {
-			originalFileName = sanitizeFileName(file.getOriginalFilename());
-		}
 		String displayFileName = safeString(request.getParameter("fileName"));
 		if (displayFileName.isEmpty()) {
 			displayFileName = FilenameUtils.removeExtension(originalFileName);
 		}
-		String extension = FilenameUtils.getExtension(originalFileName);
-		if (!"pdf".equalsIgnoreCase(extension)) {
-			resultVo.setSuccess(false);
-			resultVo.setMessage(prop.msg("feature.techRegister.validation.pdfOnly"));
-			return resultVo;
-		}
-		String savedFileName = objectId + ".pdf";
+		String extension = TechnicalFileTypePolicy.extensionOf(originalFileName);
+		String savedFileName = objectId + "." + extension;
 		String filePathNm = buildFileApiPath(savedFileName);
 
 
@@ -519,6 +528,22 @@ public class SwRequestService implements CommonService{
 		return names;
 	}
 
+	private String findUnsupportedSubFileName(List<MultipartFile> subFiles) {
+		if (subFiles == null) {
+			return "";
+		}
+		for (MultipartFile subFile : subFiles) {
+			if (subFile == null || subFile.isEmpty()) {
+				continue;
+			}
+			String originalName = sanitizeFileName(subFile.getOriginalFilename());
+			if (!TechnicalFileTypePolicy.isAllowedFileName(originalName)) {
+				return originalName;
+			}
+		}
+		return "";
+	}
+
 	private void saveSwSubFiles(List<MultipartFile> subFiles, String objectId, String distributeTypeCd) {
 		if (subFiles == null || subFiles.isEmpty()) {
 			return;
@@ -529,25 +554,18 @@ public class SwRequestService implements CommonService{
 				continue;
 			}
 
-			String originalName = subFile.getOriginalFilename();
-			if (originalName == null) {
-				originalName = "";
-			}
-			if (originalName.contains(File.separator)) {
-				originalName = originalName.substring(originalName.lastIndexOf(File.separator) + 1);
-			}
-			originalName = StringUtil.replaceLfiPath(originalName);
+			String originalName = sanitizeFileName(subFile.getOriginalFilename());
 
 			String subObjectId = RandomStringGenerator.generateRandomString(32);
-			String extension = FilenameUtils.getExtension(originalName);
-			if (!"pdf".equalsIgnoreCase(extension)) {
+			String extension = TechnicalFileTypePolicy.extensionOf(originalName);
+			if (!TechnicalFileTypePolicy.isAllowedFileName(originalName)) {
 				throw new IllegalArgumentException(
 						prop.messagesFormat(
-								"feature.techRegister.validation.supportingPdfOnly",
+								"feature.techRegister.validation.unsupportedSupportingFileType",
 								LocaleContextHolder.getLocale(),
 								originalName));
 			}
-			String savedFileName = subObjectId + ".pdf";
+			String savedFileName = subObjectId + "." + extension;
 			String savedPath = buildFileApiPath(savedFileName);
 			String savedOrgFileNm = originalName;
 			long savedSize = subFile.getSize();
@@ -1066,20 +1084,7 @@ public class SwRequestService implements CommonService{
 	}
 
 	private String[] splitFileApiPath(String filePath) {
-		String path = safeString(filePath).replace("\\", "/");
-		if (path.isEmpty() || path.startsWith("/") || path.matches("^[A-Za-z]:/.*")) {
-			return null;
-		}
-		int separator = path.indexOf("/");
-		if (separator <= 0 || separator == path.length() - 1) {
-			return null;
-		}
-		String folder = path.substring(0, separator);
-		String fileName = path.substring(separator + 1);
-		if (!fileName.toLowerCase().endsWith(".pdf")) {
-			return null;
-		}
-		return new String[] { folder, fileName };
+		return TechnicalFileTypePolicy.splitRepositoryPath(safeString(filePath));
 	}
 
 	private String safeString(Object value) {

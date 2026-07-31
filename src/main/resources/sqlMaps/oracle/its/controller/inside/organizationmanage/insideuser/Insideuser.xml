@@ -354,7 +354,20 @@
 		userInfo.LOCK_YN        AS accountLockYn,   /* 계정잠금여부 */
 		userInfo.LOGIN_COUNT    AS loginCount,      /* 비밀번호틀린회수 */
 		userInfo.USE_YN         AS useYn,           /* 재직구분 */
-		dRoleGroup.GROUP_NM     AS roleGroup        /* 사용자권한 */
+		dRoleGroup.GROUP_NM     AS roleGroup,       /* 사용자권한 */
+		securityGrade.GRADE_CD  AS clearanceGradeCd,
+		securityGrade.GRADE_NM  AS clearanceGradeNm,
+		securityGrade.GRADE_LEVEL AS clearanceGradeLevel,
+		TO_CHAR(userClearance.VALID_FROM AT TIME ZONE 'Asia/Seoul', 'YYYY-MM-DD') AS clearanceValidFrom,
+		TO_CHAR(userClearance.VALID_TO AT TIME ZONE 'Asia/Seoul', 'YYYY-MM-DD') AS clearanceValidTo,
+		CASE
+			WHEN userClearance.USER_CD IS NULL THEN 'UNASSIGNED'
+			WHEN COALESCE(securityGrade.USE_YN, 'N') != 'Y' THEN 'INACTIVE_GRADE'
+			WHEN userClearance.VALID_FROM &gt; CURRENT_TIMESTAMP THEN 'SCHEDULED'
+			WHEN userClearance.VALID_TO IS NOT NULL
+				AND userClearance.VALID_TO &lt;= CURRENT_TIMESTAMP THEN 'EXPIRED'
+			ELSE 'ACTIVE'
+		END AS clearanceStatus
 		FROM DOCS_USER userInfo
 		LEFT JOIN DOCS_DEPT docsDept
 		ON userInfo.DEPT_CD = docsDept.DEPT_CD
@@ -364,6 +377,10 @@
 		ON userInfo.USER_CD = dRoleGroupMem.MEMBER_CD
 		LEFT JOIN DOCS_ROLE_GROUP dRoleGroup
 		ON dRoleGroupMem.GROUP_CODE = dRoleGroup.GROUP_CODE
+		LEFT JOIN DOCS_USER_SECURITY_CLEARANCE userClearance
+		ON userClearance.USER_CD = userInfo.USER_CD
+		LEFT JOIN DOCS_SECURITY_GRADE securityGrade
+		ON securityGrade.GRADE_CD = userClearance.GRADE_CD
 		WHERE userInfo.USE_YN = 'Y'
 		<if test='sortColumn != null and !"".equals(sortColumn)'>
 			ORDER BY ${sortColumn} ${order}
@@ -422,8 +439,13 @@
 
 <update id="resetPwd">
 	UPDATE DOCS_USER
-	SET USER_PWD = #{userPwd}
+	SET USER_PWD = #{userPwd},
+		PWD_UPDATE_DT = CURRENT_TIMESTAMP,
+		LOGIN_COUNT = 0,
+		LOCK_YN = 'N'
 	WHERE USER_CD = #{userCd}
+	  AND USE_YN = 'Y'
+	  AND DEL_YN = 'N'
 </update>
 
 

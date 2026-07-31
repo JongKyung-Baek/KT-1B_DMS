@@ -120,6 +120,12 @@
 		return true;
 	}
 
+	function isSwPdfFile(rowdata, fallbackName) {
+		var fileName = (rowdata && (rowdata.orgFileNm || rowdata.fileViewNm || rowdata.fileNm || rowdata.fileName))
+			|| fallbackName || "";
+		return /\.pdf$/i.test(String(fileName).trim());
+	}
+
 	function formatSwFileName(cellValue, rowdata, useSubFileNo) {
 		var name = isSwProcessingFileLabel(cellValue) ? swProcessingFileLabel() : (cellValue || "");
 		if (name === "") {
@@ -127,6 +133,12 @@
 		}
 		if (!isDownloadableSwFile(rowdata || {})) {
 			return escapeAttr(name);
+		}
+		if (!isSwPdfFile(rowdata || {}, name)) {
+			return '<span class="sw-file-name-static">' + escapeAttr(name) + '</span>'
+				+ '<span class="sw-file-preview-unavailable">'
+				+ escapeAttr(swFileMessage("feature.techDetail.file.previewUnavailable", "미리보기 미지원"))
+				+ '</span>';
 		}
 		var objectId = rowdata.objectId || "";
 		var fileNo = rowdata.fileNo || "";
@@ -650,6 +662,31 @@
 		text-decoration: underline;
 	}
 
+	.sw-file-popup .sw-file-name-static {
+		display: inline-block;
+		max-width: calc(100% - 118px);
+		vertical-align: middle;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.sw-file-popup .sw-file-preview-unavailable {
+		display: inline-flex;
+		align-items: center;
+		margin-left: 8px;
+		padding: 2px 7px;
+		border: 1px solid #d9e1ec;
+		border-radius: 999px;
+		background: #f6f8fb;
+		color: #6b778c;
+		font-size: 11px;
+		font-weight: 700;
+		line-height: 1.35;
+		vertical-align: middle;
+		white-space: nowrap;
+	}
+
 	.sw-file-popup .ui-jqgrid input.cbox,
 	.sw-file-popup .ui-jqgrid input.cbox:hover,
 	.sw-file-popup .ui-jqgrid input.cbox:focus,
@@ -696,7 +733,7 @@
 	<div class="sw-detail-summary" role="list"
 		 aria-label="<spring:message code='feature.techDetail.summary.aria' text='기술자료 요약' />">
 		<span class="sw-detail-summary__chip" role="listitem">
-			<spring:message code="feature.techDetail.transmittalNo" text="송부번호" />
+			<spring:message code="feature.techDetail.transmittalNo" text="자료번호" />
 			<strong><c:out value="${empty documentInfo.swNo ? '-' : documentInfo.swNo}" /></strong>
 		</span>
 		<span class="sw-detail-summary__chip" role="listitem">
@@ -715,7 +752,7 @@
 		</div>
 		<dl class="sw-detail-grid">
 			<div class="sw-detail-item">
-				<dt><spring:message code="feature.techDetail.transmittalNo" text="송부번호" /></dt>
+				<dt><spring:message code="feature.techDetail.transmittalNo" text="자료번호" /></dt>
 				<dd><c:out value="${empty documentInfo.swNo ? '-' : documentInfo.swNo}" /></dd>
 			</div>
 			<div class="sw-detail-item sw-detail-item--span-3">

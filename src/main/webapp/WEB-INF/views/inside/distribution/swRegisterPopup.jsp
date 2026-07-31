@@ -441,8 +441,8 @@
                     }
 
                     function requestCrXCallback(response) {
-                        if (response.success) {
-                            infoMessage(g_msg('msg.registerComplete'), function () {
+                        if (response && response.success) {
+                            infoMessage(response.message || g_msg('msg.registerComplete'), function () {
                                 $(this).dialog("close");
                                 if (IS_SW_REGISTER_PAGE) {
                                     location.href = "/inside/distribution/swRequest/";
@@ -456,7 +456,7 @@
                                 closePopup('popupDialog');
                             });
                         } else {
-                            alertMessage(g_msg("msg.registerFailure"));						//등록에 실패했습니다.
+                            alertMessage((response && response.message) || g_msg("msg.registerFailure"));
                         }
                     }
 
@@ -791,6 +791,7 @@
                                 <div class="uploadLine" title="Drag and drop a file to upload it, or click the button.">
                                     <form id="fileForm" name="fileForm" enctype="multipart/form-data">
                                         <input type="file" id="swRegisFile" name="swRegisFile" onchange="fileChange()"
+                                            accept="${allowedTechnicalFileExtensions}"
                                             style="display: none;" />
                                     </form>
                                     <div class="fileNameWrap">
@@ -811,6 +812,7 @@
                             <div class="uploadLine" title="Drag and drop a file to upload it, or click the button.">
                                 <form id="subFileForm" name="subFileForm" enctype="multipart/form-data">
                                     <input type="file" id="swSubFiles" name="swSubFiles" multiple="multiple"
+                                        accept="${allowedTechnicalFileExtensions}"
                                         style="display: none;" />
                                 </form>
                                 <div class="fileNameWrap">

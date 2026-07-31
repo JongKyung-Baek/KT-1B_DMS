@@ -159,6 +159,22 @@ class RequestAuditFilterTest {
     }
 
     @Test
+    void passwordResetIsRecordedAsItsOwnAdministrativeAction() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest(
+                "POST", "/inside/organizationmanage/insideuser/resetPwd");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        when(menuResolver.resolve(request)).thenReturn(menu);
+
+        filter.doFilter(request, response, (req, res) -> {
+        });
+
+        verify(auditWriter).writeMenuAction(
+                eq(actor), eq(menu), eq("PASSWORD_RESET"), eq("비밀번호 초기화"),
+                eq("SUCCESS"), isNull(), eq("HTTP 200"), eq(200), anyLong(),
+                any(String.class));
+    }
+
+    @Test
     void getRegistrationPopupIsReadRatherThanCreate() throws Exception {
         MockHttpServletRequest request =
                 new MockHttpServletRequest("GET", "/inside/distribution/swRequest/regist");

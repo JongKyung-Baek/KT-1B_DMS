@@ -17,6 +17,7 @@ function getAuditActionLabel(actionType) {
         LOGIN: ["feature.audit.action.login", "로그인"],
         LOGOUT: ["feature.audit.action.logout", "로그아웃"],
         PASSWORD_CHANGE: ["feature.audit.action.passwordChange", "비밀번호 변경"],
+        PASSWORD_RESET: ["feature.audit.action.passwordReset", "비밀번호 초기화"],
         DOWNLOAD: ["feature.audit.action.download", "다운로드"],
         PRINT: ["feature.audit.action.print", "출력"],
         VIEW: ["feature.audit.action.view", "열람"],
@@ -247,7 +248,7 @@ function ensureAuditLogResetButton() {
             id: "auditLogResetButton",
             type: "button",
             class: "audit-log-reset-btn",
-            "aria-label": auditText("feature.audit.search.resetAria", "감사로그 검색조건 초기화")
+            "aria-label": auditText("feature.audit.search.resetAria", "접근·감사이력 검색조건 초기화")
         })
             .append($("<i>", {
                 class: "icon-base ti tabler-refresh",

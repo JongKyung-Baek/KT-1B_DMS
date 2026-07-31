@@ -354,14 +354,14 @@ public class SwRequestController extends AbstractController {
 
 		String filePath = fileInfo.get("filePath") == null ? "" : String.valueOf(fileInfo.get("filePath"));
 		String orgFileNm = fileInfo.get("orgFileNm") == null ? "download.bin" : String.valueOf(fileInfo.get("orgFileNm"));
-		if (!isPdfFilePath(filePath) && !isAdminRole(authentication)) {
+		if (!TechnicalFileTypePolicy.hasMatchingAllowedExtension(orgFileNm, filePath)) {
 			recordDirectDownloadResult(fileInfo, "SW", objectId, fileNo,
 					"FAIL", "FILE_TYPE_DENIED", "Direct download file type was denied.");
 			return ResponseEntity.status(403).build();
 		}
 		byte[] bytes;
 		try {
-			bytes = "Y".equalsIgnoreCase(watermarkYn) && !isFileApiPath(filePath)
+			bytes = "Y".equalsIgnoreCase(watermarkYn) && isPdfFilePath(filePath) && !isFileApiPath(filePath)
 					? requestWatermarkPdf(filePath, orgFileNm, authentication) : null;
 			if (bytes == null || bytes.length == 0) {
 				bytes = service.readSwFileBytes(filePath);
@@ -384,6 +384,8 @@ public class SwRequestController extends AbstractController {
 		return ResponseEntity.ok()
 				.contentType(MediaType.APPLICATION_OCTET_STREAM)
 				.header("Content-Disposition", "attachment; filename*=UTF-8''" + encodedFileName)
+				.header("Cache-Control", "no-store, private")
+				.header("X-Content-Type-Options", "nosniff")
 				.contentLength(bytes.length)
 				.body(bytes);
 	}
@@ -416,28 +418,15 @@ public class SwRequestController extends AbstractController {
 	}
 
 	private String buildDownloadFileName(String filePath, String orgFileNm) {
-		String downloadFileName = orgFileNm == null || orgFileNm.trim().isEmpty() ? "download.bin" : orgFileNm.trim();
-		if (isPdfFilePath(filePath) && !downloadFileName.toLowerCase().endsWith(".pdf")) {
-			int dotIndex = downloadFileName.lastIndexOf('.');
-			downloadFileName = (dotIndex > 0 ? downloadFileName.substring(0, dotIndex) : downloadFileName) + ".pdf";
-		}
-		return downloadFileName;
+		return orgFileNm == null || orgFileNm.trim().isEmpty() ? "download.bin" : orgFileNm.trim();
 	}
 
 	private boolean isPdfFilePath(String filePath) {
-		return filePath != null && filePath.trim().toLowerCase().endsWith(".pdf");
+		return TechnicalFileTypePolicy.isPdf(filePath);
 	}
 
 	private boolean isFileApiPath(String filePath) {
-		String path = filePath == null ? "" : filePath.trim().replace("\\", "/");
-		if (path.isEmpty() || path.startsWith("/") || path.matches("^[A-Za-z]:/.*")) {
-			return false;
-		}
-		int separator = path.indexOf("/");
-		if (separator <= 0 || separator == path.length() - 1) {
-			return false;
-		}
-		return path.substring(separator + 1).toLowerCase().endsWith(".pdf");
+		return TechnicalFileTypePolicy.splitRepositoryPath(filePath) != null;
 	}
 
 	private byte[] requestWatermarkPdf(String inputPdfPath, String orgFileNm, Authentication authentication) {
@@ -510,29 +499,6 @@ public class SwRequestController extends AbstractController {
 
 	//2023.07.24 기범추가 ( 등록 )
 
-	private boolean isAdminRole(Authentication authentication) {
-		try {
-			UserVO userVo = (UserVO) authentication.getPrincipal();
-			return "RG_001".equals(userVo.getRoleGroup());
-		} catch (Exception ignored) {
-			return false;
-		}
-	}
-
-	private boolean isNonConvertibleFile(String fileName) {
-		if (fileName == null) {
-			return true;
-		}
-		String lower = fileName.toLowerCase();
-		int dot = lower.lastIndexOf('.');
-		if (dot < 0 || dot == lower.length() - 1) {
-			return true;
-		}
-		String ext = lower.substring(dot + 1);
-		return !java.util.Arrays.asList(
-				"pdf"
-		).contains(ext);
-	}
 	@RequestMapping("/swRegisterPopup")
 	public String registerPopup(SwRegisterPopupParam param, Model model) {
 		setRegisterModel(param, model);
@@ -570,6 +536,7 @@ public class SwRequestController extends AbstractController {
 		model.addAttribute("registerUser", registerUser);
 		model.addAttribute("date", date);
 		model.addAttribute("treeCd", param.getTreeCd());
+		model.addAttribute("allowedTechnicalFileExtensions", TechnicalFileTypePolicy.acceptAttribute());
 
 
 		// 파일유형, 사업단계

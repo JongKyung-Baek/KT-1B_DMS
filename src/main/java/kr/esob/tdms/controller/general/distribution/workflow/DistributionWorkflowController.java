@@ -6,7 +6,9 @@ import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.bind.ServletRequestBindingException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 @RestController
 @RequestMapping("/general/distribution/workflow/api")
@@ -90,6 +93,26 @@ public class DistributionWorkflowController {
         return service.approved(limit, offset);
     }
 
+    @GetMapping("/catalog")
+    public List<DistributionDocumentBundle> catalog(@RequestParam String treeCd) {
+        return service.catalog(treeCd);
+    }
+
+    @GetMapping("/directory/partners")
+    public List<DistributionPartnerOption> partners() {
+        return service.partners();
+    }
+
+    @GetMapping("/directory/partners/{partnerCompanyId}/users")
+    public List<DistributionRecipientOption> recipients(@PathVariable long partnerCompanyId) {
+        return service.recipients(partnerCompanyId);
+    }
+
+    @GetMapping("/directory/approvers")
+    public List<DistributionApproverOption> approvers() {
+        return service.approvers();
+    }
+
     @ExceptionHandler(DistributionWorkflowException.class)
     public ResponseEntity<Map<String, Object>> workflowError(DistributionWorkflowException exception) {
         return ResponseEntity.status(exception.getStatus())
@@ -100,6 +123,16 @@ public class DistributionWorkflowController {
     public ResponseEntity<Map<String, Object>> denied(AccessDeniedException exception) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
             .body(error("DISTRIBUTION_ACCESS_DENIED", exception.getMessage()));
+    }
+
+    @ExceptionHandler({
+        HttpMessageNotReadableException.class,
+        MethodArgumentTypeMismatchException.class,
+        ServletRequestBindingException.class
+    })
+    public ResponseEntity<Map<String, Object>> invalidRequest(Exception exception) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(error("INVALID_DISTRIBUTION_API_REQUEST", "The request format is invalid."));
     }
 
     private Map<String, Object> error(String code, String message) {

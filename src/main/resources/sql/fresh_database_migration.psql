@@ -13,7 +13,11 @@
 \echo '[KT-1B] Applying user integrity, ACL, audit and download migrations...'
 \ir organization_management_integrity_ddl.sql
 \ir acl_foundation_ddl.sql
+\echo '[KT-1B] Applying partner company and recipient directory...'
+\ir partner_management_ddl.sql
 \ir distribution_workflow_ddl.sql
+\echo '[KT-1B] Applying technical-data distribution menu hierarchy...'
+\ir distribution_workflow_menu_ddl.sql
 \ir audit_trail_ddl.sql
 \ir download_runtime_ddl.sql
 

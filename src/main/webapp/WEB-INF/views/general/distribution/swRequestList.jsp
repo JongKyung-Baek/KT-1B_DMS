@@ -52,6 +52,10 @@
 			"feature.documentGrade.unassigned": "<spring:message code='feature.documentGrade.unassigned' text='미지정' javaScriptEscape='true' />",
 			"feature.techList.grade.label": "<spring:message code='feature.techList.grade.label' text='문서등급' javaScriptEscape='true' />",
 			"feature.techList.grade.notAssigned": "<spring:message code='feature.techList.grade.notAssigned' text='문서등급이 지정되지 않았습니다.' javaScriptEscape='true' />",
+			"feature.distributionWorkflow.action.createFromSelection": "<spring:message code='feature.distributionWorkflow.action.createFromSelection' text='선택자료 배포요청' javaScriptEscape='true' />",
+			"feature.distributionWorkflow.validation.noSelection": "<spring:message code='feature.distributionWorkflow.validation.noSelection' text='배포요청할 기술자료를 선택하세요.' javaScriptEscape='true' />",
+			"feature.distributionWorkflow.validation.itemIdentifierMissing": "<spring:message code='feature.distributionWorkflow.validation.itemIdentifierMissing' text='선택한 기술자료의 파일 식별정보를 확인할 수 없습니다.' javaScriptEscape='true' />",
+			"feature.distributionWorkflow.validation.maxItems": "<spring:message code='feature.distributionWorkflow.validation.maxItems' text='배포요청에는 최대 200개 파일을 담을 수 있습니다.' javaScriptEscape='true' />",
 			"feature.grid.pager.firstPage": "<spring:message code='feature.grid.pager.firstPage' text='첫 번째 페이지로 이동' javaScriptEscape='true' />",
 			"feature.grid.pager.lastPage": "<spring:message code='feature.grid.pager.lastPage' text='마지막 페이지로 이동' javaScriptEscape='true' />",
 			"feature.grid.pager.goToPage": "<spring:message code='feature.grid.pager.goToPage' text='{0}페이지로 이동' javaScriptEscape='true' />",
@@ -61,7 +65,7 @@
 			"feature.grid.pager.total": "<spring:message code='feature.grid.pager.total' text='총 {0}' javaScriptEscape='true' />"
 		};
 	</script>
-	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/views/general/distribution/swRequestList.js?v=20260726.4"></script>
+	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/views/general/distribution/swRequestList.js?v=20260801.2"></script>
 	<script>
 		window.USE_ACCEPTANCE_VUEXY_FORM = true;
 

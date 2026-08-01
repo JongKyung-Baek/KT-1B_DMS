@@ -17,7 +17,7 @@ class SwRequestEnglishUiContractTest {
 		String page = read(
 			"src/main/webapp/WEB-INF/views/general/distribution/swRequestList.jsp");
 		int messages = page.indexOf("window.SdmsPageMessages = {");
-		int script = page.indexOf("swRequestList.js?v=20260726.4");
+		int script = page.indexOf("swRequestList.js?v=20260801.2");
 
 		assertTrue(messages >= 0);
 		assertTrue(script > messages);

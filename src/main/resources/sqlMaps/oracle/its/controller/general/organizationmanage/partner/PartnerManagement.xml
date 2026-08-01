@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="sql.PartnerManagement">
+
+    <select id="nextCompanyId" resultType="long">
+        SELECT nextval('docs_partner_company_id_seq')
+    </select>
+
+    <select id="nextUserId" resultType="long">
+        SELECT nextval('docs_partner_user_id_seq')
+    </select>
+
+    <select id="selectCompanies"
+            resultType="kr.esob.tdms.controller.general.organizationmanage.partner.PartnerCompany">
+        SELECT company.partner_company_id,
+               company.company_code,
+               company.company_name,
+               company.business_no,
+               company.contact_email,
+               company.contact_phone,
+               company.address,
+               company.use_yn,
+               MAX(partner_user.user_name)
+                   FILTER (WHERE partner_user.representative_yn = 'Y'
+                             AND partner_user.use_yn = 'Y') AS representative_user_name,
+               COUNT(partner_user.partner_user_id)
+                   FILTER (WHERE partner_user.use_yn = 'Y')::integer AS user_count,
+               company.created_at,
+               company.updated_at
+          FROM docs_partner_company company
+          LEFT JOIN docs_partner_user partner_user
+            ON partner_user.partner_company_id = company.partner_company_id
+           AND partner_user.del_yn = 'N'
+         WHERE company.del_yn = 'N'
+        <if test='keyword != null and !keyword.equals("")'>
+           AND (
+               company.company_code ILIKE '%' || #{keyword} || '%'
+               OR company.company_name ILIKE '%' || #{keyword} || '%'
+               OR COALESCE(company.business_no, '') ILIKE '%' || #{keyword} || '%'
+               OR EXISTS (
+                   SELECT 1
+                     FROM docs_partner_user searched_user
+                    WHERE searched_user.partner_company_id = company.partner_company_id
+                      AND searched_user.del_yn = 'N'
+                      AND (searched_user.user_name ILIKE '%' || #{keyword} || '%'
+                           OR searched_user.email ILIKE '%' || #{keyword} || '%')
+               )
+           )
+        </if>
+         GROUP BY company.partner_company_id
+         ORDER BY company.use_yn DESC, company.company_name, company.partner_company_id
+    </select>
+
+    <select id="selectCompany"
+            resultType="kr.esob.tdms.controller.general.organizationmanage.partner.PartnerCompany">
+        SELECT partner_company_id,
+               company_code,
+               company_name,
+               business_no,
+               contact_email,
+               contact_phone,
+               address,
+               use_yn,
+               created_at,
+               updated_at
+          FROM docs_partner_company
+         WHERE partner_company_id = #{value}
+           AND del_yn = 'N'
+    </select>
+
+    <select id="selectCompanyForUpdate"
+            resultType="kr.esob.tdms.controller.general.organizationmanage.partner.PartnerCompany">
+        SELECT partner_company_id,
+               company_code,
+               company_name,
+               business_no,
+               contact_email,
+               contact_phone,
+               address,
+               use_yn,
+               created_at,
+               updated_at
+          FROM docs_partner_company
+         WHERE partner_company_id = #{value}
+           AND del_yn = 'N'
+         FOR UPDATE
+    </select>
+
+    <select id="selectUsers"
+            resultType="kr.esob.tdms.controller.general.organizationmanage.partner.PartnerUser">
+        SELECT partner_user_id,
+               partner_company_id,
+               user_name,
+               email,
+               phone,
+               position_name,
+               representative_yn,
+               use_yn
+          FROM docs_partner_user
+         WHERE partner_company_id = #{partnerCompanyId}
+           AND del_yn = 'N'
+        <if test='!includeInactive'>
+           AND use_yn = 'Y'
+        </if>
+         ORDER BY representative_yn DESC, use_yn DESC, user_name, partner_user_id
+    </select>
+
+    <select id="countDuplicateBusinessNo" resultType="int">
+        SELECT COUNT(*)
+          FROM docs_partner_company
+         WHERE del_yn = 'N'
+           AND business_no = #{businessNo}
+        <if test='excludeCompanyId != null'>
+           AND partner_company_id &lt;&gt; #{excludeCompanyId}
+        </if>
+    </select>
+
+    <insert id="insertCompany">
+        INSERT INTO docs_partner_company (
+            partner_company_id, company_code, company_name, business_no,
+            contact_email, contact_phone, address, use_yn, del_yn,
+            created_by, created_at, updated_by, updated_at
+        ) VALUES (
+            #{company.partnerCompanyId}, #{company.companyCode}, #{company.companyName},
+            NULLIF(#{company.businessNo}, ''), NULLIF(#{company.contactEmail}, ''),
+            NULLIF(#{company.contactPhone}, ''), NULLIF(#{company.address}, ''),
+            #{company.useYn}, 'N', #{actorUserCd}, CURRENT_TIMESTAMP,
+            #{actorUserCd}, CURRENT_TIMESTAMP
+        )
+    </insert>
+
+    <update id="updateCompany">
+        UPDATE docs_partner_company
+           SET company_name = #{company.companyName},
+               business_no = NULLIF(#{company.businessNo}, ''),
+               contact_email = NULLIF(#{company.contactEmail}, ''),
+               contact_phone = NULLIF(#{company.contactPhone}, ''),
+               address = NULLIF(#{company.address}, ''),
+               use_yn = #{company.useYn},
+               updated_by = #{actorUserCd},
+               updated_at = CURRENT_TIMESTAMP
+         WHERE partner_company_id = #{company.partnerCompanyId}
+           AND del_yn = 'N'
+    </update>
+
+    <update id="softDeleteCompany">
+        UPDATE docs_partner_company
+           SET use_yn = 'N',
+               del_yn = 'Y',
+               updated_by = #{actorUserCd},
+               updated_at = CURRENT_TIMESTAMP
+         WHERE partner_company_id = #{partnerCompanyId}
+           AND del_yn = 'N'
+    </update>
+
+    <update id="softDeleteCompanyUsers">
+        UPDATE docs_partner_user
+           SET use_yn = 'N',
+               del_yn = 'Y',
+               representative_yn = 'N',
+               updated_by = #{actorUserCd},
+               updated_at = CURRENT_TIMESTAMP
+         WHERE partner_company_id = #{partnerCompanyId}
+           AND del_yn = 'N'
+    </update>
+
+    <update id="clearRepresentatives">
+        UPDATE docs_partner_user
+           SET representative_yn = 'N',
+               updated_by = #{actorUserCd},
+               updated_at = CURRENT_TIMESTAMP
+         WHERE partner_company_id = #{partnerCompanyId}
+           AND representative_yn = 'Y'
+           AND del_yn = 'N'
+    </update>
+
+    <insert id="insertUser">
+        INSERT INTO docs_partner_user (
+            partner_user_id, partner_company_id, user_name, email, phone,
+            position_name, representative_yn, use_yn, del_yn,
+            created_by, created_at, updated_by, updated_at
+        ) VALUES (
+            #{user.partnerUserId}, #{user.partnerCompanyId}, #{user.userName},
+            #{user.email}, NULLIF(#{user.phone}, ''), NULLIF(#{user.positionName}, ''),
+            #{user.representativeYn}, #{user.useYn}, 'N',
+            #{actorUserCd}, CURRENT_TIMESTAMP, #{actorUserCd}, CURRENT_TIMESTAMP
+        )
+    </insert>
+
+    <update id="updateUser">
+        UPDATE docs_partner_user
+           SET user_name = #{user.userName},
+               email = #{user.email},
+               phone = NULLIF(#{user.phone}, ''),
+               position_name = NULLIF(#{user.positionName}, ''),
+               representative_yn = #{user.representativeYn},
+               use_yn = #{user.useYn},
+               updated_by = #{actorUserCd},
+               updated_at = CURRENT_TIMESTAMP
+         WHERE partner_user_id = #{user.partnerUserId}
+           AND partner_company_id = #{user.partnerCompanyId}
+           AND del_yn = 'N'
+    </update>
+
+    <update id="softDeleteMissingUsers">
+        UPDATE docs_partner_user
+           SET use_yn = 'N',
+               del_yn = 'Y',
+               representative_yn = 'N',
+               updated_by = #{actorUserCd},
+               updated_at = CURRENT_TIMESTAMP
+         WHERE partner_company_id = #{partnerCompanyId}
+           AND del_yn = 'N'
+           AND partner_user_id NOT IN
+           <foreach collection="retainedUserIds" item="userId" open="(" separator="," close=")">
+               #{userId}
+           </foreach>
+    </update>
+
+    <select id="selectActiveRecipients"
+            resultType="kr.esob.tdms.controller.general.organizationmanage.partner.PartnerRecipient">
+        SELECT company.partner_company_id,
+               company.company_code,
+               company.company_name,
+               partner_user.partner_user_id,
+               partner_user.user_name,
+               partner_user.email,
+               partner_user.phone,
+               partner_user.position_name,
+               partner_user.representative_yn
+          FROM docs_partner_company company
+          JOIN docs_partner_user partner_user
+            ON partner_user.partner_company_id = company.partner_company_id
+           AND partner_user.use_yn = 'Y'
+           AND partner_user.del_yn = 'N'
+         WHERE company.use_yn = 'Y'
+           AND company.del_yn = 'N'
+        <if test='_parameter != null'>
+           AND company.partner_company_id = #{value}
+        </if>
+         ORDER BY company.company_name,
+                  partner_user.representative_yn DESC,
+                  partner_user.user_name,
+                  partner_user.partner_user_id
+    </select>
+
+    <select id="selectActiveRecipient"
+            resultType="kr.esob.tdms.controller.general.organizationmanage.partner.PartnerRecipient">
+        SELECT company.partner_company_id,
+               company.company_code,
+               company.company_name,
+               partner_user.partner_user_id,
+               partner_user.user_name,
+               partner_user.email,
+               partner_user.phone,
+               partner_user.position_name,
+               partner_user.representative_yn
+          FROM docs_partner_company company
+          JOIN docs_partner_user partner_user
+            ON partner_user.partner_company_id = company.partner_company_id
+           AND partner_user.use_yn = 'Y'
+           AND partner_user.del_yn = 'N'
+         WHERE company.partner_company_id = #{partnerCompanyId}
+           AND partner_user.partner_user_id = #{partnerUserId}
+           AND company.use_yn = 'Y'
+           AND company.del_yn = 'N'
+    </select>
+</mapper>

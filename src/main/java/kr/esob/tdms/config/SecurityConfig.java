@@ -120,6 +120,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 				.antMatchers("/general/system/securityaccess/**").hasAuthority("ROLE_MENU_222")
 				.antMatchers("/general/organizationmanage/insidedept/**")
 				.hasAuthority("ROLE_MENU_199")
+				// Partner contacts are maintained independently from TDMS login
+				// accounts and are available only through their explicit menu role.
+				.antMatchers("/general/organizationmanage/partner/**")
+				.hasAuthority("ROLE_MENU_230")
 				// Logout lifecycle callbacks are used by every authenticated session,
 				// independently of access/audit-history menu permission.
 				.antMatchers(HttpMethod.POST,
@@ -132,7 +136,21 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 						"/general/distribution/viewPrintHistory",
 						"/general/distribution/viewPrintHistory/")
 				.hasAuthority("ROLE_MENU_218")
-				.antMatchers("/general/distribution/viewPrintHistory/**").denyAll();
+				.antMatchers("/general/distribution/viewPrintHistory/**").denyAll()
+				// Distribution request pages are menu-authorized. Approval mutations
+				// also retain the service-level RG_001 check as defense in depth.
+				.antMatchers("/general/distribution/workflow/approval/**")
+				.hasAuthority("ROLE_MENU_227")
+				.antMatchers(HttpMethod.GET,
+						"/general/distribution/workflow/api/approval-queue")
+				.hasAuthority("ROLE_MENU_227")
+				.antMatchers(HttpMethod.POST,
+						"/general/distribution/workflow/api/requests/*/approve",
+						"/general/distribution/workflow/api/requests/*/reject")
+				.hasAuthority("ROLE_MENU_227")
+				// Request ownership and approved-item file ACL are enforced by the
+				// workflow service. Keep those APIs available to signed-in users.
+				.antMatchers("/general/distribution/workflow/api/**").authenticated();
 
 		// Spring Security uses the first matching pattern. Put longer, more
 		// specific menu routes first so parent patterns cannot shadow children.

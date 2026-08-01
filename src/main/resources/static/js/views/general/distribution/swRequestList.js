@@ -80,6 +80,7 @@ function resolveSwRequestTreeNodeVisual(node, depthNo, hasChildren) {
 }
 
 $(function() {
+	ensureSwRequestWorkflowToolbar();
 	initSwRequestExplorerTree();
 });
 
@@ -794,13 +795,13 @@ function updateSwRequestTreeSelection(label, pathLabel) {
 }
 
 function renderToolbarNavigator(pathLabel) {
-	var $btnArea = $(".distribution-invoice-layout > .btnArea");
-	var $right = $btnArea.find(".right");
+	var toolbar = ensureSwRequestWorkflowToolbar();
 	var hasSelection = getSelectedSwRequestTreeFilters().length > 0;
-	if (!$right.length) {
+	if (!toolbar) {
 		setTimeout(function() { renderToolbarNavigator(pathLabel); }, 200);
 		return;
 	}
+	var $right = toolbar.right;
 
 	var $nav = $right.find(".tree-toolbar-navigator");
 	if (!$nav.length) {
@@ -835,8 +836,110 @@ function renderToolbarNavigator(pathLabel) {
 		.prop("hidden", !hasSelection);
 }
 
+function ensureSwRequestWorkflowToolbar() {
+	var $btnArea = $(".distribution-invoice-layout > .btnArea");
+	if (!$btnArea.length) {
+		return null;
+	}
+
+	var $left = $btnArea.children(".left").first();
+	if (!$left.length) {
+		$left = $("<div>", { "class": "left" }).appendTo($btnArea);
+	}
+	var $right = $btnArea.children(".right").first();
+	if (!$right.length) {
+		$right = $("<div>", { "class": "right" }).appendTo($btnArea);
+	}
+
+	if (!$left.children("#swDistributionRequestButton").length) {
+		var $button = $("<button>", {
+			id: "swDistributionRequestButton",
+			type: "button",
+			"class": "ui-button ui-corner-all sw-distribution-request-button",
+			"aria-label": swRequestMessage(
+				"feature.distributionWorkflow.action.createFromSelection",
+				"선택자료 배포요청"
+			)
+		});
+		$button.append($("<i>", {
+			"class": "icon-base ti tabler-send",
+			"aria-hidden": "true"
+		}));
+		$button.append($("<span>").text(swRequestMessage(
+			"feature.distributionWorkflow.action.createFromSelection",
+			"선택자료 배포요청"
+		)));
+		$button.on("click", requestDistribute);
+		$left.prepend($button);
+	}
+
+	$btnArea.removeClass("is-empty");
+	$left.show();
+	$right.show();
+
+	if (!$btnArea.data("workflowToolbarObserver")) {
+		var observer = new MutationObserver(function() {
+			if (!document.getElementById("swDistributionRequestButton")) {
+				window.setTimeout(ensureSwRequestWorkflowToolbar, 0);
+			}
+		});
+		observer.observe($btnArea.get(0), { childList: true, subtree: true });
+		$btnArea.data("workflowToolbarObserver", observer);
+	}
+
+	return { area: $btnArea, left: $left, right: $right };
+}
+
 function requestDistribute(){
-	requestInsideUser('DISTRIBUTION', 'SW', 'gridSwRequestList');
+	var $grid = $("#gridSwRequestList");
+	var selectedRows = $grid.jqGrid("getGridParam", "selarrrow") || [];
+	if (!selectedRows.length) {
+		alertMessage(swRequestMessage(
+			"feature.distributionWorkflow.validation.noSelection",
+			"배포요청할 기술자료를 선택하세요."
+		));
+		return false;
+	}
+	if (selectedRows.length > 200) {
+		alertMessage(swRequestMessage(
+			"feature.distributionWorkflow.validation.maxItems",
+			"배포요청에는 최대 200개 파일을 담을 수 있습니다."
+		));
+		return false;
+	}
+
+	var query = [];
+	var duplicateGuard = {};
+	var invalidItem = false;
+	$.each(selectedRows, function(index, rowId) {
+		var raw = $grid.jqGrid("getLocalRow", rowId) || {};
+		var rendered = $grid.jqGrid("getRowData", rowId) || {};
+		var objectId = $.trim(String(raw.objectId || rendered.objectId || ""));
+		var fileNo = $.trim(String(raw.fileNo || rendered.fileNo || ""));
+		var itemKey = objectId + "\u0000" + fileNo;
+		if (!objectId || !fileNo) {
+			invalidItem = true;
+			return false;
+		}
+		if (duplicateGuard[itemKey]) {
+			return;
+		}
+		duplicateGuard[itemKey] = true;
+		query.push("objectType=" + encodeURIComponent("SW"));
+		query.push("objectId=" + encodeURIComponent(objectId));
+		query.push("fileNo=" + encodeURIComponent(fileNo));
+	});
+
+	if (invalidItem || !query.length) {
+		alertMessage(swRequestMessage(
+			"feature.distributionWorkflow.validation.itemIdentifierMissing",
+			"선택한 기술자료의 파일 식별정보를 확인할 수 없습니다."
+		));
+		return false;
+	}
+
+	window.location.href = "/general/distribution/workflow/requests/new?" + query.join("&");
+	return true;
 }
 
 function requestPrint(){

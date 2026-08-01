@@ -9,6 +9,8 @@ public class DistributionRequestItemSnapshot {
     private Long itemId;
     private Long requestId;
     private int lineNo;
+    private int documentLineNo;
+    private int fileLineNo;
     private String objectType;
     private String objectId;
     private String fileNo;
@@ -17,5 +19,10 @@ public class DistributionRequestItemSnapshot {
     private String originalFileName;
     private Long fileSize;
     private String gradeCd;
+    private String gradeNm;
+    private String treeCd;
+    private String treeNm;
+    private String parentTreeCd;
+    private String parentTreeNm;
     private String snapshotAt;
 }

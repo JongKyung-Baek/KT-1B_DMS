@@ -1155,3 +1155,9 @@
     transition: none;
   }
 }
+.technical-data-list-page .sw-distribution-request-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+}

@@ -16,6 +16,14 @@ public class DistributionRequestRecord {
     private String requestedByUserNm;
     private String requestedDeptCd;
     private String requestedDeptNm;
+    private Long partnerCompanyId;
+    private String partnerCompanyCode;
+    private String partnerCompanyName;
+    private String approverUserCd;
+    private String approverUserId;
+    private String approverUserNm;
+    private String distributionStartDate;
+    private String distributionEndDate;
     private String submittedAt;
     private String decidedAt;
     private String decidedByUserCd;
@@ -24,5 +32,8 @@ public class DistributionRequestRecord {
     private String decisionComment;
     private String createdAt;
     private String updatedAt;
+    private int recipientCount;
+    private int documentCount;
     private int itemCount;
+    private int remainingDays;
 }

@@ -1,0 +1,243 @@
+<div class="dw-dialog" id="workflowDialog" hidden>
+    <div class="dw-dialog__backdrop" data-workflow-close></div>
+    <section class="dw-dialog__panel" role="dialog" aria-modal="true"
+             aria-labelledby="workflowDialogTitle" tabindex="-1">
+        <header class="dw-dialog__header">
+            <div>
+                <span class="dw-section-kicker" data-i18n-key="feature.distributionWorkflow.dialog.kicker">
+                    <spring:message code="feature.distributionWorkflow.dialog.kicker" text="DISTRIBUTION WORKFLOW"/>
+                </span>
+                <h2 id="workflowDialogTitle"></h2>
+            </div>
+            <button type="button" class="dw-icon-button" id="workflowDialogClose" data-workflow-close
+                    aria-label="<spring:message code='feature.distributionWorkflow.action.close' text='닫기'/>">
+                <i class="icon-base ti tabler-x" aria-hidden="true"></i>
+            </button>
+        </header>
+
+        <div class="dw-dialog__body">
+            <div class="dw-alert" id="workflowDialogMessage" role="status" aria-live="polite" hidden></div>
+
+            <div class="dw-request-meta" id="workflowRequestMeta" hidden>
+                <span class="dw-meta-chip"><i class="icon-base ti tabler-file-description" aria-hidden="true"></i>
+                    <span id="workflowRequestNo"></span>
+                </span>
+                <span class="dw-status-chip" id="workflowRequestStatus"></span>
+                <span class="dw-meta-chip"><i class="icon-base ti tabler-user" aria-hidden="true"></i>
+                    <span id="workflowRequester"></span>
+                </span>
+                <span class="dw-meta-chip"><i class="icon-base ti tabler-calendar" aria-hidden="true"></i>
+                    <span id="workflowCreatedAt"></span>
+                </span>
+            </div>
+
+            <form id="workflowRequestForm" autocomplete="off">
+                <div class="dw-form-grid">
+                    <label class="dw-field dw-field--wide">
+                        <span data-i18n-key="feature.distributionWorkflow.label.title">
+                            <spring:message code="feature.distributionWorkflow.label.title" text="요청 제목"/>
+                            <em aria-hidden="true">*</em>
+                        </span>
+                        <input type="text" id="workflowTitle" maxlength="200" required
+                               placeholder="<spring:message code='feature.distributionWorkflow.placeholder.title' text='배포 목적을 알 수 있는 제목을 입력하세요.'/>">
+                    </label>
+                    <label class="dw-field dw-field--wide">
+                        <span data-i18n-key="feature.distributionWorkflow.label.purpose">
+                            <spring:message code="feature.distributionWorkflow.label.purpose" text="배포 목적"/>
+                        </span>
+                        <textarea id="workflowPurpose" maxlength="2000" rows="3"
+                                  placeholder="<spring:message code='feature.distributionWorkflow.placeholder.purpose' text='자료가 필요한 목적과 사용 범위를 입력하세요.'/>"></textarea>
+                        <small><span id="workflowPurposeLength">0</span>/2000</small>
+                    </label>
+                    <label class="dw-field">
+                        <span data-i18n-key="feature.distributionWorkflow.label.partnerCompany">
+                            <spring:message code="feature.distributionWorkflow.label.partnerCompany" text="협력업체"/>
+                            <em aria-hidden="true">*</em>
+                        </span>
+                        <select id="workflowPartnerCompany" required
+                                aria-label="<spring:message code='feature.distributionWorkflow.label.partnerCompany' text='협력업체'/>">
+                            <option value=""><spring:message code="feature.distributionWorkflow.placeholder.partnerCompany" text="협력업체를 선택하세요."/></option>
+                        </select>
+                    </label>
+                    <label class="dw-field">
+                        <span data-i18n-key="feature.distributionWorkflow.label.approver">
+                            <spring:message code="feature.distributionWorkflow.label.approver" text="승인자"/>
+                            <em aria-hidden="true">*</em>
+                        </span>
+                        <select id="workflowApprover" required
+                                aria-label="<spring:message code='feature.distributionWorkflow.label.approver' text='승인자'/>">
+                            <option value=""><spring:message code="feature.distributionWorkflow.placeholder.approver" text="승인자를 선택하세요."/></option>
+                        </select>
+                    </label>
+                    <fieldset class="dw-field dw-field--wide dw-recipient-field">
+                        <legend data-i18n-key="feature.distributionWorkflow.label.recipients">
+                            <spring:message code="feature.distributionWorkflow.label.recipients" text="수신자"/>
+                            <em aria-hidden="true">*</em>
+                        </legend>
+                        <div class="dw-recipient-list" id="workflowRecipients"
+                             aria-live="polite"
+                             data-empty-message="<spring:message code='feature.distributionWorkflow.message.selectPartnerFirst' text='협력업체를 먼저 선택하세요.'/>">
+                            <p class="dw-recipient-empty"><spring:message code="feature.distributionWorkflow.message.selectPartnerFirst" text="협력업체를 먼저 선택하세요."/></p>
+                        </div>
+                        <small id="workflowRecipientHelp"><spring:message code="feature.distributionWorkflow.help.recipients" text="대표사용자는 기본 선택되며 같은 업체의 사용자를 함께 지정할 수 있습니다."/></small>
+                    </fieldset>
+                    <label class="dw-field">
+                        <span data-i18n-key="feature.distributionWorkflow.label.distributionStartDate">
+                            <spring:message code="feature.distributionWorkflow.label.distributionStartDate" text="배포 시작일"/>
+                            <em aria-hidden="true">*</em>
+                        </span>
+                        <input type="date" id="workflowDistributionStartDate" required>
+                    </label>
+                    <label class="dw-field">
+                        <span data-i18n-key="feature.distributionWorkflow.label.distributionEndDate">
+                            <spring:message code="feature.distributionWorkflow.label.distributionEndDate" text="배포 종료일"/>
+                            <em aria-hidden="true">*</em>
+                        </span>
+                        <input type="date" id="workflowDistributionEndDate" required>
+                        <small><spring:message code="feature.distributionWorkflow.help.distributionPeriod" text="기본 7일이며 종료일 다음 날 자동 만료됩니다."/></small>
+                    </label>
+                </div>
+            </form>
+
+            <section class="dw-items" aria-labelledby="workflowItemsTitle">
+                <header class="dw-items__header">
+                    <div>
+                        <h3 id="workflowItemsTitle" data-i18n-key="feature.distributionWorkflow.items.title">
+                            <spring:message code="feature.distributionWorkflow.items.title" text="배포 대상 기술자료"/>
+                        </h3>
+                        <p data-i18n-key="feature.distributionWorkflow.items.description">
+                            <spring:message code="feature.distributionWorkflow.items.description"
+                                            text="기술자료를 선택하면 주파일과 모든 보조파일이 한 묶음으로 포함됩니다."/>
+                        </p>
+                    </div>
+                    <button type="button" class="dw-button dw-button--soft" id="workflowAddItem">
+                        <i class="icon-base ti tabler-plus" aria-hidden="true"></i>
+                        <span data-i18n-key="feature.distributionWorkflow.action.addItem">
+                            <spring:message code="feature.distributionWorkflow.action.addItem" text="자료 추가"/>
+                        </span>
+                    </button>
+                </header>
+
+                <div class="dw-table-wrap dw-item-editor" id="workflowItemEditor">
+                    <table class="dw-table dw-item-table">
+                        <thead>
+                        <tr>
+                            <th scope="col"><spring:message code="feature.distributionWorkflow.column.lineNo" text="번호"/></th>
+                            <th scope="col"><spring:message code="feature.distributionWorkflow.column.categoryParent" text="상위 자료분류"/></th>
+                            <th scope="col"><spring:message code="feature.distributionWorkflow.column.categoryChild" text="하위 자료분류"/></th>
+                            <th scope="col"><spring:message code="feature.distributionWorkflow.column.material" text="기술자료"/></th>
+                            <th scope="col"><spring:message code="feature.distributionWorkflow.column.grade" text="문서등급"/></th>
+                            <th scope="col"><spring:message code="feature.distributionWorkflow.column.fileBundle" text="배포 파일 묶음"/></th>
+                            <th scope="col"><spring:message code="feature.distributionWorkflow.column.actions" text="관리"/></th>
+                        </tr>
+                        </thead>
+                        <tbody id="workflowItemEditorBody"></tbody>
+                    </table>
+                </div>
+
+                <div class="dw-table-wrap dw-item-snapshot" id="workflowItemSnapshot" hidden>
+                    <table class="dw-table dw-item-table dw-item-table--snapshot">
+                        <thead>
+                        <tr>
+                            <th scope="col"><spring:message code="feature.distributionWorkflow.column.lineNo" text="번호"/></th>
+                            <th scope="col"><spring:message code="feature.distributionWorkflow.column.categoryParent" text="상위 자료분류"/></th>
+                            <th scope="col"><spring:message code="feature.distributionWorkflow.column.categoryChild" text="하위 자료분류"/></th>
+                            <th scope="col"><spring:message code="feature.distributionWorkflow.column.material" text="기술자료"/></th>
+                            <th scope="col"><spring:message code="feature.distributionWorkflow.column.grade" text="문서등급"/></th>
+                            <th scope="col"><spring:message code="feature.distributionWorkflow.column.fileName" text="파일명"/></th>
+                            <th scope="col"><spring:message code="feature.distributionWorkflow.column.fileNo" text="파일번호"/></th>
+                            <th scope="col"><spring:message code="feature.distributionWorkflow.column.fileSize" text="크기"/></th>
+                        </tr>
+                        </thead>
+                        <tbody id="workflowItemSnapshotBody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="dw-decision" id="workflowDecisionSection" hidden>
+                <label class="dw-field dw-field--wide">
+                    <span data-i18n-key="feature.distributionWorkflow.label.decisionComment">
+                        <spring:message code="feature.distributionWorkflow.label.decisionComment" text="승인·반려 의견"/>
+                    </span>
+                    <textarea id="workflowDecisionComment" maxlength="1000" rows="3"
+                              placeholder="<spring:message code='feature.distributionWorkflow.placeholder.decisionComment' text='승인 의견 또는 반려 사유를 입력하세요.'/>"></textarea>
+                    <small><span id="workflowDecisionLength">0</span>/1000</small>
+                </label>
+            </section>
+
+            <section class="dw-decision-summary" id="workflowDecisionSummary" hidden>
+                <span data-i18n-key="feature.distributionWorkflow.label.decisionComment">
+                    <spring:message code="feature.distributionWorkflow.label.decisionComment" text="승인·반려 의견"/>
+                </span>
+                <p id="workflowDecisionSummaryText"></p>
+            </section>
+
+            <section class="dw-events" id="workflowEventsSection" hidden aria-labelledby="workflowEventsTitle">
+                <header class="dw-items__header">
+                    <div>
+                        <h3 id="workflowEventsTitle" data-i18n-key="feature.distributionWorkflow.events.title">
+                            <spring:message code="feature.distributionWorkflow.events.title" text="처리이력"/>
+                        </h3>
+                        <p data-i18n-key="feature.distributionWorkflow.events.description">
+                            <spring:message code="feature.distributionWorkflow.events.description"
+                                            text="요청 생성부터 승인·반려까지의 변경 기록입니다."/>
+                        </p>
+                    </div>
+                </header>
+                <div class="dw-table-wrap dw-event-table-wrap">
+                    <table class="dw-table dw-event-table">
+                        <thead>
+                        <tr>
+                            <th scope="col"><spring:message code="feature.distributionWorkflow.column.event" text="행위"/></th>
+                            <th scope="col"><spring:message code="feature.distributionWorkflow.column.statusChange" text="상태변경"/></th>
+                            <th scope="col"><spring:message code="feature.distributionWorkflow.column.actor" text="처리자"/></th>
+                            <th scope="col"><spring:message code="feature.distributionWorkflow.column.comment" text="의견"/></th>
+                            <th scope="col"><spring:message code="feature.distributionWorkflow.column.occurredAt" text="처리일시"/></th>
+                        </tr>
+                        </thead>
+                        <tbody id="workflowEventsBody"></tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+        <footer class="dw-dialog__footer">
+            <button type="button" class="dw-button dw-button--danger-ghost" id="workflowCancelRequest" hidden>
+                <i class="icon-base ti tabler-ban" aria-hidden="true"></i>
+                <span data-i18n-key="feature.distributionWorkflow.action.cancelRequest">
+                    <spring:message code="feature.distributionWorkflow.action.cancelRequest" text="요청 취소"/>
+                </span>
+            </button>
+            <span class="dw-dialog__footer-spacer"></span>
+            <button type="button" class="dw-button dw-button--ghost" data-workflow-close>
+                <span data-i18n-key="feature.distributionWorkflow.action.close">
+                    <spring:message code="feature.distributionWorkflow.action.close" text="닫기"/>
+                </span>
+            </button>
+            <button type="button" class="dw-button dw-button--ghost" id="workflowSaveDraft" hidden>
+                <i class="icon-base ti tabler-device-floppy" aria-hidden="true"></i>
+                <span data-i18n-key="feature.distributionWorkflow.action.saveDraft">
+                    <spring:message code="feature.distributionWorkflow.action.saveDraft" text="임시저장"/>
+                </span>
+            </button>
+            <button type="button" class="dw-button dw-button--primary" id="workflowSubmit" hidden>
+                <i class="icon-base ti tabler-send" aria-hidden="true"></i>
+                <span data-i18n-key="feature.distributionWorkflow.action.submit">
+                    <spring:message code="feature.distributionWorkflow.action.submit" text="승인 요청"/>
+                </span>
+            </button>
+            <button type="button" class="dw-button dw-button--danger" id="workflowReject" hidden>
+                <i class="icon-base ti tabler-x" aria-hidden="true"></i>
+                <span data-i18n-key="feature.distributionWorkflow.action.reject">
+                    <spring:message code="feature.distributionWorkflow.action.reject" text="반려"/>
+                </span>
+            </button>
+            <button type="button" class="dw-button dw-button--success" id="workflowApprove" hidden>
+                <i class="icon-base ti tabler-check" aria-hidden="true"></i>
+                <span data-i18n-key="feature.distributionWorkflow.action.approve">
+                    <spring:message code="feature.distributionWorkflow.action.approve" text="승인"/>
+                </span>
+            </button>
+        </footer>
+    </section>
+</div>

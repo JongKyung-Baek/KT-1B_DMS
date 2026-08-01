@@ -10,5 +10,10 @@ import lombok.Setter;
 public class DistributionRequestSaveRequest {
     private String title;
     private String purpose;
-    private List<DistributionRequestItemRef> items;
+    private Long partnerCompanyId;
+    private List<Long> recipientUserIds;
+    private String approverUserCd;
+    private String distributionStartDate;
+    private String distributionEndDate;
+    private List<DistributionRequestDocumentRef> documents;
 }

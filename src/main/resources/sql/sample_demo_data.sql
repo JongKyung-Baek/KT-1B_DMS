@@ -39,6 +39,13 @@ $$;
 
 -- Explicit list only. Do not add CASCADE: several reference tables must remain.
 TRUNCATE TABLE
+    docs_distribution_outbox,
+    docs_distribution_request_event,
+    docs_distribution_request_recipient,
+    docs_distribution_request_item,
+    docs_distribution_request,
+    docs_partner_user,
+    docs_partner_company,
     docs_print_job_item,
     docs_print_job,
     docs_download_runtime,
@@ -143,6 +150,39 @@ UPDATE docs_company
        update_dt = CURRENT_TIMESTAMP
  WHERE company_cd = 'COMP_0000000999';
 
+-- Distribution recipients are deliberately separate from DOCS_USER. They are
+-- contacts only and cannot authenticate to TDMS.
+INSERT INTO docs_partner_company (
+    partner_company_id, company_code, company_name, business_no,
+    contact_email, contact_phone, address, use_yn, del_yn,
+    created_by, created_at, updated_by, updated_at
+) VALUES
+    (1, 'PARTNER-000001', 'PT Nusantara Aviation', 'ID-73.100.200.3-001.000',
+     'td@nusantara.example', '+62-21-555-0101', 'Jakarta, Indonesia',
+     'Y', 'N', 'USER_0000000001', CURRENT_TIMESTAMP, 'USER_0000000001', CURRENT_TIMESTAMP),
+    (2, 'PARTNER-000002', 'PT Garuda Technical Services', 'ID-73.100.200.3-002.000',
+     'data@garuda-tech.example', '+62-21-555-0202', 'Bandung, Indonesia',
+     'Y', 'N', 'USER_0000000001', CURRENT_TIMESTAMP, 'USER_0000000001', CURRENT_TIMESTAMP);
+
+INSERT INTO docs_partner_user (
+    partner_user_id, partner_company_id, user_name, email, phone,
+    position_name, representative_yn, use_yn, del_yn,
+    created_by, created_at, updated_by, updated_at
+) VALUES
+    (1, 1, 'Andi Pratama', 'andi.pratama@nusantara.example', '+62-812-1000-1001',
+     'Technical Data Lead', 'Y', 'Y', 'N', 'USER_0000000001', CURRENT_TIMESTAMP, 'USER_0000000001', CURRENT_TIMESTAMP),
+    (2, 1, 'Siti Rahma', 'siti.rahma@nusantara.example', '+62-812-1000-1002',
+     'Configuration Engineer', 'N', 'Y', 'N', 'USER_0000000001', CURRENT_TIMESTAMP, 'USER_0000000001', CURRENT_TIMESTAMP),
+    (3, 1, 'Budi Santoso', 'budi.santoso@nusantara.example', '+62-812-1000-1003',
+     'Quality Engineer', 'N', 'Y', 'N', 'USER_0000000001', CURRENT_TIMESTAMP, 'USER_0000000001', CURRENT_TIMESTAMP),
+    (4, 2, 'Dewi Lestari', 'dewi.lestari@garuda-tech.example', '+62-812-2000-2001',
+     'Program Coordinator', 'Y', 'Y', 'N', 'USER_0000000001', CURRENT_TIMESTAMP, 'USER_0000000001', CURRENT_TIMESTAMP),
+    (5, 2, 'Rizky Maulana', 'rizky.maulana@garuda-tech.example', '+62-812-2000-2002',
+     'Technical Librarian', 'N', 'Y', 'N', 'USER_0000000001', CURRENT_TIMESTAMP, 'USER_0000000001', CURRENT_TIMESTAMP);
+
+SELECT setval('docs_partner_company_id_seq', 2, true);
+SELECT setval('docs_partner_user_id_seq', 5, true);
+
 TRUNCATE TABLE docs_dept;
 
 INSERT INTO docs_dept (
@@ -241,11 +281,11 @@ INSERT INTO docs_user (
         'pbkdf2-sha256$310000$Jif9LE_bol0fW-gL8mvt_Q$0WWFmD1G1cL8QP61LHMckQ21OTzdWj65GRK8zX5UUuU',
         'COMP_0000000999', 'DMS500', 'POSI_0000000002', 'security.yoon@kt1b.local',
         4, 'N', 'Y', 'N', 'admin', CURRENT_TIMESTAMP, 'admin', CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP, 0, 'RG_011', '1210', 'N', 'L0329', 'N', 'N'
+        CURRENT_TIMESTAMP, 0, 'RG_012', '1210', 'N', 'L0329', 'N', 'N'
     );
 
 INSERT INTO docs_role_group_member (group_code, member_cd, group_type)
-SELECT 'RG_011', user_cd, 'USER'
+SELECT role_group, user_cd, 'USER'
   FROM docs_user
  WHERE user_cd LIKE 'USER_000002%';
 
@@ -1307,6 +1347,13 @@ BEGIN
         RAISE EXCEPTION 'The admin must have five permissions on all sixteen documents.';
     END IF;
 
+    IF (SELECT COUNT(*) FROM docs_partner_company WHERE del_yn = 'N') <> 2
+       OR (SELECT COUNT(*) FROM docs_partner_user WHERE del_yn = 'N') <> 5
+       OR (SELECT COUNT(*) FROM docs_partner_user
+            WHERE representative_yn = 'Y' AND use_yn = 'Y' AND del_yn = 'N') <> 2 THEN
+        RAISE EXCEPTION 'Partner demo data must contain two companies, five users and two representatives.';
+    END IF;
+
     IF EXISTS (
         SELECT 1
           FROM docs_object_user_permission permission
@@ -1325,6 +1372,10 @@ COMMIT;
 SELECT 'users' AS metric, COUNT(*)::text AS value FROM docs_user
 UNION ALL
 SELECT 'departments', COUNT(*)::text FROM docs_dept
+UNION ALL
+SELECT 'partner_companies', COUNT(*)::text FROM docs_partner_company WHERE del_yn = 'N'
+UNION ALL
+SELECT 'partner_users', COUNT(*)::text FROM docs_partner_user WHERE del_yn = 'N'
 UNION ALL
 SELECT 'technical_documents', COUNT(*)::text FROM docs_sw
 UNION ALL

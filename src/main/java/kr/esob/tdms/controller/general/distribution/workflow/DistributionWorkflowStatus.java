@@ -8,5 +8,6 @@ public enum DistributionWorkflowStatus {
     PENDING_APPROVAL,
     APPROVED,
     REJECTED,
-    CANCELLED
+    CANCELLED,
+    EXPIRED
 }

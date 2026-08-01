@@ -1,6 +1,7 @@
 package kr.esob.tdms.controller.general.distribution.workflow;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.reflect.Field;
@@ -41,6 +42,8 @@ class DistributionWorkflowContractTest {
         assertTrue(mapper.contains("'HOLD'"));
         assertTrue(mapper.contains("ON CONFLICT (request_id) DO NOTHING"));
         assertTrue(mapper.contains("request_row.status = 'APPROVED'"));
+        assertTrue(mapper.contains("COALESCE(file_info.org_file_nm, file_info.file_nm, '')"));
+        assertTrue(mapper.contains("9223372036854775807::numeric"));
         assertFalse(mapper.toLowerCase().contains("file_path_nm"));
         String service = read(SERVICE);
         assertFalse(service.contains("RestTemplate"));
@@ -58,6 +61,13 @@ class DistributionWorkflowContractTest {
             builder.parse();
         }
         assertTrue(configuration.hasStatement("sql.DistributionWorkflow.selectRequest"));
+        assertTrue(configuration.hasStatement("sql.DistributionWorkflow.selectEvents"));
+        assertTrue(configuration.hasStatement("sql.DistributionWorkflow.selectAccessibleApprovedRequests"));
+        assertTrue(configuration.hasStatement("sql.DistributionWorkflow.selectCatalogItems"));
+        assertTrue(configuration.hasStatement("sql.DistributionWorkflow.resolveDocumentFiles"));
+        assertTrue(configuration.hasStatement("sql.DistributionWorkflow.selectRecipients"));
+        assertTrue(configuration.hasStatement("sql.DistributionWorkflow.selectApprovers"));
+        assertTrue(configuration.hasStatement("sql.DistributionWorkflow.expireApprovedRequests"));
         assertTrue(configuration.hasStatement("sql.DistributionWorkflow.insertOutboxHold"));
     }
 
@@ -69,13 +79,17 @@ class DistributionWorkflowContractTest {
         assertTrue(ddl.contains("CREATE SEQUENCE IF NOT EXISTS"));
         assertTrue(ddl.contains("CREATE TABLE IF NOT EXISTS docs_distribution_request"));
         assertTrue(ddl.contains("CREATE TABLE IF NOT EXISTS docs_distribution_request_item"));
+        assertTrue(ddl.contains("CREATE TABLE IF NOT EXISTS docs_distribution_request_recipient"));
         assertTrue(ddl.contains("CREATE TABLE IF NOT EXISTS docs_distribution_request_event"));
         assertTrue(ddl.contains("CREATE TABLE IF NOT EXISTS docs_distribution_outbox"));
-        assertTrue(ddl.contains("CREATE OR REPLACE VIEW docs_approved_distribution_list"));
+        assertTrue(ddl.contains("DROP VIEW IF EXISTS docs_approved_distribution_list"));
+        assertTrue(ddl.contains("CREATE VIEW docs_approved_distribution_list"));
         for (DistributionWorkflowStatus status : DistributionWorkflowStatus.values()) {
             assertTrue(ddl.contains("'" + status.name() + "'"));
         }
         assertTrue(ddl.contains("UNIQUE (request_id)"));
+        assertTrue(ddl.contains("distribution_end_date >= CURRENT_DATE"));
+        assertTrue(ddl.contains("document_line_no"));
         assertTrue(ddl.contains("status IN ('HOLD', 'READY', 'SENDING', 'SENT', 'FAILED', 'DEAD')"));
         assertFalse(ddl.toLowerCase().contains("file_path"));
         assertTrue(freshMigration.contains("\\ir distribution_workflow_ddl.sql"));
@@ -85,16 +99,16 @@ class DistributionWorkflowContractTest {
 
     @Test
     void clientDtosHaveIdentifiersButNoActorMetadataOrFilePath() {
-        Set<String> itemFields = Arrays.stream(DistributionRequestItemRef.class.getDeclaredFields())
+        Set<String> documentFields = Arrays.stream(DistributionRequestDocumentRef.class.getDeclaredFields())
             .map(Field::getName).collect(Collectors.toSet());
         Set<String> requestFields = Arrays.stream(DistributionRequestSaveRequest.class.getDeclaredFields())
             .map(Field::getName).collect(Collectors.toSet());
 
-        assertTrue(itemFields.containsAll(Arrays.asList("objectType", "objectId", "fileNo")));
-        assertFalse(itemFields.stream().anyMatch(name -> name.toLowerCase().contains("path")));
-        assertFalse(itemFields.stream().anyMatch(name -> name.toLowerCase().contains("user")));
+        assertEquals(java.util.Collections.singleton("objectId"), documentFields);
         assertFalse(requestFields.stream().anyMatch(name -> name.toLowerCase().contains("path")));
-        assertFalse(requestFields.stream().anyMatch(name -> name.toLowerCase().contains("user")));
+        assertTrue(requestFields.containsAll(Arrays.asList(
+            "partnerCompanyId", "recipientUserIds", "approverUserCd",
+            "distributionStartDate", "distributionEndDate", "documents")));
     }
 
     @Test

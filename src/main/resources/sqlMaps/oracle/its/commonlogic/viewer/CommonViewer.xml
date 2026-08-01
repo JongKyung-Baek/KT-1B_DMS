@@ -6,7 +6,7 @@
 <mapper namespace="sql.CommonViewer">
 
 <!-- 배포된 아이템 파일 정보 조회 [2019.11.13(최금영)] -->
-<select id="selectFileInfo" parameterType="kr.esob.fdms.commonlogic.viewer.CommonViewerParam" resultType="kr.esob.fdms.commonlogic.viewer.CommonViewerVO">
+<select id="selectFileInfo" parameterType="kr.esob.tdms.commonlogic.viewer.CommonViewerParam" resultType="kr.esob.tdms.commonlogic.viewer.CommonViewerVO">
 	/* 배포된 아이템 파일 정보 조회 */
 	SELECT fileInfo.FILE_PATH_NM														                                AS filePath
 		 , fileInfo.FILE_NM          													                                        AS fileNm
@@ -35,7 +35,7 @@
 </select>
 
 <!-- 아이템(도면,문서,SW) 파일 정보 조회 [2019.11.14(최금영)] -->
-<select id="selectObjectFileInfo" parameterType="kr.esob.fdms.commonlogic.viewer.CommonViewerParam" resultType="kr.esob.fdms.commonlogic.viewer.CommonViewerVO">
+<select id="selectObjectFileInfo" parameterType="kr.esob.tdms.commonlogic.viewer.CommonViewerParam" resultType="kr.esob.tdms.commonlogic.viewer.CommonViewerVO">
 	/* 아이템(도면,문서,SW) 파일 정보 조회 */
 	SELECT FILE_PATH_NM 	AS filePath
 	, FILE_NM			AS fileNm
@@ -57,7 +57,7 @@
 
 <!-- 미등록자료 파일 정보 조회 [2019.11.14(최금영)] -->
 <!-- 생산기술자료 파일 정보 조회 [2019.11.14(최금영)] -->
-<select id="selectProductFileInfo" parameterType="kr.esob.fdms.commonlogic.viewer.CommonViewerParam" resultType="kr.esob.fdms.commonlogic.viewer.CommonViewerVO">
+<select id="selectProductFileInfo" parameterType="kr.esob.tdms.commonlogic.viewer.CommonViewerParam" resultType="kr.esob.tdms.commonlogic.viewer.CommonViewerVO">
 	SELECT FILE_PATH_NM AS filePath
 	, FILE_NM AS fileNm
 	, ORG_FILE_NM AS fileOrgNm
@@ -72,7 +72,7 @@
 </select>
 
 <!-- 도면,문서,SW 파일 정보 조회 [2019.11.19(최금영)] -->
-<select id="getObjectFileInfo" parameterType="kr.esob.fdms.commonlogic.viewer.CommonViewerParam" resultType="kr.esob.fdms.commonlogic.viewer.CommonViewerVO">
+<select id="getObjectFileInfo" parameterType="kr.esob.tdms.commonlogic.viewer.CommonViewerParam" resultType="kr.esob.tdms.commonlogic.viewer.CommonViewerVO">
 	/* 아이템(도면,문서,SW) 파일 정보 조회 */
 	SELECT fileInfo.FILE_PATH_NM 	AS filePath
 	, fileInfo.FILE_NM			AS fileNm
@@ -128,7 +128,7 @@
 -->
 
 <!-- 생산기술자료 파일 정보 조회 [2019.11.19(최금영)] -->
-<select id="getProductFileInfo" parameterType="kr.esob.fdms.commonlogic.viewer.CommonViewerParam" resultType="kr.esob.fdms.commonlogic.viewer.CommonViewerVO">
+<select id="getProductFileInfo" parameterType="kr.esob.tdms.commonlogic.viewer.CommonViewerParam" resultType="kr.esob.tdms.commonlogic.viewer.CommonViewerVO">
 	/* 생산기술자료 파일 정보 조회 */
 	SELECT FILE_PATH_NM AS filePath
 	, FILE_NM AS fileNm
@@ -144,7 +144,7 @@
 </select>
 
 <!--  배포된 아이템 파일 정보 조회 [2019.11.19(최금영)] -->
-<select id="getFileInfo" parameterType="kr.esob.fdms.commonlogic.viewer.CommonViewerParam" resultType="kr.esob.fdms.commonlogic.viewer.CommonViewerVO">
+<select id="getFileInfo" parameterType="kr.esob.tdms.commonlogic.viewer.CommonViewerParam" resultType="kr.esob.tdms.commonlogic.viewer.CommonViewerVO">
 	SELECT fileInfo.FILE_PATH_NM														AS filePath
 		 , fileInfo.FILE_NM																AS fileNm
 		 , fileInfo.ORG_FILE_NM															AS fileOrgNm
@@ -180,7 +180,7 @@
 </select>
 
 <!--23.07.06 (yskim) 폐기 상태 조회 쿼리-->
-<select id="getFileInfoForDestroyStatus" parameterType="kr.esob.fdms.commonlogic.viewer.CommonViewerParam" resultType="kr.esob.fdms.commonlogic.viewer.CommonViewerVO">
+<select id="getFileInfoForDestroyStatus" parameterType="kr.esob.tdms.commonlogic.viewer.CommonViewerParam" resultType="kr.esob.tdms.commonlogic.viewer.CommonViewerVO">
 	SELECT fileInfo.FILE_PATH_NM														AS filePath
 		 , fileInfo.FILE_NM																AS fileNm
 		 , fileInfo.ORG_FILE_NM															AS fileOrgNm
@@ -233,7 +233,7 @@
 </select>
 
 <!-- 워터 마크 정보 조회 [2019.11.28(최금영)] -->
-<select id="selectWatermarkInfo" resultType="kr.esob.fdms.commonlogic.viewer.WatermarkVO">
+<select id="selectWatermarkInfo" resultType="kr.esob.tdms.commonlogic.viewer.WatermarkVO">
 	SELECT ITEM_CD 				AS itemCd
 		 , ITEM_NAME				AS itemNm
 		 , ITEM_DESC				AS itemDesc
@@ -257,14 +257,14 @@
 	)
 </select>
 
-<select id="getMessageDesc" resultType="String" parameterType="kr.esob.fdms.commonlogic.viewer.CommonViewerParam">
+<select id="getMessageDesc" resultType="String" parameterType="kr.esob.tdms.commonlogic.viewer.CommonViewerParam">
 	SELECT LANG_DESC
 	FROM DOCS_LANG
 	WHERE LANG_CD = #{msgCode}
 	  AND LANG_TYPE = #{sessionLang}
 </select>
 
-<select id="selectFileList" parameterType="kr.esob.fdms.commonlogic.viewer.CommonViewerParam" resultType="kr.esob.fdms.commonlogic.viewer.CommonViewerVO">
+<select id="selectFileList" parameterType="kr.esob.tdms.commonlogic.viewer.CommonViewerParam" resultType="kr.esob.tdms.commonlogic.viewer.CommonViewerVO">
 	/* 배포된 아이템 파일 정보 조회 */
 	SELECT fileInfo.FILE_NM          					AS fileNm
 	, fileInfo.ORG_FILE_NM      					AS fileOrgNm
@@ -294,7 +294,7 @@
 	AND fileInfo.OBJECT_ID = #{objectId}
 </select>
 
-<update id="updatePrintCnt" parameterType="kr.esob.fdms.commonlogic.viewer.CommonViewerParam">
+<update id="updatePrintCnt" parameterType="kr.esob.tdms.commonlogic.viewer.CommonViewerParam">
 	UPDATE DOCS_REQUEST_FILE
 	SET PRINT_COUNT = COALESCE(PRINT_COUNT, 0) + 1
 	WHERE REQUEST_NO = #{requestNo}

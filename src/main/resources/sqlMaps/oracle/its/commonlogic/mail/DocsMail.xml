@@ -116,7 +116,7 @@
 	WHERE MAIL_ID = #{processSeq}
 </update>
 
-	<select id="selectRevisionCoreData" resultType="kr.esob.fdms.commonlogic.distribution.model.RequestListVO">
+	<select id="selectRevisionCoreData" resultType="kr.esob.tdms.commonlogic.distribution.model.RequestListVO">
 		SELECT DRAWING_NO AS drawingNo,
 			   DRAWING_NM AS drawingNm,
 			   REV_NO AS revNo

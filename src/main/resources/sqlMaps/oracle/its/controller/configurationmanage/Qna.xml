@@ -8,7 +8,7 @@
 <!--<mapper namespace="sql.configQna">-->
 
 <!--	<select id="selectList"-->
-<!--		resultType="kr.esob.fdms.controller.configurationmanage.qna.ConfigQnaListVO">-->
+<!--		resultType="kr.esob.tdms.controller.configurationmanage.qna.ConfigQnaListVO">-->
 <!--		SELECT-->
 <!--			B1.*-->
 <!--		FROM-->
@@ -93,8 +93,8 @@
 <!--		) B1-->
 <!--	</select>-->
 <!--	-->
-<!--	<insert id="insertQna" parameterType="kr.esob.fdms.controller.configurationmanage.qna.ConfigQnaAddParam">-->
-<!--		<selectKey keyProperty="qnaCd" resultType="kr.esob.fdms.controller.configurationmanage.qna.ConfigQnaAddParam" order="BEFORE">-->
+<!--	<insert id="insertQna" parameterType="kr.esob.tdms.controller.configurationmanage.qna.ConfigQnaAddParam">-->
+<!--		<selectKey keyProperty="qnaCd" resultType="kr.esob.tdms.controller.configurationmanage.qna.ConfigQnaAddParam" order="BEFORE">-->
 <!--			SELECT NVL(MAX(to_number(QNA_CD)),0)+1 AS qnaCd-->
 <!--        	FROM DOCS_CONF_QNA-->
 <!--		</selectKey>-->
@@ -124,8 +124,8 @@
 <!--		)-->
 <!--	</insert>-->
 <!--	-->
-<!--	<insert id="insertConfigQnaFile" parameterType="kr.esob.fdms.controller.configurationmanage.qna.ConfigQnaAddParam">-->
-<!--		<selectKey keyProperty="fileNo" resultType="kr.esob.fdms.controller.configurationmanage.qna.ConfigQnaAddParam" order="BEFORE">-->
+<!--	<insert id="insertConfigQnaFile" parameterType="kr.esob.tdms.controller.configurationmanage.qna.ConfigQnaAddParam">-->
+<!--		<selectKey keyProperty="fileNo" resultType="kr.esob.tdms.controller.configurationmanage.qna.ConfigQnaAddParam" order="BEFORE">-->
 <!--			SELECT NVL(MAX(to_number(FILE_NO)),0)+1 AS fileNo-->
 <!--	        FROM DOCS_CONF_QNA_FILE-->
 <!--		</selectKey>-->
@@ -147,8 +147,8 @@
 <!--		)-->
 <!--	</insert>-->
 <!--	-->
-<!--	<select id="getQnaInfo" resultType="kr.esob.fdms.controller.configurationmanage.qna.ConfigQnaPopupVO"-->
-<!--	parameterType="kr.esob.fdms.controller.configurationmanage.qna.ConfigQnaPopupVO">-->
+<!--	<select id="getQnaInfo" resultType="kr.esob.tdms.controller.configurationmanage.qna.ConfigQnaPopupVO"-->
+<!--	parameterType="kr.esob.tdms.controller.configurationmanage.qna.ConfigQnaPopupVO">-->
 <!--		SELECT-->
 <!--			QNA_CD AS qnaCd,-->
 <!--			TITLE AS title,-->
@@ -167,7 +167,7 @@
 <!--		WHERE QNA_CD = #{qnaCd}-->
 <!--	</select>-->
 <!--	-->
-<!--	<select id="selectFileInfo" resultType="kr.esob.fdms.controller.configurationmanage.qna.ConfigQnaPopupVO">-->
+<!--	<select id="selectFileInfo" resultType="kr.esob.tdms.controller.configurationmanage.qna.ConfigQnaPopupVO">-->
 <!--		SELECT-->
 <!--			FILE_NO AS fileNo,-->
 <!--			QNA_CD AS qnaCd,-->
@@ -178,7 +178,7 @@
 <!--		WHERE QNA_CD = #{qnaCd}-->
 <!--	</select>-->
 <!--	-->
-<!--	<select id="selectFileList" resultType="kr.esob.fdms.controller.configurationmanage.qna.ConfigQnaAddParam">-->
+<!--	<select id="selectFileList" resultType="kr.esob.tdms.controller.configurationmanage.qna.ConfigQnaAddParam">-->
 <!--		SELECT-->
 <!--			FILE_NO AS fileNo,-->
 <!--			QNA_CD AS qnaCd,-->
@@ -205,7 +205,7 @@
 <!--		DELETE FROM DOCS_CONF_QNA_FILE WHERE QNA_CD = #{qnaCd}-->
 <!--	</delete>-->
 <!--	-->
-<!--	<update id="insertReplyQna" parameterType="kr.esob.fdms.controller.configurationmanage.qna.ConfigQnaPopupVO">-->
+<!--	<update id="insertReplyQna" parameterType="kr.esob.tdms.controller.configurationmanage.qna.ConfigQnaPopupVO">-->
 <!--		UPDATE DOCS_CONF_QNA SET-->
 <!--			ANSWER = #{answer},-->
 <!--			STATUS = 'A',-->
@@ -228,7 +228,7 @@
 
 <mapper namespace="sql.configQna">
 
-<select id="selectList" resultType="kr.esob.fdms.controller.configurationmanage.qna.ConfigQnaListVO">
+<select id="selectList" resultType="kr.esob.tdms.controller.configurationmanage.qna.ConfigQnaListVO">
 	SELECT
 	B1.*
 	FROM
@@ -306,8 +306,8 @@
 	</if>
 </select>
 
-<insert id="insertQna" parameterType="kr.esob.fdms.controller.configurationmanage.qna.ConfigQnaAddParam">
-	<selectKey keyProperty="qnaCd" resultType="kr.esob.fdms.controller.configurationmanage.qna.ConfigQnaAddParam" order="BEFORE">
+<insert id="insertQna" parameterType="kr.esob.tdms.controller.configurationmanage.qna.ConfigQnaAddParam">
+	<selectKey keyProperty="qnaCd" resultType="kr.esob.tdms.controller.configurationmanage.qna.ConfigQnaAddParam" order="BEFORE">
 		SELECT COALESCE(MAX(CAST(QNA_CD AS INTEGER)),0)+1 AS qnaCd
 		FROM DOCS_CONF_QNA
 	</selectKey>
@@ -337,8 +337,8 @@
 	)
 </insert>
 
-<insert id="insertConfigQnaFile" parameterType="kr.esob.fdms.controller.configurationmanage.qna.ConfigQnaAddParam">
-	<selectKey keyProperty="fileNo" resultType="kr.esob.fdms.controller.configurationmanage.qna.ConfigQnaAddParam" order="BEFORE">
+<insert id="insertConfigQnaFile" parameterType="kr.esob.tdms.controller.configurationmanage.qna.ConfigQnaAddParam">
+	<selectKey keyProperty="fileNo" resultType="kr.esob.tdms.controller.configurationmanage.qna.ConfigQnaAddParam" order="BEFORE">
 		SELECT COALESCE(MAX(CAST(FILE_NO AS INTEGER)),0)+1 AS fileNo
 		FROM DOCS_CONF_QNA_FILE
 	</selectKey>
@@ -360,7 +360,7 @@
 	)
 </insert>
 
-<select id="getQnaInfo" resultType="kr.esob.fdms.controller.configurationmanage.qna.ConfigQnaPopupVO" parameterType="kr.esob.fdms.controller.configurationmanage.qna.ConfigQnaPopupVO">
+<select id="getQnaInfo" resultType="kr.esob.tdms.controller.configurationmanage.qna.ConfigQnaPopupVO" parameterType="kr.esob.tdms.controller.configurationmanage.qna.ConfigQnaPopupVO">
 	SELECT
 		QNA_CD AS qnaCd,
 		TITLE AS title,
@@ -379,7 +379,7 @@
 	WHERE QNA_CD = #{qnaCd}
 </select>
 
-<select id="selectFileInfo" resultType="kr.esob.fdms.controller.configurationmanage.qna.ConfigQnaPopupVO">
+<select id="selectFileInfo" resultType="kr.esob.tdms.controller.configurationmanage.qna.ConfigQnaPopupVO">
 	SELECT
 		FILE_NO AS fileNo,
 		QNA_CD AS qnaCd,
@@ -390,7 +390,7 @@
 	WHERE QNA_CD = #{qnaCd}
 </select>
 
-<select id="selectFileList" resultType="kr.esob.fdms.controller.configurationmanage.qna.ConfigQnaAddParam">
+<select id="selectFileList" resultType="kr.esob.tdms.controller.configurationmanage.qna.ConfigQnaAddParam">
 	SELECT
 		FILE_NO AS fileNo,
 		QNA_CD AS qnaCd,
@@ -417,7 +417,7 @@
 	DELETE FROM DOCS_CONF_QNA_FILE WHERE QNA_CD = #{qnaCd}
 </delete>
 
-<update id="insertReplyQna" parameterType="kr.esob.fdms.controller.configurationmanage.qna.ConfigQnaPopupVO">
+<update id="insertReplyQna" parameterType="kr.esob.tdms.controller.configurationmanage.qna.ConfigQnaPopupVO">
 	UPDATE DOCS_CONF_QNA SET
 							 ANSWER = #{answer},
 							 STATUS = 'A',

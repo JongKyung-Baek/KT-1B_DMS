@@ -4,7 +4,7 @@
 <mapper namespace="sql.DownloadRuntime">
 
     <resultMap id="runtimeStateMap"
-            type="kr.esob.fdms.commonlogic.updown.runtime.DownloadRuntimeState">
+            type="kr.esob.tdms.commonlogic.updown.runtime.DownloadRuntimeState">
         <id property="wsSeq" column="ws_seq"/>
         <result property="requestNo" column="request_no"/>
         <result property="docSeq" column="doc_seq"/>
@@ -22,7 +22,7 @@
         <result property="restSequence" column="rest_sequence"/>
         <result property="tempFilePath" column="temp_file_path"/>
         <result property="status" column="status_cd"
-                javaType="kr.esob.fdms.commonlogic.updown.runtime.DownloadRuntimeStatus"/>
+                javaType="kr.esob.tdms.commonlogic.updown.runtime.DownloadRuntimeStatus"/>
         <result property="resultCode" column="result_code"/>
         <result property="optionalData" column="optional_data"/>
         <result property="errorMessage" column="error_message"/>
@@ -47,7 +47,7 @@
     </sql>
 
     <insert id="insertQueued"
-            parameterType="kr.esob.fdms.commonlogic.updown.runtime.DownloadRuntimeState">
+            parameterType="kr.esob.tdms.commonlogic.updown.runtime.DownloadRuntimeState">
         INSERT INTO docs_download_runtime (
             <include refid="runtimeColumns"/>
         ) VALUES (
@@ -69,7 +69,7 @@
     </select>
 
     <update id="updateState"
-            parameterType="kr.esob.fdms.commonlogic.updown.runtime.DownloadRuntimeState">
+            parameterType="kr.esob.tdms.commonlogic.updown.runtime.DownloadRuntimeState">
         UPDATE docs_download_runtime
            SET saved_file_name = #{savedFileName},
                rest_sequence = #{restSequence},

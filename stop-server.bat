@@ -9,7 +9,7 @@ set "DB_CONTAINER=kt1b-postgres"
 set "SERVER_PORT=3508"
 set "LOG_DIR=%APP_HOME%\run-logs"
 set "STATE_FILE=%LOG_DIR%\kt1b-server.state.json"
-set "WAR_FILE=%APP_HOME%\target\SDMS-KT-1B.war"
+set "WAR_FILE=%APP_HOME%\target\TDMS-KT-1B.war"
 set "EXIT_CODE=0"
 
 set "KT1B_STATE_FILE=%STATE_FILE%"

@@ -21,7 +21,7 @@ if exist "%LOCAL_ENV_FILE%" (
 set "DB_CONTAINER=kt1b-postgres"
 set "SERVER_PORT=3508"
 set "APP_URL=http://127.0.0.1:%SERVER_PORT%/login/loginPage"
-set "WAR_FILE=%APP_HOME%\target\SDMS-KT-1B.war"
+set "WAR_FILE=%APP_HOME%\target\TDMS-KT-1B.war"
 set "LOG_DIR=%APP_HOME%\run-logs"
 set "STATE_FILE=%LOG_DIR%\kt1b-server.state.json"
 set "STDOUT_LOG=%LOG_DIR%\server.out.log"
@@ -126,7 +126,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -Command ^
 
 if errorlevel 1 (
     echo [INFO] Building the current source because the WAR is missing or outdated...
-    call "%APP_HOME%\mvnw.cmd" -DskipTests package
+    call "%APP_HOME%\mvnw.cmd" -DskipTests clean package
     if errorlevel 1 (
         echo [ERROR] Maven build failed.
         set "EXIT_CODE=1"

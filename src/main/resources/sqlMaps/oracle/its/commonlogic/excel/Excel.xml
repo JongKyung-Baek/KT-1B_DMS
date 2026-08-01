@@ -6,7 +6,7 @@
 <mapper namespace="sql.Excel">
 
 <!-- 일반 목록 조회 -->
-<select id="selectList" resultType="kr.esob.fdms.commonlogic.grid.GridInfoVO">
+<select id="selectList" resultType="kr.esob.tdms.commonlogic.grid.GridInfoVO">
     SELECT
         grid.COLUMN_ID AS name,
         COALESCE(lang.LANG_DESC, grid.COLUMN_NM) AS label,
@@ -26,7 +26,7 @@
 </select>
 
 <!-- 특별한 그리드 설정 목록 조회 -->
-<select id="selectListDuanzongPdm" resultType="kr.esob.fdms.commonlogic.grid.GridInfoVO">
+<select id="selectListDuanzongPdm" resultType="kr.esob.tdms.commonlogic.grid.GridInfoVO">
     SELECT
         grid.COLUMN_ID AS name,
         COALESCE(lang.LANG_DESC, grid.COLUMN_NM) AS label,

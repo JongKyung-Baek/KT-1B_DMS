@@ -5,7 +5,7 @@
 
 <mapper namespace="sql.FormInfo">
 
-<select id="selectList" resultType="kr.esob.fdms.commonlogic.form.FormInfoVO">
+<select id="selectList" resultType="kr.esob.tdms.commonlogic.form.FormInfoVO">
     SELECT
         FORM_ID                 AS formId,
         COLUMN_ID                AS columnId,

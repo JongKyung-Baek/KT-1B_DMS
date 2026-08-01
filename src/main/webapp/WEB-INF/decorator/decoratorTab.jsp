@@ -1,5 +1,5 @@
-<%@page import="kr.esob.fdms.commonlogic.message.LocaleUtil"%>
-<%@page import="kr.esob.fdms.controller.login.UserVO"%>
+<%@page import="kr.esob.tdms.commonlogic.message.LocaleUtil"%>
+<%@page import="kr.esob.tdms.controller.login.UserVO"%>
 <%@page import="org.springframework.security.core.context.SecurityContextHolder"%>
 <%@page import="org.springframework.security.core.Authentication"%>
 
@@ -251,9 +251,9 @@
 						</div>
 						<div class="tabArea">
 							<ul>
-								<li id="distribute"><a href="/inside/distribution/approval/">배포승인</a></li>
-								<li id="print"><a href="/inside/distribution/printApproval/">출력승인</a></li>
-								<li id="printDisposal"><a href="/inside/distribution/printDestroyApproval/">출력폐기승인</a></li>
+								<li id="distribute"><a href="/general/distribution/approval/">배포승인</a></li>
+								<li id="print"><a href="/general/distribution/printApproval/">출력승인</a></li>
+								<li id="printDisposal"><a href="/general/distribution/printDestroyApproval/">출력폐기승인</a></li>
 							</ul>
 						</div>
 						<div class="contentArea distribution-tab-content">

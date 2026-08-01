@@ -17,7 +17,7 @@
     WHERE SYSTEM_CONFIG_CD LIKE 'UPDOWN%'
 </select>
 
-<select id="selectList" parameterType="kr.esob.fdms.commonlogic.down.CommonDownParam" resultType="kr.esob.fdms.commonlogic.down.CommonDownFileVO">
+<select id="selectList" parameterType="kr.esob.tdms.commonlogic.down.CommonDownParam" resultType="kr.esob.tdms.commonlogic.down.CommonDownFileVO">
     SELECT
     FILE_PATH_NM AS filePathNm,
     ORG_FILE_NM AS orgFileNm,

@@ -5,7 +5,7 @@
 
 <mapper namespace="sql.CommonMessage">
 
-<select id="selectMessageList" resultType="kr.esob.fdms.commonlogic.message.CommonMessageVO">
+<select id="selectMessageList" resultType="kr.esob.tdms.commonlogic.message.CommonMessageVO">
     SELECT *
     FROM DOCS_LANG
 </select>

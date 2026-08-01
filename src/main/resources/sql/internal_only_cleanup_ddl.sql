@@ -53,9 +53,9 @@ WITH RECURSIVE removed_menu (
         OR menu.parent_menu_cd = 'E'
         OR COALESCE(menu.menu_url, '') ~* '(^|/)outside/'
         OR COALESCE(menu.menu_url, '') ~*
-           '^/inside/(unregisted|outregisted)(/|$)'
+           '^/(inside|general)/(unregisted|outregisted)(/|$)'
         OR COALESCE(menu.menu_url, '') ~*
-           '^/inside/organizationmanage/(outsideuser|approval)(/|$)'
+           '^/(inside|general)/organizationmanage/(outsideuser|approval)(/|$)'
         OR menu.menu_cd IN (
            'MENU_124',
            'MENU_041', 'MENU_042', 'MENU_043', 'MENU_044', 'MENU_045',
@@ -102,19 +102,19 @@ DELETE FROM docs_role_mapping mapping
  USING kt1b_removed_menu removed
  WHERE mapping.menu_url = removed.menu_url;
 
--- MENU_124 was a legacy broad /inside/** authority. It must not survive as a
--- catch-all rule in the single-portal ACL model, including duplicate mappings
--- that may not carry the original menu role code.
+-- MENU_124 was a legacy broad portal authority. Neither the old nor current
+-- root wildcard may survive in the single-portal ACL model, including mappings
+-- that do not carry the original menu role code.
 DELETE FROM docs_role_mapping
- WHERE menu_url = '/inside/**';
+ WHERE menu_url IN ('/inside/**', '/general/**');
 
 DELETE FROM docs_role_mapping
  WHERE group_cd = 'RG_006'
     OR COALESCE(menu_url, '') ~* '(^|/)outside/'
     OR COALESCE(menu_url, '') ~*
-       '^/inside/(unregisted|outregisted)(/|$)'
+       '^/(inside|general)/(unregisted|outregisted)(/|$)'
     OR COALESCE(menu_url, '') ~*
-       '^/inside/organizationmanage/(outsideuser|approval)(/|$)';
+       '^/(inside|general)/organizationmanage/(outsideuser|approval)(/|$)';
 
 DELETE FROM docs_rel_role_group
  WHERE group_cd = 'RG_006';
@@ -328,9 +328,9 @@ BEGIN
          WHERE parent_menu_cd IN ('I', 'B', 'E')
             OR COALESCE(menu_url, '') ~* '(^|/)outside/'
             OR COALESCE(menu_url, '') ~*
-               '^/inside/(unregisted|outregisted)(/|$)'
+               '^/(inside|general)/(unregisted|outregisted)(/|$)'
             OR COALESCE(menu_url, '') ~*
-               '^/inside/organizationmanage/(outsideuser|approval)(/|$)'
+               '^/(inside|general)/organizationmanage/(outsideuser|approval)(/|$)'
     ) THEN
         RAISE EXCEPTION 'A legacy portal marker remains in the menu catalog.';
     END IF;
@@ -397,11 +397,11 @@ BEGIN
         SELECT 1
           FROM docs_menu
          WHERE menu_cd = 'MENU_124'
-            OR menu_url = '/inside/**'
+            OR menu_url IN ('/inside/**', '/general/**')
     ) OR EXISTS (
         SELECT 1
           FROM docs_role_mapping
-         WHERE menu_url = '/inside/**'
+         WHERE menu_url IN ('/inside/**', '/general/**')
     ) THEN
         RAISE EXCEPTION 'The retired broad portal ACL remains.';
     END IF;

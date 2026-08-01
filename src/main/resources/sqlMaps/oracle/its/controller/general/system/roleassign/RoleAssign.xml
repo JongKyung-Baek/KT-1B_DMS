@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+
+<!--<mapper namespace="sql.RoleAssign">-->
+<!--	<select id="selectRoleGroup" resultType="kr.esob.tdms.controller.general.system.role.RoleGroupVO">-->
+<!--		SELECT-->
+<!--			GROUP_CODE AS groupCd-->
+<!--			, GROUP_NM AS groupNm-->
+<!--		FROM DOCS_ROLE_GROUP-->
+<!--		AND GROUP_CODE != 'RG_001'		/* 관리자 */-->
+<!--		AND USE_YN = 'Y'-->
+<!--		ORDER BY INSERT_ORDER-->
+<!--	</select>-->
+
+<!--	<select id="selectRoleGroupInfo" resultType="kr.esob.tdms.controller.general.system.role.RoleGroupVO">-->
+<!--		SELECT-->
+<!--			GROUP_CODE AS groupCd-->
+<!--			, GROUP_NM AS groupNm-->
+<!--		FROM DOCS_ROLE_GROUP-->
+<!--		WHERE GROUP_CODE = #{groupCd}-->
+<!--	</select>-->
+
+<!--	<select id="selectRelRoleGroup" resultType="java.lang.String">-->
+<!--		/* 특정 그룹이 사용하는 메뉴목록 */-->
+<!--		SELECT-->
+<!--          MENU_CD-->
+<!--        FROM DOCS_REL_ROLE_GROUP rel-->
+<!--        INNER JOIN DOCS_MENU menu ON menu.ROLE_CD = rel.ROLE_CD-->
+<!--        WHERE GROUP_CD = #{groupCd}-->
+<!--        ORDER BY MENU_CD-->
+<!--	</select>-->
+
+<!--	<select id="selectRelRoleGroupCount" resultType="java.lang.Integer">-->
+<!--		/* INSERT하기 전에 이미 존재하는지 체크 */-->
+<!--		SELECT COUNT(*) FROM DOCS_REL_ROLE_GROUP WHERE GROUP_CD = #{groupCd} AND ROLE_CD = #{roleCd}-->
+<!--	</select>-->
+
+<!--	<insert id="insertRelRoleGroup">-->
+<!--		/* REL_ROLE_GROUP을 등록 */-->
+<!--		INSERT INTO DOCS_REL_ROLE_GROUP(GROUP_CD, ROLE_CD, INSERT_DT) VALUES(#{groupCd}, #{roleCd}, SYSDATE)-->
+<!--	</insert>-->
+
+<!--	<delete id="deleteRelRoleGroup">-->
+<!--		DELETE FROM DOCS_REL_ROLE_GROUP-->
+<!--		WHERE 1=1-->
+<!--		<if test='groupCd != null and !groupCd.equals("")'>-->
+<!--		AND GROUP_CD = #{groupCd}-->
+<!--		</if>-->
+<!--		<if test='roleCd != null and !roleCd.equals("")'>-->
+<!--		AND ROLE_CD = #{roleCd}-->
+<!--		</if>-->
+<!--	</delete>-->
+<!--</mapper>-->
+
+
+
+
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+		<!-- 이하 PostgreSQL용 쿼리문 -->
+
+
+
+<mapper namespace="sql.RoleAssign">
+
+<select id="selectRoleGroup" resultType="kr.esob.tdms.controller.general.system.roleassign.RoleGroupVO">
+	SELECT
+		GROUP_CODE AS groupCd,
+		GROUP_NM AS groupNm
+	FROM DOCS_ROLE_GROUP
+	WHERE GROUP_CODE != 'RG_001'
+	  AND USE_YN = 'Y'
+	ORDER BY INSERT_ORDER
+</select>
+
+<select id="selectRoleGroupInfo" resultType="kr.esob.tdms.controller.general.system.roleassign.RoleGroupVO">
+	SELECT
+		GROUP_CODE AS groupCd,
+		GROUP_NM AS groupNm
+	FROM DOCS_ROLE_GROUP
+	WHERE GROUP_CODE = #{groupCd}
+	  AND GROUP_CODE != 'RG_001'
+	  AND USE_YN = 'Y'
+</select>
+
+<select id="selectRelRoleGroup" resultType="java.lang.String">
+	WITH RECURSIVE active_menu (menu_cd, parent_menu_cd, role_cd, path) AS (
+		SELECT menu.menu_cd, menu.parent_menu_cd, menu.role_cd,
+		       ARRAY[menu.menu_cd::TEXT]::TEXT[]
+		  FROM docs_menu menu
+		 WHERE menu.del_yn = 'N'
+		   AND menu.use_yn = 'Y'
+		   AND menu.menu_type IN ('T', 'M', 'P')
+		   AND menu.tree_type = 'root'
+		   AND menu.parent_menu_cd = 'ROOT'
+		UNION ALL
+		SELECT child.menu_cd, child.parent_menu_cd, child.role_cd,
+		       parent.path || child.menu_cd::TEXT
+		  FROM docs_menu child
+		  JOIN active_menu parent ON child.parent_menu_cd = parent.menu_cd
+		 WHERE child.del_yn = 'N'
+		   AND child.use_yn = 'Y'
+		   AND child.menu_type IN ('T', 'M', 'P')
+		   AND NOT child.menu_cd::TEXT = ANY(parent.path)
+	)
+	SELECT menu.menu_cd
+	  FROM active_menu menu
+	  JOIN docs_rel_role_group rel ON rel.role_cd = menu.role_cd
+	 WHERE rel.group_cd = #{groupCd}
+	 ORDER BY menu.menu_cd
+</select>
+
+<select id="selectAssignableRoleCodes" resultType="java.lang.String">
+	WITH RECURSIVE active_menu (menu_cd, parent_menu_cd, role_cd, path) AS (
+		SELECT menu.menu_cd, menu.parent_menu_cd, menu.role_cd,
+		       ARRAY[menu.menu_cd::TEXT]::TEXT[]
+		  FROM docs_menu menu
+		 WHERE menu.del_yn = 'N'
+		   AND menu.use_yn = 'Y'
+		   AND menu.menu_type IN ('T', 'M', 'P')
+		   AND menu.tree_type = 'root'
+		   AND menu.parent_menu_cd = 'ROOT'
+		UNION ALL
+		SELECT child.menu_cd, child.parent_menu_cd, child.role_cd,
+		       parent.path || child.menu_cd::TEXT
+		  FROM docs_menu child
+		  JOIN active_menu parent ON child.parent_menu_cd = parent.menu_cd
+		 WHERE child.del_yn = 'N'
+		   AND child.use_yn = 'Y'
+		   AND child.menu_type IN ('T', 'M', 'P')
+		   AND NOT child.menu_cd::TEXT = ANY(parent.path)
+	)
+	SELECT DISTINCT role_cd
+	  FROM active_menu
+	 WHERE NULLIF(BTRIM(role_cd), '') IS NOT NULL
+	 ORDER BY role_cd
+</select>
+
+<select id="selectRelRoleGroupCount" resultType="java.lang.Integer">
+	/* INSERT하기 전에 이미 존재하는지 체크 */
+	SELECT COUNT(*)
+	FROM DOCS_REL_ROLE_GROUP
+	WHERE GROUP_CD = #{groupCd}
+	  AND ROLE_CD = #{roleCd}
+</select>
+
+<insert id="insertRelRoleGroup">
+	/* REL_ROLE_GROUP을 등록 */
+	INSERT INTO DOCS_REL_ROLE_GROUP (GROUP_CD, ROLE_CD, INSERT_DT)
+	VALUES (#{groupCd}, #{roleCd}, CURRENT_TIMESTAMP)
+	ON CONFLICT (GROUP_CD, ROLE_CD) DO NOTHING
+</insert>
+
+<delete id="deleteMenuRoleAssignments">
+	DELETE FROM DOCS_REL_ROLE_GROUP assignment
+	USING DOCS_MENU menu
+	WHERE assignment.GROUP_CD = #{groupCd}
+	  AND (assignment.ROLE_CD = menu.ROLE_CD
+	       OR assignment.ROLE_CD = menu.MENU_CD)
+</delete>
+
+<delete id="deleteRelRoleGroup">
+	DELETE FROM DOCS_REL_ROLE_GROUP
+	WHERE 1=1
+	<if test='groupCd != null and !groupCd.equals("")'>
+		AND GROUP_CD = #{groupCd}
+	</if>
+	<if test='roleCd != null and !roleCd.equals("")'>
+		AND ROLE_CD = #{roleCd}
+	</if>
+</delete>
+
+</mapper>

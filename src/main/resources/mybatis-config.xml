@@ -8,18 +8,18 @@
         <setting name="jdbcTypeForNull" value="NULL" />
     </settings>
     <typeAliases>
-    	<typeAlias alias="comboInfoVo" type="kr.esob.fdms.commonlogic.combo.ComboInfoVO"/>
-    	<typeAlias alias="searchComboInfoVo" type="kr.esob.fdms.commonlogic.combo.SearchComboInfoVO"/>
-    	<typeAlias alias="userVo" type="kr.esob.fdms.controller.login.UserVO"/>
-	<typeAlias alias="drawingInfoVO" type="kr.esob.fdms.commonlogic.distribution.model.DrawingInfoVO"/>
-	<typeAlias alias="docInfoVO" type="kr.esob.fdms.commonlogic.distribution.model.DocInfoVO"/>
-    	<typeAlias alias="docPdfRequestVO" type="kr.esob.fdms.controller.inside.distribution.docpdfrequest.DocPdfRequestVO"/>
-	<typeAlias alias="swInfoVO" type="kr.esob.fdms.commonlogic.distribution.model.SwInfoVO"/>
-    	<typeAlias alias="crInfoVO" type="kr.esob.fdms.controller.inside.cr.CrInfoVO"/>
-    	<typeAlias alias="crFileVO" type="kr.esob.fdms.controller.inside.cr.CrFileVO"/>
-	<typeAlias alias="requestFileParam" type="kr.esob.fdms.commonlogic.distribution.model.RequestFileParam"/>
-	<typeAlias alias="objectInfoVO" type="kr.esob.fdms.commonlogic.distribution.model.ObjectInfoVO"/>
-    	<typeAlias alias="mailInfoVO" type="kr.esob.fdms.commonlogic.mail.MailInfoVO"/>
+		<typeAlias alias="comboInfoVo" type="kr.esob.tdms.commonlogic.combo.ComboInfoVO"/>
+		<typeAlias alias="searchComboInfoVo" type="kr.esob.tdms.commonlogic.combo.SearchComboInfoVO"/>
+		<typeAlias alias="userVo" type="kr.esob.tdms.controller.login.UserVO"/>
+		<typeAlias alias="drawingInfoVO" type="kr.esob.tdms.commonlogic.distribution.model.DrawingInfoVO"/>
+		<typeAlias alias="docInfoVO" type="kr.esob.tdms.commonlogic.distribution.model.DocInfoVO"/>
+		<typeAlias alias="docPdfRequestVO" type="kr.esob.tdms.controller.general.distribution.docpdfrequest.DocPdfRequestVO"/>
+		<typeAlias alias="swInfoVO" type="kr.esob.tdms.commonlogic.distribution.model.SwInfoVO"/>
+		<typeAlias alias="crInfoVO" type="kr.esob.tdms.controller.general.cr.CrInfoVO"/>
+		<typeAlias alias="crFileVO" type="kr.esob.tdms.controller.general.cr.CrFileVO"/>
+		<typeAlias alias="requestFileParam" type="kr.esob.tdms.commonlogic.distribution.model.RequestFileParam"/>
+		<typeAlias alias="objectInfoVO" type="kr.esob.tdms.commonlogic.distribution.model.ObjectInfoVO"/>
+		<typeAlias alias="mailInfoVO" type="kr.esob.tdms.commonlogic.mail.MailInfoVO"/>
 
     </typeAliases>
 </configuration>

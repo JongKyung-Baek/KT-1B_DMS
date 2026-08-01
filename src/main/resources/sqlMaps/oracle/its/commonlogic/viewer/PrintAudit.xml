@@ -23,7 +23,7 @@
         )
     </insert>
 
-    <select id="selectJobForUpdate" resultType="kr.esob.fdms.commonlogic.viewer.PrintJobVO">
+    <select id="selectJobForUpdate" resultType="kr.esob.tdms.commonlogic.viewer.PrintJobVO">
         SELECT print_job_id, status_cd, actor_user_cd, object_type, object_id,
                file_no, request_no, count_applied_yn
           FROM docs_print_job
@@ -31,7 +31,7 @@
          FOR UPDATE
     </select>
 
-    <select id="selectItems" resultType="kr.esob.fdms.commonlogic.viewer.PrintJobItemVO">
+    <select id="selectItems" resultType="kr.esob.tdms.commonlogic.viewer.PrintJobItemVO">
         SELECT print_job_id, item_seq, object_type, object_id, file_no, request_no,
                request_type, count_required_yn
           FROM docs_print_job_item

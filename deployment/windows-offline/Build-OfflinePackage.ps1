@@ -99,7 +99,7 @@ try {
     }
     & $baseBuilder @baseParameters
 
-    $warPath = Join-Path $stagingPackage 'app\SDMS-KT-1B.war'
+    $warPath = Join-Path $stagingPackage 'app\TDMS-KT-1B.war'
     $backupPath = Join-Path $stagingPackage 'database\kt1b-demo.backup'
     Assert-File -Path $warPath -Description 'Application WAR'
     Assert-File -Path $backupPath -Description 'Sanitized demo backup'
@@ -130,7 +130,7 @@ try {
     $warHash = (Get-FileHash -LiteralPath $warPath `
         -Algorithm SHA256).Hash.ToLowerInvariant()
     $imageWarOutput = & docker run --rm --entrypoint sha256sum `
-        $appImage /opt/kt1b/SDMS-KT-1B.war
+        $appImage /opt/kt1b/TDMS-KT-1B.war
     if ($LASTEXITCODE -ne 0) {
         throw 'Could not hash the WAR embedded in the application image.'
     }

@@ -304,7 +304,7 @@ function openViewerPostPopup(popupName, windowFeatures, params) {
 
 	var form = document.createElement('form');
 	form.method = 'POST';
-	form.action = '/inside/distribution/docPdfLinkRequest/selectItem2';
+	form.action = '/general/distribution/docPdfLinkRequest/selectItem2';
 	form.target = popupName;
 	form.style.display = 'none';
 
@@ -395,15 +395,15 @@ function openFile(requestType, objectType, requestNo, objectId, fileNo, protectY
 
 
 function openDownHistoryPopup(requestNo, objectId){
-	openDialogPopup("/inside/distribution/downHistory/downHistoryPopup", {objectId: objectId, requestNo : requestNo}, "popupDialog", 'm', 350);
+	openDialogPopup("/general/distribution/downHistory/downHistoryPopup", {objectId: objectId, requestNo : requestNo}, "popupDialog", 'm', 350);
 }
 
 function openActLogPopup(downloadedName){
-	openDialogPopup_onlyForActLog("/inside/distribution/downHistory/actLogPopup", {downloadedName:downloadedName}, "popupDialog", 'm', 350, true, 'popup-common popup-act-log');
+	openDialogPopup_onlyForActLog("/general/distribution/downHistory/actLogPopup", {downloadedName:downloadedName}, "popupDialog", 'm', 350, true, 'popup-common popup-act-log');
 }
 
 function openActLogPopup_onlyForActLog(downloadedName){
-	openDialogPopup_onlyForActLog("/inside/distribution/downHistory/actLogPopup", {downloadedName:downloadedName}, "popupDialog", 'm', 350, true, 'popup-common popup-act-log');
+	openDialogPopup_onlyForActLog("/general/distribution/downHistory/actLogPopup", {downloadedName:downloadedName}, "popupDialog", 'm', 350, true, 'popup-common popup-act-log');
 }
 
 var EXT = ['exe', 'zip'];
@@ -435,7 +435,7 @@ function openPrintViewer(requestType, gridId, userType){
 	
 	//if( arr.length === 1 ) {
 		// 1개면 바로 뷰어 띄움 테스트
-		//	var ret = window.open('/inside/distribution/docPdfListRequest/selectItem2?objectType='+objectType+'&file='+objectId, '_blank', '', false);
+		//	var ret = window.open('/general/distribution/docPdfListRequest/selectItem2?objectType='+objectType+'&file='+objectId, '_blank', '', false);
 	//}
 
 
@@ -663,8 +663,8 @@ function callPrint(response){
 		wmType = response.watermarkInfo;
 
 		var ret = window.open(response.filePath+'&wmType='+wmType, '_blank', '', false);
-		//var ret = window.open('/inside/distribution/docPdfLinkRequest/selectItem2?objectType='+objectType+'&file='+objectId+'&wmType'+wmType, '_blank', '', false);
-		//var ret = window.open('/inside/distribution/docPdfLinkRequest/selectItem2?objectType='+objectType+'&file='+objectId+'&wmType'+wmType, '_blank', '', false);
+		//var ret = window.open('/general/distribution/docPdfLinkRequest/selectItem2?objectType='+objectType+'&file='+objectId+'&wmType'+wmType, '_blank', '', false);
+		//var ret = window.open('/general/distribution/docPdfLinkRequest/selectItem2?objectType='+objectType+'&file='+objectId+'&wmType'+wmType, '_blank', '', false);
 	}else{
 		printSuccess = false;
 		if('NO_SUPPORT_EXT' == response.failType) {
@@ -801,7 +801,7 @@ function getProtectAuthYn(objectType, protectList) {
 
 	var auth = true;
 
-	callAjax(protectParam, '/inside/authorization/checkProtectAuth', function(response){
+	callAjax(protectParam, '/general/authorization/checkProtectAuth', function(response){
 		if(response.length > 0) {
 			alertMessage(g_msg('msg.noAuthProtectRequest'));
 			auth = false;
@@ -830,10 +830,10 @@ function requestInsideUser(requestType, objectType, gridId) {
 	}
 
 	if('PRINT' === requestType) {
-		url = '/inside/distribution/commonRequest/commonPrintRequestPopup';
+		url = '/general/distribution/commonRequest/commonPrintRequestPopup';
 	}
 	else {
-		url = '/inside/distribution/commonRequest/' + objectType.toLowerCase() + 'RequestPopup';
+		url = '/general/distribution/commonRequest/' + objectType.toLowerCase() + 'RequestPopup';
 	}
 
 	$.each($("#" + gridId).getGridParam('selarrrow'), function(index, item){
@@ -886,7 +886,7 @@ function revisionUpdateInsideUser(objectType, gridId) {
 		return false;
 	}
 
-	var url = '/inside/distribution/commonRequest/' + objectType.toLowerCase() + 'RevisionUpdatePopup';
+	var url = '/general/distribution/commonRequest/' + objectType.toLowerCase() + 'RevisionUpdatePopup';
 	var data = $("#" + gridId).jqGrid('getRowData', selectedRows[0]);
 
 	var popupHeight = Math.min($(window).height() - 100, 620);
@@ -906,7 +906,7 @@ function checkVersionInsideUser(objectType, gridId) {
 		return false;
 	}
 
-	var url = '/inside/distribution/commonRequest/' + objectType.toLowerCase() + 'VersionCheckPopup';
+	var url = '/general/distribution/commonRequest/' + objectType.toLowerCase() + 'VersionCheckPopup';
 	var data = $("#" + gridId).jqGrid('getRowData', selectedRows[0]);
 
 	var popupHeight = Math.min($(window).height() - 100, 500);

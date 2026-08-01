@@ -1,7 +1,7 @@
-﻿<%@page import="org.springframework.web.servlet.i18n.SessionLocaleResolver" %>
+<%@page import="org.springframework.web.servlet.i18n.SessionLocaleResolver" %>
 
 	<%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" %>
-		<%@page import="kr.esob.fdms.commonlogic.message.LocaleUtil" %>
+		<%@page import="kr.esob.tdms.commonlogic.message.LocaleUtil" %>
 		<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 			<%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
 
@@ -21,7 +21,7 @@
 					<script type="text/javascript" src="/resources/js/common_dialog.js"></script>
 						<link type="text/css" rel="stylesheet" href="/resources/css/popup-common.css" media="screen" />
 					<script type="text/javascript" src="/resources/js/common_validation.js"></script>
-					<script type="text/javascript" src="/resources/js/views/inside/common/clipboard.js"></script>
+					<script type="text/javascript" src="/resources/js/views/general/common/clipboard.js"></script>
 					<script>
 						console.log("empty");
 					</script>

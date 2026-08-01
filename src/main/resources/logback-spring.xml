@@ -8,11 +8,11 @@
 	</appender>
 	<appender name="FILE"
 		class="ch.qos.logback.core.rolling.RollingFileAppender">
-		<file>${LOG_DIR}/fdms-webapp.log</file>
+		<file>${LOG_DIR}/tdms-webapp.log</file>
 		<rollingPolicy
 			class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
 			<!-- 파일이 하루에 한개씩 생성된다 -->
-			<fileNamePattern>${LOG_DIR}/fdms-webapp.%d{yyyy-MM-dd}.log</fileNamePattern>
+			<fileNamePattern>${LOG_DIR}/tdms-webapp.%d{yyyy-MM-dd}.log</fileNamePattern>
 			<!-- maxHistory에 설정한 숫자만큼 로그 파일이 날짜별로 생성되고 그 이전로그는 자동삭제된다 -->
 			<maxHistory>${MAXHISTORY}</maxHistory>
 		</rollingPolicy>

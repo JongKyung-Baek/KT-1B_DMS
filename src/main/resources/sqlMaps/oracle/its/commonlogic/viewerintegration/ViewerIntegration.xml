@@ -17,7 +17,7 @@
     </insert>
 
     <select id="selectLaunch"
-            resultType="kr.esob.fdms.commonlogic.viewerintegration.ViewerLaunchRecord">
+            resultType="kr.esob.tdms.commonlogic.viewerintegration.ViewerLaunchRecord">
         SELECT correlation_id, object_type, object_id, acl_object_type, acl_object_id,
                file_no, request_no, actor_user_cd, actor_user_id, actor_user_nm,
                distribution_type, drawing_no, org_file_nm, revision,

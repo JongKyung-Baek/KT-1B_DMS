@@ -5,7 +5,7 @@
 
 <mapper namespace="sql.ToolbarInfo">
 
-<select id="selectList" resultType="kr.esob.fdms.commonlogic.toolbar.ToolbarInfoVO">
+<select id="selectList" resultType="kr.esob.tdms.commonlogic.toolbar.ToolbarInfoVO">
     SELECT
         TOOLBAR.TOOLBAR_ID as toolbarId,
         TOOLBAR.BUTTON_ID as buttonId,

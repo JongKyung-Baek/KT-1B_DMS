@@ -6,7 +6,7 @@
 
 
 <!--<mapper namespace="sql.ValidTermOver">-->
-<!--	<select id="selectList" resultType="kr.esob.fdms.commonlogic.validTermOver.ValidTermOverListVO">-->
+<!--	<select id="selectList" resultType="kr.esob.tdms.commonlogic.validTermOver.ValidTermOverListVO">-->
 <!--		/* 유효기간이 오늘 이전인것 */-->
 <!--		SELECT-->
 <!--		  reqFile.REQUEST_NO-->
@@ -74,7 +74,7 @@
 
 
 <mapper namespace="sql.ValidTermOver">
-<select id="selectList" resultType="kr.esob.fdms.commonlogic.validTermOver.ValidTermOverListVO">
+<select id="selectList" resultType="kr.esob.tdms.commonlogic.validTermOver.ValidTermOverListVO">
 	/* 유효기간이 오늘 이전인것 */
 	SELECT
 	reqFile.REQUEST_NO,

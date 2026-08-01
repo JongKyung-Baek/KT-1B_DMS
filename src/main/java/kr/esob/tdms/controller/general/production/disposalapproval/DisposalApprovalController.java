@@ -1,0 +1,68 @@
+package kr.esob.tdms.controller.general.production.disposalapproval;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+
+import kr.esob.tdms.commonlogic.abstractclass.AbstractController;
+import kr.esob.tdms.commonlogic.abstractclass.CommonHomeParam;
+import kr.esob.tdms.commonlogic.grid.GridResultVO;
+import kr.esob.tdms.commonlogic.result.ResultVO;
+import net.sf.json.JSONArray;
+
+@Controller
+@RequestMapping("/general/production/disposalApproval")
+public class DisposalApprovalController extends AbstractController {
+	@Inject
+	DisposalApprovalService service;
+
+	@RequestMapping(value="/")
+	public String home(Model model, CommonHomeParam param) throws JsonProcessingException {
+		setHomeParam(model, param);
+		model.addAttribute("formInfo", JSONArray.fromObject(formService.selectFormInfo("formProductionDisposalApproval")));
+		model.addAttribute("toolbarInfo", JSONArray.fromObject(toolbarService.selectToolbarInfo("toolbarProductionDisposalApproval")));
+		model.addAttribute("gridInfo", JSONArray.fromObject(gridService.selectGridInfo("gridProductionDisposalApprovalList")));
+
+		return "general/production/disposalapproval/disposalApprovalList";
+	}
+
+	@RequestMapping("/selectList")
+	public @ResponseBody GridResultVO selectList(DisposalApprovalListParam param) throws Exception {
+		GridResultVO result = commonSelectList(param, service);
+		return result;
+	}
+
+	/**
+	 * 생산기술자료 폐기 승인/반려 팝업
+	 * @param param
+	 * @param model
+	 * @return
+	 * @throws JsonProcessingException
+	 */
+	@RequestMapping(value="/disposalApprovalPopup")
+	public String disposalApprovalPopup(DisposalApprovalPopupParam param, Model model) throws JsonProcessingException {
+		model.addAttribute("data", service.getDestroyRequestInfo(param));
+		return "general/production/disposalapproval/disposalApprovalPopup";
+	}
+
+	/**
+	 * 생산기술자료 폐기 승인/반려
+	 * @param param
+	 * @param model
+	 * @return
+	 * @throws JsonProcessingException
+	 */
+	@PostMapping(value="/destroyApproval")
+	public @ResponseBody ResultVO destroyApproval(@RequestBody DisposalApprovalPopupParam param, Model model) throws JsonProcessingException {
+		return service.destroyApproval(param);
+	}
+
+
+}

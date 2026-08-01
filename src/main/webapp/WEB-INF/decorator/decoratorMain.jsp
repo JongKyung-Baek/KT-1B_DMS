@@ -1,6 +1,6 @@
 <%@page import="org.springframework.web.servlet.i18n.SessionLocaleResolver"%>
-<%@page import="kr.esob.fdms.commonlogic.message.LocaleUtil"%>
-<%@page import="kr.esob.fdms.controller.login.UserVO"%>
+<%@page import="kr.esob.tdms.commonlogic.message.LocaleUtil"%>
+<%@page import="kr.esob.tdms.controller.login.UserVO"%>
 <%@page import="org.springframework.security.core.context.SecurityContextHolder"%>
 <%@page import="org.springframework.security.core.Authentication"%>
 

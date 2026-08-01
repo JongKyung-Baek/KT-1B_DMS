@@ -638,7 +638,7 @@ INSERT INTO docs_menu (
 )
 VALUES (
     'MENU_223', 'ROOT', '이력관리', '', '1', 'T',
-    '/inside/history/', 115, 'root', 'N', 'Y',
+    '/general/history/', 115, 'root', 'N', 'Y',
     '접근·감사·열람·출력 이력 관리',
     '인증·메뉴·보안 접근 감사와 실제 열람·출력 기록을 구분하여 조회',
     'ROLE_MENU_223', ''
@@ -666,14 +666,14 @@ INSERT INTO docs_menu (
 VALUES
     (
         'MENU_224', 'MENU_223', '열람이력', '', '2', 'M',
-        '/inside/history/view/**', 117, 'leaf', 'N', 'Y',
+        '/general/history/view/**', 117, 'leaf', 'N', 'Y',
         '기술자료 열람 이력',
         '사용자별 기술자료 열람 허용·차단 및 이전 시스템 열람 기록 조회',
         'ROLE_MENU_224', ''
     ),
     (
         'MENU_225', 'MENU_223', '출력이력', '', '2', 'M',
-        '/inside/history/print/**', 118, 'leaf', 'N', 'Y',
+        '/general/history/print/**', 118, 'leaf', 'N', 'Y',
         '기술자료 출력 이력',
         '사용자별 출력 요청과 검증된 성공·실패 결과 조회',
         'ROLE_MENU_225', ''
@@ -744,7 +744,7 @@ INSERT INTO docs_menu (
 )
 VALUES (
     'MENU_222', 'MENU_214', '보안등급/인가 관리', '', '2', 'M',
-    '/inside/system/securityaccess/', 2, 'leaf', 'N', 'Y', '',
+    '/general/system/securityaccess/', 2, 'leaf', 'N', 'Y', '',
     '파일 보안등급과 사용자 인가등급 관리', 'ROLE_MENU_222', ''
 )
 ON CONFLICT (menu_cd) DO UPDATE SET
@@ -1053,7 +1053,7 @@ INSERT INTO docs_menu (
 )
 VALUES (
     'MENU_218', 'MENU_223', '접근·감사이력', 'menu.accessAuditHistory', '2', 'M',
-    '/inside/organizationmanage/auditlog/**', 116, 'leaf', 'N', 'Y',
+    '/general/organizationmanage/auditlog/**', 116, 'leaf', 'N', 'Y',
     '사용자 접근 및 운영 감사 이력',
     '인증·메뉴 행위와 문서 ACL 접근 이벤트를 한 화면에서 조회',
     'ROLE_MENU_218', ''

@@ -8,7 +8,7 @@
 <!--<mapper namespace="sql.configNotice">-->
 
 <!--	<select id="selectList"-->
-<!--		resultType="kr.esob.fdms.controller.configurationmanage.notice.ConfigNoticeListVO">-->
+<!--		resultType="kr.esob.tdms.controller.configurationmanage.notice.ConfigNoticeListVO">-->
 <!--		SELECT-->
 <!--			B1.*-->
 <!--		FROM-->
@@ -78,8 +78,8 @@
 <!--		</if>-->
 <!--	</select>-->
 <!--	-->
-<!--	<insert id="insertConfigNotice" parameterType="kr.esob.fdms.controller.configurationmanage.notice.ConfigNoticeAddParam">-->
-<!--	<selectKey keyProperty="noticeCd" resultType="kr.esob.fdms.controller.configurationmanage.notice.ConfigNoticeAddParam" order="BEFORE">	-->
+<!--	<insert id="insertConfigNotice" parameterType="kr.esob.tdms.controller.configurationmanage.notice.ConfigNoticeAddParam">-->
+<!--	<selectKey keyProperty="noticeCd" resultType="kr.esob.tdms.controller.configurationmanage.notice.ConfigNoticeAddParam" order="BEFORE">	-->
 <!--		SELECT NVL(MAX(NOTICE_CD),0)+1 AS noticeCd-->
 <!--        FROM DOCS_CONF_NOTICE-->
 <!--	</selectKey>-->
@@ -106,8 +106,8 @@
 <!--		)-->
 <!--	</insert>-->
 <!--	-->
-<!--	<insert id="insertConfigNoticeFile" parameterType="kr.esob.fdms.controller.configurationmanage.notice.ConfigNoticeAddParam">-->
-<!--		<selectKey keyProperty="fileNo" resultType="kr.esob.fdms.controller.configurationmanage.notice.ConfigNoticeAddParam" order="BEFORE">-->
+<!--	<insert id="insertConfigNoticeFile" parameterType="kr.esob.tdms.controller.configurationmanage.notice.ConfigNoticeAddParam">-->
+<!--		<selectKey keyProperty="fileNo" resultType="kr.esob.tdms.controller.configurationmanage.notice.ConfigNoticeAddParam" order="BEFORE">-->
 <!--			SELECT NVL(MAX(to_number(FILE_NO)),0)+1 AS fileNo-->
 <!--	        FROM DOCS_CONF_NOTICE_FILE-->
 <!--		</selectKey>-->
@@ -129,7 +129,7 @@
 <!--		)-->
 <!--	</insert>-->
 <!--	-->
-<!--	<select id="getNoticeInfo" resultType="kr.esob.fdms.controller.configurationmanage.notice.ConfigNoticePopupVO">-->
+<!--	<select id="getNoticeInfo" resultType="kr.esob.tdms.controller.configurationmanage.notice.ConfigNoticePopupVO">-->
 <!--		SELECT-->
 <!--			NOTICE_CD AS noticeCd,											/* 글번호 */-->
 <!--			(SELECT VALUE FROM docs_combo WHERE SEQ = NOTICE_TYPE-->
@@ -144,7 +144,7 @@
 <!--		WHERE NOTICE_CD = #{noticeCd}-->
 <!--	</select>-->
 <!--	-->
-<!--	<update id="updateHitCount" parameterType="kr.esob.fdms.controller.configurationmanage.notice.ConfigNoticePopupVO">-->
+<!--	<update id="updateHitCount" parameterType="kr.esob.tdms.controller.configurationmanage.notice.ConfigNoticePopupVO">-->
 <!--		UPDATE DOCS_CONF_NOTICE-->
 <!--		SET NOTICE_HIT = NVL(NOTICE_HIT, 0) + 1-->
 <!--		WHERE NOTICE_CD = #{noticeCd}-->
@@ -158,7 +158,7 @@
 <!--		WHERE NOTICE_CD = #{noticeCd}-->
 <!--	</update>-->
 <!--	-->
-<!--	<select id="selectFileInfo" resultType="kr.esob.fdms.controller.configurationmanage.notice.ConfigNoticeAddParam">-->
+<!--	<select id="selectFileInfo" resultType="kr.esob.tdms.controller.configurationmanage.notice.ConfigNoticeAddParam">-->
 <!--		SELECT-->
 <!--			FILE_NO AS fileNo,-->
 <!--			NOTICE_CD AS noticeCd,-->
@@ -169,7 +169,7 @@
 <!--		WHERE NOTICE_CD = #{noticeCd}-->
 <!--	</select>-->
 <!--	-->
-<!--	<delete id="deleteNotice" parameterType="kr.esob.fdms.controller.configurationmanage.notice.ConfigNoticePopupVO">-->
+<!--	<delete id="deleteNotice" parameterType="kr.esob.tdms.controller.configurationmanage.notice.ConfigNoticePopupVO">-->
 <!--		DELETE FROM DOCS_CONF_NOTICE WHERE NOTICE_CD = #{noticeCd}-->
 <!--	</delete>-->
 <!--	-->
@@ -192,7 +192,7 @@
 
 <mapper namespace="sql.configNotice">
 
-<select id="selectList" resultType="kr.esob.fdms.controller.configurationmanage.notice.ConfigNoticeListVO">
+<select id="selectList" resultType="kr.esob.tdms.controller.configurationmanage.notice.ConfigNoticeListVO">
 	SELECT
 	B1.*
 	FROM
@@ -262,8 +262,8 @@
 	</if>
 </select>
 
-<insert id="insertConfigNotice" parameterType="kr.esob.fdms.controller.configurationmanage.notice.ConfigNoticeAddParam">
-	<selectKey keyProperty="noticeCd" resultType="kr.esob.fdms.controller.configurationmanage.notice.ConfigNoticeAddParam" order="BEFORE">
+<insert id="insertConfigNotice" parameterType="kr.esob.tdms.controller.configurationmanage.notice.ConfigNoticeAddParam">
+	<selectKey keyProperty="noticeCd" resultType="kr.esob.tdms.controller.configurationmanage.notice.ConfigNoticeAddParam" order="BEFORE">
 		SELECT COALESCE(MAX(NOTICE_CD),0)+1 AS noticeCd
 		FROM DOCS_CONF_NOTICE
 	</selectKey>
@@ -289,8 +289,8 @@
 	)
 </insert>
 
-<insert id="insertConfigNoticeFile" parameterType="kr.esob.fdms.controller.configurationmanage.notice.ConfigNoticeAddParam">
-	<selectKey keyProperty="fileNo" resultType="kr.esob.fdms.controller.configurationmanage.notice.ConfigNoticeAddParam" order="BEFORE">
+<insert id="insertConfigNoticeFile" parameterType="kr.esob.tdms.controller.configurationmanage.notice.ConfigNoticeAddParam">
+	<selectKey keyProperty="fileNo" resultType="kr.esob.tdms.controller.configurationmanage.notice.ConfigNoticeAddParam" order="BEFORE">
 		SELECT COALESCE(MAX(CAST(FILE_NO AS INTEGER)),0)+1 AS fileNo
 		FROM DOCS_CONF_NOTICE_FILE
 	</selectKey>
@@ -312,7 +312,7 @@
 	)
 </insert>
 
-<select id="getNoticeInfo" resultType="kr.esob.fdms.controller.configurationmanage.notice.ConfigNoticePopupVO">
+<select id="getNoticeInfo" resultType="kr.esob.tdms.controller.configurationmanage.notice.ConfigNoticePopupVO">
 	SELECT
 		NOTICE_CD AS noticeCd,                                          /* 글번호 */
 		(SELECT VALUE FROM docs_combo WHERE SEQ = NOTICE_TYPE
@@ -327,7 +327,7 @@
 	WHERE NOTICE_CD = #{noticeCd}
 </select>
 
-<update id="updateHitCount" parameterType="kr.esob.fdms.controller.configurationmanage.notice.ConfigNoticePopupVO">
+<update id="updateHitCount" parameterType="kr.esob.tdms.controller.configurationmanage.notice.ConfigNoticePopupVO">
 	UPDATE DOCS_CONF_NOTICE
 	SET NOTICE_HIT = COALESCE(NOTICE_HIT, 0) + 1
 	WHERE NOTICE_CD = #{noticeCd}
@@ -341,7 +341,7 @@
 	WHERE NOTICE_CD = #{noticeCd}
 </update>
 
-<select id="selectFileInfo" resultType="kr.esob.fdms.controller.configurationmanage.notice.ConfigNoticeAddParam">
+<select id="selectFileInfo" resultType="kr.esob.tdms.controller.configurationmanage.notice.ConfigNoticeAddParam">
 	SELECT
 		FILE_NO AS fileNo,
 		NOTICE_CD AS noticeCd,
@@ -352,7 +352,7 @@
 	WHERE NOTICE_CD = #{noticeCd}
 </select>
 
-<delete id="deleteNotice" parameterType="kr.esob.fdms.controller.configurationmanage.notice.ConfigNoticePopupVO">
+<delete id="deleteNotice" parameterType="kr.esob.tdms.controller.configurationmanage.notice.ConfigNoticePopupVO">
 	DELETE FROM DOCS_CONF_NOTICE WHERE NOTICE_CD = #{noticeCd}
 </delete>
 

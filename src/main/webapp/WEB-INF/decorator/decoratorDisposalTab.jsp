@@ -1,6 +1,6 @@
 <%@page import="org.springframework.web.servlet.i18n.SessionLocaleResolver"%>
-<%@page import="kr.esob.fdms.commonlogic.message.LocaleUtil"%>
-<%@page import="kr.esob.fdms.controller.login.UserVO"%>
+<%@page import="kr.esob.tdms.commonlogic.message.LocaleUtil"%>
+<%@page import="kr.esob.tdms.controller.login.UserVO"%>
 <%@page import="org.springframework.security.core.context.SecurityContextHolder"%>
 <%@page import="org.springframework.security.core.Authentication"%>
 
@@ -121,7 +121,7 @@
 </head>
 <body>
 	<div id="viewerCab"></div>
-	<div class="bodyWrap inside">
+	<div class="bodyWrap general">
 		<jsp:include page="/header.jsp" flush="true"></jsp:include>
 		<div class="wrap">
 			<jsp:include page="/left.jsp" flush="true"></jsp:include>
@@ -138,8 +138,8 @@
 				</div>
 				<div class="tabArea">
 					<ul>
-						<li id="distribute"><a href="/inside/production/disposal/">폐기요청</a></li>
-						<li id="print" class="current"><a href="/inside/production/disposalStatus/">폐기현황</a></li>
+						<li id="distribute"><a href="/general/production/disposal/">폐기요청</a></li>
+						<li id="print" class="current"><a href="/general/production/disposalStatus/">폐기현황</a></li>
 					</ul>
 				</div>
 				<div class="contentArea whole tabContentArea">

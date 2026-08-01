@@ -21,7 +21,7 @@
     FROM CONFIG;
 </select>
 
-<select id="selectList" parameterType="kr.esob.fdms.commonlogic.updown.CommonUpdownParam" resultType="kr.esob.fdms.commonlogic.updown.CommonUpdownFileVO">
+<select id="selectList" parameterType="kr.esob.tdms.commonlogic.updown.CommonUpdownParam" resultType="kr.esob.tdms.commonlogic.updown.CommonUpdownFileVO">
     SELECT rf.FILE_PATH_NM 	AS filePathNm
     , rf.ORG_FILE_NM		AS orgFileNm
     , rf.FILE_NM			AS fileNm
@@ -41,7 +41,7 @@
     </foreach>
 </select>
 
-<select id="selectDownloadResource" parameterType="map" resultType="kr.esob.fdms.commonlogic.updown.CommonUpdownFileVO">
+<select id="selectDownloadResource" parameterType="map" resultType="kr.esob.tdms.commonlogic.updown.CommonUpdownFileVO">
     SELECT rf.FILE_PATH_NM AS filePathNm,
            rf.ORG_FILE_NM AS orgFileNm,
            rf.FILE_NM AS fileNm,
@@ -89,7 +89,7 @@
     WHERE REQUEST_NO = #{requestNo} AND OBJECT_ID = #{objectId}
 </select>
 
-<insert id="insertLog" parameterType="kr.esob.fdms.commonlogic.updown.DownloadedFileActLogDto">
+<insert id="insertLog" parameterType="kr.esob.tdms.commonlogic.updown.DownloadedFileActLogDto">
     INSERT INTO DOCS_DOCUMENT_ACT_LOG (ACT_TYPE, ACT_TIME, PATH, UUID, OBJECT_ID, POLICY)
     VALUES (
                #{act_type},

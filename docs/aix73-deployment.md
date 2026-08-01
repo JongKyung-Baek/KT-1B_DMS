@@ -100,6 +100,9 @@ psql -h <pg17-host> -p 5432 -U "$KT1B_DB_USERNAME" -d kt1b \
 psql -h <pg17-host> -p 5432 -U "$KT1B_DB_USERNAME" -d kt1b \
   -v ON_ERROR_STOP=1 \
   -f /opt/kt1b/sql/internal_only_cleanup_ddl.sql
+psql -h <pg17-host> -p 5432 -U "$KT1B_DB_USERNAME" -d kt1b \
+  -v ON_ERROR_STOP=1 \
+  -f /opt/kt1b/sql/general_route_migration_ddl.sql
 ```
 
 두 스크립트는 재실행 가능하게 작성되어 있다. 적용 후 메뉴와 사용자 구분값이 모두 내부(`I`)로 정규화되고, 폐기된 외부 사용자 요청 테이블과 시퀀스가 남지 않았는지 확인한다.
@@ -150,12 +153,12 @@ Windows 검증에서 생성한 동일 WAR를 AIX에 배포하고 양쪽 체크�
 
 ```powershell
 .\mvnw.cmd clean verify
-Get-FileHash .\target\SDMS-KT-1B.war -Algorithm SHA256
+Get-FileHash .\target\TDMS-KT-1B.war -Algorithm SHA256
 ```
 
 ```sh
-openssl dgst -sha256 /opt/kt1b/SDMS-KT-1B.war
-$JAVA_HOME/bin/java -Xms1g -Xmx2g -jar /opt/kt1b/SDMS-KT-1B.war
+openssl dgst -sha256 /opt/kt1b/TDMS-KT-1B.war
+$JAVA_HOME/bin/java -Xms1g -Xmx2g -jar /opt/kt1b/TDMS-KT-1B.war
 ```
 
 메모리 값은 운영 서버 용량에 맞춰 조정한다. 장기 실행은 AIX 서비스 관리 방식으로 등록하고, 시작·중지·로그 경로를 서비스 계정 기준으로 고정한다.

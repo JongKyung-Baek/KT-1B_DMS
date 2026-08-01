@@ -44,7 +44,7 @@
 		}
 
 		auditLeaveNotified = true;
-		var notifyUrl = '${pageContext.request.contextPath}/inside/organizationmanage/auditlog/notifyLogoutOnLeave';
+		var notifyUrl = '${pageContext.request.contextPath}/general/organizationmanage/auditlog/notifyLogoutOnLeave';
 		var requestBody = buildAuditLeaveBody();
 
 		if (navigator.sendBeacon) {
@@ -70,7 +70,7 @@
 
 	function clearPendingLogoutOnStay() {
 		$.ajax({
-			url: '/inside/organizationmanage/auditlog/clearPendingLogoutOnStay',
+			url: '/general/organizationmanage/auditlog/clearPendingLogoutOnStay',
 			type: 'POST'
 		});
 	}

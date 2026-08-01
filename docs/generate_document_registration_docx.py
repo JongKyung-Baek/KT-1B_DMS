@@ -205,7 +205,7 @@ def build_document_xml():
     body.append(paragraph("KT-1B 문서 등록 후 조회 가이드", "Title"))
     body.append(paragraph("문서를 등록한 뒤 목록에서 문서번호를 클릭하고, 파일 정보 팝업에서 파일명을 클릭해 뷰어로 확인하는 절차입니다."))
     body.append(paragraph("1. 문서 등록", "Heading1"))
-    body.append(bullet("문서 배포요청 화면(`/inside/distribution/docRequest/`)에서 등록 버튼을 클릭합니다."))
+    body.append(bullet("문서 배포요청 화면(`/general/distribution/docRequest/`)에서 등록 버튼을 클릭합니다."))
     body.append(bullet("등록 정보 팝업에서 문서제목, Function Code1/2, 배포 대상, 승인자, 주파일을 입력한 뒤 등록합니다."))
     body.append(paragraph("2. 등록 문서 확인", "Heading1"))
     body.append(bullet("등록 후 같은 문서 배포요청 목록에서 등록한 문서를 조회합니다."))
@@ -220,9 +220,9 @@ def build_document_xml():
     body.append(bullet("뷰어에서 문서 내용을 확인하고, 필요 시 확대/축소, 다운로드, 인쇄 기능을 사용한다."))
     body.append(image_paragraph("rId3", "문서 뷰어"))
     body.append(paragraph("5. 핵심 경로 요약", "Heading1"))
-    body.append(bullet("목록 화면: /inside/distribution/docRequest/"))
-    body.append(bullet("등록 팝업: /inside/distribution/docRequest/docRegisterPopup"))
-    body.append(bullet("파일 정보 팝업: /inside/distribution/docRequest/docFilePopup"))
+    body.append(bullet("목록 화면: /general/distribution/docRequest/"))
+    body.append(bullet("등록 팝업: /general/distribution/docRequest/docRegisterPopup"))
+    body.append(bullet("파일 정보 팝업: /general/distribution/docRequest/docFilePopup"))
     body.append(bullet("뷰어 호출: 파일 정보 팝업에서 파일명 클릭"))
     body.append(
         '<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="850" w:right="850" w:bottom="850" w:left="850" w:header="708" w:footer="708" w:gutter="0"/></w:sectPr>'

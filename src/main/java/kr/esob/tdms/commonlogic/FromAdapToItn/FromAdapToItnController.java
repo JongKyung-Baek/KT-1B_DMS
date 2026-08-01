@@ -1,0 +1,21 @@
+package kr.esob.tdms.commonlogic.FromAdapToItn;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+
+import kr.esob.tdms.commonlogic.abstractclass.AbstractController;
+import kr.esob.tdms.commonlogic.abstractclass.CommonHomeParam;
+
+
+@Controller
+public class FromAdapToItnController{
+
+	@RequestMapping("/commonlogic/FromAdapToItn")
+	public String home(Model model, CommonHomeParam param) throws JsonProcessingException {
+		
+		return "aaa";
+	}
+}

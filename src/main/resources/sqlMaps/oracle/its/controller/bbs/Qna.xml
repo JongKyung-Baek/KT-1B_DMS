@@ -6,7 +6,7 @@
 
 <mapper namespace="sql.qna">
 
-	<select id="selectMainList" resultType="kr.esob.fdms.controller.bbs.qna.BbsQnaListVO">
+	<select id="selectMainList" resultType="kr.esob.tdms.controller.bbs.qna.BbsQnaListVO">
 		/* 메인화면용 QNA list*/
 		SELECT
 			A1.*
@@ -23,7 +23,7 @@
 			 ) A1
 	</select>
 
-	<select id="selectMainReplyList" resultType="kr.esob.fdms.controller.bbs.qna.BbsQnaListVO">
+	<select id="selectMainReplyList" resultType="kr.esob.tdms.controller.bbs.qna.BbsQnaListVO">
 		/* 메인화면용 QNA 댓글 list*/
 		SELECT
 			A1.*
@@ -39,7 +39,7 @@
 			 ) A1
 	</select>
 
-	<select id="selectList" resultType="kr.esob.fdms.controller.bbs.qna.BbsQnaListVO">
+	<select id="selectList" resultType="kr.esob.tdms.controller.bbs.qna.BbsQnaListVO">
 		WITH RECURSIVE QNA_CTE AS (
 		SELECT
 		QNA_CD,
@@ -122,7 +122,7 @@
 		) AS subquery
 	</select>
 
-	<select id="getRequestInfo" resultType="kr.esob.fdms.controller.bbs.qna.BbsQnaPopupVO" parameterType="kr.esob.fdms.controller.bbs.qna.BbsQnaPopupParam">
+	<select id="getRequestInfo" resultType="kr.esob.tdms.controller.bbs.qna.BbsQnaPopupVO" parameterType="kr.esob.tdms.controller.bbs.qna.BbsQnaPopupParam">
 		SELECT req.QNA_CD 		AS qnaCd,
 			   req.PARENT_QNA_CD			AS parentQnaCd,
 			   req.TITLE 					AS title,
@@ -138,14 +138,14 @@
 		  AND DEL_YN = 'N'
 	</select>
 
-	<update id="updateHitCount" parameterType="kr.esob.fdms.controller.bbs.qna.BbsQnaPopupParam">
+	<update id="updateHitCount" parameterType="kr.esob.tdms.controller.bbs.qna.BbsQnaPopupParam">
 		UPDATE DOCS_QNA
 		SET HIT_COUNT = COALESCE(HIT_COUNT, 0) + 1
 		WHERE QNA_CD = #{qnaCd}
 	</update>
 
-	<insert id="insertQnaInfo" parameterType="kr.esob.fdms.controller.bbs.qna.BbsQnaAddParam">
-		<selectKey keyProperty="qnaCd" resultType="kr.esob.fdms.controller.bbs.qna.BbsQnaAddParam" order="BEFORE">
+	<insert id="insertQnaInfo" parameterType="kr.esob.tdms.controller.bbs.qna.BbsQnaAddParam">
+		<selectKey keyProperty="qnaCd" resultType="kr.esob.tdms.controller.bbs.qna.BbsQnaAddParam" order="BEFORE">
 			SELECT COALESCE(MAX(CAST(QNA_CD AS INTEGER)), 0) + 1 AS qnaCd
 			FROM DOCS_QNA
 		</selectKey>
@@ -169,8 +169,8 @@
 		)
 	</insert>
 
-	<insert id="replyQnaInfo" parameterType="kr.esob.fdms.controller.bbs.qna.BbsQnaReplyParam">
-		<selectKey keyProperty="qnaCd" resultType="kr.esob.fdms.controller.bbs.qna.BbsQnaReplyParam" order="BEFORE">
+	<insert id="replyQnaInfo" parameterType="kr.esob.tdms.controller.bbs.qna.BbsQnaReplyParam">
+		<selectKey keyProperty="qnaCd" resultType="kr.esob.tdms.controller.bbs.qna.BbsQnaReplyParam" order="BEFORE">
 			SELECT COALESCE(MAX(CAST(QNA_CD AS INTEGER)), 0) + 1 AS qnaCd
 			FROM DOCS_QNA
 		</selectKey>
@@ -196,7 +196,7 @@
 		)
 	</insert>
 
-	<select id="selectQnaInfo" resultType="kr.esob.fdms.controller.bbs.qna.BbsQnaPopupParam">
+	<select id="selectQnaInfo" resultType="kr.esob.tdms.controller.bbs.qna.BbsQnaPopupParam">
 		SELECT req.QNA_CD		AS qnaCd,
 			   req.TITLE                AS title,
 			   req.INSERT_USER_CD		AS insertUserNm
@@ -204,14 +204,14 @@
 		WHERE req.QNA_CD = #{qnaCd}
 	</select>
 
-	<update id="deleteQna" parameterType="kr.esob.fdms.controller.bbs.qna.BbsQnaPopupParam">
+	<update id="deleteQna" parameterType="kr.esob.tdms.controller.bbs.qna.BbsQnaPopupParam">
 		UPDATE DOCS_QNA
 		SET DEL_YN = 'Y'
 		WHERE QNA_CD = #{qnaCd}
 	</update>
 
 	<select id="getUser"
-			resultType="kr.esob.fdms.controller.login.UserVO"
+			resultType="kr.esob.tdms.controller.login.UserVO"
 			parameterType="string">
 		SELECT
 			docsUser.*,
@@ -227,7 +227,7 @@
 	</select>
 
 	<select id="getRoleCodeList"
-			resultType="kr.esob.fdms.controller.login.RoleVO">
+			resultType="kr.esob.tdms.controller.login.RoleVO">
 		SELECT rel.ROLE_CODE AS roleCd,
 			   menu.MENU_TYPE
 		FROM ITS_REL_ROLE_GROUP rel

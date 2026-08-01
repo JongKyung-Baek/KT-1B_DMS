@@ -5,7 +5,7 @@
 
 <mapper namespace="sql.SystemConfig">
 
-<select id="selectSystemConfig" resultType="kr.esob.fdms.commonlogic.systemconfig.SystemConfigVO">
+<select id="selectSystemConfig" resultType="kr.esob.tdms.commonlogic.systemconfig.SystemConfigVO">
 	SELECT *
 	FROM DOCS_SYSTEM_CONFIG
 </select>

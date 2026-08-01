@@ -861,9 +861,9 @@ SELECT CURRENT_TIMESTAMP - make_interval(hours => actor_order * 2),
        jsonb_build_object('sample', true, 'screen', 'technical-data-search'),
        'MENU_220',
        '조회',
-       '/inside/distribution/swRequest/**',
+       '/general/distribution/swRequest/**',
        '기술자료 조회',
-       '/inside/distribution/swRequest/selectList',
+       '/general/distribution/swRequest/selectList',
        'POST',
        200,
        80 + actor_order * 7
@@ -931,9 +931,9 @@ SELECT CURRENT_TIMESTAMP - make_interval(hours => document.seq_no + 2),
        jsonb_build_object('sample', true, 'transmittalNo', document.transmittal_no),
        'MENU_220',
        '조회',
-       '/inside/distribution/swRequest/**',
+       '/general/distribution/swRequest/**',
        '상세조회',
-       '/inside/distribution/swRequest/detail',
+       '/general/distribution/swRequest/detail',
        'GET',
        200,
        110 + document.seq_no * 5
@@ -997,9 +997,9 @@ SELECT CURRENT_TIMESTAMP - make_interval(hours => (audit_row + 8)::integer),
        jsonb_build_object('sample', true, 'policy', 'grade-and-named-acl'),
        'MENU_220',
        '조회',
-       '/inside/distribution/swRequest/**',
+       '/general/distribution/swRequest/**',
        '상세정보 접근',
-       '/inside/distribution/swRequest/detail',
+       '/general/distribution/swRequest/detail',
        'GET',
        200,
        60 + audit_row * 4
@@ -1067,9 +1067,9 @@ SELECT CURRENT_TIMESTAMP - make_interval(days => 1) - make_interval(hours => aud
        jsonb_build_object('sample', true, 'fileType', 'main'),
        'MENU_220',
        '조회',
-       '/inside/distribution/swRequest/**',
+       '/general/distribution/swRequest/**',
        '원문 다운로드',
-       '/inside/distribution/swRequest/file',
+       '/general/distribution/swRequest/file',
        'GET',
        200,
        140 + audit_row * 9
@@ -1124,9 +1124,9 @@ SELECT CURRENT_TIMESTAMP - make_interval(days => 2) - make_interval(hours => doc
        jsonb_build_object('sample', true, 'change', 'grant-document-permission'),
        'MENU_222',
        '보안등급/인가 관리',
-       '/inside/system/securityaccess/',
+       '/general/system/securityaccess/',
        '문서권한 변경',
-       '/inside/system/securityaccess/document-permissions',
+       '/general/system/securityaccess/document-permissions',
        'POST',
        200,
        95 + document.seq_no * 6
@@ -1190,9 +1190,9 @@ BEGIN
          WHERE parent_menu_cd IN ('I', 'B', 'E')
             OR COALESCE(menu_url, '') ~* '(^|/)outside/'
             OR COALESCE(menu_url, '') ~*
-               '^/inside/(unregisted|outregisted)(/|$)'
+               '^/general/(unregisted|outregisted)(/|$)'
             OR COALESCE(menu_url, '') ~*
-               '^/inside/organizationmanage/(outsideuser|approval)(/|$)'
+               '^/general/organizationmanage/(outsideuser|approval)(/|$)'
     ) THEN
         RAISE EXCEPTION 'The demo contains a retired external menu.';
     END IF;

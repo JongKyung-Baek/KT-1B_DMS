@@ -9,11 +9,11 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>kr.esob</groupId>
-	<artifactId>StartupHub</artifactId>
+	<artifactId>kt1b-tdms</artifactId>
 	<packaging>war</packaging>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>StartupHub</name>
-	<description>Demo project for Spring Boot</description>
+	<name>KT-1B TDMS</name>
+	<description>KT-1B Technical Data Management System</description>
 
 	<properties>
 		<java.version>17</java.version>
@@ -172,6 +172,6 @@
 
 
 		</plugins>
-		<finalName>SDMS-KT-1B</finalName>
+		<finalName>TDMS-KT-1B</finalName>
 	</build>
 </project>

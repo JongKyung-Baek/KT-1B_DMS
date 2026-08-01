@@ -5,7 +5,7 @@
 
 <mapper namespace="sql.Menu">
 
-<select id="getMenuList" resultType="kr.esob.fdms.commonlogic.menu.MenuVO">
+<select id="getMenuList" resultType="kr.esob.tdms.commonlogic.menu.MenuVO">
     WITH RECURSIVE ACTIVE_MENU (
         MENU_CD, PARENT_MENU_CD, MENU_NM, MESSAGE_CD, MENU_LEVEL, MENU_TYPE,
         MENU_URL, SORT_SEQ, TREE_TYPE, DEL_YN, USE_YN, TOOLTIP, MENU_DESC,
@@ -95,7 +95,7 @@
     AND MENU_URL = #{url}
 </select>
 
-<select id="getMenuTopList" resultType="kr.esob.fdms.commonlogic.menu.MenuVO">
+<select id="getMenuTopList" resultType="kr.esob.tdms.commonlogic.menu.MenuVO">
     SELECT menu.MENU_CD AS menuCd,
            menu.PARENT_MENU_CD AS parentMenuCd,
            COALESCE(lang.LANG_DESC, menu.MENU_NM) AS menuNm,
@@ -126,7 +126,7 @@
     ORDER BY SORT_SEQ
 </select>
 
-<select id="getMenuSubList" resultType="kr.esob.fdms.commonlogic.menu.MenuVO">
+<select id="getMenuSubList" resultType="kr.esob.tdms.commonlogic.menu.MenuVO">
     WITH RECURSIVE parent (MENU_CD, PARENT_MENU_CD, MENU_NM, MESSAGE_CD, MENU_LEVEL, MENU_TYPE, MENU_URL, SORT_SEQ, TREE_TYPE, DEL_YN, USE_YN, TOOLTIP, MENU_DESC, ROLE_CD, MENU_PATH_CD, MENU_PATH, MAIN_CD) AS (
         SELECT menu.MENU_CD,
                menu.PARENT_MENU_CD,
@@ -194,7 +194,7 @@
     ORDER BY SORT_SEQ
 </select>
 
-<select id="getMenuCombo" resultType="kr.esob.fdms.commonlogic.combo.SearchComboInfoVO" parameterType="String">
+<select id="getMenuCombo" resultType="kr.esob.tdms.commonlogic.combo.SearchComboInfoVO" parameterType="String">
     WITH RECURSIVE PARENT (MENU_CD, PARENT_MENU_CD, MENU_NM, MENU_URL, MENU_LEVEL, MENU_TYPE, MAIN_CODE) AS (
         SELECT MENU_CD,
                PARENT_MENU_CD,
@@ -227,7 +227,7 @@
     ORDER BY MAIN_CODE, MENU_CD
 </select>
 
-<select id="getParentMenuInfo" resultType="kr.esob.fdms.commonlogic.menu.MenuVO">
+<select id="getParentMenuInfo" resultType="kr.esob.tdms.commonlogic.menu.MenuVO">
     SELECT *
     FROM DOCS_MENU
     WHERE MENU_CD = #{parentMenuCd}
@@ -245,7 +245,7 @@
     LIMIT 1
 </select>
 
-<select id="selectTree" resultType="kr.esob.fdms.commonlogic.tree.TreeVO">
+<select id="selectTree" resultType="kr.esob.tdms.commonlogic.tree.TreeVO">
     WITH RECURSIVE ACTIVE_MENU (
         MENU_CD, PARENT_MENU_CD, MENU_NM, MENU_LEVEL, MENU_TYPE,
         SORT_SEQ, USE_YN, ROLE_CD, MENU_PATH
@@ -329,7 +329,7 @@
     WHERE MENU_CD = #{menuCd}
 </update>
 
-<select id="selectMenuInfo" resultType="kr.esob.fdms.controller.inside.system.menu.MenuVO">
+<select id="selectMenuInfo" resultType="kr.esob.tdms.controller.general.system.menu.MenuVO">
     SELECT MENU_CD AS menuCd,
            MENU_NM AS menuNm,
            PARENT_MENU_CD AS parentMenuCd,

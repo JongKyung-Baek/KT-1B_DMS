@@ -1,4 +1,4 @@
-﻿<%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" %>
+<%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" %>
 	<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 		<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 		<%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
@@ -63,7 +63,7 @@
 
 			<aside id="layout-menu" class="layout-menu menu-vertical menu">
 				<div class="app-brand demo">
-					<a href="${pageContext.request.contextPath}/inside/distribution/swRequest/dashboard" class="app-brand-link"
+					<a href="${pageContext.request.contextPath}/general/distribution/swRequest/dashboard" class="app-brand-link"
 					   aria-label="KT-1B DMS dashboard">
 						<span class="app-brand-text demo menu-text fw-bold ms-2">KT-1B DMS</span>
 					</a>

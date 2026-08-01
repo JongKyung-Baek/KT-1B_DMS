@@ -3,7 +3,7 @@
     "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="sql.SecurityAcl">
 
-    <select id="selectGrades" resultType="kr.esob.fdms.commonlogic.securityacl.SecurityGradeVO">
+    <select id="selectGrades" resultType="kr.esob.tdms.commonlogic.securityacl.SecurityGradeVO">
         SELECT grade_cd, grade_nm, grade_level, description, default_yn, use_yn
           FROM docs_security_grade
          ORDER BY grade_level, grade_cd
@@ -42,7 +42,7 @@
             update_dt = CURRENT_TIMESTAMP
     </insert>
 
-    <select id="selectUsers" resultType="kr.esob.fdms.commonlogic.securityacl.UserClearanceVO">
+    <select id="selectUsers" resultType="kr.esob.tdms.commonlogic.securityacl.UserClearanceVO">
         SELECT u.user_cd,
                u.user_id,
                u.user_nm,
@@ -235,7 +235,7 @@
         </choose>
     </sql>
 
-    <select id="selectFiles" resultType="kr.esob.fdms.commonlogic.securityacl.FileSecurityLabelVO">
+    <select id="selectFiles" resultType="kr.esob.tdms.commonlogic.securityacl.FileSecurityLabelVO">
         WITH inventory AS (
             <include refid="fileInventory"/>
         )
@@ -440,7 +440,7 @@
     </select>
 
     <select id="selectFileUserPermissions"
-            resultType="kr.esob.fdms.commonlogic.securityacl.FileUserPermissionVO">
+            resultType="kr.esob.tdms.commonlogic.securityacl.FileUserPermissionVO">
         WITH selected_label AS (
             SELECT l.grade_cd, g.grade_nm, g.grade_level, g.use_yn AS grade_use_yn
               FROM docs_file_security_label l
@@ -573,7 +573,7 @@
     </select>
 
     <select id="selectDocumentUserPermissionStates"
-            resultType="kr.esob.fdms.commonlogic.securityacl.FileUserPermissionVO">
+            resultType="kr.esob.tdms.commonlogic.securityacl.FileUserPermissionVO">
         SELECT u.user_cd,
                CASE WHEN COUNT(DISTINCT p.action_cd) FILTER (
                    WHERE p.action_cd IN ('LIST', 'DETAIL', 'VIEW')
@@ -668,7 +668,7 @@
             updated_at = CURRENT_TIMESTAMP
     </insert>
 
-    <select id="selectDecision" resultType="kr.esob.fdms.commonlogic.securityacl.FileAccessDecisionVO">
+    <select id="selectDecision" resultType="kr.esob.tdms.commonlogic.securityacl.FileAccessDecisionVO">
         SELECT CASE
                    WHEN u.user_cd IS NULL THEN FALSE
                    WHEN uc.user_cd IS NULL THEN FALSE
@@ -788,7 +788,7 @@
         )
     </insert>
 
-    <select id="selectAudit" resultType="kr.esob.fdms.commonlogic.securityacl.AccessAuditEventVO">
+    <select id="selectAudit" resultType="kr.esob.tdms.commonlogic.securityacl.AccessAuditEventVO">
         SELECT event_id,
                TO_CHAR(occurred_at AT TIME ZONE 'Asia/Seoul', 'YYYY-MM-DD HH24:MI:SS') AS occurred_at,
                event_type, action_type, result_cd, reason_cd, result_message,

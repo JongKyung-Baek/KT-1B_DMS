@@ -1,0 +1,336 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="sql.OrganizationmanageAuditLog">
+
+    <sql id="auditSourceType">
+        CASE
+            WHEN auditLog.correlation_id LIKE 'LEGACY-AUDIT-%' THEN 'LEGACY'
+            WHEN auditLog.event_type = 'AUTH' THEN 'AUTH'
+            WHEN auditLog.event_type = 'MENU_ACTION' THEN 'MENU'
+            ELSE 'SECURITY'
+        END
+    </sql>
+
+    <sql id="localizedMenuName">
+        COALESCE(
+            (
+                SELECT language.lang_desc
+                  FROM docs_menu menu
+                  JOIN docs_lang language
+                    ON language.lang_cd = menu.message_cd
+                   AND language.lang_type = #{sessionLang}
+                 WHERE menu.menu_cd = auditLog.menu_cd
+                 LIMIT 1
+            ),
+            auditLog.menu_nm
+        )
+    </sql>
+
+    <sql id="auditFilters">
+        <if test='sourceType != null and sourceType != ""'>
+            AND (
+                CASE
+                    WHEN auditLog.correlation_id LIKE 'LEGACY-AUDIT-%' THEN 'LEGACY'
+                    WHEN auditLog.event_type = 'AUTH' THEN 'AUTH'
+                    WHEN auditLog.event_type = 'MENU_ACTION' THEN 'MENU'
+                    ELSE 'SECURITY'
+                END
+            ) = UPPER(#{sourceType})
+        </if>
+        <if test='eventType != null and eventType != ""'>
+            AND auditLog.event_type = UPPER(#{eventType})
+        </if>
+        <if test='userCd != null and userCd != ""'>
+            AND COALESCE(auditLog.actor_user_cd, '') ILIKE '%' || #{userCd} || '%'
+        </if>
+        <if test='userId != null and userId != ""'>
+            AND COALESCE(auditLog.actor_user_id, '') ILIKE '%' || #{userId} || '%'
+        </if>
+        <if test='userName != null and userName != ""'>
+            AND COALESCE(auditLog.actor_user_nm, '') ILIKE '%' || #{userName} || '%'
+        </if>
+        <if test='userNm != null and userNm != ""'>
+            AND COALESCE(auditLog.actor_user_nm, '') ILIKE '%' || #{userNm} || '%'
+        </if>
+        <if test='menuCd != null and menuCd != ""'>
+            AND auditLog.menu_cd = #{menuCd}
+        </if>
+        <if test='menuNm != null and menuNm != ""'>
+            AND COALESCE(<include refid="localizedMenuName"/>, '') ILIKE '%' || #{menuNm} || '%'
+        </if>
+        <if test='actionType != null and actionType != ""'>
+            AND auditLog.action_type = UPPER(#{actionType})
+        </if>
+        <if test='resultCd != null and resultCd != ""'>
+            AND auditLog.result_cd = UPPER(#{resultCd})
+        </if>
+        <if test='objectType != null and objectType != ""'>
+            AND auditLog.object_type = UPPER(#{objectType})
+        </if>
+        <if test='targetKeyword != null and targetKeyword != ""'>
+            AND (
+                   COALESCE(auditLog.object_type, '') ILIKE '%' || #{targetKeyword} || '%'
+                OR COALESCE(auditLog.object_id, '') ILIKE '%' || #{targetKeyword} || '%'
+                OR COALESCE(auditLog.file_no, '') ILIKE '%' || #{targetKeyword} || '%'
+                OR COALESCE(auditLog.request_no, '') ILIKE '%' || #{targetKeyword} || '%'
+            )
+        </if>
+        <if test='accessIp != null and accessIp != ""'>
+            AND COALESCE(auditLog.client_ip, '') ILIKE '%' || #{accessIp} || '%'
+        </if>
+        <if test='startDt != null and startDt != ""'>
+            AND auditLog.occurred_at &gt;=
+                (CAST(#{startDt} || ' 00:00:00' AS timestamp) AT TIME ZONE 'Asia/Seoul')
+        </if>
+        <if test='endDt != null and endDt != ""'>
+            AND auditLog.occurred_at &lt;
+                (CAST(#{endDt} || ' 00:00:00' AS timestamp) AT TIME ZONE 'Asia/Seoul')
+                + INTERVAL '1 day'
+        </if>
+    </sql>
+
+    <select id="selectList"
+            resultType="kr.esob.tdms.controller.general.organizationmanage.auditlog.AuditLogListVO">
+        SELECT auditLog.event_id AS "eventId",
+               auditLog.event_id AS "logNo",
+               TO_CHAR(
+                   auditLog.occurred_at AT TIME ZONE 'Asia/Seoul',
+                   'YYYY-MM-DD HH24:MI:SS'
+               ) AS "occurredAt",
+               TO_CHAR(
+                   auditLog.occurred_at AT TIME ZONE 'Asia/Seoul',
+                   'YYYY-MM-DD HH24:MI:SS'
+               ) AS "logDt",
+               TO_CHAR(
+                   auditLog.occurred_at AT TIME ZONE 'Asia/Seoul',
+                   'YYYY-MM-DD HH24:MI:SS'
+               ) AS "date",
+               <include refid="auditSourceType"/> AS "sourceType",
+               auditLog.event_type AS "eventType",
+               auditLog.actor_user_cd AS "userCd",
+               auditLog.actor_user_id AS "userId",
+               auditLog.actor_user_nm AS "userName",
+               auditLog.actor_user_nm AS "userNm",
+               auditLog.menu_cd AS "menuCd",
+               <include refid="localizedMenuName"/> AS "menuNm",
+               auditLog.menu_url AS "menuUrl",
+               auditLog.action_type AS "actionType",
+               COALESCE(NULLIF(auditLog.action_nm, ''), auditLog.action_type) AS "actionNm",
+               auditLog.result_cd AS "resultCd",
+               auditLog.object_type AS "objectType",
+               auditLog.object_id AS "objectId",
+               auditLog.file_no AS "fileNo",
+               auditLog.request_no AS "requestNo",
+               auditLog.grade_cd AS "gradeCd",
+               COALESCE(
+                   NULLIF(
+                       CONCAT_WS(
+                           ' · ',
+                           NULLIF(auditLog.object_type, ''),
+                           NULLIF(auditLog.object_id, ''),
+                           CASE WHEN NULLIF(auditLog.file_no, '') IS NOT NULL
+                                THEN 'FILE ' || auditLog.file_no END,
+                           CASE WHEN NULLIF(auditLog.request_no, '') IS NOT NULL
+                                THEN 'REQ ' || auditLog.request_no END,
+                           CASE WHEN NULLIF(auditLog.grade_cd, '') IS NOT NULL
+                                THEN 'GRADE ' || auditLog.grade_cd END
+                       ),
+                       ''
+                   ),
+                   '-'
+               ) AS "targetSummary",
+               auditLog.reason_cd AS "reasonCd",
+               auditLog.result_message AS "resultMessage",
+               auditLog.client_ip AS "accessIp",
+               auditLog.request_uri AS "requestUri",
+               auditLog.http_method AS "httpMethod",
+               auditLog.http_status AS "httpStatus",
+               auditLog.duration_ms AS "durationMs",
+               auditLog.correlation_id AS "correlationId",
+               auditLog.detail_json::text AS "detailJson"
+          FROM docs_access_audit_log auditLog
+        WHERE 1 = 1
+        <include refid="auditFilters"/>
+        <choose>
+            <when test='sortColumn != null and (sortColumn.equalsIgnoreCase("eventId") or sortColumn.equalsIgnoreCase("logNo"))'>
+                ORDER BY auditLog.event_id
+            </when>
+            <when test='sortColumn != null and (sortColumn.equalsIgnoreCase("occurredAt") or sortColumn.equalsIgnoreCase("logDt") or sortColumn.equalsIgnoreCase("date"))'>
+                ORDER BY auditLog.occurred_at
+            </when>
+            <when test='sortColumn != null and sortColumn.equalsIgnoreCase("sourceType")'>
+                ORDER BY <include refid="auditSourceType"/>
+            </when>
+            <when test='sortColumn != null and sortColumn.equalsIgnoreCase("eventType")'>
+                ORDER BY auditLog.event_type
+            </when>
+            <when test='sortColumn != null and sortColumn.equalsIgnoreCase("userCd")'>
+                ORDER BY auditLog.actor_user_cd
+            </when>
+            <when test='sortColumn != null and sortColumn.equalsIgnoreCase("userId")'>
+                ORDER BY auditLog.actor_user_id
+            </when>
+            <when test='sortColumn != null and (sortColumn.equalsIgnoreCase("userName") or sortColumn.equalsIgnoreCase("userNm"))'>
+                ORDER BY auditLog.actor_user_nm
+            </when>
+            <when test='sortColumn != null and sortColumn.equalsIgnoreCase("menuNm")'>
+                ORDER BY <include refid="localizedMenuName"/>
+            </when>
+            <when test='sortColumn != null and sortColumn.equalsIgnoreCase("actionType")'>
+                ORDER BY auditLog.action_type
+            </when>
+            <when test='sortColumn != null and sortColumn.equalsIgnoreCase("actionNm")'>
+                ORDER BY COALESCE(NULLIF(auditLog.action_nm, ''), auditLog.action_type)
+            </when>
+            <when test='sortColumn != null and sortColumn.equalsIgnoreCase("resultCd")'>
+                ORDER BY auditLog.result_cd
+            </when>
+            <when test='sortColumn != null and sortColumn.equalsIgnoreCase("targetSummary")'>
+                ORDER BY auditLog.object_type, auditLog.object_id, auditLog.file_no
+            </when>
+            <when test='sortColumn != null and sortColumn.equalsIgnoreCase("reasonCd")'>
+                ORDER BY auditLog.reason_cd
+            </when>
+            <when test='sortColumn != null and sortColumn.equalsIgnoreCase("accessIp")'>
+                ORDER BY auditLog.client_ip
+            </when>
+            <otherwise>
+                ORDER BY auditLog.occurred_at
+            </otherwise>
+        </choose>
+        <choose>
+            <when test='order != null and order.equalsIgnoreCase("asc")'>
+                ASC
+            </when>
+            <otherwise>
+                DESC
+            </otherwise>
+        </choose>
+        <if test='sortColumn == null or !(sortColumn.equalsIgnoreCase("eventId") or sortColumn.equalsIgnoreCase("logNo"))'>
+            , auditLog.event_id DESC
+        </if>
+        <if test='size != null and page != null'>
+            LIMIT CAST(#{size} AS INTEGER)
+            OFFSET ((CAST(#{page} AS INTEGER) - 1) * CAST(#{size} AS INTEGER))
+        </if>
+    </select>
+
+    <select id="selectListCount" resultType="Integer">
+        SELECT COUNT(*)
+          FROM docs_access_audit_log auditLog
+        WHERE 1 = 1
+        <include refid="auditFilters"/>
+    </select>
+
+    <select id="selectSummary" resultType="hashmap">
+        SELECT COUNT(*) FILTER (
+                   WHERE (auditLog.occurred_at AT TIME ZONE 'Asia/Seoul')::date
+                         = (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul')::date
+               )::integer AS "totalToday",
+               COUNT(*) FILTER (
+                   WHERE (auditLog.occurred_at AT TIME ZONE 'Asia/Seoul')::date
+                         = (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul')::date
+                     AND auditLog.result_cd IN ('SUCCESS', 'ALLOW')
+               )::integer AS "successToday",
+               COUNT(*) FILTER (
+                   WHERE (auditLog.occurred_at AT TIME ZONE 'Asia/Seoul')::date
+                         = (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul')::date
+                     AND auditLog.result_cd = 'DENY'
+               )::integer AS "deniedToday",
+               COUNT(*) FILTER (
+                   WHERE (auditLog.occurred_at AT TIME ZONE 'Asia/Seoul')::date
+                         = (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul')::date
+                     AND auditLog.result_cd IN ('FAIL', 'FAILED', 'FAILURE', 'ERROR')
+               )::integer AS "failedToday",
+               COUNT(DISTINCT COALESCE(auditLog.actor_user_cd, auditLog.actor_user_id)) FILTER (
+                   WHERE (auditLog.occurred_at AT TIME ZONE 'Asia/Seoul')::date
+                         = (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul')::date
+                     AND COALESCE(auditLog.actor_user_cd, auditLog.actor_user_id) IS NOT NULL
+               )::integer AS "activeUsersToday"
+          FROM docs_access_audit_log auditLog
+    </select>
+
+    <insert id="insertAuditLog">
+        INSERT INTO docs_access_audit_log (
+            event_type,
+            action_type,
+            action_nm,
+            result_cd,
+            reason_cd,
+            result_message,
+            actor_user_cd,
+            actor_user_id,
+            actor_user_nm,
+            menu_cd,
+            menu_nm,
+            menu_url,
+            object_type,
+            object_id,
+            file_no,
+            request_no,
+            grade_cd,
+            client_ip,
+            session_id,
+            correlation_id,
+            request_uri,
+            http_method,
+            http_status,
+            duration_ms,
+            detail_json
+        ) VALUES (
+            COALESCE(NULLIF(UPPER(#{eventType}), ''), 'AUTH'),
+            CASE #{actionType}
+                WHEN 'logIn' THEN 'LOGIN'
+                WHEN 'logOut' THEN 'LOGOUT'
+                WHEN 'loginFail' THEN 'LOGIN'
+                WHEN 'changePassword' THEN 'PASSWORD_CHANGE'
+                ELSE COALESCE(NULLIF(UPPER(#{actionType}), ''), 'UNKNOWN')
+            END,
+            COALESCE(
+                NULLIF(#{actionNm}, ''),
+                CASE #{actionType}
+                    WHEN 'logIn' THEN '로그인'
+                    WHEN 'logOut' THEN '로그아웃'
+                    WHEN 'loginFail' THEN '로그인'
+                    WHEN 'changePassword' THEN '비밀번호 변경'
+                    ELSE #{actionType}
+                END
+            ),
+            COALESCE(
+                NULLIF(UPPER(#{resultCd}), ''),
+                CASE WHEN #{actionType} = 'loginFail' THEN 'FAILURE' ELSE 'SUCCESS' END
+            ),
+            COALESCE(
+                NULLIF(#{reasonCd}, ''),
+                CASE WHEN #{actionType} = 'loginFail' THEN 'AUTHENTICATION_FAILED' END
+            ),
+            #{resultMessage},
+            #{userCd},
+            #{userId},
+            COALESCE(NULLIF(#{userName}, ''), NULLIF(#{userNm}, '')),
+            COALESCE(NULLIF(#{menuCd}, ''), 'AUTH'),
+            COALESCE(
+                NULLIF(#{menuNm}, ''),
+                '인증 / 계정'
+            ),
+            COALESCE(NULLIF(#{menuUrl}, ''), '/login/**'),
+            COALESCE(NULLIF(UPPER(#{objectType}), ''), 'USER_ACCOUNT'),
+            COALESCE(NULLIF(#{objectId}, ''), NULLIF(#{userId}, '')),
+            #{fileNo},
+            #{requestNo},
+            #{gradeCd},
+            #{accessIp},
+            #{sessionId},
+            COALESCE(NULLIF(#{correlationId}, ''), 'AUDIT-' || gen_random_uuid()::text),
+            #{requestUri},
+            NULLIF(UPPER(#{httpMethod}), ''),
+            #{httpStatus},
+            #{durationMs},
+            CAST(COALESCE(NULLIF(#{detailJson}, ''), '{}') AS jsonb)
+        )
+    </insert>
+
+</mapper>

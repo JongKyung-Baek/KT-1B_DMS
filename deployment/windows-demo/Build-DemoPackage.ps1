@@ -52,7 +52,7 @@ if ([string]::IsNullOrWhiteSpace($OutputRoot)) {
 $packageName = "$PackagePrefix-$Version"
 $packageDirectory = Join-Path $releaseRoot $packageName
 $zipPath = Join-Path $releaseRoot "$packageName.zip"
-$warSource = Join-Path $projectRoot 'target\SDMS-KT-1B.war'
+$warSource = Join-Path $projectRoot 'target\TDMS-KT-1B.war'
 $samplePdfSource = Join-Path $projectRoot 'deployment\windows-demo\assets\demo-document.pdf'
 $sqlDirectorySource = Join-Path $projectRoot 'src\main\resources\sql'
 $migrationManifestSource = Join-Path $sqlDirectorySource `
@@ -65,10 +65,10 @@ if (-not $SkipBuild) {
     try {
         if ($RunTests) {
             Invoke-NativeTool -Executable (Join-Path $projectRoot 'mvnw.cmd') `
-                -Arguments @('package')
+                -Arguments @('clean', 'package')
         } else {
             Invoke-NativeTool -Executable (Join-Path $projectRoot 'mvnw.cmd') `
-                -Arguments @('-DskipTests', 'package')
+                -Arguments @('-DskipTests', 'clean', 'package')
         }
     } finally {
         Pop-Location
@@ -144,7 +144,7 @@ Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'runtime') `
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'database') `
     -Destination $packageDirectory -Recurse
 Copy-Item -LiteralPath $warSource `
-    -Destination (Join-Path $packageDirectory 'app\SDMS-KT-1B.war')
+    -Destination (Join-Path $packageDirectory 'app\TDMS-KT-1B.war')
 Copy-Item -LiteralPath $samplePdfSource `
     -Destination (Join-Path $packageDirectory 'storage\demo\file.pdf')
 

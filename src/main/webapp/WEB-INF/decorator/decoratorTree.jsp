@@ -1,5 +1,5 @@
 <%@page import="org.springframework.web.servlet.i18n.SessionLocaleResolver"%>
-<%@page import="kr.esob.fdms.commonlogic.message.LocaleUtil"%>
+<%@page import="kr.esob.tdms.commonlogic.message.LocaleUtil"%>
 
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>

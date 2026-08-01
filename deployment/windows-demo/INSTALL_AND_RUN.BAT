@@ -49,8 +49,8 @@ if not exist "%CD%\Dockerfile" (
     echo [ERROR] Missing file: Dockerfile
     goto :failed
 )
-if not exist "%CD%\app\SDMS-KT-1B.war" (
-    echo [ERROR] Missing application file: app\SDMS-KT-1B.war
+if not exist "%CD%\app\TDMS-KT-1B.war" (
+    echo [ERROR] Missing application file: app\TDMS-KT-1B.war
     goto :failed
 )
 if not exist "%CD%\database\kt1b-demo.backup" (

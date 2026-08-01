@@ -237,11 +237,19 @@ SELECT concat_ws('|',
      (SELECT COUNT(*) FROM docs_role_mapping
        WHERE COALESCE(menu_url, '') ~* '(^|/)outside/')),
     ((SELECT COUNT(*) FROM docs_menu
-       WHERE menu_type = 'H'
-          OR COALESCE(menu_url, '') IN ('/inside/**', '/outside/**'))
+       WHERE menu_url = '/inside' OR menu_url LIKE '/inside/%')
      +
      (SELECT COUNT(*) FROM docs_role_mapping
-       WHERE COALESCE(menu_url, '') IN ('/inside/**', '/outside/**'))),
+       WHERE menu_url = '/inside' OR menu_url LIKE '/inside/%')
+     +
+     (SELECT COUNT(*) FROM docs_form_info
+       WHERE search_url = '/inside' OR search_url LIKE '/inside/%')),
+    ((SELECT COUNT(*) FROM docs_menu
+       WHERE menu_type = 'H'
+          OR COALESCE(menu_url, '') IN ('/inside/**', '/general/**', '/outside/**'))
+     +
+     (SELECT COUNT(*) FROM docs_role_mapping
+       WHERE COALESCE(menu_url, '') IN ('/inside/**', '/general/**', '/outside/**'))),
     (SELECT COUNT(*) FROM docs_menu menu
       WHERE COALESCE(menu.use_yn, 'N') = 'Y'
         AND COALESCE(menu.del_yn, 'Y') = 'N'
@@ -274,7 +282,7 @@ SELECT concat_ws('|',
     }
 
     $values = $validationResult -split '\|'
-    if ($values.Count -ne 17) {
+    if ($values.Count -ne 18) {
         throw "Unexpected validation result: $validationResult"
     }
     if ($values[0] -notmatch '^17[0-9]{4}$') {
@@ -288,23 +296,25 @@ SELECT concat_ws('|',
     }
     if ($values[6] -ne '0' -or
         $values[7] -ne '0' -or
-        $values[8] -ne '0') {
+        $values[8] -ne '0' -or
+        $values[9] -ne '0') {
         throw "Portal-specific schema or menu state remains: $validationResult"
     }
-    if ($values[9] -ne '0' -or $values[10] -ne '0') {
+    if ($values[10] -ne '0' -or $values[11] -ne '0') {
         throw "Menu role assignment integrity check failed: $validationResult"
     }
-    if ($values[11] -ne '4') {
+    if ($values[12] -ne '4') {
         throw "Unexpected security grade catalog: $validationResult"
     }
     if (-not $SkipSampleData -and
-        (($values[12..16] -join ',') -ne '6,6,16,16,16')) {
+        (($values[13..17] -join ',') -ne '6,6,16,16,16')) {
         throw "Unexpected sample data counts: $validationResult"
     }
 
     Write-Host 'Fresh KT-1B database is ready.'
     Write-Host ('server|tables|activeMenus|visibleRoots|rootMenuCodes|' +
-        'assignableMenus|portalSelectorColumns|outsideUrls|broadPortalAcls|' +
+        'assignableMenus|portalSelectorColumns|outsideUrls|retiredRoutes|' +
+        'broadPortalAcls|' +
         'missingAdminRoles|orphanRoles|grades|users|departments|documents|' +
         'mainFiles|subFiles')
     Write-Host $validationResult

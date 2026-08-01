@@ -19,7 +19,7 @@
         )
     </insert>
 
-    <select id="selectValid" resultType="kr.esob.fdms.commonlogic.viewer.ViewerTicketVO">
+    <select id="selectValid" resultType="kr.esob.tdms.commonlogic.viewer.ViewerTicketVO">
         SELECT disposable_key, object_type, object_id, file_no, file_name, user_cd, session_id
           FROM docs_viewer_key
          WHERE disposable_key = #{key}

@@ -77,7 +77,7 @@ function openDialogPopup(url, param, dialogId, width, height, modal, extraDialog
 	loadOptions = loadOptions || {};
 	var isNoticeAddPopup = url === "/configurationmanage/notice/addPopup";
 	var isTechnicalDataDetailPopup =
-		url === "/inside/distribution/swRequest/swFilePopup";
+		url === "/general/distribution/swRequest/swFilePopup";
 	var useLoadProgress =
 		loadOptions.progress === true || isTechnicalDataDetailPopup;
 	var loadProgressText =
@@ -85,16 +85,16 @@ function openDialogPopup(url, param, dialogId, width, height, modal, extraDialog
 	var loadProgressDescription =
 		loadOptions.progressDescription || "파일 및 권한 정보를 확인하고 있습니다.";
 	var isDialogMinHeightException =
-		url === "/inside/distribution/commonRequest/commonPrintRequestPopup" ||
-		url === "/inside/distribution/commonRequest/drawingRevisionUpdatePopup" ||
-		url === "/inside/distribution/commonRequest/drawingVersionCheckPopup" ||
-		url === "/inside/distribution/annotationinfo/annotationPopup";
+		url === "/general/distribution/commonRequest/commonPrintRequestPopup" ||
+		url === "/general/distribution/commonRequest/drawingRevisionUpdatePopup" ||
+		url === "/general/distribution/commonRequest/drawingVersionCheckPopup" ||
+		url === "/general/distribution/annotationinfo/annotationPopup";
 	var isDeferredInitialLayoutPopup =
-		url === "/inside/distribution/commonRequest/commonPrintRequestPopup" ||
-		url === "/inside/distribution/commonRequest/drawingRevisionUpdatePopup" ||
-		url === "/inside/distribution/commonRequest/drawingVersionCheckPopup";
+		url === "/general/distribution/commonRequest/commonPrintRequestPopup" ||
+		url === "/general/distribution/commonRequest/drawingRevisionUpdatePopup" ||
+		url === "/general/distribution/commonRequest/drawingVersionCheckPopup";
 	var isApprovalStatusPopup =
-		url === "/inside/distribution/commonRequest/approvalStatusPopup";
+		url === "/general/distribution/commonRequest/approvalStatusPopup";
 	var useAutoContentHeight =
 		isDialogMinHeightException ||
 		url === "/bbs/qna/addPopup" ||

@@ -1,0 +1,61 @@
+package kr.esob.tdms.controller.general.distribution.printdestroyapproval;
+
+import java.util.List;
+
+import org.springframework.stereotype.Repository;
+
+import kr.esob.tdms.commonlogic.abstractclass.AbstractDao;
+
+@Repository
+public class PrintDestroyApprovalDao extends AbstractDao {
+	private String prefix = "sql.PrintDestroyApproval.";
+
+
+	@SuppressWarnings("unchecked")
+	public List<PrintDestroyApprovalListVO> selectList(Object param){
+		return list(prefix + "selectList", param);
+	}
+
+	public Integer selectListCount(Object param){
+		return (Integer) obj(prefix + "selectListCount", param);
+	}
+
+	@SuppressWarnings("rawtypes")
+	public List selectPopupList(PrintDestroyApprovalListParam param) {
+		return list(prefix + "selectPopupList", param);
+	}
+
+	public List<PrintDestroyApprovalListParam> selectSearchInfo(PrintDestroyApprovalListParam param) {
+		return list(prefix + "selectSearchInfo", param);
+	}
+
+	public int updatePrintDestroyRequestInfo(PrintDestroyApprovalPopupParam param) {
+		return update(prefix + "updatePrintDestroyRequestInfo", param);
+	}
+
+	public int updatePrintDestroyRequestDetail(PrintDestroyApprovalPopupParam param) {
+		return update(prefix + "updatePrintDestroyRequestDetail", param);
+	}
+
+	public PrintDestroyApprovalPopupParam getDestroyRequestInfo(PrintDestroyApprovalPopupParam param) {
+		return (PrintDestroyApprovalPopupParam) obj(prefix + "getDestroyRequestInfo", param);
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<PrintDestroyItemListVO> selectDestroyItemList(PrintDestroyApprovalPopupParam param) {
+		return list(prefix + "selectDestroyItemList", param);
+	}
+
+	public int updateRequestMapping(PrintDestroyApprovalPopupParam param) {
+		return update(prefix + "updateRequestMapping", param);
+	}
+
+	public PrintDestroyItemListVO getDestroyRequest(String destroyRequestNo) {
+		return (PrintDestroyItemListVO) obj(prefix + "getDestroyRequest", destroyRequestNo);
+	}
+
+	public int selectPopupListCount(PrintDestroyApprovalListParam param) {
+		return (Integer) obj(prefix + "selectPopupListCount", param);
+	}
+
+}

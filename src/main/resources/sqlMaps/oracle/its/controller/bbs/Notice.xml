@@ -5,7 +5,7 @@
 
 <mapper namespace="sql.notice">
 
-	<select id="selectMainList" resultType="kr.esob.fdms.controller.bbs.notice.BbsNoticeListVO">
+	<select id="selectMainList" resultType="kr.esob.tdms.controller.bbs.notice.BbsNoticeListVO">
 		/* 메인화면용 공지사항 list*/
 		SELECT
 			A1.*
@@ -21,7 +21,7 @@
 	</select>
 
 	<select id="selectList"
-			resultType="kr.esob.fdms.controller.bbs.notice.BbsNoticeListVO">
+			resultType="kr.esob.tdms.controller.bbs.notice.BbsNoticeListVO">
 		SELECT
 		B1.*
 		FROM
@@ -92,7 +92,7 @@
 		</if>
 	</select>
 
-	<select id="getRequestInfo" resultType="kr.esob.fdms.controller.bbs.notice.BbsNoticePopupVO" parameterType="kr.esob.fdms.controller.bbs.notice.BbsNoticePopupParam">
+	<select id="getRequestInfo" resultType="kr.esob.tdms.controller.bbs.notice.BbsNoticePopupVO" parameterType="kr.esob.tdms.controller.bbs.notice.BbsNoticePopupParam">
 		SELECT req.NOTICE_CD                                      AS noticeCd
 			 ,req.TITLE                                                AS noticeTitle
 			 ,req.CONTENTS                                             AS contents
@@ -110,14 +110,14 @@
 		  AND DEL_YN = 'N'
 	</select>
 
-	<update id="updateHitCount" parameterType="kr.esob.fdms.controller.bbs.notice.BbsNoticePopupParam">
+	<update id="updateHitCount" parameterType="kr.esob.tdms.controller.bbs.notice.BbsNoticePopupParam">
 		UPDATE DOCS_NOTICE
 		SET HIT_COUNT = COALESCE(HIT_COUNT,0) + 1
 		WHERE NOTICE_CD = #{noticeCd}
 	</update>
 
-	<insert id="insertNoticeInfo" parameterType="kr.esob.fdms.controller.bbs.notice.BbsNoticeAddParam">
-		<selectKey keyProperty="noticeCd" resultType="kr.esob.fdms.controller.bbs.notice.BbsNoticeAddParam" order="BEFORE">
+	<insert id="insertNoticeInfo" parameterType="kr.esob.tdms.controller.bbs.notice.BbsNoticeAddParam">
+		<selectKey keyProperty="noticeCd" resultType="kr.esob.tdms.controller.bbs.notice.BbsNoticeAddParam" order="BEFORE">
 			SELECT COALESCE(MAX(NOTICE_CD),1)+1 AS noticeCd
 			FROM DOCS_NOTICE
 		</selectKey>
@@ -156,7 +156,7 @@
 		WHERE NOTICE_CD = #{noticeCd}
 	</update>
 
-	<select id="selectNoticeInfo" resultType="kr.esob.fdms.controller.bbs.notice.BbsNoticePopupParam">
+	<select id="selectNoticeInfo" resultType="kr.esob.tdms.controller.bbs.notice.BbsNoticePopupParam">
 		SELECT req.NOTICE_CD                                      AS noticeCd
 			 ,req.TITLE                                                AS title
 			 ,req.INSERT_UID                                           AS insertUserNm
@@ -164,18 +164,18 @@
 		WHERE req.NOTICE_CD = #{noticeCd}
 	</select>
 
-	<update id="deleteNotice" parameterType="kr.esob.fdms.controller.bbs.notice.BbsNoticePopupParam">
+	<update id="deleteNotice" parameterType="kr.esob.tdms.controller.bbs.notice.BbsNoticePopupParam">
 		UPDATE DOCS_NOTICE
 		SET DEL_YN = 'Y'
 		WHERE NOTICE_CD = #{noticeCd}
 	</update>
 
-	<select id="addNoticeInfo" resultType="kr.esob.fdms.controller.bbs.notice.BbsNoticePopupVO" parameterType="kr.esob.fdms.controller.bbs.notice.BbsNoticeAddParam">
+	<select id="addNoticeInfo" resultType="kr.esob.tdms.controller.bbs.notice.BbsNoticePopupVO" parameterType="kr.esob.tdms.controller.bbs.notice.BbsNoticeAddParam">
 		SELECT req.INSERT_UID      AS insertUserNm
 		FROM DOCS_NOTICE req where req.NOTICE_CD = 1
 	</select>
 
-	<select id="selectFileInfo" resultType="kr.esob.fdms.controller.bbs.notice.BbsNoticeFileVO">
+	<select id="selectFileInfo" resultType="kr.esob.tdms.controller.bbs.notice.BbsNoticeFileVO">
 		SELECT NOTICE_CD
 			 , FILE_NO
 			 , FILE_PATH
@@ -189,8 +189,8 @@
 		DELETE FROM DOCS_NOTICE_FILE WHERE NOTICE_CD = #{noticeCd}
 	</delete>
 
-	<insert id="insertNoticeFile" parameterType="kr.esob.fdms.controller.bbs.notice.BbsNoticeFileVO">
-		<selectKey keyProperty="fileNo" resultType="kr.esob.fdms.controller.bbs.notice.BbsNoticeAddParam" order="BEFORE">
+	<insert id="insertNoticeFile" parameterType="kr.esob.tdms.controller.bbs.notice.BbsNoticeFileVO">
+		<selectKey keyProperty="fileNo" resultType="kr.esob.tdms.controller.bbs.notice.BbsNoticeAddParam" order="BEFORE">
 			SELECT COALESCE(MAX(CAST(FILE_NO AS INTEGER)),0)+1 AS fileNo
 			FROM DOCS_NOTICE_FILE
 		</selectKey>
@@ -219,7 +219,7 @@
 		)
 	</insert>
 
-	<select id="selectFilePath" resultType="kr.esob.fdms.controller.bbs.notice.BbsNoticeFileVO">
+	<select id="selectFilePath" resultType="kr.esob.tdms.controller.bbs.notice.BbsNoticeFileVO">
 		SELECT NOTICE_CD AS noticeCd
 			 , FILE_NO AS fileNo
 			 , FILE_NM AS fileNm
@@ -230,7 +230,7 @@
 		  AND FILE_NO = CAST(#{fileNo} AS INTEGER)
 	</select>
 
-	<select id="selectNoticeFileList" resultType="kr.esob.fdms.controller.bbs.notice.BbsNoticeFileVO">
+	<select id="selectNoticeFileList" resultType="kr.esob.tdms.controller.bbs.notice.BbsNoticeFileVO">
 		SELECT NOTICE_CD AS noticeCd
 			 , FILE_NO AS fileNo
 			 , FILE_NM AS fileNm
@@ -240,7 +240,7 @@
 		WHERE NOTICE_CD = #{noticeCd}
 	</select>
 
-	<select id="selectNoticePopupInfo" resultType="kr.esob.fdms.controller.bbs.notice.BbsNoticePopupVO">
+	<select id="selectNoticePopupInfo" resultType="kr.esob.tdms.controller.bbs.notice.BbsNoticePopupVO">
 		SELECT req.NOTICE_CD                                      AS noticeCd
 			 ,req.TITLE                                                AS title
 			 ,req.INSERT_UID                                           AS insertUserNm
@@ -251,7 +251,7 @@
 	</select>
 
 	<select id="getUser"
-			resultType="kr.esob.fdms.controller.login.UserVO"
+			resultType="kr.esob.tdms.controller.login.UserVO"
 			parameterType="string">
 		SELECT
 			docsUser.*
@@ -269,7 +269,7 @@
 	</select>
 
 	<select id="getRoleCodeList"
-			resultType="kr.esob.fdms.controller.login.RoleVO">
+			resultType="kr.esob.tdms.controller.login.RoleVO">
 		SELECT rel.ROLE_CODE AS roleCd
 			 , menu.MENU_TYPE
 		FROM ITS_REL_ROLE_GROUP rel
@@ -278,7 +278,7 @@
 		WHERE GROUP_CODE = #{roleGroup}
 	</select>
 
-	<select id="selectAlertNotice" resultType="kr.esob.fdms.controller.bbs.notice.BbsNoticePopupVO">
+	<select id="selectAlertNotice" resultType="kr.esob.tdms.controller.bbs.notice.BbsNoticePopupVO">
 <![CDATA[
 		SELECT *
 		FROM (

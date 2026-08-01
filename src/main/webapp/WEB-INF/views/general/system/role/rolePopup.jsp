@@ -3,11 +3,11 @@
 <%@ taglib prefix="custom" tagdir="/WEB-INF/tags" %>
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags"%>
 
-<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/views/general/system/role/rolePopup.js"></script>
+<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/views/general/system/role/rolePopup.js?v=20260801.1"></script>
 <div class="dialogContent commonRequestPopup rolePopup popup-base popup-actions-center popup-type-form-grid popup-overflow-visible">
 <div class="popupHero">
-	<h2><spring:message code="label.roleGroup" text="권한 그룹" /></h2>
-	<p>권한 그룹명을 입력한 뒤 저장할 수 있습니다.</p>
+	<h2><spring:message code="feature.system.role.popup.title" text="사용자등급 정보" /></h2>
+	<p><spring:message code="feature.system.role.popup.description" text="화면에 표시할 사용자등급 이름을 입력하세요." /></p>
 </div>
 <form id="formPopup">
 	<input type="hidden" name="groupCd" id="groupCd" value="${vo.groupCd }"/>
@@ -15,7 +15,7 @@
 	<ul class="section popupCard popupFormGrid popup-grid-1">
 		<li class="full">
 			<%-- 권한그룹명 --%>
-			<custom:popupInputText name="groupNm" id="groupNm" label="label.roleGroupNm" value="${vo.groupNm }" />
+			<custom:popupInputText name="groupNm" id="groupNm" label="feature.system.role.popup.name" value="${vo.groupNm }" />
 		</li>
 	</ul>
 </form>

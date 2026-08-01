@@ -1,19 +1,27 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags"%>
 <spring:message code="feature.locale.code" text="ko" var="pageLanguage" />
+<spring:message code="feature.treeManage.pageTitle" text="분류/레벨 관리 | 기술자료관리시스템" var="pageTitle" />
+<spring:message code="feature.treeManage.title" text="분류/레벨 관리" var="pageHeading" />
+<spring:message code="feature.treeManage.level.title" text="Level" var="levelTitle" />
+<spring:message code="feature.treeManage.level.parent" text="상위 Level" var="parentLevelTitle" />
+<spring:message code="feature.treeManage.level.child" text="하위 Level" var="childLevelTitle" />
+<spring:message code="feature.treeManage.documentType.title" text="Document Type Code" var="documentTypeTitle" />
+<spring:message code="feature.common.countSuffix" text="건" var="countSuffix" />
 <!doctype html>
 <html lang="${pageLanguage}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title><spring:message code="feature.treeManage.pageTitle" text="분류/레벨 관리 | 기술자료관리시스템" /></title>
+<title>${pageTitle}</title>
 <link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/distribution-invoice.css" media="screen" />
+<link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/tree-management.css?v=20260801.1" media="screen" />
 <script>
 	$(function () {
 		$('.layout-wrapper.bodyWrap .content-wrapper > .container').addClass('distribution-invoice-container');
 	});
 </script>
-<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/views/general/system/treemanage/treeManage.js"></script>
+<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/views/general/system/treemanage/treeManage.js?v=20260801.1"></script>
 <script>
 	// 캐시된 구버전 JS가 로드된 경우에도 모드 전환 버튼이 죽지 않도록 안전망
 	window.switchManageMode = window.switchManageMode || function (mode) {
@@ -30,90 +38,112 @@
 		}
 	};
 </script>
-<style>
-	.system-manage-page .wrap { border: 1px solid #d9dee3; border-radius: 8px; background: #fff; padding: 1rem; }
-	.system-manage-page .title { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.8rem; }
-	.system-manage-page .mode-switch { display: flex; gap: 0.5rem; margin-bottom: 0.9rem; }
-	.system-manage-page .mode-btn { border: 1px solid #c9ced6; background: #f7f8fa; color: #2e3440; border-radius: 6px; padding: 0.45rem 0.8rem; cursor: pointer; font-weight: 600; }
-	.system-manage-page .mode-btn.active { background: #034C8C; color: #fff; border-color: #034C8C; }
-	.system-manage-page .layout { display: grid; grid-template-columns: 2fr 1fr; gap: 1rem; }
-	.system-manage-page .panel { border: 1px solid #d9dee3; border-radius: 8px; padding: 0.75rem; }
-	.system-manage-page .panel-title { font-weight: 700; margin-bottom: 0.6rem; text-align: center; }
-	.system-manage-page .codes { display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem; }
-	.system-manage-page .col { border: 1px solid #e5e7eb; border-radius: 6px; padding: 0.6rem; }
-	.system-manage-page .col-title { font-weight: 600; margin-bottom: 0.45rem; text-align: center; }
-	.system-manage-page .actions { display: flex; justify-content: center; gap: 0.35rem; margin-bottom: 0.45rem; }
-	.system-manage-page .actions .ui-button { min-width: 62px; }
-	.system-manage-page .list { border: 1px solid #d9dee3; border-radius: 6px; min-height: 300px; max-height: 420px; overflow: auto; background: #fff; }
-	.system-manage-page .list-item { padding: 0.45rem 0.5rem; border-bottom: 1px solid #f0f1f3; cursor: pointer; }
-	.system-manage-page .list-item:last-child { border-bottom: 0; }
-	.system-manage-page .list-item.active { background: color-mix(in sRGB, var(--bs-paper-bg) var(--bs-bg-label-tint-amount), var(--bs-primary)); color: var(--bs-primary); }
-	.system-manage-page.level-mode #treeMainTitle { display: none; }
-	.system-manage-page.level-mode #leftTreePanel.level-flat { padding: 0; border: 0; background: transparent; }
-	.system-manage-page.level-mode #leftTreePanel.level-flat .codes { gap: 0; }
-	.system-manage-page.level-mode #leftTreePanel.level-flat .col { border: 0; padding: 0; }
-	@media (max-width: 1200px){
-		.system-manage-page .layout { grid-template-columns: 1fr; }
-		.system-manage-page .codes { grid-template-columns: 1fr; }
-	}
-</style>
 </head>
 <body>
-<div class="system-manage-page">
-	<div class="wrap">
-		<div class="title"><spring:message code="feature.treeManage.title" text="분류/레벨 관리" /></div>
-		<div class="mode-switch">
-			<!-- <button type="button" id="modeDocBtn" class="mode-btn active" onclick="switchManageMode('DOC')">문서 코드 번호 등록 및 수정</button> -->
-			<!-- <button type="button" id="modeLevelBtn" class="mode-btn active" onclick="switchManageMode('LEVEL')">Level 등록 및 수정</button> -->
+<main class="system-manage-page" aria-labelledby="treeManagePageTitle">
+	<header class="tm-page-header">
+		<div class="tm-page-heading">
+			<span class="tm-kicker">
+				<i class="icon-base ti tabler-hierarchy-2" aria-hidden="true"></i>
+				${levelTitle}
+			</span>
+			<h1 id="treeManagePageTitle">${pageHeading}</h1>
 		</div>
+		<span class="tm-context-chip">
+			<i class="icon-base ti tabler-adjustments-code" aria-hidden="true"></i>
+			${levelTitle}
+		</span>
+	</header>
+
+	<section class="wrap tm-workspace-card" aria-label="${pageHeading}">
 		<div id="treeManageLayout" class="layout">
-			<div id="leftTreePanel" class="panel">
-				<div id="treeMainTitle" class="panel-title"><spring:message
-					code="feature.treeManage.level.title" text="Level" /></div>
+			<section id="leftTreePanel" class="panel" aria-labelledby="treeMainTitle">
+				<header class="tm-section-header">
+					<span class="tm-section-icon" aria-hidden="true">
+						<i class="icon-base ti tabler-sitemap"></i>
+					</span>
+					<h2 id="treeMainTitle" class="panel-title">${levelTitle}</h2>
+				</header>
+
 				<div class="codes">
-					<div class="col" id="treeCol2Panel">
-						<div id="treeCol1Title" class="col-title"><spring:message
-							code="feature.treeManage.level.parent" text="상위 Level" /></div>
+					<article class="col tm-tree-column" id="treeCol2Panel" aria-labelledby="treeCol1Title">
+						<header class="tm-column-header">
+							<div>
+								<span class="tm-step-chip" aria-hidden="true">1</span>
+								<h3 id="treeCol1Title" class="col-title">${parentLevelTitle}</h3>
+							</div>
+							<span id="function1Count" class="tm-count-chip">0${countSuffix}</span>
+						</header>
 						<div id="levelActions" class="actions">
-							<button type="button" class="ui-button ui-corner-all" onclick="addFunction1()"><spring:message
-								code="feature.common.button.add" text="추가" /></button>
-							<button type="button" class="ui-button ui-corner-all" onclick="editFunction1()"><spring:message
-								code="feature.common.button.edit" text="수정" /></button>
-							<button type="button" class="ui-button ui-corner-all" onclick="deleteFunction1()"><spring:message
-								code="feature.common.button.delete" text="삭제" /></button>
+							<button type="button" class="ui-button ui-corner-all tm-button tm-button--primary" onclick="addFunction1()" aria-controls="function1List">
+								<i class="icon-base ti tabler-plus" aria-hidden="true"></i>
+								<spring:message code="feature.common.button.add" text="추가" />
+							</button>
+							<button type="button" class="ui-button ui-corner-all tm-button tm-button--ghost" onclick="editFunction1()" aria-controls="function1List">
+								<i class="icon-base ti tabler-edit" aria-hidden="true"></i>
+								<spring:message code="feature.common.button.edit" text="수정" />
+							</button>
+							<button type="button" class="ui-button ui-corner-all tm-button tm-button--danger" onclick="deleteFunction1()" aria-controls="function1List">
+								<i class="icon-base ti tabler-trash" aria-hidden="true"></i>
+								<spring:message code="feature.common.button.delete" text="삭제" />
+							</button>
 						</div>
-						<div id="function1List" class="list"></div>
-					</div>
-					<div class="col">
-						<div id="treeCol2Title" class="col-title"><spring:message
-							code="feature.treeManage.level.child" text="하위 Level" /></div>
+						<div id="function1List" class="list" role="listbox" aria-labelledby="treeCol1Title"></div>
+					</article>
+
+					<article class="col tm-tree-column" aria-labelledby="treeCol2Title">
+						<header class="tm-column-header">
+							<div>
+								<span class="tm-step-chip" aria-hidden="true">2</span>
+								<h3 id="treeCol2Title" class="col-title">${childLevelTitle}</h3>
+							</div>
+							<span id="function2Count" class="tm-count-chip">0${countSuffix}</span>
+						</header>
 						<div class="actions">
-							<button type="button" class="ui-button ui-corner-all" onclick="addFunction2()"><spring:message
-								code="feature.common.button.add" text="추가" /></button>
-							<button type="button" class="ui-button ui-corner-all" onclick="editFunction2()"><spring:message
-								code="feature.common.button.edit" text="수정" /></button>
-							<button type="button" class="ui-button ui-corner-all" onclick="deleteFunction2()"><spring:message
-								code="feature.common.button.delete" text="삭제" /></button>
+							<button type="button" class="ui-button ui-corner-all tm-button tm-button--primary" onclick="addFunction2()" aria-controls="function2List">
+								<i class="icon-base ti tabler-plus" aria-hidden="true"></i>
+								<spring:message code="feature.common.button.add" text="추가" />
+							</button>
+							<button type="button" class="ui-button ui-corner-all tm-button tm-button--ghost" onclick="editFunction2()" aria-controls="function2List">
+								<i class="icon-base ti tabler-edit" aria-hidden="true"></i>
+								<spring:message code="feature.common.button.edit" text="수정" />
+							</button>
+							<button type="button" class="ui-button ui-corner-all tm-button tm-button--danger" onclick="deleteFunction2()" aria-controls="function2List">
+								<i class="icon-base ti tabler-trash" aria-hidden="true"></i>
+								<spring:message code="feature.common.button.delete" text="삭제" />
+							</button>
 						</div>
-						<div id="function2List" class="list"></div>
+						<div id="function2List" class="list" role="listbox" aria-labelledby="treeCol2Title"></div>
+					</article>
+				</div>
+			</section>
+
+			<section id="docTypePanel" class="panel tm-tree-column" aria-labelledby="docTypeTitle">
+				<header class="tm-column-header">
+					<div>
+						<span class="tm-step-chip" aria-hidden="true">3</span>
+						<h2 id="docTypeTitle" class="panel-title">${documentTypeTitle}</h2>
 					</div>
-				</div>
-			</div>
-			<div id="docTypePanel" class="panel">
-				<div class="panel-title"><spring:message
-					code="feature.treeManage.documentType.title" text="Document Type Code" /></div>
+					<span id="docTypeCount" class="tm-count-chip">0${countSuffix}</span>
+				</header>
 				<div class="actions">
-					<button type="button" class="ui-button ui-corner-all" onclick="addDocType()"><spring:message
-						code="feature.common.button.add" text="추가" /></button>
-					<button type="button" class="ui-button ui-corner-all" onclick="editDocType()"><spring:message
-						code="feature.common.button.edit" text="수정" /></button>
-					<button type="button" class="ui-button ui-corner-all" onclick="deleteDocType()"><spring:message
-						code="feature.common.button.delete" text="삭제" /></button>
+					<button type="button" class="ui-button ui-corner-all tm-button tm-button--primary" onclick="addDocType()" aria-controls="docTypeList">
+						<i class="icon-base ti tabler-plus" aria-hidden="true"></i>
+						<spring:message code="feature.common.button.add" text="추가" />
+					</button>
+					<button type="button" class="ui-button ui-corner-all tm-button tm-button--ghost" onclick="editDocType()" aria-controls="docTypeList">
+						<i class="icon-base ti tabler-edit" aria-hidden="true"></i>
+						<spring:message code="feature.common.button.edit" text="수정" />
+					</button>
+					<button type="button" class="ui-button ui-corner-all tm-button tm-button--danger" onclick="deleteDocType()" aria-controls="docTypeList">
+						<i class="icon-base ti tabler-trash" aria-hidden="true"></i>
+						<spring:message code="feature.common.button.delete" text="삭제" />
+					</button>
 				</div>
-				<div id="docTypeList" class="list"></div>
-			</div>
+				<div id="docTypeList" class="list" role="listbox" aria-labelledby="docTypeTitle"></div>
+			</section>
 		</div>
-	</div>
-</div>
+	</section>
+</main>
 </body>
 </html>

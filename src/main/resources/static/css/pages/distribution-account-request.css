@@ -1,0 +1,102 @@
+.distribution-account-request-page {
+  --dar-primary: #7367f0;
+  --dar-primary-dark: #5b50d6;
+  --dar-text: #2f2b3d;
+  --dar-muted: #6d6a77;
+  --dar-border: #e7e5eb;
+  color: var(--dar-text);
+  font-family: "Pretendard", "Noto Sans KR", sans-serif;
+}
+.distribution-account-request-page *,
+.distribution-account-request-page *::before,
+.distribution-account-request-page *::after { box-sizing: border-box; }
+.dar-card { padding: 20px; border: 1px solid var(--dar-border); border-radius: 14px; background: #fff; box-shadow: 0 5px 20px rgba(47,43,61,.055); }
+.dar-heading, .dar-dialog__header, .dar-dialog__footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.dar-heading { padding: 0 2px 14px; }
+.dar-heading > div, .dar-dialog__header > div { min-width: 0; text-align: left; }
+.dar-heading h2, .dar-dialog h2 { margin: 0; color: #24202f; font-size: 20px; text-align: left; }
+.dar-heading p, .dar-dialog__header p { margin: 5px 0 0; color: var(--dar-muted); font-size: 11px; text-align: left; }
+.dar-button, .dar-icon-button, .dar-link { border: 0; cursor: pointer; font: inherit; }
+.dar-button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 36px; padding: 8px 14px; border-radius: 8px; font-size: 11px; font-weight: 800; }
+.dar-button:disabled { cursor: wait; opacity: .58; }
+.dar-button--primary { background: var(--dar-primary); color: #fff; }
+.dar-button--primary:hover { background: var(--dar-primary-dark); }
+.dar-button--ghost { border: 1px solid #d8d5de; background: #fff; color: #5d596c; }
+.dar-button--danger { background: #e5484d; color: #fff; }
+.dar-button--danger:hover { background: #c9363d; }
+.dar-icon-button { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; background: #f5f3f7; color: #5d596c; }
+.dar-link { padding: 0; background: transparent; color: var(--dar-primary-dark); font-weight: 800; }
+.dar-search { display: grid; grid-template-columns: minmax(230px, 1.4fr) repeat(3, minmax(135px, .7fr)) auto; align-items: end; gap: 11px; padding: 14px; border: 1px solid #ebe9ee; border-radius: 12px 12px 0 0; background: #faf9fb; }
+.dar-field { display: flex; flex-direction: column; gap: 6px; color: #5d596c; font-size: 10px; font-weight: 800; text-align: left; }
+.dar-field em { color: #d34053; font-style: normal; }
+.dar-field input, .dar-field select, .dar-field textarea { width: 100%; border: 1px solid #d9d6df; border-radius: 8px; background: #fff; color: var(--dar-text); font: inherit; font-size: 11px; }
+.dar-field input, .dar-field select { height: 36px; padding: 7px 10px; }
+.dar-field textarea { min-height: 96px; padding: 10px; resize: vertical; line-height: 1.55; }
+.dar-field input:focus, .dar-field select:focus, .dar-field textarea:focus { border-color: var(--dar-primary); outline: 0; box-shadow: 0 0 0 3px rgba(115,103,240,.11); }
+.dar-field small { color: #96909f; font-size: 9px; font-weight: 500; text-align: right; }
+.dar-search__actions { display: flex; gap: 7px; }
+.dar-alert { margin: 12px 0; padding: 10px 12px; border-radius: 8px; background: #f0eeff; color: #5146bb; font-size: 11px; }
+.dar-alert--success { background: #e9f8f0; color: #16854b; }
+.dar-alert--error { background: #fff0f1; color: #b82f42; }
+.dar-table-wrap { overflow: auto; border: 1px solid var(--dar-border); border-top: 0; border-radius: 0 0 11px 11px; }
+.dar-table { width: 100%; min-width: 930px; border-collapse: collapse; table-layout: fixed; }
+.dar-table th { height: 42px; padding: 9px 11px; border-bottom: 1px solid #ddd9e2; background: #f4f2f6; color: #5d596c; font-size: 10px; font-weight: 800; text-align: center; white-space: nowrap; }
+.dar-table td { height: 54px; padding: 9px 11px; border-bottom: 1px solid #efedf1; background: #fff; color: #4b465c; font-size: 11px; text-align: center; vertical-align: middle; }
+.dar-table th:nth-child(1) { width: 16%; }
+.dar-table th:nth-child(2), .dar-table th:nth-child(3) { width: 15%; }
+.dar-table th:nth-child(4) { width: 13%; }
+.dar-table th:nth-child(5) { width: 17%; }
+.dar-table th:nth-child(6) { width: 11%; }
+.dar-table th:nth-child(7) { width: 8%; }
+.dar-table tbody tr:last-child td { border-bottom: 0; }
+.dar-table tbody tr:hover td { background: #fbfaff; }
+.dar-table td small { display: block; margin-top: 3px; color: var(--dar-muted); font-size: 9px; }
+.dar-chip { display: inline-flex; align-items: center; justify-content: center; min-width: 60px; padding: 4px 9px; border-radius: 999px; font-size: 9px; font-weight: 800; }
+.dar-chip--pending { background: #fff3e5; color: #b96808; }
+.dar-chip--approved { background: #e9f8f0; color: #16854b; }
+.dar-chip--rejected { background: #fff0f1; color: #c23749; }
+.dar-chip--type { background: #f0eeff; color: #5b50d6; }
+.dar-table-footer { display: flex; justify-content: space-between; gap: 16px; padding: 11px 4px 0; color: var(--dar-muted); font-size: 10px; }
+.dar-empty-row td { height: 150px; color: var(--dar-muted); }
+.dar-dialog[hidden] { display: none; }
+.dar-dialog { position: fixed; z-index: 1100; inset: 0; display: flex; align-items: center; justify-content: center; padding: 24px; }
+.dar-dialog__backdrop { position: absolute; inset: 0; background: rgba(24,21,31,.56); backdrop-filter: blur(2px); }
+.dar-dialog__panel { position: relative; display: flex; flex-direction: column; width: min(880px, 96vw); max-height: 92vh; overflow: hidden; border-radius: 15px; background: #fff; box-shadow: 0 24px 70px rgba(20,17,28,.28); }
+.dar-dialog__header { padding: 19px 22px; border-bottom: 1px solid var(--dar-border); }
+.dar-dialog__body { overflow: auto; padding: 20px 22px; }
+.dar-dialog__footer { padding: 14px 22px; border-top: 1px solid var(--dar-border); }
+.dar-dialog__footer > span { flex: 1; }
+.dar-detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0; overflow: hidden; border: 1px solid var(--dar-border); border-radius: 11px; }
+.dar-detail-grid > div { min-width: 0; padding: 11px 13px; border-right: 1px solid #efedf1; border-bottom: 1px solid #efedf1; }
+.dar-detail-grid > div:nth-child(2n) { border-right: 0; }
+.dar-detail-grid > div:nth-last-child(-n+2) { border-bottom: 0; }
+.dar-detail-grid > .dar-detail-grid__wide { grid-column: 1 / -1; border-right: 0; }
+.dar-detail-grid > .dar-detail-grid__wide:not(:last-child) { border-bottom: 1px solid #efedf1; }
+.dar-detail-grid dt { margin-bottom: 5px; color: #817d8a; font-size: 9px; font-weight: 800; }
+.dar-detail-grid dd { margin: 0; overflow-wrap: anywhere; color: #3f3a4c; font-size: 11px; line-height: 1.5; white-space: pre-wrap; }
+.dar-decision { margin-top: 16px; padding: 14px; border: 1px solid #ebe9ee; border-radius: 11px; background: #faf9fb; }
+.dar-events { margin-top: 16px; padding: 14px; border: 1px solid var(--dar-border); border-radius: 11px; }
+.dar-events h3 { margin: 0 0 10px; color: #3f3a4c; font-size: 12px; text-align: left; }
+.dar-events ol { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.dar-events li { display: grid; grid-template-columns: 120px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 9px 11px; border-radius: 8px; background: #f8f7fa; color: #4b465c; font-size: 10px; }
+.dar-events li strong { color: #3f3a4c; }
+.dar-events li small { color: #817d8a; }
+body.dar-dialog-open { overflow: hidden; }
+@media (max-width: 980px) {
+  .dar-search { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dar-field--keyword { grid-column: 1 / -1; }
+  .dar-search__actions { justify-content: flex-end; }
+}
+@media (max-width: 640px) {
+  .dar-card { padding: 15px; }
+  .dar-heading { align-items: flex-start; }
+  .dar-search { grid-template-columns: 1fr; }
+  .dar-field--keyword { grid-column: auto; }
+  .dar-detail-grid { grid-template-columns: 1fr; }
+  .dar-detail-grid > div, .dar-detail-grid > div:nth-child(2n) { border-right: 0; border-bottom: 1px solid #efedf1; }
+  .dar-detail-grid > div:last-child { border-bottom: 0; }
+  .dar-detail-grid > .dar-detail-grid__wide { grid-column: auto; }
+  .dar-events li { grid-template-columns: 1fr; gap: 3px; }
+  .dar-dialog { padding: 8px; }
+  .dar-dialog__panel { max-height: 97vh; }
+}

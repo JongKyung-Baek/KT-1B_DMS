@@ -14,7 +14,8 @@
         lastFocused: null,
         partners: [],
         approvers: [],
-        partnerUsers: {}
+        partnerUsers: {},
+        partnerUserRequestSequence: 0
     };
     var parentCategoryMessageKeys = {
         TRB000002: 'drawing',
@@ -28,6 +29,43 @@
         TRB000010: 'sourceData',
         TRB000011: 'etc',
         TRB000012: 'mfgData'
+    };
+    var apiErrorMessageKeys = {
+        DISTRIBUTION_ACCESS_DENIED: 'feature.distributionWorkflow.message.accessDenied',
+        DISTRIBUTION_REQUEST_ACCESS_DENIED: 'feature.distributionWorkflow.message.accessDenied',
+        DISTRIBUTION_REQUEST_OWNER_REQUIRED: 'feature.distributionWorkflow.message.accessDenied',
+        DISTRIBUTION_APPROVAL_ROLE_REQUIRED: 'feature.distributionWorkflow.message.accessDenied',
+        ASSIGNED_DISTRIBUTION_APPROVER_REQUIRED: 'feature.distributionWorkflow.message.assignedApproverOnly',
+        SELF_APPROVAL_NOT_ALLOWED: 'feature.distributionWorkflow.error.selfApproval',
+        DISTRIBUTION_RECIPIENTS_CHANGED: 'feature.distributionWorkflow.error.recipientsChanged',
+        PARTNER_RECIPIENT_UNAVAILABLE: 'feature.distributionWorkflow.error.recipientUnavailable',
+        DISTRIBUTION_ITEM_CHANGED: 'feature.distributionWorkflow.error.itemsChanged',
+        DISTRIBUTION_DOCUMENT_NOT_FOUND: 'feature.distributionWorkflow.error.documentUnavailable',
+        DISTRIBUTION_DOCUMENT_BUNDLE_INVALID: 'feature.distributionWorkflow.error.documentUnavailable',
+        DISTRIBUTION_MAIN_FILE_INVALID: 'feature.distributionWorkflow.error.documentUnavailable',
+        DISTRIBUTION_ITEM_METADATA_INVALID: 'feature.distributionWorkflow.error.documentUnavailable',
+        DISTRIBUTION_PERIOD_EXPIRED: 'feature.distributionWorkflow.error.periodExpired',
+        DISTRIBUTION_START_DATE_IN_PAST: 'feature.distributionWorkflow.error.startDatePast',
+        INVALID_DISTRIBUTION_STATUS_TRANSITION: 'feature.distributionWorkflow.error.invalidState',
+        INVALID_DISTRIBUTION_STATUS: 'feature.distributionWorkflow.error.invalidState',
+        DISTRIBUTION_REQUEST_NOT_FOUND: 'feature.distributionWorkflow.error.notFound',
+        REJECTION_COMMENT_REQUIRED: 'feature.distributionWorkflow.message.rejectionReasonRequired',
+        DECISION_COMMENT_TOO_LONG: 'feature.distributionWorkflow.error.commentTooLong',
+        INVALID_DISTRIBUTION_TITLE: 'feature.distributionWorkflow.message.titleRequired',
+        INVALID_DISTRIBUTION_DOCUMENTS: 'feature.distributionWorkflow.message.itemsRequired',
+        DISTRIBUTION_ITEMS_REQUIRED: 'feature.distributionWorkflow.message.itemsRequired',
+        INVALID_DISTRIBUTION_RECIPIENTS: 'feature.distributionWorkflow.message.recipientsRequired',
+        INVALID_PARTNER_IDENTIFIER: 'feature.distributionWorkflow.message.partnerRequired',
+        INVALID_DISTRIBUTION_APPROVER: 'feature.distributionWorkflow.message.approverRequired',
+        DISTRIBUTION_APPROVER_UNAVAILABLE: 'feature.distributionWorkflow.error.approverUnavailable',
+        INVALID_DISTRIBUTION_PERIOD: 'feature.distributionWorkflow.message.invalidDistributionPeriod',
+        INVALID_DISTRIBUTION_START_DATE: 'feature.distributionWorkflow.message.invalidDistributionPeriod',
+        INVALID_DISTRIBUTION_END_DATE: 'feature.distributionWorkflow.message.invalidDistributionPeriod',
+        DUPLICATE_DISTRIBUTION_DOCUMENT: 'feature.distributionWorkflow.error.duplicateDocument',
+        DISTRIBUTION_FILE_LIMIT_EXCEEDED: 'feature.distributionWorkflow.message.maxItems',
+        INVALID_DISTRIBUTION_DOCUMENT_IDENTIFIER: 'feature.distributionWorkflow.error.documentUnavailable',
+        INVALID_DISTRIBUTION_TREE: 'feature.distributionWorkflow.message.catalogFailed',
+        INVALID_DISTRIBUTION_API_REQUEST: 'feature.distributionWorkflow.message.actionFailed'
     };
 
     function element(id) {
@@ -158,6 +196,11 @@
         setMessage(element('workflowDialogMessage'), message, type);
     }
 
+    function localizedApiError(body, fallback) {
+        var key = body && body.code ? apiErrorMessageKeys[body.code] : '';
+        return key ? t(key, fallback) : (body && body.message ? body.message : fallback);
+    }
+
     function request(path, options) {
         var requestOptions = options || {};
         var headers = requestOptions.headers || {};
@@ -180,7 +223,7 @@
                     var fallback = response.status === 403
                         ? t('feature.distributionWorkflow.message.accessDenied', '이 기능을 사용할 권한이 없습니다.')
                         : t('feature.distributionWorkflow.message.actionFailed', '요청을 처리하지 못했습니다.');
-                    var error = new Error(body && body.message ? body.message : fallback);
+                    var error = new Error(localizedApiError(body, fallback));
                     error.status = response.status;
                     error.code = body && body.code ? body.code : '';
                     throw error;
@@ -414,10 +457,14 @@
         return department ? label + ' · ' + department : label;
     }
 
-    function populatePartnerOptions(selectedId, selectedLabel) {
+    function populatePartnerOptions(selectedId, selectedLabel, snapshotOnly) {
         var select = element('workflowPartnerCompany');
         resetSelect(select, t('feature.distributionWorkflow.placeholder.partnerCompany',
             '협력업체를 선택하세요.'));
+        if (snapshotOnly) {
+            if (selectedId) addSelectOption(select, String(selectedId), selectedLabel || selectedId, true);
+            return;
+        }
         var found = false;
         state.partners.forEach(function (partner) {
             var value = String(partner.partnerCompanyId || '');
@@ -428,10 +475,14 @@
         if (selectedId && !found) addSelectOption(select, String(selectedId), selectedLabel || selectedId, true);
     }
 
-    function populateApproverOptions(selectedCd, selectedLabel) {
+    function populateApproverOptions(selectedCd, selectedLabel, snapshotOnly) {
         var select = element('workflowApprover');
         resetSelect(select, t('feature.distributionWorkflow.placeholder.approver',
             '승인자를 선택하세요.'));
+        if (snapshotOnly) {
+            if (selectedCd) addSelectOption(select, String(selectedCd), selectedLabel || selectedCd, true);
+            return;
+        }
         var found = false;
         state.approvers.forEach(function (approver) {
             var value = String(approver.approverUserCd || '');
@@ -478,6 +529,12 @@
 
     function loadPartnerUsers(partnerId, selectedIds, editable) {
         var normalized = String(partnerId || '');
+        var requestSequence = ++state.partnerUserRequestSequence;
+        function isCurrentSelection() {
+            var select = element('workflowPartnerCompany');
+            return requestSequence === state.partnerUserRequestSequence
+                && (!select || String(select.value || '') === normalized);
+        }
         if (!normalized) {
             var target = element('workflowRecipients');
             target.textContent = '';
@@ -487,7 +544,9 @@
             return Promise.resolve([]);
         }
         if (state.partnerUsers[normalized]) {
-            renderRecipients(state.partnerUsers[normalized], selectedIds, editable);
+            if (isCurrentSelection()) {
+                renderRecipients(state.partnerUsers[normalized], selectedIds, editable);
+            }
             return Promise.resolve(state.partnerUsers[normalized]);
         }
         var target = element('workflowRecipients');
@@ -497,9 +556,12 @@
         return request('/directory/partners/' + encodeURIComponent(normalized) + '/users')
             .then(function (users) {
                 state.partnerUsers[normalized] = Array.isArray(users) ? users : [];
-                renderRecipients(state.partnerUsers[normalized], selectedIds, editable);
+                if (isCurrentSelection()) {
+                    renderRecipients(state.partnerUsers[normalized], selectedIds, editable);
+                }
                 return state.partnerUsers[normalized];
             }).catch(function (error) {
+                if (!isCurrentSelection()) return [];
                 target.textContent = '';
                 append(target, 'p', 'dw-recipient-empty', error.message ||
                     t('feature.distributionWorkflow.message.directoryFailed',
@@ -904,13 +966,14 @@
         var record = detail && detail.request ? detail.request : {};
         var items = detail && Array.isArray(detail.items) ? detail.items : [];
         var events = detail && Array.isArray(detail.events) ? detail.events : [];
+        var editable = mode === 'mine' && (record.status === 'DRAFT' || record.status === 'REJECTED');
         state.current = detail;
         element('workflowTitle').value = record.title || '';
         element('workflowPurpose').value = record.purpose || '';
         populatePartnerOptions(record.partnerCompanyId,
-            partnerLabel({code: record.partnerCompanyCode, name: record.partnerCompanyName}));
+            partnerLabel({code: record.partnerCompanyCode, name: record.partnerCompanyName}), !editable);
         populateApproverOptions(record.approverUserCd,
-            approverLabel({userName: record.approverUserNm, userId: record.approverUserId}));
+            approverLabel({userName: record.approverUserNm, userId: record.approverUserId}), !editable);
         element('workflowDistributionStartDate').value = record.distributionStartDate || '';
         element('workflowDistributionEndDate').value = record.distributionEndDate || '';
         element('workflowDecisionComment').value = '';
@@ -927,11 +990,17 @@
         renderEvents(events);
         var dialogNotice = '';
 
-        var editable = mode === 'mine' && (record.status === 'DRAFT' || record.status === 'REJECTED');
         setEditable(editable);
-        loadPartnerUsers(record.partnerCompanyId,
-            (detail.recipients || []).map(function (recipient) { return recipient.partnerUserId; }),
-            editable);
+        var recipientSnapshots = detail && Array.isArray(detail.recipients)
+            ? detail.recipients : [];
+        var selectedRecipientIds = recipientSnapshots.map(function (recipient) {
+            return recipient.partnerUserId;
+        });
+        if (editable) {
+            loadPartnerUsers(record.partnerCompanyId, selectedRecipientIds, true);
+        } else {
+            renderRecipients(recipientSnapshots, selectedRecipientIds, false);
+        }
         if (editable) {
             renderItemEditor(detail.documents && detail.documents.length ? detail.documents : items);
         } else {

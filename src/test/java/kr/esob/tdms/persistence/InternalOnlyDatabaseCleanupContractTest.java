@@ -55,7 +55,11 @@ class InternalOnlyDatabaseCleanupContractTest {
         assertTrue(sql.contains(
                 "ALTER TABLE public.docs_user DROP COLUMN IF EXISTS auth_site"));
         assertTrue(sql.contains("SET parent_menu_cd = 'ROOT'"));
-        assertTrue(sql.contains("'MENU_013', 'MENU_071', 'MENU_214', 'MENU_223'"));
+        assertTrue(sql.contains(
+                "'MENU_013', 'MENU_071', 'MENU_214', 'MENU_223',"));
+        assertTrue(sql.contains("'MENU_229'"));
+        assertTrue(sql.contains(
+                "five current navigation roots"));
         assertTrue(sql.contains("toolbarSystemMenu"));
     }
 

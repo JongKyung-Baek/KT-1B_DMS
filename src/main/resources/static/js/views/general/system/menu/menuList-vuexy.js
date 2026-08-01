@@ -1,22 +1,153 @@
 var ROOT_MENU_ID = "MENU_000";
 var MENU_TREE_ID = "menuTree";
+var selectedMenuId = null;
+var menuTreeSearchTimer = null;
+
+function menuPermissionText(key, fallback) {
+  if (window.SdmsI18n && typeof window.SdmsI18n.t === "function") {
+    return window.SdmsI18n.t(key, fallback);
+  }
+  return fallback;
+}
+
+function localizeMenuToolbar() {
+  var labels = {
+    addMenu: menuPermissionText("feature.common.button.add", "추가"),
+    modMenu: menuPermissionText("feature.common.button.edit", "수정"),
+    delMenu: menuPermissionText("feature.common.button.delete", "삭제"),
+    saveMenu: menuPermissionText("feature.system.menu.action.saveOrder", "메뉴순서저장")
+  };
+
+  $("#menuBtnArea button").each(function () {
+    var action = String($(this).attr("onclick") || "").split("(")[0];
+    if (labels[action]) {
+      $(this).text(labels[action]);
+    }
+  });
+}
 
 $(function () {
   settingToolbar(JSON.parse(toolbarInfo || "[]"), $("#menuBtnArea"));
+  localizeMenuToolbar();
+  bindMenuTreeSearch();
   setTree();
 });
 
 function setTree() {
+  $("#" + MENU_TREE_ID).attr("aria-busy", "true");
+
   callAjax({}, "/general/system/menu/getTreeList", function (response) {
     menuTreeList = response || [];
+    updateMenuTreeSummary();
+
     settingTree(MENU_TREE_ID, {
       list: menuTreeList,
       useCheckbox: false,
       dragDrop: true,
       openLevel: 2,
-      customCheckbox: false
+      customCheckbox: false,
+      onReady: function (data) {
+        var tree = data.instance;
+
+        bindMenuTreeSelection();
+        $("#" + MENU_TREE_ID).attr("aria-busy", "false");
+
+        if (selectedMenuId && tree.get_node(selectedMenuId)) {
+          tree.select_node(selectedMenuId);
+        } else {
+          selectedMenuId = null;
+          resetMenuSelection();
+        }
+
+        searchMenuTree();
+      }
     });
   });
+}
+
+function bindMenuTreeSearch() {
+  $("#menuTreeSearchForm")
+    .off("submit.menuPermission")
+    .on("submit.menuPermission", function (event) {
+      event.preventDefault();
+      searchMenuTree();
+    });
+
+  $("#menuTreeSearch")
+    .off("input.menuPermission")
+    .on("input.menuPermission", function () {
+      window.clearTimeout(menuTreeSearchTimer);
+      menuTreeSearchTimer = window.setTimeout(searchMenuTree, 140);
+    });
+}
+
+function searchMenuTree() {
+  var tree = $("#" + MENU_TREE_ID).jstree(true);
+  var keyword = $.trim($("#menuTreeSearch").val() || "");
+
+  if (!tree) {
+    return;
+  }
+
+  if (keyword) {
+    tree.search(keyword);
+  } else {
+    tree.clear_search();
+  }
+}
+
+function bindMenuTreeSelection() {
+  $("#" + MENU_TREE_ID)
+    .off(".menuPermission")
+    .on("select_node.jstree.menuPermission", function (event, data) {
+      selectedMenuId = data.node.id;
+      renderMenuSelection(data.node, data.instance);
+    })
+    .on("deselect_all.jstree.menuPermission", function () {
+      selectedMenuId = null;
+      resetMenuSelection();
+    });
+}
+
+function updateMenuTreeSummary() {
+  var menus = $.grep(menuTreeList, function (menu) {
+    return menu && menu.id !== ROOT_MENU_ID;
+  });
+  var activeMenus = $.grep(menus, function (menu) {
+    return String(menu.useYn || "").toUpperCase() === "Y";
+  });
+
+  $("#menuTotalCount").text(menus.length);
+  $("#menuActiveCount").text(activeMenus.length);
+}
+
+function renderMenuSelection(node, tree) {
+  var menu = node.original || {};
+  var parent = tree.get_node(node.parent);
+  var useYn = String(menu.useYn || "-").toUpperCase();
+  var type = String(menu.type || "-").toUpperCase();
+
+  $("#selectedMenuName").text(node.text || "-");
+  $("#selectedMenuCode").text(node.id || "-");
+  $("#selectedMenuParent").text(
+    parent && parent.id !== "#" ? parent.text : "-"
+  );
+  $("#selectedMenuLevel").text(menu.level || "-");
+  $("#selectedMenuRole").text(menu.roleCd || "-");
+  $("#selectedMenuUseYn").text(useYn);
+  $("#selectedMenuType").text("TYPE " + type);
+  $("#selectedMenuState")
+    .text(useYn)
+    .toggleClass("menu-permission-chip--active", useYn === "Y")
+    .toggleClass("menu-permission-chip--inactive", useYn !== "Y");
+
+  $("#menuSelectionEmpty").prop("hidden", true);
+  $("#menuSelectionDetail").prop("hidden", false);
+}
+
+function resetMenuSelection() {
+  $("#menuSelectionDetail").prop("hidden", true);
+  $("#menuSelectionEmpty").prop("hidden", false);
 }
 
 function saveMenu() {

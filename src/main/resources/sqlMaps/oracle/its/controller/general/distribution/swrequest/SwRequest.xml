@@ -1749,6 +1749,8 @@
 			WHERE viewHistory.INSERT_DATE &gt;= CURRENT_TIMESTAMP - INTERVAL '30 days'
 			  AND viewHistory.DISTRIBUTION_TYPE = 'CCB'
 			  AND viewHistory.LOG_TYPE = 'VIEWING'
+			  AND viewHistory.SOURCE_SYSTEM_CD = 'CV'
+			  AND viewHistory.SOURCE_EVENT_ID IS NOT NULL
 			  AND viewHistory.USER_ID = actor.user_id
 		       ) AS "viewCount30Days",
 		       (
@@ -1914,6 +1916,8 @@
 			FROM DOCS_HISTORY viewHistory
 			WHERE viewHistory.DISTRIBUTION_TYPE = 'CCB'
 			  AND viewHistory.LOG_TYPE = 'VIEWING'
+			  AND viewHistory.SOURCE_SYSTEM_CD = 'CV'
+			  AND viewHistory.SOURCE_EVENT_ID IS NOT NULL
 			UNION ALL
 			SELECT ('AUDIT-' || auditLog.EVENT_ID) AS event_id,
 			       auditLog.OCCURRED_AT AT TIME ZONE 'Asia/Seoul' AS occurred_at,

@@ -17,6 +17,6 @@ public class DistributionExpirationScheduler {
 
     @Scheduled(cron = "0 5 * * * *", zone = "Asia/Seoul")
     public void expireElapsedDistributions() {
-        workflowService.expireApprovedRequests();
+        workflowService.expireElapsedRequests();
     }
 }

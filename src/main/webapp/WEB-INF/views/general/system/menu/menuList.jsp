@@ -1,225 +1,137 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
-<%@ taglib prefix="custom" tagdir="/WEB-INF/tags" %>
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags"%>
+<spring:message code="feature.locale.code" text="ko" var="pageLanguage" />
 <!doctype html>
-<html lang="kr">
+<html lang="${pageLanguage}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>KT-1B DMS</title>
-<link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/distribution-invoice.css" media="screen" />
+<title><spring:message code="form.roleGroup" text="메뉴 권한" /></title>
+<link type="text/css" rel="stylesheet"
+    href="${pageContext.request.contextPath}/resources/css/pages/distribution-invoice.css"
+    media="screen" />
+<link type="text/css" rel="stylesheet"
+    href="${pageContext.request.contextPath}/resources/css/pages/menu-permission.css?v=20260801.2"
+    media="screen" />
 <script>
-	var menuTreeList = [];
-	var toolbarInfo = '${toolbarInfo}';
+    var menuTreeList = [];
+    var toolbarInfo = '${toolbarInfo}';
 
-	$(function () {
-		$('.layout-wrapper.bodyWrap .content-wrapper > .container').addClass('distribution-invoice-container');
-	});
+    $(function () {
+        $('.layout-wrapper.bodyWrap .content-wrapper > .container')
+            .addClass('distribution-invoice-container');
+    });
 </script>
-<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/views/general/system/menu/menuList-vuexy.js?v=20260728.1"></script>
-<style>
-	.system-menu-page .system-menu-card {
-		border: 0;
-	}
-
-	.system-menu-page .system-menu-card .card-body {
-		padding: 1.25rem;
-	}
-
-	.system-menu-page .nav-align-top > .nav {
-		gap: 0.5rem;
-		border-bottom: 0;
-		margin-bottom: 10px;
-	}
-
-	.system-menu-page .nav-pills .nav-link {
-		border: 1px solid transparent;
-		border-radius: 999px;
-		padding: 0.55rem 1rem;
-		color: var(--bs-secondary-color);
-		font-weight: 600;
-	}
-
-	.system-menu-page .nav-pills .nav-link.active {
-		background: rgba(var(--bs-primary-rgb), 0.12);
-		color: var(--bs-primary);
-		border-color: rgba(var(--bs-primary-rgb), 0.2);
-		box-shadow: none;
-	}
-
-	.system-menu-page .tab-content {
-		padding: 1.25rem 0 0;
-		box-shadow: none !important;
-	}
-
-	.system-menu-page .menu-pane {
-		display: flex;
-		flex-direction: column;
-		gap: 1rem;
-		min-width: 0;
-	}
-
-	.system-menu-page .menu-pane .btnArea {
-		margin: 0;
-	}
-
-	.system-menu-page .menu-pane .btnArea:not(.is-empty) {
-		display: flex;
-		align-items: center;
-		justify-content: flex-end;
-		gap: 0.5rem;
-	}
-
-	.system-menu-page .menu-pane .btnArea .left,
-	.system-menu-page .menu-pane .btnArea .right {
-		display: flex;
-		gap: 0.5rem;
-		width: auto !important;
-	}
-
-	.system-menu-page .menu-pane .btnArea .right {
-		margin-left: auto;
-	}
-
-	.system-menu-page .menu-pane .btnArea .ui-button {
-		min-width: 5rem;
-		padding: 0.4rem 0.9rem;
-		border: 1px solid var(--bs-primary);
-		border-radius: var(--bs-border-radius);
-		background: transparent;
-		color: var(--bs-primary);
-		font-size: 0.8125rem;
-		font-weight: 500;
-		line-height: 1.2;
-		box-shadow: none;
-	}
-
-	.system-menu-page .menu-pane .tree-card {
-		border: 1px solid var(--bs-border-color);
-		border-radius: var(--bs-border-radius-lg);
-		background: linear-gradient(180deg, rgba(var(--bs-body-color-rgb), 0.02) 0%, rgba(var(--bs-body-bg-rgb), 0.98) 100%);
-		padding: 1rem 1rem 1.25rem;
-		min-height: 32rem;
-		max-height: calc(100vh - 320px);
-		overflow: auto;
-		/* box-shadow: 0 0.25rem 1rem rgba(34, 48, 62, 0.08); */
-		text-align: left;
-	}
-
-	.system-menu-page .menu-pane .tree-card .jstree-default {
-		min-width: 100%;
-		font-size: 0.875rem;
-		color: var(--bs-body-color);
-		text-align: left;
-	}
-
-	.system-menu-page .menu-pane .tree-card .jstree-default .jstree-container-ul {
-		width: 100%;
-	}
-
-	.system-menu-page .menu-pane .tree-card .jstree-default .jstree-node {
-		position: relative;
-		margin-left: 1.5rem;
-		min-height: 2.25rem;
-		line-height: 2.25rem;
-	}
-
-	.system-menu-page .menu-pane .tree-card .jstree-default .jstree-anchor {
-		height: 2.25rem;
-		line-height: 2.25rem;
-		padding: 0 0.75rem 0 0.25rem;
-		border-radius: 0.75rem;
-		font-weight: 500;
-		transition: background-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
-	}
-
-	.system-menu-page .menu-pane .tree-card .jstree-default .jstree-hovered,
-	.system-menu-page .menu-pane .tree-card .jstree-default .jstree-wholerow-hovered {
-		background: rgba(var(--bs-primary-rgb), 0.08);
-		box-shadow: none;
-	}
-
-	.system-menu-page .menu-pane .tree-card .jstree-default .jstree-clicked,
-	.system-menu-page .menu-pane .tree-card .jstree-default .jstree-wholerow-clicked {
-		background: rgba(var(--bs-primary-rgb), 0.14);
-		color: var(--bs-primary);
-		/* box-shadow: inset 0 0 0 1px rgba(var(--bs-primary-rgb), 0.18); */
-	}
-
-	.system-menu-page .menu-pane .tree-card .jstree-default .jstree-icon,
-	.system-menu-page .menu-pane .tree-card .jstree-default .jstree-icon:empty {
-		width: 2rem;
-		height: 2.25rem;
-		line-height: 2.25rem;
-	}
-
-	.system-menu-page .menu-pane .tree-card .jstree-default .jstree-ocl {
-		opacity: 0.7;
-	}
-
-	.system-menu-page .menu-pane .tree-card .jstree-default .jstree-wholerow {
-		height: 2.25rem;
-		border-radius: 0.75rem;
-		background: transparent !important;
-		box-shadow: none !important;
-		border: 0 !important;
-	}
-
-	.system-menu-page .menu-pane .tree-card .jstree-default .jstree-wholerow-hovered,
-	.system-menu-page .menu-pane .tree-card .jstree-default .jstree-wholerow-clicked {
-		background: transparent !important;
-		box-shadow: none !important;
-		border: 0 !important;
-	}
-
-	.system-menu-page .menu-pane .tree-card .jstree-default .jstree-themeicon {
-		margin-right: 0.25rem;
-	}
-
-	.system-menu-page .menu-pane .tree-card .jstree-default .jstree-anchor:hover {
-		color: var(--bs-primary);
-	}
-
-	.system-menu-page #jstree-marker {
-		border-left-color: var(--bs-primary);
-	}
-
-	.system-menu-page #jstree-dnd {
-		padding: 0.45rem 0.65rem;
-		border: 1px solid rgba(var(--bs-primary-rgb), 0.18);
-		border-radius: 0.75rem;
-		background: var(--bs-body-bg);
-		box-shadow: 0 0.375rem 1rem rgba(34, 48, 62, 0.14);
-		color: var(--bs-body-color);
-	}
-
-	@media (max-height: 900px) {
-		.system-menu-page .menu-pane .tree-card {
-			max-height: calc(100vh - 280px);
-		}
-	}
-
-	@media (max-width: 991.98px) {
-		.system-menu-page .menu-pane .tree-card {
-			min-height: 24rem;
-			max-height: 24rem;
-		}
-	}
-</style>
+<script type="text/javascript"
+    src="${pageContext.request.contextPath}/resources/js/views/general/system/menu/menuList-vuexy.js?v=20260801.2"></script>
 </head>
 <body>
-	<div class="system-menu-page">
-		<div class="card system-menu-card">
-			<div class="card-body">
-				<div class="menu-pane">
-					<div class="btnArea" id="menuBtnArea"></div>
-					<div class="tree-card">
-						<div id="menuTree"></div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+<main class="menu-permission-page" aria-labelledby="menuPermissionTitle">
+    <header class="menu-permission-header">
+        <div class="menu-permission-heading">
+            <p class="menu-permission-eyebrow">
+                <i class="icon-base ti tabler-settings" aria-hidden="true"></i>
+                <spring:message code="menu.sysmanage" text="시스템 관리" />
+            </p>
+            <h1 id="menuPermissionTitle">
+                <spring:message code="form.roleGroup" text="메뉴 권한" />
+            </h1>
+        </div>
+        <div class="menu-permission-summary" aria-live="polite">
+            <span class="menu-permission-chip menu-permission-chip--primary">
+                <i class="icon-base ti tabler-sitemap" aria-hidden="true"></i>
+                <span><spring:message code="label.allMenus" text="전체 메뉴" /></span>
+                <strong id="menuTotalCount">0</strong>
+            </span>
+            <span class="menu-permission-chip menu-permission-chip--active">
+                <i class="icon-base ti tabler-circle-check" aria-hidden="true"></i>
+                <span><spring:message code="form.useYn" text="사용여부" /></span>
+                <strong id="menuActiveCount">0</strong>
+            </span>
+        </div>
+    </header>
+
+    <section class="menu-permission-workspace">
+        <article class="menu-permission-panel menu-permission-tree-panel">
+            <header class="menu-permission-panel-header">
+                <div>
+                    <span class="menu-permission-panel-kicker">TREE</span>
+                    <h2><spring:message code="label.allMenus" text="전체 메뉴" /></h2>
+                </div>
+                <div class="btnArea menu-permission-toolbar" id="menuBtnArea"></div>
+            </header>
+
+            <form id="menuTreeSearchForm" class="menu-permission-search" role="search">
+                <label class="menu-permission-sr-only" for="menuTreeSearch">
+                    <spring:message code="btn.search" text="조회" />
+                </label>
+                <span class="menu-permission-search-field">
+                    <i class="icon-base ti tabler-search" aria-hidden="true"></i>
+                    <input type="search" id="menuTreeSearch" autocomplete="off"
+                        placeholder="<spring:message code='label.allMenus' text='전체 메뉴' />" />
+                </span>
+                <button type="submit" id="menuTreeSearchButton"
+                    class="menu-permission-button menu-permission-button--primary">
+                    <spring:message code="btn.search" text="조회" />
+                </button>
+            </form>
+
+            <div class="menu-permission-tree-shell">
+                <div id="menuTree" aria-label="<spring:message code='label.allMenus' text='전체 메뉴' />"></div>
+            </div>
+        </article>
+
+        <aside class="menu-permission-panel menu-permission-detail-panel"
+            aria-labelledby="selectedMenuPanelTitle">
+            <header class="menu-permission-panel-header">
+                <div>
+                    <span class="menu-permission-panel-kicker">DETAIL</span>
+                    <h2 id="selectedMenuPanelTitle">
+                        <spring:message code="form.menuNm" text="메뉴명" />
+                    </h2>
+                </div>
+            </header>
+
+            <div id="menuSelectionEmpty" class="menu-selection-empty">
+                <span class="menu-selection-empty-icon" aria-hidden="true">
+                    <i class="icon-base ti tabler-pointer"></i>
+                </span>
+                <p><spring:message code="msg.plzSelectMenu" text="메뉴를 선택해주세요" /></p>
+            </div>
+
+            <div id="menuSelectionDetail" class="menu-selection-detail" hidden>
+                <div class="menu-selection-identity">
+                    <div class="menu-selection-chips">
+                        <span id="selectedMenuType" class="menu-permission-chip">TYPE</span>
+                        <span id="selectedMenuState"
+                            class="menu-permission-chip menu-permission-chip--active">Y</span>
+                    </div>
+                    <h3 id="selectedMenuName">-</h3>
+                    <code id="selectedMenuCode">-</code>
+                </div>
+
+                <dl class="menu-selection-meta">
+                    <div>
+                        <dt><spring:message code="form.parentMenuNm" text="상위메뉴" /></dt>
+                        <dd id="selectedMenuParent">-</dd>
+                    </div>
+                    <div>
+                        <dt>LEVEL</dt>
+                        <dd id="selectedMenuLevel">-</dd>
+                    </div>
+                    <div>
+                        <dt><spring:message code="form.roleGroup" text="메뉴 권한" /></dt>
+                        <dd><code id="selectedMenuRole">-</code></dd>
+                    </div>
+                    <div>
+                        <dt><spring:message code="form.useYn" text="사용여부" /></dt>
+                        <dd id="selectedMenuUseYn">-</dd>
+                    </div>
+                </dl>
+            </div>
+        </aside>
+    </section>
+</main>
 </body>
 </html>

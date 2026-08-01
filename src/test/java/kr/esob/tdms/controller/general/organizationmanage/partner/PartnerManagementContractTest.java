@@ -40,16 +40,23 @@ class PartnerManagementContractTest {
         String ddl = read("src/main/resources/sql/partner_management_ddl.sql");
         String security = read("src/main/java/kr/esob/tdms/config/SecurityConfig.java");
         String jsp = read("src/main/webapp/WEB-INF/views/general/organizationmanage/partner/partnerManagement.jsp");
+        String script = read("src/main/resources/static/js/views/general/organizationmanage/partner/partner-management.js");
+        String koreanBase = read("src/main/webapp/messages/feature.properties");
         String korean = read("src/main/webapp/messages/feature_ko.properties");
         String english = read("src/main/webapp/messages/feature_en.properties");
 
-        assertTrue(ddl.contains("'MENU_230', 'MENU_214', '협력업체 관리'"));
+        assertTrue(ddl.contains("'MENU_230', 'MENU_071', '협력업체 관리'"));
+        assertTrue(ddl.contains("'/general/organizationmanage/partner/**', 91"));
         assertTrue(ddl.contains("'ROLE_MENU_230'"));
         assertTrue(security.contains(".hasAuthority(\"ROLE_MENU_230\")"));
         assertTrue(jsp.contains("feature.partner.page.title"));
         assertTrue(jsp.contains("partner-management.css?v=20260801.1"));
         assertTrue(korean.contains("feature.partner.page.title=협력업체 관리"));
         assertTrue(english.contains("feature.partner.page.title=Partner Management"));
+        assertTrue(script.contains("function localizedApiError(body, fallback)"));
+        assertTrue(script.contains("DUPLICATE_PARTNER_BUSINESS_NO: 'feature.partner.error.duplicateBusinessNo'"));
+        assertTrue(koreanBase.contains("feature.partner.error.duplicateBusinessNo=이미 등록된 사업자번호입니다."));
+        assertTrue(english.contains("feature.partner.error.duplicateBusinessNo=This business number is already registered."));
     }
 
     @Test

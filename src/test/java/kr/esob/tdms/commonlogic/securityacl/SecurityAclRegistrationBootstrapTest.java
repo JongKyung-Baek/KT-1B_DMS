@@ -1,7 +1,9 @@
 package kr.esob.tdms.commonlogic.securityacl;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -121,6 +123,20 @@ class SecurityAclRegistrationBootstrapTest {
             () -> service.initializeRegisteredSwAcl("SW-OBJECT-1"));
 
         verify(dao, never()).upsertFileLabel(any(FileSecurityLabelVO.class), anyString());
+    }
+
+    @Test
+    void currentActorActionPermissionIsResolvedFromTheServerSideIdentity() {
+        when(dao.hasActionPermission("REGISTRANT", SecurityAclService.DOWNLOAD_ORIGINAL))
+            .thenReturn(false);
+        when(dao.hasActionPermission("REGISTRANT", SecurityAclService.VIEW))
+            .thenReturn(true);
+
+        assertFalse(service.hasCurrentUserActionPermission(SecurityAclService.DOWNLOAD_ORIGINAL));
+        assertTrue(service.hasCurrentUserActionPermission(SecurityAclService.VIEW));
+
+        verify(dao).hasActionPermission("REGISTRANT", SecurityAclService.DOWNLOAD_ORIGINAL);
+        verify(dao).hasActionPermission("REGISTRANT", SecurityAclService.VIEW);
     }
 
     private SecurityGradeVO grade(String gradeCd, String defaultYn, String useYn) {

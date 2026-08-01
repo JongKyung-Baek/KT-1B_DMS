@@ -127,7 +127,75 @@ TDMS_VIEWER_ENABLED=false
 
 client ID, callback client ID, shared secret 및 Windows/AIX 활성화 절차는 [viewer-integration.md](viewer-integration.md)를 따른다. shared secret은 DB나 이 파일에 저장하지 않는다.
 
-### 5.2 외부연계 스케줄러
+### 5.2 배포시스템 계정요청 HMAC API
+
+배포시스템 계정요청 API는 로그인 세션 대신 요청별 HMAC-SHA256 서명을
+검증한다. 애플리케이션 URL이 외부에 열려 있어도 아래 설정을 명시적으로
+주입하기 전에는 기능을 활성화하지 않는다.
+
+```sh
+export TDMS_DISTRIBUTION_INTEGRATION_ENABLED=false
+export TDMS_DISTRIBUTION_INTEGRATION_CLIENT_ID='<registered-client-id>'
+export TDMS_DISTRIBUTION_INTEGRATION_SOURCE_SYSTEM_ID='<registered-source-system-id>'
+export TDMS_DISTRIBUTION_INTEGRATION_SHARED_SECRET='<runtime-secret-at-least-32-UTF8-bytes>'
+export TDMS_DISTRIBUTION_INTEGRATION_ADDITIONAL_CLIENTS=''
+export TDMS_DISTRIBUTION_INTEGRATION_CLOCK_SKEW_SECONDS=300
+export TDMS_DISTRIBUTION_INTEGRATION_NONCE_RETENTION_DAYS=2
+```
+
+`TDMS_DISTRIBUTION_INTEGRATION_ADDITIONAL_CLIENTS`는 여러 연계처가 승인된
+경우에만 `clientId|sourceSystemId|secret` 항목을 세미콜론으로 구분하여
+설정한다. 기본 client ID와 중복되는 ID를 추가하지 않는다. timestamp 허용
+오차는 운영 시계 동기화 오차보다 크게, nonce 보존기간은 timestamp 허용
+오차보다 길게 유지한다. 현재 기본값 300초와 2일은 이 조건을 충족한다.
+
+비밀키는 배포 전에 AIX 서비스 계정만 읽을 수 있는 파일에서 생성·보관하고,
+WAR·Git·DDL·로그·셸 이력이나 Java 명령행 인자에 기록하지 않는다. 아래는
+placeholder 경로를 사용한 예시이며 실제 파일 경로는 조직의 비밀관리 정책에
+맞춘다.
+
+```sh
+umask 077
+service_user='<tdms-service-user>'
+service_group='<tdms-service-group>'
+secret_dir=/etc/kt1b/secrets
+secret_file="$secret_dir/distribution-account-hmac.secret"
+mkdir -p "$secret_dir"
+openssl rand -base64 48 > "$secret_file"
+chown "$service_user:$service_group" "$secret_dir" "$secret_file"
+chmod 700 "$secret_dir"
+chmod 600 "$secret_file"
+
+secret_bytes=$(tr -d '\r\n' < "$secret_file" | wc -c | tr -d ' ')
+[ "$secret_bytes" -ge 32 ] || {
+  echo "Distribution HMAC secret must be at least 32 UTF-8 bytes" >&2
+  exit 1
+}
+export TDMS_DISTRIBUTION_INTEGRATION_SHARED_SECRET="$(tr -d '\r\n' < "$secret_file")"
+unset secret_bytes service_user service_group
+```
+
+서비스 시작 스크립트는 위 파일을 런타임에 읽어 환경변수로 주입하되 실제
+값을 `echo`, `set`, `env`, 프로세스 진단 덤프에 출력하지 않는다. 키 교체는
+새 client ID와 새 비밀키를 `ADDITIONAL_CLIENTS`에 먼저 등록하여 왕복 검증한
+뒤 상대 시스템을 전환하고, 마지막으로 이전 등록을 제거하는 순서로 한다.
+동일 client ID에 서로 다른 키를 중복 등록하지 않는다.
+
+reverse proxy는 다음 고정 경로만 허용하고 TLS와 연계 서버 source IP
+allowlist를 함께 적용한다.
+
+- `POST /api/integrations/distribution/v1/account-requests`
+- `GET /api/integrations/distribution/v1/account-requests/{eventId}`
+
+활성화 전 양쪽 서버의 NTP 시간을 확인한다. 연계 테스트에서는 정상 서명
+POST가 201을 반환하고, 새 nonce를 사용한 동일 payload 재시도가 200과
+`duplicate=true`를 반환하는지 확인한다. 동일 nonce 재사용, 만료 timestamp,
+본문 hash 또는 서명이 다른 요청은 거절되어야 한다. 상세 canonical 문자열과
+헤더 규격은 [distribution-account-request-api.md](distribution-account-request-api.md)를
+따른다. 검증이 끝난 뒤에만
+`TDMS_DISTRIBUTION_INTEGRATION_ENABLED=true`로 전환한다.
+
+### 5.3 외부연계 스케줄러
 
 다음 세 스케줄러는 현재 `application.properties`에서 모두 `false`이고, 각 컴포넌트도 `matchIfMissing=false`라서 속성을 생략해도 생성되지 않는다. 운영 승인 없이 공통 설정이나 WAR 내부 기본값을 `true`로 바꾸지 않는다.
 
@@ -177,6 +245,7 @@ $JAVA_HOME/bin/java -Xms1g -Xmx2g -jar /opt/kt1b/TDMS-KT-1B.war
 - [ ] `../`, 절대 경로, 역슬래시를 이용한 저장소 이탈 요청이 거부된다.
 - [ ] 외부 인터페이스가 호출되지 않으며 `UnsatisfiedLinkError`나 ePDF JNI 로딩 로그가 없다.
 - [ ] 외부연계 시험 시 전송·뷰어 URL이 HTTPS이고 인증서·호스트명 검증이 성공한다.
+- [ ] 배포시스템 계정요청 연계는 기본 `false`이고, 활성화 시험에서는 정상 HMAC 요청·멱등 재시도·nonce 재사용 거절을 모두 확인한다.
 - [ ] 재시작 후 ACL, 이력, 파일이 그대로 조회된다.
 
 ## 8. 실제 AIX Smoke Checklist
@@ -196,6 +265,9 @@ $JAVA_HOME/bin/java -Xms1g -Xmx2g -jar /opt/kt1b/TDMS-KT-1B.war
 - [ ] 세 외부연계 스케줄러가 기본 `false`이고 외부 인터페이스 장애가 핵심 문서 기능에 영향을 주지 않는다.
 - [ ] 레거시 SEED 연계를 켠 경우에만 정확히 16바이트인 `KT1B_LEGACY_CRYPTO_KEY`가 설정된다.
 - [ ] 외부연계를 켠 경우 전송·뷰어 URL과 공개 reverse proxy URL이 HTTPS이고 AIX truststore 검증이 성공한다.
+- [ ] 계정요청 HMAC 비밀키는 32바이트 이상이며 서비스 계정만 읽을 수 있고, 실제 값이 WAR·Git·로그·명령행에 노출되지 않는다.
+- [ ] 계정요청 API의 reverse proxy는 HTTPS, 연계 서버 IP allowlist, 고정 POST/GET 경로만 허용한다.
+- [ ] AIX와 배포시스템 시간이 동기화되고 정상 요청, 새 nonce 멱등 재시도, 동일 nonce·만료 timestamp·잘못된 서명 거절이 확인된다.
 
 Windows 테스트는 AIX의 OpenJ9, 대소문자 구분, 파일 권한과 경로 동작을 대신할 수 없다. 최종 배포 승인은 실제 AIX 7.3 환경에서 위 체크리스트를 모두 통과한 결과로 결정한다.
 

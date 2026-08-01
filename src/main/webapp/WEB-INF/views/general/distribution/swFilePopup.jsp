@@ -107,7 +107,7 @@
 		openFile("OBJECT", "SW", popupRequestNo || null, objectId, fileNo || null, "N");
 	}
 
-	function isDownloadableSwFile(rowdata) {
+	function isAvailableSwFile(rowdata) {
 		if (!rowdata || !rowdata.objectId) {
 			return false;
 		}
@@ -118,6 +118,11 @@
 			return false;
 		}
 		return true;
+	}
+
+	function isDownloadableSwFile(rowdata) {
+		return isAvailableSwFile(rowdata)
+			&& (rowdata.downloadAllowed === true || String(rowdata.downloadAllowed).toLowerCase() === "true");
 	}
 
 	function isSwPdfFile(rowdata, fallbackName) {
@@ -131,7 +136,7 @@
 		if (name === "") {
 			return "";
 		}
-		if (!isDownloadableSwFile(rowdata || {})) {
+		if (!isAvailableSwFile(rowdata || {})) {
 			return escapeAttr(name);
 		}
 		if (!isSwPdfFile(rowdata || {}, name)) {
@@ -201,7 +206,10 @@
 			viewrecords: false,
 			loadonce: true,
 			beforeSelectRow: function (rowId, e) {
-				return $(e.target).closest(".sw-file-link").length === 0;
+				if ($(e.target).closest(".sw-file-link").length > 0) {
+					return false;
+				}
+				return isDownloadableSwFile($grid.jqGrid("getLocalRow", rowId) || {});
 			}
 		});
 
@@ -801,9 +809,11 @@
 						arguments="${mainFileList.size()}" /></span>
 			</div>
 			<div class="right">
+				<c:if test="${mainDownloadAllowed}">
 				<button type="button" class="ui-button ui-corner-all bottomBtn"
 					onclick="downloadSelectedSwFile('gridSwMainFile')"><spring:message
 						code="feature.common.button.download" text="다운로드" /></button>
+				</c:if>
 			</div>
 		</div>
 		<div class="gridContainer">
@@ -819,9 +829,11 @@
 						arguments="${subFileList.size()}" /></span>
 			</div>
 			<div class="right">
+				<c:if test="${subDownloadAllowed}">
 				<button type="button" class="ui-button ui-corner-all bottomBtn"
 					onclick="downloadSelectedSwFile('gridSwSubFile')"><spring:message
 						code="feature.common.button.download" text="다운로드" /></button>
+				</c:if>
 			</div>
 		</div>
 		<div class="gridContainer">

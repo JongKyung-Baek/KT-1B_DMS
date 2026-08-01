@@ -24,7 +24,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
 
-import kr.esob.tdms.commonlogic.securityacl.FileAccessDecisionVO;
 import kr.esob.tdms.commonlogic.securityacl.FileAccessRequest;
 import kr.esob.tdms.commonlogic.securityacl.SecurityAclService;
 import kr.esob.tdms.controller.general.organizationmanage.partner.PartnerDirectoryService;
@@ -87,26 +86,20 @@ class DistributionWorkflowServiceTest {
     }
 
     @Test
-    void catalogExcludesAWholeDocumentWhenAnyBundledFileIsNotViewable() {
+    void catalogUsesTheBulkAclFilteredQueryWithoutWritingFileAccessAudit() {
         DistributionRequestItemSnapshot mainA = snapshot("SW", "OBJ-A", "1");
         DistributionRequestItemSnapshot subA = snapshot("SW_SUB", "OBJ-A", "2");
         DistributionRequestItemSnapshot mainB = snapshot("SW", "OBJ-B", "1");
         when(aclService.requireCurrentUser()).thenReturn(requester);
-        when(dao.selectCatalogItems("TRB000013"))
+        when(dao.selectAccessibleCatalogItems("TRB000013", requester.getUserCd()))
             .thenReturn(Arrays.asList(mainA, subA, mainB));
-        when(aclService.checkAccess(any())).thenAnswer(invocation -> {
-            FileAccessRequest request = invocation.getArgument(0);
-            FileAccessDecisionVO decision = new FileAccessDecisionVO();
-            decision.setAllowed(!("OBJ-A".equals(request.getObjectId())
-                && "SW_SUB".equals(request.getObjectType())));
-            return decision;
-        });
 
         List<DistributionDocumentBundle> result = service.catalog("trb000013");
 
-        assertEquals(1, result.size());
-        assertEquals("OBJ-B", result.get(0).getObjectId());
-        assertEquals(1, result.get(0).getTotalFileCount());
+        assertEquals(2, result.size());
+        assertEquals("OBJ-A", result.get(0).getObjectId());
+        assertEquals(2, result.get(0).getTotalFileCount());
+        verify(aclService, never()).checkAccess(any());
     }
 
     @Test
@@ -227,10 +220,57 @@ class DistributionWorkflowServiceTest {
     }
 
     @Test
+    void approvedDistributionIsNotOpenToUnrelatedUsersBeforeItsStartDate() {
+        DistributionRequestRecord approved = record(31L, "APPROVED", "OWNER-1", "APPROVER-1");
+        LocalDate tomorrow = LocalDate.now(ZoneId.of("Asia/Seoul")).plusDays(1);
+        approved.setDistributionStartDate(tomorrow.toString());
+        approved.setDistributionEndDate(tomorrow.plusDays(7).toString());
+        when(aclService.requireCurrentUser()).thenReturn(requester);
+        when(dao.selectRequest(31L)).thenReturn(approved);
+
+        DistributionWorkflowException failure = assertThrows(
+            DistributionWorkflowException.class, () -> service.detail(31L));
+
+        assertEquals("DISTRIBUTION_REQUEST_ACCESS_DENIED", failure.getCode());
+        verify(dao, never()).selectItems(anyLong());
+    }
+
+    @Test
+    void expiredDraftCannotBypassExpirationByBeingCancelled() {
+        DistributionRequestRecord expired = record(32L, "DRAFT", "USER-1", "APPROVER-1");
+        expired.setDistributionEndDate(LocalDate.now(ZoneId.of("Asia/Seoul")).minusDays(1).toString());
+        when(aclService.requireCurrentUser()).thenReturn(requester);
+        when(dao.selectRequestForUpdate(32L)).thenReturn(expired);
+
+        DistributionWorkflowException failure = assertThrows(
+            DistributionWorkflowException.class, () -> service.cancel(32L));
+
+        assertEquals("DISTRIBUTION_PERIOD_EXPIRED", failure.getCode());
+        verify(dao, never()).markCancelled(anyLong(), any(), any());
+    }
+
+    @Test
+    void expiredPendingRequestCannotBypassExpirationByBeingRejected() {
+        UserVO assignedApprover = user("APPROVER-1", "approver", "RG_012");
+        DistributionRequestRecord expired = record(33L, "PENDING_APPROVAL", "OWNER-1", "APPROVER-1");
+        expired.setDistributionEndDate(LocalDate.now(ZoneId.of("Asia/Seoul")).minusDays(1).toString());
+        when(aclService.requireCurrentUser()).thenReturn(assignedApprover);
+        when(dao.selectRequestForUpdate(33L)).thenReturn(expired);
+        when(dao.selectApprover("APPROVER-1")).thenReturn(approver("APPROVER-1"));
+
+        DistributionWorkflowException failure = assertThrows(
+            DistributionWorkflowException.class,
+            () -> service.reject(33L, new DistributionDecisionRequest()));
+
+        assertEquals("DISTRIBUTION_PERIOD_EXPIRED", failure.getCode());
+        verify(dao, never()).markRejected(anyLong(), any(), any());
+    }
+
+    @Test
     void expirationDelegatesToOneTransactionalDatabaseStatement() {
-        when(dao.expireApprovedRequests()).thenReturn(3);
-        assertEquals(3, service.expireApprovedRequests());
-        verify(dao).expireApprovedRequests();
+        when(dao.expireElapsedRequests()).thenReturn(3);
+        assertEquals(3, service.expireElapsedRequests());
+        verify(dao).expireElapsedRequests();
     }
 
     private DistributionRequestSaveRequest saveRequest(String objectId) {
@@ -256,6 +296,10 @@ class DistributionWorkflowServiceTest {
         item.setOriginalFileName("SW_SUB".equals(objectType) ? "attachment.pdf" : "drawing.pdf");
         item.setFileSize(1234L);
         item.setGradeCd("GENERAL");
+        item.setTreeCd("TRB000013");
+        item.setTreeNm("2D");
+        item.setParentTreeCd("TRB000002");
+        item.setParentTreeNm("Drawing");
         return item;
     }
 

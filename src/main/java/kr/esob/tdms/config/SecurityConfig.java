@@ -4,6 +4,7 @@ import kr.esob.tdms.commonlogic.audit.RequestAuditFilter;
 import kr.esob.tdms.commonlogic.menu.MenuDao;
 import kr.esob.tdms.commonlogic.menu.MenuVO;
 import kr.esob.tdms.commonlogic.viewerintegration.ViewerIntegrationProperties;
+import kr.esob.tdms.controller.general.distribution.accountrequest.DistributionAccountIntegrationProperties;
 import kr.esob.tdms.controller.general.organizationmanage.auditlog.AuditLogSessionListener;
 import kr.esob.tdms.controller.login.*;
 import lombok.AllArgsConstructor;
@@ -104,6 +105,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 				.antMatchers(HttpMethod.POST,
 						ViewerIntegrationProperties.CALLBACK_PATH).permitAll()
 				.antMatchers(ViewerIntegrationProperties.CALLBACK_PATH).denyAll()
+				// Account-request ingress and status lookup are authenticated by
+				// the integration HMAC service rather than a browser session.
+				.antMatchers(HttpMethod.POST,
+						DistributionAccountIntegrationProperties.REQUEST_PATH).permitAll()
+				.antMatchers(HttpMethod.GET,
+						DistributionAccountIntegrationProperties.REQUEST_PATH + "/*").permitAll()
+				.antMatchers(DistributionAccountIntegrationProperties.REQUEST_PATH + "/**").denyAll()
 				.antMatchers(HttpMethod.GET,
 						"/login/loginPage",
 						"/login/duplication",
@@ -124,6 +132,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 				// accounts and are available only through their explicit menu role.
 				.antMatchers("/general/organizationmanage/partner/**")
 				.hasAuthority("ROLE_MENU_230")
+				// Only the system administrator menu role can inspect and decide
+				// distribution-system account requests.
+				.antMatchers("/general/distribution/account-requests/**")
+				.hasAuthority("ROLE_MENU_231")
 				// Logout lifecycle callbacks are used by every authenticated session,
 				// independently of access/audit-history menu permission.
 				.antMatchers(HttpMethod.POST,
@@ -197,9 +209,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 			.invalidateHttpSession(true)
 			.deleteCookies("JSESSIONID");
 		// Browser mutations use the session-backed token rendered by the shared
-		// JSP fragment. Only the exact HMAC-authenticated viewer callback path is
-		// excluded from CSRF because it has no browser session.
-		http.csrf().ignoringAntMatchers(ViewerIntegrationProperties.CALLBACK_PATH);
+		// JSP fragment. Only HMAC-authenticated server-to-server integration paths
+		// are excluded from CSRF because they have no browser session.
+		http.csrf().ignoringAntMatchers(
+				ViewerIntegrationProperties.CALLBACK_PATH,
+				DistributionAccountIntegrationProperties.REQUEST_PATH,
+				DistributionAccountIntegrationProperties.REQUEST_PATH + "/**");
 		http.addFilterBefore(requestAuditFilter, FilterSecurityInterceptor.class);
 
 	}

@@ -43,7 +43,13 @@ public class TransactionConfig {
 	@Bean
 	public Advisor txAdviceAdvisor() {
 		AspectJExpressionPointcut pointcut = new AspectJExpressionPointcut();
-		pointcut.setExpression("execution(* kr.esob.tdms..*.*(..))");
+		// A servlet filter is an HTTP lifecycle boundary, not a business
+		// transaction boundary. If the audit filter joins a controller/service
+		// transaction, a handled validation exception can mark the outer filter
+		// transaction rollback-only and replace the intended 4xx response with an
+		// UnexpectedRollbackException after the response has been committed.
+		pointcut.setExpression("execution(* kr.esob.tdms..*.*(..))"
+				+ " && !within(kr.esob.tdms.commonlogic.audit.RequestAuditFilter)");
 		return new DefaultPointcutAdvisor(pointcut, txAdvice());
 	}
 	

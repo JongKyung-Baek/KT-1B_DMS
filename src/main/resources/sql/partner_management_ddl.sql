@@ -137,8 +137,8 @@ INSERT INTO docs_menu (
     role_cd, menu_icon
 )
 VALUES (
-    'MENU_230', 'MENU_214', '협력업체 관리', 'menu.partnerManagement', '2', 'M',
-    '/general/organizationmanage/partner/**', 6, 'leaf', 'N', 'Y',
+    'MENU_230', 'MENU_071', '협력업체 관리', 'menu.partnerManagement', '2', 'M',
+    '/general/organizationmanage/partner/**', 91, 'leaf', 'N', 'Y',
     '배포 대상 협력업체와 수신 사용자 관리',
     '협력업체, 대표사용자 1명 및 일반 수신 사용자를 등록·수정',
     'ROLE_MENU_230', ''
@@ -192,7 +192,7 @@ BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM docs_menu
          WHERE menu_cd = 'MENU_230'
-           AND parent_menu_cd = 'MENU_214'
+           AND parent_menu_cd = 'MENU_071'
            AND role_cd = 'ROLE_MENU_230'
            AND use_yn = 'Y' AND del_yn = 'N'
     ) THEN

@@ -19,6 +19,8 @@ class TransactionConfigPackageContractTest {
 
         assertTrue(source.contains(
                 "execution(* kr.esob.tdms..*.*(..))"));
+        assertTrue(source.contains(
+                "!within(kr.esob.tdms.commonlogic.audit.RequestAuditFilter)"));
         assertFalse(source.contains("kr.esob.docs"));
     }
 }

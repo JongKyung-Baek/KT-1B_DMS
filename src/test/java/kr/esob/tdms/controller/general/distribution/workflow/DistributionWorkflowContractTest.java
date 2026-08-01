@@ -45,6 +45,16 @@ class DistributionWorkflowContractTest {
         assertTrue(mapper.contains("COALESCE(file_info.org_file_nm, file_info.file_nm, '')"));
         assertTrue(mapper.contains("9223372036854775807::numeric"));
         assertFalse(mapper.toLowerCase().contains("file_path_nm"));
+        assertTrue(mapper.contains("CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul'"));
+        assertFalse(mapper.contains("CURRENT_DATE"));
+        assertTrue(mapper.contains("WITH actor_context AS"));
+        assertTrue(mapper.contains("BOOL_AND("));
+        assertFalse(mapper.contains("LIMIT 500"));
+        assertFalse(mapper.contains("allViewable"));
+        assertTrue(mapper.contains("BTRIM(main_file.processing_status)"));
+        assertTrue(mapper.contains("BTRIM(sub_file.processing_status)"));
+        assertTrue(mapper.contains("status IN ('DRAFT', 'PENDING_APPROVAL', 'APPROVED', 'REJECTED')"));
+        assertTrue(mapper.contains("'parentTreeName', item.parent_tree_nm"));
         String service = read(SERVICE);
         assertFalse(service.contains("RestTemplate"));
         assertFalse(service.contains("HttpClient"));
@@ -63,11 +73,11 @@ class DistributionWorkflowContractTest {
         assertTrue(configuration.hasStatement("sql.DistributionWorkflow.selectRequest"));
         assertTrue(configuration.hasStatement("sql.DistributionWorkflow.selectEvents"));
         assertTrue(configuration.hasStatement("sql.DistributionWorkflow.selectAccessibleApprovedRequests"));
-        assertTrue(configuration.hasStatement("sql.DistributionWorkflow.selectCatalogItems"));
+        assertTrue(configuration.hasStatement("sql.DistributionWorkflow.selectAccessibleCatalogItems"));
         assertTrue(configuration.hasStatement("sql.DistributionWorkflow.resolveDocumentFiles"));
         assertTrue(configuration.hasStatement("sql.DistributionWorkflow.selectRecipients"));
         assertTrue(configuration.hasStatement("sql.DistributionWorkflow.selectApprovers"));
-        assertTrue(configuration.hasStatement("sql.DistributionWorkflow.expireApprovedRequests"));
+        assertTrue(configuration.hasStatement("sql.DistributionWorkflow.expireElapsedRequests"));
         assertTrue(configuration.hasStatement("sql.DistributionWorkflow.insertOutboxHold"));
     }
 
@@ -77,6 +87,9 @@ class DistributionWorkflowContractTest {
         String freshMigration = read(FRESH_MIGRATION);
 
         assertTrue(ddl.contains("CREATE SEQUENCE IF NOT EXISTS"));
+        assertTrue(ddl.contains("\\set ON_ERROR_STOP on"));
+        assertTrue(ddl.contains("BEGIN;"));
+        assertTrue(ddl.contains("COMMIT;"));
         assertTrue(ddl.contains("CREATE TABLE IF NOT EXISTS docs_distribution_request"));
         assertTrue(ddl.contains("CREATE TABLE IF NOT EXISTS docs_distribution_request_item"));
         assertTrue(ddl.contains("CREATE TABLE IF NOT EXISTS docs_distribution_request_recipient"));
@@ -88,13 +101,43 @@ class DistributionWorkflowContractTest {
             assertTrue(ddl.contains("'" + status.name() + "'"));
         }
         assertTrue(ddl.contains("UNIQUE (request_id)"));
-        assertTrue(ddl.contains("distribution_end_date >= CURRENT_DATE"));
+        assertTrue(ddl.contains("distribution_end_date >= (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul')::date"));
+        assertTrue(ddl.contains("distribution_start_date <= (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul')::date"));
+        assertFalse(ddl.contains("CURRENT_DATE"));
         assertTrue(ddl.contains("document_line_no"));
+        assertTrue(ddl.contains("parent_tree_nm"));
         assertTrue(ddl.contains("status IN ('HOLD', 'READY', 'SENDING', 'SENT', 'FAILED', 'DEAD')"));
         assertFalse(ddl.toLowerCase().contains("file_path"));
         assertTrue(freshMigration.contains("\\ir distribution_workflow_ddl.sql"));
         assertTrue(freshMigration.indexOf("\\ir acl_foundation_ddl.sql")
             < freshMigration.indexOf("\\ir distribution_workflow_ddl.sql"));
+    }
+
+    @Test
+    void migrationBackfillsLegacyRequestsBeforeEnforcingCurrentConstraints()
+            throws Exception {
+        String ddl = read(DDL);
+        int placeholder = ddl.indexOf("'TDMS-LEGACY-UNASSIGNED'");
+        int backfillValidation = ddl.indexOf(
+            "$validate_distribution_request_backfill$");
+        int notNullConstraint = ddl.indexOf(
+            "ALTER COLUMN partner_company_id SET NOT NULL");
+
+        assertTrue(placeholder >= 0);
+        assertTrue(backfillValidation > placeholder);
+        assertTrue(notNullConstraint > backfillValidation);
+        assertTrue(ddl.contains("SET status = CASE"));
+        assertTrue(ddl.contains("ELSE 'CANCELLED'"));
+        assertTrue(ddl.contains(
+            "requester.user_cd = request_row.requested_by_user_cd"));
+        assertTrue(ddl.contains("administrator.group_code = 'RG_001'"));
+        assertTrue(ddl.contains(
+            "Cannot backfill legacy distribution approver: docs_user is empty."));
+        assertTrue(ddl.contains(
+            "ALTER COLUMN distribution_start_date SET NOT NULL"));
+        assertTrue(ddl.contains(
+            "ALTER COLUMN distribution_end_date SET NOT NULL"));
+        assertFalse(ddl.contains("expected to clear those drafts"));
     }
 
     @Test

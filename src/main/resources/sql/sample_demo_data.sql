@@ -737,7 +737,10 @@ INSERT INTO docs_history (
     distribution_user,
     approval_user,
     log_type,
-    count
+    count,
+    source_system_cd,
+    source_event_id,
+    source_correlation_id
 )
 SELECT 'CCB',
        document.transmittal_no,
@@ -753,7 +756,10 @@ SELECT 'CCB',
        NULL,
        NULL,
        'VIEWING',
-       1
+       1,
+       'CV',
+       md5(actor.user_cd || ':' || document.object_id)::uuid,
+       'SAMPLE-CV-' || actor.user_cd || '-' || document.object_id
   FROM selected_access selected
   JOIN sample_document document
     ON document.object_id = selected.object_id

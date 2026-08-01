@@ -43,8 +43,12 @@ public class DistributionWorkflowDao extends AbstractDao {
     }
 
     @SuppressWarnings("unchecked")
-    public List<DistributionRequestItemSnapshot> selectCatalogItems(String treeCd) {
-        return listNotUseSession(PREFIX + "selectCatalogItems", treeCd);
+    public List<DistributionRequestItemSnapshot> selectAccessibleCatalogItems(
+            String treeCd, String actorUserCd) {
+        Map<String, Object> param = new HashMap<String, Object>();
+        param.put("treeCd", treeCd);
+        param.put("actorUserCd", actorUserCd);
+        return listNotUseSession(PREFIX + "selectAccessibleCatalogItems", param);
     }
 
     public DistributionRequestRecord selectRequest(long requestId) {
@@ -163,8 +167,9 @@ public class DistributionWorkflowDao extends AbstractDao {
         return count.intValue();
     }
 
-    public int expireApprovedRequests() {
-        return update(PREFIX + "expireApprovedRequests", null);
+    public int expireElapsedRequests() {
+        Number count = (Number) objNotUseSession(PREFIX + "expireElapsedRequests", null);
+        return count.intValue();
     }
 
     private Map<String, Object> stateParam(long requestId, String expectedStatus, UserVO actor) {

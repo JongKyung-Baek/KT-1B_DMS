@@ -743,8 +743,8 @@ INSERT INTO docs_menu (
     role_cd, menu_icon
 )
 VALUES (
-    'MENU_222', 'MENU_214', '보안등급/인가 관리', '', '2', 'M',
-    '/general/system/securityaccess/', 2, 'leaf', 'N', 'Y', '',
+    'MENU_222', 'MENU_071', '보안등급/인가 관리', '', '2', 'M',
+    '/general/system/securityaccess/', 93, 'leaf', 'N', 'Y', '',
     '파일 보안등급과 사용자 인가등급 관리', 'ROLE_MENU_222', ''
 )
 ON CONFLICT (menu_cd) DO UPDATE SET
@@ -1039,8 +1039,15 @@ UPDATE docs_menu
        del_yn = 'N'
  WHERE menu_cd = 'MENU_160';
 
+-- Security-grade and clearance administration belongs to the user-management
+-- domain while retaining its stable URL and role code.
 UPDATE docs_menu
-   SET sort_seq = 5
+   SET parent_menu_cd = 'MENU_071',
+       menu_level = '2',
+       sort_seq = 93,
+       tree_type = 'leaf',
+       use_yn = 'Y',
+       del_yn = 'N'
  WHERE menu_cd = 'MENU_222';
 
 -- Authentication/menu actions and document ACL decisions already share the

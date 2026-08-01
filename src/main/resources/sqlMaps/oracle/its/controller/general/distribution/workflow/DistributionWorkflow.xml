@@ -38,7 +38,8 @@
           WHERE item_count.request_id = request_row.request_id)::integer AS document_count,
         (SELECT COUNT(*) FROM docs_distribution_request_item item_count
           WHERE item_count.request_id = request_row.request_id)::integer AS item_count,
-        GREATEST(request_row.distribution_end_date - CURRENT_DATE, 0)::integer AS remaining_days
+        GREATEST(request_row.distribution_end_date
+            - (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul')::date, 0)::integer AS remaining_days
     </sql>
 
     <!-- PostgreSQL INSERT ... RETURNING is intentionally a select so the generated
@@ -53,7 +54,7 @@
             distribution_start_date, distribution_end_date,
             created_by, updated_by
         ) VALUES (
-            'DREQ-' || TO_CHAR(CURRENT_DATE, 'YYYYMMDD') || '-'
+            'DREQ-' || TO_CHAR((CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul')::date, 'YYYYMMDD') || '-'
                 || LPAD(NEXTVAL('docs_distribution_request_no_seq')::varchar, 8, '0'),
             #{request.title}, #{request.purpose}, 'DRAFT',
             #{actor.userCd}, #{actor.userId}, #{actor.userNm},
@@ -70,11 +71,13 @@
         INSERT INTO docs_distribution_request_item (
             request_id, line_no, document_line_no, file_line_no,
             object_type, object_id, file_no,
-            material_no, material_name, original_file_name, file_size, grade_cd
+            material_no, material_name, original_file_name, file_size, grade_cd,
+            tree_cd, tree_nm, parent_tree_cd, parent_tree_nm
         ) VALUES (
             #{requestId}, #{lineNo}, #{documentLineNo}, #{fileLineNo},
             #{objectType}, #{objectId}, #{fileNo},
-            #{materialNo}, #{materialName}, #{originalFileName}, #{fileSize}, #{gradeCd}
+            #{materialNo}, #{materialName}, #{originalFileName}, #{fileSize}, #{gradeCd},
+            #{treeCd}, #{treeNm}, #{parentTreeCd}, #{parentTreeNm}
         )
     </insert>
 
@@ -194,10 +197,11 @@
                        ELSE 0
                    END AS file_size,
                    0 AS file_kind_order
-              FROM docs_sw info
+             FROM docs_sw info
               JOIN docs_sw_file main_file ON main_file.object_id = info.object_id
              WHERE info.object_id = #{value}
                AND COALESCE(info.deleted_yn, 'N') = 'N'
+               AND UPPER(COALESCE(NULLIF(BTRIM(main_file.processing_status), ''), 'DONE')) = 'DONE'
             UNION ALL
             SELECT 'SW_SUB'::varchar AS object_type,
                    info.object_id,
@@ -213,6 +217,7 @@
              WHERE info.object_id = #{value}
                AND COALESCE(info.deleted_yn, 'N') = 'N'
                AND COALESCE(sub_file.use_yn, 'Y') = 'Y'
+               AND UPPER(COALESCE(NULLIF(BTRIM(sub_file.processing_status), ''), 'DONE')) = 'DONE'
         )
         SELECT document_file.object_type,
                document_file.object_id,
@@ -258,9 +263,33 @@
          ORDER BY document_file.file_kind_order, document_file.file_no
     </select>
 
-    <select id="selectCatalogItems"
+    <select id="selectAccessibleCatalogItems"
             resultType="kr.esob.tdms.controller.general.distribution.workflow.DistributionRequestItemSnapshot">
-        WITH catalog_file AS (
+        <!-- Catalog discovery is not a file-open action. Apply the complete VIEW
+             ACL in one query before LIMIT so dropdown loading neither emits
+             FILE_ACCESS audit rows nor creates an N+1 transaction boundary. -->
+        WITH actor_context AS (
+            SELECT actor.user_cd, actor_grade.grade_level
+              FROM docs_user actor
+              JOIN docs_user_security_clearance actor_clearance
+                ON actor_clearance.user_cd = actor.user_cd
+               AND actor_clearance.valid_from &lt;= CURRENT_TIMESTAMP
+               AND (actor_clearance.valid_to IS NULL
+                    OR actor_clearance.valid_to &gt; CURRENT_TIMESTAMP)
+              JOIN docs_security_grade actor_grade
+                ON actor_grade.grade_cd = actor_clearance.grade_cd
+               AND actor_grade.use_yn = 'Y'
+              JOIN docs_user_action_permission global_permission
+                ON global_permission.user_cd = actor.user_cd
+               AND global_permission.action_cd = 'VIEW'
+               AND global_permission.allow_yn = 'Y'
+             WHERE actor.user_cd = #{actorUserCd}
+               AND actor.use_yn = 'Y'
+               AND actor.del_yn = 'N'
+               AND COALESCE(actor.lock_yn, 'N') != 'Y'
+             ORDER BY actor_grade.grade_level DESC
+             LIMIT 1
+        ), catalog_file AS (
             SELECT 'SW'::varchar AS object_type,
                    info.object_id,
                    main_file.file_no::varchar AS file_no,
@@ -273,11 +302,13 @@
                        THEN LEAST(BTRIM(main_file.file_size::text)::numeric,
                                   9223372036854775807::numeric)::bigint
                        ELSE 0
-                   END AS file_size
+                   END AS file_size,
+                   0 AS file_kind_order
               FROM docs_sw info
               JOIN docs_sw_file main_file ON main_file.object_id = info.object_id
-             WHERE COALESCE(NULLIF(info.tree_cd, ''), NULLIF(info.business_type_cd, '')) = #{value}
+             WHERE COALESCE(NULLIF(info.tree_cd, ''), NULLIF(info.business_type_cd, '')) = #{treeCd}
                AND COALESCE(info.deleted_yn, 'N') = 'N'
+               AND UPPER(COALESCE(NULLIF(BTRIM(main_file.processing_status), ''), 'DONE')) = 'DONE'
             UNION ALL
             SELECT 'SW_SUB'::varchar AS object_type,
                    info.object_id,
@@ -286,24 +317,30 @@
                    COALESCE(info.sw_nm, '') AS material_name,
                    COALESCE(NULLIF(info.tree_cd, ''), NULLIF(info.business_type_cd, '')) AS tree_cd,
                    COALESCE(sub_file.org_file_nm, '') AS original_file_name,
-                   COALESCE(sub_file.file_size, 0)::bigint AS file_size
+                   COALESCE(sub_file.file_size, 0)::bigint AS file_size,
+                   1 AS file_kind_order
               FROM docs_sw info
               JOIN docs_sw_sub_file sub_file ON sub_file.parent_object_id = info.object_id
-             WHERE COALESCE(NULLIF(info.tree_cd, ''), NULLIF(info.business_type_cd, '')) = #{value}
+             WHERE COALESCE(NULLIF(info.tree_cd, ''), NULLIF(info.business_type_cd, '')) = #{treeCd}
                AND COALESCE(info.deleted_yn, 'N') = 'N'
                AND COALESCE(sub_file.use_yn, 'Y') = 'Y'
-        )
-        SELECT catalog_file.*,
+               AND UPPER(COALESCE(NULLIF(BTRIM(sub_file.processing_status), ''), 'DONE')) = 'DONE'
+        ), evaluated_file AS (
+            SELECT catalog_file.*,
                item_tree.tree_nm,
                parent_tree.tree_cd AS parent_tree_cd,
                parent_tree.tree_nm AS parent_tree_nm,
                effective_label.grade_cd,
-               effective_label.grade_nm
+               file_grade.grade_nm,
+               file_grade.grade_level AS file_grade_level,
+               actor_context.grade_level AS actor_grade_level,
+               document_permission.allow_yn AS document_allow_yn
           FROM catalog_file
+          CROSS JOIN actor_context
           LEFT JOIN docs_sw_tree item_tree ON item_tree.tree_cd = catalog_file.tree_cd
           LEFT JOIN docs_sw_tree parent_tree ON parent_tree.tree_cd = item_tree.upper_tree_cd
           LEFT JOIN LATERAL (
-              SELECT label.grade_cd, grade_order.grade_nm
+              SELECT label.grade_cd
                 FROM docs_file_security_label label
                 LEFT JOIN docs_security_grade grade_order
                   ON grade_order.grade_cd = label.grade_cd
@@ -326,11 +363,41 @@
                         END
                LIMIT 1
           ) effective_label ON TRUE
-         ORDER BY catalog_file.material_no, catalog_file.material_name,
-                  catalog_file.object_id,
-                  CASE WHEN catalog_file.object_type = 'SW' THEN 0 ELSE 1 END,
-                  catalog_file.file_no
-         LIMIT 500
+          LEFT JOIN docs_security_grade file_grade
+            ON file_grade.grade_cd = effective_label.grade_cd
+           AND file_grade.use_yn = 'Y'
+          LEFT JOIN docs_object_user_permission document_permission
+            ON document_permission.object_type = 'SW'
+           AND document_permission.object_id = catalog_file.object_id
+           AND document_permission.user_cd = actor_context.user_cd
+           AND document_permission.action_cd = 'VIEW'
+        ), eligible_document AS (
+            SELECT evaluated_file.object_id
+              FROM evaluated_file
+             GROUP BY evaluated_file.object_id
+            HAVING COUNT(*) FILTER (WHERE evaluated_file.object_type = 'SW') = 1
+               AND BOOL_AND(
+                       evaluated_file.grade_cd IS NOT NULL
+                       AND evaluated_file.file_grade_level IS NOT NULL
+                       AND evaluated_file.actor_grade_level &gt;= evaluated_file.file_grade_level
+                       AND evaluated_file.document_allow_yn = 'Y'
+                   )
+             ORDER BY MIN(evaluated_file.material_no),
+                      MIN(evaluated_file.material_name), evaluated_file.object_id
+        )
+        SELECT evaluated_file.object_type, evaluated_file.object_id,
+               evaluated_file.file_no, evaluated_file.material_no,
+               evaluated_file.material_name, evaluated_file.tree_cd,
+               evaluated_file.original_file_name, evaluated_file.file_size,
+               evaluated_file.tree_nm, evaluated_file.parent_tree_cd,
+               evaluated_file.parent_tree_nm, evaluated_file.grade_cd,
+               evaluated_file.grade_nm
+          FROM evaluated_file
+          JOIN eligible_document
+            ON eligible_document.object_id = evaluated_file.object_id
+         ORDER BY evaluated_file.material_no, evaluated_file.material_name,
+                  evaluated_file.object_id, evaluated_file.file_kind_order,
+                  evaluated_file.file_no
     </select>
 
     <select id="selectRequest"
@@ -356,18 +423,10 @@
                request_item.material_no, request_item.material_name,
                request_item.original_file_name, request_item.file_size,
                request_item.grade_cd, grade.grade_nm,
-               COALESCE(NULLIF(document_info.tree_cd, ''),
-                        NULLIF(document_info.business_type_cd, '')) AS tree_cd,
-               item_tree.tree_nm,
-               parent_tree.tree_cd AS parent_tree_cd,
-               parent_tree.tree_nm AS parent_tree_nm,
+               request_item.tree_cd, request_item.tree_nm,
+               request_item.parent_tree_cd, request_item.parent_tree_nm,
                TO_CHAR(request_item.snapshot_at AT TIME ZONE 'Asia/Seoul', 'YYYY-MM-DD HH24:MI:SS') AS snapshot_at
           FROM docs_distribution_request_item request_item
-          LEFT JOIN docs_sw document_info ON document_info.object_id = request_item.object_id
-          LEFT JOIN docs_sw_tree item_tree
-            ON item_tree.tree_cd = COALESCE(NULLIF(document_info.tree_cd, ''),
-                                            NULLIF(document_info.business_type_cd, ''))
-          LEFT JOIN docs_sw_tree parent_tree ON parent_tree.tree_cd = item_tree.upper_tree_cd
           LEFT JOIN docs_security_grade grade ON grade.grade_cd = request_item.grade_cd
          WHERE request_item.request_id = #{value}
          ORDER BY request_item.document_line_no, request_item.file_line_no, request_item.line_no
@@ -408,11 +467,11 @@
         </if>
         <if test="approvalQueue">
            AND request_row.status = 'PENDING_APPROVAL'
-           AND request_row.distribution_end_date >= CURRENT_DATE
+           AND request_row.distribution_end_date >= (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul')::date
         </if>
         <if test="approvedOnly">
            AND request_row.status = 'APPROVED'
-           AND request_row.distribution_end_date >= CURRENT_DATE
+           AND request_row.distribution_end_date >= (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul')::date
         </if>
          ORDER BY request_row.updated_at DESC, request_row.request_id DESC
          LIMIT #{limit} OFFSET #{offset}
@@ -443,7 +502,8 @@
            AND global_permission.action_cd = 'VIEW'
            AND global_permission.allow_yn = 'Y'
          WHERE request_row.status = 'APPROVED'
-           AND request_row.distribution_end_date >= CURRENT_DATE
+           AND request_row.distribution_start_date &lt;= (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul')::date
+           AND request_row.distribution_end_date >= (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul')::date
            AND EXISTS (
                SELECT 1
                  FROM docs_distribution_request_item any_item
@@ -519,6 +579,7 @@
                version_no = version_no + 1
          WHERE request_id = #{requestId}
            AND status = #{expectedStatus}
+           AND distribution_end_date &gt;= (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul')::date
     </update>
 
     <delete id="deleteItems">
@@ -581,7 +642,7 @@
                version_no = version_no + 1
          WHERE request_id = #{requestId}
            AND status = #{expectedStatus}
-           AND distribution_end_date >= CURRENT_DATE
+           AND distribution_end_date >= (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul')::date
     </update>
 
     <update id="markApproved">
@@ -597,7 +658,7 @@
                version_no = version_no + 1
          WHERE request_id = #{requestId}
            AND status = #{expectedStatus}
-           AND distribution_end_date >= CURRENT_DATE
+           AND distribution_end_date >= (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul')::date
     </update>
 
     <update id="markRejected">
@@ -613,6 +674,7 @@
                version_no = version_no + 1
          WHERE request_id = #{requestId}
            AND status = #{expectedStatus}
+           AND distribution_end_date &gt;= (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul')::date
     </update>
 
     <update id="markCancelled">
@@ -623,6 +685,7 @@
                version_no = version_no + 1
          WHERE request_id = #{requestId}
            AND status = #{expectedStatus}
+           AND distribution_end_date &gt;= (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul')::date
     </update>
 
     <insert id="insertEvent">
@@ -705,6 +768,10 @@
                                'originalFileName', item.original_file_name,
                                'fileSize', item.file_size,
                                'gradeCd', item.grade_cd,
+                               'treeCd', item.tree_cd,
+                               'treeName', item.tree_nm,
+                               'parentTreeCd', item.parent_tree_cd,
+                               'parentTreeName', item.parent_tree_nm,
                                'snapshotAt', item.snapshot_at
                            ) ORDER BY item.line_no
                        ) FILTER (WHERE item.item_id IS NOT NULL),
@@ -724,32 +791,42 @@
         SELECT COUNT(*) FROM docs_distribution_outbox WHERE request_id = #{value}
     </select>
 
-    <update id="expireApprovedRequests">
-        WITH expired_request AS (
-            UPDATE docs_distribution_request
+    <select id="expireElapsedRequests" resultType="int">
+        WITH expired_candidate AS (
+            SELECT request_id, status AS from_status
+              FROM docs_distribution_request
+             WHERE status IN ('DRAFT', 'PENDING_APPROVAL', 'APPROVED', 'REJECTED')
+               AND distribution_end_date &lt; (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul')::date
+             FOR UPDATE
+        ), expired_request AS (
+            UPDATE docs_distribution_request request_row
                SET status = 'EXPIRED',
                    updated_by = 'SYSTEM',
                    updated_at = CURRENT_TIMESTAMP,
                    version_no = version_no + 1
-             WHERE status = 'APPROVED'
-               AND distribution_end_date &lt; CURRENT_DATE
-         RETURNING request_id
+              FROM expired_candidate candidate
+             WHERE request_row.request_id = candidate.request_id
+               AND request_row.status = candidate.from_status
+         RETURNING request_row.request_id, candidate.from_status
         ), expired_event AS (
             INSERT INTO docs_distribution_request_event (
                 request_id, from_status, to_status, event_type,
                 actor_user_cd, actor_user_id, actor_user_nm,
                 event_comment, occurred_at
             )
-            SELECT request_id, 'APPROVED', 'EXPIRED', 'EXPIRE',
+            SELECT request_id, from_status, 'EXPIRED', 'EXPIRE',
                    'SYSTEM', 'SYSTEM', 'SYSTEM',
                    'Distribution period expired.', CURRENT_TIMESTAMP
               FROM expired_request
          RETURNING request_id
+        ), dead_outbox AS (
+            UPDATE docs_distribution_outbox outbox
+               SET status = 'DEAD',
+                   last_error = 'Distribution period expired before release.'
+             WHERE outbox.request_id IN (SELECT request_id FROM expired_event)
+               AND outbox.status = 'HOLD'
+         RETURNING outbox_id
         )
-        UPDATE docs_distribution_outbox outbox
-           SET status = 'DEAD',
-               last_error = 'Distribution period expired before release.'
-         WHERE outbox.request_id IN (SELECT request_id FROM expired_event)
-           AND outbox.status = 'HOLD'
-    </update>
+        SELECT COUNT(*)::integer FROM expired_event
+    </select>
 </mapper>

@@ -47,10 +47,11 @@
 	<script src="${pageContext.request.contextPath}/vuexy/assets/vendor/js/helpers.js"></script>
 	<script src="${pageContext.request.contextPath}/vuexy/assets/js/config.js"></script>
 
+	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/jquery-3.4.1.min.js"></script>
+	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/css/jquery-ui-1.12.1.custom/jquery-ui.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/esapi/esapi.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/esapi/ESAPI_Standard_en_US.properties.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/esapi/Base.esapi.properties.js"></script>
-	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/jquery-3.4.1.min.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/i18n/grid.locale-<%=LocaleUtil.getJqGridLanguage(request) %>.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/jqGrid-master/js/jquery.jqGrid.min.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/jstree/dist/jstree.js"></script>
@@ -68,16 +69,12 @@
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common_grid.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common_grid_paging.js?v=20260726.1"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common_tree.js?v=20260728.1"></script>
-	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/css/jquery-ui-1.12.1.custom/jquery-ui.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/prettyCheck/prettyCheckable.min.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/select2-master/dist/js/select2.full.min.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/rsa.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/jsbn.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/prng4.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/rng.js"></script>
-	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/esapi/esapi.js"></script>
-	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/esapi/ESAPI_Standard_en_US.properties.js"></script>
-	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/esapi/Base.esapi.properties.js"></script>
 	<script>
 	var CONTEXT_PATH = "${pageContext.request.contextPath}";
 	</script>

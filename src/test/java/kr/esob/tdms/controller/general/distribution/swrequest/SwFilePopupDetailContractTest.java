@@ -26,6 +26,11 @@ class SwFilePopupDetailContractTest {
 		assertTrue(popup.contains("model.addAttribute(\"documentInfo\""));
 		assertTrue(popup.contains(
 			"documentInfo.put(\"fileCount\", mainFileList.size() + subFileList.size())"));
+		assertTrue(popup.contains("model.addAttribute(\"mainDownloadAllowed\""));
+		assertTrue(popup.contains("model.addAttribute(\"subDownloadAllowed\""));
+		assertTrue(popup.contains("SecurityAclService.DOWNLOAD_ORIGINAL"));
+		assertTrue(popup.contains("markPopupDownloadAccess"));
+		assertTrue(controller.contains("checkAccessForDisplay"));
 	}
 
 	@Test
@@ -95,6 +100,9 @@ class SwFilePopupDetailContractTest {
 		assertFalse(detailPanel.contains("documentInfo.insertDeptNm"));
 		assertTrue(detailPanel.contains("sw-detail-item sw-detail-item--span-2"));
 		assertTrue(page.contains("id=\"swPopupDocumentGrade\""));
+		assertTrue(page.contains("<c:if test=\"${mainDownloadAllowed}\">"));
+		assertTrue(page.contains("<c:if test=\"${subDownloadAllowed}\">"));
+		assertTrue(page.contains("rowdata.downloadAllowed"));
 
 		String[] removedLabels = {
 			"CCB번호",
@@ -165,6 +173,17 @@ class SwFilePopupDetailContractTest {
 		assertFalse(page.contains("approveStatusRows"));
 		assertFalse(page.contains("saveApprovalComment"));
 		assertFalse(page.contains("approval-comment"));
+	}
+
+	@Test
+	void popupRenderingIsDisplayOnlyButDownloadEndpointKeepsFinalAuthorization() throws Exception {
+		String controller = read(
+			"src/main/java/kr/esob/tdms/controller/general/distribution/swrequest/SwRequestController.java");
+
+		assertTrue(controller.contains("checkAccessForDisplay(access)"));
+		assertTrue(controller.contains("private void requireDownloadAccess"));
+		assertTrue(controller.contains("securityAclService.requireAccess(access)"));
+		assertTrue(controller.contains("requireDownloadAccess(fileInfo, \"SW\", objectId, fileNo)"));
 	}
 
 	private String read(String path) throws Exception {

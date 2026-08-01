@@ -2,7 +2,6 @@ package kr.esob.tdms.controller.general.distribution.workflow;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -22,13 +21,11 @@ import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import kr.esob.tdms.commonlogic.securityacl.SecurityAclService;
-import kr.esob.tdms.commonlogic.value.Constant;
 import kr.esob.tdms.controller.general.distribution.swrequest.SwRequestService;
 import kr.esob.tdms.controller.login.UserVO;
 
@@ -40,6 +37,10 @@ class DistributionWorkflowPageContractTest {
         "src/main/resources/static/js/views/general/distribution/workflow/distribution-workflow.js");
     private static final Path STYLE = ROOT.resolve(
         "src/main/resources/static/css/pages/distribution-workflow.css");
+    private static final Path FEATURE_KO = ROOT.resolve(
+        "src/main/webapp/messages/feature.properties");
+    private static final Path FEATURE_EN = ROOT.resolve(
+        "src/main/webapp/messages/feature_en.properties");
 
     private SecurityAclService aclService;
     private SwRequestService swRequestService;
@@ -121,11 +122,8 @@ class DistributionWorkflowPageContractTest {
     }
 
     @Test
-    void approvalPageRequiresTheAdministratorRole() {
-        assertThrows(AccessDeniedException.class,
-            () -> controller.approval(new ExtendedModelMap()));
-
-        actor.setRoleGroup(Constant.GROUP_CD_ADMIN);
+    void approvalPageAcceptsAUserAuthorizedByTheMenuRole() {
+        actor.setRoleGroup("RG_012");
         assertEquals("/general/distribution/workflow/approvalQueue",
             controller.approval(new ExtendedModelMap()));
     }
@@ -138,6 +136,8 @@ class DistributionWorkflowPageContractTest {
         String dialog = read(VIEW_ROOT.resolve("workflowDialog.jspf"));
         String script = read(SCRIPT);
         String style = read(STYLE);
+        String korean = read(FEATURE_KO);
+        String english = read(FEATURE_EN);
 
         assertTrue(myRequests.contains("mode: 'mine'"));
         assertTrue(approvalQueue.contains("mode: 'approval'"));
@@ -162,6 +162,15 @@ class DistributionWorkflowPageContractTest {
         assertTrue(dialog.contains("workflowDistributionEndDate"));
         assertTrue(dialog.contains("feature.distributionWorkflow.column.fileBundle"));
         assertTrue(dialog.contains("data-i18n-key="));
+        assertTrue(script.contains("renderRecipients(recipientSnapshots, selectedRecipientIds, false)"));
+        assertTrue(script.contains("partnerUserRequestSequence"));
+        assertTrue(script.contains("requestSequence === state.partnerUserRequestSequence"));
+        assertTrue(script.contains("name: record.partnerCompanyName}), !editable"));
+        assertTrue(script.contains("userId: record.approverUserId}), !editable"));
+        assertTrue(script.contains("function localizedApiError(body, fallback)"));
+        assertTrue(script.contains("SELF_APPROVAL_NOT_ALLOWED: 'feature.distributionWorkflow.error.selfApproval'"));
+        assertTrue(korean.contains("feature.distributionWorkflow.error.selfApproval=요청자 본인은"));
+        assertTrue(english.contains("feature.distributionWorkflow.error.selfApproval=Requesters cannot"));
 
         assertTrue(script.contains("/general/distribution/workflow/api"));
         assertTrue(script.contains("/approval-queue?"));

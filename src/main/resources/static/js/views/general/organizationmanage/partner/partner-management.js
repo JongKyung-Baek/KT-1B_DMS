@@ -7,6 +7,24 @@
     var config = window.partnerManagementPage || {};
     var apiBase = (config.contextPath || '') + '/general/organizationmanage/partner/api';
     var state = {companies: [], companyId: null, users: [], busy: false, lastFocused: null};
+    var apiErrorMessageKeys = {
+        PARTNER_COMPANY_NOT_FOUND: 'feature.partner.error.notFound',
+        DUPLICATE_PARTNER_BUSINESS_NO: 'feature.partner.error.duplicateBusinessNo',
+        DUPLICATE_PARTNER_USER: 'feature.partner.error.duplicateUser',
+        DUPLICATE_PARTNER_USER_EMAIL: 'feature.partner.error.duplicateUserEmail',
+        ONE_REPRESENTATIVE_REQUIRED: 'feature.partner.error.oneRepresentative',
+        INACTIVE_REPRESENTATIVE: 'feature.partner.error.inactiveRepresentative',
+        INVALID_PARTNER_EMAIL: 'feature.partner.error.invalidEmail',
+        PARTNER_COMPANY_REQUIRED: 'feature.partner.error.companyRequired',
+        PARTNER_USERS_REQUIRED: 'feature.partner.error.usersRequired',
+        PARTNER_CONCURRENT_CHANGE: 'feature.partner.error.concurrentChange',
+        PARTNER_SEARCH_TOO_LONG: 'feature.partner.error.searchTooLong',
+        INVALID_PARTNER_FIELD: 'feature.partner.error.invalidField',
+        INVALID_PARTNER_FLAG: 'feature.partner.error.invalidField',
+        INVALID_PARTNER_USER: 'feature.partner.error.invalidUser',
+        INVALID_PARTNER_USER_ID: 'feature.partner.error.invalidUser',
+        INVALID_PARTNER_REQUEST: 'feature.partner.message.failed'
+    };
 
     function el(id) { return document.getElementById(id); }
     function t(key, fallback) {
@@ -28,6 +46,10 @@
         target.className = 'pm-alert' + (type ? ' pm-alert--' + type : '');
         target.textContent = message || '';
     }
+    function localizedApiError(body, fallback) {
+        var key = body && body.code ? apiErrorMessageKeys[body.code] : '';
+        return key ? t(key, fallback) : (body && body.message ? body.message : fallback);
+    }
     function request(path, options) {
         var requestOptions = options || {};
         var headers = requestOptions.headers || {};
@@ -42,8 +64,8 @@
                     try { body = JSON.parse(raw); } catch (ignore) { body = null; }
                 }
                 if (!response.ok) {
-                    throw new Error(body && body.message ? body.message
-                        : t('feature.partner.message.failed', '요청을 처리하지 못했습니다.'));
+                    var fallback = t('feature.partner.message.failed', '요청을 처리하지 못했습니다.');
+                    throw new Error(localizedApiError(body, fallback));
                 }
                 return body;
             });

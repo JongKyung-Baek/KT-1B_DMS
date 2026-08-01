@@ -33,9 +33,20 @@ public class MenuDao extends AbstractDao {
 	 */
 	@SuppressWarnings("unchecked")
 	public List<TreeVO> selectTree() {
+		return selectTree(false);
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<TreeVO> selectAdminTree() {
+		return selectTree(true);
+	}
+
+	@SuppressWarnings("unchecked")
+	private List<TreeVO> selectTree(boolean includeInactive) {
 		Map<String, Object> param = new HashMap<>();
 		param.put("rootText", menuMessage.msg("label.allMenus"));
 		param.put("sessionLang", sessionValue.getSessionLang());
+		param.put("includeInactive", includeInactive);
 
 		return list(prefix + "selectTree", param);
 	}

@@ -4,6 +4,10 @@
 -- external HTTP integration. An approval produces one immutable HOLD outbox
 -- snapshot for a later, separately authorized interface phase.
 
+\set ON_ERROR_STOP on
+
+BEGIN;
+
 CREATE SEQUENCE IF NOT EXISTS docs_distribution_request_id_seq;
 CREATE SEQUENCE IF NOT EXISTS docs_distribution_request_no_seq;
 CREATE SEQUENCE IF NOT EXISTS docs_distribution_request_item_id_seq;
@@ -29,8 +33,10 @@ CREATE TABLE IF NOT EXISTS docs_distribution_request (
     approver_user_cd        varchar(64) NOT NULL,
     approver_user_id        varchar(64),
     approver_user_nm        varchar(200) NOT NULL,
-    distribution_start_date date NOT NULL DEFAULT CURRENT_DATE,
-    distribution_end_date   date NOT NULL DEFAULT (CURRENT_DATE + 7),
+    distribution_start_date date NOT NULL
+        DEFAULT ((CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul')::date),
+    distribution_end_date   date NOT NULL
+        DEFAULT (((CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul')::date) + 7),
     submitted_at            timestamptz,
     decided_at              timestamptz,
     decided_by_user_cd      varchar(64),
@@ -56,8 +62,9 @@ CREATE TABLE IF NOT EXISTS docs_distribution_request (
 );
 
 -- Keep the migration repeatable for development databases that already have
--- the initial workflow tables. New writes are validated by the service while
--- legacy rows may remain nullable until the database is recreated.
+-- the initial workflow tables. Columns are added nullable first so legacy rows
+-- can be normalized before the current NOT NULL and foreign-key contract is
+-- enforced.
 ALTER TABLE docs_distribution_request
     ADD COLUMN IF NOT EXISTS partner_company_id bigint,
     ADD COLUMN IF NOT EXISTS partner_company_code varchar(40),
@@ -65,18 +72,265 @@ ALTER TABLE docs_distribution_request
     ADD COLUMN IF NOT EXISTS approver_user_cd varchar(64),
     ADD COLUMN IF NOT EXISTS approver_user_id varchar(64),
     ADD COLUMN IF NOT EXISTS approver_user_nm varchar(200),
-    ADD COLUMN IF NOT EXISTS distribution_start_date date NOT NULL DEFAULT CURRENT_DATE,
-    ADD COLUMN IF NOT EXISTS distribution_end_date date NOT NULL DEFAULT (CURRENT_DATE + 7);
+    ADD COLUMN IF NOT EXISTS distribution_start_date date
+        DEFAULT ((CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul')::date),
+    ADD COLUMN IF NOT EXISTS distribution_end_date date
+        DEFAULT (((CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul')::date) + 7);
 
--- Initial MVP requests did not have a destination. Development databases are
--- expected to clear those drafts before this migration; failing here prevents
--- destination-less rows from silently bypassing the new approval contract.
+-- Keep the partner allocator ahead of existing identifiers before reserving an
+-- inactive destination for legacy requests whose original destination was not
+-- captured by the initial MVP schema.
+SELECT SETVAL(
+    'docs_partner_company_id_seq',
+    GREATEST(sequence_state.last_value, existing_company.max_value, 1),
+    sequence_state.is_called
+        OR existing_company.max_value >= sequence_state.last_value
+)
+  FROM docs_partner_company_id_seq sequence_state
+ CROSS JOIN LATERAL (
+       SELECT COALESCE(MAX(partner_company_id), 0) AS max_value
+         FROM docs_partner_company
+ ) existing_company;
+
+INSERT INTO docs_partner_company (
+    partner_company_id, company_code, company_name, use_yn, del_yn,
+    created_by, created_at, updated_by, updated_at
+)
+SELECT nextval('docs_partner_company_id_seq'),
+       'TDMS-LEGACY-UNASSIGNED',
+       'Legacy request - destination unassigned',
+       'N', 'Y', 'SYSTEM', CURRENT_TIMESTAMP, 'SYSTEM', CURRENT_TIMESTAMP
+ WHERE EXISTS (
+       SELECT 1
+         FROM docs_distribution_request request_row
+         LEFT JOIN docs_partner_company company
+           ON company.partner_company_id = request_row.partner_company_id
+        WHERE company.partner_company_id IS NULL
+           OR COALESCE(BTRIM(company.company_code), '') = ''
+           OR COALESCE(BTRIM(company.company_name), '') = ''
+ )
+ON CONFLICT (company_code) DO UPDATE SET
+    company_name = EXCLUDED.company_name,
+    use_yn = 'N',
+    del_yn = 'Y',
+    updated_by = 'SYSTEM',
+    updated_at = CURRENT_TIMESTAMP;
+
+-- Any row that needs a synthetic destination, fallback approver, or repaired
+-- period is made terminal before backfill. This preserves the historical row
+-- without allowing an incomplete legacy approval to enter a future sender.
+UPDATE docs_distribution_request request_row
+   SET status = CASE
+           WHEN request_row.status IN ('REJECTED', 'CANCELLED', 'EXPIRED')
+               THEN request_row.status
+           ELSE 'CANCELLED'
+       END,
+       updated_by = 'SYSTEM',
+       updated_at = CURRENT_TIMESTAMP
+ WHERE request_row.partner_company_id IS NULL
+    OR NOT EXISTS (
+       SELECT 1
+         FROM docs_partner_company company
+        WHERE company.partner_company_id = request_row.partner_company_id
+          AND COALESCE(BTRIM(company.company_code), '') <> ''
+          AND COALESCE(BTRIM(company.company_name), '') <> ''
+    )
+    OR request_row.approver_user_cd IS NULL
+    OR NOT EXISTS (
+       SELECT 1
+         FROM docs_user approver
+        WHERE approver.user_cd = request_row.approver_user_cd
+    )
+    OR request_row.distribution_start_date IS NULL
+    OR request_row.distribution_end_date IS NULL
+    OR request_row.distribution_end_date < request_row.distribution_start_date;
+
+UPDATE docs_distribution_request request_row
+   SET partner_company_code = company.company_code,
+       partner_company_name = company.company_name
+  FROM docs_partner_company company
+ WHERE company.partner_company_id = request_row.partner_company_id
+   AND (
+       COALESCE(BTRIM(request_row.partner_company_code), '') = ''
+       OR COALESCE(BTRIM(request_row.partner_company_name), '') = ''
+   );
+
+UPDATE docs_distribution_request request_row
+   SET partner_company_id = company.partner_company_id,
+       partner_company_code = company.company_code,
+       partner_company_name = company.company_name
+  FROM docs_partner_company company
+ WHERE company.company_code = 'TDMS-LEGACY-UNASSIGNED'
+   AND (
+       request_row.partner_company_id IS NULL
+       OR NOT EXISTS (
+          SELECT 1
+            FROM docs_partner_company current_company
+           WHERE current_company.partner_company_id = request_row.partner_company_id
+             AND COALESCE(BTRIM(current_company.company_code), '') <> ''
+             AND COALESCE(BTRIM(current_company.company_name), '') <> ''
+       )
+   );
+
+-- Prefer the original requester as the legacy approver when that internal user
+-- still exists. No approval action is implied because affected live requests
+-- were made terminal above.
+UPDATE docs_distribution_request request_row
+   SET approver_user_cd = requester.user_cd,
+       approver_user_id = requester.user_id,
+       approver_user_nm = COALESCE(
+           NULLIF(BTRIM(requester.user_nm), ''),
+           NULLIF(BTRIM(requester.user_id), ''),
+           requester.user_cd
+       )
+  FROM docs_user requester
+ WHERE requester.user_cd = request_row.requested_by_user_cd
+   AND (
+       request_row.approver_user_cd IS NULL
+       OR NOT EXISTS (
+          SELECT 1
+            FROM docs_user current_approver
+           WHERE current_approver.user_cd = request_row.approver_user_cd
+       )
+   );
+
+DO $backfill_distribution_approver$
+DECLARE
+    fallback_user_cd docs_user.user_cd%TYPE;
+    fallback_user_id docs_user.user_id%TYPE;
+    fallback_user_nm docs_user.user_nm%TYPE;
+BEGIN
+    IF EXISTS (
+        SELECT 1
+          FROM docs_distribution_request request_row
+         WHERE request_row.approver_user_cd IS NULL
+            OR NOT EXISTS (
+               SELECT 1
+                 FROM docs_user approver
+                WHERE approver.user_cd = request_row.approver_user_cd
+            )
+    ) THEN
+        SELECT candidate.user_cd,
+               candidate.user_id,
+               COALESCE(
+                   NULLIF(BTRIM(candidate.user_nm), ''),
+                   NULLIF(BTRIM(candidate.user_id), ''),
+                   candidate.user_cd
+               )
+          INTO fallback_user_cd, fallback_user_id, fallback_user_nm
+          FROM docs_user candidate
+          LEFT JOIN docs_role_group_member administrator
+            ON administrator.member_cd = candidate.user_cd
+           AND administrator.group_type = 'USER'
+           AND administrator.group_code = 'RG_001'
+         ORDER BY CASE WHEN administrator.member_cd IS NOT NULL THEN 0 ELSE 1 END,
+                  CASE
+                      WHEN candidate.use_yn = 'Y' AND candidate.del_yn = 'N'
+                          THEN 0
+                      ELSE 1
+                  END,
+                  candidate.user_cd
+         LIMIT 1;
+
+        IF fallback_user_cd IS NULL THEN
+            RAISE EXCEPTION
+                'Cannot backfill legacy distribution approver: docs_user is empty.';
+        END IF;
+
+        UPDATE docs_distribution_request request_row
+           SET approver_user_cd = fallback_user_cd,
+               approver_user_id = fallback_user_id,
+               approver_user_nm = fallback_user_nm
+         WHERE request_row.approver_user_cd IS NULL
+            OR NOT EXISTS (
+               SELECT 1
+                 FROM docs_user approver
+                WHERE approver.user_cd = request_row.approver_user_cd
+            );
+    END IF;
+END
+$backfill_distribution_approver$;
+
+UPDATE docs_distribution_request request_row
+   SET approver_user_id = COALESCE(
+           NULLIF(BTRIM(request_row.approver_user_id), ''),
+           approver.user_id
+       ),
+       approver_user_nm = COALESCE(
+           NULLIF(BTRIM(request_row.approver_user_nm), ''),
+           NULLIF(BTRIM(approver.user_nm), ''),
+           NULLIF(BTRIM(approver.user_id), ''),
+           approver.user_cd
+       )
+  FROM docs_user approver
+ WHERE approver.user_cd = request_row.approver_user_cd
+   AND (
+       COALESCE(BTRIM(request_row.approver_user_nm), '') = ''
+       OR COALESCE(BTRIM(request_row.approver_user_id), '') = ''
+   );
+
+WITH normalized_period AS (
+    SELECT request_id,
+           COALESCE(
+               distribution_start_date,
+               (COALESCE(created_at, CURRENT_TIMESTAMP)
+                   AT TIME ZONE 'Asia/Seoul')::date
+           ) AS start_date,
+           distribution_end_date
+      FROM docs_distribution_request
+)
+UPDATE docs_distribution_request request_row
+   SET distribution_start_date = period.start_date,
+       distribution_end_date = CASE
+           WHEN period.distribution_end_date IS NULL
+             OR period.distribution_end_date < period.start_date
+               THEN period.start_date + 7
+           ELSE period.distribution_end_date
+       END
+  FROM normalized_period period
+ WHERE period.request_id = request_row.request_id
+   AND (
+       request_row.distribution_start_date IS NULL
+       OR request_row.distribution_end_date IS NULL
+       OR request_row.distribution_end_date < period.start_date
+   );
+
+DO $validate_distribution_request_backfill$
+BEGIN
+    IF EXISTS (
+        SELECT 1
+          FROM docs_distribution_request request_row
+          LEFT JOIN docs_partner_company company
+            ON company.partner_company_id = request_row.partner_company_id
+          LEFT JOIN docs_user approver
+            ON approver.user_cd = request_row.approver_user_cd
+         WHERE company.partner_company_id IS NULL
+            OR approver.user_cd IS NULL
+            OR COALESCE(BTRIM(request_row.partner_company_code), '') = ''
+            OR COALESCE(BTRIM(request_row.partner_company_name), '') = ''
+            OR COALESCE(BTRIM(request_row.approver_user_nm), '') = ''
+            OR request_row.distribution_start_date IS NULL
+            OR request_row.distribution_end_date IS NULL
+            OR request_row.distribution_end_date < request_row.distribution_start_date
+    ) THEN
+        RAISE EXCEPTION
+            'Legacy distribution request backfill did not satisfy the current contract.';
+    END IF;
+END
+$validate_distribution_request_backfill$;
+
 ALTER TABLE docs_distribution_request
     ALTER COLUMN partner_company_id SET NOT NULL,
     ALTER COLUMN partner_company_code SET NOT NULL,
     ALTER COLUMN partner_company_name SET NOT NULL,
     ALTER COLUMN approver_user_cd SET NOT NULL,
-    ALTER COLUMN approver_user_nm SET NOT NULL;
+    ALTER COLUMN approver_user_nm SET NOT NULL,
+    ALTER COLUMN distribution_start_date SET DEFAULT
+        ((CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul')::date),
+    ALTER COLUMN distribution_start_date SET NOT NULL,
+    ALTER COLUMN distribution_end_date SET DEFAULT
+        (((CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul')::date) + 7),
+    ALTER COLUMN distribution_end_date SET NOT NULL;
 
 ALTER TABLE docs_distribution_request
     DROP CONSTRAINT IF EXISTS fk_docs_distribution_partner_company,
@@ -118,6 +372,10 @@ CREATE TABLE IF NOT EXISTS docs_distribution_request_item (
     original_file_name      varchar(500) NOT NULL,
     file_size               bigint NOT NULL DEFAULT 0,
     grade_cd                varchar(50) NOT NULL,
+    tree_cd                 varchar(50) NOT NULL,
+    tree_nm                 varchar(500) NOT NULL,
+    parent_tree_cd          varchar(50) NOT NULL,
+    parent_tree_nm          varchar(500) NOT NULL,
     snapshot_at             timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_docs_distribution_item_request FOREIGN KEY (request_id)
         REFERENCES docs_distribution_request (request_id) ON DELETE CASCADE,
@@ -133,7 +391,11 @@ CREATE TABLE IF NOT EXISTS docs_distribution_request_item (
 
 ALTER TABLE docs_distribution_request_item
     ADD COLUMN IF NOT EXISTS document_line_no integer NOT NULL DEFAULT 1,
-    ADD COLUMN IF NOT EXISTS file_line_no integer NOT NULL DEFAULT 1;
+    ADD COLUMN IF NOT EXISTS file_line_no integer NOT NULL DEFAULT 1,
+    ADD COLUMN IF NOT EXISTS tree_cd varchar(50) NOT NULL DEFAULT '',
+    ADD COLUMN IF NOT EXISTS tree_nm varchar(500) NOT NULL DEFAULT '',
+    ADD COLUMN IF NOT EXISTS parent_tree_cd varchar(50) NOT NULL DEFAULT '',
+    ADD COLUMN IF NOT EXISTS parent_tree_nm varchar(500) NOT NULL DEFAULT '';
 
 ALTER SEQUENCE docs_distribution_request_item_id_seq
     OWNED BY docs_distribution_request_item.item_id;
@@ -291,7 +553,8 @@ SELECT request_row.request_id,
   JOIN docs_distribution_request_item item
     ON item.request_id = request_row.request_id
  WHERE request_row.status = 'APPROVED'
-   AND request_row.distribution_end_date >= CURRENT_DATE
+   AND request_row.distribution_start_date <= (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul')::date
+   AND request_row.distribution_end_date >= (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul')::date
  GROUP BY request_row.request_id;
 
 COMMENT ON TABLE docs_distribution_request IS
@@ -304,3 +567,5 @@ COMMENT ON TABLE docs_distribution_outbox IS
     'Approved request snapshots held for a future external distribution interface';
 COMMENT ON COLUMN docs_distribution_outbox.status IS
     'MVP creates HOLD only; no sender is enabled in this project phase';
+
+COMMIT;

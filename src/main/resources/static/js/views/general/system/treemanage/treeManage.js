@@ -17,6 +17,27 @@ function treeManageMessage(key, fallback) {
     });
 }
 
+function escapeTreeManageHtml(value) {
+    return String(value === undefined || value === null ? '' : value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function updateTreeManageListCount(targetId, count) {
+    var countTarget = {
+        function1List: 'function1Count',
+        function2List: 'function2Count',
+        docTypeList: 'docTypeCount'
+    }[targetId];
+    if (!countTarget) return;
+    $('#' + countTarget).text(
+        Number(count || 0) + treeManageMessage('feature.common.countSuffix', '건')
+    );
+}
+
 $(function () {
     applyModeUi();
     loadFunction1();
@@ -46,7 +67,7 @@ function applyModeUi() {
 
     if (currentManageType === 'LEVEL') {
         $('.system-manage-page').addClass('level-mode');
-        $('#treeMainTitle').text('Level');
+        $('#treeMainTitle').text(treeManageMessage('feature.treeManage.level.title', 'Level'));
 /*         $('#treeCol1Title').text('상위 Level');
         $('#treeCol2Title').text('하위 Level'); */
         $('#levelActions').css('visibility', 'visible');
@@ -105,13 +126,20 @@ function renderDocTypeList() {
 function renderList(targetId, items, selectedId, clickFn) {
     var html = [];
     $.each(items, function () {
-        var active = this.id === selectedId ? ' active' : '';
-        var label = this.text || this.id;
-        html.push('<div class="list-item' + active + '" data-id="' + this.id + '">' + label + '</div>');
+        var itemId = String(this.id === undefined || this.id === null ? '' : this.id);
+        var selected = String(selectedId === undefined || selectedId === null ? '' : selectedId) === itemId;
+        var active = selected ? ' active' : '';
+        var label = this.text || itemId;
+        html.push('<button type="button" class="list-item' + active + '" role="option"'
+            + ' aria-selected="' + (selected ? 'true' : 'false') + '" data-id="'
+            + escapeTreeManageHtml(itemId) + '"><span class="tm-list-label">'
+            + escapeTreeManageHtml(label) + '</span><i class="icon-base ti tabler-chevron-right tm-list-chevron"'
+            + ' aria-hidden="true"></i></button>');
     });
     $('#' + targetId).html(html.join(''));
+    updateTreeManageListCount(targetId, items.length);
     $('#' + targetId + ' .list-item').on('click', function () {
-        clickFn($(this).data('id'));
+        clickFn($(this).attr('data-id'));
     });
 }
 
@@ -184,12 +212,12 @@ function openNodeDialog(options) {
     var codePlaceholder = options.codePlaceholder || '';
     var headerText = options.title || treeManageMessage('feature.treeManage.dialog.input', '입력');
     var html = [];
-    html.push('<div class="tree-node-dialog" style="padding:14px 10px 8px 10px;">');
-    html.push('<div style="font-size:18px;font-weight:700;line-height:1.2;margin:0 0 14px 2px;color:#2f3542;">' + escHtml(headerText) + '</div>');
+    html.push('<div class="tree-node-dialog">');
+    html.push('<div class="tree-node-dialog__heading">' + escHtml(headerText) + '</div>');
     function addRow(label, inputId, value, extraAttr, marginBottom, placeholder) {
-        html.push('<div style="display:flex;align-items:center;gap:12px;' + (marginBottom ? 'margin-bottom:16px;' : '') + '">');
-        html.push('<label style="display:inline-block;width:56px;flex:0 0 56px;">' + escHtml(label) + '</label>');
-        html.push('<input type="text" id="' + inputId + '" class="ui-widget-content ui-corner-all" style="width:100%;height:34px;padding:6px 10px;box-sizing:border-box;" placeholder="' + escAttr(placeholder || '') + '" value="' + escAttr(value) + '" ' + (extraAttr || '') + '>');
+        html.push('<div class="tree-node-dialog__row' + (marginBottom ? ' tree-node-dialog__row--spaced' : '') + '">');
+        html.push('<label for="' + inputId + '">' + escHtml(label) + '</label>');
+        html.push('<input type="text" id="' + inputId + '" class="ui-widget-content ui-corner-all" placeholder="' + escAttr(placeholder || '') + '" value="' + escAttr(value) + '" ' + (extraAttr || '') + '>');
         html.push('</div>');
     }
 
@@ -213,6 +241,7 @@ function openNodeDialog(options) {
         title: options.title || treeManageMessage('feature.treeManage.dialog.input', '입력'),
         modal: true,
         appendTo: 'body',
+        dialogClass: 'tree-manage-dialog',
         width: 520,
         minHeight: 0,
         height: 'auto',
@@ -223,15 +252,6 @@ function openNodeDialog(options) {
             var $widget = $dlg.dialog('widget');
             $widget.css('max-width', '92vw');
             $dlg.css('overflow', 'visible');
-            $widget.find('.ui-dialog-content').css('padding', '0');
-            $widget.find('.ui-dialog-buttonpane').css({
-                padding: '14px 18px 14px 18px',
-                marginTop: '16px'
-            });
-            $widget.find('.ui-dialog-buttonset button').css({
-                minWidth: '56px',
-                height: '36px'
-            });
             setTimeout(function () {
                 if (includeCode) $('#treeNodeCodeInput').focus();
                 else $('#treeNodeNameInput').focus();

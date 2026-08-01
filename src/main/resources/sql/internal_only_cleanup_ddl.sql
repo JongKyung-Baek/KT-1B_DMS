@@ -69,7 +69,8 @@ WITH RECURSIVE removed_menu (
            menu.tree_type = 'root'
            AND menu.menu_type IN ('T', 'M', 'P')
            AND menu.menu_cd NOT IN (
-               'MENU_013', 'MENU_071', 'MENU_214', 'MENU_223'
+               'MENU_013', 'MENU_071', 'MENU_214', 'MENU_223',
+               'MENU_229'
            )
         )
         OR (
@@ -344,9 +345,10 @@ BEGIN
            AND del_yn = 'N'
            AND parent_menu_cd = 'ROOT'
     ) IS DISTINCT FROM ARRAY[
-        'MENU_013', 'MENU_071', 'MENU_214', 'MENU_223'
+        'MENU_013', 'MENU_071', 'MENU_214', 'MENU_223',
+        'MENU_229'
     ]::varchar[] THEN
-        RAISE EXCEPTION 'The active menu roots do not match the four current navigation roots.';
+        RAISE EXCEPTION 'The active menu roots do not match the five current navigation roots.';
     END IF;
 
     IF EXISTS (

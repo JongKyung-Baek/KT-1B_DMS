@@ -81,6 +81,11 @@ public class SecurityAclService {
         }
     }
 
+    public boolean hasCurrentUserActionPermission(String actionCd) {
+        UserVO actor = requireCurrentUser();
+        return dao.hasActionPermission(actor.getUserCd(), normalizeAction(actionCd));
+    }
+
     public List<SecurityGradeVO> selectGradesForManagement() {
         requireManageAcl();
         return dao.selectGrades();
@@ -323,19 +328,24 @@ public class SecurityAclService {
     public FileAccessDecisionVO checkAccess(FileAccessRequest request) {
         UserVO actor = requireCurrentUser();
         FileAccessRequest normalized = normalizeAccessRequest(request, actor.getUserCd());
-        FileAccessDecisionVO decision = dao.selectDecision(normalized);
-        if (decision == null) {
-            decision = denied(normalized, "ACL_DECISION_ERROR");
-        }
-        decision.setActorUserCd(actor.getUserCd());
-        decision.setActionCd(normalized.getActionCd());
-        decision.setObjectType(normalized.getObjectType());
-        decision.setObjectId(normalized.getObjectId());
-        decision.setFileNo(normalized.getFileNo());
+        FileAccessDecisionVO decision = resolveDecision(normalized, actor.getUserCd());
         recordEvent(actor, "FILE_ACCESS", normalized.getActionCd(), decision.isAllowed() ? "ALLOW" : "DENY",
             decision.getReasonCd(), null, normalized.getObjectType(), normalized.getObjectId(), normalized.getFileNo(),
             normalized.getRequestNo(), decision.getFileGradeCd(), "{}");
         return decision;
+    }
+
+    /**
+     * Resolves an ACL decision only for conditional screen rendering.
+     *
+     * <p>This method deliberately does not write a file-access audit event. It must
+     * never replace {@link #requireAccess(FileAccessRequest)} at a download, view,
+     * print, or other protected operation boundary.</p>
+     */
+    public FileAccessDecisionVO checkAccessForDisplay(FileAccessRequest request) {
+        UserVO actor = requireCurrentUser();
+        FileAccessRequest normalized = normalizeAccessRequest(request, actor.getUserCd());
+        return resolveDecision(normalized, actor.getUserCd());
     }
 
     public FileAccessDecisionVO requireAccess(FileAccessRequest request) {
@@ -345,6 +355,19 @@ public class SecurityAclService {
                 "feature.acl.error.accessDenied", "자료 접근이 거부되었습니다: {0}",
                 decision.getReasonCd()));
         }
+        return decision;
+    }
+
+    private FileAccessDecisionVO resolveDecision(FileAccessRequest normalized, String actorUserCd) {
+        FileAccessDecisionVO decision = dao.selectDecision(normalized);
+        if (decision == null) {
+            decision = denied(normalized, "ACL_DECISION_ERROR");
+        }
+        decision.setActorUserCd(actorUserCd);
+        decision.setActionCd(normalized.getActionCd());
+        decision.setObjectType(normalized.getObjectType());
+        decision.setObjectId(normalized.getObjectId());
+        decision.setFileNo(normalized.getFileNo());
         return decision;
     }
 

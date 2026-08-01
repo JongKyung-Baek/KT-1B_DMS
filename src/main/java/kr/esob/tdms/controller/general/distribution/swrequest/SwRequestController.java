@@ -272,6 +272,12 @@ public class SwRequestController extends AbstractController {
 				service.selectMainFileInfo(resolvedObjectId), "SW", false);
 		List<Map<String, Object>> subFileList = filterAccessiblePopupRows(
 				service.selectSubFileInfo(resolvedObjectId), "SW_SUB", true);
+		boolean globallyDownloadable = securityAclService.hasCurrentUserActionPermission(
+				SecurityAclService.DOWNLOAD_ORIGINAL);
+		boolean mainDownloadAllowed = markPopupDownloadAccess(
+				mainFileList, "SW", false, globallyDownloadable);
+		boolean subDownloadAllowed = markPopupDownloadAccess(
+				subFileList, "SW_SUB", true, globallyDownloadable);
 		Map<String, Object> documentInfo = new HashMap<>(service.selectSwDetailInfo(resolvedObjectId));
 		documentInfo.put("fileCount", mainFileList.size() + subFileList.size());
 
@@ -282,6 +288,8 @@ public class SwRequestController extends AbstractController {
 		model.addAttribute("subFileList", subFileList);
 		model.addAttribute("mainFileJson", JSONArray.fromObject(mainFileList));
 		model.addAttribute("subFileJson", JSONArray.fromObject(subFileList));
+		model.addAttribute("mainDownloadAllowed", mainDownloadAllowed);
+		model.addAttribute("subDownloadAllowed", subDownloadAllowed);
 		return "general/distribution/swFilePopup";
 	}
 
@@ -315,11 +323,51 @@ public class SwRequestController extends AbstractController {
 			access.setObjectType(objectType);
 			access.setObjectId(objectId);
 			access.setFileNo(mapValue(row, "fileNo", "*"));
-			if (securityAclService.checkAccess(access).isAllowed()) {
+			if (securityAclService.checkAccessForDisplay(access).isAllowed()) {
 				safeRows.add(withoutServerPath(row));
 			}
 		}
 		return safeRows;
+	}
+
+	private boolean markPopupDownloadAccess(List<Map<String, Object>> rows,
+			String objectType, boolean subFile, boolean globallyDownloadable) {
+		boolean anyAllowed = false;
+		if (rows == null) return false;
+		for (Map<String, Object> row : rows) {
+			boolean allowed = globallyDownloadable && isAvailablePopupFile(row)
+					&& hasPopupDownloadAccess(row, objectType, subFile);
+			row.put("downloadAllowed", allowed);
+			anyAllowed = anyAllowed || allowed;
+		}
+		return anyAllowed;
+	}
+
+	private boolean hasPopupDownloadAccess(Map<String, Object> row,
+			String objectType, boolean subFile) {
+		String objectId = mapValue(row, subFile ? "parentObjectId" : "objectId", "");
+		if (objectId.isEmpty()) return false;
+		FileAccessRequest access = new FileAccessRequest();
+		access.setActionCd(SecurityAclService.DOWNLOAD_ORIGINAL);
+		access.setObjectType(objectType);
+		access.setObjectId(objectId);
+		access.setFileNo(mapValue(row, "fileNo", "*"));
+		return securityAclService.checkAccessForDisplay(access).isAllowed();
+	}
+
+	private boolean isAvailablePopupFile(Map<String, Object> row) {
+		if (row == null || mapValue(row, "objectId", "").isEmpty()
+				|| !TechnicalFileTypePolicy.isAllowedFileName(mapValue(row, "orgFileNm", ""))) {
+			return false;
+		}
+		Object fileExists = row.get("fileExists");
+		if (fileExists != null && !Boolean.parseBoolean(String.valueOf(fileExists))) {
+			return false;
+		}
+		String processingStatus = mapValue(row, "processingStatus", "").toUpperCase(java.util.Locale.ROOT);
+		return processingStatus.isEmpty() || "DONE".equals(processingStatus)
+				|| "SUCCESS".equals(processingStatus) || "COMPLETED".equals(processingStatus)
+				|| "완료".equals(processingStatus);
 	}
 
 	private Map<String, Object> withoutServerPath(Map<String, Object> row) {

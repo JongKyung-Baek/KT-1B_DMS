@@ -265,7 +265,9 @@
           ON LANG.LANG_CD = MENU.MESSAGE_CD
          AND LANG.LANG_TYPE = #{sessionLang}
         WHERE MENU.DEL_YN = 'N'
-          AND MENU.USE_YN = 'Y'
+          <if test="includeInactive != true">
+            AND MENU.USE_YN = 'Y'
+          </if>
           AND MENU.MENU_TYPE IN ('T', 'M', 'P')
           AND MENU.TREE_TYPE = 'root'
           AND MENU.PARENT_MENU_CD = 'ROOT'
@@ -289,7 +291,9 @@
           ON LANG.LANG_CD = CHILD.MESSAGE_CD
          AND LANG.LANG_TYPE = #{sessionLang}
         WHERE CHILD.DEL_YN = 'N'
-          AND CHILD.USE_YN = 'Y'
+          <if test="includeInactive != true">
+            AND CHILD.USE_YN = 'Y'
+          </if>
           AND CHILD.MENU_TYPE IN ('T', 'M', 'P')
           AND NOT CHILD.MENU_CD::TEXT = ANY(PARENT.MENU_PATH)
     )

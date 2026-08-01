@@ -87,7 +87,7 @@ public class MenuController extends AbstractController {
 
 	@RequestMapping(value="/getTreeList", method=RequestMethod.POST)
 	public @ResponseBody JSONArray getTreeList(@RequestBody RequestParam param) throws Exception {
-		return JSONArray.fromObject(service.selectTree());
+		return JSONArray.fromObject(service.selectAdminTree());
 	}
 }
 

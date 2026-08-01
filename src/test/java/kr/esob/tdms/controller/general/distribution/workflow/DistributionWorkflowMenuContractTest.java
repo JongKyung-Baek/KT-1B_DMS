@@ -14,6 +14,8 @@ class DistributionWorkflowMenuContractTest {
         "src/main/resources/sql/distribution_workflow_menu_ddl.sql");
     private static final Path FRESH_MIGRATION = Paths.get(
         "src/main/resources/sql/fresh_database_migration.psql");
+    private static final Path INTERNAL_ONLY_CLEANUP = Paths.get(
+        "src/main/resources/sql/internal_only_cleanup_ddl.sql");
     private static final Path SECURITY = Paths.get(
         "src/main/java/kr/esob/tdms/config/SecurityConfig.java");
     private static final Path KOREAN_FEATURES = Paths.get(
@@ -93,12 +95,17 @@ class DistributionWorkflowMenuContractTest {
     void workflowMenuMigrationIsPartOfEveryFreshDatabaseBuild()
             throws Exception {
         String manifest = read(FRESH_MIGRATION);
+        String cleanup = read(INTERNAL_ONLY_CLEANUP);
         assertTrue(manifest.contains(
             "\\ir distribution_workflow_menu_ddl.sql"));
         assertTrue(manifest.contains(
             "Applying technical-data distribution menu hierarchy"));
         assertTrue(manifest.indexOf("\\ir distribution_workflow_ddl.sql")
             < manifest.indexOf("\\ir distribution_workflow_menu_ddl.sql"));
+        assertTrue(manifest.indexOf("\\ir distribution_workflow_menu_ddl.sql")
+            < manifest.indexOf("\\ir internal_only_cleanup_ddl.sql"));
+        assertTrue(cleanup.contains("'MENU_229'"));
+        assertTrue(cleanup.contains("five current navigation roots"));
     }
 
     @Test

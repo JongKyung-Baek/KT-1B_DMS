@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -81,7 +80,10 @@ public class DistributionWorkflowPageController {
 
     @GetMapping({"/approval", "/approval/"})
     public String approval(Model model) {
-        UserVO actor = requireAdministrator();
+        // Route authorization is enforced by SecurityConfig's ROLE_MENU_227
+        // matcher. Do not repeat an RG_001-only check here because the
+        // dedicated distribution-approver group intentionally owns that role.
+        UserVO actor = aclService.requireCurrentUser();
         addPageModel(model, "approval", actor);
         return "/general/distribution/workflow/approvalQueue";
     }
@@ -96,14 +98,6 @@ public class DistributionWorkflowPageController {
     private void addPageModel(Model model, String mode, UserVO actor) {
         model.addAttribute("workflowMode", mode);
         model.addAttribute("workflowAdministrator", isAdministrator(actor));
-    }
-
-    private UserVO requireAdministrator() {
-        UserVO actor = aclService.requireCurrentUser();
-        if (!isAdministrator(actor)) {
-            throw new AccessDeniedException("Distribution approval requires an administrator role.");
-        }
-        return actor;
     }
 
     private boolean isAdministrator(UserVO actor) {

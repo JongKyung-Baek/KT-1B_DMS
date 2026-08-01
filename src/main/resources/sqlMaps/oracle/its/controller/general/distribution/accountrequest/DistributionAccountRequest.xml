@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="sql.DistributionAccountRequest">
+
+    <sql id="requestColumns">
+        request_id,
+        event_id::text AS event_id,
+        correlation_id,
+        client_id,
+        source_system_id,
+        request_type,
+        TO_CHAR(occurred_at AT TIME ZONE 'UTC',
+                'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS occurred_at,
+        TO_CHAR(received_at AT TIME ZONE 'UTC',
+                'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS received_at,
+        status,
+        representative_id,
+        representative_name,
+        representative_email,
+        representative_phone,
+        organization_code,
+        organization_name,
+        business_number,
+        target_user_id,
+        target_user_name,
+        target_user_email,
+        target_user_phone,
+        target_user_position,
+        reason,
+        metadata_json::text AS metadata_json,
+        content_sha256,
+        decision_comment,
+        decided_by_user_cd,
+        decided_by_user_id,
+        decided_by_user_name,
+        CASE WHEN decided_at IS NULL THEN NULL ELSE
+            TO_CHAR(decided_at AT TIME ZONE 'UTC',
+                    'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') END AS decided_at,
+        TO_CHAR(updated_at AT TIME ZONE 'UTC',
+                'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS updated_at
+    </sql>
+
+    <delete id="deleteExpiredNonces">
+        DELETE FROM docs_distribution_account_request_nonce
+         WHERE received_at &lt; CURRENT_TIMESTAMP - (#{value} * INTERVAL '1 day')
+    </delete>
+
+    <insert id="insertNonce">
+        INSERT INTO docs_distribution_account_request_nonce (
+            client_id, nonce, received_at
+        ) VALUES (
+            #{clientId}, CAST(#{nonce} AS uuid), CURRENT_TIMESTAMP
+        )
+        ON CONFLICT DO NOTHING
+    </insert>
+
+    <select id="insertRequest" resultType="long">
+        INSERT INTO docs_distribution_account_request (
+            event_id, correlation_id, client_id, source_system_id,
+            request_type, occurred_at, received_at, status,
+            representative_id, representative_name, representative_email,
+            representative_phone, organization_code, organization_name,
+            business_number, target_user_id, target_user_name,
+            target_user_email, target_user_phone, target_user_position,
+            reason, metadata_json, content_sha256, updated_at
+        ) VALUES (
+            CAST(#{eventId} AS uuid), #{correlationId}, #{clientId}, #{sourceSystemId},
+            #{requestType}, CAST(#{occurredAt} AS timestamptz), CURRENT_TIMESTAMP, 'PENDING',
+            #{representativeId}, #{representativeName}, #{representativeEmail},
+            NULLIF(#{representativePhone}, ''), NULLIF(#{organizationCode}, ''),
+            NULLIF(#{organizationName}, ''), NULLIF(#{businessNumber}, ''),
+            #{targetUserId}, NULLIF(#{targetUserName}, ''),
+            NULLIF(#{targetUserEmail}, ''),
+            NULLIF(#{targetUserPhone}, ''), NULLIF(#{targetUserPosition}, ''),
+            NULLIF(#{reason}, ''), CAST(#{metadataJson} AS jsonb),
+            #{contentSha256}, CURRENT_TIMESTAMP
+        )
+        ON CONFLICT DO NOTHING
+        RETURNING request_id
+    </select>
+
+    <select id="selectBySourceEvent"
+            resultType="kr.esob.tdms.controller.general.distribution.accountrequest.DistributionAccountRequestRecord">
+        SELECT <include refid="requestColumns" />
+          FROM docs_distribution_account_request
+         WHERE source_system_id = #{sourceSystemId}
+           AND event_id = CAST(#{eventId} AS uuid)
+    </select>
+
+    <select id="selectBySourceCorrelation"
+            resultType="kr.esob.tdms.controller.general.distribution.accountrequest.DistributionAccountRequestRecord">
+        SELECT <include refid="requestColumns" />
+          FROM docs_distribution_account_request
+         WHERE source_system_id = #{sourceSystemId}
+           AND correlation_id = #{correlationId}
+    </select>
+
+    <select id="selectExternalStatus"
+            resultType="kr.esob.tdms.controller.general.distribution.accountrequest.DistributionAccountRequestRecord">
+        SELECT <include refid="requestColumns" />
+          FROM docs_distribution_account_request
+         WHERE client_id = #{clientId}
+           AND source_system_id = #{sourceSystemId}
+           AND event_id = CAST(#{eventId} AS uuid)
+    </select>
+
+    <select id="selectRequest"
+            resultType="kr.esob.tdms.controller.general.distribution.accountrequest.DistributionAccountRequestRecord">
+        SELECT <include refid="requestColumns" />
+          FROM docs_distribution_account_request
+         WHERE request_id = #{value}
+    </select>
+
+    <select id="selectRequestForUpdate"
+            resultType="kr.esob.tdms.controller.general.distribution.accountrequest.DistributionAccountRequestRecord">
+        SELECT <include refid="requestColumns" />
+          FROM docs_distribution_account_request
+         WHERE request_id = #{value}
+         FOR UPDATE
+    </select>
+
+    <select id="selectRequests"
+            resultType="kr.esob.tdms.controller.general.distribution.accountrequest.DistributionAccountRequestRecord">
+        SELECT <include refid="requestColumns" />
+          FROM docs_distribution_account_request
+         WHERE 1 = 1
+        <if test='status != null and !status.equals("")'>
+           AND status = #{status}
+        </if>
+        <if test='requestType != null and !requestType.equals("")'>
+           AND request_type = #{requestType}
+        </if>
+        <if test='sourceSystemId != null and !sourceSystemId.equals("")'>
+           AND source_system_id ILIKE '%' || #{sourceSystemId} || '%'
+        </if>
+        <if test='keyword != null and !keyword.equals("")'>
+           AND (
+               correlation_id ILIKE '%' || #{keyword} || '%'
+               OR representative_id ILIKE '%' || #{keyword} || '%'
+               OR representative_name ILIKE '%' || #{keyword} || '%'
+               OR representative_email ILIKE '%' || #{keyword} || '%'
+               OR target_user_id ILIKE '%' || #{keyword} || '%'
+               OR target_user_name ILIKE '%' || #{keyword} || '%'
+               OR target_user_email ILIKE '%' || #{keyword} || '%'
+               OR COALESCE(organization_name, '') ILIKE '%' || #{keyword} || '%'
+           )
+        </if>
+         ORDER BY CASE status WHEN 'PENDING' THEN 0 ELSE 1 END,
+                  received_at DESC,
+                  request_id DESC
+         LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="selectEvents"
+            resultType="kr.esob.tdms.controller.general.distribution.accountrequest.DistributionAccountRequestEvent">
+        SELECT request_event_id,
+               event_type,
+               from_status,
+               to_status,
+               actor_type,
+               actor_id,
+               actor_name,
+               comment,
+               TO_CHAR(occurred_at AT TIME ZONE 'UTC',
+                       'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS occurred_at
+          FROM docs_distribution_account_request_event
+         WHERE request_id = #{value}
+         ORDER BY request_event_id
+    </select>
+
+    <insert id="insertReceivedEvent">
+        INSERT INTO docs_distribution_account_request_event (
+            request_id, event_type, from_status, to_status,
+            actor_type, actor_id, actor_name, comment, occurred_at
+        ) VALUES (
+            #{requestId}, 'RECEIVED', NULL, 'PENDING',
+            'EXTERNAL_SYSTEM', #{representativeId}, #{representativeName},
+            NULLIF(#{reason}, ''), CURRENT_TIMESTAMP
+        )
+    </insert>
+
+    <update id="decide">
+        UPDATE docs_distribution_account_request
+           SET status = #{targetStatus},
+               decision_comment = NULLIF(#{comment}, ''),
+               decided_by_user_cd = #{actor.userCd},
+               decided_by_user_id = #{actor.userId},
+               decided_by_user_name = #{actor.userNm},
+               decided_at = CURRENT_TIMESTAMP,
+               updated_at = CURRENT_TIMESTAMP
+         WHERE request_id = #{requestId}
+           AND status = #{expectedStatus}
+    </update>
+
+    <insert id="insertDecisionEvent">
+        INSERT INTO docs_distribution_account_request_event (
+            request_id, event_type, from_status, to_status,
+            actor_type, actor_id, actor_name, comment, occurred_at
+        ) VALUES (
+            #{requestId}, #{eventType}, #{fromStatus}, #{toStatus},
+            'TDMS_USER', #{actor.userId}, #{actor.userNm},
+            NULLIF(#{comment}, ''), CURRENT_TIMESTAMP
+        )
+    </insert>
+</mapper>

@@ -137,6 +137,7 @@ public class DistributionWorkflowService {
         DistributionRequestRecord current = requireLockedRequest(requestId);
         requireStatus(current, DistributionWorkflowStatus.PENDING_APPROVAL);
         requireAssignedApprover(current, actor);
+        requireUnexpired(current);
         String comment = validateComment(decision, true);
 
         requireOne(dao.markRejected(requestId, comment, actor), "reject distribution request");
@@ -153,6 +154,7 @@ public class DistributionWorkflowService {
         requireOwner(current, actor);
         requireStatus(current, DistributionWorkflowStatus.DRAFT,
             DistributionWorkflowStatus.PENDING_APPROVAL, DistributionWorkflowStatus.REJECTED);
+        requireUnexpired(current);
 
         requireOne(dao.markCancelled(requestId, current.getStatus(), actor),
             "cancel distribution request");
@@ -167,7 +169,7 @@ public class DistributionWorkflowService {
         UserVO actor = aclService.requireCurrentUser();
         DistributionRequestRecord request = requireRequest(requestId);
         boolean activeApproved = DistributionWorkflowStatus.APPROVED.name().equals(request.getStatus())
-            && !isExpired(request);
+            && isActiveDistributionPeriod(request);
         boolean mayOpen = isOwner(request, actor) || isAssignedApprover(request, actor)
             || isAdministrator(actor) || activeApproved;
         if (!mayOpen) {
@@ -229,7 +231,7 @@ public class DistributionWorkflowService {
     /** Returns only documents whose complete main+auxiliary file bundle is viewable. */
     @Transactional(readOnly = true)
     public List<DistributionDocumentBundle> catalog(String treeCd) {
-        aclService.requireCurrentUser();
+        UserVO actor = aclService.requireCurrentUser();
         String normalizedTreeCd = trim(treeCd).toUpperCase(Locale.ROOT);
         if (!isSafeIdentifier(normalizedTreeCd, 50)) {
             throw DistributionWorkflowException.badRequest(
@@ -237,11 +239,11 @@ public class DistributionWorkflowService {
         }
 
         Map<String, List<DistributionRequestItemSnapshot>> grouped =
-            groupByObjectId(dao.selectCatalogItems(normalizedTreeCd));
+            groupByObjectId(dao.selectAccessibleCatalogItems(normalizedTreeCd, actor.getUserCd()));
         List<DistributionDocumentBundle> result = new ArrayList<DistributionDocumentBundle>();
         for (Map.Entry<String, List<DistributionRequestItemSnapshot>> entry : grouped.entrySet()) {
             List<DistributionRequestItemSnapshot> files = entry.getValue();
-            if (!hasExactlyOneMain(files) || !allViewable(files)) {
+            if (!hasExactlyOneMain(files)) {
                 continue;
             }
             validateBundleMetadata(entry.getKey(), files);
@@ -288,8 +290,8 @@ public class DistributionWorkflowService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public int expireApprovedRequests() {
-        return dao.expireApprovedRequests();
+    public int expireElapsedRequests() {
+        return dao.expireElapsedRequests();
     }
 
     private DistributionRequestDetail loadDetail(long requestId, UserVO actor, boolean requireView) {
@@ -392,7 +394,15 @@ public class DistributionWorkflowService {
                 || snapshot.getFileSize() == null
                 || snapshot.getFileSize().longValue() < 0
                 || trim(snapshot.getGradeCd()).isEmpty()
-                || snapshot.getGradeCd().length() > 50) {
+                || snapshot.getGradeCd().length() > 50
+                || trim(snapshot.getTreeCd()).isEmpty()
+                || snapshot.getTreeCd().length() > 50
+                || trim(snapshot.getTreeNm()).isEmpty()
+                || snapshot.getTreeNm().length() > 500
+                || trim(snapshot.getParentTreeCd()).isEmpty()
+                || snapshot.getParentTreeCd().length() > 50
+                || trim(snapshot.getParentTreeNm()).isEmpty()
+                || snapshot.getParentTreeNm().length() > 500) {
             throw DistributionWorkflowException.conflict(
                 "DISTRIBUTION_ITEM_METADATA_INVALID",
                 "A selected technical-data file has incomplete distribution metadata.");
@@ -439,7 +449,11 @@ public class DistributionWorkflowService {
             && Objects.equals(saved.getMaterialName(), current.getMaterialName())
             && Objects.equals(saved.getOriginalFileName(), current.getOriginalFileName())
             && Objects.equals(saved.getFileSize(), current.getFileSize())
-            && Objects.equals(saved.getGradeCd(), current.getGradeCd());
+            && Objects.equals(saved.getGradeCd(), current.getGradeCd())
+            && Objects.equals(saved.getTreeCd(), current.getTreeCd())
+            && Objects.equals(saved.getTreeNm(), current.getTreeNm())
+            && Objects.equals(saved.getParentTreeCd(), current.getParentTreeCd())
+            && Objects.equals(saved.getParentTreeNm(), current.getParentTreeNm());
     }
 
     private void validatePersistedRecipients(DistributionRequestRecord request,
@@ -483,16 +497,6 @@ public class DistributionWorkflowService {
         for (DistributionRequestItemSnapshot item : items) {
             requireView(item.getObjectType(), item.getObjectId(), item.getFileNo());
         }
-    }
-
-    private boolean allViewable(List<DistributionRequestItemSnapshot> files) {
-        for (DistributionRequestItemSnapshot file : files) {
-            if (file == null || !aclService.checkAccess(accessRequest(
-                    file.getObjectType(), file.getObjectId(), file.getFileNo())).isAllowed()) {
-                return false;
-            }
-        }
-        return true;
     }
 
     private void requireView(String objectType, String objectId, String fileNo) {
@@ -676,6 +680,21 @@ public class DistributionWorkflowService {
                 || LocalDate.parse(request.getDistributionEndDate()).isBefore(businessToday());
         } catch (DateTimeException exception) {
             return true;
+        }
+    }
+
+    private boolean isActiveDistributionPeriod(DistributionRequestRecord request) {
+        try {
+            if (request == null || trim(request.getDistributionStartDate()).isEmpty()
+                    || trim(request.getDistributionEndDate()).isEmpty()) {
+                return false;
+            }
+            LocalDate today = businessToday();
+            LocalDate start = LocalDate.parse(request.getDistributionStartDate());
+            LocalDate end = LocalDate.parse(request.getDistributionEndDate());
+            return !today.isBefore(start) && !today.isAfter(end);
+        } catch (DateTimeException exception) {
+            return false;
         }
     }
 

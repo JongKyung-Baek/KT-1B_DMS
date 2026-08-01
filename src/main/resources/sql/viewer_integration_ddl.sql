@@ -6,6 +6,18 @@ BEGIN;
 -- compatible while allowing signed viewer callbacks to persist that identity.
 ALTER TABLE public.docs_history
     ADD COLUMN IF NOT EXISTS file_no varchar(60);
+ALTER TABLE public.docs_history
+    ADD COLUMN IF NOT EXISTS source_system_cd varchar(30),
+    ADD COLUMN IF NOT EXISTS source_event_id uuid,
+    ADD COLUMN IF NOT EXISTS source_correlation_id varchar(64);
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_docs_history_source_event
+    ON public.docs_history (source_system_cd, source_event_id)
+    WHERE source_system_cd IS NOT NULL AND source_event_id IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_docs_history_cv_view_time
+    ON public.docs_history (insert_date DESC)
+    WHERE log_type = 'VIEWING' AND source_system_cd = 'CV';
 
 CREATE TABLE IF NOT EXISTS docs_viewer_launch (
     correlation_id     varchar(64) PRIMARY KEY,
@@ -80,6 +92,12 @@ COMMENT ON TABLE docs_viewer_callback_nonce IS
     'Replay-protection nonces for signed external viewer callbacks';
 COMMENT ON COLUMN public.docs_history.file_no IS
     'Exact file number for a persisted view or file-level history event';
+COMMENT ON COLUMN public.docs_history.source_system_cd IS
+    'System that supplied the durable history event; CV identifies signed viewer callbacks';
+COMMENT ON COLUMN public.docs_history.source_event_id IS
+    'Idempotent event identifier supplied by the source system';
+COMMENT ON COLUMN public.docs_history.source_correlation_id IS
+    'Correlation identifier shared with the source system';
 
 -- Retire only the loopback ADAP endpoints from old development dumps. A
 -- non-loopback row is retained for emergency rollback, but the new integration

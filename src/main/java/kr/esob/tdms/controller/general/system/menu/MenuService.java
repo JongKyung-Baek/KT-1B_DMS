@@ -39,6 +39,13 @@ public class MenuService {
 	}
 
 	/**
+	 * 시스템관리 메뉴 편집 트리. 미사용 메뉴도 다시 활성화할 수 있도록 포함한다.
+	 */
+	public List<TreeVO> selectAdminTree() {
+		return dao.selectAdminTree();
+	}
+
+	/**
 	 * GET 메뉴정보
 	 * @param param
 	 * @return

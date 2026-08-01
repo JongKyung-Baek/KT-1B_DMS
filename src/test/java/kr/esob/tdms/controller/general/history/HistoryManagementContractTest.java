@@ -93,6 +93,8 @@ class HistoryManagementContractTest {
         assertTrue(controller.contains("\"/view/\""));
         assertTrue(controller.contains("\"/view/events\""));
         assertTrue(mapper.contains("FROM DOCS_HISTORY"));
+        assertTrue(mapper.contains("INFO.SOURCE_SYSTEM_CD = 'CV'"));
+        assertTrue(mapper.contains("INFO.SOURCE_EVENT_ID IS NOT NULL"));
         assertTrue(mapper.contains("LOG_TYPE = 'VIEWING'"));
         assertFalse(mapper.contains("#{LOGTYPE}"));
         assertTrue(mapper.contains("'VIEW' AS ACTION_TYPE"));

@@ -24,6 +24,7 @@ class ErrorPagePresentationContractTest {
         String view = read(ERROR_VIEW);
         String css = read(ERROR_CSS);
 
+        assertTrue(view.contains("session=\"false\""));
         assertTrue(view.contains("<body class=\"error-page\""));
         assertTrue(view.contains("class=\"error-card\""));
         assertTrue(view.contains("class=\"error-status-chip\""));

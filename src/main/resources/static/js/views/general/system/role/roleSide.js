@@ -1,6 +1,22 @@
 var selectedGroupCd = "";
 var selectedType = "";
 
+function roleText(key, fallback) {
+	var args = Array.prototype.slice.call(arguments, 2);
+	if (window.SdmsI18n && typeof window.SdmsI18n.t === 'function') {
+		return window.SdmsI18n.t.apply(window.SdmsI18n, [key, fallback].concat(args));
+	}
+	return fallback;
+}
+
+function localizeRoleToolbar() {
+	$(".role-management-toolbar button").each(function() {
+		if (String($(this).attr("onclick") || "").indexOf("saveRole") !== -1) {
+			$(this).text(roleText("feature.common.button.save", "저장"));
+		}
+	});
+}
+
 var assignedDeptParam = {
 		gridId: 'gridRoleDeptAssigned',
 		formId: 'formRoleDeptAssign',
@@ -38,6 +54,7 @@ function initWindow() {
 $(function() {
 	$("#tabs").tabs();
 	settingToolbar(JSON.parse(toolbarInfo));
+	localizeRoleToolbar();
 	setGridParam();
 	settingGrid(gridRoleDept, deptGridParam, 'deptGridParam');
 	settingGrid(gridRoleUser, userGridParam, 'userGridParam');
@@ -287,10 +304,11 @@ function bindEvent() {
 
 function clickGroup($div) {
 	$(".listBox > li").removeClass("current");
-	selectedGroupCd = $div.attr('groupCd');
+	selectedGroupCd = $div.attr('data-group-cd') || $div.attr('groupCd');
 	settingAssignedDeptGrid();
 	settingAssignedUserGrid();
 	$div.parent("li").addClass("current");
+	$("#selectedGroupName").text($.trim($div.text()));
 }
 
 /**
@@ -300,23 +318,23 @@ function clickGroup($div) {
 function addGroup() {
 	openDialogPopup("/general/system/role/roleAddPopup"
 			, {}
-			, "popupDialog", 's', 170, true, 'popup-common popup-role');
+			, "popupDialog", 's', 230, true, 'popup-common popup-role');
 }
 
 function modGroup() {
 	if('' === selectedGroupCd) {
-		alertMessage("수정할 그룹을 선택해주세요");
+		alertMessage(roleText('feature.system.role.message.selectForEdit', '수정할 사용자등급을 선택하세요.'));
 		return;
 	}
 
 	openDialogPopup("/general/system/role/roleModPopup"
 			, {groupCd: selectedGroupCd}
-			, "popupDialog", 's', 170, true, 'popup-common popup-role');
+			, "popupDialog", 's', 230, true, 'popup-common popup-role');
 }
 
 function delGroup() {
 	if('' === selectedGroupCd) {
-		alertMessage("삭제할 그룹을 선택해주세요");
+		alertMessage(roleText('feature.system.role.message.selectForDelete', '삭제할 사용자등급을 선택하세요.'));
 		return;
 	}
 
@@ -325,12 +343,17 @@ function delGroup() {
 			groupCd: selectedGroupCd
 	}
 
-	confirmMessage($("div#" + selectedGroupCd + " > span").text() + "을(를) 삭제하시겠습니까?<br>삭제시 권한 사용이 불가능하오니 참고하세요.", function(){
+	var groupName = $.trim($("#" + selectedGroupCd).text());
+	confirmMessage(roleText(
+		'feature.system.role.message.confirmDelete',
+		'"{0}" 사용자등급을 삭제하시겠습니까?<br>삭제하면 이 등급의 권한을 더 이상 사용할 수 없습니다.',
+		groupName
+	), function(){
 		$("#confirmMessage").dialog("close");
 
 		callAjax(param, '/general/system/role/saveRoleGroup', function(response){
 			if(response.success) {
-				alertMessage(g_msg("msg.completeDelete"));
+				alertMessage(roleText('feature.system.role.message.deleted', '사용자등급을 삭제했습니다.'));
 				initWindow();
 			}
 			else {
@@ -349,30 +372,50 @@ function setManagerGroupList() {
 	var param = {};
 
 	callAjax(param, '/general/system/role/getRoleGroupList', function(response){
-  		var html = [];
-  		$.each(response, function() {
-  			html.push('<li>');
-  			html.push('	<div class="listName" id="' + this.groupCd + '" groupCd="' + this.groupCd + '"><span>' + this.groupNm + '</span></div>');
-  			html.push('</li>');
-  		});
+		var groupList = response || [];
+		var $list = $(".listBox").empty();
 
-  		$(".listBox").html(html.join(''));
-  		$("#managerCount").text(response.length);
+		$.each(groupList, function() {
+			var $button = $("<button>", {
+				type: "button",
+				class: "listName",
+				id: this.groupCd,
+				"data-group-cd": this.groupCd
+			}).append($("<span>").text(this.groupNm));
+			$list.append($("<li>").append($button));
+		});
 
-  		$(".listName").eq(0).trigger('click');
+		$("#managerCount").text(groupList.length);
+
+		if (groupList.length === 0) {
+			selectedGroupCd = "";
+			$("#selectedGroupName").text(roleText(
+				'feature.system.role.assignment.selectGrade',
+				'등급을 선택하세요'
+			));
+			$list.append(
+				$("<li>", { class: "role-group-empty" }).text(roleText(
+					'feature.system.role.group.empty',
+					'등록된 사용자등급이 없습니다.'
+				))
+			);
+			return;
+		}
+
+		$list.find(".listName").first().trigger('click');
 	});
 }
 
 function saveRole() {
 	if("" === selectedGroupCd) {
-		alertMessage("선택된 그룹이 없습니다.");
+		alertMessage(roleText('feature.system.role.message.noSelectedGrade', '선택된 사용자등급이 없습니다.'));
 		return;
 	}
 	var param = getParam();
 
 	callAjax(param, '/general/system/role/saveRoleGroupMember', function(response){
 		if(response.success) {
-			alertMessage(g_msg("msg.completeSave"));
+			alertMessage(roleText('feature.system.role.message.saved', '사용자등급 배정을 저장했습니다.'));
 			initWindow();
 		}
 		else {
@@ -517,13 +560,17 @@ function delList() {
 	}
 	else {
 		// 사용자
-		gridId = 'gridRoleDeptAssigned';
+		gridId = 'gridRoleUserAssigned';
 		targetParam = assignedUserParam;
 		key = "userCd";
 		searchType = 'assignedUser';
 	}
 
 	var checkedDataList = $("#" + gridId).getGridParam('selarrrow');
+	if (!checkedDataList || checkedDataList.length === 0) {
+		alertMessage(g_msg('msg.noSelectData'));
+		return;
+	}
 
 	$.each(checkedDataList, function() {
 		var checkedData = $("#" + gridId).jqGrid('getRowData', this);
@@ -573,9 +620,6 @@ function addList() {
 
 	var arrAlready = [];
 
-	console.log(checkedDataList);
-	console.log(targetParam);
-
 	$.each(checkedDataList, function() {
 		var checkedData = $("#" + gridId).jqGrid('getRowData', this);
 		var isAlready = false;
@@ -585,7 +629,6 @@ function addList() {
 
 			if(ts[key] === checkedData[key]) {
 				isAlready = true;
-				console.log("already");
 				arrAlready.push(checkedData);
 				return false;
 			}
@@ -597,7 +640,11 @@ function addList() {
 	});
 
 	if(arrAlready.length > 0) {
-		alertMessage("이미 할당된 " + arrAlready.length + "건의 데이터는 추가되지 않았습니다.");
+		alertMessage(roleText(
+			'feature.system.role.message.duplicateAssignment',
+			'이미 배정된 {0}건은 추가하지 않았습니다.',
+			arrAlready.length
+		));
 	}
 
 	$("#" + targetParam.formId).find('input[type=text]').val('');

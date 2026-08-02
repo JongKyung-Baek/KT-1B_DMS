@@ -23,12 +23,6 @@ WHERE tree_cd = 'TRB000014'
 DELETE FROM docs_sw_tree
 WHERE tree_cd = 'TRB000014';
 
-DELETE FROM docs_product_tree
-WHERE tree_cd = 'TRB000014';
-
-DELETE FROM docs_dxf_tree
-WHERE tree_cd = 'TRB000014';
-
 DELETE FROM docs_drawing_tree
 WHERE tree_cd = 'TRB000014';
 

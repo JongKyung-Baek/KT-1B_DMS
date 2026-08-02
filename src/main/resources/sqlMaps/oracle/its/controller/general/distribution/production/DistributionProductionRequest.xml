@@ -1118,29 +1118,29 @@
 <mapper namespace="sql.DistributionProductionRequest">
 
 		<select id="selectTree" resultType="kr.esob.tdms.controller.general.distribution.production.ProductionRequestTreeVO">
-		<!-- 2026-03-30: production tree source -> DOCS_PRODUCT_TREE -->
+		<!-- Technical category/level tree source: canonical DOCS_SW_TREE -->
 		SELECT tree.TREE_CD AS id
 			 , COALESCE(tree.UPPER_TREE_CD, '#') AS parent
 			 , tree.TREE_NM AS text
 			 , CAST(tree.TREE_DEPTH AS VARCHAR) AS "level"
 			 , CASE
 				   WHEN tree.UPPER_TREE_CD IS NULL THEN 'root'
-				   WHEN EXISTS (SELECT 1 FROM DOCS_PRODUCT_TREE child WHERE child.UPPER_TREE_CD = tree.TREE_CD AND COALESCE(child.USE_YN, 'Y') = 'Y') THEN 'group'
+				   WHEN EXISTS (SELECT 1 FROM DOCS_SW_TREE child WHERE child.UPPER_TREE_CD = tree.TREE_CD AND COALESCE(child.USE_YN, 'Y') = 'Y') THEN 'group'
 				   ELSE 'item'
 			   END AS "type"
 			 , tree.SORT_ORDER AS sort
 			 , COALESCE(tree.USE_YN, 'Y') AS useYn
 			 , CASE
-				   WHEN EXISTS (SELECT 1 FROM DOCS_PRODUCT_TREE child WHERE child.UPPER_TREE_CD = tree.TREE_CD AND COALESCE(child.USE_YN, 'Y') = 'Y') THEN ''
+				   WHEN EXISTS (SELECT 1 FROM DOCS_SW_TREE child WHERE child.UPPER_TREE_CD = tree.TREE_CD AND COALESCE(child.USE_YN, 'Y') = 'Y') THEN ''
 				   ELSE 'objectNoPrefix'
 			   END AS filterType
 			 , tree.TREE_NM AS filterValue
 			 , CASE
-				   WHEN EXISTS (SELECT 1 FROM DOCS_PRODUCT_TREE child WHERE child.UPPER_TREE_CD = tree.TREE_CD AND COALESCE(child.USE_YN, 'Y') = 'Y') THEN ''
+				   WHEN EXISTS (SELECT 1 FROM DOCS_SW_TREE child WHERE child.UPPER_TREE_CD = tree.TREE_CD AND COALESCE(child.USE_YN, 'Y') = 'Y') THEN ''
 				   ELSE tree.TREE_NM
 			   END AS objectNoPrefix
 			 , '' AS distributeTypeCd
-		FROM DOCS_PRODUCT_TREE tree
+		FROM DOCS_SW_TREE tree
 		WHERE COALESCE(tree.USE_YN, 'Y') = 'Y'
 		ORDER BY tree.TREE_PATH, tree.SORT_ORDER, tree.TREE_NM
 	</select>
@@ -1148,7 +1148,7 @@
 	<select id="selectLevelOptions" resultType="kr.esob.tdms.commonlogic.combo.ComboInfoVO">
 		SELECT tree_cd AS comboVal
 			 , tree_nm AS comboLabel
-		FROM docs_product_tree
+		FROM docs_sw_tree
 		WHERE COALESCE(use_yn, 'Y') = 'Y'
 		  AND tree_depth = 1
 		ORDER BY sort_order, tree_nm
@@ -1429,8 +1429,8 @@
 		<if test='treeCd != null and !treeCd.equals("")'>
 			AND EXISTS (
 				SELECT 1
-				FROM DOCS_PRODUCT_TREE node
-				JOIN DOCS_PRODUCT_TREE selectedNode ON selectedNode.TREE_CD = #{treeCd}
+				FROM DOCS_SW_TREE node
+				JOIN DOCS_SW_TREE selectedNode ON selectedNode.TREE_CD = #{treeCd}
 				WHERE node.TREE_CD = info.TREE_CD
 				  AND node.TREE_PATH LIKE selectedNode.TREE_PATH || '%'
 			)
@@ -1633,8 +1633,8 @@
 				<if test='treeCd != null and !treeCd.equals("")'>
 					AND EXISTS (
 						SELECT 1
-						FROM DOCS_PRODUCT_TREE node
-						JOIN DOCS_PRODUCT_TREE selectedNode ON selectedNode.TREE_CD = #{treeCd}
+						FROM DOCS_SW_TREE node
+						JOIN DOCS_SW_TREE selectedNode ON selectedNode.TREE_CD = #{treeCd}
 						WHERE node.TREE_CD = info.TREE_CD
 						  AND node.TREE_PATH LIKE selectedNode.TREE_PATH || '%'
 					)

@@ -27,6 +27,7 @@
 
 \echo '[KT-1B] Removing retired content and portal objects...'
 \ir remove_unused_content_features_ddl.sql
+\ir remove_duplicate_technical_tree_tables_ddl.sql
 \ir remove_orphan_legacy_objects_ddl.sql
 \ir internal_only_cleanup_ddl.sql
 

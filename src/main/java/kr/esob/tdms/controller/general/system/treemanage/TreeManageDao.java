@@ -52,14 +52,6 @@ public class TreeManageDao extends AbstractDao {
 		return update(prefix + "insertBoardSwNode", param);
 	}
 
-	public int insertBoardProductNode(TreeManageSaveParam param) {
-		return update(prefix + "insertBoardProductNode", param);
-	}
-
-	public int insertBoardDxfNode(TreeManageSaveParam param) {
-		return update(prefix + "insertBoardDxfNode", param);
-	}
-
 	public int updateNode(TreeManageSaveParam param) {
 		return update(prefix + "updateNode", param);
 	}
@@ -70,14 +62,6 @@ public class TreeManageDao extends AbstractDao {
 
 	public int updateBoardSwNode(TreeManageSaveParam param) {
 		return update(prefix + "updateBoardSwNode", param);
-	}
-
-	public int updateBoardProductNode(TreeManageSaveParam param) {
-		return update(prefix + "updateBoardProductNode", param);
-	}
-
-	public int updateBoardDxfNode(TreeManageSaveParam param) {
-		return update(prefix + "updateBoardDxfNode", param);
 	}
 
 	public Integer countChildren(String treeCd) {
@@ -92,14 +76,6 @@ public class TreeManageDao extends AbstractDao {
 		return (Integer) obj(prefix + "countBoardSwChildren", treeCd);
 	}
 
-	public Integer countBoardProductChildren(String treeCd) {
-		return (Integer) obj(prefix + "countBoardProductChildren", treeCd);
-	}
-
-	public Integer countBoardDxfChildren(String treeCd) {
-		return (Integer) obj(prefix + "countBoardDxfChildren", treeCd);
-	}
-
 	public Integer countLinkedDrawing(String treeCd) {
 		return (Integer) obj(prefix + "countLinkedDrawing", treeCd);
 	}
@@ -110,14 +86,6 @@ public class TreeManageDao extends AbstractDao {
 
 	public Integer countLinkedSw(String treeCd) {
 		return (Integer) obj(prefix + "countLinkedSw", treeCd);
-	}
-
-	public Integer countLinkedProduct(String treeCd) {
-		return (Integer) obj(prefix + "countLinkedProduct", treeCd);
-	}
-
-	public Integer countLinkedDxf(String treeCd) {
-		return (Integer) obj(prefix + "countLinkedDxf", treeCd);
 	}
 
 	public Integer countByTreeCd(String treeCd) {
@@ -132,14 +100,6 @@ public class TreeManageDao extends AbstractDao {
 		return (Integer) obj(prefix + "countBoardSwByTreeCd", treeCd);
 	}
 
-	public Integer countBoardProductByTreeCd(String treeCd) {
-		return (Integer) obj(prefix + "countBoardProductByTreeCd", treeCd);
-	}
-
-	public Integer countBoardDxfByTreeCd(String treeCd) {
-		return (Integer) obj(prefix + "countBoardDxfByTreeCd", treeCd);
-	}
-
 	public Integer countByFunctionCd(String functionCd) {
 		return (Integer) obj(prefix + "countByFunctionCd", functionCd);
 	}
@@ -150,14 +110,6 @@ public class TreeManageDao extends AbstractDao {
 
 	public Integer countBoardSwByFunctionCd(String functionCd) {
 		return (Integer) obj(prefix + "countBoardSwByFunctionCd", functionCd);
-	}
-
-	public Integer countBoardProductByFunctionCd(String functionCd) {
-		return (Integer) obj(prefix + "countBoardProductByFunctionCd", functionCd);
-	}
-
-	public Integer countBoardDxfByFunctionCd(String functionCd) {
-		return (Integer) obj(prefix + "countBoardDxfByFunctionCd", functionCd);
 	}
 
 	public Integer selectDrawingTreeDepth(String treeCd) {
@@ -186,14 +138,6 @@ public class TreeManageDao extends AbstractDao {
 
 	public int deleteBoardSwNode(String treeCd) {
 		return update(prefix + "deleteBoardSwNode", treeCd);
-	}
-
-	public int deleteBoardProductNode(String treeCd) {
-		return update(prefix + "deleteBoardProductNode", treeCd);
-	}
-
-	public int deleteBoardDxfNode(String treeCd) {
-		return update(prefix + "deleteBoardDxfNode", treeCd);
 	}
 }
 

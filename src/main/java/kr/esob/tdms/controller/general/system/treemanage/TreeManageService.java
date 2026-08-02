@@ -76,9 +76,7 @@ public class TreeManageService {
 			// Level 명칭(tree_nm)과 별개로 function_cd는 길이 제한(varchar(10))에 맞춰 서버에서 자동 부여
 			param.setFunctionCd(param.getTreeCd());
 			int swAffected = dao.insertBoardSwNode(param);
-			int productAffected = dao.insertBoardProductNode(param);
-			int dxfAffected = dao.insertBoardDxfNode(param);
-			result.setSuccess(swAffected > 0 && productAffected > 0 && dxfAffected > 0);
+			result.setSuccess(swAffected > 0);
 			if (!result.isSuccess()) {
 				result.setFailReason(prop.msg("feature.common.result.createFailed"));
 			}
@@ -157,9 +155,7 @@ public class TreeManageService {
 
 		if (isLevelType(param.getManageType())) {
 			int swAffected = dao.updateBoardSwNode(param);
-			int productAffected = dao.updateBoardProductNode(param);
-			int dxfAffected = dao.updateBoardDxfNode(param);
-			result.setSuccess(swAffected > 0 && productAffected > 0 && dxfAffected > 0);
+			result.setSuccess(swAffected > 0);
 			if (!result.isSuccess()) {
 				result.setFailReason(prop.msg("feature.common.result.updateFailed"));
 			}
@@ -190,27 +186,19 @@ public class TreeManageService {
 
 		if (isLevelType(param.getManageType())) {
 			Integer swChildCount = dao.countBoardSwChildren(treeCd);
-			Integer productChildCount = dao.countBoardProductChildren(treeCd);
-			Integer dxfChildCount = dao.countBoardDxfChildren(treeCd);
-			if ((swChildCount != null && swChildCount > 0) || (productChildCount != null && productChildCount > 0)
-					|| (dxfChildCount != null && dxfChildCount > 0)) {
+			if (swChildCount != null && swChildCount > 0) {
 				result.setFailReason(prop.msg("feature.treeManage.error.hasChildren"));
 				return result;
 			}
 
 			Integer swLinkedCount = dao.countLinkedSw(treeCd);
-			Integer productLinkedCount = dao.countLinkedProduct(treeCd);
-			Integer dxfLinkedCount = dao.countLinkedDxf(treeCd);
-			if ((swLinkedCount != null && swLinkedCount > 0) || (productLinkedCount != null && productLinkedCount > 0)
-					|| (dxfLinkedCount != null && dxfLinkedCount > 0)) {
+			if (swLinkedCount != null && swLinkedCount > 0) {
 				result.setFailReason(prop.msg("feature.treeManage.error.hasLinkedData"));
 				return result;
 			}
 
 			int swAffected = dao.deleteBoardSwNode(treeCd);
-			int productAffected = dao.deleteBoardProductNode(treeCd);
-			int dxfAffected = dao.deleteBoardDxfNode(treeCd);
-			result.setSuccess(swAffected > 0 && productAffected > 0 && dxfAffected > 0);
+			result.setSuccess(swAffected > 0);
 			if (!result.isSuccess()) {
 				result.setFailReason(prop.msg("feature.common.result.deleteFailed"));
 			}
@@ -324,9 +312,7 @@ public class TreeManageService {
 	private boolean existsTreeCd(boolean boardType, String treeCd) {
 		if (boardType) {
 			Integer sw = dao.countBoardSwByTreeCd(treeCd);
-			Integer product = dao.countBoardProductByTreeCd(treeCd);
-			Integer dxf = dao.countBoardDxfByTreeCd(treeCd);
-			return (sw != null && sw > 0) || (product != null && product > 0) || (dxf != null && dxf > 0);
+			return sw != null && sw > 0;
 		}
 		Integer drawing = dao.countByTreeCd(treeCd);
 		Integer doc = dao.countIocByTreeCd(treeCd);

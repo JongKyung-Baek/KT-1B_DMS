@@ -60,7 +60,7 @@ class SystemRolePresentationContractTest {
         assertTrue(view.contains("role-grid-panel"));
         assertTrue(view.contains("class=\"role-search-form\""));
         assertTrue(view.contains("class=\"role-selection-chip\""));
-        assertTrue(view.contains("role-vuexy.css?v=20260801.2"));
+        assertTrue(view.contains("role-vuexy.css?v=20260801.6"));
         assertTrue(css.contains(".role-management-page .ui-jqgrid-htable th"));
         assertTrue(css.contains("text-align: center !important"));
         assertTrue(css.contains("background: #f1efff !important"));
@@ -69,6 +69,16 @@ class SystemRolePresentationContractTest {
                 .contains("text-align: left"));
         assertTrue(styleBlock(css, ".role-management-card {")
                 .contains("border-radius: 14px"));
+        assertTrue(styleBlock(css, ".role-grid-panel {")
+                .contains("grid-template-columns: minmax(0, 1fr)"));
+        assertTrue(styleBlock(css,
+                ".role-management-page .role-grid-panel > .role-grid-section {")
+                .contains("height: auto !important"));
+        assertTrue(styleBlock(css, ".role-transfer-toolbar {")
+                .contains("flex-direction: row !important"));
+        assertTrue(styleBlock(css,
+                ".role-management-page .role-transfer-toolbar button::before {")
+                .contains("content: none !important"));
         assertTrue(popup.contains("class=\"popupHero\""));
         assertTrue(popup.contains("class=\"section popupCard"));
     }

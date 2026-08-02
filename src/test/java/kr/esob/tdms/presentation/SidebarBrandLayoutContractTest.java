@@ -20,7 +20,8 @@ class SidebarBrandLayoutContractTest {
                 "src", "main", "webapp", "left.jsp"), StandardCharsets.UTF_8);
 
         assertTrue(sidebar.contains("class=\"app-brand-text demo menu-text fw-bold ms-2\""));
-        assertTrue(sidebar.contains("aria-label=\"KT-1B DMS dashboard\""));
+        assertTrue(sidebar.contains("aria-label=\"KT-1B TDMS dashboard\""));
+        assertTrue(sidebar.contains(">KT-1B TDMS</span>"));
         assertTrue(css.contains("#layout-menu .app-brand-text"));
         assertTrue(css.contains("white-space: nowrap"));
         assertTrue(css.contains("@media (min-width: 1200px)"));

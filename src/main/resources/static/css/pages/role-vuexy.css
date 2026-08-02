@@ -167,10 +167,29 @@
 }
 
 .role-group-actions {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin-top: 14px;
+}
+
+.role-group-actions .role-action-button {
+  flex: 0 0 74px;
+}
+
+.role-group-actions .addGroupBtn {
+  margin-right: auto;
+  border-color: var(--role-primary);
+  background: var(--role-primary);
+  color: #fff;
+  box-shadow: 0 3px 9px rgba(115, 103, 240, .2);
+}
+
+.role-group-actions .addGroupBtn:hover,
+.role-group-actions .addGroupBtn:focus-visible {
+  border-color: var(--role-primary-dark);
+  background: var(--role-primary-dark);
+  color: #fff;
 }
 
 .role-action-button,
@@ -456,8 +475,8 @@
 }
 
 .role-grid-panel {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 72px minmax(0, 1fr);
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
   align-items: stretch;
 }
@@ -468,6 +487,12 @@
   border: 1px solid var(--role-border);
   border-radius: 12px;
   background: #fff;
+}
+
+/* The legacy side-list stylesheet fixes .total/.selected to half height.
+   These cards are stacked rows now, so each row must use its full grid track. */
+.role-management-page .role-grid-panel > .role-grid-section {
+  height: auto !important;
 }
 
 .role-grid-heading {
@@ -555,8 +580,8 @@
 
 .role-transfer-toolbar {
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
+  flex-direction: row !important;
+  align-items: center;
   justify-content: center;
   gap: 7px;
   padding: 0;
@@ -568,7 +593,8 @@
   align-items: center;
   justify-content: center;
   gap: 3px;
-  width: 72px;
+  width: auto;
+  min-width: 92px;
   min-height: 34px;
   padding: 6px 7px;
   border: 1px solid #dcd7ff;
@@ -578,6 +604,22 @@
   font-size: 9px;
   font-weight: 800;
   line-height: 1;
+  white-space: nowrap;
+}
+
+.role-management-page .role-transfer-toolbar button::before {
+  display: none !important;
+  content: none !important;
+}
+
+.role-transfer-toolbar button i,
+.role-transfer-toolbar button span {
+  flex: 0 0 auto;
+}
+
+.role-transfer-toolbar button span {
+  white-space: nowrap;
+  word-break: keep-all;
 }
 
 .role-transfer-toolbar button:hover,
@@ -590,6 +632,11 @@
 
 .role-transfer-toolbar i {
   font-size: 14px;
+}
+
+.role-transfer-toolbar .addListBtn i,
+.role-transfer-toolbar .delListBtn i {
+  transform: rotate(90deg);
 }
 
 .role-grid-container,
@@ -734,22 +781,8 @@
 }
 
 @media (max-width: 1399.98px) {
-  .role-grid-panel {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .role-transfer-toolbar {
-    flex-direction: row;
-  }
-
   .role-transfer-toolbar button {
-    width: auto;
-    min-width: 82px;
-  }
-
-  .role-transfer-toolbar .addListBtn i,
-  .role-transfer-toolbar .delListBtn i {
-    transform: rotate(90deg);
+    min-width: 92px;
   }
 }
 

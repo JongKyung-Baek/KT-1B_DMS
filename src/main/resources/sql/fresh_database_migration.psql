@@ -29,6 +29,9 @@
 \ir remove_orphan_legacy_objects_ddl.sql
 \ir internal_only_cleanup_ddl.sql
 
+\echo '[KT-1B] Applying Indonesian translations...'
+\ir indonesian_locale_ddl.sql
+
 \echo '[KT-1B] Converting retained application routes to /general...'
 \ir general_route_migration_ddl.sql
 

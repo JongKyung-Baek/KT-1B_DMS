@@ -3,13 +3,22 @@
  * @param lang
  * @param context
  */
+function normalizeBundleLanguage(lang) {
+	var language = String(lang || 'ko')
+		.trim()
+		.replace('_', '-')
+		.split('-')[0]
+		.toLowerCase();
+	return /^(ko|en|id|ja|zh)$/.test(language) ? language : 'ko';
+}
+
 function loadBundles(lang, context) {
 	try {
 		jQuery.i18n.properties({
 			name:['message', 'feature'],
 			path:context+'/messages/',
 			mode:'map',
-			language:lang,
+			language:normalizeBundleLanguage(lang),
 			callback: function() {
 			}
 		});

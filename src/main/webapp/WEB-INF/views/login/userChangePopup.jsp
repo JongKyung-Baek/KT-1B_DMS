@@ -51,7 +51,8 @@ function setPopupGridParam(){
 <div class="dialogBtnSet">
 	<div class="left"></div>
 	<div class="right">
-		<button class="ui-button ui-corner-all bottomBtn" type="submit">로그인</button>
+		<button class="ui-button ui-corner-all bottomBtn" type="submit"><spring:message
+				code="feature.login.submit" text="로그인"/></button>
 	</div>
 </div>
 </form>

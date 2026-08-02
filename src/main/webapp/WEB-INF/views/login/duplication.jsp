@@ -1,11 +1,14 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib prefix="spring" uri="http://www.springframework.org/tags"%>
+<spring:message code="feature.locale.code" text="ko" var="pageLocale"/>
+<spring:message code="feature.login.duplicate.title" text="중복 로그인 안내" var="duplicateTitle"/>
 <!doctype html>
-<html lang="ko">
+<html lang="${pageLocale}">
 <head>
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta http-equiv="Content-type" content="text/html; charset=utf-8">
-<title>Error page</title>
+<title>${duplicateTitle}</title>
 <%@ include file="/WEB-INF/jspf/favicon.jspf" %>
 <style>
 body,div,h1,h2,h3,h4,h5,h6,ul,li,ol, dl, dt, dd, header,nav,article,section,footer,button,p,span,form,fieldset,legend,input,label,select,option,iframe{margin:0; padding:0; font-family:"돋움", Dotum, Helvetica, Sans-serif;}
@@ -43,12 +46,14 @@ function movePage(){
 <div id="errorWrap" class="code404">
 	<div class="codeHeader">
 		<div>
-			<h1><span>다른 곳에서 사용자가 로그인 했습니다.</span></h1>
+			<h1><span>${duplicateTitle}</span></h1>
 		</div>
 	</div>
 	<p class="codeText">
-		<span>본인의 활동이 아니라면, 관리자에게 문의하여 주시기 바랍니다.<br>감사합니다.</span>
-		<span><button type="button" class="btn btn-primary" onclick="movePage()"><span>로그인 페이지</span></button></span>
+		<span><spring:message code="feature.login.duplicate.message"
+				text="다른 곳에서 동일한 사용자 계정으로 로그인했습니다. 본인의 활동이 아니라면 관리자에게 문의해 주세요."/></span>
+		<span><button type="button" class="btn btn-primary" onclick="movePage()"><span><spring:message
+				code="feature.login.submit" text="로그인"/></span></button></span>
 	</p>
 </div>
 </body>

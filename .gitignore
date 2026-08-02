@@ -43,6 +43,7 @@ build/
 !src/main/resources/static/images/ico_common_a0a0a0.png
 !src/main/resources/static/images/icon/*.png
 !src/main/resources/static/images/platform/*.png
+!src/main/resources/static/images/brand/kai-logo.png
 !src/main/resources/static/images/depth*.png
 src/main/webapp/excel/grid_20263181336596.xlsx
 src/main/webapp/excel/grid_2026318142345.xlsx

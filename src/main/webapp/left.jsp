@@ -64,8 +64,10 @@
 			<aside id="layout-menu" class="layout-menu menu-vertical menu">
 				<div class="app-brand demo">
 					<a href="${pageContext.request.contextPath}/general/distribution/swRequest/dashboard" class="app-brand-link"
-					   aria-label="KT-1B TDMS dashboard">
-						<span class="app-brand-text demo menu-text fw-bold ms-2">KT-1B TDMS</span>
+					   aria-label="KAI dashboard">
+						<img class="app-brand-kai-logo"
+							 src="${pageContext.request.contextPath}/resources/images/brand/kai-logo.png"
+							 width="72" height="44" alt="KAI" />
 					</a>
 						<a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
 							<i class="icon-base ti menu-toggle-icon d-none d-xl-block"></i>

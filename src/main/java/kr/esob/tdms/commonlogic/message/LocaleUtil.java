@@ -6,10 +6,7 @@ import org.springframework.web.servlet.support.RequestContextUtils;
 
 public class LocaleUtil  {
 	private static final Set<String> SUPPORTED_LANGUAGES =
-			// Add "id" here when the Indonesian feature bundle and DB
-			// translations are released. Until then an id-ID browser safely
-			// falls back to the Korean default instead of showing mixed text.
-			new HashSet<String>(Arrays.asList("ko", "en", "ja", "zh"));
+			new HashSet<String>(Arrays.asList("ko", "en", "id", "ja", "zh"));
 
 	/**
 	 * 기본 로케일을 리턴한다. 기본은 한글이다.
@@ -93,6 +90,9 @@ public class LocaleUtil  {
 		}
 		if ("en".equals(normalized)) {
 			return Locale.US;
+		}
+		if ("id".equals(normalized)) {
+			return Locale.forLanguageTag("id-ID");
 		}
 		if ("ja".equals(normalized)) {
 			return Locale.JAPAN;

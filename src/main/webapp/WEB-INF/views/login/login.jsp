@@ -40,7 +40,7 @@
 
 
 <!-- <link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/style.css" media="screen" /> -->
-<link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/custom-font.css" media="screen" />
+	<link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/custom-font.css?v=20260802.1" media="screen" />
 <style>
 
     * {
@@ -505,6 +505,10 @@ function changeLoginLanguage(language) {
               class="<%= "en".equals(LocaleUtil.getCurrentLanguage(request)) ? "active" : "" %>"
               lang="en"
               onclick="changeLoginLanguage('en')">English</button>
+      <button type="button"
+              class="<%= "id".equals(LocaleUtil.getCurrentLanguage(request)) ? "active" : "" %>"
+              lang="id"
+              onclick="changeLoginLanguage('id')">Bahasa Indonesia</button>
     </nav>
     <section class="login-wrap" aria-label="<spring:message code='feature.login.pageLabel'/>">
       <div class="brand-area">

@@ -296,6 +296,12 @@
 						   lang="en"
 						   onclick="changeUiLanguage('en')">English</a>
 					</li>
+					<li>
+						<a class="dropdown-item<c:if test="${sessionScope['scopedTarget.session'].sessionLang eq 'id'}"> active</c:if>"
+						   href="javascript:void(0);"
+						   lang="id"
+						   onclick="changeUiLanguage('id')">Bahasa Indonesia</a>
+					</li>
 				</ul>
 			</li>
 			<li class="nav-item me-2">

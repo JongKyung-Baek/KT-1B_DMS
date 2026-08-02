@@ -90,7 +90,7 @@ window.distributionAccountRequestPage = {
             </table>
         </div>
         <footer class="dar-table-footer">
-            <span id="accountRequestCount">0건</span>
+            <span id="accountRequestCount"><spring:message code="feature.common.count" text="{0}건" arguments="0"/></span>
             <span><spring:message code="feature.distributionAccountRequest.footer.note"
                 text="승인·반려 내역은 요청 정보와 함께 보존됩니다."/></span>
         </footer>

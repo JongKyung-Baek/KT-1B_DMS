@@ -31,39 +31,39 @@ $.jgrid.regional["id"] = {
 		emptyrecords: "Tidak ada data",
 		loadtext: "Memuat...",
 		pgtext : "Halaman {0} dari {1}",
-		savetext: "Saving...",
-		pgfirst : "First Page",
-		pglast : "Last Page",
-		pgnext : "Next Page",
-		pgprev : "Previous Page",
-		pgrecs : "Records per Page",
-		showhide: "Toggle Expand Collapse Grid",
+		savetext: "Menyimpan...",
+		pgfirst : "Halaman Pertama",
+		pglast : "Halaman Terakhir",
+		pgnext : "Halaman Berikutnya",
+		pgprev : "Halaman Sebelumnya",
+		pgrecs : "Data per Halaman",
+		showhide: "Perluas atau Ciutkan Grid",
 		// mobile
-		pagerCaption : "Grid::Page Settings",
-		pageText : "Page:",
-		recordPage : "Records per Page",
-		nomorerecs : "No more records...",
-		scrollPullup: "Pull up to load more...",
-		scrollPulldown : "Pull down to refresh...",
-		scrollRefresh : "Release to refresh..."
+		pagerCaption : "Pengaturan Halaman Grid",
+		pageText : "Halaman:",
+		recordPage : "Data per Halaman",
+		nomorerecs : "Tidak ada data lagi...",
+		scrollPullup: "Tarik ke atas untuk memuat lebih banyak...",
+		scrollPulldown : "Tarik ke bawah untuk menyegarkan...",
+		scrollRefresh : "Lepaskan untuk menyegarkan..."
 	},
 	search : {
 		caption: "Pencarian",
 		Find: "Cari !",
 		Reset: "Segarkan",
-		odata: [{ oper:'eq', text:"sama dengan"},{ oper:'ne', text:"tidak sama dengan"},{ oper:'lt', text:"kurang dari"},{ oper:'le', text:"kurang dari atau sama dengan"},{ oper:'gt', text:"lebih besar"},{ oper:'ge', text:"lebih besar atau sama dengan"},{ oper:'bw', text:"dimulai dengan"},{ oper:'bn', text:"tidak dimulai dengan"},{ oper:'in', text:"di dalam"},{ oper:'ni', text:"tidak di dalam"},{ oper:'ew', text:"diakhiri dengan"},{ oper:'en', text:"tidak diakhiri dengan"},{ oper:'cn', text:"mengandung"},{ oper:'nc', text:"tidak mengandung"},{ oper:'nu', text:'is null'},{ oper:'nn', text:'is not null'}, {oper:'bt', text:'between'}],
-		groupOps: [	{ op: "AND", text: "all" },	{ op: "OR",  text: "any" }	],
-		operandTitle : "Click to select search operation.",
-		resetTitle : "Reset Search Value",
-		addsubgrup : "Add subgroup",
-		addrule : "Add rule",
-		delgroup : "Delete group",
-		delrule : "Delete rule"
+		odata: [{ oper:'eq', text:"sama dengan"},{ oper:'ne', text:"tidak sama dengan"},{ oper:'lt', text:"kurang dari"},{ oper:'le', text:"kurang dari atau sama dengan"},{ oper:'gt', text:"lebih besar"},{ oper:'ge', text:"lebih besar atau sama dengan"},{ oper:'bw', text:"dimulai dengan"},{ oper:'bn', text:"tidak dimulai dengan"},{ oper:'in', text:"di dalam"},{ oper:'ni', text:"tidak di dalam"},{ oper:'ew', text:"diakhiri dengan"},{ oper:'en', text:"tidak diakhiri dengan"},{ oper:'cn', text:"mengandung"},{ oper:'nc', text:"tidak mengandung"},{ oper:'nu', text:'kosong'},{ oper:'nn', text:'tidak kosong'}, {oper:'bt', text:'di antara'}],
+		groupOps: [	{ op: "AND", text: "semua" },	{ op: "OR",  text: "salah satu" }	],
+		operandTitle : "Klik untuk memilih operasi pencarian.",
+		resetTitle : "Atur Ulang Nilai Pencarian",
+		addsubgrup : "Tambah subgrup",
+		addrule : "Tambah aturan",
+		delgroup : "Hapus grup",
+		delrule : "Hapus aturan"
 	},
 	edit : {
 		addCaption: "Tambah Data",
 		editCaption: "Sunting Data",
-		bSubmit: "Submit",
+		bSubmit: "Simpan",
 		bCancel: "Tutup",
 		bClose: "Tutup",
 		saveData: "Data telah berubah! Simpan perubahan?",
@@ -78,11 +78,11 @@ $.jgrid.regional["id"] = {
 			email: "alamat e-mail tidak valid",
 			integer: "hanya nilai integer yang diperbolehkan",
 			date: "nilai tanggal tidak valid",
-			url: "Bukan URL yang valid. Harap gunakan ('http://' or 'https://')",
+			url: "URL tidak valid. Gunakan 'http://' atau 'https://'.",
 			nodefined : " belum didefinisikan!",
-			novalue : " return value is required!",
-			customarray : "Custom function should return array!",
-			customfcheck : "Custom function should be present in case of custom checking!"
+			novalue : " nilai hasil wajib diisi!",
+			customarray : "Fungsi khusus harus mengembalikan array!",
+			customfcheck : "Fungsi khusus wajib tersedia untuk pemeriksaan khusus!"
 			
 		}
 	},
@@ -107,15 +107,15 @@ $.jgrid.regional["id"] = {
 		searchtitle: "Temukan data",
 		refreshtext: "",
 		refreshtitle: "Segarkan Grid",
-		alertcap: "Warning",
+		alertcap: "Peringatan",
 		alerttext: "Harap pilih baris",
 		viewtext: "",
 		viewtitle: "Tampilkan baris terpilih",
 		savetext: "",
-		savetitle: "Save row",
+		savetitle: "Simpan baris",
 		canceltext: "",
-		canceltitle : "Cancel row editing",
-		selectcaption : "Actions..."
+		canceltitle : "Batalkan penyuntingan baris",
+		selectcaption : "Tindakan..."
 	},
 	col : {
 		caption: "Pilih Kolom",
@@ -209,16 +209,16 @@ $.jgrid.regional["id"] = {
 		idName : 'id'
 	},
 	colmenu : {
-		sortasc : "Sort Ascending",
-		sortdesc : "Sort Descending",
-		columns : "Columns",
-		filter : "Filter",
-		grouping : "Group By",
-		ungrouping : "Ungroup",
-		searchTitle : "Get items with value that:",
-		freeze : "Freeze",
-		unfreeze : "Unfreeze",
-		reorder : "Move to reorder"
+		sortasc : "Urutkan Naik",
+		sortdesc : "Urutkan Turun",
+		columns : "Kolom",
+		filter : "Saring",
+		grouping : "Kelompokkan Berdasarkan",
+		ungrouping : "Batalkan Pengelompokan",
+		searchTitle : "Tampilkan data dengan nilai:",
+		freeze : "Bekukan",
+		unfreeze : "Batalkan Pembekuan",
+		reorder : "Pindahkan untuk mengubah urutan"
 	}
 };
 }));

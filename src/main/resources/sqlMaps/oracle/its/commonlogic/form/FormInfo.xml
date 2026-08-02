@@ -10,7 +10,7 @@
         FORM_ID                 AS formId,
         COLUMN_ID                AS columnId,
         COLUMN_TYPE              AS columnType,
-        COALESCE(lang.LANG_DESC, form.COLUMN_NM) AS columnName,
+        COALESCE(lang.LANG_DESC, fallbackLang.LANG_DESC, form.COLUMN_NM) AS columnName,
         COLUMN_SEQ               AS columnSort,
         COLUMN_SIZE              AS columnSize,
         COLUMN_ALIGN             AS columnAlign,
@@ -29,6 +29,7 @@
         COLUMN_HIDDEN            AS columnHidden
     FROM DOCS_FORM_INFO form
     LEFT JOIN DOCS_LANG lang ON lang.LANG_CD = form.LANG_CD AND lang.LANG_TYPE = #{sessionLang}
+    LEFT JOIN DOCS_LANG fallbackLang ON fallbackLang.LANG_CD = form.LANG_CD AND fallbackLang.LANG_TYPE = 'en'
     WHERE FORM_ID = #{formId}
       AND USE_YN = 'Y'
     ORDER BY COLUMN_SEQ

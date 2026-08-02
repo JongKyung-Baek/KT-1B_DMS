@@ -98,7 +98,7 @@
 <select id="getMenuTopList" resultType="kr.esob.tdms.commonlogic.menu.MenuVO">
     SELECT menu.MENU_CD AS menuCd,
            menu.PARENT_MENU_CD AS parentMenuCd,
-           COALESCE(lang.LANG_DESC, menu.MENU_NM) AS menuNm,
+           COALESCE(lang.LANG_DESC, fallbackLang.LANG_DESC, menu.MENU_NM) AS menuNm,
            menu.MESSAGE_CD AS messageCd,
            menu.MENU_LEVEL AS menuLevel,
            menu.MENU_TYPE AS menuType,
@@ -117,6 +117,9 @@
     LEFT JOIN DOCS_LANG lang
     ON lang.LANG_CD = menu.MESSAGE_CD
     AND lang.LANG_TYPE = #{sessionLang}
+    LEFT JOIN DOCS_LANG fallbackLang
+    ON fallbackLang.LANG_CD = menu.MESSAGE_CD
+    AND fallbackLang.LANG_TYPE = 'en'
     WHERE menu.TREE_TYPE = 'root'
     AND menu.PARENT_MENU_CD = 'ROOT'
     AND menu.MENU_TYPE != 'H'
@@ -130,7 +133,7 @@
     WITH RECURSIVE parent (MENU_CD, PARENT_MENU_CD, MENU_NM, MESSAGE_CD, MENU_LEVEL, MENU_TYPE, MENU_URL, SORT_SEQ, TREE_TYPE, DEL_YN, USE_YN, TOOLTIP, MENU_DESC, ROLE_CD, MENU_PATH_CD, MENU_PATH, MAIN_CD) AS (
         SELECT menu.MENU_CD,
                menu.PARENT_MENU_CD,
-               COALESCE(lang.LANG_DESC, menu.MENU_NM) AS MENU_NM,
+               COALESCE(lang.LANG_DESC, fallbackLang.LANG_DESC, menu.MENU_NM) AS MENU_NM,
                menu.MESSAGE_CD,
                1 AS MENU_LEVEL,
                menu.MENU_TYPE,
@@ -146,13 +149,16 @@
                menu.MENU_DESC,
                menu.ROLE_CD,
                CAST(menu.MENU_CD AS VARCHAR) AS MENU_PATH_CD,
-               CAST(COALESCE(lang.LANG_DESC, menu.MENU_NM) AS VARCHAR) AS MENU_PATH,
+               CAST(COALESCE(lang.LANG_DESC, fallbackLang.LANG_DESC, menu.MENU_NM) AS VARCHAR) AS MENU_PATH,
                menu.MENU_CD AS MAIN_CD
         FROM DOCS_MENU menu
         JOIN DOCS_REL_ROLE_GROUP roleGroup ON menu.ROLE_CD = roleGroup.ROLE_CD
         LEFT JOIN DOCS_LANG lang
         ON lang.LANG_CD = menu.MESSAGE_CD
         AND lang.LANG_TYPE = #{sessionLang}
+        LEFT JOIN DOCS_LANG fallbackLang
+        ON fallbackLang.LANG_CD = menu.MESSAGE_CD
+        AND fallbackLang.LANG_TYPE = 'en'
         WHERE MENU.TREE_TYPE = 'root'
         AND MENU.PARENT_MENU_CD = 'ROOT'
         AND MENU.USE_YN = 'Y'
@@ -161,7 +167,7 @@
         UNION ALL
         SELECT menu.MENU_CD,
                menu.PARENT_MENU_CD,
-               COALESCE(lang.LANG_DESC, menu.MENU_NM) AS MENU_NM,
+               COALESCE(lang.LANG_DESC, fallbackLang.LANG_DESC, menu.MENU_NM) AS MENU_NM,
                menu.MESSAGE_CD,
                parent.MENU_LEVEL + 1 AS MENU_LEVEL,
                menu.MENU_TYPE,
@@ -177,7 +183,7 @@
                menu.MENU_DESC,
                menu.ROLE_CD,
                parent.MENU_PATH_CD || ' > ' || MENU.MENU_CD AS MENU_PATH_CD,
-               parent.MENU_PATH || ' > ' || COALESCE(lang.LANG_DESC, menu.MENU_NM) AS MENU_PATH,
+               parent.MENU_PATH || ' > ' || COALESCE(lang.LANG_DESC, fallbackLang.LANG_DESC, menu.MENU_NM) AS MENU_PATH,
                parent.MAIN_CD AS MAIN_CD
         FROM DOCS_MENU menu
         JOIN parent ON menu.PARENT_MENU_CD = parent.MENU_CD
@@ -185,6 +191,9 @@
         LEFT JOIN DOCS_LANG lang
         ON lang.LANG_CD = menu.MESSAGE_CD
         AND lang.LANG_TYPE = #{sessionLang}
+        LEFT JOIN DOCS_LANG fallbackLang
+        ON fallbackLang.LANG_CD = menu.MESSAGE_CD
+        AND fallbackLang.LANG_TYPE = 'en'
         WHERE menu.USE_YN = 'Y'
         AND menu.DEL_YN = 'N'
         AND roleGroup.GROUP_CD = #{roleGroup}
@@ -253,7 +262,7 @@
         SELECT
             MENU.MENU_CD,
             MENU.PARENT_MENU_CD,
-            COALESCE(LANG.LANG_DESC, MENU.MENU_NM),
+            COALESCE(LANG.LANG_DESC, FALLBACK_LANG.LANG_DESC, MENU.MENU_NM),
             MENU.MENU_LEVEL,
             MENU.MENU_TYPE,
             MENU.SORT_SEQ,
@@ -264,6 +273,9 @@
         LEFT JOIN DOCS_LANG LANG
           ON LANG.LANG_CD = MENU.MESSAGE_CD
          AND LANG.LANG_TYPE = #{sessionLang}
+        LEFT JOIN DOCS_LANG FALLBACK_LANG
+          ON FALLBACK_LANG.LANG_CD = MENU.MESSAGE_CD
+         AND FALLBACK_LANG.LANG_TYPE = 'en'
         WHERE MENU.DEL_YN = 'N'
           <if test="includeInactive != true">
             AND MENU.USE_YN = 'Y'
@@ -277,7 +289,7 @@
         SELECT
             CHILD.MENU_CD,
             CHILD.PARENT_MENU_CD,
-            COALESCE(LANG.LANG_DESC, CHILD.MENU_NM),
+            COALESCE(LANG.LANG_DESC, FALLBACK_LANG.LANG_DESC, CHILD.MENU_NM),
             CHILD.MENU_LEVEL,
             CHILD.MENU_TYPE,
             CHILD.SORT_SEQ,
@@ -290,6 +302,9 @@
         LEFT JOIN DOCS_LANG LANG
           ON LANG.LANG_CD = CHILD.MESSAGE_CD
          AND LANG.LANG_TYPE = #{sessionLang}
+        LEFT JOIN DOCS_LANG FALLBACK_LANG
+          ON FALLBACK_LANG.LANG_CD = CHILD.MESSAGE_CD
+         AND FALLBACK_LANG.LANG_TYPE = 'en'
         WHERE CHILD.DEL_YN = 'N'
           <if test="includeInactive != true">
             AND CHILD.USE_YN = 'Y'

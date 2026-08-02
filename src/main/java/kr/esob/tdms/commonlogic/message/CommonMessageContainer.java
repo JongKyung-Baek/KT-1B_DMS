@@ -2,8 +2,12 @@ package kr.esob.tdms.commonlogic.message;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -22,6 +26,9 @@ import kr.esob.tdms.commonlogic.value.RootAbsolutePath;
 
 @Component
 public class CommonMessageContainer {
+	private static final List<String> BUNDLED_LANGUAGES =
+			Arrays.asList("ko", "en", "id", "ja", "zh");
+
 	@Inject
 	CommonMessageDao commonMessageDao;
 
@@ -53,7 +60,20 @@ public class CommonMessageContainer {
 		//메시지 properties 생성
 		Map<String, Properties> propertiesByLanguage =
 				new LinkedHashMap<String, Properties>();
-		for (CommonMessageVO message : messageMapList) {
+		// Load packaged translations first. Database values intentionally
+		// overlay matching keys below. This keeps partial DOCS_LANG locales from
+		// replacing a complete bundled message_<language>.properties file.
+		mergeBundledMessages(propertiesByLanguage, "ko", "message.properties");
+		for (String language : BUNDLED_LANGUAGES) {
+			mergeBundledMessages(
+					propertiesByLanguage,
+					language,
+					"message_" + language + ".properties");
+		}
+
+		List<CommonMessageVO> safeMessages = messageMapList == null
+				? new ArrayList<CommonMessageVO>() : messageMapList;
+		for (CommonMessageVO message : safeMessages) {
 			String language = normalizeLanguageCode(message.getLangType());
 			if (language == null || message.getLangCd() == null
 					|| message.getLangDesc() == null) {
@@ -82,6 +102,29 @@ public class CommonMessageContainer {
 					new File(messageDir, "message_" + entry.getKey() + ".properties"));
 		}
 
+	}
+
+	private void mergeBundledMessages(
+			Map<String, Properties> propertiesByLanguage,
+			String language,
+			String resourceName) throws Exception {
+		InputStream inputStream = webApplicationContext.getServletContext()
+				.getResourceAsStream("/messages/" + resourceName);
+		if (inputStream == null) {
+			return;
+		}
+		Properties bundled = new Properties();
+		try (InputStream source = inputStream;
+				InputStreamReader reader = new InputStreamReader(
+						source, StandardCharsets.UTF_8)) {
+			bundled.load(reader);
+		}
+		Properties target = propertiesByLanguage.get(language);
+		if (target == null) {
+			target = new Properties();
+			propertiesByLanguage.put(language, target);
+		}
+		target.putAll(bundled);
 	}
 
 	private String normalizeLanguageCode(String language) {

@@ -43,4 +43,22 @@ class LoginSuccessLocaleTest {
         assertEquals("en", loginSuccess.resolveLoginLanguage(
                 request, request.getSession()));
     }
+
+    @Test
+    void explicitIndonesianLoginLanguageIsSupported() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addParameter("lang", "id");
+
+        assertEquals("id", loginSuccess.resolveLoginLanguage(
+                request, request.getSession()));
+    }
+
+    @Test
+    void indonesianBrowserLanguageIsUsedWhenNoSelectionExists() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addPreferredLocale(Locale.forLanguageTag("id-ID"));
+
+        assertEquals("id", loginSuccess.resolveLoginLanguage(
+                request, request.getSession()));
+    }
 }

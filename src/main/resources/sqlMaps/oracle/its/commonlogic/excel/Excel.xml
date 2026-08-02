@@ -9,7 +9,7 @@
 <select id="selectList" resultType="kr.esob.tdms.commonlogic.grid.GridInfoVO">
     SELECT
         grid.COLUMN_ID AS name,
-        COALESCE(lang.LANG_DESC, grid.COLUMN_NM) AS label,
+        COALESCE(lang.LANG_DESC, fallbackLang.LANG_DESC, grid.COLUMN_NM) AS label,
         grid.COLUMN_ID AS columnId,
         grid.COLUMN_SIZE AS width,
         grid.COLUMN_ALIGN AS align,
@@ -20,6 +20,7 @@
         grid.MAX_LENGTH AS maxlength
     FROM DOCS_GRID_INFO grid
     LEFT JOIN DOCS_LANG lang ON lang.LANG_CD = grid.LANG_CD AND lang.LANG_TYPE = #{sessionLang}
+    LEFT JOIN DOCS_LANG fallbackLang ON fallbackLang.LANG_CD = grid.LANG_CD AND fallbackLang.LANG_TYPE = 'en'
     WHERE GRID_ID = #{gridId}
       AND COLUMN_HIDDEN = 'N' /* Excel에서는 숨겨진 column은 가져오지 않는다. */
     ORDER BY COLUMN_SEQ
@@ -29,7 +30,7 @@
 <select id="selectListDuanzongPdm" resultType="kr.esob.tdms.commonlogic.grid.GridInfoVO">
     SELECT
         grid.COLUMN_ID AS name,
-        COALESCE(lang.LANG_DESC, grid.COLUMN_NM) AS label,
+        COALESCE(lang.LANG_DESC, fallbackLang.LANG_DESC, grid.COLUMN_NM) AS label,
         grid.COLUMN_ID AS columnId,
         grid.COLUMN_SIZE AS width,
         grid.COLUMN_ALIGN AS align,
@@ -40,6 +41,7 @@
         grid.MAX_LENGTH AS maxlength
     FROM DOCS_GRID_INFO grid
     LEFT JOIN DOCS_LANG lang ON lang.LANG_CD = grid.LANG_CD AND lang.LANG_TYPE = #{sessionLang}
+    LEFT JOIN DOCS_LANG fallbackLang ON fallbackLang.LANG_CD = grid.LANG_CD AND fallbackLang.LANG_TYPE = 'en'
     WHERE GRID_ID = #{gridId}
     ORDER BY COLUMN_SEQ
 </select>

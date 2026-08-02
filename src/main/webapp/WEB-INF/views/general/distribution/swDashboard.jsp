@@ -177,7 +177,7 @@
 		<article class="dashboard-panel-card">
 			<div class="dashboard-panel-heading">
 				<div>
-					<span class="dashboard-section-kicker">My accessible documents</span>
+					<span class="dashboard-section-kicker"><spring:message code="feature.techDashboard.kicker.accessibleDocuments" text="접근 가능 문서"/></span>
 					<h2><spring:message code="feature.techDashboard.gradeDistribution.title" text="내 문서등급 분포" /></h2>
 				</div>
 				<span class="dashboard-chip dashboard-chip--neutral"><spring:message code="feature.common.count.items"
@@ -236,7 +236,7 @@
 		<article class="dashboard-panel-card">
 			<div class="dashboard-panel-heading">
 				<div>
-					<span class="dashboard-section-kicker">My permissions</span>
+					<span class="dashboard-section-kicker"><spring:message code="feature.techDashboard.kicker.permissions" text="내 권한"/></span>
 					<h2><spring:message code="feature.techDashboard.permissions.title" text="내 권한 및 확인 항목" /></h2>
 				</div>
 			</div>
@@ -352,7 +352,7 @@
 		<article class="dashboard-panel-card">
 			<div class="dashboard-panel-heading">
 				<div>
-					<span class="dashboard-section-kicker">My accessible documents</span>
+					<span class="dashboard-section-kicker"><spring:message code="feature.techDashboard.kicker.accessibleDocuments" text="접근 가능 문서"/></span>
 					<h2><spring:message code="feature.techDashboard.recentDocuments.title" text="내 접근 가능 최근 자료" /></h2>
 				</div>
 				<button type="button" class="dashboard-text-button" onclick="moveToTechnicalDataList()">
@@ -422,7 +422,7 @@
 		<article class="dashboard-panel-card">
 			<div class="dashboard-panel-heading">
 				<div>
-					<span class="dashboard-section-kicker">My file activity</span>
+					<span class="dashboard-section-kicker"><spring:message code="feature.techDashboard.kicker.fileActivity" text="내 파일 활동"/></span>
 					<h2><spring:message code="feature.techDashboard.activity.title" text="내 파일 활동" /></h2>
 				</div>
 				<span class="dashboard-chip dashboard-chip--neutral"><spring:message code="feature.techDashboard.activity.latest"

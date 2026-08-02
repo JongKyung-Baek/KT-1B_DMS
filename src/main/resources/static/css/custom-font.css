@@ -183,8 +183,17 @@ body.login-page #loginForm .mb-6 > .form-label {
   font-size: 15px;
 }
 
-#layout-menu .app-brand-text {
-  white-space: nowrap;
+#layout-menu .app-brand-link {
+  min-width: 0;
+  gap: 0;
+}
+
+#layout-menu .app-brand-kai-logo {
+  display: block;
+  flex: 0 0 72px;
+  width: 72px;
+  height: 44px;
+  object-fit: contain;
 }
 
 @media (min-width: 1200px) {

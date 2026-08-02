@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,17 +28,21 @@ public class ViewerIntegrationService {
             "objectId", "fileNo", "userId"));
 
     private final ViewerIntegrationProperties properties;
+    private final StepViewerIntegrationProperties stepProperties;
     private final ViewerIntegrationClient client;
     private final ViewerIntegrationDao dao;
     private final ObjectMapper objectMapper;
     private final Clock clock;
 
     @Autowired
-    public ViewerIntegrationService(ViewerIntegrationProperties properties,
+    public ViewerIntegrationService(
+                                    @Qualifier("viewerIntegrationProperties")
+                                    ViewerIntegrationProperties properties,
+                                    StepViewerIntegrationProperties stepProperties,
                                     ViewerIntegrationClient client,
                                     ViewerIntegrationDao dao,
                                     ObjectMapper objectMapper) {
-        this(properties, client, dao, objectMapper, Clock.systemUTC());
+        this(properties, stepProperties, client, dao, objectMapper, Clock.systemUTC());
     }
 
     ViewerIntegrationService(ViewerIntegrationProperties properties,
@@ -45,7 +50,17 @@ public class ViewerIntegrationService {
                              ViewerIntegrationDao dao,
                              ObjectMapper objectMapper,
                              Clock clock) {
+        this(properties, new StepViewerIntegrationProperties(), client, dao, objectMapper, clock);
+    }
+
+    ViewerIntegrationService(ViewerIntegrationProperties properties,
+                             StepViewerIntegrationProperties stepProperties,
+                             ViewerIntegrationClient client,
+                             ViewerIntegrationDao dao,
+                             ObjectMapper objectMapper,
+                             Clock clock) {
         this.properties = properties;
+        this.stepProperties = stepProperties;
         this.client = client;
         this.dao = dao;
         this.objectMapper = objectMapper;
@@ -53,29 +68,45 @@ public class ViewerIntegrationService {
     }
 
     public ViewerPreparedLaunch prepareLaunch(Path pdf, ViewerDocumentMetadata metadata) {
-        requireOutboundConfiguration();
+        return prepareLaunch(pdf, metadata, ViewerProvider.PDF);
+    }
+
+    public ViewerPreparedLaunch prepareLaunch(Path document,
+                                              ViewerDocumentMetadata metadata,
+                                              ViewerProvider provider) {
+        AbstractViewerIntegrationProperties selectedProperties = propertiesFor(provider);
+        requireOutboundConfiguration(selectedProperties);
         normalizeMetadata(metadata);
-        dao.deleteExpiredState(properties.getStateRetentionDays());
-        ViewerIngestResponse response = client.ingest(pdf, metadata);
-        if (dao.insertLaunch(ViewerLaunchRecord.from(metadata, response.getExpiresAt())) != 1) {
+        dao.deleteExpiredState(selectedProperties.getStateRetentionDays());
+        ViewerIngestResponse response = provider == ViewerProvider.STEP
+                ? client.ingest(document, metadata, provider)
+                : client.ingest(document, metadata);
+        if (dao.insertLaunch(ViewerLaunchRecord.from(
+                metadata, response.getExpiresAt(), provider.getCode())) != 1) {
             throw new IllegalStateException("Viewer launch correlation could not be persisted.");
         }
         return new ViewerPreparedLaunch(
-                properties.launchUri(), response.getLaunchToken(), response.getCorrelationId());
+                selectedProperties.launchUri(), response.getLaunchToken(), response.getCorrelationId());
     }
 
     public Path createRequestPdf(String correlationId) {
-        requireOutboundConfiguration();
+        return createRequestDocument(correlationId, ViewerProvider.PDF);
+    }
+
+    public Path createRequestDocument(String correlationId, ViewerProvider provider) {
+        AbstractViewerIntegrationProperties selectedProperties = propertiesFor(provider);
+        requireOutboundConfiguration(selectedProperties);
         requireCanonicalUuid(correlationId, "Viewer correlation ID", false);
-        Path workDirectory = properties.workDirectory();
+        Path workDirectory = selectedProperties.workDirectory();
         try {
             Files.createDirectories(workDirectory);
             if (!Files.isDirectory(workDirectory)) {
                 throw new IllegalStateException("Viewer work directory is unavailable.");
             }
-            return Files.createTempFile(workDirectory, correlationId + "-", ".pdf");
+            return Files.createTempFile(
+                    workDirectory, correlationId + "-", provider.getTemporarySuffix());
         } catch (IOException exception) {
-            throw new IllegalStateException("Unable to create a viewer request PDF.", exception);
+            throw new IllegalStateException("Unable to create a viewer request file.", exception);
         }
     }
 
@@ -86,16 +117,17 @@ public class ViewerIntegrationService {
                                String nonce,
                                String contentHash,
                                String signature) {
-        requireCallbackConfiguration();
-        authenticate(body, clientId, timestamp, nonce, contentHash, signature);
-        ViewerCallbackEvent event = parseEvent(body);
+        CallbackCredential credential = authenticate(
+                body, clientId, timestamp, nonce, contentHash, signature);
+        ViewerCallbackEvent event = parseEvent(body, credential.clockSkewSeconds);
 
         ViewerLaunchRecord launch = dao.selectLaunch(event.getCorrelationId());
         if (launch == null) {
             throw new ViewerCallbackIdentityException("Unknown viewer correlation identifier.");
         }
+        requireProvider(credential, launch);
         requireIdentity(event, launch);
-        requireOccurrenceNotBeforeLaunch(event, launch);
+        requireOccurrenceNotBeforeLaunch(event, launch, credential.clockSkewSeconds);
 
         dao.deleteOldNonces();
         if (dao.insertNonce(clientId, nonce) != 1) {
@@ -110,21 +142,19 @@ public class ViewerIntegrationService {
         requireSingleRow(dao.markViewed(event), "viewer launch status");
     }
 
-    private void authenticate(byte[] body,
-                              String clientId,
-                              String timestamp,
-                              String nonce,
-                              String contentHash,
-                              String signature) {
+    private CallbackCredential authenticate(byte[] body,
+                                            String clientId,
+                                            String timestamp,
+                                            String nonce,
+                                            String contentHash,
+                                            String signature) {
         if (body == null || body.length == 0 || body.length > MAX_CALLBACK_BYTES) {
             throw new ViewerCallbackValidationException("Viewer callback body size is invalid.");
         }
-        if (!properties.effectiveCallbackClientId().equals(clientId)) {
-            throw new ViewerCallbackAuthenticationException("Viewer callback client is invalid.");
-        }
+        CallbackCredential credential = resolveCallbackCredential(clientId);
         long epochSeconds = parseEpochSeconds(timestamp);
         long now = Instant.now(clock).getEpochSecond();
-        long skew = properties.getSignatureClockSkewSeconds();
+        long skew = credential.clockSkewSeconds;
         if (epochSeconds < now - skew || epochSeconds > now + skew) {
             throw new ViewerCallbackAuthenticationException("Viewer callback timestamp is outside the allowed window.");
         }
@@ -138,13 +168,14 @@ public class ViewerIntegrationService {
         }
         String canonical = "POST\n" + ViewerIntegrationProperties.CALLBACK_PATH + "\n"
                 + clientId + "\n" + timestamp + "\n" + nonce + "\n" + contentHash;
-        String expected = ViewerCrypto.hmacSha256(properties.getSharedSecret(), canonical);
+        String expected = ViewerCrypto.hmacSha256(credential.sharedSecret, canonical);
         if (!ViewerCrypto.constantTimeEquals(expected, signature)) {
             throw new ViewerCallbackAuthenticationException("Viewer callback signature is invalid.");
         }
+        return credential;
     }
 
-    private ViewerCallbackEvent parseEvent(byte[] body) {
+    private ViewerCallbackEvent parseEvent(byte[] body, long clockSkewSeconds) {
         try {
             JsonNode root = objectMapper.readTree(body);
             if (root == null || !root.isObject() || root.size() != CALLBACK_FIELDS.size()) {
@@ -176,7 +207,7 @@ public class ViewerIntegrationService {
             } catch (RuntimeException exception) {
                 throw new ViewerCallbackValidationException("Viewer callback occurrence timestamp is invalid.", exception);
             }
-            if (occurredAt.isAfter(Instant.now(clock).plusSeconds(properties.getSignatureClockSkewSeconds()))) {
+            if (occurredAt.isAfter(Instant.now(clock).plusSeconds(clockSkewSeconds))) {
                 throw new ViewerCallbackValidationException("Viewer callback occurrence timestamp is in the future.");
             }
             return event;
@@ -196,7 +227,7 @@ public class ViewerIntegrationService {
     }
 
     private void requireOccurrenceNotBeforeLaunch(
-            ViewerCallbackEvent event, ViewerLaunchRecord launch) {
+            ViewerCallbackEvent event, ViewerLaunchRecord launch, long clockSkewSeconds) {
         final Instant occurredAt;
         final Instant createdAt;
         try {
@@ -207,7 +238,7 @@ public class ViewerIntegrationService {
                     "Viewer launch or callback occurrence timestamp is invalid.", exception);
         }
         if (occurredAt.isBefore(createdAt.minusSeconds(
-                properties.getSignatureClockSkewSeconds()))) {
+                clockSkewSeconds))) {
             throw new ViewerCallbackIdentityException(
                     "Viewer callback occurrence predates its launch.");
         }
@@ -295,25 +326,92 @@ public class ViewerIntegrationService {
         }
     }
 
-    private void requireOutboundConfiguration() {
+    private AbstractViewerIntegrationProperties propertiesFor(ViewerProvider provider) {
+        if (provider == null) {
+            throw new IllegalArgumentException("Viewer provider is required.");
+        }
+        return provider == ViewerProvider.STEP ? stepProperties : properties;
+    }
+
+    private void requireOutboundConfiguration(
+            AbstractViewerIntegrationProperties selectedProperties) {
         try {
-            properties.requireOutboundConfiguration();
+            selectedProperties.requireOutboundConfiguration();
         } catch (IllegalStateException exception) {
             throw new ViewerIntegrationUnavailableException("Viewer integration is not configured.", exception);
         }
     }
 
-    private void requireCallbackConfiguration() {
+    private CallbackCredential resolveCallbackCredential(String clientId) {
+        CallbackCredential resolved = null;
+        resolved = matchingCredential(resolved, clientId, properties, ViewerProvider.PDF);
+        resolved = matchingCredential(resolved, clientId, stepProperties, ViewerProvider.STEP);
+        if (resolved != null) {
+            return resolved;
+        }
+        if (!properties.isEnabled() && !stepProperties.isEnabled()) {
+            throw new ViewerIntegrationUnavailableException(
+                    "Viewer callback is not configured.",
+                    new IllegalStateException("All viewer integrations are disabled."));
+        }
+        throw new ViewerCallbackAuthenticationException("Viewer callback client is invalid.");
+    }
+
+    private CallbackCredential matchingCredential(
+            CallbackCredential current,
+            String suppliedClientId,
+            AbstractViewerIntegrationProperties candidate,
+            ViewerProvider provider) {
+        if (!candidate.isEnabled()
+                || suppliedClientId == null
+                || !suppliedClientId.equals(candidate.effectiveCallbackClientId())) {
+            return current;
+        }
         try {
-            properties.requireCallbackConfiguration();
+            candidate.requireCallbackConfiguration();
         } catch (IllegalStateException exception) {
-            throw new ViewerIntegrationUnavailableException("Viewer callback is not configured.", exception);
+            throw new ViewerIntegrationUnavailableException(
+                    "Viewer callback is not configured.", exception);
+        }
+        if (current != null) {
+            throw new ViewerIntegrationUnavailableException(
+                    "Viewer callback client configuration is ambiguous.",
+                    new IllegalStateException("Duplicate viewer callback client ID."));
+        }
+        return new CallbackCredential(
+                provider,
+                candidate.getSharedSecret(),
+                candidate.getSignatureClockSkewSeconds());
+    }
+
+    private void requireProvider(CallbackCredential credential, ViewerLaunchRecord launch) {
+        String launchProvider = launch.getViewerProvider();
+        if (launchProvider == null || launchProvider.trim().isEmpty()) {
+            launchProvider = ViewerProvider.PDF.getCode();
+        }
+        if (!credential.provider.getCode().equalsIgnoreCase(launchProvider.trim())) {
+            throw new ViewerCallbackIdentityException(
+                    "Viewer callback provider does not match its launch.");
         }
     }
 
     private void requireSingleRow(int affectedRows, String operation) {
         if (affectedRows != 1) {
             throw new IllegalStateException("Unable to persist " + operation + ".");
+        }
+    }
+
+    private static final class CallbackCredential {
+        private final ViewerProvider provider;
+        private final String sharedSecret;
+        private final long clockSkewSeconds;
+
+        private CallbackCredential(ViewerProvider provider,
+                                   String sharedSecret,
+                                   long clockSkewSeconds) {
+            this.provider = provider;
+            this.sharedSecret = sharedSecret;
+            this.clockSkewSeconds = clockSkewSeconds;
         }
     }
 }

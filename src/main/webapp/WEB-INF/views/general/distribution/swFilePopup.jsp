@@ -131,6 +131,16 @@
 		return /\.pdf$/i.test(String(fileName).trim());
 	}
 
+	function isSwStepFile(rowdata, fallbackName) {
+		var fileName = (rowdata && (rowdata.orgFileNm || rowdata.fileViewNm || rowdata.fileNm || rowdata.fileName))
+			|| fallbackName || "";
+		return /\.(?:stp|step)$/i.test(String(fileName).trim());
+	}
+
+	function isSwViewerPreviewFile(rowdata, fallbackName) {
+		return isSwPdfFile(rowdata, fallbackName) || isSwStepFile(rowdata, fallbackName);
+	}
+
 	function formatSwFileName(cellValue, rowdata, useSubFileNo) {
 		var name = isSwProcessingFileLabel(cellValue) ? swProcessingFileLabel() : (cellValue || "");
 		if (name === "") {
@@ -139,7 +149,7 @@
 		if (!isAvailableSwFile(rowdata || {})) {
 			return escapeAttr(name);
 		}
-		if (!isSwPdfFile(rowdata || {}, name)) {
+		if (!isSwViewerPreviewFile(rowdata || {}, name)) {
 			return '<span class="sw-file-name-static">' + escapeAttr(name) + '</span>'
 				+ '<span class="sw-file-preview-unavailable">'
 				+ escapeAttr(swFileMessage("feature.techDetail.file.previewUnavailable", "미리보기 미지원"))
@@ -649,24 +659,24 @@
 	}
 
 	.sw-file-popup .ui-jqgrid .ui-jqgrid-btable tr.jqgrow:hover td {
-		background: #fbfaff !important;
+		background: #f6fafe !important;
 	}
 
 	.sw-file-popup .ui-jqgrid .ui-jqgrid-btable tr.ui-state-highlight td,
 	.sw-file-popup .ui-jqgrid .ui-jqgrid-btable tr[aria-selected="true"] td {
-		background: #f1efff !important;
-		color: #403a65 !important;
+		background: #eaf3fb !important;
+		color: #243b53 !important;
 	}
 
 	.sw-file-popup .sw-file-link {
-		color: #5b50d6 !important;
+		color: #034c8c !important;
 		font-weight: 800;
 		text-decoration: none;
 	}
 
 	.sw-file-popup .sw-file-link:hover,
 	.sw-file-popup .sw-file-link:focus {
-		color: #4b40c5 !important;
+		color: #023e73 !important;
 		text-decoration: underline;
 	}
 

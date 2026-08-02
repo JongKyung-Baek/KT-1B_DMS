@@ -1,7 +1,7 @@
 .technical-data-list-page {
-  --tdl-primary: #7367f0;
-  --tdl-primary-dark: #5b50d6;
-  --tdl-primary-soft: rgba(115, 103, 240, 0.1);
+  --tdl-primary: var(--tdms-primary, #034c8c);
+  --tdl-primary-dark: var(--tdms-primary-dark, #023e73);
+  --tdl-primary-soft: var(--tdms-primary-soft, #eaf3fb);
   --tdl-text: #2f2b3d;
   --tdl-muted: #6d6a77;
   --tdl-border: #e7e5eb;
@@ -121,7 +121,7 @@
 .technical-data-list-page .formAcceptance select.form-select:focus {
   border-color: var(--tdl-primary);
   outline: none;
-  box-shadow: 0 0 0 3px rgba(115, 103, 240, 0.11);
+  box-shadow: 0 0 0 3px rgba(3, 76, 140, 0.11);
 }
 
 .technical-data-list-page .formAcceptance .select2-container .select2-selection--single,
@@ -152,7 +152,7 @@
 .technical-data-list-page .formAcceptance .select2-container--open .select2-selection--multiple {
   border-color: var(--tdl-primary);
   outline: none;
-  box-shadow: 0 0 0 3px rgba(115, 103, 240, 0.11);
+  box-shadow: 0 0 0 3px rgba(3, 76, 140, 0.11);
   transform: none;
 }
 
@@ -203,7 +203,7 @@
 
 .technical-data-list-page .formAcceptance .formAcceptanceActions .resetBtn:hover,
 .technical-data-list-page .formAcceptance .formAcceptanceActions .resetBtn:focus {
-  border-color: rgba(115, 103, 240, 0.34);
+  border-color: rgba(3, 76, 140, 0.34);
   background: var(--tdl-primary-soft);
   color: var(--tdl-primary-dark);
   transform: translateY(-1px);
@@ -278,13 +278,13 @@
 }
 
 .technical-data-list-page #gview_gridSwRequestList .ui-jqgrid-btable tr.jqgrow:hover td {
-  background: #fbfaff !important;
+  background: rgba(3, 76, 140, 0.025) !important;
 }
 
 .technical-data-list-page #gview_gridSwRequestList .ui-jqgrid-btable tr.ui-state-highlight td,
 .technical-data-list-page #gview_gridSwRequestList .ui-jqgrid-btable tr[aria-selected="true"] td {
-  background: #f1efff !important;
-  color: #403a65 !important;
+  background: var(--tdl-primary-soft) !important;
+  color: var(--tdl-primary-dark) !important;
 }
 
 .technical-data-list-page #gridSwRequestList .sw-no-link {
@@ -295,7 +295,7 @@
 
 .technical-data-list-page #gridSwRequestList .sw-no-link:hover,
 .technical-data-list-page #gridSwRequestList .sw-no-link:focus {
-  color: #4b40c5 !important;
+  color: var(--tdl-primary-dark) !important;
   text-decoration: underline;
 }
 
@@ -407,7 +407,7 @@
   width: 280px;
   min-width: 280px;
   background:
-    linear-gradient(145deg, rgba(115, 103, 240, 0.045), rgba(255, 255, 255, 0) 42%),
+    linear-gradient(145deg, rgba(3, 76, 140, 0.045), rgba(255, 255, 255, 0) 42%),
     var(--tdl-surface);
 }
 
@@ -479,12 +479,12 @@
   justify-content: center;
   width: 34px;
   height: 34px;
-  border: 1px solid rgba(115, 103, 240, 0.14);
+  border: 1px solid rgba(3, 76, 140, 0.14);
   border-radius: 10px;
-  background: linear-gradient(145deg, #8177f4, #6558dc);
+  background: linear-gradient(145deg, #1976b9, var(--tdl-primary));
   color: #fff;
   font-size: 18px;
-  box-shadow: 0 6px 14px rgba(91, 80, 214, 0.18);
+  box-shadow: 0 6px 14px rgba(3, 76, 140, 0.18);
 }
 
 .technical-data-list-page .technical-tree-icon > .ti {
@@ -499,9 +499,9 @@
   min-width: 32px;
   min-height: 24px;
   padding: 3px 8px;
-  border: 1px solid #dfdcfb;
+  border: 1px solid var(--tdms-primary-border, #bdd6eb);
   border-radius: 999px;
-  background: #f3f1ff;
+  background: var(--tdl-primary-soft);
   color: var(--tdl-primary-dark);
   font-size: 10px;
   font-variant-numeric: tabular-nums;
@@ -562,9 +562,9 @@
 }
 
 .technical-data-list-page .technical-tree-search-input:focus {
-  border-color: rgba(115, 103, 240, 0.72);
+  border-color: rgba(3, 76, 140, 0.72);
   background: #fff;
-  box-shadow: 0 0 0 3px rgba(115, 103, 240, 0.11);
+  box-shadow: 0 0 0 3px rgba(3, 76, 140, 0.11);
 }
 
 .technical-data-list-page .technical-tree-search-clear {
@@ -597,7 +597,7 @@
 }
 
 .technical-data-list-page .technical-tree-search-clear:focus-visible {
-  outline: 2px solid rgba(115, 103, 240, 0.48);
+  outline: 2px solid rgba(3, 76, 140, 0.48);
   outline-offset: 1px;
 }
 
@@ -629,8 +629,8 @@
 }
 
 .technical-data-list-page .technical-tree-all:hover {
-  border-color: #d7d2fa;
-  background: #faf9ff;
+  border-color: var(--tdms-primary-border, #bdd6eb);
+  background: rgba(3, 76, 140, 0.035);
   color: var(--tdl-primary-dark);
   transform: translateY(-1px);
 }
@@ -639,16 +639,16 @@
 .technical-data-list-page .technical-tree-all.is-active,
 .technical-data-list-page .technical-tree-all[aria-pressed="true"],
 .technical-data-list-page .technical-tree-all[aria-current="true"] {
-  border-color: #cec8fa;
-  background: linear-gradient(135deg, #f3f1ff, #faf9ff);
+  border-color: var(--tdms-primary-border, #bdd6eb);
+  background: linear-gradient(135deg, var(--tdl-primary-soft), #f7fbfe);
   color: var(--tdl-primary-dark);
-  box-shadow: inset 3px 0 0 var(--tdl-primary), 0 4px 10px rgba(91, 80, 214, 0.08);
+  box-shadow: inset 3px 0 0 var(--tdl-primary), 0 4px 10px rgba(3, 76, 140, 0.08);
 }
 
 .technical-data-list-page .technical-tree-all:focus-visible {
   border-color: var(--tdl-primary);
   outline: 0;
-  box-shadow: 0 0 0 3px rgba(115, 103, 240, 0.14);
+  box-shadow: 0 0 0 3px rgba(3, 76, 140, 0.14);
 }
 
 .technical-data-list-page .technical-tree-all-icon {
@@ -658,10 +658,10 @@
   justify-content: center;
   width: 27px;
   height: 27px;
-  border: 1px solid #ddd8ff;
+  border: 1px solid var(--tdms-primary-border, #bdd6eb);
   border-radius: 8px;
-  background: #efedff;
-  color: #6457cf;
+  background: var(--tdl-primary-soft);
+  color: var(--tdl-primary-dark);
   font-size: 15px;
 }
 
@@ -682,9 +682,9 @@
   min-width: 24px;
   height: 21px;
   padding: 2px 6px;
-  border: 1px solid #dfdcfb;
+  border: 1px solid var(--tdms-primary-border, #bdd6eb);
   border-radius: 999px;
-  background: #f3f1ff;
+  background: var(--tdl-primary-soft);
   color: var(--tdl-primary-dark);
   font-size: 9px;
   font-variant-numeric: tabular-nums;
@@ -837,9 +837,9 @@
 }
 
 .technical-data-list-page #swRequestExplorerTree .drawing-tree-toggle:focus-visible {
-  background: #f3f1ff;
+  background: var(--tdl-primary-soft);
   color: var(--tdl-primary-dark);
-  box-shadow: 0 0 0 2px rgba(115, 103, 240, 0.3);
+  box-shadow: 0 0 0 2px rgba(3, 76, 140, 0.3);
 }
 
 .technical-data-list-page #swRequestExplorerTree .drawing-tree-toggle > .ti {
@@ -890,25 +890,25 @@
 }
 
 .technical-data-list-page #swRequestExplorerTree .drawing-tree-label:hover {
-  border-color: #e7e3f8;
-  background: #f9f8ff;
-  color: #524b76;
+  border-color: rgba(3, 76, 140, 0.18);
+  background: rgba(3, 76, 140, 0.03);
+  color: var(--tdl-primary-dark);
   transform: translateX(1px);
 }
 
 .technical-data-list-page #swRequestExplorerTree .drawing-tree-label.is-selected,
 .technical-data-list-page #swRequestExplorerTree .drawing-tree-label[aria-selected="true"] {
-  border-color: #d7d1fb;
-  background: linear-gradient(135deg, #efedff, #f8f7ff);
-  color: #5146b8;
-  box-shadow: inset 3px 0 0 var(--tdl-primary), 0 3px 9px rgba(91, 80, 214, 0.07);
+  border-color: var(--tdms-primary-border, #bdd6eb);
+  background: linear-gradient(135deg, var(--tdl-primary-soft), #f7fbfe);
+  color: var(--tdl-primary-dark);
+  box-shadow: inset 3px 0 0 var(--tdl-primary), 0 3px 9px rgba(3, 76, 140, 0.07);
 }
 
 .technical-data-list-page #swRequestExplorerTree .drawing-tree-label:focus-visible {
   border-color: var(--tdl-primary);
-  background: #f8f7ff;
-  color: #5146b8;
-  box-shadow: 0 0 0 3px rgba(115, 103, 240, 0.14);
+  background: #f7fbfe;
+  color: var(--tdl-primary-dark);
+  box-shadow: 0 0 0 3px rgba(3, 76, 140, 0.14);
 }
 
 .technical-data-list-page #swRequestExplorerTree .drawing-tree-item.is-empty .drawing-tree-label {
@@ -962,9 +962,9 @@
 
 .technical-data-list-page #swRequestExplorerTree .drawing-tree-label.is-selected .tree-node-icon,
 .technical-data-list-page #swRequestExplorerTree .drawing-tree-label.is-selected .tree-node-count {
-  border-color: #d1cbfa;
-  background: #e5e1ff;
-  color: #5146b8;
+  border-color: var(--tdms-primary-border, #bdd6eb);
+  background: var(--tdl-primary-soft);
+  color: var(--tdl-primary-dark);
 }
 
 .technical-data-list-page .tree-tone-violet {
@@ -1016,11 +1016,11 @@
   min-height: 30px;
   margin-left: 7px;
   padding: 5px 10px;
-  border: 1px solid #dfdbfb;
+  border: 1px solid var(--tdms-primary-border, #bdd6eb);
   border-radius: 999px;
-  background: #f6f4ff;
+  background: var(--tdl-primary-soft);
   color: var(--tdl-primary-dark);
-  box-shadow: 0 2px 6px rgba(91, 80, 214, 0.05);
+  box-shadow: 0 2px 6px rgba(3, 76, 140, 0.05);
 }
 
 .technical-data-list-page .tree-toolbar-navigator-icon {
@@ -1071,14 +1071,14 @@
   padding: 0;
   border: 0;
   border-radius: 50%;
-  background: rgba(115, 103, 240, 0.1);
+  background: rgba(3, 76, 140, 0.1);
   color: var(--tdl-primary-dark);
   cursor: pointer;
 }
 
 .technical-data-list-page .tree-toolbar-navigator-clear:hover,
 .technical-data-list-page .tree-toolbar-navigator-clear:focus-visible {
-  background: rgba(115, 103, 240, 0.2);
+  background: rgba(3, 76, 140, 0.2);
   outline: 0;
 }
 

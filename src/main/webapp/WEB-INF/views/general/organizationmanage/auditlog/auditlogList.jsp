@@ -12,7 +12,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${pageTitle} - KT-1B DMS</title>
 <link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/distribution-invoice.css" media="screen" />
-<link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/audit-log.css?v=20260801.1" media="screen" />
+<link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/audit-log.css?v=20260802.2" media="screen" />
 <script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/views/general/distribution/acceptance/common-form-vuexy.js"></script>
 <script>
     window.USE_ACCEPTANCE_VUEXY_FORM = true;

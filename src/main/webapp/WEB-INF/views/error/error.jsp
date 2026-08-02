@@ -17,7 +17,7 @@
 	<title><c:out value="${errorTitle}" /> | <spring:message code="feature.error.brand" text="KT-1B 기술자료관리"/></title>
 	<%@ include file="/WEB-INF/jspf/favicon.jspf" %>
 	<link rel="stylesheet"
-		  href="${pageContext.request.contextPath}/resources/css/pages/error-page.css?v=20260726.1">
+		  href="${pageContext.request.contextPath}/resources/css/pages/error-page.css?v=20260802.2">
 	<script defer
 			src="${pageContext.request.contextPath}/resources/js/error-page.js?v=20260726.1"></script>
 </head>

@@ -2,6 +2,7 @@ package kr.esob.tdms.commonlogic.viewerintegration;
 
 public class ViewerLaunchRecord {
     private String correlationId;
+    private String viewerProvider;
     private String objectType;
     private String objectId;
     private String aclObjectType;
@@ -19,8 +20,19 @@ public class ViewerLaunchRecord {
     private String createdAt;
 
     static ViewerLaunchRecord from(ViewerDocumentMetadata metadata, String expiresAt) {
+        return from(metadata, expiresAt, "PDF");
+    }
+
+    static ViewerLaunchRecord from(
+            ViewerDocumentMetadata metadata, String expiresAt, String viewerProvider) {
+        String normalizedProvider = viewerProvider == null
+                ? "" : viewerProvider.trim().toUpperCase(java.util.Locale.ROOT);
+        if (!"PDF".equals(normalizedProvider) && !"STEP".equals(normalizedProvider)) {
+            throw new IllegalArgumentException("Viewer provider must be PDF or STEP.");
+        }
         ViewerLaunchRecord record = new ViewerLaunchRecord();
         record.correlationId = metadata.getCorrelationId();
+        record.viewerProvider = normalizedProvider;
         record.objectType = metadata.getObjectType();
         record.objectId = metadata.getObjectId();
         record.aclObjectType = metadata.getAclObjectType();
@@ -40,6 +52,8 @@ public class ViewerLaunchRecord {
 
     public String getCorrelationId() { return correlationId; }
     public void setCorrelationId(String correlationId) { this.correlationId = correlationId; }
+    public String getViewerProvider() { return viewerProvider; }
+    public void setViewerProvider(String viewerProvider) { this.viewerProvider = viewerProvider; }
     public String getObjectType() { return objectType; }
     public void setObjectType(String objectType) { this.objectType = objectType; }
     public String getObjectId() { return objectId; }

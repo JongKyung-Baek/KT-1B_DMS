@@ -1,0 +1,89 @@
+/* TDMS brand palette.
+ * Primary actions and selection/focus states use KAI blue.
+ * Semantic status colors (success, warning, danger and info) remain page-owned.
+ */
+:root,
+[data-bs-theme],
+[data-bs-theme="light"],
+[data-bs-theme="dark"],
+html,
+html[data-bs-theme],
+html[data-bs-theme="light"],
+html[data-bs-theme="dark"] {
+  --tdms-primary: #034c8c;
+  --tdms-primary-dark: #023e73;
+  --tdms-primary-rgb: 3, 76, 140;
+  --tdms-primary-dark-rgb: 2, 62, 115;
+  --tdms-primary-soft: #eaf3fb;
+  --tdms-primary-border: #bdd6eb;
+
+  /* Keep Bootstrap/Vuexy components on the same canonical palette. */
+  --bs-primary: var(--tdms-primary);
+  --bs-primary-rgb: var(--tdms-primary-rgb);
+  --bs-primary-contrast: #fff;
+  --bs-primary-text-emphasis: var(--tdms-primary-dark);
+  --bs-primary-bg-subtle: var(--tdms-primary-soft);
+  --bs-primary-border-subtle: var(--tdms-primary-border);
+  --bs-link-color: var(--tdms-primary);
+  --bs-link-color-rgb: var(--tdms-primary-rgb);
+  --bs-link-hover-color: var(--tdms-primary-dark);
+  --bs-link-hover-color-rgb: var(--tdms-primary-dark-rgb);
+  --bs-focus-ring-color: rgba(var(--tdms-primary-rgb), 0.22);
+}
+
+.btn-primary {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: var(--tdms-primary);
+  --bs-btn-border-color: var(--tdms-primary);
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: var(--tdms-primary-dark);
+  --bs-btn-hover-border-color: var(--tdms-primary-dark);
+  --bs-btn-focus-shadow-rgb: var(--tdms-primary-rgb);
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: var(--tdms-primary-dark);
+  --bs-btn-active-border-color: var(--tdms-primary-dark);
+  --bs-btn-disabled-color: #fff;
+  --bs-btn-disabled-bg: var(--tdms-primary);
+  --bs-btn-disabled-border-color: var(--tdms-primary);
+  --bs-btn-waves-effect-color: var(--tdms-primary-rgb);
+}
+
+.btn-label-primary {
+  --bs-btn-color: var(--tdms-primary);
+  --bs-btn-bg: var(--tdms-primary-soft);
+  --bs-btn-border-color: var(--tdms-primary-border);
+  --bs-btn-hover-color: var(--tdms-primary-dark);
+  --bs-btn-hover-bg: #dcebf7;
+  --bs-btn-hover-border-color: #a9c9e2;
+  --bs-btn-active-color: var(--tdms-primary-dark);
+  --bs-btn-active-bg: #dcebf7;
+  --bs-btn-active-border-color: #a9c9e2;
+  --bs-btn-focus-shadow-rgb: var(--tdms-primary-rgb);
+  --bs-btn-waves-effect-color: var(--tdms-primary-rgb);
+}
+
+.btn-outline-primary {
+  --bs-btn-color: var(--tdms-primary);
+  --bs-btn-border-color: var(--tdms-primary);
+  --bs-btn-hover-color: var(--tdms-primary-dark);
+  --bs-btn-hover-bg: var(--tdms-primary-soft);
+  --bs-btn-hover-border-color: var(--tdms-primary);
+  --bs-btn-active-color: var(--tdms-primary-dark);
+  --bs-btn-active-bg: var(--tdms-primary-soft);
+  --bs-btn-active-border-color: var(--tdms-primary);
+  --bs-btn-focus-shadow-rgb: var(--tdms-primary-rgb);
+  --bs-btn-waves-effect-color: var(--tdms-primary-rgb);
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: var(--tdms-primary);
+}
+
+.form-control:focus,
+.form-select:focus,
+.select2-container--default.select2-container--focus .select2-selection,
+.select2-container--default.select2-container--open .select2-selection {
+  border-color: var(--tdms-primary) !important;
+  box-shadow: 0 0 0 0.15rem rgba(var(--tdms-primary-rgb), 0.12) !important;
+}

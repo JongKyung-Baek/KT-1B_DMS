@@ -20,10 +20,10 @@
 }
 
 :root {
-	--error-accent: #7367f0;
-	--error-primary: #685dd8;
-	--error-primary-dark: #594fbe;
-	--error-primary-soft: #f1efff;
+	--error-accent: var(--tdms-primary, #034c8c);
+	--error-primary: var(--tdms-primary, #034c8c);
+	--error-primary-dark: var(--tdms-primary-dark, #023e73);
+	--error-primary-soft: var(--tdms-primary-soft, #eaf3fb);
 	--error-ink: #2f2b3d;
 	--error-muted: #6d6a78;
 	--error-border: #e5e4ec;
@@ -50,7 +50,7 @@ body.error-page {
 	overflow-x: hidden;
 	color: var(--error-ink);
 	background:
-		radial-gradient(circle at 18% 20%, rgba(115, 103, 240, 0.11), transparent 28rem),
+		radial-gradient(circle at 18% 20%, rgba(3, 76, 140, 0.11), transparent 28rem),
 		radial-gradient(circle at 86% 82%, rgba(0, 188, 212, 0.08), transparent 24rem),
 		var(--error-background);
 	font-family: "Pretendard", "Noto Sans KR", "Malgun Gothic", sans-serif;
@@ -64,7 +64,7 @@ body.error-page {
 .error-card {
 	position: relative;
 	overflow: hidden;
-	border: 1px solid rgba(115, 103, 240, 0.14);
+	border: 1px solid rgba(3, 76, 140, 0.14);
 	border-radius: 24px;
 	background: var(--error-surface);
 	box-shadow: 0 18px 50px rgba(47, 43, 61, 0.1);
@@ -73,7 +73,7 @@ body.error-page {
 .error-card::before,
 .error-card::after {
 	position: absolute;
-	border: 22px solid rgba(115, 103, 240, 0.055);
+	border: 22px solid rgba(3, 76, 140, 0.055);
 	border-radius: 50%;
 	content: "";
 	pointer-events: none;
@@ -97,7 +97,7 @@ body.error-page {
 	position: absolute;
 	inset: 0 0 auto;
 	height: 4px;
-	background: linear-gradient(90deg, var(--error-accent), #9a91f7 62%, #62c6dc);
+	background: linear-gradient(90deg, var(--error-accent), #1976b9 62%, #62c6dc);
 }
 
 .error-brand {
@@ -157,7 +157,7 @@ body.error-page {
 	height: 30px;
 	margin-bottom: 20px;
 	padding: 0 12px;
-	border: 1px solid rgba(115, 103, 240, 0.2);
+	border: 1px solid rgba(3, 76, 140, 0.2);
 	border-radius: 999px;
 	color: var(--error-primary-dark);
 	background: var(--error-primary-soft);
@@ -171,7 +171,7 @@ body.error-page {
 	height: 7px;
 	border-radius: 50%;
 	background: var(--error-accent);
-	box-shadow: 0 0 0 4px rgba(115, 103, 240, 0.11);
+	box-shadow: 0 0 0 4px rgba(3, 76, 140, 0.11);
 }
 
 .error-symbol {
@@ -182,8 +182,8 @@ body.error-page {
 	place-items: center;
 	border-radius: 20px;
 	color: var(--error-primary);
-	background: linear-gradient(145deg, #f5f3ff, #ebe8ff);
-	box-shadow: inset 0 0 0 1px rgba(115, 103, 240, 0.11);
+	background: linear-gradient(145deg, #f3f8fc, var(--error-primary-soft));
+	box-shadow: inset 0 0 0 1px rgba(3, 76, 140, 0.11);
 }
 
 .error-symbol svg {
@@ -301,13 +301,13 @@ body.error-page {
 .error-button--primary {
 	color: #fff;
 	background: var(--error-primary);
-	box-shadow: 0 7px 16px rgba(115, 103, 240, 0.23);
+	box-shadow: 0 7px 16px rgba(3, 76, 140, 0.23);
 }
 
 .error-button--primary:hover {
 	color: #fff;
 	background: var(--error-primary-dark);
-	box-shadow: 0 9px 19px rgba(115, 103, 240, 0.28);
+	box-shadow: 0 9px 19px rgba(3, 76, 140, 0.28);
 	transform: translateY(-1px);
 }
 
@@ -318,14 +318,14 @@ body.error-page {
 }
 
 .error-button--secondary:hover {
-	border-color: rgba(115, 103, 240, 0.35);
+	border-color: rgba(3, 76, 140, 0.35);
 	color: var(--error-primary-dark);
-	background: #faf9ff;
+	background: rgba(3, 76, 140, 0.035);
 	transform: translateY(-1px);
 }
 
 .error-button:focus-visible {
-	outline: 3px solid rgba(115, 103, 240, 0.22);
+	outline: 3px solid rgba(3, 76, 140, 0.22);
 	outline-offset: 3px;
 }
 

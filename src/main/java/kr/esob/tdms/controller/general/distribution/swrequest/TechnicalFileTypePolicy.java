@@ -22,6 +22,7 @@ public final class TechnicalFileTypePolicy {
                     "hwp", "hwpx",
                     "odt", "ods", "odp", "rtf",
                     "txt", "csv", "xml", "json", "md",
+                    "stp", "step",
                     "jpg", "jpeg", "png", "gif", "bmp", "tif", "tiff")));
 
     private TechnicalFileTypePolicy() {
@@ -87,6 +88,15 @@ public final class TechnicalFileTypePolicy {
 
     public static boolean isPdf(String pathOrName) {
         return "pdf".equals(extensionOf(pathOrName));
+    }
+
+    public static boolean isStep(String pathOrName) {
+        String extension = extensionOf(pathOrName);
+        return "stp".equals(extension) || "step".equals(extension);
+    }
+
+    public static boolean isViewerPreview(String pathOrName) {
+        return isPdf(pathOrName) || isStep(pathOrName);
     }
 
     public static String[] splitRepositoryPath(String path) {

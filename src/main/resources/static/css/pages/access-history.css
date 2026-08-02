@@ -1,7 +1,7 @@
 .access-history-page {
-  --ah-primary: #7367f0;
-  --ah-primary-dark: #5b50d6;
-  --ah-primary-soft: rgba(115, 103, 240, 0.1);
+  --ah-primary: var(--tdms-primary, #034c8c);
+  --ah-primary-dark: var(--tdms-primary-dark, #023e73);
+  --ah-primary-soft: var(--tdms-primary-soft, #eaf3fb);
   --ah-text: #2f2b3d;
   --ah-muted: #6d6a77;
   --ah-border: #e7e5eb;
@@ -58,9 +58,9 @@
   gap: 6px;
   min-height: 28px;
   padding: 5px 10px;
-  border: 1px solid rgba(115, 103, 240, 0.17);
+  border: 1px solid rgba(3, 76, 140, 0.17);
   border-radius: 999px;
-  background: rgba(115, 103, 240, 0.075);
+  background: rgba(3, 76, 140, 0.075);
   color: var(--ah-primary-dark);
   font-size: 11px;
   font-weight: 700;
@@ -152,7 +152,7 @@
 .ah-search select:focus,
 .ah-search input:focus {
   border-color: var(--ah-primary);
-  box-shadow: 0 0 0 3px rgba(115, 103, 240, 0.11);
+  box-shadow: 0 0 0 3px rgba(3, 76, 140, 0.11);
 }
 
 .ah-search__actions {
@@ -207,7 +207,7 @@
 }
 
 .ah-button--ghost:hover:not(:disabled) {
-  border-color: rgba(115, 103, 240, 0.34);
+  border-color: rgba(3, 76, 140, 0.34);
   background: var(--ah-primary-soft);
   color: var(--ah-primary-dark);
 }
@@ -274,7 +274,7 @@
 }
 
 .ah-table tbody tr:hover td {
-  background: #fbfaff;
+  background: rgba(3, 76, 140, 0.025);
 }
 
 .ah-col-time { width: 135px; }
@@ -331,7 +331,7 @@
 }
 
 .ah-event-chip {
-  border-color: rgba(115, 103, 240, 0.18);
+  border-color: rgba(3, 76, 140, 0.18);
   background: var(--ah-primary-soft);
   color: var(--ah-primary-dark);
 }
@@ -398,10 +398,10 @@
   align-items: center;
   padding: 2px 6px;
   overflow: hidden;
-  border: 1px solid rgba(115, 103, 240, 0.14);
+  border: 1px solid rgba(3, 76, 140, 0.14);
   border-radius: 6px;
-  background: rgba(115, 103, 240, 0.065);
-  color: #5b50d6;
+  background: rgba(3, 76, 140, 0.065);
+  color: var(--ah-primary-dark);
   font-size: 9px;
   font-weight: 700;
   text-overflow: ellipsis;
@@ -429,7 +429,7 @@
 }
 
 .ah-loading-row td {
-  background: linear-gradient(90deg, #fff 0%, #fbfaff 50%, #fff 100%);
+  background: linear-gradient(90deg, #fff 0%, rgba(3, 76, 140, 0.025) 50%, #fff 100%);
 }
 
 .ah-spinner {
@@ -437,7 +437,7 @@
   width: 16px;
   height: 16px;
   margin-right: 8px;
-  border: 2px solid rgba(115, 103, 240, 0.2);
+  border: 2px solid rgba(3, 76, 140, 0.2);
   border-top-color: var(--ah-primary);
   border-radius: 50%;
   vertical-align: -3px;

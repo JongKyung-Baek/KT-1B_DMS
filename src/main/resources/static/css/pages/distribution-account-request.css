@@ -1,6 +1,6 @@
 .distribution-account-request-page {
-  --dar-primary: #7367f0;
-  --dar-primary-dark: #5b50d6;
+  --dar-primary: var(--tdms-primary, #034c8c);
+  --dar-primary-dark: var(--tdms-primary-dark, #023e73);
   --dar-text: #2f2b3d;
   --dar-muted: #6d6a77;
   --dar-border: #e7e5eb;
@@ -32,10 +32,10 @@
 .dar-field input, .dar-field select, .dar-field textarea { width: 100%; border: 1px solid #d9d6df; border-radius: 8px; background: #fff; color: var(--dar-text); font: inherit; font-size: 11px; }
 .dar-field input, .dar-field select { height: 36px; padding: 7px 10px; }
 .dar-field textarea { min-height: 96px; padding: 10px; resize: vertical; line-height: 1.55; }
-.dar-field input:focus, .dar-field select:focus, .dar-field textarea:focus { border-color: var(--dar-primary); outline: 0; box-shadow: 0 0 0 3px rgba(115,103,240,.11); }
+.dar-field input:focus, .dar-field select:focus, .dar-field textarea:focus { border-color: var(--dar-primary); outline: 0; box-shadow: 0 0 0 3px rgba(3,76,140,.11); }
 .dar-field small { color: #96909f; font-size: 9px; font-weight: 500; text-align: right; }
 .dar-search__actions { display: flex; gap: 7px; }
-.dar-alert { margin: 12px 0; padding: 10px 12px; border-radius: 8px; background: #f0eeff; color: #5146bb; font-size: 11px; }
+.dar-alert { margin: 12px 0; padding: 10px 12px; border-radius: 8px; background: var(--tdms-primary-soft, #eaf3fb); color: var(--dar-primary-dark); font-size: 11px; }
 .dar-alert--success { background: #e9f8f0; color: #16854b; }
 .dar-alert--error { background: #fff0f1; color: #b82f42; }
 .dar-table-wrap { overflow: auto; border: 1px solid var(--dar-border); border-top: 0; border-radius: 0 0 11px 11px; }
@@ -49,13 +49,13 @@
 .dar-table th:nth-child(6) { width: 11%; }
 .dar-table th:nth-child(7) { width: 8%; }
 .dar-table tbody tr:last-child td { border-bottom: 0; }
-.dar-table tbody tr:hover td { background: #fbfaff; }
+.dar-table tbody tr:hover td { background: rgba(3, 76, 140, 0.025); }
 .dar-table td small { display: block; margin-top: 3px; color: var(--dar-muted); font-size: 9px; }
 .dar-chip { display: inline-flex; align-items: center; justify-content: center; min-width: 60px; padding: 4px 9px; border-radius: 999px; font-size: 9px; font-weight: 800; }
 .dar-chip--pending { background: #fff3e5; color: #b96808; }
 .dar-chip--approved { background: #e9f8f0; color: #16854b; }
 .dar-chip--rejected { background: #fff0f1; color: #c23749; }
-.dar-chip--type { background: #f0eeff; color: #5b50d6; }
+.dar-chip--type { background: var(--tdms-primary-soft, #eaf3fb); color: var(--tdms-primary, #034c8c); }
 .dar-table-footer { display: flex; justify-content: space-between; gap: 16px; padding: 11px 4px 0; color: var(--dar-muted); font-size: 10px; }
 .dar-empty-row td { height: 150px; color: var(--dar-muted); }
 .dar-dialog[hidden] { display: none; }

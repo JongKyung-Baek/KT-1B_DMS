@@ -47,9 +47,8 @@ class SwRegistrationFileTypeContractTest {
     }
 
     @Test
-    void nonPdfDownloadsRemainAclProtectedAndNeverUseThePdfViewerOrWatermark() throws Exception {
+    void downloadsRemainAclProtectedAndPreviewLinksIncludePdfAndStepFormats() throws Exception {
         String controller = read("src/main/java/kr/esob/tdms/controller/general/distribution/swrequest/SwRequestController.java");
-        String viewer = read("src/main/java/kr/esob/tdms/controller/general/distribution/doc_pdf_link_request/DocPdfLinkRequestController.java");
         String popup = read("src/main/webapp/WEB-INF/views/general/distribution/swFilePopup.jsp");
 
         assertTrue(controller.contains("requireDownloadAccess(fileInfo"));
@@ -59,9 +58,28 @@ class SwRegistrationFileTypeContractTest {
         assertTrue(controller.contains("X-Content-Type-Options\", \"nosniff"));
         assertFalse(controller.contains("!isPdfFilePath(filePath) && !isAdminRole"));
 
-        assertTrue(viewer.contains("\"SW\".equals(baseAclObjectType) && !TechnicalFileTypePolicy.isPdf(orgFileNm)"));
         assertTrue(popup.contains("function isSwPdfFile"));
+        assertTrue(popup.contains("function isSwStepFile"));
+        assertTrue(popup.contains("function isSwViewerPreviewFile"));
+        assertTrue(popup.contains("/\\.(?:stp|step)$/i"));
+        assertTrue(popup.contains("!isSwViewerPreviewFile(rowdata || {}, name)"));
         assertTrue(popup.contains("feature.techDetail.file.previewUnavailable"));
+    }
+
+    @Test
+    void stepPreviewUsesTheStepProviderWithoutEnteringThePdfOnlyPath() throws Exception {
+        String viewer = read("src/main/java/kr/esob/tdms/controller/general/distribution/doc_pdf_link_request/DocPdfLinkRequestController.java");
+
+        assertTrue(viewer.contains("!TechnicalFileTypePolicy.isViewerPreview(orgFileNm)"));
+        assertTrue(viewer.contains("ViewerProvider viewerProvider = TechnicalFileTypePolicy.isStep(orgFileNm)"));
+        assertTrue(viewer.contains("? ViewerProvider.STEP : ViewerProvider.PDF"));
+        assertTrue(viewer.contains("viewerIntegrationService.createRequestDocument(correlationId, viewerProvider)"));
+        assertTrue(viewer.contains("cacheSwFileApiForViewer("));
+        assertTrue(viewer.contains("orgFileNm, requestDocument, viewerProvider"));
+        assertTrue(viewer.contains("viewerIntegrationService.prepareLaunch("));
+        assertTrue(viewer.contains("requestDocument, metadata, viewerProvider"));
+        assertTrue(viewer.contains("splitFileApiPath(filePathNm, viewerProvider)"));
+        assertFalse(viewer.contains("Only PDF technical-data files are available"));
     }
 
     @Test

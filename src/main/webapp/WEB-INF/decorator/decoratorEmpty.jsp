@@ -18,8 +18,8 @@
 					<%@ include file="/WEB-INF/jspf/favicon.jspf" %>
 
 					<script type="text/javascript" src="/resources/js/common_util.js"></script>
-					<script type="text/javascript" src="/resources/js/common_dialog.js"></script>
-						<link type="text/css" rel="stylesheet" href="/resources/css/popup-common.css" media="screen" />
+					<script type="text/javascript" src="/resources/js/common_dialog.js?v=20260802.1"></script>
+						<link type="text/css" rel="stylesheet" href="/resources/css/popup-common.css?v=20260802.2" media="screen" />
 					<script type="text/javascript" src="/resources/js/common_validation.js"></script>
 					<script type="text/javascript" src="/resources/js/views/general/common/clipboard.js"></script>
 					<script>

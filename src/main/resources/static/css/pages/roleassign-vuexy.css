@@ -1,7 +1,7 @@
 .roleassign-page {
-  --ra-primary: #7367f0;
-  --ra-primary-dark: #5b50d6;
-  --ra-primary-soft: #f0eeff;
+  --ra-primary: var(--tdms-primary, #034c8c);
+  --ra-primary-dark: var(--tdms-primary-dark, #023e73);
+  --ra-primary-soft: var(--tdms-primary-soft, #eaf3fb);
   --ra-text: #2f2b3d;
   --ra-muted: #6d6a77;
   --ra-border: #e7e5eb;
@@ -79,7 +79,7 @@
 .roleassign-heading-chip {
   min-height: 34px;
   padding: 7px 12px;
-  border: 1px solid #dcd7ff;
+  border: 1px solid var(--tdms-primary-border, #bdd6eb);
   background: var(--ra-primary-soft);
   color: var(--ra-primary-dark);
 }
@@ -161,8 +161,8 @@
   max-width: 260px;
   padding: 4px 9px;
   overflow: hidden;
-  border: 1px solid #dcd7ff;
-  background: #faf9ff;
+  border: 1px solid var(--tdms-primary-border, #bdd6eb);
+  background: rgba(3, 76, 140, 0.035);
   color: var(--ra-primary-dark);
   text-overflow: ellipsis;
 }
@@ -234,14 +234,14 @@
 
 .role-group-list li:hover .listName,
 .role-group-list .listName:focus-visible {
-  border-color: #e2defc;
+  border-color: rgba(3, 76, 140, 0.2);
   outline: 0;
-  background: #faf9ff;
+  background: rgba(3, 76, 140, 0.035);
   color: var(--ra-primary-dark);
 }
 
 .role-group-list li.current .listName {
-  border-color: #d6d0ff;
+  border-color: var(--tdms-primary-border, #bdd6eb);
   background: var(--ra-primary-soft);
   color: var(--ra-primary-dark);
 }
@@ -320,10 +320,10 @@
   min-height: 40px;
   margin: 0 0 12px;
   padding: 9px 12px;
-  border: 1px solid #dcd7ff;
+  border: 1px solid var(--tdms-primary-border, #bdd6eb);
   border-radius: 9px;
-  background: #faf9ff;
-  color: #5146bb;
+  background: var(--ra-primary-soft);
+  color: var(--ra-primary-dark);
   font-size: 10px;
   font-weight: 700;
   line-height: 1.45;
@@ -431,8 +431,8 @@
 }
 
 .roleassign-page .tree-checkbox:hover {
-  border-color: rgba(115, 103, 240, .65);
-  background: #faf9ff;
+  border-color: rgba(3, 76, 140, .65);
+  background: rgba(3, 76, 140, 0.035);
   background-image: none !important;
 }
 
@@ -440,7 +440,7 @@
   border-color: var(--ra-primary);
   background: var(--ra-primary);
   background-image: none !important;
-  box-shadow: 0 2px 6px rgba(115, 103, 240, .26);
+  box-shadow: 0 2px 6px rgba(3, 76, 140, .26);
 }
 
 .roleassign-page .tree-checkbox.tree-checkbox-on::after {

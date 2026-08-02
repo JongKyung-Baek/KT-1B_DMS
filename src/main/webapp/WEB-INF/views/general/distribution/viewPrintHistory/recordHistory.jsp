@@ -26,7 +26,7 @@
 <link type="text/css" rel="stylesheet"
       href="${pageContext.request.contextPath}/resources/css/pages/distribution-invoice.css" media="screen">
 <link type="text/css" rel="stylesheet"
-      href="${pageContext.request.contextPath}/resources/css/pages/access-history.css?v=20260731.1" media="screen">
+      href="${pageContext.request.contextPath}/resources/css/pages/access-history.css?v=20260802.2" media="screen">
 <script>
     window.recordHistoryConfig = {
         contextPath: '${pageContext.request.contextPath}',

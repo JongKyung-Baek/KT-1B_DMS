@@ -21,6 +21,7 @@
 \ir distribution_workflow_menu_ddl.sql
 \ir distribution_account_request_menu_ddl.sql
 \ir user_management_menu_relocation_ddl.sql
+\ir korean_menu_locale_ddl.sql
 \ir audit_trail_ddl.sql
 \ir download_runtime_ddl.sql
 

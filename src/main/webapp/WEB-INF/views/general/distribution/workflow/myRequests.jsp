@@ -10,7 +10,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${pageTitle} - KT-1B TDMS</title>
 <link type="text/css" rel="stylesheet"
-      href="${pageContext.request.contextPath}/resources/css/pages/distribution-workflow.css?v=20260801.4" media="screen">
+      href="${pageContext.request.contextPath}/resources/css/pages/distribution-workflow.css?v=20260802.2" media="screen">
 <script>
 window.distributionWorkflowPage = {
     contextPath: '${pageContext.request.contextPath}',

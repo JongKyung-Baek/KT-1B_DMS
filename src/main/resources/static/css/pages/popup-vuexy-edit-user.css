@@ -192,19 +192,19 @@
 }
 
 .ui-dialog.popup-vx-edit-user #save {
-  background: #696cff;
-  border: 1px solid #696cff;
+  background: #034c8c;
+  border: 1px solid #034c8c;
   color: #fff;
 }
 
 .ui-dialog.popup-vx-edit-user #save:hover {
-  background: #5f62e8;
-  border-color: #5f62e8;
+  background: #023e73;
+  border-color: #023e73;
 }
 
 .ui-dialog.popup-vx-edit-user #close {
   background: #f2f3f5;
-  border: 1px solid #e7e7ff;
+  border: 1px solid #d9dee3;
   color: #8592a3;
 }
 
@@ -214,12 +214,12 @@
 
 .ui-dialog.popup-vx-edit-user .select2-container--default .select2-results__option--highlighted[aria-selected="false"],
 .ui-dialog.popup-vx-edit-user .select2-container--default .select2-results__option--highlighted {
-  background: rgba(105, 108, 255, 0.12);
+  background: rgba(3, 76, 140, 0.12);
   color: #566a7f;
 }
 
 .ui-dialog.popup-vx-edit-user .select2-container--default .select2-results__option[aria-selected="true"] {
-  background: rgba(105, 108, 255, 0.18);
+  background: rgba(3, 76, 140, 0.18);
   color: #566a7f;
 }
 

@@ -19,7 +19,7 @@
   color: #6e6b7b !important;
 }
 
-/* style.css .ui-dialog .bottomBtn (purple) override */
+/* style.css .ui-dialog .bottomBtn secondary/close override */
 .ui-dialog .dialogBtnSet .right .bottomBtn[name="close"] {
   background: #ebeced !important;
   border: 1px solid #d6dade !important;
@@ -447,7 +447,7 @@
 .commonRequestPopup .prettyradio > a.checked {
   border-color: #034C8C;
   background: #034C8C !important;
-  box-shadow: 0 2px 8px rgba(115, 103, 240, 0.28);
+  box-shadow: 0 2px 8px rgba(3, 76, 140, 0.28);
 }
 
 .drawingRegisterPopup .prettyradio > a.checked:after,
@@ -727,7 +727,7 @@
 .productionRegisterPopup .form-check .form-check-input:checked {
   background-color: #034C8C;
   border-color: #034C8C;
-  box-shadow: 0 2px 8px rgba(115, 103, 240, 0.28);
+  box-shadow: 0 2px 8px rgba(3, 76, 140, 0.28);
 }
 
 .drawingRegisterPopup .form-check .form-check-label,
@@ -802,7 +802,7 @@
 .docRegisterPopup .inlineCheckGroup input[type="radio"]:checked {
   border-color: #034C8C;
   background: #034C8C;
-  box-shadow: 0 2px 8px rgba(115, 103, 240, 0.28);
+  box-shadow: 0 2px 8px rgba(3, 76, 140, 0.28);
 }
 
 .drawingRegisterPopup .inlineCheckGroup input[type="radio"]:checked::after,
@@ -820,7 +820,7 @@
 
 /* Select2 theme for popup dialogs */
 .ui-dialog.popup-common .select2-container--default .select2-selection--multiple .select2-selection__choice {
-  background: #7367f029 !important;
+  background: rgba(3, 76, 140, 0.16) !important;
   color: #034C8C !important;
 }
 
@@ -888,7 +888,7 @@ body .formAcceptanceDropdown .select2-results__option--highlighted {
 body .formAcceptanceDropdown .select2-results__option[aria-selected="true"],
 body .formAcceptanceDropdown .select2-results__option--highlighted[aria-selected="true"],
 body .formAcceptanceDropdown .select2-results__option--highlighted[aria-selected="false"].select2-results__option--selected {
-  background: rgba(115, 103, 240, 0.12) !important;
+  background: rgba(3, 76, 140, 0.12) !important;
   color: #034C8C !important;
   font-weight: 600 !important;
 }
@@ -1421,7 +1421,7 @@ body .formAcceptanceDropdown .select2-results__option--highlighted[aria-selected
 .ui-dialog .dialogContent.destroyPopup .input-append.date input.hasDatepicker:focus,
 .ui-dialog .dialogContent.destroyPopup .popupFormGrid > li > div > input[type="text"]:focus {
   border-color: #034C8C !important;
-  box-shadow: 0 0 0 2px rgba(115, 103, 240, 0.15) !important;
+  box-shadow: 0 0 0 2px rgba(3, 76, 140, 0.15) !important;
   outline: none !important;
 }
 
@@ -2167,7 +2167,7 @@ body .formAcceptanceDropdown .select2-results__option--highlighted[aria-selected
 .ui-dialog.popup-common .select2-dropdown.drawing-like-dropdown .select2-results__option[aria-selected="true"],
 .ui-dialog.popup-common .select2-dropdown.drawing-like-dropdown .select2-results__option--highlighted[aria-selected="true"],
 .ui-dialog.popup-common .select2-dropdown.drawing-like-dropdown .select2-results__option--highlighted[aria-selected="false"].select2-results__option--selected {
-  background: rgba(115, 103, 240, 0.12) !important;
+  background: rgba(3, 76, 140, 0.12) !important;
   color: #034C8C !important;
   font-weight: 600 !important;
 }
@@ -2176,7 +2176,7 @@ body .formAcceptanceDropdown .select2-results__option--highlighted[aria-selected
 .ui-dialog.popup-common .dialogContent textarea:focus,
 .ui-dialog[class*=" popup-"] .dialogContent textarea:focus {
   border-color: #034C8C !important;
-  box-shadow: 0 0 0 2px rgba(115, 103, 240, 0.15) !important;
+  box-shadow: 0 0 0 2px rgba(3, 76, 140, 0.15) !important;
   outline: none;
 }
 
@@ -2188,7 +2188,7 @@ body .formAcceptanceDropdown .select2-results__option--highlighted[aria-selected
 .ui-dialog[class*=" popup-"] .select2-container--default.select2-container--focus .select2-selection--single,
 .ui-dialog[class*=" popup-"] .select2-container--default.select2-container--open .select2-selection--single {
   border-color: #034C8C !important;
-  box-shadow: 0 0 0 2px rgba(115, 103, 240, 0.15) !important;
+  box-shadow: 0 0 0 2px rgba(3, 76, 140, 0.15) !important;
   outline: none !important;
 }
 
@@ -2201,7 +2201,7 @@ body .formAcceptanceDropdown .select2-results__option--highlighted[aria-selected
 
 .ui-dialog.popup-common .select2-drop .select2-results .select2-result-selected,
 .ui-dialog[class*=" popup-"] .select2-drop .select2-results .select2-result-selected {
-  background: rgba(115, 103, 240, 0.12) !important;
+  background: rgba(3, 76, 140, 0.12) !important;
   color: #034C8C !important;
   font-weight: 600 !important;
 }
@@ -2267,7 +2267,7 @@ body .formAcceptanceDropdown .select2-results__option--highlighted[aria-selected
 #popupDialoga .select2-drop .select2-search input:focus,
 #popupDialoga .select2-input:focus {
   border-color: #034C8C !important;
-  box-shadow: 0 0 0 2px rgba(115, 103, 240, 0.15) !important;
+  box-shadow: 0 0 0 2px rgba(3, 76, 140, 0.15) !important;
 }
 
 /* Select2 v3 option list */
@@ -2306,7 +2306,7 @@ body .formAcceptanceDropdown .select2-results__option--highlighted[aria-selected
 .ui-dialog.popup-common .select2-drop .select2-results .select2-result-selected .select2-result-label,
 .ui-dialog[class*=" popup-"] .select2-drop .select2-results .select2-result-selected .select2-result-label,
 #popupDialoga .select2-drop .select2-results .select2-result-selected .select2-result-label {
-  background: rgba(115, 103, 240, 0.12) !important;
+  background: rgba(3, 76, 140, 0.12) !important;
   color: #034C8C !important;
   font-weight: 600 !important;
 }

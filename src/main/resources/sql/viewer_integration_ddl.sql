@@ -21,6 +21,7 @@ CREATE INDEX IF NOT EXISTS idx_docs_history_cv_view_time
 
 CREATE TABLE IF NOT EXISTS docs_viewer_launch (
     correlation_id     varchar(64) PRIMARY KEY,
+    viewer_provider    varchar(20) NOT NULL DEFAULT 'PDF',
     object_type        varchar(30) NOT NULL,
     object_id          varchar(60) NOT NULL,
     acl_object_type    varchar(30) NOT NULL,
@@ -39,6 +40,22 @@ CREATE TABLE IF NOT EXISTS docs_viewer_launch (
     viewed_at          timestamp with time zone,
     CONSTRAINT ck_viewer_launch_expiry CHECK (expires_at > created_at)
 );
+
+-- CREATE TABLE IF NOT EXISTS does not evolve an already-installed table.
+-- Keep this block repeatable so upgrades label all legacy launches as PDF.
+ALTER TABLE docs_viewer_launch
+    ADD COLUMN IF NOT EXISTS viewer_provider varchar(20);
+UPDATE docs_viewer_launch
+   SET viewer_provider = 'PDF'
+ WHERE viewer_provider IS NULL OR BTRIM(viewer_provider) = '';
+ALTER TABLE docs_viewer_launch
+    ALTER COLUMN viewer_provider SET DEFAULT 'PDF',
+    ALTER COLUMN viewer_provider SET NOT NULL;
+ALTER TABLE docs_viewer_launch
+    DROP CONSTRAINT IF EXISTS ck_viewer_launch_provider;
+ALTER TABLE docs_viewer_launch
+    ADD CONSTRAINT ck_viewer_launch_provider
+    CHECK (viewer_provider IN ('PDF', 'STEP'));
 
 CREATE INDEX IF NOT EXISTS idx_viewer_launch_object_created
     ON docs_viewer_launch (object_type, object_id, file_no, created_at DESC);
@@ -86,6 +103,8 @@ CREATE INDEX IF NOT EXISTS idx_viewer_callback_nonce_created
 
 COMMENT ON TABLE docs_viewer_launch IS
     'Short-lived launch correlation and ACL context for the external viewer';
+COMMENT ON COLUMN docs_viewer_launch.viewer_provider IS
+    'Fail-closed viewer route selected by TDMS: PDF or STEP';
 COMMENT ON TABLE docs_viewer_event IS
     'Signed, idempotent viewer callbacks accepted by TDMS';
 COMMENT ON TABLE docs_viewer_callback_nonce IS
@@ -118,6 +137,8 @@ BEGIN
          WHERE UPPER(BTRIM(system_config_cd)) IN (
              'TDMS_VIEWER_SHARED_SECRET',
              'TDMS_VIEWER_SECRET',
+             'TDMS_STEP_VIEWER_SHARED_SECRET',
+             'TDMS_STEP_VIEWER_SECRET',
              'TDMS_SHARED_SECRET',
              'VIEWER_SHARED_SECRET',
              'CV_SHARED_SECRET',
@@ -132,6 +153,8 @@ BEGIN
             CHECK (UPPER(BTRIM(system_config_cd)) NOT IN (
                 'TDMS_VIEWER_SHARED_SECRET',
                 'TDMS_VIEWER_SECRET',
+                'TDMS_STEP_VIEWER_SHARED_SECRET',
+                'TDMS_STEP_VIEWER_SECRET',
                 'TDMS_SHARED_SECRET',
                 'VIEWER_SHARED_SECRET',
                 'CV_SHARED_SECRET',

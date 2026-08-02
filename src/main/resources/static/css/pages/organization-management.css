@@ -1,7 +1,7 @@
 .organization-management-page {
-  --om-primary: #7367f0;
-  --om-primary-dark: #5b50d6;
-  --om-primary-soft: rgba(115, 103, 240, 0.1);
+  --om-primary: var(--tdms-primary, #034c8c);
+  --om-primary-dark: var(--tdms-primary-dark, #023e73);
+  --om-primary-soft: var(--tdms-primary-soft, #eaf3fb);
   --om-text: #2f2b3d;
   --om-muted: #6d6a77;
   --om-border: #e7e5eb;
@@ -96,7 +96,7 @@
 .organization-management-page .formAcceptance select:not(.select2-hidden-accessible):focus {
   border-color: var(--om-primary);
   outline: 0;
-  box-shadow: 0 0 0 3px rgba(115, 103, 240, 0.11);
+  box-shadow: 0 0 0 3px rgba(3, 76, 140, 0.11);
 }
 
 .organization-management-page .formAcceptance .select2-container .select2-selection--single,
@@ -122,7 +122,7 @@
 .organization-management-page .formAcceptance .select2-container--open .select2-selection--single,
 .organization-management-page .formAcceptance .select2-container--open .select2-selection--multiple {
   border-color: var(--om-primary);
-  box-shadow: 0 0 0 3px rgba(115, 103, 240, 0.11);
+  box-shadow: 0 0 0 3px rgba(3, 76, 140, 0.11);
   transform: none;
 }
 
@@ -175,7 +175,7 @@
 
 .organization-management-page .formAcceptance .formAcceptanceActions .organization-management-reset-btn:hover,
 .organization-management-page .formAcceptance .formAcceptanceActions .organization-management-reset-btn:focus {
-  border-color: rgba(115, 103, 240, 0.34);
+  border-color: rgba(3, 76, 140, 0.34);
   background: var(--om-primary-soft);
   color: var(--om-primary-dark);
 }
@@ -274,15 +274,15 @@
 
 .organization-management-page #gview_gridInsideUserList .ui-jqgrid-btable tr.jqgrow:hover td,
 .organization-management-page #gview_gridInsideDeptList .ui-jqgrid-btable tr.jqgrow:hover td {
-  background: #fbfaff !important;
+  background: rgba(3, 76, 140, 0.025) !important;
 }
 
 .organization-management-page #gview_gridInsideUserList .ui-jqgrid-btable tr.ui-state-highlight td,
 .organization-management-page #gview_gridInsideUserList .ui-jqgrid-btable tr[aria-selected="true"] td,
 .organization-management-page #gview_gridInsideDeptList .ui-jqgrid-btable tr.ui-state-highlight td,
 .organization-management-page #gview_gridInsideDeptList .ui-jqgrid-btable tr[aria-selected="true"] td {
-  background: #f1efff !important;
-  color: #403a65 !important;
+  background: var(--om-primary-soft) !important;
+  color: var(--om-primary-dark) !important;
 }
 
 .organization-management-page #gridInsideUserList a,
@@ -294,7 +294,7 @@
 
 .organization-management-page #gridInsideUserList a:hover,
 .organization-management-page #gridInsideDeptList a:hover {
-  color: #4b40c5;
+  color: var(--om-primary-dark);
   text-decoration: underline;
 }
 

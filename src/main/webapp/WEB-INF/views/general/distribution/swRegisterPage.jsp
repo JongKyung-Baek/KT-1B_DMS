@@ -210,7 +210,7 @@
                         .sw-register-page .select2-container--default.select2-container--focus .select2-selection--single,
                         .sw-register-page .select2-container--default.select2-container--focus .select2-selection--multiple {
                             border-color: #034C8C !important;
-                            box-shadow: 0 0 0 2px rgba(115, 103, 240, 0.15) !important;
+                            box-shadow: 0 0 0 2px rgba(3, 76, 140, 0.15) !important;
                         }
 
                         .sw-register-page .select2-container--default .select2-selection--single {
@@ -290,7 +290,7 @@
                         }
 
                         .sw-register-page .select2-container--default .select2-results__option[aria-selected="true"] {
-                            background: rgba(115, 103, 240, 0.12) !important;
+                            background: rgba(3, 76, 140, 0.12) !important;
                             color: #034C8C !important;
                             font-weight: 600 !important;
                         }

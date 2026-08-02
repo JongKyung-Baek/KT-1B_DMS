@@ -21,7 +21,7 @@
 		.ch-badge-fail{background:#fdeaea;color:#a12828}
 	</style>
 	<link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/distribution-invoice.css?v=20260726.1" media="screen" />
-	<link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/technical-data-list.css?v=20260801.1" media="screen" />
+	<link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/technical-data-list.css?v=20260802.2" media="screen" />
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common_tree.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/views/general/distribution/acceptance/common-form-vuexy.js"></script>
 	<script>

@@ -9,7 +9,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${pageTitle} - KT-1B TDMS</title>
 <link type="text/css" rel="stylesheet"
-      href="${pageContext.request.contextPath}/resources/css/pages/partner-management.css?v=20260801.1" media="screen">
+      href="${pageContext.request.contextPath}/resources/css/pages/partner-management.css?v=20260802.2" media="screen">
 <script>
 window.partnerManagementPage = {
     contextPath: '${pageContext.request.contextPath}'

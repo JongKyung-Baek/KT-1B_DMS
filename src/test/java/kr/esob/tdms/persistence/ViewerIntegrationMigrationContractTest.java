@@ -24,6 +24,9 @@ class ViewerIntegrationMigrationContractTest {
                 .contains("ALTER TABLE public.docs_history")
                 .contains("ADD COLUMN IF NOT EXISTS file_no varchar(60)")
                 .contains("CREATE TABLE IF NOT EXISTS docs_viewer_launch")
+                .contains("viewer_provider    varchar(20) NOT NULL DEFAULT 'PDF'")
+                .contains("ADD COLUMN IF NOT EXISTS viewer_provider varchar(20)")
+                .contains("CHECK (viewer_provider IN ('PDF', 'STEP'))")
                 .contains("CREATE TABLE IF NOT EXISTS docs_viewer_event")
                 .contains("ADD COLUMN IF NOT EXISTS source_system_cd")
                 .contains("ADD COLUMN IF NOT EXISTS source_event_id")
@@ -47,6 +50,7 @@ class ViewerIntegrationMigrationContractTest {
                 .contains("localhost", "127\\.0\\.0\\.1", "\\[::1\\]")
                 .contains("ck_docs_system_config_no_viewer_secret")
                 .contains("TDMS_VIEWER_SHARED_SECRET")
+                .contains("TDMS_STEP_VIEWER_SHARED_SECRET")
                 .contains("VIEWER_SHARED_SECRET");
     }
 
@@ -80,6 +84,13 @@ class ViewerIntegrationMigrationContractTest {
                 .contains("tdms.viewer.shared-secret=${TDMS_VIEWER_SHARED_SECRET:}")
                 .contains("tdms.viewer.work-dir=${TDMS_VIEWER_WORK_DIR:${java.io.tmpdir}/kt1b-viewer}")
                 .contains("tdms.viewer.state-retention-days=${TDMS_VIEWER_STATE_RETENTION_DAYS:30}")
+                .contains("tdms.step-viewer.enabled=${TDMS_STEP_VIEWER_ENABLED:false}")
+                .contains("tdms.step-viewer.base-url=${TDMS_STEP_VIEWER_BASE_URL:}")
+                .contains("tdms.step-viewer.client-id=${TDMS_STEP_VIEWER_CLIENT_ID:}")
+                .contains("tdms.step-viewer.callback-client-id=${TDMS_STEP_VIEWER_CALLBACK_CLIENT_ID:}")
+                .contains("tdms.step-viewer.shared-secret=${TDMS_STEP_VIEWER_SHARED_SECRET:}")
+                .contains("tdms.step-viewer.work-dir=${TDMS_STEP_VIEWER_WORK_DIR:${java.io.tmpdir}/kt1b-step-viewer}")
+                .contains("tdms.step-viewer.state-retention-days=${TDMS_STEP_VIEWER_STATE_RETENTION_DAYS:30}")
                 .doesNotContain("tdms.viewer.documents-path=")
                 .doesNotContain("tdms.viewer.launch-path=")
                 .doesNotContain("ADAP_POST_URL=")
@@ -89,6 +100,7 @@ class ViewerIntegrationMigrationContractTest {
                 .contains("POST /api/integrations/tdms/v1/documents")
                 .contains("POST /api/integrations/tdms/v1/launch")
                 .contains("POST /api/integrations/cv/v1/events")
+                .contains("TDMS_STEP_VIEWER_ENABLED")
                 .contains("Windows 테스트/데모")
                 .contains("AIX 7.3 운영");
     }
@@ -118,5 +130,35 @@ class ViewerIntegrationMigrationContractTest {
                 .contains("revision, file_no, user_id, insert_date, user_nm, log_type")
                 .contains("#{launch.fileNo}, #{launch.actorUserId}")
                 .contains("#{launch.actorUserNm}, 'VIEWING'");
+    }
+
+    @Test
+    void launchMapperPersistsAndReadsTheSelectedViewerProvider() throws IOException {
+        String mapper = Files.readString(Path.of(
+                "src/main/resources/sqlMaps/oracle/its/commonlogic/viewerintegration/ViewerIntegration.xml"),
+                StandardCharsets.UTF_8);
+
+        assertThat(mapper)
+                .contains("correlation_id, viewer_provider, object_type")
+                .contains("#{correlationId}, #{viewerProvider}, #{objectType}")
+                .contains("SELECT correlation_id, viewer_provider, object_type");
+    }
+
+    @Test
+    void windowsLauncherImportsEveryStepProviderSettingFromLocalEnvironment()
+            throws IOException {
+        String launcher = Files.readString(Path.of("start-server.bat"), StandardCharsets.UTF_8);
+
+        assertThat(launcher).contains(
+                "TDMS_STEP_VIEWER_ENABLED",
+                "TDMS_STEP_VIEWER_BASE_URL",
+                "TDMS_STEP_VIEWER_CLIENT_ID",
+                "TDMS_STEP_VIEWER_CALLBACK_CLIENT_ID",
+                "TDMS_STEP_VIEWER_SHARED_SECRET",
+                "TDMS_STEP_VIEWER_WORK_DIR",
+                "TDMS_STEP_VIEWER_CONNECT_TIMEOUT_MS",
+                "TDMS_STEP_VIEWER_READ_TIMEOUT_MS",
+                "TDMS_STEP_VIEWER_SIGNATURE_CLOCK_SKEW_SECONDS",
+                "TDMS_STEP_VIEWER_STATE_RETENTION_DAYS");
     }
 }

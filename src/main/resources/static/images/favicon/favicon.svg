@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="KT-1B DMS">
-  <rect width="64" height="64" rx="14" fill="#014594"/>
-  <path d="M8 25C15 10 36 4 56 11C38 9 22 15 13 29Z" fill="#0094BB"/>
-  <path d="M13 26H21V36L31 26H41L28 39L42 52H31L21 42V52H13Z" fill="#FFFFFF"/>
-  <path d="M44 26H53V52H46V34L41 37V30Z" fill="#FFFFFF"/>
-  <rect x="12" y="55" width="41" height="3" rx="1.5" fill="#0094BB"/>
-</svg>

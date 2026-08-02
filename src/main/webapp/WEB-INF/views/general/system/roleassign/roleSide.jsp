@@ -11,7 +11,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${pageTitle} - KT-1B TDMS</title>
 <link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/distribution-invoice.css" media="screen" />
-<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/roleassign-vuexy.css?v=20260801.2" />
+<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/roleassign-vuexy.css?v=20260802.2" />
 <script>
 	var toolbarInfo = '${toolbarInfo}';
 

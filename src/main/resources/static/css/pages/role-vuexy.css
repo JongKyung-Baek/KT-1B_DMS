@@ -1,7 +1,7 @@
 .role-management-page {
-  --role-primary: #7367f0;
-  --role-primary-dark: #5b50d6;
-  --role-primary-soft: #f0eeff;
+  --role-primary: var(--tdms-primary, #034c8c);
+  --role-primary-dark: var(--tdms-primary-dark, #023e73);
+  --role-primary-soft: var(--tdms-primary-soft, #eaf3fb);
   --role-text: #2f2b3d;
   --role-muted: #6d6a77;
   --role-border: #e7e5eb;
@@ -81,7 +81,7 @@
 .system-role-heading-chip {
   min-height: 34px;
   padding: 7px 12px;
-  border: 1px solid #dcd7ff;
+  border: 1px solid var(--tdms-primary-border, #bdd6eb);
   background: var(--role-primary-soft);
   color: var(--role-primary-dark);
 }
@@ -160,8 +160,8 @@
   max-width: 250px;
   padding: 4px 9px;
   overflow: hidden;
-  border: 1px solid #dcd7ff;
-  background: #faf9ff;
+  border: 1px solid var(--tdms-primary-border, #bdd6eb);
+  background: rgba(3, 76, 140, 0.035);
   color: var(--role-primary-dark);
   text-overflow: ellipsis;
 }
@@ -182,7 +182,7 @@
   border-color: var(--role-primary);
   background: var(--role-primary);
   color: #fff;
-  box-shadow: 0 3px 9px rgba(115, 103, 240, .2);
+  box-shadow: 0 3px 9px rgba(3, 76, 140, .2);
 }
 
 .role-group-actions .addGroupBtn:hover,
@@ -219,7 +219,7 @@
 
 .role-action-button:hover,
 .role-action-button:focus-visible {
-  border-color: #cfc9ff;
+  border-color: var(--tdms-primary-border, #bdd6eb);
   outline: 0;
   background: var(--role-primary-soft);
   color: var(--role-primary-dark);
@@ -309,14 +309,14 @@
 
 .role-group-list li:hover .listName,
 .role-group-list .listName:focus-visible {
-  border-color: #e2defc;
+  border-color: rgba(3, 76, 140, 0.2);
   outline: 0;
-  background: #faf9ff;
+  background: rgba(3, 76, 140, 0.035);
   color: var(--role-primary-dark);
 }
 
 .role-group-list li.current .listName {
-  border-color: #d6d0ff;
+  border-color: var(--tdms-primary-border, #bdd6eb);
   background: var(--role-primary-soft);
   color: var(--role-primary-dark);
 }
@@ -554,7 +554,7 @@
 .role-search-field input:focus {
   border-color: var(--role-primary);
   outline: 0;
-  box-shadow: 0 0 0 3px rgba(115, 103, 240, .11);
+  box-shadow: 0 0 0 3px rgba(3, 76, 140, .11);
 }
 
 .role-search-form .searchBtn {
@@ -597,7 +597,7 @@
   min-width: 92px;
   min-height: 34px;
   padding: 6px 7px;
-  border: 1px solid #dcd7ff;
+  border: 1px solid var(--tdms-primary-border, #bdd6eb);
   border-radius: 8px;
   background: var(--role-primary-soft);
   color: var(--role-primary-dark);
@@ -730,13 +730,13 @@
 }
 
 .role-management-page .ui-jqgrid-btable tr.jqgrow:hover td {
-  background: #fbfaff !important;
+  background: rgba(3, 76, 140, 0.025) !important;
 }
 
 .role-management-page .ui-jqgrid-btable tr.ui-state-highlight td,
 .role-management-page .ui-jqgrid-btable tr[aria-selected="true"] td {
-  background: #f1efff !important;
-  color: #403a65 !important;
+  background: var(--role-primary-soft) !important;
+  color: var(--role-primary-dark) !important;
 }
 
 .role-management-page .role-grid-container [id$="Pager"] {

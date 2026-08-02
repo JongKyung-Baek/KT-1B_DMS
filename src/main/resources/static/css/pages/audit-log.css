@@ -1,7 +1,7 @@
 .audit-log-page {
-  --audit-primary: #7367f0;
-  --audit-primary-dark: #5b50d6;
-  --audit-primary-soft: rgba(115, 103, 240, 0.1);
+  --audit-primary: var(--tdms-primary, #034c8c);
+  --audit-primary-dark: var(--tdms-primary-dark, #023e73);
+  --audit-primary-soft: var(--tdms-primary-soft, #eaf3fb);
   --audit-text: #2f2b3d;
   --audit-muted: #6d6a77;
   --audit-border: #e7e5eb;
@@ -92,7 +92,7 @@
 .audit-log-page .formAcceptance .select2-container--open .select2-selection--multiple {
   border-color: var(--audit-primary) !important;
   outline: none;
-  box-shadow: 0 0 0 3px rgba(115, 103, 240, 0.11) !important;
+  box-shadow: 0 0 0 3px rgba(3, 76, 140, 0.11) !important;
 }
 
 .audit-log-page .formAcceptance .select2-container--default .select2-selection--single .select2-selection__rendered {
@@ -153,7 +153,7 @@
 
 .audit-log-page .formAcceptance .formAcceptanceActions .audit-log-reset-btn:hover,
 .audit-log-page .formAcceptance .formAcceptanceActions .audit-log-reset-btn:focus {
-  border-color: rgba(115, 103, 240, 0.34);
+  border-color: rgba(3, 76, 140, 0.34);
   background: var(--audit-primary-soft);
   color: var(--audit-primary-dark);
 }
@@ -236,13 +236,13 @@
 }
 
 .audit-log-page #gview_gridInsideAuditLogList .ui-jqgrid-btable tr.jqgrow:hover td {
-  background: #fbfaff !important;
+  background: rgba(3, 76, 140, 0.025) !important;
 }
 
 .audit-log-page #gview_gridInsideAuditLogList .ui-jqgrid-btable tr.ui-state-highlight td,
 .audit-log-page #gview_gridInsideAuditLogList .ui-jqgrid-btable tr[aria-selected="true"] td {
-  background: #f1efff !important;
-  color: #403a65 !important;
+  background: var(--audit-primary-soft) !important;
+  color: var(--audit-primary-dark) !important;
 }
 
 .audit-log-page #gridInsideAuditLogListPager {

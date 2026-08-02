@@ -2,9 +2,10 @@
 
 BEGIN;
 
--- Preload the forty-four STP assets for the future 3dCV integration as
--- supplementary files on the GENERAL sample document.  These assets are not
--- sent to, converted by, or opened with the current PDF-only viewer flow.
+-- Preload the forty-four STP assets for the CollabView3D integration as
+-- supplementary files on the GENERAL sample document. TDMS sends these raw
+-- STEP bytes to the dedicated signed 3D viewer route; they are never sent to
+-- the PDF viewer or passed through the legacy PDF conversion flow.
 -- The identifiers are the first 32 lowercase hexadecimal characters of each
 -- source file's SHA-256 digest.
 LOCK TABLE docs_sw_sub_file IN SHARE ROW EXCLUSIVE MODE;

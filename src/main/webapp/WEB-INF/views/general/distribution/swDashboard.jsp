@@ -21,7 +21,7 @@
 	<link type="text/css" rel="stylesheet"
 		  href="${pageContext.request.contextPath}/resources/css/pages/distribution-invoice.css?v=20260726.1">
 	<link type="text/css" rel="stylesheet"
-		  href="${pageContext.request.contextPath}/resources/css/pages/technical-data-dashboard.css?v=20260726.4">
+		  href="${pageContext.request.contextPath}/resources/css/pages/technical-data-dashboard.css?v=20260802.2">
 	<script>
 		function moveToTechnicalDataList() {
 			location.href = "${pageContext.request.contextPath}/general/distribution/swRequest/";

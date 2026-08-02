@@ -7,6 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -30,6 +32,7 @@ import kr.esob.tdms.commonlogic.securityacl.SecurityAclService;
 import kr.esob.tdms.commonlogic.viewerintegration.ViewerDocumentMetadata;
 import kr.esob.tdms.commonlogic.viewerintegration.ViewerIntegrationService;
 import kr.esob.tdms.commonlogic.viewerintegration.ViewerPreparedLaunch;
+import kr.esob.tdms.commonlogic.viewerintegration.ViewerProvider;
 import kr.esob.tdms.controller.login.UserVO;
 
 class DocPdfLinkRequestControllerViewerLaunchTest {
@@ -206,6 +209,57 @@ class DocPdfLinkRequestControllerViewerLaunchTest {
                 "SW-MAIN-1", "SW", "REQ-1", "1", authentication, new ExtendedModelMap());
 
         assertEquals("/general/distribution/redirectPost", view);
+    }
+
+    @Test
+    void localSwStepUsesIndependentThreeDimensionalViewerProvider() throws Exception {
+        Path sourceStep = tempDir.resolve("assembly.step");
+        byte[] stepBytes = ("ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('demo'),'2;1');\n"
+                + "ENDSEC;\nDATA;\nENDSEC;\nEND-ISO-10303-21;\n")
+                .getBytes(StandardCharsets.US_ASCII);
+        Files.write(sourceStep, stepBytes);
+
+        DocPdfLinkRequestController controller = new DocPdfLinkRequestController();
+        controller.dao = org.mockito.Mockito.mock(DocPdfLinkRequestDao.class);
+        controller.securityAclService = org.mockito.Mockito.mock(SecurityAclService.class);
+        controller.viewerIntegrationService = org.mockito.Mockito.mock(ViewerIntegrationService.class);
+        Authentication authentication = org.mockito.Mockito.mock(Authentication.class);
+        when(authentication.getPrincipal()).thenReturn(actor());
+        when(controller.dao.selectSwFile(any())).thenReturn(sourceStep.toString());
+        when(controller.dao.selectSubFileParent("SW", "STEP-1", "1")).thenReturn(null);
+        when(controller.dao.selectSwNo(any())).thenReturn("TD-STEP-001");
+        when(controller.dao.selectFileNmSW(any())).thenReturn("assembly.step");
+        when(controller.dao.selectRevisionSW(any())).thenReturn("A");
+        when(controller.viewerIntegrationService.createRequestDocument(
+                anyString(), eq(ViewerProvider.STEP))).thenAnswer(invocation ->
+                Files.createTempFile(tempDir, invocation.getArgument(0) + "-", ".step"));
+
+        AtomicReference<Path> transferredStep = new AtomicReference<>();
+        when(controller.viewerIntegrationService.prepareLaunch(
+                any(Path.class), any(ViewerDocumentMetadata.class), eq(ViewerProvider.STEP)))
+                .thenAnswer(invocation -> {
+                    Path transferred = invocation.getArgument(0);
+                    assertEquals(new String(stepBytes, StandardCharsets.US_ASCII),
+                            Files.readString(transferred, StandardCharsets.US_ASCII));
+                    transferredStep.set(transferred);
+                    ViewerDocumentMetadata metadata = invocation.getArgument(1);
+                    assertEquals("assembly.step", metadata.getFileName());
+                    return new ViewerPreparedLaunch(
+                            URI.create("http://127.0.0.1:7443/api/integrations/tdms/v1/launch"),
+                            "step-launch-token", metadata.getCorrelationId());
+                });
+
+        ExtendedModelMap model = new ExtendedModelMap();
+        String view = controller.selectItem2(
+                "STEP-1", "SW", "REQ-STEP-1", "1", authentication, model);
+
+        assertEquals("/general/distribution/redirectPost", view);
+        @SuppressWarnings("unchecked")
+        Map<String, String> params = (Map<String, String>) model.get("params");
+        assertEquals("step-launch-token", params.get("launchToken"));
+        assertEquals("http://127.0.0.1:7443/api/integrations/tdms/v1/launch", params.get("url"));
+        assertFalse(Files.exists(transferredStep.get()));
+        verify(controller.viewerIntegrationService, never()).createRequestPdf(anyString());
     }
 
     @Test

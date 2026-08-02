@@ -1,7 +1,7 @@
 .distribution-workflow-page {
-  --dw-primary: #7367f0;
-  --dw-primary-dark: #5b50d6;
-  --dw-primary-soft: rgba(115, 103, 240, 0.1);
+  --dw-primary: var(--tdms-primary, #034c8c);
+  --dw-primary-dark: var(--tdms-primary-dark, #023e73);
+  --dw-primary-soft: var(--tdms-primary-soft, #eaf3fb);
   --dw-text: #2f2b3d;
   --dw-muted: #6d6a77;
   --dw-border: #e7e5eb;
@@ -100,9 +100,9 @@
   gap: 5px;
   min-height: 28px;
   padding: 5px 10px;
-  border: 1px solid rgba(115, 103, 240, 0.17);
+  border: 1px solid rgba(3, 76, 140, 0.17);
   border-radius: 999px;
-  background: rgba(115, 103, 240, 0.075);
+  background: rgba(3, 76, 140, 0.075);
   color: var(--dw-primary-dark);
   font-size: 10px;
   font-weight: 800;
@@ -188,7 +188,7 @@
 .dw-item-table select:focus,
 .dw-item-table input:focus {
   border-color: var(--dw-primary);
-  box-shadow: 0 0 0 3px rgba(115, 103, 240, 0.11);
+  box-shadow: 0 0 0 3px rgba(3, 76, 140, 0.11);
 }
 
 .dw-field input:disabled,
@@ -270,14 +270,14 @@
 
 .dw-button--ghost:hover:not(:disabled),
 .dw-button--soft {
-  border-color: rgba(115, 103, 240, 0.25);
+  border-color: rgba(3, 76, 140, 0.25);
   background: var(--dw-primary-soft);
   color: var(--dw-primary-dark);
 }
 
 .dw-button--soft:hover:not(:disabled) {
   border-color: var(--dw-primary);
-  background: rgba(115, 103, 240, 0.16);
+  background: rgba(3, 76, 140, 0.16);
 }
 
 .dw-button--success {
@@ -372,7 +372,7 @@
 }
 
 .dw-table tbody tr:hover td {
-  background: #fbfaff;
+  background: rgba(3, 76, 140, 0.025);
 }
 
 .dw-cell {
@@ -458,7 +458,7 @@
 .dw-row-action {
   min-height: 29px;
   padding: 5px 10px;
-  border-color: rgba(115, 103, 240, 0.22);
+  border-color: rgba(3, 76, 140, 0.22);
   border-radius: 7px;
   background: var(--dw-primary-soft);
   color: var(--dw-primary-dark);
@@ -477,7 +477,7 @@
   width: 16px;
   height: 16px;
   margin-right: 8px;
-  border: 2px solid rgba(115, 103, 240, 0.2);
+  border: 2px solid rgba(3, 76, 140, 0.2);
   border-top-color: var(--dw-primary);
   border-radius: 50%;
   vertical-align: -3px;
@@ -646,7 +646,7 @@
 }
 
 .dw-recipient-option:has(input:checked) {
-  border-color: rgba(115, 103, 240, 0.35);
+  border-color: rgba(3, 76, 140, 0.35);
   background: var(--dw-primary-soft);
   color: var(--dw-primary-dark);
 }
@@ -705,7 +705,7 @@
   align-items: center;
   min-height: 22px;
   padding: 3px 8px;
-  border: 1px solid rgba(115, 103, 240, 0.18);
+  border: 1px solid rgba(3, 76, 140, 0.18);
   border-radius: 999px;
   background: var(--dw-primary-soft);
   color: var(--dw-primary-dark);

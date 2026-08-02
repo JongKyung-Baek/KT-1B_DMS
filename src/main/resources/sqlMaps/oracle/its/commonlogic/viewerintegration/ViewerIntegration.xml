@@ -5,11 +5,11 @@
 
     <insert id="insertLaunch">
         INSERT INTO docs_viewer_launch (
-            correlation_id, object_type, object_id, acl_object_type, acl_object_id,
+            correlation_id, viewer_provider, object_type, object_id, acl_object_type, acl_object_id,
             file_no, request_no, actor_user_cd, actor_user_id, actor_user_nm,
             distribution_type, drawing_no, org_file_nm, revision, expires_at
         ) VALUES (
-            #{correlationId}, #{objectType}, #{objectId}, #{aclObjectType}, #{aclObjectId},
+            #{correlationId}, #{viewerProvider}, #{objectType}, #{objectId}, #{aclObjectType}, #{aclObjectId},
             #{fileNo}, NULLIF(#{requestNo}, ''), #{actorUserCd}, #{actorUserId}, #{actorUserNm},
             NULLIF(#{distributionType}, ''), NULLIF(#{drawingNo}, ''), #{orgFileNm},
             NULLIF(#{revision}, ''), CAST(#{expiresAt} AS timestamp with time zone)
@@ -18,7 +18,7 @@
 
     <select id="selectLaunch"
             resultType="kr.esob.tdms.commonlogic.viewerintegration.ViewerLaunchRecord">
-        SELECT correlation_id, object_type, object_id, acl_object_type, acl_object_id,
+        SELECT correlation_id, viewer_provider, object_type, object_id, acl_object_type, acl_object_id,
                file_no, request_no, actor_user_cd, actor_user_id, actor_user_nm,
                distribution_type, drawing_no, org_file_nm, revision,
                expires_at::text AS expires_at,

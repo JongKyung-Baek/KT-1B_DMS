@@ -10,6 +10,7 @@ import kr.esob.tdms.commonlogic.securityacl.SecurityAclService;
 import kr.esob.tdms.commonlogic.systemconfig.SystemConfig;
 import kr.esob.tdms.commonlogic.viewerintegration.ViewerDocumentMetadata;
 import kr.esob.tdms.commonlogic.viewerintegration.ViewerIntegrationService;
+import kr.esob.tdms.commonlogic.viewerintegration.ViewerProvider;
 import kr.esob.tdms.controller.general.distribution.swrequest.TechnicalFileTypePolicy;
 import kr.esob.tdms.commonlogic.viewerintegration.ViewerPreparedLaunch;
 import kr.esob.tdms.commonlogic.viewer.CommonViewerParam;
@@ -191,28 +192,45 @@ public class DocPdfLinkRequestController extends AbstractController {
 			aclObjectType = subFileObjectType(baseAclObjectType);
 		}
 		requireViewAccess(aclObjectType, aclObjectId, normalizedFileNo, requestNo);
-		if ("SW".equals(baseAclObjectType) && !TechnicalFileTypePolicy.isPdf(orgFileNm)) {
+		if ("SW".equals(baseAclObjectType)
+				&& !TechnicalFileTypePolicy.isViewerPreview(orgFileNm)) {
 			throw new AccessDeniedException(
-					"Only PDF technical-data files are available in the secured viewer.");
+					"Only PDF or STEP technical-data files are available in the secured viewer.");
 		}
 
-		java.nio.file.Path requestPdf = viewerIntegrationService.createRequestPdf(correlationId);
-		String cvrtFilePathNm = requestPdf.toString();
-		String viewerWorkDirectory = requestPdf.getParent().toString();
+		ViewerProvider viewerProvider = TechnicalFileTypePolicy.isStep(orgFileNm)
+				? ViewerProvider.STEP : ViewerProvider.PDF;
+		java.nio.file.Path requestDocument = viewerProvider == ViewerProvider.STEP
+				? viewerIntegrationService.createRequestDocument(correlationId, viewerProvider)
+				: viewerIntegrationService.createRequestPdf(correlationId);
+		String cvrtFilePathNm = requestDocument.toString();
+		String viewerWorkDirectory = requestDocument.getParent().toString();
 		try {
 			boolean prepared = false;
 			if ("SW".equals(baseAclObjectType)) {
-				prepared = cacheSwFileApiPdfForViewer(orgFileNm, requestPdf);
+				prepared = cacheSwFileApiForViewer(
+						orgFileNm, requestDocument, viewerProvider);
 			}
 			if (!prepared) {
 				File sourceFile = new File(orgFileNm);
-				if (convertToViewerPdf(
-						sourceFile, cvrtFilePathNm, viewerWorkDirectory, correlationId) == 0) {
+				if (viewerProvider == ViewerProvider.STEP && sourceFile.isFile()) {
+					try {
+						Files.copy(sourceFile.toPath(), requestDocument,
+								StandardCopyOption.REPLACE_EXISTING);
+						prepared = true;
+					} catch (java.io.IOException exception) {
+						log.warn("STEP viewer request preparation failed. correlationId={}",
+								correlationId);
+					}
+				}
+				if (!prepared && (viewerProvider == ViewerProvider.STEP
+						|| convertToViewerPdf(
+								sourceFile, cvrtFilePathNm, viewerWorkDirectory, correlationId) == 0)) {
 					model.addAttribute("convertFailRestricted", "Y");
 					return "/general/distribution/docConvertFail";
 				}
 			}
-			if (!Files.isRegularFile(requestPdf)) {
+			if (!Files.isRegularFile(requestDocument)) {
 				model.addAttribute("convertFailRestricted", "Y");
 				return "/general/distribution/docConvertFail";
 			}
@@ -271,17 +289,19 @@ public class DocPdfLinkRequestController extends AbstractController {
 			metadata.setDistributionType(distributionType);
 			metadata.setDrawingNo(drawingNo);
 
-			ViewerPreparedLaunch launch =
-					viewerIntegrationService.prepareLaunch(requestPdf, metadata);
+			ViewerPreparedLaunch launch = viewerProvider == ViewerProvider.STEP
+					? viewerIntegrationService.prepareLaunch(
+							requestDocument, metadata, viewerProvider)
+					: viewerIntegrationService.prepareLaunch(requestDocument, metadata);
 			Map<String, String> params = new LinkedHashMap<String, String>();
 			params.put("url", launch.getLaunchUri().toString());
 			params.put("launchToken", launch.getLaunchToken());
 			return handleRedirect(params, model);
 		} finally {
 			try {
-				Files.deleteIfExists(requestPdf);
+				Files.deleteIfExists(requestDocument);
 			} catch (Exception exception) {
-				log.warn("Viewer request PDF cleanup failed. correlationId={}", correlationId);
+				log.warn("Viewer request document cleanup failed. correlationId={}", correlationId);
 			}
 		}
 	}
@@ -641,8 +661,10 @@ public class DocPdfLinkRequestController extends AbstractController {
 		return result;
 	}
 	
-	private boolean cacheSwFileApiPdfForViewer(
-			String filePathNm, java.nio.file.Path requestPdf) {
+	private boolean cacheSwFileApiForViewer(
+			String filePathNm,
+			java.nio.file.Path requestDocument,
+			ViewerProvider viewerProvider) {
 		try {
 			if (filePathNm != null && Files.isRegularFile(java.nio.file.Path.of(filePathNm.trim()))) {
 				return false;
@@ -650,24 +672,33 @@ public class DocPdfLinkRequestController extends AbstractController {
 		} catch (java.nio.file.InvalidPathException ignored) {
 			// Non-local repository identifiers are parsed by splitFileApiPath below.
 		}
-		String[] fileApiPath = splitFileApiPath(filePathNm);
+		String[] fileApiPath = splitFileApiPath(filePathNm, viewerProvider);
 		if (fileApiPath == null) {
 			return false;
 		}
 		byte[] bytes = fileApiClient.download(fileApiPath[1], fileApiPath[0]);
 		try {
-			java.nio.file.Path parent = requestPdf.getParent();
+			java.nio.file.Path parent = requestDocument.getParent();
 			if (parent != null) {
 				Files.createDirectories(parent);
 			}
-			Files.write(requestPdf, bytes);
+			Files.write(requestDocument, bytes);
 			return true;
 		} catch (Exception e) {
-			throw new IllegalStateException("Viewer request PDF write failed.", e);
+			throw new IllegalStateException("Viewer request document write failed.", e);
 		}
 	}
 
+	private boolean cacheSwFileApiPdfForViewer(
+			String filePathNm, java.nio.file.Path requestPdf) {
+		return cacheSwFileApiForViewer(filePathNm, requestPdf, ViewerProvider.PDF);
+	}
+
 	private String[] splitFileApiPath(String filePath) {
+		return splitFileApiPath(filePath, ViewerProvider.PDF);
+	}
+
+	private String[] splitFileApiPath(String filePath, ViewerProvider viewerProvider) {
 		String path = normalizeFileApiPath(filePath);
 		if (path.isEmpty() || path.startsWith("/") || path.matches("^[A-Za-z]:/.*")) {
 			return null;
@@ -678,7 +709,10 @@ public class DocPdfLinkRequestController extends AbstractController {
 		}
 		String folder = path.substring(0, separator);
 		String fileName = path.substring(separator + 1);
-		if (!fileName.toLowerCase().endsWith(".pdf")) {
+		boolean expectedType = viewerProvider == ViewerProvider.STEP
+				? TechnicalFileTypePolicy.isStep(fileName)
+				: TechnicalFileTypePolicy.isPdf(fileName);
+		if (!expectedType) {
 			return null;
 		}
 		return new String[] { folder, fileName };

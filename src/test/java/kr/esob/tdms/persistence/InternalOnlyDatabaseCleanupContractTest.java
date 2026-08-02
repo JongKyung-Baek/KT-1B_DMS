@@ -60,6 +60,11 @@ class InternalOnlyDatabaseCleanupContractTest {
         assertTrue(sql.contains("'MENU_229'"));
         assertTrue(sql.contains(
                 "five current navigation roots"));
+        assertTrue(sql.contains("WHEN 'MENU_013' THEN 'tabler-file-stack'"));
+        assertTrue(sql.contains("WHEN 'MENU_229' THEN 'tabler-package-export'"));
+        assertTrue(sql.contains("WHEN 'MENU_071' THEN 'tabler-users-group'"));
+        assertTrue(sql.contains("WHEN 'MENU_214' THEN 'tabler-settings'"));
+        assertTrue(sql.contains("WHEN 'MENU_223' THEN 'tabler-history'"));
         assertTrue(sql.contains("toolbarSystemMenu"));
     }
 

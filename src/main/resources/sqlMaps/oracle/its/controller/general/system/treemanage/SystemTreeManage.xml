@@ -65,6 +65,8 @@ DOC 모드의 Document Type 목록 조회
 BOARD 모드의 Function Code 1(최상위) 목록 조회
 - 기준 트리: DOCS_SW_TREE -->
     <select id="selectBoardFunctionCode1List" resultType="kr.esob.tdms.controller.general.system.treemanage.TreeManageNodeVO">
+        SELECT deduplicated.*
+          FROM (
         SELECT DISTINCT ON (u.id)
                u.id,
                u.parent,
@@ -81,7 +83,7 @@ BOARD 모드의 Function Code 1(최상위) 목록 조회
                        COALESCE(FUNCTION_CD, TREE_CD) AS functionCd,
                        CAST(TREE_DEPTH AS VARCHAR) AS "level",
                        'group' AS type,
-                       COALESCE(SORT_ORDER, 0) AS sort,
+                       SORT_ORDER AS sort,
                        COALESCE(USE_YN, 'Y') AS useYn
                   FROM DOCS_SW_TREE
                  WHERE COALESCE(USE_YN, 'Y') = 'Y'
@@ -94,7 +96,7 @@ BOARD 모드의 Function Code 1(최상위) 목록 조회
                        COALESCE(FUNCTION_CD, TREE_CD) AS functionCd,
                        CAST(TREE_DEPTH AS VARCHAR) AS "level",
                        'group' AS type,
-                       COALESCE(SORT_ORDER, 0) AS sort,
+                       SORT_ORDER AS sort,
                        COALESCE(USE_YN, 'Y') AS useYn
                   FROM DOCS_PRODUCT_TREE
                  WHERE COALESCE(USE_YN, 'Y') = 'Y'
@@ -107,14 +109,18 @@ BOARD 모드의 Function Code 1(최상위) 목록 조회
                        COALESCE(FUNCTION_CD, TREE_CD) AS functionCd,
                        CAST(TREE_DEPTH AS VARCHAR) AS "level",
                        'group' AS type,
-                       COALESCE(SORT_ORDER, 0) AS sort,
+                       SORT_ORDER AS sort,
                        COALESCE(USE_YN, 'Y') AS useYn
                   FROM DOCS_DXF_TREE
                  WHERE COALESCE(USE_YN, 'Y') = 'Y'
                    AND COALESCE(TREE_DEPTH, 0) = 1
                    AND COALESCE(UPPER_TREE_CD, '') = 'ROOT'
                ) u
-         ORDER BY u.id, u.sort, u.text
+         ORDER BY u.id, COALESCE(u.sort, 2147483647), u.text
+               ) deduplicated
+         ORDER BY COALESCE(deduplicated.sort, 2147483647),
+                  deduplicated.text,
+                  deduplicated.id
     </select>
 
     <!-- selectBoardFunctionCode2List
@@ -128,12 +134,12 @@ BOARD 모드의 Function Code 2 목록 조회
                COALESCE(FUNCTION_CD, TREE_CD) AS functionCd,
                CAST(TREE_DEPTH AS VARCHAR) AS "level",
                'group' AS type,
-               COALESCE(SORT_ORDER, 0) AS sort,
+               SORT_ORDER AS sort,
                COALESCE(USE_YN, 'Y') AS useYn
           FROM DOCS_SW_TREE
          WHERE COALESCE(USE_YN, 'Y') = 'Y'
            AND UPPER_TREE_CD = #{parentTreeCd,jdbcType=VARCHAR}
-         ORDER BY SORT_ORDER, TREE_NM
+         ORDER BY COALESCE(SORT_ORDER, 2147483647), TREE_NM, TREE_CD
     </select>
 
     <!-- selectBoardDocumentTypeList
@@ -147,12 +153,12 @@ BOARD 모드의 Type Code 목록 조회
                COALESCE(FUNCTION_CD, TREE_CD) AS functionCd,
                CAST(TREE_DEPTH AS VARCHAR) AS "level",
                'item' AS type,
-               COALESCE(SORT_ORDER, 0) AS sort,
+               SORT_ORDER AS sort,
                COALESCE(USE_YN, 'Y') AS useYn
           FROM DOCS_SW_TREE
          WHERE COALESCE(USE_YN, 'Y') = 'Y'
            AND UPPER_TREE_CD = #{parentTreeCd,jdbcType=VARCHAR}
-         ORDER BY SORT_ORDER, TREE_NM
+         ORDER BY COALESCE(SORT_ORDER, 2147483647), TREE_NM, TREE_CD
     </select>
 
     <!-- insertNode
@@ -233,6 +239,7 @@ BOARD 모드 등록(SW)
                CASE WHEN #{parentTreeCd,jdbcType=VARCHAR} IS NULL THEN 1
                     ELSE (SELECT COALESCE(TREE_DEPTH, 0) + 1 FROM DOCS_SW_TREE WHERE TREE_CD = #{parentTreeCd,jdbcType=VARCHAR}) END,
                COALESCE(
+                   #{sortOrder,jdbcType=INTEGER},
                    (SELECT old.SORT_ORDER
                       FROM DOCS_SW_TREE old
                      WHERE UPPER(TRIM(COALESCE(old.FUNCTION_CD, ''))) = UPPER(TRIM(#{functionCd}))
@@ -260,6 +267,7 @@ BOARD 모드 등록(PRODUCT)
                CASE WHEN #{parentTreeCd,jdbcType=VARCHAR} IS NULL THEN 1
                     ELSE (SELECT COALESCE(TREE_DEPTH, 0) + 1 FROM DOCS_PRODUCT_TREE WHERE TREE_CD = #{parentTreeCd,jdbcType=VARCHAR}) END,
                COALESCE(
+                   #{sortOrder,jdbcType=INTEGER},
                    (SELECT old.SORT_ORDER
                       FROM DOCS_PRODUCT_TREE old
                      WHERE UPPER(TRIM(COALESCE(old.FUNCTION_CD, ''))) = UPPER(TRIM(#{functionCd}))
@@ -287,6 +295,7 @@ BOARD 모드 등록(DXF)
                CASE WHEN #{parentTreeCd,jdbcType=VARCHAR} IS NULL THEN 1
                     ELSE (SELECT COALESCE(TREE_DEPTH, 0) + 1 FROM DOCS_DXF_TREE WHERE TREE_CD = #{parentTreeCd,jdbcType=VARCHAR}) END,
                COALESCE(
+                   #{sortOrder,jdbcType=INTEGER},
                    (SELECT old.SORT_ORDER
                       FROM DOCS_DXF_TREE old
                      WHERE UPPER(TRIM(COALESCE(old.FUNCTION_CD, ''))) = UPPER(TRIM(#{functionCd}))
@@ -317,15 +326,24 @@ DOC 모드 명칭 수정
 BOARD 모드 명칭 수정
 - SW, PRODUCT, DXF 트리 동시 수정 -->
     <update id="updateBoardSwNode" parameterType="kr.esob.tdms.controller.general.system.treemanage.TreeManageSaveParam">
-        UPDATE DOCS_SW_TREE SET TREE_NM = #{treeNm} WHERE TREE_CD = #{treeCd}
+        UPDATE DOCS_SW_TREE
+           SET TREE_NM = #{treeNm},
+               SORT_ORDER = COALESCE(#{sortOrder,jdbcType=INTEGER}, SORT_ORDER)
+         WHERE TREE_CD = #{treeCd}
     </update>
 
     <update id="updateBoardProductNode" parameterType="kr.esob.tdms.controller.general.system.treemanage.TreeManageSaveParam">
-        UPDATE DOCS_PRODUCT_TREE SET TREE_NM = #{treeNm} WHERE TREE_CD = #{treeCd}
+        UPDATE DOCS_PRODUCT_TREE
+           SET TREE_NM = #{treeNm},
+               SORT_ORDER = COALESCE(#{sortOrder,jdbcType=INTEGER}, SORT_ORDER)
+         WHERE TREE_CD = #{treeCd}
     </update>
 
     <update id="updateBoardDxfNode" parameterType="kr.esob.tdms.controller.general.system.treemanage.TreeManageSaveParam">
-        UPDATE DOCS_DXF_TREE SET TREE_NM = #{treeNm} WHERE TREE_CD = #{treeCd}
+        UPDATE DOCS_DXF_TREE
+           SET TREE_NM = #{treeNm},
+               SORT_ORDER = COALESCE(#{sortOrder,jdbcType=INTEGER}, SORT_ORDER)
+         WHERE TREE_CD = #{treeCd}
     </update>
 
     <!-- countChildren / countIocChildren

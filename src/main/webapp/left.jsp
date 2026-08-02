@@ -81,23 +81,24 @@
 					<c:forEach items="${sessionScope['scopedTarget.session'].menuTop }" var="menuTop">
 						<c:if test="${menuTop.menuNm ne 'CR' }">
 							<c:choose>
-								<c:when test="${menuTop.menuNm eq '업체 및 사용자' or menuTop.menuNm eq '사용자 관리'}">
-									<c:set var="menuIconFile" value="user.png" />
+								<c:when test="${menuTop.menuCd eq 'MENU_013'}">
+									<c:set var="menuIconClass" value="tabler-file-stack" />
 								</c:when>
-								<%-- <c:when test="${menuTop.menuNm eq '게시판'}">
-									<c:set var="menuIconFile" value="notice.png" />
-									</c:when>
-									--%>
-								<%-- <c:when test="${menuTop.menuNm eq '시스템 공통'}">
-										<c:set var="menuIconFile" value="system.png" />
-									</c:when>
-									--%>
-									<c:when test="${menuTop.menuNm eq '시스템 관리'}">
-										<c:set var="menuIconFile" value="system.png" />
-									</c:when>
-									<c:otherwise>
-										<c:set var="menuIconFile" value="folder.png" />
-									</c:otherwise>
+								<c:when test="${menuTop.menuCd eq 'MENU_229'}">
+									<c:set var="menuIconClass" value="tabler-package-export" />
+								</c:when>
+								<c:when test="${menuTop.menuCd eq 'MENU_071'}">
+									<c:set var="menuIconClass" value="tabler-users-group" />
+								</c:when>
+								<c:when test="${menuTop.menuCd eq 'MENU_214'}">
+									<c:set var="menuIconClass" value="tabler-settings" />
+								</c:when>
+								<c:when test="${menuTop.menuCd eq 'MENU_223'}">
+									<c:set var="menuIconClass" value="tabler-history" />
+								</c:when>
+								<c:otherwise>
+									<c:set var="menuIconClass" value="tabler-folder" />
+								</c:otherwise>
 							</c:choose>
 							<c:set var="hasTopChild" value="false" />
 							<c:forEach items="${sessionScope['scopedTarget.session'].menuSub }" var="menuSubCheck">
@@ -106,13 +107,12 @@
 								</c:if>
 							</c:forEach>
 
-							<li id="${menuTop.menuCd }" class="menu-item ${menuTop.menuIcon}">
+							<li id="${menuTop.menuCd }" class="menu-item">
 								<c:choose>
 									<c:when test="${hasTopChild}">
 										<a href="javascript:void(0);" class="menu-link menu-toggle" title="${menuTop.menuNm}">
 											<span class="menu-top-icon" aria-hidden="true">
-												<img src="${pageContext.request.contextPath}/resources/images/icon/${menuIconFile}"
-													alt="" />
+												<i class="icon-base ti ${menuIconClass}"></i>
 											</span>
 											<div>${menuTop.menuNm}</div>
 										</a>
@@ -163,8 +163,7 @@
 										</c:if>
 										<a href="${topMenuUrl }" class="menu-link" title="${menuTop.menuNm}">
 											<span class="menu-top-icon" aria-hidden="true">
-												<img src="${pageContext.request.contextPath}/resources/images/icon/${menuIconFile}"
-													alt="" />
+												<i class="icon-base ti ${menuIconClass}"></i>
 											</span>
 											<div>${menuTop.menuNm}</div>
 										</a>

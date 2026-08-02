@@ -166,12 +166,19 @@ function renderSwRequestExplorerCustomTree(treeList) {
 
 	$.each(childrenMap, function(parentId, childList) {
 		childList.sort(function(a, b) {
-			var sortA = parseInt(a.sort || 0, 10);
-			var sortB = parseInt(b.sort || 0, 10);
+			var sortA = parseInt(a.sort, 10);
+			var sortB = parseInt(b.sort, 10);
+			sortA = isFinite(sortA) && sortA > 0 ? sortA : 2147483647;
+			sortB = isFinite(sortB) && sortB > 0 ? sortB : 2147483647;
 			if (sortA !== sortB) {
 				return sortA - sortB;
 			}
-			return (a.displayText || a.text || "").localeCompare(b.displayText || b.text || "");
+			var textCompare = (a.displayText || a.text || "")
+				.localeCompare(b.displayText || b.text || "");
+			if (textCompare !== 0) {
+				return textCompare;
+			}
+			return String(a.id || "").localeCompare(String(b.id || ""));
 		});
 	});
 

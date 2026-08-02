@@ -52,6 +52,10 @@ public class TreeManageService {
 			result.setFailReason(prop.msg("feature.treeManage.validation.nameLength"));
 			return result;
 		}
+		if (isLevelType(param.getManageType()) && !isValidPriority(param.getSortOrder())) {
+			result.setFailReason(prop.msg("feature.treeManage.validation.priorityPositive"));
+			return result;
+		}
 
 		if (isBlank(param.getParentTreeCd())) {
 			param.setParentTreeCd(null);
@@ -144,6 +148,10 @@ public class TreeManageService {
 		param.setTreeNm(param.getTreeNm().trim());
 		if (!isValidTreeNm(param.getTreeNm())) {
 			result.setFailReason(prop.msg("feature.treeManage.validation.nameLength"));
+			return result;
+		}
+		if (isLevelType(param.getManageType()) && !isValidPriority(param.getSortOrder())) {
+			result.setFailReason(prop.msg("feature.treeManage.validation.priorityPositive"));
 			return result;
 		}
 
@@ -243,6 +251,10 @@ public class TreeManageService {
 
 	private boolean isValidTreeNm(String name) {
 		return name != null && !name.trim().isEmpty() && name.trim().length() <= 128;
+	}
+
+	private boolean isValidPriority(Integer sortOrder) {
+		return sortOrder == null || sortOrder > 0;
 	}
 
 	private boolean isBlank(String s) {

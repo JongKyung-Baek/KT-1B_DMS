@@ -378,12 +378,7 @@
 			.off("click.swFilePopup", ".sw-file-popup .sw-file-link")
 			.on("click.swFilePopup", ".sw-file-popup .sw-file-link", function (e) {
 			e.preventDefault();
-			var $row = $(this).closest('tr.jqgrow');
-			var rowId = $row.attr('id');
-			var tableId = $(this).closest('table.ui-jqgrid-btable').attr('id');
-			if (rowId && tableId) {
-				$("#" + tableId).jqGrid('setSelection', rowId, false);
-			}
+			e.stopPropagation();
 			var objectId = $(this).data("objectId");
 			var fileNo = $(this).data("fileNo");
 			openSwFileViewer(objectId, fileNo);

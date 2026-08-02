@@ -26,6 +26,33 @@ function escapeTreeManageHtml(value) {
         .replace(/'/g, '&#39;');
 }
 
+function normalizeTreePriority(value, fallback) {
+    var text = $.trim(String(value === undefined || value === null ? '' : value));
+    if (!/^[1-9]\d*$/.test(text)) return fallback;
+    var priority = parseInt(text, 10);
+    return isFinite(priority) && priority <= 2147483647 ? priority : fallback;
+}
+
+function nextTreePriority(items) {
+    var maxPriority = 0;
+    $.each(items || [], function () {
+        maxPriority = Math.max(maxPriority, normalizeTreePriority(this.sort, 0));
+    });
+    return Math.min(maxPriority + 1, 2147483647);
+}
+
+function compareTreeManageItems(a, b) {
+    var sortA = normalizeTreePriority(a && a.sort, 2147483647);
+    var sortB = normalizeTreePriority(b && b.sort, 2147483647);
+    if (sortA !== sortB) return sortA - sortB;
+
+    var textA = String(a && (a.text || a.id) || '');
+    var textB = String(b && (b.text || b.id) || '');
+    var textCompare = textA.localeCompare(textB);
+    if (textCompare !== 0) return textCompare;
+    return String(a && a.id || '').localeCompare(String(b && b.id || ''));
+}
+
 function updateTreeManageListCount(targetId, count) {
     var countTarget = {
         function1List: 'function1Count',
@@ -125,15 +152,24 @@ function renderDocTypeList() {
 
 function renderList(targetId, items, selectedId, clickFn) {
     var html = [];
-    $.each(items, function () {
+    var priorityLabel = treeManageMessage('feature.treeManage.field.priority', '우선순위');
+    var orderedItems = (items || []).slice().sort(compareTreeManageItems);
+    $.each(orderedItems, function () {
         var itemId = String(this.id === undefined || this.id === null ? '' : this.id);
         var selected = String(selectedId === undefined || selectedId === null ? '' : selectedId) === itemId;
         var active = selected ? ' active' : '';
         var label = this.text || itemId;
+        var priority = normalizeTreePriority(this.sort, null);
+        var priorityBadge = currentManageType === 'LEVEL'
+            ? '<span class="tm-list-priority" title="' + escapeTreeManageHtml(priorityLabel)
+                + '" aria-label="' + escapeTreeManageHtml(priorityLabel + ' ' + (priority || '-')) + '">'
+                + escapeTreeManageHtml(priority || '-') + '</span>'
+            : '';
         html.push('<button type="button" class="list-item' + active + '" role="option"'
             + ' aria-selected="' + (selected ? 'true' : 'false') + '" data-id="'
             + escapeTreeManageHtml(itemId) + '"><span class="tm-list-label">'
-            + escapeTreeManageHtml(label) + '</span><i class="icon-base ti tabler-chevron-right tm-list-chevron"'
+            + escapeTreeManageHtml(label) + '</span>' + priorityBadge
+            + '<i class="icon-base ti tabler-chevron-right tm-list-chevron"'
             + ' aria-hidden="true"></i></button>');
     });
     $('#' + targetId).html(html.join(''));
@@ -204,8 +240,11 @@ function openNodeDialog(options) {
     }
 
     var includeCode = !!options.includeCode;
+    var includePriority = !!options.includePriority;
     var codeLabel = options.codeLabel || treeManageMessage('feature.treeManage.field.code', '코드');
     var nameLabel = options.nameLabel || treeManageMessage('feature.treeManage.field.name', '명칭');
+    var priorityLabel = options.priorityLabel
+        || treeManageMessage('feature.treeManage.field.priority', '우선순위');
     var nameFirst = !!options.nameFirst;
     var readOnlyCode = !!options.readOnlyCode;
     var namePlaceholder = options.namePlaceholder || '';
@@ -220,6 +259,13 @@ function openNodeDialog(options) {
         html.push('<input type="text" id="' + inputId + '" class="ui-widget-content ui-corner-all" placeholder="' + escAttr(placeholder || '') + '" value="' + escAttr(value) + '" ' + (extraAttr || '') + '>');
         html.push('</div>');
     }
+    function addPriorityRow() {
+        html.push('<div class="tree-node-dialog__row">');
+        html.push('<label for="treeNodePriorityInput">' + escHtml(priorityLabel) + '</label>');
+        html.push('<input type="number" id="treeNodePriorityInput" class="ui-widget-content ui-corner-all" min="1" max="2147483647" step="1" inputmode="numeric" required value="'
+            + escAttr(options.priority) + '">');
+        html.push('</div>');
+    }
 
     if (includeCode && nameFirst) {
         addRow(nameLabel, 'treeNodeNameInput', options.name, '', true, namePlaceholder);
@@ -228,6 +274,7 @@ function openNodeDialog(options) {
         if (includeCode) addRow(codeLabel, 'treeNodeCodeInput', options.code, readOnlyCode ? 'readonly' : '', true, codePlaceholder);
         addRow(nameLabel, 'treeNodeNameInput', options.name, '', false, namePlaceholder);
     }
+    if (includePriority) addPriorityRow();
     html.push('</div>');
 
     var $oldDlg = $('#treeNodeEditDialog');
@@ -272,6 +319,7 @@ function openNodeDialog(options) {
                 click: function () {
                     var code = includeCode ? $.trim($('#treeNodeCodeInput').val()) : (options.code || '');
                     var name = $.trim($('#treeNodeNameInput').val());
+                    var priority = null;
                     if (includeCode && !code) {
                         alertMessage(treeManageMessage('feature.treeManage.validation.codeRequired', '코드를 입력해 주세요.'));
                         return;
@@ -280,7 +328,17 @@ function openNodeDialog(options) {
                         alertMessage(treeManageMessage('feature.treeManage.validation.nameRequired', '명칭을 입력해 주세요.'));
                         return;
                     }
-                    options.onSubmit(code, name);
+                    if (includePriority) {
+                        priority = normalizeTreePriority($('#treeNodePriorityInput').val(), null);
+                        if (priority === null) {
+                            alertMessage(treeManageMessage(
+                                'feature.treeManage.validation.priorityPositive',
+                                '우선순위는 1 이상의 정수로 입력해 주세요.'
+                            ));
+                            return;
+                        }
+                    }
+                    options.onSubmit(code, name, priority);
                     $(this).dialog('close');
                 }
             },
@@ -419,16 +477,18 @@ function normalizeBoardLevelName(name) {
     return $.trim(name || '');
 }
 
-function addBoardLevel(parentTreeCd, doneFn) {
+function addBoardLevel(parentTreeCd, doneFn, defaultPriority) {
     var isChild = !!parentTreeCd;
     openNodeDialog({
         title: isChild
             ? treeManageMessage('feature.treeManage.dialog.childLevelCreate', '하위 Level 생성')
             : treeManageMessage('feature.treeManage.dialog.levelCreate', 'Level 생성'),
         includeCode: false,
+        includePriority: true,
         nameLabel: treeManageMessage('feature.treeManage.field.level', 'Level'),
         namePlaceholder: isChild ? 'ex) Detail Level' : 'ex) LV1',
-        onSubmit: function (code, levelName) {
+        priority: normalizeTreePriority(defaultPriority, 1),
+        onSubmit: function (code, levelName, priority) {
             var normalized = normalizeBoardLevelName(levelName);
             if (!normalized) {
                 alertMessage(treeManageMessage('feature.treeManage.validation.levelRequired', 'Level을 입력해 주세요.'));
@@ -438,6 +498,7 @@ function addBoardLevel(parentTreeCd, doneFn) {
                 functionCd: normalized,
                 treeCd: '',
                 treeNm: normalized,
+                sortOrder: priority,
                 parentTreeCd: parentTreeCd || null,
                 manageType: currentManageType
             }, '/general/system/treemanage/node/add', function (response) {
@@ -452,15 +513,17 @@ function addBoardLevel(parentTreeCd, doneFn) {
     });
 }
 
-function editBoardLevel(treeCd, currentTreeNm, doneFn) {
+function editBoardLevel(treeCd, currentTreeNm, currentSort, doneFn) {
     if (!treeCd) { alertMessage(treeManageMessage('feature.treeManage.validation.selectionRequired', '대상을 선택해 주세요.')); return; }
     openNodeDialog({
         title: treeManageMessage('feature.treeManage.dialog.levelEdit', 'Level 수정'),
         includeCode: false,
+        includePriority: true,
         nameLabel: treeManageMessage('feature.treeManage.field.level', 'Level'),
         namePlaceholder: 'ex) LV1',
         name: currentTreeNm || '',
-        onSubmit: function (code, levelName) {
+        priority: normalizeTreePriority(currentSort, 1),
+        onSubmit: function (code, levelName, priority) {
             var normalized = normalizeBoardLevelName(levelName);
             if (!normalized) {
                 alertMessage(treeManageMessage('feature.treeManage.validation.levelRequired', 'Level을 입력해 주세요.'));
@@ -469,6 +532,7 @@ function editBoardLevel(treeCd, currentTreeNm, doneFn) {
             callAjax({
                 treeCd: treeCd,
                 treeNm: normalized,
+                sortOrder: priority,
                 manageType: currentManageType
             }, '/general/system/treemanage/node/update', function (response) {
                 if (response.success) {
@@ -565,7 +629,7 @@ function getItemById(list, id) {
 
 function addFunction1() {
     if (currentManageType === 'LEVEL') {
-        addBoardLevel(null, loadFunction1);
+        addBoardLevel(null, loadFunction1, nextTreePriority(function1));
         return;
     }
     addFunctionCode('ROOT', loadFunction1, { name: 'ex) Program Management', code: 'ex) 100' });
@@ -573,7 +637,7 @@ function addFunction1() {
 function editFunction1() {
     var item = getItemById(function1, selected1);
     if (currentManageType === 'LEVEL') {
-        editBoardLevel(selected1, item ? item.text : '', loadFunction1);
+        editBoardLevel(selected1, item ? item.text : '', item ? item.sort : null, loadFunction1);
         return;
     }
     editFunctionCode(selected1, item ? item.text : '', item ? item.functionCd : '', loadFunction1, { name: 'ex) Program Management', code: 'ex) 100' });
@@ -588,7 +652,7 @@ function addFunction2() {
         return;
     }
     if (currentManageType === 'LEVEL') {
-        addBoardLevel(selected1, loadFunction2);
+        addBoardLevel(selected1, loadFunction2, nextTreePriority(function2));
         return;
     }
     addFunctionCode(selected1, loadFunction2, { name: 'ex) Program Office', code: 'ex) 110' });
@@ -596,7 +660,7 @@ function addFunction2() {
 function editFunction2() {
     if (currentManageType === 'LEVEL') {
         var levelItem = getItemById(function2, selected2);
-        editBoardLevel(selected2, levelItem ? levelItem.text : '', loadFunction2);
+        editBoardLevel(selected2, levelItem ? levelItem.text : '', levelItem ? levelItem.sort : null, loadFunction2);
         return;
     }
     var item = getItemById(function2, selected2);

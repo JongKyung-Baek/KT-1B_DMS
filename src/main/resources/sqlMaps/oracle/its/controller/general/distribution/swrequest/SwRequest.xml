@@ -547,7 +547,7 @@
 		FROM DOCS_SW_TREE tree
 		WHERE COALESCE(tree.USE_YN, 'Y') = 'Y'
 		  AND COALESCE(tree.UPPER_TREE_CD, '') = 'ROOT'
-		ORDER BY tree.TREE_CD
+		ORDER BY COALESCE(tree.SORT_ORDER, 2147483647), tree.TREE_NM, tree.TREE_CD
 	</select>
 
 	<select id="selectLevelOptions" resultType="kr.esob.tdms.commonlogic.combo.ComboInfoVO">
@@ -557,7 +557,10 @@
 		FROM DOCS_SW_TREE tree
 		WHERE COALESCE(tree.USE_YN, 'Y') = 'Y'
 		  AND COALESCE(tree.UPPER_TREE_CD, '') != 'ROOT'
-		ORDER BY tree.TREE_CD
+		ORDER BY tree.UPPER_TREE_CD,
+		         COALESCE(tree.SORT_ORDER, 2147483647),
+		         tree.TREE_NM,
+		         tree.TREE_CD
 	</select>
 
 	<select id="selectNextSwRegisterNo" parameterType="map" resultType="Integer">

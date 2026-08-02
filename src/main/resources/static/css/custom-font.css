@@ -225,6 +225,14 @@ body.login-page #loginForm .mb-6 > .form-label {
   object-fit: contain;
 }
 
+#layout-menu .menu-inner > .menu-item > .menu-link .menu-top-icon > i {
+  display: block;
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
+  line-height: 1;
+}
+
 @media (max-width: 991.98px) {
   #layout-navbar.layout-navbar {
     flex-wrap: nowrap;

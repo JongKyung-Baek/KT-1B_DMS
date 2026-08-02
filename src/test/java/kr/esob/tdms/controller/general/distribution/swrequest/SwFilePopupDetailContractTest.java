@@ -176,6 +176,17 @@ class SwFilePopupDetailContractTest {
 	}
 
 	@Test
+	void openingViewerDoesNotSelectTheFileRow() throws Exception {
+		String page = read(
+			"src/main/webapp/WEB-INF/views/general/distribution/swFilePopup.jsp");
+
+		assertTrue(page.contains("$(e.target).closest(\".sw-file-link\").length > 0"));
+		assertTrue(page.contains("e.stopPropagation();"));
+		assertTrue(page.contains("openSwFileViewer(objectId, fileNo);"));
+		assertFalse(page.contains("jqGrid('setSelection', rowId, false)"));
+	}
+
+	@Test
 	void popupRenderingIsDisplayOnlyButDownloadEndpointKeepsFinalAuthorization() throws Exception {
 		String controller = read(
 			"src/main/java/kr/esob/tdms/controller/general/distribution/swrequest/SwRequestController.java");

@@ -377,6 +377,23 @@
   white-space: nowrap;
 }
 
+.system-manage-page .tm-list-priority {
+  display: inline-flex;
+  min-width: 30px;
+  min-height: 22px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 7px;
+  border: 1px solid rgba(3, 76, 140, 0.16);
+  border-radius: 999px;
+  background: var(--tm-primary-soft);
+  color: var(--tm-primary-dark);
+  font-size: 9px;
+  font-weight: 900;
+  line-height: 1;
+}
+
 .system-manage-page .tm-list-chevron {
   flex: 0 0 auto;
   color: #aaa6b2;
@@ -427,8 +444,8 @@
 }
 
 .tree-node-dialog__row label {
-  width: 64px;
-  flex: 0 0 64px;
+  width: 82px;
+  flex: 0 0 82px;
   color: #5d596c;
   font-size: 11px;
   font-weight: 800;

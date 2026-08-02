@@ -36,10 +36,42 @@ class SidebarBrandLayoutContractTest {
         assertTrue(Files.size(kaiLogo) > 0);
         assertTrue(css.contains("#layout-menu .app-brand-kai-logo"));
         assertTrue(css.contains("object-fit: contain"));
-        assertTrue(mainDecorator.contains("custom-font.css?v=20260802.2"));
+        assertTrue(mainDecorator.contains("custom-font.css?v=20260803.1"));
         assertTrue(css.contains("@media (min-width: 1200px)"));
         assertTrue(css.contains(".layout-menu-collapsed:not(.layout-menu-hover)"));
         assertTrue(css.contains("#layout-menu .app-brand-link"));
         assertTrue(css.contains("display: none"));
+    }
+
+    @Test
+    void rootMenusUseDistinctLocaleIndependentTablerIcons() throws IOException {
+        String sidebar = Files.readString(Path.of(
+                "src", "main", "webapp", "left.jsp"), StandardCharsets.UTF_8);
+        String css = Files.readString(Path.of(
+                "src", "main", "resources", "static", "css", "custom-font.css"),
+                StandardCharsets.UTF_8);
+        String productDecorator = Files.readString(Path.of("src", "main", "webapp",
+                "WEB-INF", "decorator", "decoratorProductTab.jsp"),
+                StandardCharsets.UTF_8);
+        String disposalDecorator = Files.readString(Path.of("src", "main", "webapp",
+                "WEB-INF", "decorator", "decoratorDisposalTab.jsp"),
+                StandardCharsets.UTF_8);
+
+        assertTrue(sidebar.contains("menuTop.menuCd eq 'MENU_013'"));
+        assertTrue(sidebar.contains("value=\"tabler-file-stack\""));
+        assertTrue(sidebar.contains("menuTop.menuCd eq 'MENU_229'"));
+        assertTrue(sidebar.contains("value=\"tabler-package-export\""));
+        assertTrue(sidebar.contains("menuTop.menuCd eq 'MENU_071'"));
+        assertTrue(sidebar.contains("value=\"tabler-users-group\""));
+        assertTrue(sidebar.contains("menuTop.menuCd eq 'MENU_214'"));
+        assertTrue(sidebar.contains("value=\"tabler-settings\""));
+        assertTrue(sidebar.contains("menuTop.menuCd eq 'MENU_223'"));
+        assertTrue(sidebar.contains("value=\"tabler-history\""));
+        assertTrue(sidebar.contains("<i class=\"icon-base ti ${menuIconClass}\"></i>"));
+        assertFalse(sidebar.contains("menuIconFile"));
+        assertFalse(sidebar.contains("class=\"menu-item ${menuTop.menuIcon}\""));
+        assertTrue(css.contains(".menu-top-icon > i"));
+        assertTrue(productDecorator.contains("iconify-icons.css"));
+        assertTrue(disposalDecorator.contains("iconify-icons.css"));
     }
 }

@@ -11,4 +11,5 @@ public class TreeManageSaveParam {
 	private String parentTreeCd;
 	private String treeNm;
 	private String manageType;
+	private Integer sortOrder;
 }

@@ -22,7 +22,7 @@ VALUES
         '/general/distribution/workflow/', 5, 'root', 'N', 'Y',
         '기술자료 배포요청·승인·승인목록 관리',
         '기술자료 배포요청부터 승인완료 목록까지 관리',
-        'ROLE_MENU_229', ''
+        'ROLE_MENU_229', 'tabler-package-export'
     ),
     (
         'MENU_226', 'MENU_229', '배포요청',

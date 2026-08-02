@@ -113,6 +113,24 @@ class SwRequestTreeExplorerContractTest {
 	}
 
 	@Test
+	void technicalDataTreeOrdersEverySiblingGroupByConfiguredPriority() throws Exception {
+		String mapper = read(
+			"src/main/resources/sqlMaps/oracle/its/controller/general/distribution/swrequest/SwRequest.xml");
+		String script = read(
+			"src/main/resources/static/js/views/general/distribution/swRequestList.js");
+
+		assertTrue(mapper.contains(
+			"ORDER BY COALESCE(tree.SORT_ORDER, 2147483647), tree.TREE_NM, tree.TREE_CD"));
+		assertTrue(mapper.contains(
+			"ORDER BY tree.UPPER_TREE_CD,"));
+		assertTrue(script.contains("$.each(childrenMap, function(parentId, childList)"));
+		assertTrue(script.contains("var sortA = parseInt(a.sort, 10);"));
+		assertTrue(script.contains("sortA = isFinite(sortA) && sortA > 0 ? sortA : 2147483647;"));
+		assertTrue(script.contains("var textCompare = (a.displayText || a.text || \"\")"));
+		assertTrue(script.contains("String(a.id || \"\").localeCompare(String(b.id || \"\"))"));
+	}
+
+	@Test
 	void koreanAndEnglishBundlesContainEveryTreeExplorerMessage() throws Exception {
 		String korean = read("src/main/webapp/messages/feature.properties");
 		String english = read("src/main/webapp/messages/feature_en.properties");

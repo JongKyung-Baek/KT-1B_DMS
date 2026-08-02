@@ -177,6 +177,19 @@ UPDATE docs_menu
    SET parent_menu_cd = 'ROOT'
  WHERE parent_menu_cd IN ('I', 'B');
 
+-- Keep the five current navigation roots visually distinct in every locale.
+UPDATE docs_menu
+   SET menu_icon = CASE menu_cd
+       WHEN 'MENU_013' THEN 'tabler-file-stack'
+       WHEN 'MENU_229' THEN 'tabler-package-export'
+       WHEN 'MENU_071' THEN 'tabler-users-group'
+       WHEN 'MENU_214' THEN 'tabler-settings'
+       WHEN 'MENU_223' THEN 'tabler-history'
+       END
+ WHERE menu_cd IN (
+       'MENU_013', 'MENU_229', 'MENU_071', 'MENU_214', 'MENU_223'
+ );
+
 -- The application now has one portal. Remove both physical selector columns
 -- after their legacy values have served the one-time cleanup above.
 ALTER TABLE public.docs_menu DROP COLUMN IF EXISTS auth_site;

@@ -641,7 +641,7 @@ VALUES (
     '/general/history/', 115, 'root', 'N', 'Y',
     '접근·감사·열람·출력 이력 관리',
     '인증·메뉴·보안 접근 감사와 실제 열람·출력 기록을 구분하여 조회',
-    'ROLE_MENU_223', ''
+    'ROLE_MENU_223', 'tabler-history'
 )
 ON CONFLICT (menu_cd) DO UPDATE SET
     parent_menu_cd = EXCLUDED.parent_menu_cd,

@@ -15,13 +15,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${pageTitle}</title>
 <link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/distribution-invoice.css" media="screen" />
-<link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/tree-management.css?v=20260802.2" media="screen" />
+<link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/tree-management.css?v=20260803.1" media="screen" />
 <script>
 	$(function () {
 		$('.layout-wrapper.bodyWrap .content-wrapper > .container').addClass('distribution-invoice-container');
 	});
 </script>
-<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/views/general/system/treemanage/treeManage.js?v=20260801.1"></script>
+<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/views/general/system/treemanage/treeManage.js?v=20260803.1"></script>
 <script>
 	// 캐시된 구버전 JS가 로드된 경우에도 모드 전환 버튼이 죽지 않도록 안전망
 	window.switchManageMode = window.switchManageMode || function (mode) {
@@ -55,7 +55,7 @@
 		</span>
 	</header>
 
-	<section class="wrap tm-workspace-card" aria-label="${pageHeading}">
+	<section class="tm-workspace-card" aria-label="${pageHeading}">
 		<div id="treeManageLayout" class="layout">
 			<section id="leftTreePanel" class="panel" aria-labelledby="treeMainTitle">
 				<header class="tm-section-header">

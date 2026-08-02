@@ -25,9 +25,11 @@ class TreeManagePresentationContractTest {
         String view = read(VIEW);
         String css = read(STYLE);
 
-        assertTrue(view.contains("tree-management.css?v=20260802.2"));
+        assertTrue(view.contains("tree-management.css?v=20260803.1"));
+        assertTrue(view.contains("treeManage.js?v=20260803.1"));
         assertTrue(view.contains("class=\"tm-page-header\""));
-        assertTrue(view.contains("class=\"wrap tm-workspace-card\""));
+        assertTrue(view.contains("class=\"tm-workspace-card\""));
+        assertFalse(view.contains("class=\"wrap tm-workspace-card\""));
         assertTrue(view.contains("class=\"tm-context-chip\""));
         assertTrue(view.contains("class=\"tm-count-chip\""));
         assertFalse(view.contains("<style>"));
@@ -48,6 +50,7 @@ class TreeManagePresentationContractTest {
                 .contains("min-height: 54px"));
         assertTrue(styleBlock(css, ".system-manage-page .list-item.active {")
                 .contains("background: var(--tm-primary-soft)"));
+        assertTrue(css.contains(".system-manage-page .tm-list-priority"));
     }
 
     @Test
@@ -83,6 +86,15 @@ class TreeManagePresentationContractTest {
         assertTrue(script.contains("id=\"treeNodeEditDialog\""));
         assertTrue(script.contains("'treeNodeCodeInput'"));
         assertTrue(script.contains("'treeNodeNameInput'"));
+        assertTrue(script.contains("id=\"treeNodePriorityInput\""));
+        assertTrue(script.contains("type=\"number\""));
+        assertTrue(script.contains("min=\"1\""));
+        assertTrue(script.contains("step=\"1\""));
+        assertTrue(script.contains("sortOrder: priority"));
+        assertTrue(script.contains("nextTreePriority(function1)"));
+        assertTrue(script.contains("nextTreePriority(function2)"));
+        assertTrue(script.contains("item ? item.sort : null"));
+        assertTrue(script.contains("levelItem ? levelItem.sort : null"));
     }
 
     @Test
@@ -99,6 +111,8 @@ class TreeManagePresentationContractTest {
         assertTrue(script.contains("feature.common.countSuffix"));
         assertTrue(css.contains(".tree-manage-dialog.ui-dialog"));
         assertTrue(css.contains(".tree-node-dialog__row input.ui-widget-content:focus"));
+        assertTrue(script.contains("feature.treeManage.field.priority"));
+        assertTrue(script.contains("feature.treeManage.validation.priorityPositive"));
     }
 
     @Test

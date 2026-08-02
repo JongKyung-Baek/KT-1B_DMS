@@ -32,6 +32,7 @@ class ViewerIntegrationMigrationContractTest {
                 .contains("ADD COLUMN IF NOT EXISTS source_event_id")
                 .contains("ADD COLUMN IF NOT EXISTS source_correlation_id")
                 .contains("uq_docs_history_source_event")
+                .contains("idx_docs_history_view_time")
                 .contains("CREATE TABLE IF NOT EXISTS docs_viewer_callback_nonce")
                 .contains("REFERENCES docs_viewer_launch (correlation_id) ON DELETE CASCADE")
                 .contains("UNIQUE (correlation_id, event_type)")
@@ -119,17 +120,44 @@ class ViewerIntegrationMigrationContractTest {
     }
 
     @Test
-    void authenticatedViewCallbackPersistsItsExactFileNumberInHistory()
+    void successfulTdmsLaunchAtomicallyPersistsLaunchAndHistory()
             throws IOException {
         String mapper = Files.readString(Path.of(
                 "src/main/resources/sqlMaps/oracle/its/commonlogic/viewerintegration/ViewerIntegration.xml"),
                 StandardCharsets.UTF_8);
+        String service = Files.readString(Path.of(
+                "src/main/java/kr/esob/tdms/commonlogic/viewerintegration/ViewerIntegrationService.java"),
+                StandardCharsets.UTF_8);
+        String atomicInsertId = "<insert id=\"insertLaunchWithHistory\">";
+        int atomicInsertStart = mapper.indexOf(atomicInsertId);
+        assertThat(atomicInsertStart).isGreaterThanOrEqualTo(0);
+        int atomicInsertEnd = mapper.indexOf("</insert>", atomicInsertStart);
+        assertThat(atomicInsertEnd).isGreaterThan(atomicInsertStart);
+        String atomicInsert = mapper.substring(
+                atomicInsertStart, atomicInsertEnd + "</insert>".length());
 
         assertThat(mapper)
-                .contains("<insert id=\"insertViewHistory\">")
+                .containsOnlyOnce(atomicInsertId)
+                .doesNotContain("<insert id=\"insertLaunch\">")
+                .doesNotContain("<insert id=\"insertLaunchViewHistory\">");
+        assertThat(atomicInsert)
+                .contains("WITH inserted_launch AS (")
+                .contains("INSERT INTO docs_viewer_launch (")
+                .contains("RETURNING correlation_id")
+                .contains("INSERT INTO docs_history (")
                 .contains("revision, file_no, user_id, insert_date, user_nm, log_type")
-                .contains("#{launch.fileNo}, #{launch.actorUserId}")
-                .contains("#{launch.actorUserNm}, 'VIEWING'");
+                .contains("revision, file_no, actor_user_id, clock_timestamp()")
+                .contains("actor_user_nm, 'VIEWING', 'TDMS'")
+                .contains("CAST(correlation_id AS uuid), correlation_id")
+                .contains("FROM inserted_launch")
+                .doesNotContain("ON CONFLICT")
+                .doesNotContain("DO NOTHING");
+        assertThat(service)
+                .contains("dao.insertLaunchWithHistory(launch)")
+                .contains("dao.insertEvent(event)")
+                .doesNotContain("dao.insertLaunch(launch)")
+                .doesNotContain("dao.insertLaunchViewHistory(launch)")
+                .doesNotContain("dao.insertViewHistory(");
     }
 
     @Test

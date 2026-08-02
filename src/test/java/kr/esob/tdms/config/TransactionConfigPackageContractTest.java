@@ -2,12 +2,23 @@ package kr.esob.tdms.config;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import javax.servlet.FilterChain;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import kr.esob.tdms.commonlogic.viewerintegration.ViewerCallbackAuthenticationFilter;
+import kr.esob.tdms.commonlogic.viewerintegration.ViewerIntegrationService;
+import kr.esob.tdms.commonlogic.security.MobileClientAccessFilter;
 import org.junit.jupiter.api.Test;
+import org.springframework.aop.PointcutAdvisor;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.transaction.PlatformTransactionManager;
 
 class TransactionConfigPackageContractTest {
 
@@ -21,6 +32,48 @@ class TransactionConfigPackageContractTest {
                 "execution(* kr.esob.tdms..*.*(..))"));
         assertTrue(source.contains(
                 "!within(kr.esob.tdms.commonlogic.audit.RequestAuditFilter)"));
+        assertTrue(source.contains(
+                "!within(kr.esob.tdms.commonlogic.security."
+                        + "MobileClientAccessFilter)"));
+        assertTrue(source.contains(
+                "!within(kr.esob.tdms.commonlogic.viewerintegration."
+                        + "ViewerCallbackAuthenticationFilter)"));
+        assertTrue(source.contains("UnexpectedRollbackException"));
         assertFalse(source.contains("kr.esob.docs"));
+    }
+
+    @Test
+    void callbackFilterIsNotABusinessTransactionBoundary() throws Exception {
+        TransactionConfig config = new TransactionConfig();
+        ReflectionTestUtils.setField(
+                config,
+                "transactionManager",
+                mock(PlatformTransactionManager.class));
+        PointcutAdvisor advisor = (PointcutAdvisor) config.txAdviceAdvisor();
+
+        assertFalse(advisor.getPointcut().getMethodMatcher().matches(
+                MobileClientAccessFilter.class.getDeclaredMethod(
+                        "doFilterInternal",
+                        HttpServletRequest.class,
+                        HttpServletResponse.class,
+                        FilterChain.class),
+                MobileClientAccessFilter.class));
+        assertFalse(advisor.getPointcut().getMethodMatcher().matches(
+                ViewerCallbackAuthenticationFilter.class.getDeclaredMethod(
+                        "doFilterInternal",
+                        HttpServletRequest.class,
+                        HttpServletResponse.class,
+                        FilterChain.class),
+                ViewerCallbackAuthenticationFilter.class));
+        assertTrue(advisor.getPointcut().getMethodMatcher().matches(
+                ViewerIntegrationService.class.getMethod(
+                        "authenticateCallbackRequest",
+                        byte[].class,
+                        String.class,
+                        String.class,
+                        String.class,
+                        String.class,
+                        String.class),
+                ViewerIntegrationService.class));
     }
 }

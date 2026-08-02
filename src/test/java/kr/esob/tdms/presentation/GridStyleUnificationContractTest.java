@@ -24,7 +24,7 @@ class GridStyleUnificationContractTest {
         assertTrue(styleBlock(css, ".ah-table td {").contains("text-align: center"));
         assertTrue(styleBlock(css, ".ah-cell {").contains("align-items: center"));
         assertTrue(styleBlock(css, ".rh-detail-chips {").contains("justify-content: center"));
-        assertTrue(recordPage.contains("access-history.css?v=20260731.1"));
+        assertTrue(recordPage.contains("access-history.css?v=20260802.2"));
     }
 
     @Test
@@ -62,7 +62,7 @@ class GridStyleUnificationContractTest {
         assertTrue(script.contains("$resetButtons.slice(1).remove()"));
         assertTrue(styleBlock(css,
                 ".audit-log-page .formAcceptance input.form-control:focus,")
-                .contains("box-shadow: 0 0 0 3px rgba(115, 103, 240, 0.11) !important"));
+                .contains("box-shadow: 0 0 0 3px rgba(3, 76, 140, 0.11) !important"));
         assertTrue(css.contains(
                 "#gview_gridInsideAuditLogList .ui-jqgrid-htable th"));
         assertTrue(css.contains("height: 42px !important"));
@@ -83,8 +83,8 @@ class GridStyleUnificationContractTest {
         assertTrue(styleBlock(css,
                 ".audit-log-page #gridInsideAuditLogListPager input,")
                 .contains("font-size: 11px !important"));
-        assertTrue(css.contains("background: #f1efff !important"));
-        assertTrue(page.contains("audit-log.css?v=20260801.1"));
+        assertTrue(css.contains("background: var(--audit-primary-soft) !important"));
+        assertTrue(page.contains("audit-log.css?v=20260802.2"));
         assertTrue(page.contains("auditlogList.js?v=20260801.1"));
     }
 
@@ -106,8 +106,8 @@ class GridStyleUnificationContractTest {
                 "<section class=\"organization-management-results-card\" aria-label=\"${resultsAria}\">"));
         assertTrue(userPage.contains("feature.organization.user.resultsAria"));
         assertTrue(departmentPage.contains("feature.organization.department.resultsAria"));
-        assertTrue(userPage.contains("organization-management.css?v=20260726.2"));
-        assertTrue(departmentPage.contains("organization-management.css?v=20260726.2"));
+        assertTrue(userPage.contains("organization-management.css?v=20260802.2"));
+        assertTrue(departmentPage.contains("organization-management.css?v=20260802.2"));
         assertTrue(userPage.contains("organization-management.js?v=20260726.1"));
         assertTrue(departmentPage.contains("organization-management.js?v=20260726.1"));
         assertTrue(styleBlock(css,
@@ -157,7 +157,7 @@ class GridStyleUnificationContractTest {
         assertTrue(page.contains(
                 ".sw-file-popup .ui-jqgrid .ui-jqgrid-btable tr.jqgrow td"));
         assertTrue(page.contains("height: 56px !important"));
-        assertTrue(page.contains("background: #f1efff !important"));
+        assertTrue(page.contains("background: #eaf3fb !important"));
         assertTrue(page.contains(".sw-file-popup .sw-file-link"));
     }
 

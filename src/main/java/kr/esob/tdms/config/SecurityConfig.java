@@ -3,7 +3,9 @@ package kr.esob.tdms.config;
 import kr.esob.tdms.commonlogic.audit.RequestAuditFilter;
 import kr.esob.tdms.commonlogic.menu.MenuDao;
 import kr.esob.tdms.commonlogic.menu.MenuVO;
+import kr.esob.tdms.commonlogic.security.MobileClientAccessFilter;
 import kr.esob.tdms.commonlogic.viewerintegration.ViewerIntegrationProperties;
+import kr.esob.tdms.commonlogic.viewerintegration.ViewerCallbackAuthenticationFilter;
 import kr.esob.tdms.controller.general.distribution.accountrequest.DistributionAccountIntegrationProperties;
 import kr.esob.tdms.controller.general.organizationmanage.auditlog.AuditLogSessionListener;
 import kr.esob.tdms.controller.login.*;
@@ -54,6 +56,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 	@Inject
 	RequestAuditFilter requestAuditFilter;
 
+	@Inject
+	ViewerCallbackAuthenticationFilter viewerCallbackAuthenticationFilter;
+
+	@Inject
+	MobileClientAccessFilter mobileClientAccessFilter;
+
 	@Override
 	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
 		auth.authenticationProvider(authProvider);
@@ -103,7 +111,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 		// remain public. Static resources are excluded in configure(WebSecurity).
 		http.authorizeRequests()
 				.antMatchers(HttpMethod.POST,
-						ViewerIntegrationProperties.CALLBACK_PATH).permitAll()
+						ViewerIntegrationProperties.CALLBACK_PATH)
+				.hasAuthority(ViewerCallbackAuthenticationFilter.AUTHORITY)
 				.antMatchers(ViewerIntegrationProperties.CALLBACK_PATH).denyAll()
 				// Account-request ingress and status lookup are authenticated by
 				// the integration HMAC service rather than a browser session.
@@ -215,6 +224,15 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 				ViewerIntegrationProperties.CALLBACK_PATH,
 				DistributionAccountIntegrationProperties.REQUEST_PATH,
 				DistributionAccountIntegrationProperties.REQUEST_PATH + "/**");
+		// Apply the device policy before authentication, CSRF and application
+		// auditing. Keeping HeaderWriterFilter first preserves the normal Spring
+		// Security response headers on a blocked response.
+		http.addFilterAfter(
+				mobileClientAccessFilter,
+				org.springframework.security.web.header.HeaderWriterFilter.class);
+		http.addFilterAfter(
+				viewerCallbackAuthenticationFilter,
+				org.springframework.security.web.session.SessionManagementFilter.class);
 		http.addFilterBefore(requestAuditFilter, FilterSecurityInterceptor.class);
 
 	}
@@ -263,6 +281,25 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 			RequestAuditFilter filter) {
 		FilterRegistrationBean<RequestAuditFilter> registration =
 				new FilterRegistrationBean<RequestAuditFilter>(filter);
+		registration.setEnabled(false);
+		return registration;
+	}
+
+	@Bean
+	public FilterRegistrationBean<ViewerCallbackAuthenticationFilter>
+	viewerCallbackAuthenticationFilterRegistration(
+			ViewerCallbackAuthenticationFilter filter) {
+		FilterRegistrationBean<ViewerCallbackAuthenticationFilter> registration =
+				new FilterRegistrationBean<ViewerCallbackAuthenticationFilter>(filter);
+		registration.setEnabled(false);
+		return registration;
+	}
+
+	@Bean
+	public FilterRegistrationBean<MobileClientAccessFilter>
+	mobileClientAccessFilterRegistration(MobileClientAccessFilter filter) {
+		FilterRegistrationBean<MobileClientAccessFilter> registration =
+				new FilterRegistrationBean<MobileClientAccessFilter>(filter);
 		registration.setEnabled(false);
 		return registration;
 	}

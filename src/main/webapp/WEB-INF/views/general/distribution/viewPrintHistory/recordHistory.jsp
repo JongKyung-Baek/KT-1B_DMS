@@ -5,7 +5,7 @@
 <c:set var="historyTitleFallback" value="${printMode ? '출력이력' : '열람이력'}"/>
 <c:set var="historyKickerFallback" value="${printMode ? '문서 출력' : '문서 열람'}"/>
 <c:set var="historyDescriptionFallback"
-       value="${printMode ? '출력 작업 원장과 대상 파일을 기준으로 요청 시각과 출력 정보를 표시합니다.' : '뷰어에서 실제 열람이 완료되어 저장된 기록만 표시합니다.'}"/>
+       value="${printMode ? '출력 작업 원장과 대상 파일을 기준으로 요청 시각과 출력 정보를 표시합니다.' : 'TDMS가 뷰어 실행 준비를 성공적으로 완료한 열람 기록만 표시합니다.'}"/>
 <spring:message code="feature.locale.code" text="ko" var="pageLocale"/>
 <spring:message code="${historyTitleCode}" text="${historyTitleFallback}" var="historyTitle"/>
 <spring:message code="${historyKickerCode}" text="${historyKickerFallback}" var="historyKicker"/>

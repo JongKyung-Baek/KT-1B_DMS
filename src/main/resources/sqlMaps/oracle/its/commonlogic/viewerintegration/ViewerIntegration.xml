@@ -3,17 +3,34 @@
     "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="sql.ViewerIntegration">
 
-    <insert id="insertLaunch">
-        INSERT INTO docs_viewer_launch (
-            correlation_id, viewer_provider, object_type, object_id, acl_object_type, acl_object_id,
-            file_no, request_no, actor_user_cd, actor_user_id, actor_user_nm,
-            distribution_type, drawing_no, org_file_nm, revision, expires_at
-        ) VALUES (
-            #{correlationId}, #{viewerProvider}, #{objectType}, #{objectId}, #{aclObjectType}, #{aclObjectId},
-            #{fileNo}, NULLIF(#{requestNo}, ''), #{actorUserCd}, #{actorUserId}, #{actorUserNm},
-            NULLIF(#{distributionType}, ''), NULLIF(#{drawingNo}, ''), #{orgFileNm},
-            NULLIF(#{revision}, ''), CAST(#{expiresAt} AS timestamp with time zone)
+    <insert id="insertLaunchWithHistory">
+        WITH inserted_launch AS (
+            INSERT INTO docs_viewer_launch (
+                correlation_id, viewer_provider, object_type, object_id,
+                acl_object_type, acl_object_id, file_no, request_no,
+                actor_user_cd, actor_user_id, actor_user_nm,
+                distribution_type, drawing_no, org_file_nm, revision, expires_at
+            ) VALUES (
+                #{correlationId}, #{viewerProvider}, #{objectType}, #{objectId},
+                #{aclObjectType}, #{aclObjectId}, #{fileNo}, NULLIF(#{requestNo}, ''),
+                #{actorUserCd}, #{actorUserId}, #{actorUserNm},
+                NULLIF(#{distributionType}, ''), NULLIF(#{drawingNo}, ''),
+                #{orgFileNm}, NULLIF(#{revision}, ''),
+                CAST(#{expiresAt} AS timestamp with time zone)
+            )
+            RETURNING correlation_id, distribution_type, drawing_no, object_id,
+                      org_file_nm, revision, file_no, actor_user_id, actor_user_nm
         )
+        INSERT INTO docs_history (
+            distribution_type, drawing_no, object_id, org_file_nm,
+            revision, file_no, user_id, insert_date, user_nm, log_type,
+            source_system_cd, source_event_id, source_correlation_id
+        )
+        SELECT distribution_type, drawing_no, object_id, org_file_nm,
+               revision, file_no, actor_user_id, clock_timestamp(),
+               actor_user_nm, 'VIEWING', 'TDMS',
+               CAST(correlation_id AS uuid), correlation_id
+          FROM inserted_launch
     </insert>
 
     <select id="selectLaunch"
@@ -55,24 +72,6 @@
             #{objectId}, #{fileNo}, #{userId}, #{contentSha256}
         )
         ON CONFLICT (correlation_id, event_type) DO NOTHING
-    </insert>
-
-    <insert id="insertViewHistory">
-        INSERT INTO docs_history (
-            distribution_type, drawing_no, object_id, org_file_nm,
-            revision, file_no, user_id, insert_date, user_nm, log_type,
-            source_system_cd, source_event_id, source_correlation_id
-        ) VALUES (
-            NULLIF(#{launch.distributionType}, ''), NULLIF(#{launch.drawingNo}, ''),
-            #{launch.objectId}, #{launch.orgFileNm}, NULLIF(#{launch.revision}, ''),
-            #{launch.fileNo}, #{launch.actorUserId},
-            CAST(#{event.occurredAt} AS timestamp with time zone),
-            #{launch.actorUserNm}, 'VIEWING', 'CV',
-            CAST(#{event.eventId} AS uuid), #{event.correlationId}
-        )
-        ON CONFLICT (source_system_cd, source_event_id)
-        WHERE source_system_cd IS NOT NULL AND source_event_id IS NOT NULL
-        DO NOTHING
     </insert>
 
     <update id="markViewed">

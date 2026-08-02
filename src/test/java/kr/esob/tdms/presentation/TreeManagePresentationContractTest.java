@@ -25,7 +25,7 @@ class TreeManagePresentationContractTest {
         String view = read(VIEW);
         String css = read(STYLE);
 
-        assertTrue(view.contains("tree-management.css?v=20260801.1"));
+        assertTrue(view.contains("tree-management.css?v=20260802.2"));
         assertTrue(view.contains("class=\"tm-page-header\""));
         assertTrue(view.contains("class=\"wrap tm-workspace-card\""));
         assertTrue(view.contains("class=\"tm-context-chip\""));

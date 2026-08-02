@@ -81,12 +81,14 @@ public class ViewerIntegrationService {
         ViewerIngestResponse response = provider == ViewerProvider.STEP
                 ? client.ingest(document, metadata, provider)
                 : client.ingest(document, metadata);
-        if (dao.insertLaunch(ViewerLaunchRecord.from(
-                metadata, response.getExpiresAt(), provider.getCode())) != 1) {
-            throw new IllegalStateException("Viewer launch correlation could not be persisted.");
-        }
-        return new ViewerPreparedLaunch(
-                selectedProperties.launchUri(), response.getLaunchToken(), response.getCorrelationId());
+        ViewerPreparedLaunch preparedLaunch = new ViewerPreparedLaunch(
+                selectedProperties.launchUri(), response.getLaunchToken(),
+                response.getCorrelationId());
+        ViewerLaunchRecord launch = ViewerLaunchRecord.from(
+                metadata, response.getExpiresAt(), provider.getCode());
+        requireSingleRow(dao.insertLaunchWithHistory(launch),
+                "viewer launch and history");
+        return preparedLaunch;
     }
 
     public Path createRequestPdf(String correlationId) {
@@ -138,8 +140,16 @@ public class ViewerIntegrationService {
         if (dao.insertEvent(event) == 0) {
             return;
         }
-        requireSingleRow(dao.insertViewHistory(launch, event), "viewer history");
         requireSingleRow(dao.markViewed(event), "viewer launch status");
+    }
+
+    public void authenticateCallbackRequest(byte[] body,
+                                            String clientId,
+                                            String timestamp,
+                                            String nonce,
+                                            String contentHash,
+                                            String signature) {
+        authenticate(body, clientId, timestamp, nonce, contentHash, signature);
     }
 
     private CallbackCredential authenticate(byte[] body,

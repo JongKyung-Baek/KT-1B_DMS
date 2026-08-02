@@ -11,8 +11,8 @@ import kr.esob.tdms.commonlogic.abstractclass.AbstractDao;
 public class ViewerIntegrationDao extends AbstractDao {
     private static final String PREFIX = "sql.ViewerIntegration.";
 
-    public int insertLaunch(ViewerLaunchRecord launch) {
-        return (Integer) insert(PREFIX + "insertLaunch", launch);
+    public int insertLaunchWithHistory(ViewerLaunchRecord launch) {
+        return (Integer) insert(PREFIX + "insertLaunchWithHistory", launch);
     }
 
     public ViewerLaunchRecord selectLaunch(String correlationId) {
@@ -36,13 +36,6 @@ public class ViewerIntegrationDao extends AbstractDao {
 
     public int insertEvent(ViewerCallbackEvent event) {
         return (Integer) insert(PREFIX + "insertEvent", event);
-    }
-
-    public int insertViewHistory(ViewerLaunchRecord launch, ViewerCallbackEvent event) {
-        Map<String, Object> values = new HashMap<String, Object>();
-        values.put("launch", launch);
-        values.put("event", event);
-        return (Integer) insert(PREFIX + "insertViewHistory", values);
     }
 
     public int markViewed(ViewerCallbackEvent event) {

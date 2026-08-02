@@ -60,10 +60,10 @@ class SystemRolePresentationContractTest {
         assertTrue(view.contains("role-grid-panel"));
         assertTrue(view.contains("class=\"role-search-form\""));
         assertTrue(view.contains("class=\"role-selection-chip\""));
-        assertTrue(view.contains("role-vuexy.css?v=20260801.6"));
+        assertTrue(view.contains("role-vuexy.css?v=20260802.2"));
         assertTrue(css.contains(".role-management-page .ui-jqgrid-htable th"));
         assertTrue(css.contains("text-align: center !important"));
-        assertTrue(css.contains("background: #f1efff !important"));
+        assertTrue(css.contains("background: var(--role-primary-soft) !important"));
         assertTrue(css.contains(".rolePopup .popupHero"));
         assertTrue(styleBlock(css, ".system-role-page-heading {")
                 .contains("text-align: left"));
@@ -99,7 +99,7 @@ class SystemRolePresentationContractTest {
         assertTrue(view.contains("class=\"roleassign-guide\""));
         assertTrue(view.contains("roleassign-selection-chip"));
         assertTrue(view.contains("roleassign-count-chip--green"));
-        assertTrue(view.contains("roleassign-vuexy.css?v=20260801.2"));
+        assertTrue(view.contains("roleassign-vuexy.css?v=20260802.2"));
         assertTrue(styleBlock(css, ".roleassign-page-heading {")
                 .contains("text-align: left"));
         assertTrue(styleBlock(css, ".roleassign-card {")

@@ -50,7 +50,7 @@ class PartnerManagementContractTest {
         assertTrue(ddl.contains("'ROLE_MENU_230'"));
         assertTrue(security.contains(".hasAuthority(\"ROLE_MENU_230\")"));
         assertTrue(jsp.contains("feature.partner.page.title"));
-        assertTrue(jsp.contains("partner-management.css?v=20260801.1"));
+        assertTrue(jsp.contains("partner-management.css?v=20260802.2"));
         assertTrue(korean.contains("feature.partner.page.title=협력업체 관리"));
         assertTrue(english.contains("feature.partner.page.title=Partner Management"));
         assertTrue(script.contains("function localizedApiError(body, fallback)"));

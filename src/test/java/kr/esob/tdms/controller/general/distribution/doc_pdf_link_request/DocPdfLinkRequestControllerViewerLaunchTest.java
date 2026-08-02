@@ -280,6 +280,53 @@ class DocPdfLinkRequestControllerViewerLaunchTest {
     }
 
     @Test
+    void deniedAclStopsBeforeViewerRequestOrLaunch() {
+        DocPdfLinkRequestController controller = new DocPdfLinkRequestController();
+        controller.dao = org.mockito.Mockito.mock(DocPdfLinkRequestDao.class);
+        controller.securityAclService = org.mockito.Mockito.mock(SecurityAclService.class);
+        controller.viewerIntegrationService = org.mockito.Mockito.mock(ViewerIntegrationService.class);
+        Authentication authentication = org.mockito.Mockito.mock(Authentication.class);
+        when(authentication.getPrincipal()).thenReturn(actor());
+        when(controller.dao.selectSwFile(any()))
+                .thenReturn(tempDir.resolve("acl-denied.pdf").toString());
+        when(controller.securityAclService.requireAccess(any(FileAccessRequest.class)))
+                .thenThrow(new AccessDeniedException("denied"));
+
+        assertThrows(AccessDeniedException.class, () -> controller.selectItem2(
+                "SW-DENIED", "SW", "REQ-1", "1",
+                authentication, new ExtendedModelMap()));
+
+        verifyNoInteractions(controller.viewerIntegrationService);
+    }
+
+    @Test
+    void missingPhysicalFileDoesNotPrepareOrReturnViewerLaunch() throws Exception {
+        Path missingPdf = tempDir.resolve("missing.pdf");
+        assertFalse(Files.exists(missingPdf));
+
+        DocPdfLinkRequestController controller = new DocPdfLinkRequestController();
+        controller.dao = org.mockito.Mockito.mock(DocPdfLinkRequestDao.class);
+        controller.securityAclService = org.mockito.Mockito.mock(SecurityAclService.class);
+        controller.viewerIntegrationService = org.mockito.Mockito.mock(ViewerIntegrationService.class);
+        Authentication authentication = org.mockito.Mockito.mock(Authentication.class);
+        when(authentication.getPrincipal()).thenReturn(actor());
+        when(controller.dao.selectSwFile(any())).thenReturn(missingPdf.toString());
+        when(controller.viewerIntegrationService.createRequestPdf(anyString())).thenAnswer(invocation ->
+                Files.createTempFile(tempDir, invocation.getArgument(0) + "-", ".pdf"));
+        ExtendedModelMap model = new ExtendedModelMap();
+
+        String view = controller.selectItem2(
+                "SW-MISSING", "SW", "REQ-1", "1", authentication, model);
+
+        assertEquals("/general/distribution/docConvertFail", view);
+        assertEquals("Y", model.get("convertFailRestricted"));
+        verify(controller.viewerIntegrationService, never())
+                .prepareLaunch(any(Path.class), any(ViewerDocumentMetadata.class));
+        verify(controller.viewerIntegrationService, never()).prepareLaunch(
+                any(Path.class), any(ViewerDocumentMetadata.class), any(ViewerProvider.class));
+    }
+
+    @Test
     void blankOrNonPositiveFileNumberIsRejectedBeforeAnyResourceLookup() {
         DocPdfLinkRequestController controller = new DocPdfLinkRequestController();
         controller.dao = org.mockito.Mockito.mock(DocPdfLinkRequestDao.class);

@@ -41,7 +41,7 @@ class SwRequestFileExtensionSummaryContractTest {
 
         assertTrue(page.contains("function formatFileExtensions(cellValue)"));
         assertTrue(page.contains("escapeSwGridHtml(extension)"));
-        assertTrue(page.contains("technical-data-list.css?v=20260801.1"));
+        assertTrue(page.contains("technical-data-list.css?v=20260802.2"));
         assertTrue(css.contains("#gridSwRequestList .file-extension-list"));
         assertTrue(css.contains("#gridSwRequestList .file-extension-badge"));
         assertTrue(ddl.contains("'gridSwRequestList', 'fileExtensions', '파일 확장자', 54, 170"));

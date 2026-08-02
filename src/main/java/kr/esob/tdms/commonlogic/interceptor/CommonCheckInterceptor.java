@@ -28,7 +28,7 @@ public class CommonCheckInterceptor extends HandlerInterceptorAdapter {
 			return super.preHandle(request, response, handler);
 		}
 
-		if(null == auth.getPrincipal() || "anonymousUser".equals(auth.getPrincipal())) {
+		if (!(auth.getPrincipal() instanceof UserVO)) {
 			return super.preHandle(request, response, handler);
 		}
 

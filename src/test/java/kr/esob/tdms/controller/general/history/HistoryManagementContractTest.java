@@ -13,8 +13,8 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Authentication, menu actions and ACL decisions share one canonical audit
- * ledger. Successful viewing and printing remain independent ledgers because
- * an ACL decision is not proof that either action completed.
+ * ledger. Successful viewer launch preparation and printing remain independent
+ * ledgers because an ACL decision is not proof that either action completed.
  */
 class HistoryManagementContractTest {
 
@@ -93,7 +93,8 @@ class HistoryManagementContractTest {
         assertTrue(controller.contains("\"/view/\""));
         assertTrue(controller.contains("\"/view/events\""));
         assertTrue(mapper.contains("FROM DOCS_HISTORY"));
-        assertTrue(mapper.contains("INFO.SOURCE_SYSTEM_CD = 'CV'"));
+        assertTrue(mapper.contains(
+                "INFO.SOURCE_SYSTEM_CD IN ('CV', 'TDMS')"));
         assertTrue(mapper.contains("INFO.SOURCE_EVENT_ID IS NOT NULL"));
         assertTrue(mapper.contains("LOG_TYPE = 'VIEWING'"));
         assertFalse(mapper.contains("#{LOGTYPE}"));
@@ -133,6 +134,27 @@ class HistoryManagementContractTest {
         assertTrue(javascript.contains("renderRows"));
         assertFalse(javascript.contains("renderSummary"));
         assertFalse(javascript.contains("jqGrid"));
+    }
+
+    @Test
+    void viewingHistoryCopyDescribesSuccessfulTdmsViewerLaunchPreparation()
+            throws Exception {
+        String korean = read("src/main/webapp/messages/feature.properties");
+        String english = read("src/main/webapp/messages/feature_en.properties");
+        String indonesian = read("src/main/webapp/messages/feature_id.properties");
+        String jsp = read(RECORD_JSP);
+
+        assertTrue(korean.contains(
+                "feature.history.view.description=TDMS가 뷰어 실행 준비를 성공적으로 완료한 열람 기록만 표시합니다."));
+        assertTrue(english.contains(
+                "feature.history.view.description=Shows only viewing records for which TDMS successfully completed viewer launch preparation."));
+        assertTrue(indonesian.contains(
+                "feature.history.view.description=Hanya menampilkan riwayat penayangan ketika TDMS berhasil menyelesaikan persiapan peluncuran penampil."));
+        assertTrue(jsp.contains(
+                "TDMS가 뷰어 실행 준비를 성공적으로 완료한 열람 기록만 표시합니다."));
+        assertFalse(korean.contains("실제 열람이 완료"));
+        assertFalse(english.contains("actually opened"));
+        assertFalse(indonesian.contains("benar-benar dibuka"));
     }
 
     @Test

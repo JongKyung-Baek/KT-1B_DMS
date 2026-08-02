@@ -3,7 +3,8 @@ BEGIN;
 -- Durable TDMS <-> external viewer integration state. Endpoint paths are owned by
 -- the application contract and credentials are supplied only at runtime.
 -- The legacy history ledger did not identify the exact file. Keep existing rows
--- compatible while allowing signed viewer callbacks to persist that identity.
+-- compatible while allowing TDMS launch history and signed callback audit to
+-- persist that identity independently.
 ALTER TABLE public.docs_history
     ADD COLUMN IF NOT EXISTS file_no varchar(60);
 ALTER TABLE public.docs_history
@@ -18,6 +19,11 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_docs_history_source_event
 CREATE INDEX IF NOT EXISTS idx_docs_history_cv_view_time
     ON public.docs_history (insert_date DESC)
     WHERE log_type = 'VIEWING' AND source_system_cd = 'CV';
+
+CREATE INDEX IF NOT EXISTS idx_docs_history_view_time
+    ON public.docs_history (insert_date DESC)
+    WHERE log_type = 'VIEWING'
+      AND source_system_cd IN ('CV', 'TDMS');
 
 CREATE TABLE IF NOT EXISTS docs_viewer_launch (
     correlation_id     varchar(64) PRIMARY KEY,
@@ -112,9 +118,9 @@ COMMENT ON TABLE docs_viewer_callback_nonce IS
 COMMENT ON COLUMN public.docs_history.file_no IS
     'Exact file number for a persisted view or file-level history event';
 COMMENT ON COLUMN public.docs_history.source_system_cd IS
-    'System that supplied the durable history event; CV identifies signed viewer callbacks';
+    'System that supplied the durable history event; TDMS identifies successful launches and CV preserves legacy callback history';
 COMMENT ON COLUMN public.docs_history.source_event_id IS
-    'Idempotent event identifier supplied by the source system';
+    'Idempotent source identifier; TDMS launch history uses its correlation UUID';
 COMMENT ON COLUMN public.docs_history.source_correlation_id IS
     'Correlation identifier shared with the source system';
 

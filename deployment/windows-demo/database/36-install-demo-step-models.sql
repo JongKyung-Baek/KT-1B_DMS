@@ -2,7 +2,7 @@
 
 BEGIN;
 
--- Preload the forty-four STP assets for the CollabView3D integration as
+-- Preload the forty-four STP assets for the signed 3D viewer integration as
 -- supplementary files on the GENERAL sample document. TDMS sends these raw
 -- STEP bytes to the dedicated signed 3D viewer route; they are never sent to
 -- the PDF viewer or passed through the legacy PDF conversion flow.

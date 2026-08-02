@@ -236,7 +236,7 @@
                info.FILE_NO AS file_no
          FROM DOCS_HISTORY info
          WHERE info.LOG_TYPE = 'VIEWING'
-           AND info.SOURCE_SYSTEM_CD = 'CV'
+           AND info.SOURCE_SYSTEM_CD IN ('CV', 'TDMS')
            AND info.SOURCE_EVENT_ID IS NOT NULL
         <if test="distributionType != null and distributionType != ''">
             <choose>

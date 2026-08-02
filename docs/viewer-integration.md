@@ -2,7 +2,7 @@
 
 ## 1. 연동 범위
 
-TDMS는 문서 ACL을 먼저 확인한 뒤 파일 형식에 따라 PDF 또는 STEP 뷰어 제공자를 선택하고, 짧은 수명의 실행 상관관계 ID를 발급한다. 각 제공자는 파일이 처음 정상적으로 열린 시점에 HMAC 서명된 `VIEW_OPENED` callback을 전송하며, TDMS는 제공자별 서명·nonce·상관관계·사용자·파일 일치를 검증한 뒤 열람이력에 한 번만 저장한다.
+TDMS는 문서 ACL을 먼저 확인한 뒤 파일 형식에 따라 PDF 또는 STEP 뷰어 제공자를 선택하고, 짧은 수명의 실행 상관관계 ID를 발급한다. 뷰어 ingest와 launch URL 생성 및 launch 레코드 저장이 모두 성공하면 TDMS가 즉시 열람이력을 정확히 한 번 저장한다. 외부 제공자의 HMAC 서명 `VIEW_OPENED` callback은 서명·nonce·상관관계·사용자·파일 일치와 이벤트 멱등성 검증에만 사용하며 열람이력을 추가로 만들지 않는다.
 
 개발·운영 뷰어 주소는 환경변수로 관리하되 아래 경로는 양쪽 애플리케이션의 고정 계약이므로 설정값으로 변경하지 않는다.
 
@@ -90,8 +90,13 @@ secret을 다른 제공자에 재사용하지 않는다. 두 제공자 모두 �
 | 테이블 | 목적 |
 |---|---|
 | `docs_viewer_launch` | `viewer_provider`(`PDF`/`STEP`), ACL 대상, 사용자, 파일 및 만료 시각을 correlation ID와 연결 |
+| `docs_history` | 성공한 TDMS launch를 `source_system_cd=TDMS`인 열람이력으로 요청당 한 번 저장 |
 | `docs_viewer_event` | 검증된 callback 이벤트를 멱등 저장 |
 | `docs_viewer_callback_nonce` | callback 재전송 공격 차단 |
+
+launch와 TDMS 열람이력은 `WITH inserted_launch AS (INSERT ... RETURNING ...) INSERT INTO docs_history ...`
+형태의 PostgreSQL 단일 문장으로 저장한다. 서비스는 이 원자 저장 결과가 정확히 1행일 때만
+뷰어 launch URL을 반환한다.
 
 기존 DB에 마이그레이션을 다시 실행하면 `viewer_provider`가 없는 과거 launch는 `PDF`로
 채워지고 `PDF`/`STEP` 이외의 값은 제약조건으로 거부된다. callback 처리 시 1일보다
@@ -127,7 +132,7 @@ secret을 다른 제공자에 재사용하지 않는다. 두 제공자 모두 �
 - [ ] ACL 차단 문서는 외부 뷰어로 바이트가 전송되지 않는다.
 - [ ] launch 만료 후 실행 URL을 다시 사용할 수 없다.
 - [ ] callback 서명, client ID, 시각, nonce, correlation ID, 사용자/파일 일치 검증이 모두 동작한다.
-- [ ] 정상 열람은 기존 열람 이력과 viewer event에 중복 없이 기록된다.
+- [ ] PDF/STEP launch 성공은 TDMS 열람이력에 요청당 한 번 기록되고 callback은 열람이력을 추가하지 않는다.
 - [ ] 애플리케이션 및 reverse proxy 로그에 secret, 서명 원문 또는 파일 본문이 없다.
 
 ## 8. 상태 보존기간

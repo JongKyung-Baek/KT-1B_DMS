@@ -17,7 +17,7 @@
 	<title><c:out value="${errorTitle}" /> | <spring:message code="feature.error.brand" text="KT-1B 기술자료관리"/></title>
 	<%@ include file="/WEB-INF/jspf/favicon.jspf" %>
 	<link rel="stylesheet"
-		  href="${pageContext.request.contextPath}/resources/css/pages/error-page.css?v=20260802.2">
+		  href="${pageContext.request.contextPath}/resources/css/pages/error-page.css?v=20260802.3">
 	<script defer
 			src="${pageContext.request.contextPath}/resources/js/error-page.js?v=20260726.1"></script>
 </head>
@@ -28,8 +28,8 @@
 
 			<header class="error-brand">
 				<img class="error-brand__mark"
-					 src="${pageContext.request.contextPath}/resources/images/favicon/favicon.svg?v=20260726"
-					 width="42" height="42" alt="">
+					 src="${pageContext.request.contextPath}/resources/images/brand/kai-logo.png?v=20260802.1"
+					 width="72" height="47" alt="KAI">
 				<div>
 					<strong><spring:message code="feature.error.brand" text="KT-1B 기술자료관리"/></strong>
 					<span><spring:message code="feature.error.systemName" text="기술자료관리시스템"/></span>

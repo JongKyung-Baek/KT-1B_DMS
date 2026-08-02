@@ -77,7 +77,8 @@ class SwRequestDashboardContractTest {
 
 		assertTrue(summary.contains("FROM DOCS_HISTORY viewHistory"));
 		assertTrue(summary.contains("viewHistory.LOG_TYPE = 'VIEWING'"));
-		assertTrue(summary.contains("viewHistory.SOURCE_SYSTEM_CD = 'CV'"));
+		assertTrue(summary.contains(
+			"viewHistory.SOURCE_SYSTEM_CD IN ('CV', 'TDMS')"));
 		assertTrue(summary.contains("viewHistory.SOURCE_EVENT_ID IS NOT NULL"));
 		assertTrue(summary.contains("viewHistory.USER_ID = actor.user_id"));
 		assertTrue(summary.contains("auditLog.EVENT_TYPE = 'DOWNLOAD_RESULT'"));

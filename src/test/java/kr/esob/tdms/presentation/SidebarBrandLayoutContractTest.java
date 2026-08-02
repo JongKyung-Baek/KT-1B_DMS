@@ -36,7 +36,7 @@ class SidebarBrandLayoutContractTest {
         assertTrue(Files.size(kaiLogo) > 0);
         assertTrue(css.contains("#layout-menu .app-brand-kai-logo"));
         assertTrue(css.contains("object-fit: contain"));
-        assertTrue(mainDecorator.contains("custom-font.css?v=20260802.1"));
+        assertTrue(mainDecorator.contains("custom-font.css?v=20260802.2"));
         assertTrue(css.contains("@media (min-width: 1200px)"));
         assertTrue(css.contains(".layout-menu-collapsed:not(.layout-menu-hover)"));
         assertTrue(css.contains("#layout-menu .app-brand-link"));

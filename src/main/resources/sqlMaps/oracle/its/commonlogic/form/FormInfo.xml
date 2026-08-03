@@ -10,7 +10,15 @@
         FORM_ID                 AS formId,
         COLUMN_ID                AS columnId,
         COLUMN_TYPE              AS columnType,
-        COALESCE(lang.LANG_DESC, fallbackLang.LANG_DESC, form.COLUMN_NM) AS columnName,
+        COALESCE(
+            lang.LANG_DESC,
+            CASE
+                WHEN LEFT(LOWER(COALESCE(#{sessionLang}, '')), 2) = 'ko'
+                    THEN form.COLUMN_NM
+                ELSE fallbackLang.LANG_DESC
+            END,
+            form.COLUMN_NM
+        ) AS columnName,
         COLUMN_SEQ               AS columnSort,
         COLUMN_SIZE              AS columnSize,
         COLUMN_ALIGN             AS columnAlign,

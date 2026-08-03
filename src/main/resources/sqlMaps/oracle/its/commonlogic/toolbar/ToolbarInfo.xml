@@ -11,7 +11,15 @@
         TOOLBAR.BUTTON_ID as buttonId,
         TOOLBAR.BUTTON_SEQ as buttonSort,
         COALESCE(TOOLBAR.BUTTON_ALIGN, 'left') as buttonAlign,
-        COALESCE(LANG.LANG_DESC, FALLBACK_LANG.LANG_DESC, TOOLBAR.BUTTON_LABEL) AS buttonLabel,
+        COALESCE(
+            LANG.LANG_DESC,
+            CASE
+                WHEN LEFT(LOWER(COALESCE(#{sessionLang}, '')), 2) = 'ko'
+                    THEN TOOLBAR.BUTTON_LABEL
+                ELSE FALLBACK_LANG.LANG_DESC
+            END,
+            TOOLBAR.BUTTON_LABEL
+        ) AS buttonLabel,
         TOOLBAR.BUTTON_IMG as buttonImg,
         TOOLBAR.CALL_FUNC as callFunc,
         COALESCE(TOOLBAR.BUTTON_TYPE, '') AS buttonType,

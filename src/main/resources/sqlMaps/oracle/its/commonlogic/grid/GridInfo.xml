@@ -8,7 +8,15 @@
 <select id="selectList" resultType="kr.esob.tdms.commonlogic.grid.GridInfoVO">
     SELECT
         grid.COLUMN_ID AS name,
-        COALESCE(lang.LANG_DESC, fallbackLang.LANG_DESC, grid.COLUMN_NM) AS label,
+        COALESCE(
+            lang.LANG_DESC,
+            CASE
+                WHEN LEFT(LOWER(COALESCE(#{sessionLang}, '')), 2) = 'ko'
+                    THEN grid.COLUMN_NM
+                ELSE fallbackLang.LANG_DESC
+            END,
+            grid.COLUMN_NM
+        ) AS label,
         grid.COLUMN_SIZE AS width,
         grid.COLUMN_ALIGN AS align,
         grid.COLUMN_HIDDEN AS hidden,

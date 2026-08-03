@@ -12,6 +12,7 @@
 
 \echo '[KT-1B] Applying user integrity, ACL, audit and download migrations...'
 \ir organization_management_integrity_ddl.sql
+\ir initial_password_ddl.sql
 \ir acl_foundation_ddl.sql
 \echo '[KT-1B] Applying partner company and recipient directory...'
 \ir partner_management_ddl.sql

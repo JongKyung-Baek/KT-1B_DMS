@@ -11,7 +11,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${pageTitle} - KT-1B TDMS</title>
 <link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/distribution-invoice.css" media="screen" />
-<link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/role-vuexy.css?v=20260802.2" media="screen" />
+<link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/role-vuexy.css?v=20260803.1" media="screen" />
 <style>
 	body { visibility: hidden; }
 </style>
@@ -58,7 +58,7 @@
 		}
 	}
 </script>
-<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/views/general/system/role/roleSide.js?v=20260801.2"></script>
+<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/views/general/system/role/roleSide.js?v=20260803.1"></script>
 </head>
 <body>
 	<main class="role-management-page" aria-labelledby="roleManagementTitle">

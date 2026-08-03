@@ -11,6 +11,7 @@ public class Constant {
 
 
 	public static final String SYSTEM_CONFIG = "SYSTEM_CONFIG";
+	public static final String INITIAL_PASSWORD = "0000";
 
 	public static final String REQUEST = "REQUEST";
 	public static final String ACCEPT = "ACCEPT";

@@ -41,6 +41,8 @@ class DistributionWorkflowPageContractTest {
         "src/main/webapp/messages/feature.properties");
     private static final Path FEATURE_EN = ROOT.resolve(
         "src/main/webapp/messages/feature_en.properties");
+    private static final Path FEATURE_ID = ROOT.resolve(
+        "src/main/webapp/messages/feature_id.properties");
 
     private SecurityAclService aclService;
     private SwRequestService swRequestService;
@@ -206,6 +208,43 @@ class DistributionWorkflowPageContractTest {
         assertTrue(style.contains(".dw-dialog__header > div"));
         assertTrue(style.contains(".dw-items__header > div"));
         assertTrue(style.contains("text-align: left"));
+    }
+
+    @Test
+    void processingHistoryColumnsAreLocalizedWithoutBrokenFallbackText() throws Exception {
+        String dialog = read(VIEW_ROOT.resolve("workflowDialog.jspf"));
+        String korean = read(FEATURE_KO);
+        String english = read(FEATURE_EN);
+        String indonesian = read(FEATURE_ID);
+
+        assertTrue(dialog.contains(
+            "code=\"feature.distributionWorkflow.column.event\" text=\"행위\""));
+        assertTrue(dialog.contains(
+            "code=\"feature.distributionWorkflow.column.statusChange\" text=\"상태 변경\""));
+        assertTrue(dialog.contains(
+            "code=\"feature.distributionWorkflow.column.actor\" text=\"처리자\""));
+        assertTrue(dialog.contains(
+            "code=\"feature.distributionWorkflow.column.comment\" text=\"의견\""));
+        assertTrue(dialog.contains(
+            "code=\"feature.distributionWorkflow.column.occurredAt\" text=\"처리일시\""));
+
+        assertHistoryColumnTranslations(korean,
+            "행위", "상태 변경", "처리자", "의견", "처리일시");
+        assertHistoryColumnTranslations(english,
+            "Action", "Status Change", "Actor", "Comment", "Processed At");
+        assertHistoryColumnTranslations(indonesian,
+            "Tindakan", "Perubahan Status", "Pelaksana", "Komentar", "Waktu Pemrosesan");
+    }
+
+    private void assertHistoryColumnTranslations(String bundle, String event, String statusChange,
+            String actorName, String comment, String occurredAt) {
+        assertTrue(bundle.contains("feature.distributionWorkflow.column.event=" + event));
+        assertTrue(bundle.contains(
+            "feature.distributionWorkflow.column.statusChange=" + statusChange));
+        assertTrue(bundle.contains("feature.distributionWorkflow.column.actor=" + actorName));
+        assertTrue(bundle.contains("feature.distributionWorkflow.column.comment=" + comment));
+        assertTrue(bundle.contains(
+            "feature.distributionWorkflow.column.occurredAt=" + occurredAt));
     }
 
     private String read(Path path) throws Exception {

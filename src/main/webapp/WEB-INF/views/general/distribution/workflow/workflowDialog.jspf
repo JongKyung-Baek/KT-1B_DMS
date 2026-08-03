@@ -189,7 +189,7 @@
                         <thead>
                         <tr>
                             <th scope="col"><spring:message code="feature.distributionWorkflow.column.event" text="행위"/></th>
-                            <th scope="col"><spring:message code="feature.distributionWorkflow.column.statusChange" text="상태변경"/></th>
+                            <th scope="col"><spring:message code="feature.distributionWorkflow.column.statusChange" text="상태 변경"/></th>
                             <th scope="col"><spring:message code="feature.distributionWorkflow.column.actor" text="처리자"/></th>
                             <th scope="col"><spring:message code="feature.distributionWorkflow.column.comment" text="의견"/></th>
                             <th scope="col"><spring:message code="feature.distributionWorkflow.column.occurredAt" text="처리일시"/></th>

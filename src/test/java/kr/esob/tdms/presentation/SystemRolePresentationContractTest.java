@@ -60,7 +60,8 @@ class SystemRolePresentationContractTest {
         assertTrue(view.contains("role-grid-panel"));
         assertTrue(view.contains("class=\"role-search-form\""));
         assertTrue(view.contains("class=\"role-selection-chip\""));
-        assertTrue(view.contains("role-vuexy.css?v=20260802.2"));
+        assertTrue(view.contains("role-vuexy.css?v=20260803.1"));
+        assertTrue(view.contains("roleSide.js?v=20260803.1"));
         assertTrue(css.contains(".role-management-page .ui-jqgrid-htable th"));
         assertTrue(css.contains("text-align: center !important"));
         assertTrue(css.contains("background: var(--role-primary-soft) !important"));
@@ -71,6 +72,14 @@ class SystemRolePresentationContractTest {
                 .contains("border-radius: 14px"));
         assertTrue(styleBlock(css, ".role-grid-panel {")
                 .contains("grid-template-columns: minmax(0, 1fr)"));
+        assertFalse(styleBlock(css, ".role-grid-panel {")
+                .contains("display: grid !important"));
+        assertTrue(styleBlock(css,
+                ".role-tabs .role-grid-panel[aria-hidden=\"true\"] {")
+                .contains("display: none !important"));
+        assertTrue(styleBlock(css,
+                ".role-tabs .role-grid-panel[aria-hidden=\"false\"] {")
+                .contains("display: grid !important"));
         assertTrue(styleBlock(css,
                 ".role-management-page .role-grid-panel > .role-grid-section {")
                 .contains("height: auto !important"));
@@ -146,6 +155,11 @@ class SystemRolePresentationContractTest {
         assertTrue(roleScript.contains("'/general/system/role/getAssignedDept'"));
         assertTrue(roleScript.contains("'/general/system/role/getAssignedUser'"));
         assertTrue(roleScript.contains("'/general/system/role/saveRoleGroupMember'"));
+        assertTrue(roleScript.contains("function initializeRoleTabs()"));
+        assertTrue(roleScript.contains("typeof $.fn.tabs === \"function\""));
+        assertTrue(roleScript.contains("function activateRoleTabFallback(index)"));
+        assertTrue(roleScript.contains("function getActiveRoleTabIndex()"));
+        assertTrue(roleScript.contains("var active = getActiveRoleTabIndex();"));
         assertTrue(roleScript.contains("\"/general/system/role/roleAddPopup\""));
         assertTrue(roleScript.contains("\"/general/system/role/roleModPopup\""));
         assertTrue(rolePopup.contains("id=\"formPopup\""));

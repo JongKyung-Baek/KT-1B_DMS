@@ -15,7 +15,6 @@ import kr.esob.tdms.commonlogic.value.Constant;
 import kr.esob.tdms.commonlogic.value.SessionValue;
 import kr.esob.tdms.config.SessionExtendController;
 import kr.esob.tdms.controller.general.organizationmanage.auditlog.AuditLogService;
-import kr.esob.tdms.controller.general.distribution.doc_pdf_link_request.DocPdfLinkRequestDao;
 import kr.esob.tdms.controller.main.MainService;
 import kr.esob.tdms.util.RequestUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -71,10 +70,6 @@ public class LoginSuccess implements AuthenticationSuccessHandler {
 	@Inject
 	Provider<SessionValue> provider;
 
-	@Autowired
-	DocPdfLinkRequestDao dao_for_pwd;
-
-
 	private RedirectStrategy redirectStrategy = new DefaultRedirectStrategy();
 
 	public LoginSuccess() {
@@ -84,9 +79,6 @@ public class LoginSuccess implements AuthenticationSuccessHandler {
 	@Override
 	public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
 			Authentication authentication) throws IOException, ServletException {
-
-
-		String basicPassword = findBasicPassword(dao_for_pwd.selectDbConfig());
 
 
 		String urlType = "I";
@@ -109,7 +101,8 @@ public class LoginSuccess implements AuthenticationSuccessHandler {
 
 		String userPwd = userVo.getUserPwd();
 		// 비밀번호가 '0000'라면 비밀번호 초기화 기능 수행
-		boolean mustChangePassword = verifyPassword(userPwd, basicPassword);
+		boolean mustChangePassword = verifyPassword(
+				userPwd, Constant.INITIAL_PASSWORD);
 		// The stored password hash is only needed during authentication. Do not
 		// retain it in the SecurityContext-backed session principal.
 		userVo.setUserPwd(null);
@@ -179,34 +172,6 @@ public class LoginSuccess implements AuthenticationSuccessHandler {
 			systemMap.put(Constant.SYSTEM_CONFIG + "|" + vo.getSystemConfigCd(), vo.getSystemConfigValue());
 		}
 		return systemMap;
-	}
-
-	private String findBasicPassword(List<Map<String, Object>> dbConfig) {
-		if (dbConfig == null) {
-			return null;
-		}
-		for (Map<String, Object> config : dbConfig) {
-			if (config == null) {
-				continue;
-			}
-			Object configCd = value(config, "SYSTEM_CONFIG_CD", "system_config_cd");
-			if (!"BASIC_PASSWORD".equals(configCd)) {
-				continue;
-			}
-			Object configValue = value(config, "SYSTEM_CONFIG_VALUE", "system_config_value");
-			return configValue == null ? null : configValue.toString();
-		}
-		return null;
-	}
-
-	private Object value(Map<String, Object> config, String... keys) {
-		for (String key : keys) {
-			Object value = config.get(key);
-			if (value != null) {
-				return value;
-			}
-		}
-		return null;
 	}
 
 	private String resolveBrowserLanguage(Locale locale) {

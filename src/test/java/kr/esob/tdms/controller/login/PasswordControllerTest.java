@@ -7,15 +7,11 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import kr.esob.tdms.commonlogic.result.ResultVO;
-import kr.esob.tdms.controller.general.distribution.doc_pdf_link_request.DocPdfLinkRequestDao;
+import kr.esob.tdms.commonlogic.value.Constant;
 import kr.esob.tdms.controller.general.organizationmanage.auditlog.AuditLogService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -30,9 +26,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 class PasswordControllerTest {
 
     private static final String ACCEPTABLE_PASSWORD = "Abcdefghi1!@";
-
-    @Mock
-    private DocPdfLinkRequestDao systemConfigDao;
 
     @Mock
     private LoginService loginService;
@@ -58,10 +51,9 @@ class PasswordControllerTest {
     }
 
     @Test
-    void savesPasswordAndEndsAuthenticatedSessionEvenWhenBasicPasswordConfigIsAbsent() {
+    void savesPasswordAndEndsAuthenticatedSession() {
         UserVO principal = authenticatedPrincipal();
         principal.setUserPwd("must-be-cleared");
-        when(systemConfigDao.selectDbConfig()).thenReturn(Collections.emptyList());
         when(loginService.changeOwnPassword(principal.getUserCd(), ACCEPTABLE_PASSWORD))
                 .thenReturn(true);
         when(request.getSession(false)).thenReturn(session);
@@ -88,7 +80,6 @@ class PasswordControllerTest {
 
         assertFalse(result.isSuccess());
         assertTrue("feature.password.error.invalidPolicy".equals(result.getMessage()));
-        verify(systemConfigDao, never()).selectDbConfig();
         verify(loginService, never()).changeOwnPassword(
                 principalUserCd(), "Abcdefghi1!");
         verify(auditLogService, never()).insertAuditLog(
@@ -96,20 +87,16 @@ class PasswordControllerTest {
     }
 
     @Test
-    void rejectsConfiguredInitialPasswordWithoutPersistingIt() {
+    void rejectsTheFixedInitialPasswordWithoutPersistingIt() {
         authenticatedPrincipal();
-        Map<String, Object> config = new HashMap<>();
-        config.put("system_config_cd", "BASIC_PASSWORD");
-        config.put("system_config_value", ACCEPTABLE_PASSWORD);
-        when(systemConfigDao.selectDbConfig()).thenReturn(Collections.singletonList(config));
 
         ResultVO result = controller.changeOwnPassword(
-                ACCEPTABLE_PASSWORD, authentication, request);
+                Constant.INITIAL_PASSWORD, authentication, request);
 
         assertFalse(result.isSuccess());
         assertTrue("feature.password.error.invalidPolicy".equals(result.getMessage()));
         verify(loginService, never()).changeOwnPassword(
-                principalUserCd(), ACCEPTABLE_PASSWORD);
+                principalUserCd(), Constant.INITIAL_PASSWORD);
         verify(auditLogService, never()).insertAuditLog(
                 "changePassword", "tester", "테스트 사용자", request);
     }
@@ -117,7 +104,6 @@ class PasswordControllerTest {
     @Test
     void doesNotReportSuccessOrEndSessionWhenStorageUpdatesNoUser() {
         UserVO principal = authenticatedPrincipal();
-        when(systemConfigDao.selectDbConfig()).thenReturn(Collections.emptyList());
         when(loginService.changeOwnPassword(principal.getUserCd(), ACCEPTABLE_PASSWORD))
                 .thenReturn(false);
 

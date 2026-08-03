@@ -43,7 +43,27 @@ UPDATE docs_system_config
 -- Disable every external integration, legacy ActiveX/CAB address and secret.
 UPDATE docs_system_config
    SET system_config_value = ''
- WHERE system_config_cd ~ '(URL|ENDPOINT|SERVER_IP|DOMAIN|HOST|EMAIL|KEY|PASSWORD|CAB)';
+ WHERE system_config_cd ~ '(URL|ENDPOINT|SERVER_IP|DOMAIN|HOST|EMAIL|KEY|PASSWORD|CAB)'
+   AND system_config_cd <> 'BASIC_PASSWORD';
+
+-- BASIC_PASSWORD is application state rather than an integration secret.
+-- Keep the same fixed value used by user creation and administrator reset.
+INSERT INTO docs_system_config (
+    system_config_group,
+    system_config_cd,
+    system_config_value,
+    system_config_desc
+)
+VALUES (
+    'SYSTEM_CONFIG',
+    'BASIC_PASSWORD',
+    '0000',
+    'Initial password for newly created or reset users'
+)
+ON CONFLICT (system_config_group, system_config_cd)
+DO UPDATE SET
+    system_config_value = EXCLUDED.system_config_value,
+    system_config_desc = EXCLUDED.system_config_desc;
 
 UPDATE docs_system_config
    SET system_config_value = ''

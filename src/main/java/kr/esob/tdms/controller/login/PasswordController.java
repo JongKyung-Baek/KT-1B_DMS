@@ -1,10 +1,9 @@
 package kr.esob.tdms.controller.login;
 
 import kr.esob.tdms.commonlogic.result.ResultVO;
-import kr.esob.tdms.controller.general.distribution.doc_pdf_link_request.DocPdfLinkRequestDao;
+import kr.esob.tdms.commonlogic.value.Constant;
 import kr.esob.tdms.controller.general.organizationmanage.auditlog.AuditLogService;
 import kr.esob.tdms.util.seed.PasswordUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -18,15 +17,10 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
-import java.util.List;
-import java.util.Map;
 
 @Controller
 @RequestMapping("/login/password")
 public class PasswordController {
-
-    @Autowired
-    DocPdfLinkRequestDao systemConfigDao;
 
     @Inject
     LoginService loginService;
@@ -61,8 +55,7 @@ public class PasswordController {
             return result;
         }
 
-        String basicPassword = findBasicPassword(systemConfigDao.selectDbConfig());
-        if (basicPassword != null && basicPassword.equals(newPassword)) {
+        if (Constant.INITIAL_PASSWORD.equals(newPassword)) {
             result.setMessage("feature.password.error.invalidPolicy");
             return result;
         }
@@ -83,33 +76,5 @@ public class PasswordController {
         }
         SecurityContextHolder.clearContext();
         return result;
-    }
-
-    private String findBasicPassword(List<Map<String, Object>> dbConfig) {
-        if (dbConfig == null) {
-            return null;
-        }
-        for (Map<String, Object> config : dbConfig) {
-            if (config == null) {
-                continue;
-            }
-            Object configCd = value(config, "SYSTEM_CONFIG_CD", "system_config_cd");
-            if (!"BASIC_PASSWORD".equals(configCd)) {
-                continue;
-            }
-            Object configValue = value(config, "SYSTEM_CONFIG_VALUE", "system_config_value");
-            return configValue == null ? null : configValue.toString();
-        }
-        return null;
-    }
-
-    private Object value(Map<String, Object> config, String... keys) {
-        for (String key : keys) {
-            Object value = config.get(key);
-            if (value != null) {
-                return value;
-            }
-        }
-        return null;
     }
 }

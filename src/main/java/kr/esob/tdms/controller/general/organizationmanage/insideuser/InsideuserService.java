@@ -2,8 +2,7 @@ package kr.esob.tdms.controller.general.organizationmanage.insideuser;
 
 import kr.esob.tdms.commonlogic.abstractclass.CommonService;
 import kr.esob.tdms.commonlogic.result.ResultVO;
-import kr.esob.tdms.commonlogic.systemconfig.SystemConfigDao;
-import kr.esob.tdms.commonlogic.systemconfig.SystemConfigVO;
+import kr.esob.tdms.commonlogic.value.Constant;
 import kr.esob.tdms.controller.login.UserVO;
 import kr.esob.tdms.util.seed.PasswordUtils;
 import org.springframework.stereotype.Service;
@@ -19,10 +18,6 @@ public class InsideuserService implements CommonService {
 
 	@Inject
 	InsideuserDao dao;
-
-	@Inject
-	SystemConfigDao systemConfigDao;
-
 
 	@SuppressWarnings("rawtypes")
 	@Override
@@ -52,13 +47,8 @@ public class InsideuserService implements CommonService {
 		}
 		userVo.setUserCd(trim(userVo.getUserCd()));
 
-		String basicPassword = findBasicPassword(systemConfigDao.selectSystemConfig());
-		if (basicPassword == null || basicPassword.isEmpty()) {
-			resultVo.setMessage("feature.organization.user.passwordReset.configMissing");
-			return resultVo;
-		}
-
-		String hashedPassword = PasswordUtils.hashPasswordWithSalt(basicPassword);
+		String hashedPassword = PasswordUtils.hashPasswordWithSalt(
+				Constant.INITIAL_PASSWORD);
 		userVo.setUserPwd(hashedPassword);
 
 		if (dao.resetPwd(userVo) != 1) {
@@ -66,7 +56,7 @@ public class InsideuserService implements CommonService {
 			return resultVo;
 		}
 
-		resultVo.setData(basicPassword);
+		resultVo.setData(Constant.INITIAL_PASSWORD);
 		resultVo.setMessage("feature.organization.user.passwordReset.completed");
 		resultVo.setSuccess(true);
 		return resultVo;
@@ -179,15 +169,9 @@ public class InsideuserService implements CommonService {
 				return resultVo;
 			} else {
 
-				String basicPassword = findBasicPassword(systemConfigDao.selectSystemConfig());
-				if (basicPassword == null || basicPassword.isEmpty()) {
-					resultVo.setMessage("msg.error");
-					resultVo.setSuccess(false);
-					return resultVo;
-				}
-
-				// 초기 비밀번호인 0000 삽입
-				userPopupParam.setUserPwd(PasswordUtils.hashPasswordWithSalt(basicPassword));
+				// 신규 사용자는 고정 초기 비밀번호로 등록하고 첫 로그인 시 변경한다.
+				userPopupParam.setUserPwd(PasswordUtils.hashPasswordWithSalt(
+						Constant.INITIAL_PASSWORD));
 
 				dao.insertRegisterUserInfo(userPopupParam); // 저장
 				resultVo.setSuccess(true);
@@ -288,26 +272,6 @@ public class InsideuserService implements CommonService {
 		return resultVo;
 
 		}
-
-	private String findBasicPassword(List<SystemConfigVO> dbConfig) {
-		if (dbConfig == null) {
-			return null;
-		}
-
-		for (SystemConfigVO config : dbConfig) {
-			if (config == null) {
-				continue;
-			}
-
-			if (!"BASIC_PASSWORD".equals(config.getSystemConfigCd())) {
-				continue;
-			}
-
-			return config.getSystemConfigValue();
-		}
-
-		return null;
-	}
 
 	private String trim(String value) {
 		return value == null ? null : value.trim();

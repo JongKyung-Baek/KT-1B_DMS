@@ -475,10 +475,21 @@
 }
 
 .role-grid-panel {
-  display: grid !important;
+  display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 12px;
   align-items: stretch;
+}
+
+/* jQuery UI hides inactive panels with an inline display value. The previous
+   display:grid!important declaration overrode that value, leaving both the
+   department and user panels visible and making tab clicks appear inert. */
+.role-tabs .role-grid-panel[aria-hidden="true"] {
+  display: none !important;
+}
+
+.role-tabs .role-grid-panel[aria-hidden="false"] {
+  display: grid !important;
 }
 
 .role-grid-section {

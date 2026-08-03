@@ -1,5 +1,6 @@
 var selectedGroupCd = "";
 var selectedType = "";
+var activeRoleTabIndex = 0;
 
 function roleText(key, fallback) {
 	var args = Array.prototype.slice.call(arguments, 2);
@@ -15,6 +16,76 @@ function localizeRoleToolbar() {
 			$(this).text(roleText("feature.common.button.save", "저장"));
 		}
 	});
+}
+
+function activateRoleTabFallback(index) {
+	var $tabs = $("#tabs");
+	var $links = $tabs.children("ul").find("a[href^='#']");
+	var normalizedIndex = index === 1 ? 1 : 0;
+
+	activeRoleTabIndex = normalizedIndex;
+	$links.each(function(linkIndex) {
+		var $link = $(this);
+		var panelSelector = $link.attr("href");
+		var isActive = linkIndex === normalizedIndex;
+
+		$link.attr({
+			"aria-selected": isActive ? "true" : "false",
+			"tabindex": isActive ? "0" : "-1"
+		});
+		$link.parent("li").toggleClass("ui-tabs-active ui-state-active", isActive);
+		$(panelSelector)
+			.attr("aria-hidden", isActive ? "false" : "true")
+			.toggle(isActive);
+	});
+
+	setTimeout(refreshVisibleRoleGrids, 0);
+}
+
+function initializeRoleTabs() {
+	var $tabs = $("#tabs");
+
+	if ($.fn && typeof $.fn.tabs === "function") {
+		try {
+			$tabs.tabs({
+				activate: function(event, ui) {
+					activeRoleTabIndex = ui.newTab.index();
+				}
+			});
+			activeRoleTabIndex = $tabs.tabs("option", "active") || 0;
+			return;
+		} catch (e) {
+			// Continue with the dependency-free tab behavior below.
+		}
+	}
+
+	$tabs.addClass("role-tabs--fallback");
+	$tabs.children("ul").addClass("ui-tabs-nav");
+	$tabs.children("ul").find("li").addClass("ui-tabs-tab");
+	$tabs.children("ul").find("a[href^='#']")
+		.addClass("ui-tabs-anchor")
+		.attr("role", "tab")
+		.off("click.roleTabsFallback")
+		.on("click.roleTabsFallback", function(event) {
+			event.preventDefault();
+			activateRoleTabFallback($(this).parent("li").index());
+		});
+
+	activateRoleTabFallback(0);
+}
+
+function getActiveRoleTabIndex() {
+	var $tabs = $("#tabs");
+
+	if ($.fn && typeof $.fn.tabs === "function" && $tabs.hasClass("ui-tabs")) {
+		try {
+			return $tabs.tabs("option", "active") || 0;
+		} catch (e) {
+			// The fallback state remains authoritative if another plugin replaced tabs.
+		}
+	}
+
+	return activeRoleTabIndex;
 }
 
 var assignedDeptParam = {
@@ -36,7 +107,7 @@ var assignedUserParam = {
 function initWindow() {
 	setManagerGroupList();
 
-	var active = $( "#tabs" ).tabs( "option", "active" );
+	var active = getActiveRoleTabIndex();
 	var searchType = undefined;
 
 	if(0 === active) {
@@ -52,7 +123,7 @@ function initWindow() {
 }
 
 $(function() {
-	$("#tabs").tabs();
+	initializeRoleTabs();
 	settingToolbar(JSON.parse(toolbarInfo));
 	localizeRoleToolbar();
 	setGridParam();
@@ -87,7 +158,7 @@ function resizeGridToContainer(gridId) {
 }
 
 function refreshVisibleRoleGrids() {
-	var active = $("#tabs").tabs("option", "active");
+	var active = getActiveRoleTabIndex();
 	var gridIds = active === 0
 		? ['gridRoleDept', 'gridRoleDeptAssigned']
 		: ['gridRoleUser', 'gridRoleUserAssigned'];
@@ -448,7 +519,7 @@ function getParam() {
 }
 
 function ondblClickRowLocal(rowId) {
-	var active = $( "#tabs" ).tabs( "option", "active" );
+	var active = getActiveRoleTabIndex();
 	var gridId = undefined;
 	var targetParam = undefined;
 	var key = undefined;
@@ -490,7 +561,7 @@ function ondblClickRowLocal(rowId) {
  * @returns
  */
 function ondblClickRowFunc(rowId) {
-	var active = $( "#tabs" ).tabs( "option", "active" );
+	var active = getActiveRoleTabIndex();
 	var gridId = undefined;
 	var targetParam = undefined;
 	var key = undefined;
@@ -544,7 +615,7 @@ function ondblClickRowFunc(rowId) {
 }
 
 function delList() {
-	var active = $( "#tabs" ).tabs( "option", "active" );
+	var active = getActiveRoleTabIndex();
 	var gridId = undefined;
 	var targetParam = undefined;
 	var key = undefined;
@@ -590,7 +661,7 @@ function delList() {
 }
 
 function addList() {
-	var active = $( "#tabs" ).tabs( "option", "active" );
+	var active = getActiveRoleTabIndex();
 	var gridId = undefined;
 	var targetParam = undefined;
 	var key = undefined;

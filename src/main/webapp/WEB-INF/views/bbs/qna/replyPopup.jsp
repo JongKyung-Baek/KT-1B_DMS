@@ -7,7 +7,6 @@
 <script>
 var popupGridParam;
 $(function() {
-	//settingGrid('${gridInfo }',replyPopupGridParam() , 'popupGridParam');
 });
 
 

@@ -11,7 +11,6 @@ var gridAddId = 'gridAddConfigQna';
 var formAddId = 'formAddConfigQna';
 var files = [];
 $(function() {
-	//settingGrid('${gridInfo }', setPopupGridParam(), 'popupGridParam');
 });
 
 

@@ -1,6 +1,7 @@
 package kr.esob.tdms.controller.general.system.menu;
 
 import kr.esob.tdms.commonlogic.result.ResultVO;
+import kr.esob.tdms.commonlogic.menu.MenuUrlPolicy;
 import kr.esob.tdms.commonlogic.toolbar.ToolbarInfoDao;
 import kr.esob.tdms.commonlogic.tree.TreeVO;
 import kr.esob.tdms.commonlogic.value.Constant;
@@ -62,6 +63,16 @@ public class MenuService {
 		if(param == null || param.getSaveFlag() == null) {
 			result.setFailReason("Invalid menu request.");
 			return result;
+		}
+
+		if("I".equals(param.getSaveFlag()) || "U".equals(param.getSaveFlag())) {
+			try {
+				param.setMenuUrl(MenuUrlPolicy.normalizeForStorage(param.getMenuUrl()));
+			}
+			catch(IllegalArgumentException exception) {
+				result.setFailReason(exception.getMessage());
+				return result;
+			}
 		}
 
 		if("I".equals(param.getSaveFlag())) {

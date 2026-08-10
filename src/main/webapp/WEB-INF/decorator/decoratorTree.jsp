@@ -62,7 +62,7 @@
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/esapi/ESAPI_Standard_en_US.properties.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/esapi/Base.esapi.properties.js"></script>
 	<script>
-	loadBundles('<%=LocaleUtil.getCurrentLanguage(request) %>', '${pageContext.request.contextPath}');
+	loadBundles('<spring:escapeBody htmlEscape="false" javaScriptEscape="true"><%=LocaleUtil.getCurrentLanguage(request) %></spring:escapeBody>', '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${pageContext.request.contextPath}</spring:escapeBody>');
 	</script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common.js?v=20260802.1"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common_util.js"></script>
@@ -79,7 +79,7 @@
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/prng4.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/rng.js"></script>
 	<script>
-	var CONTEXT_PATH = "${pageContext.request.contextPath}";
+	var CONTEXT_PATH = "<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${pageContext.request.contextPath}</spring:escapeBody>";
 	</script>
 
 	<sitemesh:write property='head'/>

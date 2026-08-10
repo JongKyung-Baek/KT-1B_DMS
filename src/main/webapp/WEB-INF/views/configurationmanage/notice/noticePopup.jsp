@@ -8,7 +8,6 @@
 <script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/views/configurationmanage/notice/noticePopup.js"></script>
 <script>
 $(function() {
-	//settingGrid('${gridInfo }', setPopupGridParam(), 'popupGridParam');
 	$(".ui-dialog .ui-dialog-titlebar-close").click(function(event){
 		console.log("close-popup");
 		closePopup('popupDialog');

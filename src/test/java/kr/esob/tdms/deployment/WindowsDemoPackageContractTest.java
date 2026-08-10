@@ -32,6 +32,12 @@ class WindowsDemoPackageContractTest {
         assertTrue(compose.contains(
                 "KT1B_DB_URL: jdbc:postgresql://db:5432/kt1b"));
         assertTrue(compose.contains("KT1B_DB_USERNAME: kt1b_demo"));
+        assertTrue(compose.contains(
+                "POSTGRES_PASSWORD: ${KT1B_POSTGRES_PASSWORD:?"));
+        assertTrue(compose.contains(
+                "APP_DB_PASSWORD: ${KT1B_DB_PASSWORD:?"));
+        assertTrue(compose.contains(
+                "KT1B_DB_PASSWORD: ${KT1B_DB_PASSWORD:?"));
         assertTrue(compose.contains("system_config_group='DEMO_CONFIG'"));
 
         String dbService = compose.substring(
@@ -45,6 +51,8 @@ class WindowsDemoPackageContractTest {
     void installerChecksDockerBackupLinuxModeAndApplicationReadiness()
             throws IOException {
         String installer = text("INSTALL_AND_RUN.BAT");
+        String secretsInitializer = text(
+                "runtime", "Initialize-DeploymentSecrets.ps1");
         String readme = text("README-FIRST.txt");
 
         assertTrue(installer.contains("database\\kt1b-demo.backup"));
@@ -53,6 +61,22 @@ class WindowsDemoPackageContractTest {
         assertTrue(installer.contains("INSTALL_AND_RUN.BAT 3510"));
         assertTrue(installer.contains("/login/loginPage"));
         assertTrue(installer.contains("up -d --build --remove-orphans"));
+        assertTrue(installer.contains("SECRETS_FILE=%CD%\\.env"));
+        assertTrue(installer.contains(
+                "DB_VOLUME=kt1b-dms-demo-db-data"));
+        assertTrue(installer.contains("--env-file \"%SECRETS_FILE%\""));
+        assertTrue(installer.contains("call :ensure_secrets"));
+        assertTrue(installer.contains(
+                "docker volume inspect \"%DB_VOLUME%\""));
+        assertTrue(installer.contains(
+                "Copy the .env file from the previous installation"));
+        assertTrue(secretsInitializer.contains("RandomNumberGenerator"));
+        assertTrue(secretsInitializer.contains(
+                "if (Test-Path -LiteralPath $resolvedPath)"));
+        assertTrue(secretsInitializer.contains(
+                "Existing deployment credentials were preserved."));
+        assertTrue(secretsInitializer.contains(
+                "[IO.File]::Move($temporaryPath, $resolvedPath)"));
         assertTrue(installer.contains("Demo is already running."));
         assertTrue(installer.contains(
                 "exec -T db bash /docker-entrypoint-initdb.d/"
@@ -108,6 +132,10 @@ class WindowsDemoPackageContractTest {
         assertTrue(builder.contains(
                 "table_name IN ('docs_menu', 'docs_user')"));
         assertTrue(builder.contains("6,6,16,16,16,16,0"));
+        assertFalse(builder.contains("RandomNumberGenerator"));
+        assertFalse(builder.contains("KT1B_POSTGRES_PASSWORD="));
+        assertFalse(builder.contains("KT1B_DB_PASSWORD="));
+        assertFalse(builder.contains("Join-Path $packageDirectory '.env'"));
         assertFalse(builder.contains("$internalOnlyCleanupSqlInContainer"));
         assertFalse(builder.contains("$sampleSqlInContainer"));
     }

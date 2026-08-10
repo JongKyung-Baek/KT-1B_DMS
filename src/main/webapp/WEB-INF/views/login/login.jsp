@@ -36,7 +36,7 @@
 <script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/i18n/jquery-i18n-properties-master/jquery.i18n.properties.js"></script>
 <script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/i18n/common_i18n.js?v=20260802.1"></script>
 <script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/polyfill.js"></script>
-<script>loadBundles('<%=LocaleUtil.getCurrentLanguage(request) %>', '${pageContext.request.contextPath}');</script>
+<script>loadBundles('<spring:escapeBody htmlEscape="false" javaScriptEscape="true"><%=LocaleUtil.getCurrentLanguage(request) %></spring:escapeBody>', '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${pageContext.request.contextPath}</spring:escapeBody>');</script>
 
 
 <!-- <link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/style.css" media="screen" /> -->

@@ -7,6 +7,7 @@ if errorlevel 1 exit /b 1
 set "PROJECT_NAME=kt1b-dms-offline"
 set "COMPOSE_FILE=%CD%\runtime\compose.yaml"
 set "ENV_FILE=%CD%\runtime\offline.env"
+set "SECRETS_FILE=%CD%\.env"
 set "DB_VOLUME=kt1b-dms-offline-db-data"
 
 where docker.exe >nul 2>&1
@@ -35,7 +36,7 @@ if not "%CONFIRM%"=="RESET" (
 )
 
 echo [1/3] Stopping offline demo containers...
-docker compose --env-file "%ENV_FILE%" -p "%PROJECT_NAME%" -f "%COMPOSE_FILE%" down --remove-orphans
+docker compose --env-file "%ENV_FILE%" --env-file "%SECRETS_FILE%" -p "%PROJECT_NAME%" -f "%COMPOSE_FILE%" down --remove-orphans
 if errorlevel 1 goto :failed
 
 echo [2/3] Removing only the offline demo database volume...

@@ -49,7 +49,7 @@
 			return;
 		}
 		
-		var strUserCd = '${sessionUser.userCd}';
+var strUserCd = '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${sessionUser.userCd}</spring:escapeBody>';
 		
 		$.each($("#" + gridId).getGridParam('selarrrow'), function(index, item){
 			var data = $("#" + gridId).jqGrid('getRowData', item);

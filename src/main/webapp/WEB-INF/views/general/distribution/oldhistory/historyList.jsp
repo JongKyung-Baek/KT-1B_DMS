@@ -1,14 +1,15 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
 <%@ taglib prefix="custom" tagdir="/WEB-INF/tags" %>
+<%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
 <!doctype html>
 <html lang="kr">
 <head>
 <meta charset="UTF-8">
 <title>${tdmsBrand.systemName}</title>
 <script>
-var gridId = '${gridId}';
-var formId = '${formId}';
+var gridId = '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${gridId}</spring:escapeBody>';
+var formId = '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${formId}</spring:escapeBody>';
 
 var url = '/general/distribution/oldhistory/selectList';
 

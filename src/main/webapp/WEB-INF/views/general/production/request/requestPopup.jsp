@@ -16,15 +16,15 @@
 <script>
 var gridAcceptanceId = 'gridProductionRequestAcceptance';
 var gridProductionId = 'gridProductionRequestProduction';
-var currentBusinessArea = '${sessionUser.businessAreaCd}';
+var currentBusinessArea = '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${sessionUser.businessAreaCd}</spring:escapeBody>';
 var gridAcceptanceParam;
 var gridDocumentParam;
 
 $(document).ready(function (){
     setGridAcceptanceParam();
     setGridProductionParam();
-    settingGrid('${gridAcceptance}', gridAcceptanceParam, 'gridAcceptanceParam');
-    settingGridWithData('${gridProduction}', gridProductionParam, 'gridProductionParam');
+    settingGrid('<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${gridAcceptance}</spring:escapeBody>', gridAcceptanceParam, 'gridAcceptanceParam');
+    settingGridWithData('<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${gridProduction}</spring:escapeBody>', gridProductionParam, 'gridProductionParam');
 
     if ('1210' === currentBusinessArea) {
         $('#' + gridAcceptanceId).jqGrid('hideCol', 'copy');

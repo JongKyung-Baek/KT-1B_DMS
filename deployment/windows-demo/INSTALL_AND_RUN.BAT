@@ -9,6 +9,9 @@ if errorlevel 1 (
 
 set "PROJECT_NAME=kt1b-dms-demo"
 set "COMPOSE_FILE=%CD%\runtime\compose.yaml"
+set "SECRETS_FILE=%CD%\.env"
+set "SECRETS_INITIALIZER=%CD%\runtime\Initialize-DeploymentSecrets.ps1"
+set "DB_VOLUME=kt1b-dms-demo-db-data"
 set "PORT_FILE=%CD%\runtime\.demo-port"
 set "DEMO_PORT=3508"
 set "OPEN_BROWSER=1"
@@ -43,6 +46,10 @@ if errorlevel 1 (
 
 if not exist "%COMPOSE_FILE%" (
     echo [ERROR] Missing file: runtime\compose.yaml
+    goto :failed
+)
+if not exist "%SECRETS_INITIALIZER%" (
+    echo [ERROR] Missing credential initializer: runtime\Initialize-DeploymentSecrets.ps1
     goto :failed
 )
 if not exist "%CD%\Dockerfile" (
@@ -95,11 +102,14 @@ if /i not "%DOCKER_OS%"=="linux" (
     goto :failed
 )
 
+call :ensure_secrets
+if errorlevel 1 goto :failed
+
 echo [2/5] Checking local port %DEMO_PORT%...
 set "APP_CONTAINER="
 set "APP_PUBLISHED="
 set "PORT_OWNED_BY_PROJECT="
-for /f "delims=" %%C in ('docker compose -p "%PROJECT_NAME%" -f "%COMPOSE_FILE%" ps -q app 2^>nul') do set "APP_CONTAINER=%%C"
+for /f "delims=" %%C in ('docker compose --env-file "%SECRETS_FILE%" -p "%PROJECT_NAME%" -f "%COMPOSE_FILE%" ps -q app 2^>nul') do set "APP_CONTAINER=%%C"
 if defined APP_CONTAINER call :inspect_existing_app
 if not defined PORT_OWNED_BY_PROJECT call :check_port_available
 if errorlevel 1 (
@@ -117,13 +127,13 @@ if defined PORT_OWNED_BY_PROJECT if not errorlevel 1 (
 
 echo [3/5] Preparing the database and application images...
 echo [INFO]  The first run can take several minutes while images are downloaded.
-docker compose -p "%PROJECT_NAME%" -f "%COMPOSE_FILE%" up -d --build --remove-orphans
+docker compose --env-file "%SECRETS_FILE%" -p "%PROJECT_NAME%" -f "%COMPOSE_FILE%" up -d --build --remove-orphans
 if errorlevel 1 (
     echo [ERROR] Docker Compose could not start the demo.
     goto :show_failure_logs
 )
 
-docker compose -p "%PROJECT_NAME%" -f "%COMPOSE_FILE%" exec -T db bash /docker-entrypoint-initdb.d/40-configure-demo-port.sh >nul 2>&1
+docker compose --env-file "%SECRETS_FILE%" -p "%PROJECT_NAME%" -f "%COMPOSE_FILE%" exec -T db bash /docker-entrypoint-initdb.d/40-configure-demo-port.sh >nul 2>&1
 if errorlevel 1 (
     echo [ERROR] The demo URL configuration could not be synchronized.
     goto :show_failure_logs
@@ -157,10 +167,10 @@ exit /b 0
 
 :show_failure_logs
 echo.
-docker compose -p "%PROJECT_NAME%" -f "%COMPOSE_FILE%" ps
+docker compose --env-file "%SECRETS_FILE%" -p "%PROJECT_NAME%" -f "%COMPOSE_FILE%" ps
 echo.
 echo [INFO] Recent container logs:
-docker compose -p "%PROJECT_NAME%" -f "%COMPOSE_FILE%" logs --tail 120 app db
+docker compose --env-file "%SECRETS_FILE%" -p "%PROJECT_NAME%" -f "%COMPOSE_FILE%" logs --tail 120 app db
 goto :failed
 
 :failed
@@ -170,6 +180,21 @@ echo [INFO]   Run VIEW_LOGS.BAT for more details after Docker starts.
 popd
 endlocal
 exit /b 1
+
+:ensure_secrets
+if exist "%SECRETS_FILE%" goto :validate_secrets
+docker volume inspect "%DB_VOLUME%" >nul 2>&1
+if not errorlevel 1 (
+    echo [ERROR] Existing demo database data was found, but .env is missing.
+    echo [INFO]  Copy the .env file from the previous installation into this folder.
+    echo [INFO]  New credentials were not generated, so the database was not changed.
+    exit /b 1
+)
+
+:validate_secrets
+powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass ^
+    -File "%SECRETS_INITIALIZER%" -SecretsPath "%SECRETS_FILE%"
+exit /b %errorlevel%
 
 :inspect_existing_app
 for /f "delims=" %%M in ('docker port "%APP_CONTAINER%" 3508/tcp 2^>nul') do set "APP_PUBLISHED=%%M"

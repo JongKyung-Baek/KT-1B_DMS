@@ -16,17 +16,17 @@
 	body { visibility: hidden; }
 </style>
 <script>
-	var toolbarInfo = '${toolbarInfo}';
+var toolbarInfo = '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${toolbarInfo}</spring:escapeBody>';
 	var gridId = 'gridProductionApprovalList';
 	var formId = 'formProductionApproval';
 	var deptGridParam = undefined;
 	var deptAssignedGridParam = undefined;
 	var userGridParam = undefined;
 	var userAssignedGridParam = undefined;
-	var gridRoleDept = '${gridRoleDept}';
-	var gridRoleDeptAssigned = '${gridRoleDeptAssigned}';
-	var gridRoleUser = '${gridRoleUser}';
-	var gridRoleUserAssigned = '${gridRoleUserAssigned}';
+var gridRoleDept = '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${gridRoleDept}</spring:escapeBody>';
+var gridRoleDeptAssigned = '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${gridRoleDeptAssigned}</spring:escapeBody>';
+var gridRoleUser = '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${gridRoleUser}</spring:escapeBody>';
+var gridRoleUserAssigned = '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${gridRoleUserAssigned}</spring:escapeBody>';
 
 	$(function () {
 		$('.layout-wrapper.bodyWrap .content-wrapper > .container').addClass('distribution-invoice-container system-management-container');

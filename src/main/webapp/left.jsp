@@ -14,18 +14,27 @@
 				</c:if>
 			</c:forEach>
 
+			<div id="current-menu-data" hidden
+				data-menu-title="<c:out value='${menuTitle}' />"
+				data-menu-path="<c:out value='${menuPath}' />"
+				data-menu-cd="<c:out value='${menuCd}' />"
+				data-menu-path-cd="<c:out value='${menuPathCd}' />"></div>
+
 			<script>
-				var currentMenuNm = '${menuTitle}';
-				var currentMenuPath = '${menuPath}';
-				var currentMenuCd = '${menuCd}';
-				var currentMenuPathCd = '${menuPathCd}';
+				var currentMenuData = document.getElementById('current-menu-data');
+				var currentMenuNm = currentMenuData ? currentMenuData.getAttribute('data-menu-title') || '' : '';
+				var currentMenuPath = currentMenuData ? currentMenuData.getAttribute('data-menu-path') || '' : '';
+				var currentMenuCd = currentMenuData ? currentMenuData.getAttribute('data-menu-cd') || '' : '';
+				var currentMenuPathCd = currentMenuData ? currentMenuData.getAttribute('data-menu-path-cd') || '' : '';
 
 				function getMenuPath() {
 					var v = currentMenuPath.split(' > ');
-					var result = [];
+					var result = document.createDocumentFragment();
 
-					$.each(v, function () {
-						result.push('<span>' + this + '</span>');
+					$.each(v, function (_, menuPathName) {
+						var menuPathItem = document.createElement('span');
+						menuPathItem.textContent = menuPathName;
+						result.appendChild(menuPathItem);
 					});
 
 					return result;
@@ -41,7 +50,10 @@
 
 					for (i = 0; i < arr.length; i++) {
 						if (i == arr.length - 1) {
-							$("#" + arr[i]).addClass("active");
+							var activeMenu = document.getElementById(arr[i]);
+							if (activeMenu) {
+								activeMenu.classList.add("active");
+							}
 						}
 					}
 
@@ -56,7 +68,7 @@
 					}
 
 					$(".titleBox span").text(currentMenuNm);
-					$(".navBox").html(getMenuPath());
+					$(".navBox").empty().append(getMenuPath());
 					openMenu();
 				});
 			</script>
@@ -117,30 +129,30 @@
 								</c:if>
 							</c:forEach>
 
-							<li id="${menuTop.menuCd }" class="menu-item">
+							<li id="<c:out value='${menuTop.menuCd}' />" class="menu-item">
 								<c:choose>
 									<c:when test="${hasTopChild}">
-										<a href="javascript:void(0);" class="menu-link menu-toggle" title="${menuTop.menuNm}">
+										<a href="javascript:void(0);" class="menu-link menu-toggle" title="<c:out value='${menuTop.menuNm}' />">
 											<span class="menu-top-icon" aria-hidden="true">
 												<i class="icon-base ti ${menuIconClass}"></i>
 											</span>
-											<div>${menuTop.menuNm}</div>
+											<div><c:out value="${menuTop.menuNm}" /></div>
 										</a>
 										<ul class="menu-sub">
 											<c:forEach items="${sessionScope['scopedTarget.session'].menuSub }" var="menuSub">
 												<c:if test="${menuTop.menuCd == menuSub.parentMenuCd }">
 													<c:choose>
 														<c:when test="${menuSub.treeType == 'leaf' }">
-															<li id="${menuSub.menuCd }" class="menu-item">
-																<a href="${menuSub.menuUrl }" class="menu-link">
-																	<div>${menuSub.menuNm}</div>
+															<li id="<c:out value='${menuSub.menuCd}' />" class="menu-item">
+																<a href="<c:out value='${menuSub.menuUrl}' />" class="menu-link">
+																	<div><c:out value="${menuSub.menuNm}" /></div>
 																</a>
 															</li>
 														</c:when>
 														<c:otherwise>
 															<li class="menu-item">
 																<a href="javascript:void(0);" class="menu-link menu-toggle">
-																	<div>${menuSub.menuNm}</div>
+																	<div><c:out value="${menuSub.menuNm}" /></div>
 																</a>
 																<ul class="menu-sub">
 																	<c:forEach
@@ -149,10 +161,10 @@
 																		<c:if
 																			test="${menuSub.menuCd == menuLeaf.parentMenuCd }">
 																			<c:if test="${menuLeaf.menuType == 'M' }">
-																				<li id="${menuLeaf.menuCd }" class="menu-item">
-																					<a href="${menuLeaf.menuUrl }"
+																				<li id="<c:out value='${menuLeaf.menuCd}' />" class="menu-item">
+																					<a href="<c:out value='${menuLeaf.menuUrl}' />"
 																						class="menu-link">
-																						<div>${menuLeaf.menuNm}</div>
+																						<div><c:out value="${menuLeaf.menuNm}" /></div>
 																					</a>
 																				</li>
 																			</c:if>
@@ -171,11 +183,11 @@
 										<c:if test="${not empty topMenuUrl}">
 											<c:set var="topMenuUrl" value="${fn:replace(topMenuUrl, '/**', '/')}" />
 										</c:if>
-										<a href="${topMenuUrl }" class="menu-link" title="${menuTop.menuNm}">
+										<a href="<c:out value='${topMenuUrl}' />" class="menu-link" title="<c:out value='${menuTop.menuNm}' />">
 											<span class="menu-top-icon" aria-hidden="true">
 												<i class="icon-base ti ${menuIconClass}"></i>
 											</span>
-											<div>${menuTop.menuNm}</div>
+											<div><c:out value="${menuTop.menuNm}" /></div>
 										</a>
 									</c:otherwise>
 								</c:choose>

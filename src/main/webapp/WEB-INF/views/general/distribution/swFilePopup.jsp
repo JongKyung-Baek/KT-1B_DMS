@@ -4,9 +4,9 @@
 <spring:message code="feature.techDetail.untitled" text="제목 미등록" var="untitledText" />
 
 <script>
-	var mainFileRows = ${ empty mainFileJson ?'[]': mainFileJson };
-	var subFileRows = ${ empty subFileJson ?'[]': subFileJson };
-	var popupRequestNo = "${param.requestNo}";
+	var mainFileRows = JSON.parse('<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${empty mainFileJson ? "[]" : mainFileJson}</spring:escapeBody>');
+	var subFileRows = JSON.parse('<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${empty subFileJson ? "[]" : subFileJson}</spring:escapeBody>');
+	var popupRequestNo = "<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${param.requestNo}</spring:escapeBody>";
 	var MAIN_GRID_BODY_HEIGHT = 56;
 	var SUB_GRID_BODY_HEIGHT = 168;
 

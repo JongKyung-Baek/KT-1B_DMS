@@ -8,9 +8,8 @@
 <sec:authentication property="principal" var="sessionUser" />
 <!-- CR 접수 팝업(제의번호 상세보기)-->
 <script>
-var info = '${popupInfo}';
+var info = '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${popupInfo}</spring:escapeBody>';
 $(document).ready(function(){
-	//console.log(${popupInfo});
 });
 </script>
 <script type="text/javascript" src="/resources/js/views/general/cr/commonInsideCrPopup.js"></script>

@@ -12,7 +12,7 @@
 var popupGridParam;
 var gridId='gridDisPosalApprovalPopup';
 $(function() {
-	settingGrid('${gridInfo }', setPopupGridParam());
+	settingGrid('<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${gridInfo}</spring:escapeBody>', setPopupGridParam());
 });
 
 function formatOpenView(cellValue, options, rowdata, action){

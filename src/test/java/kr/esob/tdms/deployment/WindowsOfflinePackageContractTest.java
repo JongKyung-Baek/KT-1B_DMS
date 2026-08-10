@@ -25,6 +25,12 @@ class WindowsOfflinePackageContractTest {
         assertTrue(compose.contains("pull_policy: never"));
         assertTrue(compose.contains(
                 "\"127.0.0.1:${KT1B_DEMO_PORT:-3508}:3508\""));
+        assertTrue(compose.contains(
+                "POSTGRES_PASSWORD: ${KT1B_POSTGRES_PASSWORD:?"));
+        assertTrue(compose.contains(
+                "APP_DB_PASSWORD: ${KT1B_DB_PASSWORD:?"));
+        assertTrue(compose.contains(
+                "KT1B_DB_PASSWORD: ${KT1B_DB_PASSWORD:?"));
         assertFalse(compose.contains("\n    build:"));
 
         String dbService = compose.substring(
@@ -45,6 +51,16 @@ class WindowsOfflinePackageContractTest {
         assertTrue(installer.contains("--no-build --pull never"));
         assertTrue(installer.contains("{{.Os}}/{{.Architecture}}"));
         assertTrue(installer.contains("EXPECTED_APP_IMAGE_ID"));
+        assertTrue(installer.contains("SECRETS_FILE=%CD%\\.env"));
+        assertTrue(installer.contains(
+                "DB_VOLUME=kt1b-dms-offline-db-data"));
+        assertTrue(installer.contains("call :ensure_secrets"));
+        assertTrue(installer.contains(
+                "--env-file \"%ENV_FILE%\" --env-file \"%SECRETS_FILE%\""));
+        assertTrue(installer.contains(
+                "Copy the .env file from the previous installation"));
+        assertFalse(installer.contains("HAS_POSTGRES_PASSWORD"));
+        assertFalse(installer.contains("HAS_APP_DB_PASSWORD"));
         assertFalse(installer.contains("docker pull"));
         assertFalse(installer.contains("docker build"));
         assertFalse(installer.contains(" up -d --build"));
@@ -70,6 +86,11 @@ class WindowsOfflinePackageContractTest {
                 "database\\kt1b-demo.backup"));
         assertTrue(builder.contains(
                 "$zipHashPath = \"$zipPath.sha256\""));
+        assertTrue(builder.contains("$secretsInitializerPath"));
+        assertFalse(builder.contains("$stagingSecretsPath"));
+        assertFalse(builder.contains("KT1B_POSTGRES_PASSWORD="));
+        assertFalse(builder.contains("KT1B_DB_PASSWORD="));
+        assertTrue(builder.contains("Join-Path $packageDirectory '.env'"));
     }
 
     @Test

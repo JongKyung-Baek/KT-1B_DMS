@@ -9,7 +9,7 @@
 var popupGridParam;
 var popupGridId = 'gridApproval';
 $(function() {
-	settingGrid('${gridInfo }', setPopupGridParam());
+	settingGrid('<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${gridInfo}</spring:escapeBody>', setPopupGridParam());
 });
 
 function formatAddMonth(cellValue, options, rowdata, action){

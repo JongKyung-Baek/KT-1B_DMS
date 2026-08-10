@@ -12,7 +12,7 @@
       href="${pageContext.request.contextPath}/resources/css/pages/distribution-workflow.css?v=20260802.2" media="screen">
 <script>
 window.distributionWorkflowPage = {
-    contextPath: '${pageContext.request.contextPath}',
+    contextPath: '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${pageContext.request.contextPath}</spring:escapeBody>',
     mode: 'approval',
     openCreateOnLoad: false
 };

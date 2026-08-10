@@ -9,12 +9,8 @@
 <%--<sec:authentication property="principal" var="sessionUser" />--%>
 <%--<spring:message code='form.autoIncrement' var='autoIncrement'/>--%>
 <%--<script>--%>
-<%--    var popupInfo = ${popupInfo};--%>
-<%--    var dataType = '${dataType}';--%>
-<%--    var gridInfo = ${gridInfo };--%>
 <%--    $(document).ready(function(){--%>
 <%--        setGridParam();--%>
-<%--        settingGrid('${gridInfo }', popupGridParam, 'popupGridParam');--%>
 <%--        $("#"+popupGridId).jqGrid('clearGridData');--%>
 <%--        $('#deployUserCd').attr('disabled','true');--%>
 <%--    });--%>
@@ -75,7 +71,7 @@
     var popupGridParam;
     var popupGridId='gridDistributionApprovalPopup';
     $(function() {
-        settingGrid('${gridInfo }', setPopupGridParam());
+        settingGrid('<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${gridInfo}</spring:escapeBody>', setPopupGridParam());
         setTimeout(ensureVersionPopupGridHorizontalScroll, 0);
         $(window).off("resize.versionPopupGrid").on("resize.versionPopupGrid", function() {
             ensureVersionPopupGridHorizontalScroll();

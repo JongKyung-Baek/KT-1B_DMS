@@ -5,7 +5,7 @@
 <%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
 <sec:authentication property="principal" var="sessionUser" />
 <script>
-	var defaultSessionTime = ${sessionScope['scopedTarget.session'].timeoutSecond};
+	var defaultSessionTime = Number('<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${sessionScope['scopedTarget.session'].timeoutSecond}</spring:escapeBody>');
 	var timerchecker = null;
 	var auditLogoutSkip = false;
 	var auditInternalNavigation = false;
@@ -44,7 +44,7 @@
 		}
 
 		auditLeaveNotified = true;
-		var notifyUrl = '${pageContext.request.contextPath}/general/organizationmanage/auditlog/notifyLogoutOnLeave';
+		var notifyUrl = '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${pageContext.request.contextPath}</spring:escapeBody>/general/organizationmanage/auditlog/notifyLogoutOnLeave';
 		var requestBody = buildAuditLeaveBody();
 
 		if (navigator.sendBeacon) {
@@ -219,7 +219,7 @@
 		try { markAuditInternalNavigation(); } catch (e) {}
 		var logoutForm = document.createElement('form');
 		logoutForm.method = 'POST';
-		logoutForm.action = '${pageContext.request.contextPath}/login/logout';
+		logoutForm.action = '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${pageContext.request.contextPath}</spring:escapeBody>/login/logout';
 		logoutForm.style.display = 'none';
 		document.body.appendChild(logoutForm);
 		if (window.SdmsCsrf) {

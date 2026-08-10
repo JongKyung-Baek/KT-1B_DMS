@@ -4,6 +4,7 @@ run-logs/
 *.log
 .env
 .env.*
+**/offline.env
 ssl_key/
 *.backup
 *.p12

@@ -1713,7 +1713,7 @@
 
 <!--	<insert id="insertDocsDocumentV2" parameterType="hashMap">-->
 <!--		INSERT INTO DOCS_DOCUMENT (CN_SERIAL, OBJECT_ID, INSERT_DT, DOCUMENT_NM, DOCUMENT_NO)-->
-<!--		values (CN_SERIAL_SEQ.NEXTVAL, #{OBJECT_ID}, SYSDATE, '${DOCUMENT_NM}',('DOC_' || TO_CHAR(CN_SERIAL_SEQ.NEXTVAL)))-->
+<!--		values (CN_SERIAL_SEQ.NEXTVAL, #{OBJECT_ID}, SYSDATE, #{DOCUMENT_NM},('DOC_' || TO_CHAR(CN_SERIAL_SEQ.NEXTVAL)))-->
 <!--	</insert>-->
 
 <!--	<select id="selectDocsDrawingV2" parameterType="hashMap" resultType="HashMap">-->
@@ -3484,7 +3484,7 @@
 
 <insert id="insertDocsDocumentV2" parameterType="hashMap">
 	INSERT INTO DOCS_DOCUMENT (CN_SERIAL, OBJECT_ID, INSERT_DT, DOCUMENT_NM, DOCUMENT_NO)
-	values (nextval('cn_serial_seq'), #{OBJECT_ID}, CURRENT_TIMESTAMP, '${DOCUMENT_NM}',('DOC_' || TO_CHAR(nextval('cn_serial_seq'))))
+	values (nextval('cn_serial_seq'), #{OBJECT_ID}, CURRENT_TIMESTAMP, #{DOCUMENT_NM},('DOC_' || TO_CHAR(nextval('cn_serial_seq'))))
 </insert>
 
 <select id="selectDocsDrawingV2" parameterType="hashMap" resultType="HashMap">

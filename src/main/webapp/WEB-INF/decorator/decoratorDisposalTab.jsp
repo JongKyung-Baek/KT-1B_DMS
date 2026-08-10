@@ -57,32 +57,32 @@
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/prng4.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/rng.js"></script>
 	<script>
-	loadBundles('<%=LocaleUtil.getCurrentLanguage(request) %>', '${pageContext.request.contextPath}');
+	loadBundles('<spring:escapeBody htmlEscape="false" javaScriptEscape="true"><%=LocaleUtil.getCurrentLanguage(request) %></spring:escapeBody>', '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${pageContext.request.contextPath}</spring:escapeBody>');
 	</script>
 	<script>
-	var CONTEXT_PATH = "${pageContext.request.contextPath}";
+	var CONTEXT_PATH = "<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${pageContext.request.contextPath}</spring:escapeBody>";
 	var gridParam;
-	var USER_CD = '<%=userVo.getUserCd() %>';
-	var USER_NM = '<%=userVo.getUserNm() %>';
-	var DEPT_CD = '<%=userVo.getDeptCd() %>';
-	var BUSINESS_AREA_CD = '<%=userVo.getBusinessAreaCd() %>';
-	var TEAM_LEADER_USER_CD = '<%=userVo.getTeamLeaderUid() %>';
-	var PASS_USE_YN = '<%=userVo.getPassUseYn() %>';
-	var VIEWER_URL = '${viewerUrl}';
-	var STATUS_CD = '${statusCd}';
-	var START_DT = '${startDt}';
-	var END_DT = '${endDt}';
-	var DESTROY_STATUS_CD = '${destroyStatusCd}';
-	var REQUEST_TYPE = '${requestType}';
-	var REQUEST_USER_CD = '${requestUserCd}';
-	var REQUEST_USER_NM = '${requestUserNm}';
-	var APPROVAL_USER_CD = '${approvalUserCd}';
-	var APPROVAL_USER_NM = '${approvalUserNm}';
-	var DESTROY_REQUEST_USER_CD = '${destroyRequestUserCd}';
-	var DESTROY_REQUEST_USER_NM = '${destroyRequestUserNm}';
-	var TERM_LIMIT = '${termLimit}';
-	var URL = '<%=request.getRequestURL()%>';
-	loadBundles('<%=LocaleUtil.getCurrentLanguage(request) %>', '${pageContext.request.contextPath}');
+	var USER_CD = '<spring:escapeBody htmlEscape="false" javaScriptEscape="true"><%=userVo.getUserCd() %></spring:escapeBody>';
+	var USER_NM = '<spring:escapeBody htmlEscape="false" javaScriptEscape="true"><%=userVo.getUserNm() %></spring:escapeBody>';
+	var DEPT_CD = '<spring:escapeBody htmlEscape="false" javaScriptEscape="true"><%=userVo.getDeptCd() %></spring:escapeBody>';
+	var BUSINESS_AREA_CD = '<spring:escapeBody htmlEscape="false" javaScriptEscape="true"><%=userVo.getBusinessAreaCd() %></spring:escapeBody>';
+	var TEAM_LEADER_USER_CD = '<spring:escapeBody htmlEscape="false" javaScriptEscape="true"><%=userVo.getTeamLeaderUid() %></spring:escapeBody>';
+	var PASS_USE_YN = '<spring:escapeBody htmlEscape="false" javaScriptEscape="true"><%=userVo.getPassUseYn() %></spring:escapeBody>';
+	var VIEWER_URL = '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${viewerUrl}</spring:escapeBody>';
+	var STATUS_CD = '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${statusCd}</spring:escapeBody>';
+	var START_DT = '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${startDt}</spring:escapeBody>';
+	var END_DT = '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${endDt}</spring:escapeBody>';
+	var DESTROY_STATUS_CD = '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${destroyStatusCd}</spring:escapeBody>';
+	var REQUEST_TYPE = '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${requestType}</spring:escapeBody>';
+	var REQUEST_USER_CD = '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${requestUserCd}</spring:escapeBody>';
+	var REQUEST_USER_NM = '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${requestUserNm}</spring:escapeBody>';
+	var APPROVAL_USER_CD = '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${approvalUserCd}</spring:escapeBody>';
+	var APPROVAL_USER_NM = '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${approvalUserNm}</spring:escapeBody>';
+	var DESTROY_REQUEST_USER_CD = '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${destroyRequestUserCd}</spring:escapeBody>';
+	var DESTROY_REQUEST_USER_NM = '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${destroyRequestUserNm}</spring:escapeBody>';
+	var TERM_LIMIT = '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${termLimit}</spring:escapeBody>';
+	var URL = '<spring:escapeBody htmlEscape="false" javaScriptEscape="true"><%=request.getRequestURL()%></spring:escapeBody>';
+	loadBundles('<spring:escapeBody htmlEscape="false" javaScriptEscape="true"><%=LocaleUtil.getCurrentLanguage(request) %></spring:escapeBody>', '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${pageContext.request.contextPath}</spring:escapeBody>');
 	console.log("list");
 	$(document).ready(function(){
 // 		var $tab = $('.tabArea ul > li').on('click', function() { // show content that matches the index
@@ -97,9 +97,9 @@
 		setGridParam();
 // 		setTabIndex();
 
-		settingForm('${formInfo }');
-		settingToolbar(${toolbarInfo });
-		settingGrid('${gridInfo }', gridParam, 'gridParam');
+		settingForm('<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${formInfo }</spring:escapeBody>');
+		settingToolbar(JSON.parse('<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${empty toolbarInfo ? "[]" : toolbarInfo}</spring:escapeBody>'));
+		settingGrid('<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${gridInfo }</spring:escapeBody>', gridParam, 'gridParam');
 		searchList(gridParam);
 	});
 	function setTabIndex(){

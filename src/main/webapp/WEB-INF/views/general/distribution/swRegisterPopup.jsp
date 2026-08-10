@@ -134,9 +134,9 @@
                 <script>
                     var SWTYPE_EMPTY_VALUE = '__NONE__';
                     var $swPopupRoot = null;
-                    var IS_SW_REVISION_UPDATE = "${param.isNewRevision}" === "true";
-                    var SW_PREV_OBJECT_ID = "${param.objectId}";
-                    var IS_SW_REGISTER_PAGE = "${swRegisterPageMode}" === "true";
+var IS_SW_REVISION_UPDATE = "<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${param.isNewRevision}</spring:escapeBody>" === "true";
+var SW_PREV_OBJECT_ID = "<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${param.objectId}</spring:escapeBody>";
+var IS_SW_REGISTER_PAGE = "<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${swRegisterPageMode}</spring:escapeBody>" === "true";
 
                     function nextRevisionValue(current) {
                         var value = $.trim(current || "");
@@ -603,21 +603,21 @@
 
                     $(document).ready(function () {
                         if (IS_SW_REVISION_UPDATE) {
-                            var prevRevNo = "${param.revNo}";
+	var prevRevNo = "<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${param.revNo}</spring:escapeBody>";
                             var nextRevNo = nextRevisionValue(prevRevNo);
                             $swPopupField('#revNo').val(nextRevNo);
-                            $swPopupField('#swNo').val("${param.swNo}");
-                            $swPopupField('#dataName').val("${param.dataName}");
-                            if ($.trim("${param.businessTypeCd}") !== "") {
-                                $swPopupField('#businessTypeCd').val("${param.businessTypeCd}");
-                                $swPopupField('#treeCd').val("${param.businessTypeCd}");
+                            $swPopupField('#swNo').val("<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${param.swNo}</spring:escapeBody>");
+                            $swPopupField('#dataName').val("<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${param.dataName}</spring:escapeBody>");
+                            if ($.trim("<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${param.businessTypeCd}</spring:escapeBody>") !== "") {
+                                $swPopupField('#businessTypeCd').val("<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${param.businessTypeCd}</spring:escapeBody>");
+                                $swPopupField('#treeCd').val("<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${param.businessTypeCd}</spring:escapeBody>");
                             }
                             $swPopupField('#businessTypeCd').prop('disabled', true);
-                            if ($.trim("${param.ccbIssueDt}") !== "") {
-                                $swPopupField('#ccbIssueDt').val("${param.ccbIssueDt}");
+                            if ($.trim("<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${param.ccbIssueDt}</spring:escapeBody>") !== "") {
+                                $swPopupField('#ccbIssueDt').val("<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${param.ccbIssueDt}</spring:escapeBody>");
                             }
-                            if ($.trim("${param.distributeTypeCd}") !== "") {
-                                $swPopupField('#distributeTypeCd').val("${param.distributeTypeCd}");
+                            if ($.trim("<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${param.distributeTypeCd}</spring:escapeBody>") !== "") {
+                                $swPopupField('#distributeTypeCd').val("<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${param.distributeTypeCd}</spring:escapeBody>");
                             }
                         }
 
@@ -657,13 +657,13 @@
                         initSwPopupSelect2();
                         setTimeout(initSwPopupSelect2, 0);
                         if (IS_SW_REVISION_UPDATE) {
-                            var swTypeRaw = "${param.swTypeCd}";
+		var swTypeRaw = "<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${param.swTypeCd}</spring:escapeBody>";
                             if ($.trim(swTypeRaw) !== "") {
                                 $swPopupField('#swTypeCd').val(swTypeRaw.split(',')).trigger('change.select2');
                             } else {
                                 $swPopupField('#swTypeCd').trigger('change.multiPlaceholder');
                             }
-                            var reviewerRaw = "${param.reviewerUser}";
+		var reviewerRaw = "<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${param.reviewerUser}</spring:escapeBody>";
                             if ($.trim(reviewerRaw) !== "") {
                                 $swPopupField('#reviewerUser').val(reviewerRaw.split(',')).trigger('change.select2');
                             } else {

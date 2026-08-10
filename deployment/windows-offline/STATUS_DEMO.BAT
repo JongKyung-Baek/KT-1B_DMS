@@ -7,6 +7,7 @@ if errorlevel 1 exit /b 1
 set "PROJECT_NAME=kt1b-dms-offline"
 set "COMPOSE_FILE=%CD%\runtime\compose.yaml"
 set "ENV_FILE=%CD%\runtime\offline.env"
+set "SECRETS_FILE=%CD%\.env"
 set "PORT_FILE=%CD%\runtime\.demo-port"
 set "DEMO_PORT=3508"
 if exist "%PORT_FILE%" set /p DEMO_PORT=<"%PORT_FILE%"
@@ -25,7 +26,7 @@ echo ============================================================
 echo  KT-1B DMS Offline Demo - Status
 echo ============================================================
 echo.
-docker compose --env-file "%ENV_FILE%" -p "%PROJECT_NAME%" -f "%COMPOSE_FILE%" ps
+docker compose --env-file "%ENV_FILE%" --env-file "%SECRETS_FILE%" -p "%PROJECT_NAME%" -f "%COMPOSE_FILE%" ps
 echo.
 
 where curl.exe >nul 2>&1

@@ -8,7 +8,7 @@
 <script>
 var popupGridParam;
 $(function() {
-	settingGrid('${gridInfo }', setPopupGridParam(), 'popupGridParam');
+	settingGrid('<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${gridInfo}</spring:escapeBody>', setPopupGridParam(), 'popupGridParam');
 });
 </script>
 <style>

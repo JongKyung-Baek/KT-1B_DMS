@@ -16,7 +16,7 @@ var gridProductionId = 'gridProductionReplaceRequest';
 var gridDocumentParam;
 $(document).ready(function (){
 	setGridProductionParam();
-	settingGrid('${gridProduction}', gridProductionParam, 'gridProductionParam');
+	settingGrid('<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${gridProduction}</spring:escapeBody>', gridProductionParam, 'gridProductionParam');
 
 });
 

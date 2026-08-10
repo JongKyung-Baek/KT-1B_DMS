@@ -2,10 +2,10 @@
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
 
 <script>
-	var mainFileRows = ${ empty mainFileJson ?'[]': mainFileJson };
-	var subFileRows = ${ empty subFileJson ?'[]': subFileJson };
+	var mainFileRows = JSON.parse('<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${empty mainFileJson ? "[]" : mainFileJson}</spring:escapeBody>');
+	var subFileRows = JSON.parse('<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${empty subFileJson ? "[]" : subFileJson}</spring:escapeBody>');
 	var popupRequestNo = "";
-	var popupObjectId = "${objectId}";
+	var popupObjectId = "<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${objectId}</spring:escapeBody>";
 	var popupObjectType = "Production";
 	var MAIN_GRID_BODY_HEIGHT = 52;
 	var SUB_GRID_BODY_HEIGHT = 180;

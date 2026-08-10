@@ -23,6 +23,10 @@ public class MenuService {
 	}
 
 	public void insertMenu(MenuVO menuVo) {
+		if(menuVo == null) {
+			throw new IllegalArgumentException("Menu request is required.");
+		}
+		menuVo.setMenuUrl(MenuUrlPolicy.normalizeForStorage(menuVo.getMenuUrl()));
 		List<MenuVO> menuList = dao.getParentMenuInfo(menuVo);
 		int roleCode = 0;
 		int menuLevel = 0;

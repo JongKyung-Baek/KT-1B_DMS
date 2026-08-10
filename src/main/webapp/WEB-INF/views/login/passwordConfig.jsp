@@ -588,7 +588,7 @@
 
   <script src="${pageContext.request.contextPath}/resources/js/jquery-3.4.1.min.js"></script>
   <script>
-    var contextPath = "${pageContext.request.contextPath}";
+var contextPath = "<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${pageContext.request.contextPath}</spring:escapeBody>";
     var isSubmitting = false;
     var passwordMessages = {
       defaultSubmitLabel: '<spring:message code="feature.password.action.change" text="비밀번호 변경" javaScriptEscape="true"/>',

@@ -133,8 +133,8 @@
 <script>
     var SWTYPE_EMPTY_VALUE = '__NONE__';
     var $dxfPopupRoot = null;
-    var IS_DXF_REVISION_UPDATE = "${param.isNewRevision}" === "true";
-    var DXF_PREV_OBJECT_ID = "${param.objectId}";
+var IS_DXF_REVISION_UPDATE = "<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${param.isNewRevision}</spring:escapeBody>" === "true";
+var DXF_PREV_OBJECT_ID = "<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${param.objectId}</spring:escapeBody>";
 
     function nextRevisionValue(current) {
         var value = $.trim(current || "");
@@ -542,26 +542,26 @@
 
     $(document).ready(function() {
         if (IS_DXF_REVISION_UPDATE) {
-            var prevRevNo = "${param.revNo}";
+	var prevRevNo = "<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${param.revNo}</spring:escapeBody>";
             var nextRevNo = nextRevisionValue(prevRevNo);
             $dxfPopupField('#revNo').val(nextRevNo);
-            $dxfPopupField('#dxfNo').val("${param.dxfNo}");
-            $dxfPopupField('#dataName').val("${param.dataName}");
-            if ($.trim("${param.treeCd}") !== '') {
-                $dxfPopupField('#treeCd').val("${param.treeCd}");
+            $dxfPopupField('#dxfNo').val("<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${param.dxfNo}</spring:escapeBody>");
+            $dxfPopupField('#dataName').val("<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${param.dataName}</spring:escapeBody>");
+            if ($.trim("<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${param.treeCd}</spring:escapeBody>") !== '') {
+                $dxfPopupField('#treeCd').val("<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${param.treeCd}</spring:escapeBody>");
             }
-            if ($.trim("${param.businessTypeCd}") !== '') {
-                $dxfPopupField('#businessTypeCd').val("${param.businessTypeCd}");
+            if ($.trim("<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${param.businessTypeCd}</spring:escapeBody>") !== '') {
+                $dxfPopupField('#businessTypeCd').val("<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${param.businessTypeCd}</spring:escapeBody>");
                 if (!$.trim($dxfPopupField('#treeCd').val() || '')) {
-                    $dxfPopupField('#treeCd').val("${param.businessTypeCd}");
+                    $dxfPopupField('#treeCd').val("<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${param.businessTypeCd}</spring:escapeBody>");
                 }
             }
             $dxfPopupField('#businessTypeCd').prop('disabled', true);
-            if ($.trim("${param.pmpcbIssueDt}") !== '') {
-                $dxfPopupField('#pmpcbIssueDt').val("${param.pmpcbIssueDt}");
+            if ($.trim("<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${param.pmpcbIssueDt}</spring:escapeBody>") !== '') {
+                $dxfPopupField('#pmpcbIssueDt').val("<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${param.pmpcbIssueDt}</spring:escapeBody>");
             }
-            if ($.trim("${param.distributeTypeCd}") !== '') {
-                $dxfPopupField('#distributeTypeCd').val("${param.distributeTypeCd}");
+            if ($.trim("<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${param.distributeTypeCd}</spring:escapeBody>") !== '') {
+                $dxfPopupField('#distributeTypeCd').val("<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${param.distributeTypeCd}</spring:escapeBody>");
             }
         }
 
@@ -596,13 +596,13 @@
         initDxfPopupSelect2();
         setTimeout(initDxfPopupSelect2, 0);
         if (IS_DXF_REVISION_UPDATE) {
-            var swTypeRaw = "${param.swTypeCd}";
+		var swTypeRaw = "<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${param.swTypeCd}</spring:escapeBody>";
             if ($.trim(swTypeRaw) !== '') {
                 $dxfPopupField('#swTypeCd').val(swTypeRaw.split(',')).trigger('change.select2');
             } else {
                 $dxfPopupField('#swTypeCd').trigger('change.multiPlaceholder');
             }
-            var reviewerRaw = "${param.reviewerUser}";
+		var reviewerRaw = "<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${param.reviewerUser}</spring:escapeBody>";
             if ($.trim(reviewerRaw) !== '') {
                 $dxfPopupField('#reviewerUser').val(reviewerRaw.split(',')).trigger('change.select2');
             } else {

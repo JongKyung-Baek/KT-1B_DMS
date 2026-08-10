@@ -7,10 +7,10 @@
 <script>
 var filePopupGridParam;
 var gridId='gridCommonViewingPopup';
-var VIEWER_URL = '${viewerUrl}';
+var VIEWER_URL = '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${viewerUrl}</spring:escapeBody>';
 $(function() {
 	filePopupGridParam = setPopupGridParam();
-	settingGrid('${gridInfo }', filePopupGridParam, 'filePopupGridParam');
+	settingGrid('<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${gridInfo}</spring:escapeBody>', filePopupGridParam, 'filePopupGridParam');
 });
 
 function setPopupGridParam(){

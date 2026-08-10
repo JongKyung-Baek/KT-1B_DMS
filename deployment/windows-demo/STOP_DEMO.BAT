@@ -9,6 +9,7 @@ if errorlevel 1 (
 
 set "PROJECT_NAME=kt1b-dms-demo"
 set "COMPOSE_FILE=%CD%\runtime\compose.yaml"
+set "SECRETS_FILE=%CD%\.env"
 
 where docker.exe >nul 2>&1
 if errorlevel 1 (
@@ -27,7 +28,7 @@ if errorlevel 1 (
 )
 
 echo [INFO] Stopping the KT-1B DMS demo...
-docker compose -p "%PROJECT_NAME%" -f "%COMPOSE_FILE%" down --remove-orphans
+docker compose --env-file "%SECRETS_FILE%" -p "%PROJECT_NAME%" -f "%COMPOSE_FILE%" down --remove-orphans
 if errorlevel 1 goto :failed
 
 echo [OK] Demo stopped.

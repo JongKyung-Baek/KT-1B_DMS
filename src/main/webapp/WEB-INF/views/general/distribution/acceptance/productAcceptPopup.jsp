@@ -9,7 +9,7 @@
 var popupGridParam;
 var gridId = 'gridDistributionApprovalPopup';
 $(function() {
-	settingGrid('${gridInfo }', setPopupGridParam());
+	settingGrid('<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${gridInfo}</spring:escapeBody>', setPopupGridParam());
 });
 
 

@@ -1,6 +1,7 @@
 ﻿<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
+<%@ taglib prefix="spring" uri="http://www.springframework.org/tags"%>
 <style>
 	.popup-approval-status.ui-dialog,
 	.popup-approval-status {
@@ -119,8 +120,8 @@
 			updatePopupLayout();
 		}
 
-		var objectId = "${fn:escapeXml(param.objectId)}";
-		var approveUrl = "${fn:escapeXml(param.approveUrl)}";
+	var objectId = "<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${param.objectId}</spring:escapeBody>";
+	var approveUrl = "<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${param.approveUrl}</spring:escapeBody>";
 		if (!objectId || !approveUrl) {
 			renderRows([]);
 			return;

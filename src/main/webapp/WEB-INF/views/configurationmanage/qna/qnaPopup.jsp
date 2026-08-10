@@ -8,7 +8,6 @@
 <!-- QnA 팝업(QnA 상세보기)-->
 <script>
 $(function() {
-	//settingGrid('${gridInfo }', setPopupGridParam(), 'popupGridParam');
 
 	$(".ui-dialog .ui-dialog-titlebar-close").click(function(event){
 		console.log("close-popup");

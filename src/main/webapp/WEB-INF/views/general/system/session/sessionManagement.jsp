@@ -107,7 +107,7 @@
 
             // AJAX 요청
             $.ajax({
-                url: "${pageContext.request.contextPath}/extendSession/sessionTime",
+		url: "<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${pageContext.request.contextPath}</spring:escapeBody>/extendSession/sessionTime",
                 type: "POST",
                 contentType: "application/json; charset=UTF-8",  // JSON 형식으로 전송
                 data: JSON.stringify({

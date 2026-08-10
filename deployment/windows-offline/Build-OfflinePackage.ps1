@@ -101,8 +101,12 @@ try {
 
     $warPath = Join-Path $stagingPackage 'app\TDMS-KT-1B.war'
     $backupPath = Join-Path $stagingPackage 'database\kt1b-demo.backup'
+    $secretsInitializerPath = Join-Path $stagingPackage `
+        'runtime\Initialize-DeploymentSecrets.ps1'
     Assert-File -Path $warPath -Description 'Application WAR'
     Assert-File -Path $backupPath -Description 'Sanitized demo backup'
+    Assert-File -Path $secretsInitializerPath `
+        -Description 'Deployment credential initializer'
 
     Write-Host '[2/9] Preparing pinned Linux/AMD64 images...'
     if (-not $SkipImagePull) {
@@ -188,6 +192,7 @@ try {
     $unusedRuntimeFiles = @(
         (Join-Path $packageDirectory 'Dockerfile'),
         (Join-Path $packageDirectory '.dockerignore'),
+        (Join-Path $packageDirectory '.env'),
         (Join-Path $packageDirectory 'app')
     )
     foreach ($unusedPath in $unusedRuntimeFiles) {

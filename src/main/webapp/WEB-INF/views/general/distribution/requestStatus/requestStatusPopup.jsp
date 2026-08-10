@@ -7,10 +7,10 @@
 <!-- 배포승인 - 도면/문서/SW 팝업(요청번호 상세보기)-->
 <script>
 var popupGridParam;
-var objectType = '${objectType}';
+var objectType = '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${objectType}</spring:escapeBody>';
 var gridId = 'gridRequestStatus';
 $(function() {
-	settingGrid('${gridInfo }', setPopupGridParam(), 'popupGridParam');
+	settingGrid('<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${gridInfo}</spring:escapeBody>', setPopupGridParam(), 'popupGridParam');
 	if('DRAWING'==objectType){
 		$("#gridRequestStatus").jqGrid("hideCol", "swVersion");
 	}else if('DOC'==objectType){

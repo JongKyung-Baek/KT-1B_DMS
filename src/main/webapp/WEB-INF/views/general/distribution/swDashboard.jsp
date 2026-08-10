@@ -24,7 +24,7 @@
 		  href="${pageContext.request.contextPath}/resources/css/pages/technical-data-dashboard.css?v=20260802.2">
 	<script>
 		function moveToTechnicalDataList() {
-			location.href = "${pageContext.request.contextPath}/general/distribution/swRequest/";
+			location.href = "<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${pageContext.request.contextPath}</spring:escapeBody>/general/distribution/swRequest/";
 		}
 
 		function openDashboardDocument($item) {

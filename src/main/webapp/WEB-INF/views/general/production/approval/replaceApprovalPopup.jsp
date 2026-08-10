@@ -11,7 +11,7 @@ var popupObjectInfoGridParam;
 var popupGridId = 'gridProductionReplaceApprovalList';
 $(function() {
 	//배포승인 자료 그리드
-	settingGrid('${gridObjectInfo }', setPopupObjectInfoGridParam(), 'popupObjectInfoGridParam');
+	settingGrid('<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${gridObjectInfo}</spring:escapeBody>', setPopupObjectInfoGridParam(), 'popupObjectInfoGridParam');
 });
 </script>
 <div class="dialogContent">

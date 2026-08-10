@@ -9,6 +9,7 @@ if errorlevel 1 (
 
 set "PROJECT_NAME=kt1b-dms-demo"
 set "COMPOSE_FILE=%CD%\runtime\compose.yaml"
+set "SECRETS_FILE=%CD%\.env"
 set "PORT_FILE=%CD%\runtime\.demo-port"
 set "DEMO_PORT=3508"
 if exist "%PORT_FILE%" set /p DEMO_PORT=<"%PORT_FILE%"
@@ -37,7 +38,7 @@ echo ============================================================
 echo  KT-1B DMS Demo - Status
 echo ============================================================
 echo.
-docker compose -p "%PROJECT_NAME%" -f "%COMPOSE_FILE%" ps
+docker compose --env-file "%SECRETS_FILE%" -p "%PROJECT_NAME%" -f "%COMPOSE_FILE%" ps
 echo.
 
 call :check_ready

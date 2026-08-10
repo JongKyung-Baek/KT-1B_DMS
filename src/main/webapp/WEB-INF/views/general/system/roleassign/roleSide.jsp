@@ -13,7 +13,7 @@
 <link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/distribution-invoice.css" media="screen" />
 <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/roleassign-vuexy.css?v=20260802.2" />
 <script>
-	var toolbarInfo = '${toolbarInfo}';
+var toolbarInfo = '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${toolbarInfo}</spring:escapeBody>';
 
 	$(function () {
 		$('.layout-wrapper.bodyWrap .content-wrapper > .container').addClass('distribution-invoice-container system-management-container');

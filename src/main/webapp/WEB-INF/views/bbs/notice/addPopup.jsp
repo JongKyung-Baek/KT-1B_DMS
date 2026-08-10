@@ -9,7 +9,6 @@ var gridAddId = 'gridAddNotice';
 var formAddId = 'formAddNotice';
 var files = [];
 $(function() {
-	//settingGrid('${gridInfo }', setPopupGridParam(), 'popupGridParam');
 
 	function applyNoticeCalendarUI() {
 		['#startDt', '#endDt'].forEach(function(selector) {

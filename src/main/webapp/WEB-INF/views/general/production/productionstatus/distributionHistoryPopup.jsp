@@ -12,8 +12,8 @@
 <script>
 var gridHistoryId = 'gridProductionDistributionHistory';
 
-var gridColmodel = '${gridInfo}';
-var distributionHistoryList = ${historyList };
+var gridColmodel = '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${gridInfo}</spring:escapeBody>';
+var distributionHistoryList = JSON.parse('<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${empty historyList ? "[]" : historyList}</spring:escapeBody>');
 
 var gridHistoryParam;
 var detailInfoIdx;

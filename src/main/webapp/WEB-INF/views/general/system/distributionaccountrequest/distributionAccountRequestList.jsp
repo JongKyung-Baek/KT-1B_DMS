@@ -12,7 +12,7 @@
       href="${pageContext.request.contextPath}/resources/css/pages/distribution-account-request.css?v=20260802.2" media="screen">
 <script>
 window.distributionAccountRequestPage = {
-    contextPath: '${pageContext.request.contextPath}'
+        contextPath: '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${pageContext.request.contextPath}</spring:escapeBody>'
 };
 </script>
 </head>

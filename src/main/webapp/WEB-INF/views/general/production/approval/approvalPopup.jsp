@@ -12,9 +12,9 @@ var popupObjectInfoGridParam;
 var popupGridId = 'gridObjectInfoPopup';
 $(function() {
 	//접수자 정보 그리드
-	settingGrid('${gridRequestInfo }', setPopupRequestInfoGridParam(), 'popupRequestInfoGridParam');
+	settingGrid('<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${gridRequestInfo}</spring:escapeBody>', setPopupRequestInfoGridParam(), 'popupRequestInfoGridParam');
 	//배포승인 자료 그리드
-	settingGrid('${gridObjectInfo }', setPopupObjectInfoGridParam(), 'popupObjectInfoGridParam');
+	settingGrid('<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${gridObjectInfo}</spring:escapeBody>', setPopupObjectInfoGridParam(), 'popupObjectInfoGridParam');
 });
 </script>
 <style>

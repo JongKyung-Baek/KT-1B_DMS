@@ -9,7 +9,6 @@ var gridAddId = 'gridAddQna';
 var formAddId = 'formAddQna';
 var files = [];
 $(function() {
-	//settingGrid('${gridInfo }', setPopupGridParam(), 'popupGridParam');
 });
 
 

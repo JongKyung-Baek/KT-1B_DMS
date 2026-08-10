@@ -241,8 +241,8 @@
 <!--				</choose>-->
 <!--			</if>-->
 <!--&lt;!&ndash; 			<if test='approvalStartDt != null and !approvalStartDt.equals("")'> &ndash;&gt;-->
-<!--&lt;!&ndash; 			AND approvalDt BETWEEN TO_DATE('${approvalStartDt}', 'YYYY-MM-DD') &ndash;&gt;-->
-<!--&lt;!&ndash; 	                         AND TO_DATE('${approvalEndDt} ', 'YYYY-MM-DD')+1 &ndash;&gt;-->
+<!--&lt;!&ndash; 			AND approvalDt BETWEEN TO_DATE(#{approvalStartDt}, 'YYYY-MM-DD') &ndash;&gt;-->
+<!--&lt;!&ndash; 	                         AND TO_DATE(#{approvalEndDt}, 'YYYY-MM-DD')+1 &ndash;&gt;-->
 <!--&lt;!&ndash; 			</if>  &ndash;&gt;-->
 <!--			<if test='requestStartDt != null and !requestStartDt.equals("")'>-->
 <!--				AND requestDt BETWEEN TO_DATE(#{requestStartDt}, 'YYYY-MM-DD')-->
@@ -482,8 +482,8 @@
 <!--	                         AND TO_DATE(#{requestEndDt}, 'YYYY-MM-DD')+1-->
 <!--			</if>-->
 <!--			&lt;!&ndash; <if test='approvalStartDt != null and !approvalStartDt.equals("")'>-->
-<!--			AND approvalDt BETWEEN TO_DATE('${approvalStartDt}', 'YYYY-MM-DD')-->
-<!--	                         AND TO_DATE('${approvalEndDt} ', 'YYYY-MM-DD')+1-->
+<!--			AND approvalDt BETWEEN TO_DATE(#{approvalStartDt}, 'YYYY-MM-DD')-->
+<!--	                         AND TO_DATE(#{approvalEndDt}, 'YYYY-MM-DD')+1-->
 <!--			</if> &ndash;&gt;-->
 <!--			) B1-->
 <!--	</select>-->

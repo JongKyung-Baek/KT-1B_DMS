@@ -18,8 +18,8 @@ var gridProductionParam;
 $(document).ready(function (){
 	setGridAcceptanceParam();
 	setGridProductionParam();
-	settingGrid('${gridAcceptance}', gridAcceptanceParam, 'gridAcceptanceParam');
-	settingGrid('${gridProduction}', gridProductionParam, 'gridProductionParam');
+	settingGrid('<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${gridAcceptance}</spring:escapeBody>', gridAcceptanceParam, 'gridAcceptanceParam');
+	settingGrid('<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${gridProduction}</spring:escapeBody>', gridProductionParam, 'gridProductionParam');
 
 });
 

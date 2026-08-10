@@ -16,7 +16,7 @@
     media="screen" />
 <script>
     var menuTreeList = [];
-    var toolbarInfo = '${toolbarInfo}';
+var toolbarInfo = '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${toolbarInfo}</spring:escapeBody>';
 
     $(function () {
         $('.layout-wrapper.bodyWrap .content-wrapper > .container')

@@ -8,7 +8,7 @@
 var popupGridParam;
 var stopDealGridResizeNs = '.stopDealGridResize';
 $(function() {
-	settingGrid('${gridInfo }', setPopupGridParam(), 'popupGridParam');
+	settingGrid('<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${gridInfo}</spring:escapeBody>', setPopupGridParam(), 'popupGridParam');
 	bindStopDealGridResize();
 	setTimeout(resizeStopDealGrid, 0);
 	setTimeout(resizeStopDealGrid, 120);

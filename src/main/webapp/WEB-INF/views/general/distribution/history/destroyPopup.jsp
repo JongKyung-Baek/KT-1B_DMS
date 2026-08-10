@@ -8,7 +8,7 @@
 <script>
 $(document).ready(function(){
 	setGridParam();
-	settingGrid('${gridInfo }', popupGridParam, 'popupGridParam');
+	settingGrid('<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${gridInfo}</spring:escapeBody>', popupGridParam, 'popupGridParam');
 // 	$("#gridDestroyUploadPopup .cbox").prettyCheckable();
 	$("#"+popupGridId).jqGrid('clearGridData');
 });

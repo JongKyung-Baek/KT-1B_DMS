@@ -1,13 +1,14 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="custom" tagdir="/WEB-INF/tags" %>
+<%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
 
 <!-- <script>
   (function() {
-        var gridId = "${gridId}";
-        var reqType = "${reqType}";
-        var objectType = "${objectType}";
-        var distributeTypeCd = "${distributeTypeCd}";
-        var selectedDataJsonBase64 = "${selectedDataJson}";
+        var gridId = "<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${gridId}</spring:escapeBody>";
+        var reqType = "<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${reqType}</spring:escapeBody>";
+        var objectType = "<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${objectType}</spring:escapeBody>";
+        var distributeTypeCd = "<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${distributeTypeCd}</spring:escapeBody>";
+        var selectedDataJsonBase64 = "<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${selectedDataJson}</spring:escapeBody>";
 
         function decodeHtmlEntities(value) {
                 return $("<textarea/>").html(value || "").text();
@@ -139,11 +140,11 @@
 
   <script>
   (function() {
-      var gridId = "${gridId}";
-      var reqType = "${reqType}";
-      var objectType = "${objectType}";
-      var distributeTypeCd = "${distributeTypeCd}";
-      var selectedDataJsonBase64 = "${selectedDataJson}";
+      var gridId = "<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${gridId}</spring:escapeBody>";
+      var reqType = "<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${reqType}</spring:escapeBody>";
+      var objectType = "<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${objectType}</spring:escapeBody>";
+      var distributeTypeCd = "<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${distributeTypeCd}</spring:escapeBody>";
+      var selectedDataJsonBase64 = "<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${selectedDataJson}</spring:escapeBody>";
 
       function statusText(status) {
           if (status === "QUEUED") return "대기";

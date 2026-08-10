@@ -13,9 +13,9 @@
       href="${pageContext.request.contextPath}/resources/css/pages/distribution-workflow.css?v=20260802.2" media="screen">
 <script>
 window.distributionWorkflowPage = {
-    contextPath: '${pageContext.request.contextPath}',
+    contextPath: '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${pageContext.request.contextPath}</spring:escapeBody>',
     mode: 'mine',
-    openCreateOnLoad: ${workflowOpenCreate or not empty initialItems}
+    openCreateOnLoad: '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${workflowOpenCreate or not empty initialItems}</spring:escapeBody>' === 'true'
 };
 </script>
 </head>

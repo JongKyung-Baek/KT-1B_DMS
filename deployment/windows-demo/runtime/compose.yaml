@@ -7,9 +7,9 @@ services:
     environment:
       POSTGRES_DB: kt1b
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: kt1b_demo_bootstrap_2026
+      POSTGRES_PASSWORD: ${KT1B_POSTGRES_PASSWORD:?KT1B_POSTGRES_PASSWORD is required}
       APP_DB_USER: kt1b_demo
-      APP_DB_PASSWORD: kt1b_demo_local_2026
+      APP_DB_PASSWORD: ${KT1B_DB_PASSWORD:?KT1B_DB_PASSWORD is required}
       KT1B_DEMO_PORT: ${KT1B_DEMO_PORT:-3508}
       POSTGRES_INITDB_ARGS: --encoding=UTF8
       TZ: Asia/Seoul
@@ -48,7 +48,7 @@ services:
     environment:
       KT1B_DB_URL: jdbc:postgresql://db:5432/kt1b
       KT1B_DB_USERNAME: kt1b_demo
-      KT1B_DB_PASSWORD: kt1b_demo_local_2026
+      KT1B_DB_PASSWORD: ${KT1B_DB_PASSWORD:?KT1B_DB_PASSWORD is required}
       LOG_DIR: /var/log/kt1b
       JAVA_TOOL_OPTIONS: -Dfile.encoding=UTF-8 -Duser.language=ko -Duser.country=KR -Duser.timezone=Asia/Seoul -Djava.io.tmpdir=/data/kt1b/tmp
       UPDATE_DISTRIBUTION_SCHEDULER_ENABLED: "false"

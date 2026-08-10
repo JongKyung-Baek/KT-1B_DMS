@@ -13,11 +13,11 @@ var gridProductionId = 'gridProductionHistoryProduction';
 var gridRequestDetailId = 'gridProductionHistoryRequestDetail';
 var gridDetailInfoId = 'gridProductionHistoryDetailInfo';
 
-var historyDetailInfo = ${historyDetailInfo};
-var gridProductionInfo = '${gridProductionInfo}';
-var gridRequestDetailInfo = '${gridRequestDetailInfo}';
-var gridDetailInfo = '${gridDetailInfo}';
-var requestDeployVoList = ${historyDetailInfo.requestDeployVoList };
+var historyDetailInfo = JSON.parse('<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${empty historyDetailInfo ? "{}" : historyDetailInfo}</spring:escapeBody>');
+var gridProductionInfo = '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${gridProductionInfo}</spring:escapeBody>';
+var gridRequestDetailInfo = '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${gridRequestDetailInfo}</spring:escapeBody>';
+var gridDetailInfo = '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${gridDetailInfo}</spring:escapeBody>';
+var requestDeployVoList = JSON.parse('<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${empty historyDetailInfo.requestDeployVoList ? "[]" : historyDetailInfo.requestDeployVoList}</spring:escapeBody>');
 
 var gridProductionParam;
 var gridRequestDetailParam;
@@ -27,7 +27,7 @@ var detailInfoIdx;
 	$(document).ready(function(){
 		setGridProductionParam();
 		setGridRequestDetailParam();
-		settingGridWithData('${gridProductionInfo}', gridProductionParam, 'gridProductionParam');
+		settingGridWithData('<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${gridProductionInfo}</spring:escapeBody>', gridProductionParam, 'gridProductionParam');
 
 
 		var $tab = $('.tabArea ul > li').on('click', function() { // show content that matches the index

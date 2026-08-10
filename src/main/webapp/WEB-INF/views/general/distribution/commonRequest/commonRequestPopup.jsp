@@ -17,7 +17,7 @@
 <script>
 $(document).ready(function(){
 	setGridParam();
-	settingGridWithData('${gridInfo}', popupGridParam, 'popupGridParam');
+	settingGridWithData('<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${gridInfo}</spring:escapeBody>', popupGridParam, 'popupGridParam');
 });
 </script>
 <!-- 도면 팝업 (배포승인요청 버튼) -->

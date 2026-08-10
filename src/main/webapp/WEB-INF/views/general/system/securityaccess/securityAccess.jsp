@@ -17,7 +17,7 @@
           href="${pageContext.request.contextPath}/resources/css/general/system/securityaccess/securityAccess.css?v=20260726.2" media="screen">
     <script>
         window.securityAccessConfig = {
-            contextPath: '${pageContext.request.contextPath}'
+        contextPath: '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${pageContext.request.contextPath}</spring:escapeBody>'
         };
     </script>
     <script type="text/javascript"

@@ -10,6 +10,9 @@ if errorlevel 1 (
 set "PROJECT_NAME=kt1b-dms-offline"
 set "COMPOSE_FILE=%CD%\runtime\compose.yaml"
 set "ENV_FILE=%CD%\runtime\offline.env"
+set "SECRETS_FILE=%CD%\.env"
+set "SECRETS_INITIALIZER=%CD%\runtime\Initialize-DeploymentSecrets.ps1"
+set "DB_VOLUME=kt1b-dms-offline-db-data"
 set "PORT_FILE=%CD%\runtime\.demo-port"
 set "VERIFY_MARKER=%CD%\runtime\.package-verified"
 set "IMAGES_ARCHIVE=%CD%\images\kt1b-dms-offline-images.tar"
@@ -60,6 +63,10 @@ if not exist "%ENV_FILE%" (
     echo [ERROR] Missing file: runtime\offline.env
     goto :failed
 )
+if not exist "%SECRETS_INITIALIZER%" (
+    echo [ERROR] Missing credential initializer: runtime\Initialize-DeploymentSecrets.ps1
+    goto :failed
+)
 if not exist "%IMAGES_ARCHIVE%" (
     echo [ERROR] Missing Docker images: images\kt1b-dms-offline-images.tar
     goto :failed
@@ -103,7 +110,6 @@ if not defined EXPECTED_DB_IMAGE_ID (
     echo [ERROR] KT1B_DB_IMAGE_ID is missing from runtime\offline.env.
     goto :failed
 )
-
 if not exist "%CD%\storage" mkdir "%CD%\storage"
 if errorlevel 1 (
     echo [ERROR] Cannot create the storage folder.
@@ -189,11 +195,14 @@ if errorlevel 1 (
 echo [OK] Application image: %APP_IMAGE%
 echo [OK] Database image:    %DB_IMAGE%
 
+call :ensure_secrets
+if errorlevel 1 goto :failed
+
 echo [4/7] Checking local port %DEMO_PORT%...
 set "APP_CONTAINER="
 set "APP_PUBLISHED="
 set "PORT_OWNED_BY_PROJECT="
-for /f "delims=" %%C in ('docker compose --env-file "%ENV_FILE%" -p "%PROJECT_NAME%" -f "%COMPOSE_FILE%" ps -q app 2^>nul') do set "APP_CONTAINER=%%C"
+for /f "delims=" %%C in ('docker compose --env-file "%ENV_FILE%" --env-file "%SECRETS_FILE%" -p "%PROJECT_NAME%" -f "%COMPOSE_FILE%" ps -q app 2^>nul') do set "APP_CONTAINER=%%C"
 if defined APP_CONTAINER call :inspect_existing_app
 if not defined PORT_OWNED_BY_PROJECT call :check_port_available
 if errorlevel 1 (
@@ -209,13 +218,13 @@ if defined PORT_OWNED_BY_PROJECT if not errorlevel 1 (
 )
 
 echo [5/7] Starting the database and application without network access...
-docker compose --env-file "%ENV_FILE%" -p "%PROJECT_NAME%" -f "%COMPOSE_FILE%" up -d --no-build --pull never --remove-orphans
+docker compose --env-file "%ENV_FILE%" --env-file "%SECRETS_FILE%" -p "%PROJECT_NAME%" -f "%COMPOSE_FILE%" up -d --no-build --pull never --remove-orphans
 if errorlevel 1 (
     echo [ERROR] Docker Compose could not start the offline demo.
     goto :show_failure_logs
 )
 
-docker compose --env-file "%ENV_FILE%" -p "%PROJECT_NAME%" -f "%COMPOSE_FILE%" exec -T db bash /docker-entrypoint-initdb.d/40-configure-demo-port.sh >nul 2>&1
+docker compose --env-file "%ENV_FILE%" --env-file "%SECRETS_FILE%" -p "%PROJECT_NAME%" -f "%COMPOSE_FILE%" exec -T db bash /docker-entrypoint-initdb.d/40-configure-demo-port.sh >nul 2>&1
 if errorlevel 1 (
     echo [ERROR] The demo URL configuration could not be synchronized.
     goto :show_failure_logs
@@ -269,6 +278,21 @@ if /i not "%APP_PLATFORM%"=="linux/amd64" exit /b 1
 if /i not "%DB_PLATFORM%"=="linux/amd64" exit /b 1
 exit /b 0
 
+:ensure_secrets
+if exist "%SECRETS_FILE%" goto :validate_secrets
+docker volume inspect "%DB_VOLUME%" >nul 2>&1
+if not errorlevel 1 (
+    echo [ERROR] Existing offline database data was found, but .env is missing.
+    echo [INFO]  Copy the .env file from the previous installation into this folder.
+    echo [INFO]  New credentials were not generated, so the database was not changed.
+    exit /b 1
+)
+
+:validate_secrets
+powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass ^
+    -File "%SECRETS_INITIALIZER%" -SecretsPath "%SECRETS_FILE%"
+exit /b %errorlevel%
+
 :inspect_existing_app
 for /f "delims=" %%M in ('docker port "%APP_CONTAINER%" 3508/tcp 2^>nul') do set "APP_PUBLISHED=%%M"
 if not defined APP_PUBLISHED exit /b 0
@@ -302,7 +326,7 @@ exit /b 0
 
 :inspect_service
 set "SERVICE_CONTAINER="
-for /f "delims=" %%C in ('docker compose --env-file "%ENV_FILE%" -p "%PROJECT_NAME%" -f "%COMPOSE_FILE%" ps -q %1 2^>nul') do set "SERVICE_CONTAINER=%%C"
+for /f "delims=" %%C in ('docker compose --env-file "%ENV_FILE%" --env-file "%SECRETS_FILE%" -p "%PROJECT_NAME%" -f "%COMPOSE_FILE%" ps -q %1 2^>nul') do set "SERVICE_CONTAINER=%%C"
 if not defined SERVICE_CONTAINER exit /b 0
 call :inspect_container "%SERVICE_CONTAINER%"
 exit /b %errorlevel%
@@ -319,10 +343,10 @@ exit /b 0
 
 :show_failure_logs
 echo.
-docker compose --env-file "%ENV_FILE%" -p "%PROJECT_NAME%" -f "%COMPOSE_FILE%" ps
+docker compose --env-file "%ENV_FILE%" --env-file "%SECRETS_FILE%" -p "%PROJECT_NAME%" -f "%COMPOSE_FILE%" ps
 echo.
 echo [INFO] Recent container logs:
-docker compose --env-file "%ENV_FILE%" -p "%PROJECT_NAME%" -f "%COMPOSE_FILE%" logs --tail 120 app db
+docker compose --env-file "%ENV_FILE%" --env-file "%SECRETS_FILE%" -p "%PROJECT_NAME%" -f "%COMPOSE_FILE%" logs --tail 120 app db
 echo [INFO] Application file logs: %CD%\logs
 
 :failed

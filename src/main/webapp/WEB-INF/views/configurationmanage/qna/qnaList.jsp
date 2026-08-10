@@ -2,6 +2,7 @@
     pageEncoding="UTF-8"%>
 <%@ taglib prefix="custom" tagdir="/WEB-INF/tags" %>
 <%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
+<%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
 <sec:authentication property="principal" var="sessionUser" />
 <!doctype html>
 <html lang="kr">
@@ -10,7 +11,7 @@
 <title>${tdmsBrand.systemName}</title>
 <script>
 var multiflag;
-var user = '${sessionUser.roleGroup}';
+var user = '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${sessionUser.roleGroup}</spring:escapeBody>';
 if(user == 'RG_001'){
 	multiflag = true;
 }else{

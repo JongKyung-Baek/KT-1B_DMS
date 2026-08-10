@@ -9,6 +9,7 @@ if errorlevel 1 (
 
 set "PROJECT_NAME=kt1b-dms-demo"
 set "COMPOSE_FILE=%CD%\runtime\compose.yaml"
+set "SECRETS_FILE=%CD%\.env"
 
 where docker.exe >nul 2>&1
 if errorlevel 1 (
@@ -29,7 +30,7 @@ if errorlevel 1 (
 echo [INFO] Showing application and database logs.
 echo [INFO] Press Ctrl+C to stop viewing logs.
 echo.
-docker compose -p "%PROJECT_NAME%" -f "%COMPOSE_FILE%" logs --tail 200 --follow app db
+docker compose --env-file "%SECRETS_FILE%" -p "%PROJECT_NAME%" -f "%COMPOSE_FILE%" logs --tail 200 --follow app db
 set "LOG_EXIT=%errorlevel%"
 popd
 endlocal & exit /b %LOG_EXIT%

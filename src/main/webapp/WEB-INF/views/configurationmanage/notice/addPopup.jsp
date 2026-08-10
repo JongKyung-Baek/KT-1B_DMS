@@ -11,7 +11,6 @@ var gridAddId = 'gridAddConfigNotice';
 var formAddId = 'formAddConfigNotice';
 var files = [];
 $(function() {
-	//settingGrid('${gridInfo }', setPopupGridParam(), 'popupGridParam');
 });
 
 

@@ -16,7 +16,6 @@ var gridId='gridNoticePopup';
 var updateflag;
 var files = [];
 $(function() {
-	//settingGrid('${gridInfo }', setPopupGridParam(), 'popupGridParam');
 	$(".ui-dialog .ui-dialog-titlebar-close").click(function(event){
 			console.log("close-popup");
 			closePopup('popupDialog');

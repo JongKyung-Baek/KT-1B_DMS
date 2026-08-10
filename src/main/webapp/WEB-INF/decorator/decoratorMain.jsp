@@ -69,7 +69,7 @@
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/prettyCheck/prettyCheckable.min.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/select2-master/dist/js/select2.full.min.js"></script>
 	<script>
-	loadBundles('<%=LocaleUtil.getCurrentLanguage(request) %>', '${pageContext.request.contextPath}');
+	loadBundles('<spring:escapeBody htmlEscape="false" javaScriptEscape="true"><%=LocaleUtil.getCurrentLanguage(request) %></spring:escapeBody>', '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${pageContext.request.contextPath}</spring:escapeBody>');
 	</script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common_util.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common_dialog.js?v=20260802.1"></script>
@@ -84,11 +84,11 @@
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/rng.js"></script>
 
 	<script>
-	var CONTEXT_PATH = "${pageContext.request.contextPath}";
-	var USER_ID = '${sessionUser.userId}';
-	var USER_CD = '${sessionUser.userCd}';
-	var USER_NM = '${sessionUser.userNm}';
-	var APPROVER_YN = '${sessionUser.approverYn}';
+	var CONTEXT_PATH = "<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${pageContext.request.contextPath}</spring:escapeBody>";
+	var USER_ID = '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${sessionUser.userId}</spring:escapeBody>';
+	var USER_CD = '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${sessionUser.userCd}</spring:escapeBody>';
+	var USER_NM = '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${sessionUser.userNm}</spring:escapeBody>';
+	var APPROVER_YN = '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${sessionUser.approverYn}</spring:escapeBody>';
 	var gridParam;
 	console.log("main");
 	$(document).ready(function(){

@@ -9,13 +9,13 @@
 <script type="text/javascript" src="/resources/js/views/general/common/searchAllPopup.js"></script>
 <!-- SW 팝업(일괄검색 버튼)-->
 <script>
-var popupInfo = ${popupInfo};
+var popupInfo = JSON.parse('<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${empty popupInfo ? "{}" : popupInfo}</spring:escapeBody>');
 var popupGridParam;
 var searchAllGridId = 'gridSearchAll';
 
 $(document).ready(function(){
 	setPopupGridParam();
-	settingGrid('${gridInfo }', popupGridParam, 'popupGridParam');
+	settingGrid('<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${gridInfo}</spring:escapeBody>', popupGridParam, 'popupGridParam');
 	$("#"+searchAllGridId).jqGrid('clearGridData');
 	$("#partialMatch").prettyCheckable({labelPosition:'right'});
 	gridParam.useLike = 'N';

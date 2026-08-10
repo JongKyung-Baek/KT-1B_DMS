@@ -29,9 +29,9 @@
       href="${pageContext.request.contextPath}/resources/css/pages/access-history.css?v=20260802.2" media="screen">
 <script>
     window.recordHistoryConfig = {
-        contextPath: '${pageContext.request.contextPath}',
-        endpoint: '${historyEndpoint}',
-        mode: '${historyMode}'
+        contextPath: '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${pageContext.request.contextPath}</spring:escapeBody>',
+        endpoint: '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${historyEndpoint}</spring:escapeBody>',
+        mode: '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${historyMode}</spring:escapeBody>'
     };
 
     $(function () {

@@ -17,26 +17,36 @@ public class MenuDao extends AbstractDao{
 	}
 
 	public List<MenuVO> getMenuTopList(UserVO param){
-		return list("sql.Menu.getMenuTopList", param);
+		List<MenuVO> list = list("sql.Menu.getMenuTopList", param);
+		sanitizeNavigationUrls(list);
+		return list;
 	}
 
 	public List<MenuVO> getMenuSubList(UserVO param){
 		List<MenuVO> list = list("sql.Menu.getMenuSubList", param);
 
-		for(MenuVO vo : list) {
-			if(null != vo.getMenuUrl()) {
-				vo.setMenuUrl(toNavigationUrl(vo.getMenuUrl()));
-			}
-		}
+		sanitizeNavigationUrls(list);
 
 		return list;
 	}
 
+	private static void sanitizeNavigationUrls(List<MenuVO> list) {
+		if(list == null) {
+			return;
+		}
+		for(MenuVO vo : list) {
+			if(vo != null) {
+				vo.setMenuUrl(toNavigationUrl(vo.getMenuUrl()));
+			}
+		}
+	}
+
 	static String toNavigationUrl(String securedMenuUrl) {
-		if (securedMenuUrl == null) {
+		String safeMenuUrl = MenuUrlPolicy.safeNavigationUrlOrNull(securedMenuUrl);
+		if (safeMenuUrl == null) {
 			return null;
 		}
-		return securedMenuUrl.replaceFirst("/\\*\\*$", "/");
+		return safeMenuUrl.replaceFirst("/\\*\\*$", "/");
 	}
 
 	public List<SearchComboInfoVO> getMenuCombo(String menuNm){

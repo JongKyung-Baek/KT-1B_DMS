@@ -191,11 +191,25 @@ body.login-page #loginForm .mb-6 > .form-label {
 }
 
 #layout-menu .app-brand-kai-logo {
+	display: block;
+	flex: 0 0 72px;
+	width: 72px;
+	height: 44px;
+	object-fit: contain;
+}
+
+#layout-menu .app-brand-logo {
   display: block;
-  flex: 0 0 72px;
-  width: 72px;
-  height: 44px;
+  flex: 0 1 auto;
+  width: auto;
+  max-width: 112px;
+  height: 30px;
   object-fit: contain;
+}
+
+#layout-menu .app-brand-logo--wide {
+  width: 112px;
+  max-width: 112px;
 }
 
 @media (min-width: 1200px) {

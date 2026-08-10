@@ -2,6 +2,11 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags"%>
 <c:url var="homeUrl" value="/" />
+<c:url var="brandLogoUrl" value="${tdmsBrand.logoLightPath}" />
+<c:set var="brandLogoClass" value="error-brand__mark" />
+<c:if test="${tdmsBrand.wideLogo}">
+	<c:set var="brandLogoClass" value="error-brand__mark error-brand__mark--wide" />
+</c:if>
 <spring:message code="feature.locale.code" text="ko" var="pageLocale"/>
 <spring:message code="${errorTitleCode}" var="errorTitle"/>
 <spring:message code="${errorMessageCode}" var="errorMessage"/>
@@ -14,10 +19,10 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<meta name="robots" content="noindex, nofollow">
-	<title><c:out value="${errorTitle}" /> | <spring:message code="feature.error.brand" text="KT-1B 기술자료관리"/></title>
+	<title><c:out value="${errorTitle}" /> | <c:choose><c:when test="${tdmsBrand.alternate}"><c:out value="${tdmsBrand.systemName}" /></c:when><c:otherwise><spring:message code="feature.error.brand" text="KT-1B 기술자료관리"/></c:otherwise></c:choose></title>
 	<%@ include file="/WEB-INF/jspf/favicon.jspf" %>
 	<link rel="stylesheet"
-		  href="${pageContext.request.contextPath}/resources/css/pages/error-page.css?v=20260802.3">
+		  href="${pageContext.request.contextPath}/resources/css/pages/error-page.css?v=20260804.1">
 	<script defer
 			src="${pageContext.request.contextPath}/resources/js/error-page.js?v=20260726.1"></script>
 </head>
@@ -27,12 +32,29 @@
 			<div class="error-card__accent" aria-hidden="true"></div>
 
 			<header class="error-brand">
-				<img class="error-brand__mark"
-					 src="${pageContext.request.contextPath}/resources/images/brand/kai-logo.png?v=20260802.1"
-					 width="72" height="47" alt="KAI">
+				<c:choose>
+					<c:when test="${tdmsBrand.alternate}">
+						<img class="${brandLogoClass}"
+							 src="${brandLogoUrl}?v=20260804.1"
+							 alt="${tdmsBrand.logoAlt}">
+					</c:when>
+					<c:otherwise>
+						<img class="error-brand__mark"
+							 src="${pageContext.request.contextPath}/resources/images/brand/kai-logo.png?v=20260802.1"
+							 width="72" height="47" alt="KAI">
+					</c:otherwise>
+				</c:choose>
 				<div>
-					<strong><spring:message code="feature.error.brand" text="KT-1B 기술자료관리"/></strong>
-					<span><spring:message code="feature.error.systemName" text="기술자료관리시스템"/></span>
+					<c:choose>
+						<c:when test="${tdmsBrand.alternate}">
+							<strong><c:out value="${tdmsBrand.companyName}" /></strong>
+							<span><c:out value="${tdmsBrand.systemName}" /></span>
+						</c:when>
+						<c:otherwise>
+							<strong><spring:message code="feature.error.brand" text="KT-1B 기술자료관리"/></strong>
+							<span><spring:message code="feature.error.systemName" text="기술자료관리시스템"/></span>
+						</c:otherwise>
+					</c:choose>
 				</div>
 			</header>
 

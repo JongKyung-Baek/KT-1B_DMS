@@ -30,10 +30,13 @@ class ErrorPagePresentationContractTest {
         assertTrue(view.contains("class=\"error-status-chip\""));
         assertTrue(view.contains("class=\"error-button error-button--primary\""));
         assertTrue(view.contains("class=\"error-button error-button--secondary\""));
-        assertTrue(view.contains("/resources/images/brand/kai-logo.png?v=20260802.1"));
+        assertTrue(view.contains("value=\"${tdmsBrand.logoLightPath}\""));
+        assertTrue(view.contains("${tdmsBrand.logoAlt}"));
+        assertTrue(view.contains("${tdmsBrand.companyName}"));
+        assertTrue(view.contains("${tdmsBrand.systemName}"));
         assertFalse(view.contains("/resources/images/favicon/favicon.svg"));
         assertTrue(view.contains("/WEB-INF/jspf/favicon.jspf"));
-        assertTrue(view.contains("/resources/css/pages/error-page.css?v=20260802.3"));
+        assertTrue(view.contains("/resources/css/pages/error-page.css?v=20260804.1"));
         assertTrue(css.contains("--error-accent: var(--tdms-primary, #034c8c)"));
         assertTrue(css.contains("--error-primary: var(--tdms-primary, #034c8c)"));
         assertTrue(css.contains("url(\"../fonts/Pretendard-Medium.woff2\")"));

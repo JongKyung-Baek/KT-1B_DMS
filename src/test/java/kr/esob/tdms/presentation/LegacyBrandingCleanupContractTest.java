@@ -108,12 +108,15 @@ class LegacyBrandingCleanupContractTest {
     }
 
     @Test
-    void loginUsesKaiLogoAndTdmsBrowserTitle() throws IOException {
+    void loginKeepsPrimaryKaiBranchAndUsesPortAwareBrowserTitle()
+            throws IOException {
         String login = Files.readString(Path.of(
                 "src", "main", "webapp", "WEB-INF", "views", "login",
                 "login.jsp"), StandardCharsets.UTF_8);
 
-        assertTrue(login.contains("<title>TDMS - Login</title>"));
+        assertTrue(login.contains("${tdmsBrand.systemName}"));
+        assertTrue(login.contains("${tdmsBrand.alternate}"));
+        assertTrue(login.contains("${tdmsBrand.logoDarkPath}"));
         assertTrue(login.contains("class=\"kai-logo\""));
         assertTrue(login.contains("src=\"data:image/png;base64,"));
     }

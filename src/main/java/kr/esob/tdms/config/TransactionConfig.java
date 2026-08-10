@@ -50,6 +50,7 @@ public class TransactionConfig {
 		// with an UnexpectedRollbackException after the response has been committed.
 		pointcut.setExpression("execution(* kr.esob.tdms..*.*(..))"
 				+ " && !within(kr.esob.tdms.commonlogic.audit.RequestAuditFilter)"
+				+ " && !within(kr.esob.tdms.commonlogic.branding..*)"
 				+ " && !within(kr.esob.tdms.commonlogic.security.MobileClientAccessFilter)"
 				+ " && !within(kr.esob.tdms.commonlogic.viewerintegration.ViewerCallbackAuthenticationFilter)");
 		return new DefaultPointcutAdvisor(pointcut, txAdvice());

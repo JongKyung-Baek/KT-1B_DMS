@@ -22,6 +22,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import kr.esob.tdms.commonlogic.branding.TdmsBrandResolver;
+import kr.esob.tdms.commonlogic.branding.TdmsBrandView;
 import kr.esob.tdms.commonlogic.viewerintegration.ViewerIntegrationProperties;
 import kr.esob.tdms.controller.general.distribution.accountrequest.DistributionAccountIntegrationProperties;
 
@@ -51,11 +53,14 @@ public class MobileClientAccessFilter extends OncePerRequestFilter {
 
     private final MessageSource messageSource;
     private final ObjectMapper objectMapper;
+    private final TdmsBrandResolver brandResolver;
 
     public MobileClientAccessFilter(MessageSource messageSource,
-                                    ObjectMapper objectMapper) {
+                                    ObjectMapper objectMapper,
+                                    TdmsBrandResolver brandResolver) {
         this.messageSource = messageSource;
         this.objectMapper = objectMapper;
+        this.brandResolver = brandResolver;
     }
 
     @Override
@@ -91,11 +96,16 @@ public class MobileClientAccessFilter extends OncePerRequestFilter {
             return;
         }
 
+        TdmsBrandView brand = brandResolver.resolve(request, locale);
         request.setAttribute("mobileBlockLocale", locale.getLanguage());
-        request.setAttribute("mobileBlockBrand",
-                message("feature.error.brand", locale));
+        request.setAttribute("mobileBlockBrand", brand.getCompanyName());
         request.setAttribute("mobileBlockSystemName",
-                message("feature.error.systemName", locale));
+                brand.getSystemDescription());
+        request.setAttribute("mobileBlockLogoPath", brand.getLogoLightPath());
+        request.setAttribute("mobileBlockLogoAlt", brand.getLogoAlt());
+        request.setAttribute("mobileBlockWideLogo", brand.isWideLogo());
+        request.setAttribute("mobileBlockAlternateBrand",
+                brand.isAlternate());
         request.setAttribute("mobileBlockStatusAria",
                 message("feature.error.status.aria", locale));
         request.setAttribute("mobileBlockEyebrow",

@@ -7,7 +7,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title><spring:message code="feature.password.browserTitle" text="비밀번호 재설정"/> | KT-1B</title>
+  <title><spring:message code="feature.password.browserTitle" text="비밀번호 재설정"/> | <c:choose><c:when test="${tdmsBrand.alternate}"><c:out value="${tdmsBrand.systemName}" /></c:when><c:otherwise>KT-1B</c:otherwise></c:choose></title>
   <%@ include file="/WEB-INF/jspf/csrf-meta.jspf" %>
   <%@ include file="/WEB-INF/jspf/favicon.jspf" %>
   <style>
@@ -463,8 +463,16 @@
   <main class="wrap">
     <section class="visual">
       <div class="brand">
-        <div class="brand-ko">KT-1B</div>
-        <div class="brand-en">DMS</div>
+        <c:choose>
+          <c:when test="${tdmsBrand.alternate}">
+            <div class="brand-ko"><c:out value="${tdmsBrand.systemName}" /></div>
+            <div class="brand-en"><c:out value="${tdmsBrand.companyName}" /></div>
+          </c:when>
+          <c:otherwise>
+            <div class="brand-ko">KT-1B</div>
+            <div class="brand-en">DMS</div>
+          </c:otherwise>
+        </c:choose>
       </div>
 
       <div class="visual-title">
@@ -477,8 +485,16 @@
       </div>
 
       <div class="visual-footer">
-        KT-1B<br />
-        Technical Data Management System
+        <c:choose>
+          <c:when test="${tdmsBrand.alternate}">
+            <c:out value="${tdmsBrand.systemName}" /><br />
+            <c:out value="${tdmsBrand.companyName}" />
+          </c:when>
+          <c:otherwise>
+            KT-1B<br />
+            Technical Data Management System
+          </c:otherwise>
+        </c:choose>
       </div>
     </section>
 

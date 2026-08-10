@@ -8,7 +8,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>KT-1B DMS</title>
+<title>${tdmsBrand.systemName}</title>
 <link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/distribution-invoice.css" media="screen" />
 <script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/views/general/distribution/acceptance/common-form-vuexy.js"></script>
 <script>

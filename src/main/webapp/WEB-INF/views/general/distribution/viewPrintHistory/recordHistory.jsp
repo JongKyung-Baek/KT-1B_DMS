@@ -22,7 +22,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title><c:out value="${historyTitle}"/> - KT-1B DMS</title>
+<title><c:out value="${historyTitle}"/> - <c:out value="${tdmsBrand.systemName}"/></title>
 <link type="text/css" rel="stylesheet"
       href="${pageContext.request.contextPath}/resources/css/pages/distribution-invoice.css" media="screen">
 <link type="text/css" rel="stylesheet"

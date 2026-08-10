@@ -121,6 +121,12 @@ body.error-page {
 	box-shadow: 0 6px 14px rgba(1, 69, 148, 0.17);
 }
 
+.error-brand__mark--wide {
+	flex: 0 1 auto;
+	width: 150px;
+	max-width: 150px;
+}
+
 .error-brand div {
 	display: grid;
 	gap: 3px;
@@ -386,6 +392,12 @@ body.error-page {
 		flex-basis: 64px;
 		width: 64px;
 		height: 42px;
+	}
+
+	.error-brand__mark--wide {
+		flex-basis: auto;
+		width: 120px;
+		max-width: 120px;
 	}
 
 	.error-card__content {

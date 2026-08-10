@@ -7,7 +7,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${pageTitle} - KT-1B TDMS</title>
+<title>${pageTitle} - ${tdmsBrand.systemName}</title>
 <link type="text/css" rel="stylesheet"
       href="${pageContext.request.contextPath}/resources/css/pages/distribution-workflow.css?v=20260802.2" media="screen">
 <script>

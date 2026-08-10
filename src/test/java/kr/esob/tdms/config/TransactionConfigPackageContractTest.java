@@ -14,6 +14,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import kr.esob.tdms.commonlogic.viewerintegration.ViewerCallbackAuthenticationFilter;
 import kr.esob.tdms.commonlogic.viewerintegration.ViewerIntegrationService;
+import kr.esob.tdms.commonlogic.branding.TdmsBrandFilter;
 import kr.esob.tdms.commonlogic.security.MobileClientAccessFilter;
 import org.junit.jupiter.api.Test;
 import org.springframework.aop.PointcutAdvisor;
@@ -33,6 +34,8 @@ class TransactionConfigPackageContractTest {
         assertTrue(source.contains(
                 "!within(kr.esob.tdms.commonlogic.audit.RequestAuditFilter)"));
         assertTrue(source.contains(
+                "!within(kr.esob.tdms.commonlogic.branding..*)"));
+        assertTrue(source.contains(
                 "!within(kr.esob.tdms.commonlogic.security."
                         + "MobileClientAccessFilter)"));
         assertTrue(source.contains(
@@ -51,6 +54,13 @@ class TransactionConfigPackageContractTest {
                 mock(PlatformTransactionManager.class));
         PointcutAdvisor advisor = (PointcutAdvisor) config.txAdviceAdvisor();
 
+        assertFalse(advisor.getPointcut().getMethodMatcher().matches(
+                TdmsBrandFilter.class.getDeclaredMethod(
+                        "doFilterInternal",
+                        HttpServletRequest.class,
+                        HttpServletResponse.class,
+                        FilterChain.class),
+                TdmsBrandFilter.class));
         assertFalse(advisor.getPointcut().getMethodMatcher().matches(
                 MobileClientAccessFilter.class.getDeclaredMethod(
                         "doFilterInternal",

@@ -13,6 +13,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.context.support.StaticMessageSource;
+import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockHttpSession;
@@ -20,6 +21,8 @@ import org.springframework.mock.web.MockHttpSession;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import kr.esob.tdms.commonlogic.branding.TdmsBrandProperties;
+import kr.esob.tdms.commonlogic.branding.TdmsBrandResolver;
 import kr.esob.tdms.commonlogic.viewerintegration.ViewerIntegrationProperties;
 import kr.esob.tdms.controller.general.distribution.accountrequest.DistributionAccountIntegrationProperties;
 
@@ -35,8 +38,12 @@ class MobileClientAccessFilterTest {
                     + "AppleWebKit/537.36 Chrome/126.0 Safari/537.36";
 
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final StaticMessageSource messageSource = messages();
+    private final TdmsBrandResolver brandResolver = new TdmsBrandResolver(
+            new TdmsBrandProperties(), messageSource);
     private final MobileClientAccessFilter filter =
-            new MobileClientAccessFilter(messages(), objectMapper);
+            new MobileClientAccessFilter(
+                    messageSource, objectMapper, brandResolver);
 
     @Test
     void mobileLoginIsBlockedBeforeAuthenticationWithStandaloneHtml()
@@ -63,7 +70,61 @@ class MobileClientAccessFilterTest {
         assertEquals("없습니다",
                 request.getAttribute("mobileBlockTitleLine2"));
         assertEquals("ko", request.getAttribute("mobileBlockLocale"));
+        assertEquals(messageSource.getMessage("feature.error.systemName",
+                        null, Locale.KOREAN),
+                request.getAttribute("mobileBlockSystemName"));
+        assertEquals(Boolean.FALSE,
+                request.getAttribute("mobileBlockAlternateBrand"));
         assertFalse(invoked.get());
+        assertNull(request.getSession(false));
+        assertNull(response.getHeader("Set-Cookie"));
+        assertBlockedHeaders(response);
+    }
+
+    @Test
+    void alternatePortMobilePageUsesRuntimeBrandWithoutCreatingSession()
+            throws Exception {
+        TdmsBrandProperties properties = new TdmsBrandProperties();
+        properties.setResourceLoader(new DefaultResourceLoader());
+        properties.setEnabled(true);
+        properties.setPort(443);
+        properties.setSystemName("ESOB DMS");
+        properties.setCompanyNameKo("이솝소프트(주)");
+        properties.setCompanyNameEn("ESOB SOFT LTD.");
+        properties.setLogoLightPath(
+                "/resources/images/brand/esobsoft-logo-blue.png");
+        properties.setLogoDarkPath(
+                "/resources/images/brand/esobsoft-logo-white.png");
+        properties.setLogoAlt("ESOBSOFT");
+        properties.afterPropertiesSet();
+        MobileClientAccessFilter alternateFilter =
+                new MobileClientAccessFilter(messageSource, objectMapper,
+                        new TdmsBrandResolver(properties, messageSource));
+        MockHttpServletRequest request = request("GET", "/login/loginPage");
+        request.setServerPort(443);
+        request.addHeader("User-Agent", ANDROID_PHONE);
+        request.addHeader("Accept", "text/html");
+        request.addHeader("Accept-Language", "ko-KR,ko;q=0.9");
+        request.addPreferredLocale(Locale.KOREA);
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        alternateFilter.doFilter(request, response,
+                (ignoredRequest, ignoredResponse) -> {
+                    throw new AssertionError("Blocked request reached chain");
+                });
+
+        assertEquals("이솝소프트(주)",
+                request.getAttribute("mobileBlockBrand"));
+        assertEquals("ESOB DMS",
+                request.getAttribute("mobileBlockSystemName"));
+        assertEquals("/resources/images/brand/esobsoft-logo-blue.png",
+                request.getAttribute("mobileBlockLogoPath"));
+        assertEquals("ESOBSOFT",
+                request.getAttribute("mobileBlockLogoAlt"));
+        assertEquals(Boolean.TRUE,
+                request.getAttribute("mobileBlockWideLogo"));
+        assertEquals(Boolean.TRUE,
+                request.getAttribute("mobileBlockAlternateBrand"));
         assertNull(request.getSession(false));
         assertNull(response.getHeader("Set-Cookie"));
         assertBlockedHeaders(response);

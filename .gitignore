@@ -44,6 +44,10 @@ build/
 !src/main/resources/static/images/icon/*.png
 !src/main/resources/static/images/platform/*.png
 !src/main/resources/static/images/brand/kai-logo.png
+!src/main/resources/static/images/brand/esobsoft-logo-blue.png
+!src/main/resources/static/images/brand/esobsoft-logo-white.png
+!src/main/resources/static/images/brand/esobsoft-favicon-32x32.png
+!src/main/resources/static/images/brand/esobsoft-apple-touch-icon.png
 !src/main/resources/static/images/favicon/*.png
 !src/main/resources/static/images/depth*.png
 src/main/webapp/excel/grid_20263181336596.xlsx

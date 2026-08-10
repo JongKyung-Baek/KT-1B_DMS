@@ -64,10 +64,20 @@
 			<aside id="layout-menu" class="layout-menu menu-vertical menu">
 				<div class="app-brand demo">
 					<a href="${pageContext.request.contextPath}/general/distribution/swRequest/dashboard" class="app-brand-link"
-					   aria-label="KAI dashboard">
-						<img class="app-brand-kai-logo"
-							 src="${pageContext.request.contextPath}/resources/images/brand/kai-logo.png"
-							 width="72" height="44" alt="KAI" />
+					   aria-label="${tdmsBrand.alternate ? fn:escapeXml(tdmsBrand.logoAlt) : 'KAI'} dashboard">
+						<c:choose>
+							<c:when test="${tdmsBrand.alternate}">
+								<img class="app-brand-logo app-brand-logo--wide"
+									 src="${pageContext.request.contextPath}${tdmsBrand.logoLightPath}"
+									 alt="${fn:escapeXml(tdmsBrand.logoAlt)}"
+									 width="112" height="30" />
+							</c:when>
+							<c:otherwise>
+								<img class="app-brand-kai-logo"
+									 src="${pageContext.request.contextPath}/resources/images/brand/kai-logo.png"
+									 width="72" height="44" alt="KAI" />
+							</c:otherwise>
+						</c:choose>
 					</a>
 						<a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
 							<i class="icon-base ti menu-toggle-icon d-none d-xl-block"></i>

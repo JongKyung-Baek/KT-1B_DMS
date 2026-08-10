@@ -1,5 +1,10 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" session="false"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<c:url var="mobileBlockLogoUrl" value="${mobileBlockLogoPath}" />
+<c:set var="mobileBlockLogoClass" value="error-brand__mark" />
+<c:if test="${mobileBlockWideLogo}">
+	<c:set var="mobileBlockLogoClass" value="error-brand__mark error-brand__mark--wide" />
+</c:if>
 <!doctype html>
 <html lang="${mobileBlockLocale}">
 <head>
@@ -9,7 +14,7 @@
 	<title><c:out value="${mobileBlockTitle}" /> | <c:out value="${mobileBlockBrand}" /></title>
 	<%@ include file="/WEB-INF/jspf/favicon.jspf" %>
 	<link rel="stylesheet"
-		  href="${pageContext.request.contextPath}/resources/css/pages/error-page.css?v=20260802.3">
+		  href="${pageContext.request.contextPath}/resources/css/pages/error-page.css?v=20260804.1">
 </head>
 <body class="error-page">
 	<main class="error-page__shell">
@@ -17,9 +22,18 @@
 			<div class="error-card__accent" aria-hidden="true"></div>
 
 			<header class="error-brand">
-				<img class="error-brand__mark"
-					 src="${pageContext.request.contextPath}/resources/images/brand/kai-logo.png?v=20260802.1"
-					 width="72" height="47" alt="KAI">
+				<c:choose>
+					<c:when test="${mobileBlockAlternateBrand}">
+						<img class="${mobileBlockLogoClass}"
+							 src="${mobileBlockLogoUrl}?v=20260804.1"
+							 alt="${mobileBlockLogoAlt}">
+					</c:when>
+					<c:otherwise>
+						<img class="error-brand__mark"
+							 src="${pageContext.request.contextPath}/resources/images/brand/kai-logo.png?v=20260802.1"
+							 width="72" height="47" alt="KAI">
+					</c:otherwise>
+				</c:choose>
 				<div>
 					<strong><c:out value="${mobileBlockBrand}" /></strong>
 					<span><c:out value="${mobileBlockSystemName}" /></span>

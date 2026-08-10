@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 class SidebarBrandLayoutContractTest {
 
     @Test
-    void sidebarUsesOfficialKaiLogoOnlyAndLeavesCollapsedDesktopLayout()
+    void sidebarUsesPortSelectedLogoAndLeavesCollapsedDesktopLayout()
             throws IOException {
         String css = Files.readString(Path.of(
                 "src", "main", "resources", "static", "css", "custom-font.css"),
@@ -25,18 +25,29 @@ class SidebarBrandLayoutContractTest {
                 StandardCharsets.UTF_8);
         Path kaiLogo = Path.of("src", "main", "resources", "static",
                 "images", "brand", "kai-logo.png");
+        Path alternateLogo = Path.of("src", "main", "resources", "static",
+                "images", "brand", "esobsoft-logo-blue.png");
 
-        assertTrue(sidebar.contains("aria-label=\"KAI dashboard\""));
+        assertTrue(sidebar.contains("tdmsBrand.logoAlt"));
+        assertTrue(sidebar.contains("tdmsBrand.logoLightPath"));
+        assertTrue(sidebar.contains("tdmsBrand.alternate"));
+        assertTrue(sidebar.contains("class=\"app-brand-logo app-brand-logo--wide\""));
         assertTrue(sidebar.contains("class=\"app-brand-kai-logo\""));
-        assertTrue(sidebar.contains("/resources/images/brand/kai-logo.png"));
         assertTrue(sidebar.contains("width=\"72\" height=\"44\" alt=\"KAI\""));
+        assertTrue(sidebar.contains("width=\"112\" height=\"30\""));
         assertFalse(sidebar.contains("KT-1B TDMS"));
         assertFalse(sidebar.contains("class=\"app-brand-text"));
         assertTrue(Files.isRegularFile(kaiLogo));
+        assertTrue(Files.isRegularFile(alternateLogo));
         assertTrue(Files.size(kaiLogo) > 0);
+        assertTrue(Files.size(alternateLogo) > 0);
+        assertTrue(css.contains("#layout-menu .app-brand-logo"));
+        assertTrue(css.contains("#layout-menu .app-brand-logo--wide"));
         assertTrue(css.contains("#layout-menu .app-brand-kai-logo"));
         assertTrue(css.contains("object-fit: contain"));
-        assertTrue(mainDecorator.contains("custom-font.css?v=20260803.1"));
+        assertTrue(css.contains("max-width: 112px"));
+        assertTrue(css.contains("height: 30px"));
+        assertTrue(mainDecorator.contains("custom-font.css?v=20260804.2"));
         assertTrue(css.contains("@media (min-width: 1200px)"));
         assertTrue(css.contains(".layout-menu-collapsed:not(.layout-menu-hover)"));
         assertTrue(css.contains("#layout-menu .app-brand-link"));

@@ -9,7 +9,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${pageTitle} - KT-1B TDMS</title>
+<title>${pageTitle} - ${tdmsBrand.systemName}</title>
 <link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/distribution-invoice.css" media="screen" />
 <link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/role-vuexy.css?v=20260803.1" media="screen" />
 <style>

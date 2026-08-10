@@ -38,7 +38,7 @@
 	<link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/js/select2-master/dist/css/select2.css" media="screen" />
 	<link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/style.css?v=20260802.2" media="screen" />
 	<link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/popup-common.css?v=20260802.2" media="screen" />
-	<link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/custom-font.css?v=20260803.1" media="screen" />
+	<link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/custom-font.css?v=20260804.2" media="screen" />
 	<link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/popup-vuexy-edit-user.css?v=20260802.2" media="screen" />
 	<style>
 		/* Legacy layout compatibility under Vuexy wrapper */

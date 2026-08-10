@@ -21,7 +21,7 @@
 	<link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/js/select2-master/dist/css/select2.css" media="screen" />
 	<link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/resources/prettyCheck/prettyCheckable.css" />
 	<link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/style.css?v=20260802.2" media="screen" />
-	<link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/custom-font.css?v=20260803.1" media="screen" />
+	<link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/custom-font.css?v=20260804.2" media="screen" />
 
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/jquery-3.4.1.min.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/i18n/grid.locale-<%=LocaleUtil.getJqGridLanguage(request) %>.js"></script>

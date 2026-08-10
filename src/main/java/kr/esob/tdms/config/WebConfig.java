@@ -27,11 +27,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.navercorp.lucy.security.xss.servletfilter.XssEscapeServletFilter;
 
 import kr.esob.tdms.commonlogic.interceptor.CommonCheckInterceptor;
+import kr.esob.tdms.commonlogic.branding.TdmsBrandFilter;
 import kr.esob.tdms.commonlogic.message.SupportedLocaleChangeInterceptor;
 import kr.esob.tdms.util.HTMLCharacterEscapes;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
+import javax.servlet.DispatcherType;
 import javax.servlet.SessionCookieConfig;
 import javax.servlet.SessionTrackingMode;
 
@@ -88,6 +90,20 @@ public class WebConfig implements WebMvcConfigurer{
 		registrationBean.setOrder(1);
 		registrationBean.addUrlPatterns("*");    //filter瑜?嫄곗튌 url patterns
 		return registrationBean;
+	}
+
+	@Bean
+	public FilterRegistrationBean<TdmsBrandFilter> tdmsBrandFilterRegistration(
+			TdmsBrandFilter filter) {
+		FilterRegistrationBean<TdmsBrandFilter> registration =
+				new FilterRegistrationBean<TdmsBrandFilter>(filter);
+		registration.setOrder(
+				org.springframework.core.Ordered.HIGHEST_PRECEDENCE + 20);
+		registration.setDispatcherTypes(
+				DispatcherType.REQUEST, DispatcherType.FORWARD,
+				DispatcherType.ERROR);
+		registration.addUrlPatterns("/*");
+		return registration;
 	}
 
 

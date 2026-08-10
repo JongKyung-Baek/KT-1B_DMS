@@ -18,6 +18,8 @@ class MobileAccessBlockPresentationContractTest {
             "src/main/resources/static/css/pages/error-page.css");
     private static final Path KAI_LOGO = Path.of(
             "src/main/resources/static/images/brand/kai-logo.png");
+    private static final Path ALTERNATE_LOGO = Path.of(
+            "src/main/resources/static/images/brand/esobsoft-logo-blue.png");
 
     @Test
     void mobileBlockPageIsSessionlessAndUsesCurrentSafeErrorDesign()
@@ -25,6 +27,7 @@ class MobileAccessBlockPresentationContractTest {
         String view = Files.readString(VIEW, StandardCharsets.UTF_8);
         String css = Files.readString(CSS, StandardCharsets.UTF_8);
         byte[] logo = Files.readAllBytes(KAI_LOGO);
+        byte[] alternateLogo = Files.readAllBytes(ALTERNATE_LOGO);
 
         assertTrue(view.contains("session=\"false\""));
         assertTrue(view.contains("<body class=\"error-page\""));
@@ -32,7 +35,11 @@ class MobileAccessBlockPresentationContractTest {
         assertTrue(view.contains("class=\"error-status-chip\""));
         assertTrue(view.contains("class=\"error-help\""));
         assertTrue(view.contains("HTTP 403"));
-        assertTrue(view.contains("/resources/css/pages/error-page.css?v=20260802.3"));
+        assertTrue(view.contains("/resources/css/pages/error-page.css?v=20260804.1"));
+        assertTrue(view.contains("value=\"${mobileBlockLogoPath}\""));
+        assertTrue(view.contains("${mobileBlockLogoAlt}"));
+        assertTrue(view.contains("${mobileBlockWideLogo}"));
+        assertTrue(view.contains("${mobileBlockAlternateBrand}"));
         assertTrue(view.contains("/resources/images/brand/kai-logo.png?v=20260802.1"));
         assertFalse(view.contains("/resources/images/favicon/favicon.svg"));
         assertTrue(view.contains("/WEB-INF/jspf/favicon.jspf"));
@@ -47,6 +54,9 @@ class MobileAccessBlockPresentationContractTest {
         assertArrayEquals(new byte[] {
                 (byte) 0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a
         }, Arrays.copyOf(logo, 8));
+        assertArrayEquals(new byte[] {
+                (byte) 0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a
+        }, Arrays.copyOf(alternateLogo, 8));
         assertTrue(view.contains("<c:out value=\"${mobileBlockMessage}\""));
         assertFalse(view.contains("data-error-back"));
         assertFalse(view.contains("error-button"));

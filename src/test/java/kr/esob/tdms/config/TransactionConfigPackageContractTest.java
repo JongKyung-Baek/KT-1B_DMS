@@ -15,6 +15,8 @@ import javax.servlet.http.HttpServletResponse;
 import kr.esob.tdms.commonlogic.viewerintegration.ViewerCallbackAuthenticationFilter;
 import kr.esob.tdms.commonlogic.viewerintegration.ViewerIntegrationService;
 import kr.esob.tdms.commonlogic.branding.TdmsBrandFilter;
+import kr.esob.tdms.commonlogic.pdfconversion.PdfConversionDao;
+import kr.esob.tdms.commonlogic.pdfconversion.PdfConversionWorker;
 import kr.esob.tdms.commonlogic.security.MobileClientAccessFilter;
 import org.junit.jupiter.api.Test;
 import org.springframework.aop.PointcutAdvisor;
@@ -41,6 +43,9 @@ class TransactionConfigPackageContractTest {
         assertTrue(source.contains(
                 "!within(kr.esob.tdms.commonlogic.viewerintegration."
                         + "ViewerCallbackAuthenticationFilter)"));
+        assertTrue(source.contains(
+                "!within(kr.esob.tdms.commonlogic.pdfconversion."
+                        + "PdfConversionWorker)"));
         assertTrue(source.contains("UnexpectedRollbackException"));
         assertFalse(source.contains("kr.esob.docs"));
     }
@@ -85,5 +90,26 @@ class TransactionConfigPackageContractTest {
                         String.class,
                         String.class),
                 ViewerIntegrationService.class));
+    }
+
+    @Test
+    void pdfWorkerOrchestrationIsOutsideTransactionButClaimDaoStillCommits()
+            throws Exception {
+        TransactionConfig config = new TransactionConfig();
+        ReflectionTestUtils.setField(
+                config,
+                "transactionManager",
+                mock(PlatformTransactionManager.class));
+        PointcutAdvisor advisor = (PointcutAdvisor) config.txAdviceAdvisor();
+
+        assertFalse(advisor.getPointcut().getMethodMatcher().matches(
+                PdfConversionWorker.class.getMethod("poll"),
+                PdfConversionWorker.class));
+        assertTrue(advisor.getPointcut().getMethodMatcher().matches(
+                PdfConversionDao.class.getMethod("claim", java.util.Map.class),
+                PdfConversionDao.class));
+        assertTrue(advisor.getPointcut().getMethodMatcher().matches(
+                PdfConversionDao.class.getMethod("failExpiredExhausted"),
+                PdfConversionDao.class));
     }
 }

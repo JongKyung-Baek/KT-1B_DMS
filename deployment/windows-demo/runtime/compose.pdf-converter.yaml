@@ -1,0 +1,117 @@
+services:
+  app:
+    environment:
+      TDMS_PDF_CONVERSION_ENABLED: "true"
+      TDMS_PDF_CONVERSION_BASE_URL: http://127.0.0.1:9001
+      TDMS_PDF_CONVERSION_CLIENT_ID: ${TDMS_PDF_CONVERSION_CLIENT_ID:?TDMS_PDF_CONVERSION_CLIENT_ID is required}
+      TDMS_PDF_CONVERSION_SHARED_SECRET: ${TDMS_PDF_CONVERSION_SHARED_SECRET:?TDMS_PDF_CONVERSION_SHARED_SECRET is required}
+      TDMS_PDF_CONVERSION_WORK_DIR: /data/kt1b/tmp/pdf-conversion
+      TDMS_PDF_CONVERSION_OUTPUT_FOLDER: CONVERTED_PDF
+      TDMS_PDF_CONVERSION_READ_TIMEOUT_MS: "660000"
+      TDMS_PDF_CONVERSION_STALE_MINUTES: "30"
+      TDMS_FILE_API_BASE_URL: http://127.0.0.1:18080
+      TDMS_FILE_API_KEY: ${KT1B_FILE_API_KEY:?KT1B_FILE_API_KEY is required}
+      TDMS_FILE_API_SW_FOLDER: UPLOAD
+
+  file-api:
+    image: ${KT1B_FILE_API_IMAGE:?KT1B_FILE_API_IMAGE is required}
+    restart: unless-stopped
+    # The API shares the app namespace and binds only to loopback. No host or
+    # peer-container route can reach the authenticated file endpoints.
+    network_mode: "service:app"
+    environment:
+      TDDSFT_HOST: 127.0.0.1
+      TDDSFT_PORT: "18080"
+      TDDSFT_API_KEY: ${KT1B_FILE_API_KEY:?KT1B_FILE_API_KEY is required}
+      TDDSFT_STORAGE_DIR: /data/kt1b/files
+      # Uploads must be staged on the same filesystem as the destination so
+      # TDDS-FT's final os.replace remains atomic across Docker mounts.
+      TDDSFT_TMP_DIR: /data/kt1b/files/.tdds-ft-tmp
+      TDDSFT_LOG_FILE: /var/log/tdds-ft/tdds-ft.log
+      TDDSFT_MAX_UPLOAD_SIZE: "1073741824"
+      TDDSFT_CHUNK_SIZE: "1048576"
+      TZ: Asia/Seoul
+    volumes:
+      - ../storage:/data/kt1b/files
+      - ../logs/file-api:/var/log/tdds-ft
+    read_only: true
+    init: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 1.0
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - >-
+          import json,urllib.request;
+          body=json.load(urllib.request.urlopen('http://127.0.0.1:18080/api/v1/health',timeout=3));
+          assert body=={'service':'TDDS-FT','status':'UP'}
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 15s
+    stop_grace_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+  pdf-converter:
+    image: ${KT1B_PDF_CONVERTER_IMAGE:?KT1B_PDF_CONVERTER_IMAGE is required}
+    restart: unless-stopped
+    # Sharing only the app network namespace keeps every converter route,
+    # including its historical endpoints, unreachable from the host and the
+    # public Internet. TDMS reaches the signed v1 route on loopback.
+    network_mode: "service:app"
+    environment:
+      # The converter shares the app network namespace, so binding to
+      # loopback is required to keep its legacy unauthenticated routes from
+      # being reachable by peer containers on the application network.
+      SERVER_ADDRESS: 127.0.0.1
+      INTEGRATION_TDMS_ENABLED: "true"
+      INTEGRATION_TDMS_CLIENT_ID: ${TDMS_PDF_CONVERSION_CLIENT_ID:?TDMS_PDF_CONVERSION_CLIENT_ID is required}
+      INTEGRATION_TDMS_SHARED_SECRET: ${TDMS_PDF_CONVERSION_SHARED_SECRET:?TDMS_PDF_CONVERSION_SHARED_SECRET is required}
+      INTEGRATION_TDMS_CACHE_DIRECTORY: /var/lib/e-pdf-converter/tdms-cache
+      INTEGRATION_TDMS_CACHE_SCHEMA: ${TDMS_PDF_CONVERSION_CACHE_SCHEMA:-converter-v2}
+      CONVERT_KEEP_TEMP_FILES: "false"
+      TZ: Asia/Seoul
+    volumes:
+      - pdf-converter-cache:/var/lib/e-pdf-converter/tdms-cache
+    tmpfs:
+      - /tmp:size=2g,mode=1777
+    read_only: true
+    init: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 256
+    mem_limit: 4g
+    cpus: 2.0
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          test "$$(curl --silent --output /dev/null --write-out '%{http_code}'
+          http://127.0.0.1:9001/api/integrations/tdms/v1/convert)" = "405"
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+    stop_grace_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+volumes:
+  pdf-converter-cache:
+    name: kt1b-dms-pdf-converter-cache

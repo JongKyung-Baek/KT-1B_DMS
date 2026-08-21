@@ -48,11 +48,19 @@ public class TransactionConfig {
 		// service transaction, a handled validation exception can mark the outer
 		// filter transaction rollback-only and replace the intended 4xx response
 		// with an UnexpectedRollbackException after the response has been committed.
+		//
+		// The PDF worker is also an orchestration boundary. Its poll method claims
+		// work and immediately hands it to another thread. Keeping the whole poll
+		// in one transaction lets the executor run before the claim is committed;
+		// a later projection failure can then roll the claim back altogether. The
+		// DAO/service calls made by the worker remain independently advised and
+		// therefore commit each queue state transition before hand-off.
 		pointcut.setExpression("execution(* kr.esob.tdms..*.*(..))"
 				+ " && !within(kr.esob.tdms.commonlogic.audit.RequestAuditFilter)"
 				+ " && !within(kr.esob.tdms.commonlogic.branding..*)"
 				+ " && !within(kr.esob.tdms.commonlogic.security.MobileClientAccessFilter)"
-				+ " && !within(kr.esob.tdms.commonlogic.viewerintegration.ViewerCallbackAuthenticationFilter)");
+				+ " && !within(kr.esob.tdms.commonlogic.viewerintegration.ViewerCallbackAuthenticationFilter)"
+				+ " && !within(kr.esob.tdms.commonlogic.pdfconversion.PdfConversionWorker)");
 		return new DefaultPointcutAdvisor(pointcut, txAdvice());
 	}
 	

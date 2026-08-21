@@ -57,10 +57,10 @@ class FileDownloadControllerTest {
 
     @BeforeEach
     void setUp() {
-        previousSystemConfig = SystemConfig.systemConfig;
+        previousSystemConfig = SystemConfig.snapshot();
         Map<String, String> config = new HashMap<String, String>();
         config.put(Constant.SYSTEM_CONFIG + "|UPDOWN_PATH", tempDir.toString());
-        SystemConfig.systemConfig = config;
+        SystemConfig.replaceSystemConfig(config);
 
         runtimeStore = new DownloadRuntimeStore(new DownloadRuntimeTestDao());
         updownV2Service = mock(CommonUpdownV2Service.class);
@@ -69,7 +69,7 @@ class FileDownloadControllerTest {
 
     @AfterEach
     void tearDown() {
-        SystemConfig.systemConfig = previousSystemConfig;
+        SystemConfig.replaceSystemConfig(previousSystemConfig);
     }
 
     @Test

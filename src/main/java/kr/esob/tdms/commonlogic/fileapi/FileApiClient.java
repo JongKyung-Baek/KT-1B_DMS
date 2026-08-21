@@ -11,6 +11,8 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class FileApiClient {
 	private static final int CONNECT_TIMEOUT_MS = 10000;
@@ -81,6 +83,36 @@ public class FileApiClient {
 	}
 
 	public byte[] download(String fileName, String folder) {
+		try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+			download(fileName, folder, output);
+			return output.toByteArray();
+		} catch (IOException e) {
+			throw new IllegalStateException("File API download failed.", e);
+		}
+	}
+
+	/**
+	 * Streams a repository object to a local file without buffering the whole
+	 * technical-data file in the application heap.
+	 */
+	public void downloadTo(String fileName, String folder, Path target) {
+		if (target == null) {
+			throw new IllegalArgumentException("target is null");
+		}
+		try {
+			Path parent = target.toAbsolutePath().normalize().getParent();
+			if (parent != null) {
+				Files.createDirectories(parent);
+			}
+			try (OutputStream output = Files.newOutputStream(target)) {
+				download(fileName, folder, output);
+			}
+		} catch (IOException e) {
+			throw new IllegalStateException("File API download failed.", e);
+		}
+	}
+
+	private void download(String fileName, String folder, OutputStream output) {
 		String baseUrl = trimTrailingSlash(SystemConfig.getSystemConfigValue("FILE_API_BASE_URL"));
 		String apiKey = SystemConfig.getSystemConfigValue("FILE_API_KEY");
 		if (baseUrl.isEmpty()) {
@@ -91,6 +123,9 @@ public class FileApiClient {
 		}
 		if (fileName == null || fileName.trim().isEmpty()) {
 			throw new IllegalArgumentException("fileName is empty");
+		}
+		if (output == null) {
+			throw new IllegalArgumentException("output is null");
 		}
 
 		HttpURLConnection connection = null;
@@ -108,15 +143,12 @@ public class FileApiClient {
 				throw new IllegalStateException("File API download failed. status=" + status);
 			}
 
-			try (InputStream input = connection.getInputStream();
-				 ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+			try (InputStream input = connection.getInputStream()) {
 				byte[] buffer = new byte[8192];
 				int read;
 				while ((read = input.read(buffer)) != -1) {
 					output.write(buffer, 0, read);
 				}
-				byte[] bytes = output.toByteArray();
-				return bytes;
 			}
 		} catch (IOException e) {
 			throw new IllegalStateException("File API download failed.", e);

@@ -37,6 +37,7 @@ public class SwRegisterPopupParam extends CommonParam {
     private String ccbIssueDt;
     private String approver;
     private String reviewerUser;
+    private String processingStatus;
 
 
     private List<DocRegisterPopupParam> paramList;

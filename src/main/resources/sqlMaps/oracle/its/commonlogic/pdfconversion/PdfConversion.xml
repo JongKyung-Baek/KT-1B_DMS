@@ -1,0 +1,339 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="sql.PdfConversion">
+
+    <resultMap id="jobMap"
+            type="kr.esob.tdms.commonlogic.pdfconversion.PdfConversionJob">
+        <id property="conversionId" column="conversion_id"/>
+        <result property="objectType" column="object_type"/>
+        <result property="objectId" column="object_id"/>
+        <result property="fileNo" column="file_no"/>
+        <result property="sourceFileName" column="source_file_name"/>
+        <result property="sourceFilePath" column="source_file_path"/>
+        <result property="sourceSizeBytes" column="source_size_bytes"/>
+        <result property="sourceSha256" column="source_sha256"/>
+        <result property="outputFileName" column="output_file_name"/>
+        <result property="outputFilePath" column="output_file_path"/>
+        <result property="outputSizeBytes" column="output_size_bytes"/>
+        <result property="outputSha256" column="output_sha256"/>
+        <result property="status" column="status_cd"/>
+        <result property="attemptCount" column="attempt_count"/>
+        <result property="maxAttempts" column="max_attempts"/>
+        <result property="nextAttemptAt" column="next_attempt_at"/>
+        <result property="claimToken" column="claim_token"/>
+        <result property="claimedAt" column="claimed_at"/>
+        <result property="claimExpiresAt" column="claim_expires_at"/>
+        <result property="startedAt" column="started_at"/>
+        <result property="completedAt" column="completed_at"/>
+        <result property="current" column="current_yn"/>
+        <result property="lastError" column="last_error"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <sql id="jobColumns">
+        conversion_id, object_type, object_id, file_no,
+        source_file_name, source_file_path, source_size_bytes, source_sha256,
+        output_file_name, output_file_path, output_size_bytes, output_sha256,
+        status_cd, attempt_count, max_attempts, next_attempt_at,
+        claim_token, claimed_at, claim_expires_at, started_at, completed_at,
+        current_yn, last_error, created_at, updated_at
+    </sql>
+
+    <!-- The data-changing CTE first retires a different current source and
+         then upserts the exact object/file/hash identity. -->
+    <select id="enqueue" resultMap="jobMap">
+        WITH logical_file_lock AS MATERIALIZED (
+            SELECT pg_advisory_xact_lock(
+                hashtextextended(
+                    CONCAT_WS(CHR(31),
+                        CAST(#{objectType} AS text),
+                        CAST(#{objectId} AS text),
+                        CAST(#{fileNo} AS text)),
+                    CAST(0 AS bigint))) AS lock_acquired
+        ),
+        superseded AS (
+            UPDATE docs_pdf_conversion
+               SET current_yn = FALSE,
+                   status_cd = CASE
+                       WHEN status_cd IN ('SUCCEEDED', 'NOT_REQUIRED') THEN status_cd
+                       ELSE 'SUPERSEDED'
+                   END,
+                   claim_token = NULL,
+                   claimed_at = NULL,
+                   claim_expires_at = NULL,
+                   completed_at = CASE
+                       WHEN status_cd IN ('SUCCEEDED', 'NOT_REQUIRED') THEN completed_at
+                       ELSE CURRENT_TIMESTAMP
+                   END,
+                   updated_at = CURRENT_TIMESTAMP
+              FROM logical_file_lock
+             WHERE object_type = #{objectType}
+               AND object_id = #{objectId}
+               AND file_no = #{fileNo}
+               AND current_yn = TRUE
+               AND source_sha256 &lt;&gt; LOWER(#{sourceSha256})
+            RETURNING 1
+        ),
+        supersede_barrier AS (
+            SELECT logical_file_lock.lock_acquired,
+                   (SELECT COUNT(*) FROM superseded) AS superseded_count
+              FROM logical_file_lock
+        ),
+        upserted AS (
+            INSERT INTO docs_pdf_conversion (
+                conversion_id, object_type, object_id, file_no,
+                source_file_name, source_file_path, source_size_bytes,
+                source_sha256, status_cd, attempt_count, max_attempts,
+                next_attempt_at, current_yn
+            )
+            SELECT CAST(#{conversionId} AS uuid), #{objectType}, #{objectId}, #{fileNo},
+                   #{sourceFileName}, #{sourceFilePath}, #{sourceSizeBytes},
+                   LOWER(#{sourceSha256}), 'PENDING', 0,
+                   GREATEST(COALESCE(NULLIF(#{maxAttempts}, 0), 3), 1),
+                   CURRENT_TIMESTAMP, TRUE
+              FROM supersede_barrier
+            ON CONFLICT (object_type, object_id, file_no, source_sha256)
+            DO UPDATE SET
+                source_file_name = EXCLUDED.source_file_name,
+                source_file_path = EXCLUDED.source_file_path,
+                source_size_bytes = EXCLUDED.source_size_bytes,
+                max_attempts = GREATEST(
+                    EXCLUDED.max_attempts,
+                    CASE
+                        WHEN docs_pdf_conversion.status_cd IN ('SUCCEEDED', 'NOT_REQUIRED')
+                             AND docs_pdf_conversion.output_file_path IS NOT NULL
+                            THEN docs_pdf_conversion.attempt_count
+                        WHEN docs_pdf_conversion.status_cd = 'PROCESSING'
+                             AND docs_pdf_conversion.claim_expires_at &gt; CURRENT_TIMESTAMP
+                            THEN docs_pdf_conversion.attempt_count
+                        ELSE 1
+                    END),
+                current_yn = TRUE,
+                status_cd = CASE
+                    WHEN docs_pdf_conversion.status_cd IN ('SUCCEEDED', 'NOT_REQUIRED')
+                         AND docs_pdf_conversion.output_file_path IS NOT NULL
+                        THEN docs_pdf_conversion.status_cd
+                    WHEN docs_pdf_conversion.status_cd = 'PROCESSING'
+                         AND docs_pdf_conversion.claim_expires_at &gt; CURRENT_TIMESTAMP
+                        THEN 'PROCESSING'
+                    ELSE 'PENDING'
+                END,
+                attempt_count = CASE
+                    WHEN docs_pdf_conversion.status_cd IN ('SUCCEEDED', 'NOT_REQUIRED')
+                         AND docs_pdf_conversion.output_file_path IS NOT NULL
+                        THEN docs_pdf_conversion.attempt_count
+                    WHEN docs_pdf_conversion.status_cd = 'PROCESSING'
+                         AND docs_pdf_conversion.claim_expires_at &gt; CURRENT_TIMESTAMP
+                        THEN docs_pdf_conversion.attempt_count
+                    ELSE 0
+                END,
+                next_attempt_at = CASE
+                    WHEN docs_pdf_conversion.status_cd IN ('SUCCEEDED', 'NOT_REQUIRED')
+                         AND docs_pdf_conversion.output_file_path IS NOT NULL
+                        THEN docs_pdf_conversion.next_attempt_at
+                    WHEN docs_pdf_conversion.status_cd = 'PROCESSING'
+                         AND docs_pdf_conversion.claim_expires_at &gt; CURRENT_TIMESTAMP
+                        THEN docs_pdf_conversion.next_attempt_at
+                    ELSE CURRENT_TIMESTAMP
+                END,
+                claim_token = CASE
+                    WHEN docs_pdf_conversion.status_cd = 'PROCESSING'
+                         AND docs_pdf_conversion.claim_expires_at &gt; CURRENT_TIMESTAMP
+                        THEN docs_pdf_conversion.claim_token ELSE NULL END,
+                claimed_at = CASE
+                    WHEN docs_pdf_conversion.status_cd = 'PROCESSING'
+                         AND docs_pdf_conversion.claim_expires_at &gt; CURRENT_TIMESTAMP
+                        THEN docs_pdf_conversion.claimed_at ELSE NULL END,
+                claim_expires_at = CASE
+                    WHEN docs_pdf_conversion.status_cd = 'PROCESSING'
+                         AND docs_pdf_conversion.claim_expires_at &gt; CURRENT_TIMESTAMP
+                        THEN docs_pdf_conversion.claim_expires_at ELSE NULL END,
+                started_at = CASE
+                    WHEN docs_pdf_conversion.status_cd IN ('SUCCEEDED', 'NOT_REQUIRED', 'PROCESSING')
+                        THEN docs_pdf_conversion.started_at ELSE NULL END,
+                completed_at = CASE
+                    WHEN docs_pdf_conversion.status_cd IN ('SUCCEEDED', 'NOT_REQUIRED')
+                         AND docs_pdf_conversion.output_file_path IS NOT NULL
+                        THEN docs_pdf_conversion.completed_at ELSE NULL END,
+                last_error = NULL,
+                updated_at = CURRENT_TIMESTAMP
+            RETURNING docs_pdf_conversion.*
+        )
+        SELECT <include refid="jobColumns"/> FROM upserted
+    </select>
+
+    <select id="selectById" resultMap="jobMap">
+        SELECT <include refid="jobColumns"/>
+          FROM docs_pdf_conversion
+         WHERE conversion_id = CAST(#{conversionId} AS uuid)
+    </select>
+
+    <select id="selectCurrent" resultMap="jobMap">
+        SELECT <include refid="jobColumns"/>
+          FROM docs_pdf_conversion
+         WHERE object_type = #{objectType}
+           AND object_id = #{objectId}
+           AND file_no = #{fileNo}
+           AND current_yn = TRUE
+         LIMIT 1
+    </select>
+
+    <select id="selectReusableByHash" resultMap="jobMap">
+        SELECT <include refid="jobColumns"/>
+          FROM docs_pdf_conversion
+         WHERE source_sha256 = LOWER(#{sourceSha256})
+           AND status_cd IN ('SUCCEEDED', 'NOT_REQUIRED')
+           AND output_file_path IS NOT NULL
+           AND output_sha256 IS NOT NULL
+           AND output_size_bytes IS NOT NULL
+         ORDER BY current_yn DESC, completed_at DESC NULLS LAST
+         LIMIT 1
+    </select>
+
+    <select id="selectDueIds" resultType="string">
+        SELECT conversion_id::text
+          FROM docs_pdf_conversion
+         WHERE current_yn = TRUE
+           AND attempt_count &lt; max_attempts
+           AND (
+               (status_cd = 'PENDING' AND next_attempt_at &lt;= CURRENT_TIMESTAMP)
+               OR (status_cd = 'PROCESSING'
+                   AND claim_expires_at &lt;= CURRENT_TIMESTAMP)
+           )
+         ORDER BY next_attempt_at, created_at, conversion_id
+         LIMIT #{limit}
+    </select>
+
+    <select id="claim" resultMap="jobMap">
+        WITH claimed AS (
+            UPDATE docs_pdf_conversion
+               SET status_cd = 'PROCESSING',
+                   attempt_count = attempt_count + 1,
+                   claim_token = CAST(#{claimToken} AS uuid),
+                   claimed_at = CURRENT_TIMESTAMP,
+                   claim_expires_at = CURRENT_TIMESTAMP
+                       + (GREATEST(CAST(#{leaseSeconds} AS integer), 1)
+                          * INTERVAL '1 second'),
+                   started_at = COALESCE(started_at, CURRENT_TIMESTAMP),
+                   completed_at = NULL,
+                   last_error = NULL,
+                   updated_at = CURRENT_TIMESTAMP
+             WHERE conversion_id = CAST(#{conversionId} AS uuid)
+               AND current_yn = TRUE
+               AND attempt_count &lt; max_attempts
+               AND (
+                   (status_cd = 'PENDING' AND next_attempt_at &lt;= CURRENT_TIMESTAMP)
+                   OR (status_cd = 'PROCESSING'
+                       AND claim_expires_at &lt;= CURRENT_TIMESTAMP)
+               )
+            RETURNING docs_pdf_conversion.*
+        )
+        SELECT <include refid="jobColumns"/> FROM claimed
+    </select>
+
+    <!-- A worker can die after consuming its final attempt. Such a row is no
+         longer claimable, so close it explicitly once its lease expires. -->
+    <select id="failExpiredExhausted" resultMap="jobMap">
+        WITH failed AS (
+        UPDATE docs_pdf_conversion
+           SET status_cd = 'FAILED',
+               claim_token = NULL,
+               claimed_at = NULL,
+               claim_expires_at = NULL,
+               completed_at = CURRENT_TIMESTAMP,
+               last_error = CASE
+                   WHEN NULLIF(BTRIM(last_error), '') IS NULL
+                       THEN 'Conversion worker lease expired after all attempts were exhausted.'
+                   ELSE last_error
+               END,
+               updated_at = CURRENT_TIMESTAMP
+         WHERE current_yn = TRUE
+           AND status_cd = 'PROCESSING'
+           AND claim_expires_at &lt;= CURRENT_TIMESTAMP
+           AND attempt_count &gt;= max_attempts
+        RETURNING docs_pdf_conversion.*
+        )
+        SELECT <include refid="jobColumns"/> FROM failed
+    </select>
+
+    <update id="markSucceeded">
+        UPDATE docs_pdf_conversion
+           SET status_cd = 'SUCCEEDED',
+               output_file_name = #{outputFileName},
+               output_file_path = #{outputFilePath},
+               output_size_bytes = #{outputSizeBytes},
+               output_sha256 = LOWER(#{outputSha256}),
+               claim_token = NULL,
+               claimed_at = NULL,
+               claim_expires_at = NULL,
+               completed_at = CURRENT_TIMESTAMP,
+               last_error = NULL,
+               updated_at = CURRENT_TIMESTAMP
+         WHERE conversion_id = CAST(#{conversionId} AS uuid)
+           AND status_cd = 'PROCESSING'
+           AND claim_token = CAST(#{claimToken} AS uuid)
+    </update>
+
+    <update id="markRetry">
+        UPDATE docs_pdf_conversion
+           SET status_cd = CASE
+                   WHEN attempt_count &lt; max_attempts THEN 'PENDING'
+                   ELSE 'FAILED'
+               END,
+               next_attempt_at = CURRENT_TIMESTAMP
+                   + (GREATEST(CAST(#{retryDelaySeconds} AS integer), 0)
+                      * INTERVAL '1 second'),
+               claim_token = NULL,
+               claimed_at = NULL,
+               claim_expires_at = NULL,
+               completed_at = CASE
+                   WHEN attempt_count &lt; max_attempts THEN NULL
+                   ELSE CURRENT_TIMESTAMP
+               END,
+               last_error = LEFT(#{lastError}, 2000),
+               updated_at = CURRENT_TIMESTAMP
+         WHERE conversion_id = CAST(#{conversionId} AS uuid)
+           AND status_cd = 'PROCESSING'
+           AND claim_token = CAST(#{claimToken} AS uuid)
+    </update>
+
+    <update id="markFailed">
+        UPDATE docs_pdf_conversion
+           SET status_cd = 'FAILED',
+               claim_token = NULL,
+               claimed_at = NULL,
+               claim_expires_at = NULL,
+               completed_at = CURRENT_TIMESTAMP,
+               last_error = LEFT(#{lastError}, 2000),
+               updated_at = CURRENT_TIMESTAMP
+         WHERE conversion_id = CAST(#{conversionId} AS uuid)
+           AND status_cd = 'PROCESSING'
+           AND claim_token = CAST(#{claimToken} AS uuid)
+    </update>
+
+    <update id="markNotRequired">
+        UPDATE docs_pdf_conversion
+           SET status_cd = 'NOT_REQUIRED',
+               output_file_name = #{outputFileName},
+               output_file_path = #{outputFilePath},
+               output_size_bytes = #{outputSizeBytes},
+               output_sha256 = LOWER(#{outputSha256}),
+               claim_token = NULL,
+               claimed_at = NULL,
+               claim_expires_at = NULL,
+               started_at = COALESCE(started_at, CURRENT_TIMESTAMP),
+               completed_at = CURRENT_TIMESTAMP,
+               last_error = NULL,
+               updated_at = CURRENT_TIMESTAMP
+         WHERE conversion_id = CAST(#{conversionId} AS uuid)
+           AND current_yn = TRUE
+           AND (
+               status_cd = 'PENDING'
+               OR (status_cd = 'PROCESSING'
+                   AND claim_token = CAST(#{claimToken} AS uuid))
+           )
+    </update>
+
+</mapper>

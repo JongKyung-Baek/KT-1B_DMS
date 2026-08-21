@@ -127,6 +127,6 @@ class DistributionAccountRequestPageContractTest {
 
     private String read(String relativePath) throws Exception {
         return new String(Files.readAllBytes(ROOT.resolve(relativePath)),
-            StandardCharsets.UTF_8);
+            StandardCharsets.UTF_8).replace("\r\n", "\n");
     }
 }

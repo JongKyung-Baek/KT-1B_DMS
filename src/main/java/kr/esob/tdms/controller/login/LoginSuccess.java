@@ -9,8 +9,6 @@ import kr.esob.tdms.commonlogic.menu.MenuVO;
 import kr.esob.tdms.commonlogic.message.LocaleUtil;
 import kr.esob.tdms.commonlogic.message.SupportedLocaleChangeInterceptor;
 import kr.esob.tdms.commonlogic.systemconfig.SystemConfig;
-import kr.esob.tdms.commonlogic.systemconfig.SystemConfigDao;
-import kr.esob.tdms.commonlogic.systemconfig.SystemConfigVO;
 import kr.esob.tdms.commonlogic.value.Constant;
 import kr.esob.tdms.commonlogic.value.SessionValue;
 import kr.esob.tdms.config.SessionExtendController;
@@ -33,10 +31,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 import static kr.esob.tdms.util.seed.PasswordUtils.verifyPassword;
 
@@ -48,9 +44,6 @@ public class LoginSuccess implements AuthenticationSuccessHandler {
 
 	@Inject
 	ComboDao comboDao;
-
-	@Inject
-	SystemConfigDao systemConfigDao;
 
 	@Inject
 	LoginDao dao;
@@ -121,7 +114,6 @@ public class LoginSuccess implements AuthenticationSuccessHandler {
 		ComboLang.replaceLanguage(
 				sessionLang,
 				comboDao.selectComboLang(sessionLang));
-		SystemConfig.systemConfig = createSystemConfig();
 		String timeoutSecond = resolveSessionTimeoutSecond();
 		sessionValue.setTimeoutSecond(timeoutSecond);
 		if(userVo.getOneOffMainUrl() != null) {
@@ -165,15 +157,6 @@ public class LoginSuccess implements AuthenticationSuccessHandler {
 		}
 		return SystemConfig.getSystemConfigValue("TIMEOUT_SECOND");
 	}
-	private Map<String, String> createSystemConfig(){
-		List<SystemConfigVO> systemConfigVoList = systemConfigDao.selectSystemConfig();
-		Map<String, String> systemMap = new HashMap<String, String>();
-		for(SystemConfigVO vo : systemConfigVoList) {
-			systemMap.put(Constant.SYSTEM_CONFIG + "|" + vo.getSystemConfigCd(), vo.getSystemConfigValue());
-		}
-		return systemMap;
-	}
-
 	private String resolveBrowserLanguage(Locale locale) {
 		return LocaleUtil.resolveSupportedLanguage(locale);
 	}

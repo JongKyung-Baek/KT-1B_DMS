@@ -29,6 +29,9 @@ import org.springframework.ui.ExtendedModelMap;
 
 import kr.esob.tdms.commonlogic.securityacl.FileAccessRequest;
 import kr.esob.tdms.commonlogic.securityacl.SecurityAclService;
+import kr.esob.tdms.commonlogic.fileapi.FileApiClient;
+import kr.esob.tdms.commonlogic.pdfconversion.PdfConversionJob;
+import kr.esob.tdms.commonlogic.pdfconversion.PdfConversionQueueService;
 import kr.esob.tdms.commonlogic.viewerintegration.ViewerDocumentMetadata;
 import kr.esob.tdms.commonlogic.viewerintegration.ViewerIntegrationService;
 import kr.esob.tdms.commonlogic.viewerintegration.ViewerPreparedLaunch;
@@ -263,6 +266,131 @@ class DocPdfLinkRequestControllerViewerLaunchTest {
     }
 
     @Test
+    void convertedSwSubUsesCompletedRepositoryPdfAndKeepsOriginalMetadata() throws Exception {
+        DocPdfLinkRequestController controller = new DocPdfLinkRequestController();
+        controller.dao = org.mockito.Mockito.mock(DocPdfLinkRequestDao.class);
+        controller.securityAclService = org.mockito.Mockito.mock(SecurityAclService.class);
+        controller.viewerIntegrationService = org.mockito.Mockito.mock(ViewerIntegrationService.class);
+        controller.pdfConversionQueueService = org.mockito.Mockito.mock(PdfConversionQueueService.class);
+        controller.fileApiClient = org.mockito.Mockito.mock(FileApiClient.class);
+        Authentication authentication = org.mockito.Mockito.mock(Authentication.class);
+        when(authentication.getPrincipal()).thenReturn(actor());
+        when(controller.dao.selectSwFile(any())).thenReturn("SW/source-manual.docx");
+        when(controller.dao.selectSubFileParent("SW", "SW-SUB-1", "2"))
+                .thenReturn("SW-PARENT-1");
+        when(controller.dao.selectFileNmSW(any())).thenReturn("source-manual.docx");
+        when(controller.dao.selectSwNo(any())).thenReturn("TD-SW-001");
+        when(controller.dao.selectRevisionSW(any())).thenReturn("C");
+
+        PdfConversionJob completed = conversionJob(
+                "SUCCEEDED", "CONVERTED_PDF/0123456789abcdef.pdf");
+        when(controller.pdfConversionQueueService.findCurrent(
+                "SW_SUB", "SW-SUB-1", "2")).thenReturn(completed);
+        org.mockito.Mockito.doAnswer(invocation -> {
+            Path target = invocation.getArgument(2);
+            Files.write(target, "%PDF-1.4\n%%EOF\n".getBytes(StandardCharsets.US_ASCII));
+            return null;
+        }).when(controller.fileApiClient).downloadTo(
+                eq("0123456789abcdef.pdf"), eq("CONVERTED_PDF"), any(Path.class));
+        when(controller.viewerIntegrationService.createRequestPdf(anyString())).thenAnswer(invocation ->
+                Files.createTempFile(tempDir, invocation.getArgument(0) + "-", ".pdf"));
+
+        AtomicReference<ViewerDocumentMetadata> transferredMetadata = new AtomicReference<>();
+        when(controller.viewerIntegrationService.prepareLaunch(any(), any())).thenAnswer(invocation -> {
+            Path transferred = invocation.getArgument(0);
+            assertTrue(Files.isRegularFile(transferred));
+            assertTrue(Files.readString(transferred, StandardCharsets.US_ASCII).startsWith("%PDF-"));
+            ViewerDocumentMetadata metadata = invocation.getArgument(1);
+            transferredMetadata.set(metadata);
+            return new ViewerPreparedLaunch(
+                    URI.create("https://demo.esob.kr:7442/api/integrations/tdms/v1/launch"),
+                    "converted-token", metadata.getCorrelationId());
+        });
+
+        String view = controller.selectItem2(
+                "SW-SUB-1", "SW", "REQ-SW-1", "2",
+                authentication, new ExtendedModelMap());
+
+        assertEquals("/general/distribution/redirectPost", view);
+        ViewerDocumentMetadata metadata = transferredMetadata.get();
+        assertEquals("SW-SUB-1", metadata.getObjectId());
+        assertEquals("SW_SUB", metadata.getAclObjectType());
+        assertEquals("SW-PARENT-1", metadata.getAclObjectId());
+        assertEquals("2", metadata.getFileNo());
+        assertEquals("source-manual.docx", metadata.getFileName());
+        verify(controller.pdfConversionQueueService).findCurrent(
+                "SW_SUB", "SW-SUB-1", "2");
+        verify(controller.pdfConversionQueueService, never()).enqueueStored(
+                anyString(), anyString(), anyString(), anyString(), anyString());
+        verify(controller.fileApiClient).downloadTo(
+                eq("0123456789abcdef.pdf"), eq("CONVERTED_PDF"), any(Path.class));
+    }
+
+    @Test
+    void pendingSwConversionIsNotReenqueuedAndFailsClosedBeforeViewerPreparation() {
+        DocPdfLinkRequestController controller = new DocPdfLinkRequestController();
+        controller.dao = org.mockito.Mockito.mock(DocPdfLinkRequestDao.class);
+        controller.securityAclService = org.mockito.Mockito.mock(SecurityAclService.class);
+        controller.viewerIntegrationService = org.mockito.Mockito.mock(ViewerIntegrationService.class);
+        controller.pdfConversionQueueService = org.mockito.Mockito.mock(PdfConversionQueueService.class);
+        controller.fileApiClient = org.mockito.Mockito.mock(FileApiClient.class);
+        Authentication authentication = org.mockito.Mockito.mock(Authentication.class);
+        when(authentication.getPrincipal()).thenReturn(actor());
+        when(controller.dao.selectSwFile(any())).thenReturn("SW/source-manual.docx");
+        when(controller.dao.selectSubFileParent("SW", "SW-MAIN-2", "1")).thenReturn(null);
+        when(controller.dao.selectFileNmSW(any())).thenReturn("source-manual.docx");
+        when(controller.pdfConversionQueueService.findCurrent(
+                "SW", "SW-MAIN-2", "1")).thenReturn(conversionJob("PENDING", null));
+        ExtendedModelMap model = new ExtendedModelMap();
+
+        String view = controller.selectItem2(
+                "SW-MAIN-2", "SW", "REQ-SW-2", "1", authentication, model);
+
+        assertEquals("/general/distribution/docConvertFail", view);
+        assertEquals("Y", model.get("convertFailRestricted"));
+        assertEquals("PENDING", model.get("conversionStatus"));
+        assertEquals("N", model.get("conversionFailed"));
+        verify(controller.pdfConversionQueueService, never()).enqueueStored(
+                anyString(), anyString(), anyString(), anyString(), anyString());
+        verifyNoInteractions(controller.viewerIntegrationService);
+        verifyNoInteractions(controller.fileApiClient);
+    }
+
+    @Test
+    void unavailableCompletedSwPdfDoesNotFallBackToLegacyOnDemandConversion() throws Exception {
+        DocPdfLinkRequestController controller = new DocPdfLinkRequestController();
+        controller.dao = org.mockito.Mockito.mock(DocPdfLinkRequestDao.class);
+        controller.securityAclService = org.mockito.Mockito.mock(SecurityAclService.class);
+        controller.viewerIntegrationService = org.mockito.Mockito.mock(ViewerIntegrationService.class);
+        controller.pdfConversionQueueService = org.mockito.Mockito.mock(PdfConversionQueueService.class);
+        controller.fileApiClient = org.mockito.Mockito.mock(FileApiClient.class);
+        Authentication authentication = org.mockito.Mockito.mock(Authentication.class);
+        when(authentication.getPrincipal()).thenReturn(actor());
+        when(controller.dao.selectSwFile(any())).thenReturn("SW/source-image.png");
+        when(controller.dao.selectSubFileParent("SW", "SW-MAIN-3", "1")).thenReturn(null);
+        when(controller.dao.selectFileNmSW(any())).thenReturn("source-image.png");
+        when(controller.pdfConversionQueueService.findCurrent(
+                "SW", "SW-MAIN-3", "1")).thenReturn(
+                        conversionJob("SUCCEEDED", "CONVERTED_PDF/missing.pdf"));
+        when(controller.viewerIntegrationService.createRequestPdf(anyString())).thenAnswer(invocation ->
+                Files.createTempFile(tempDir, invocation.getArgument(0) + "-", ".pdf"));
+        org.mockito.Mockito.doThrow(new IllegalStateException("repository unavailable"))
+                .when(controller.fileApiClient).downloadTo(
+                        eq("missing.pdf"), eq("CONVERTED_PDF"), any(Path.class));
+        ExtendedModelMap model = new ExtendedModelMap();
+
+        String view = controller.selectItem2(
+                "SW-MAIN-3", "SW", "REQ-SW-3", "1", authentication, model);
+
+        assertEquals("/general/distribution/docConvertFail", view);
+        assertEquals("FAILED", model.get("conversionStatus"));
+        verify(controller.viewerIntegrationService, never())
+                .prepareLaunch(any(Path.class), any(ViewerDocumentMetadata.class));
+        verify(controller.pdfConversionQueueService, never()).enqueueStored(
+                anyString(), anyString(), anyString(), anyString(), anyString());
+    }
+
+    @Test
     void unresolvedExactFileNumberStopsBeforeAclAndViewerTransfer() {
         DocPdfLinkRequestController controller = new DocPdfLinkRequestController();
         controller.dao = org.mockito.Mockito.mock(DocPdfLinkRequestDao.class);
@@ -386,5 +514,12 @@ class DocPdfLinkRequestControllerViewerLaunchTest {
         user.setUserId("admin");
         user.setUserNm("Administrator");
         return user;
+    }
+
+    private PdfConversionJob conversionJob(String status, String outputFilePath) {
+        PdfConversionJob job = new PdfConversionJob();
+        job.setStatus(status);
+        job.setOutputFilePath(outputFilePath);
+        return job;
     }
 }

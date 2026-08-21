@@ -175,6 +175,18 @@ public class AbstractDao {
         return sqlMap.update(queryId, obj);
     }
 
+    /**
+     * Executes an update without reading request/session-scoped values.
+     *
+     * <p>Scheduled jobs and executor threads do not have an active HTTP
+     * session.  Callers that only use durable job data must use this method
+     * instead of {@link #update(String, Object)}.</p>
+     */
+    public int updateNotUseSession(String queryId, Object obj) {
+        log.info("Query Id - {}", queryId);
+        return sqlMap.update(queryId, obj);
+    }
+
     public int delete(String queryId, Object obj) {
         log.info("Query Id - {}", queryId);
         initParam(obj);

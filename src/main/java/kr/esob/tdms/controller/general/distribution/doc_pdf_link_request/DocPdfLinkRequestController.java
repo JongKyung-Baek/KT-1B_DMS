@@ -5,6 +5,8 @@ import kr.esob.tdms.commonlogic.abstractclass.AbstractController;
 import kr.esob.tdms.commonlogic.abstractclass.CommonHomeParam;
 import kr.esob.tdms.commonlogic.convert.ConvertLogDao;
 import kr.esob.tdms.commonlogic.fileapi.FileApiClient;
+import kr.esob.tdms.commonlogic.pdfconversion.PdfConversionJob;
+import kr.esob.tdms.commonlogic.pdfconversion.PdfConversionQueueService;
 import kr.esob.tdms.commonlogic.securityacl.FileAccessRequest;
 import kr.esob.tdms.commonlogic.securityacl.SecurityAclService;
 import kr.esob.tdms.commonlogic.systemconfig.SystemConfig;
@@ -72,7 +74,10 @@ public class DocPdfLinkRequestController extends AbstractController {
 	@Autowired
 	ViewerIntegrationService viewerIntegrationService;
 
-	private final FileApiClient fileApiClient = new FileApiClient();
+	@Autowired
+	PdfConversionQueueService pdfConversionQueueService;
+
+	FileApiClient fileApiClient = new FileApiClient();
 
 	@RequestMapping(value="/")
 	public String home(Model model, CommonHomeParam param) throws JsonProcessingException {
@@ -192,13 +197,39 @@ public class DocPdfLinkRequestController extends AbstractController {
 			aclObjectType = subFileObjectType(baseAclObjectType);
 		}
 		requireViewAccess(aclObjectType, aclObjectId, normalizedFileNo, requestNo);
-		if ("SW".equals(baseAclObjectType)
-				&& !TechnicalFileTypePolicy.isViewerPreview(orgFileNm)) {
-			throw new AccessDeniedException(
-					"Only PDF or STEP technical-data files are available in the secured viewer.");
+
+		String viewerSourcePath = orgFileNm;
+		String swSourceFileName = "";
+		if ("SW".equals(baseAclObjectType)) {
+			Map<String, String> swMetadataParam = new HashMap<String, String>();
+			swMetadataParam.put("OBJECT_ID", sourceObjectId);
+			swMetadataParam.put("FILE_NO", normalizedFileNo);
+			swSourceFileName = firstNonBlank(
+					dao.selectFileNmSW(swMetadataParam), toFileNameOnly(orgFileNm));
+			if (!TechnicalFileTypePolicy.isViewerPreview(orgFileNm)) {
+				String conversionObjectType = "SW_SUB".equals(aclObjectType)
+						? "SW_SUB" : "SW";
+				try {
+					PdfConversionJob conversionJob = pdfConversionQueueService.findCurrent(
+							conversionObjectType, sourceObjectId, normalizedFileNo);
+					if (conversionJob == null) {
+						conversionJob = pdfConversionQueueService.enqueueStored(
+								conversionObjectType, sourceObjectId, normalizedFileNo,
+								orgFileNm, swSourceFileName);
+					}
+					if (!isSucceededConversion(conversionJob)) {
+						return conversionUnavailable(conversionJob, model);
+					}
+					viewerSourcePath = conversionJob.getOutputFilePath().trim();
+				} catch (RuntimeException exception) {
+					log.error("PDF conversion state lookup failed. objectType={}, objectId={}, fileNo={}",
+							conversionObjectType, sourceObjectId, normalizedFileNo, exception);
+					return conversionUnavailable("FAILED", model);
+				}
+			}
 		}
 
-		ViewerProvider viewerProvider = TechnicalFileTypePolicy.isStep(orgFileNm)
+		ViewerProvider viewerProvider = TechnicalFileTypePolicy.isStep(viewerSourcePath)
 				? ViewerProvider.STEP : ViewerProvider.PDF;
 		java.nio.file.Path requestDocument = viewerProvider == ViewerProvider.STEP
 				? viewerIntegrationService.createRequestDocument(correlationId, viewerProvider)
@@ -208,11 +239,15 @@ public class DocPdfLinkRequestController extends AbstractController {
 		try {
 			boolean prepared = false;
 			if ("SW".equals(baseAclObjectType)) {
-				prepared = cacheSwFileApiForViewer(
-						orgFileNm, requestDocument, viewerProvider);
-			}
-			if (!prepared) {
-				File sourceFile = new File(orgFileNm);
+				prepared = prepareSwViewerSource(
+						viewerSourcePath, requestDocument, viewerProvider);
+				if (!prepared) {
+					model.addAttribute("convertFailRestricted", "Y");
+					model.addAttribute("conversionStatus", "FAILED");
+					return "/general/distribution/docConvertFail";
+				}
+			} else {
+				File sourceFile = new File(viewerSourcePath);
 				if (viewerProvider == ViewerProvider.STEP && sourceFile.isFile()) {
 					try {
 						Files.copy(sourceFile.toPath(), requestDocument,
@@ -268,7 +303,7 @@ public class DocPdfLinkRequestController extends AbstractController {
 			} else if ("SW".equals(baseAclObjectType)) {
 				distributionType = "CCB";
 				drawingNo = dao.selectSwNo(metadataParam);
-				fileName = dao.selectFileNmSW(metadataParam);
+				fileName = swSourceFileName;
 				revision = dao.selectRevisionSW(metadataParam);
 			}
 
@@ -363,6 +398,26 @@ public class DocPdfLinkRequestController extends AbstractController {
 	private String firstNonBlank(String first, String second) {
 		return first == null || first.trim().isEmpty()
 				? defaultText(second, "") : first.trim();
+	}
+
+	private boolean isSucceededConversion(PdfConversionJob job) {
+		return job != null
+				&& "SUCCEEDED".equalsIgnoreCase(job.getStatus())
+				&& job.getOutputFilePath() != null
+				&& !job.getOutputFilePath().trim().isEmpty();
+	}
+
+	private String conversionUnavailable(PdfConversionJob job, Model model) {
+		return conversionUnavailable(
+				job == null ? "PENDING" : defaultText(job.getStatus(), "PENDING"), model);
+	}
+
+	private String conversionUnavailable(String status, Model model) {
+		String normalizedStatus = defaultText(status, "PENDING").toUpperCase(Locale.ROOT);
+		model.addAttribute("convertFailRestricted", "Y");
+		model.addAttribute("conversionStatus", normalizedStatus);
+		model.addAttribute("conversionFailed", "FAILED".equals(normalizedStatus) ? "Y" : "N");
+		return "/general/distribution/docConvertFail";
 	}
 
 	private String handleRedirect(Map<String, String> params, Model model) {
@@ -676,16 +731,35 @@ public class DocPdfLinkRequestController extends AbstractController {
 		if (fileApiPath == null) {
 			return false;
 		}
-		byte[] bytes = fileApiClient.download(fileApiPath[1], fileApiPath[0]);
 		try {
-			java.nio.file.Path parent = requestDocument.getParent();
-			if (parent != null) {
-				Files.createDirectories(parent);
-			}
-			Files.write(requestDocument, bytes);
+			fileApiClient.downloadTo(fileApiPath[1], fileApiPath[0], requestDocument);
 			return true;
 		} catch (Exception e) {
 			throw new IllegalStateException("Viewer request document write failed.", e);
+		}
+	}
+
+	private boolean prepareSwViewerSource(
+			String filePathNm,
+			java.nio.file.Path requestDocument,
+			ViewerProvider viewerProvider) {
+		try {
+			if (cacheSwFileApiForViewer(filePathNm, requestDocument, viewerProvider)) {
+				return true;
+			}
+			java.nio.file.Path localSource = java.nio.file.Path.of(filePathNm.trim());
+			boolean expectedType = viewerProvider == ViewerProvider.STEP
+					? TechnicalFileTypePolicy.isStep(filePathNm)
+					: TechnicalFileTypePolicy.isPdf(filePathNm);
+			if (!expectedType || !Files.isRegularFile(localSource)) {
+				return false;
+			}
+			Files.copy(localSource, requestDocument, StandardCopyOption.REPLACE_EXISTING);
+			return true;
+		} catch (Exception exception) {
+			log.warn("SW viewer source preparation failed. source={}, cause={}",
+					filePathNm, exception.getClass().getSimpleName());
+			return false;
 		}
 	}
 

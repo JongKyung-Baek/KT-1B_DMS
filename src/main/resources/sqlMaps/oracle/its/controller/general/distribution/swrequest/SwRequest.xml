@@ -1325,9 +1325,9 @@
 		#{distributeTypeCd},
 		#{filePath},
 		COALESCE(NULLIF(#{sessionUser.userNm}, ''), #{sessionUser.username}),
-		'DONE',
+		COALESCE(NULLIF(#{processingStatus}, ''), 'PENDING'),
 		NULL,
-		CURRENT_TIMESTAMP)
+		CASE WHEN #{processingStatus} IN ('DONE', 'NOT_REQUIRED') THEN CURRENT_TIMESTAMP ELSE NULL END)
 	</insert>
 
 	<insert id="insertSwSubFile" parameterType="kr.esob.tdms.controller.general.distribution.swrequest.SwSubFileParam">
@@ -1337,11 +1337,14 @@
 			WHERE PARENT_OBJECT_ID = #{parentObjectId}
 		</selectKey>
 		INSERT INTO DOCS_SW_SUB_FILE
-		(OBJECT_ID, PARENT_OBJECT_ID, FILE_NO, ORG_FILE_NM, FILE_PATH_NM, FILE_SIZE, USE_YN, INSERT_UID, INSERT_DT, UPDATE_UID, UPDATE_DT)
+		(OBJECT_ID, PARENT_OBJECT_ID, FILE_NO, ORG_FILE_NM, FILE_PATH_NM, FILE_SIZE, USE_YN, INSERT_UID, INSERT_DT, UPDATE_UID, UPDATE_DT,
+		 PROCESSING_STATUS, PROCESSING_ERROR, PROCESSED_AT)
 		VALUES
 		(#{objectId}, #{parentObjectId}, CAST(#{fileNo} AS INTEGER), #{orgFileNm}, #{filePath}, CAST(#{fileSize} AS BIGINT),
 		COALESCE(NULLIF(#{useYn}, ''), 'Y'), COALESCE(NULLIF(#{sessionUser.userId}, ''), #{sessionUser.username}),
-		CURRENT_TIMESTAMP, NULL, NULL)
+		CURRENT_TIMESTAMP, NULL, NULL,
+		COALESCE(NULLIF(#{processingStatus}, ''), 'PENDING'), NULL,
+		CASE WHEN #{processingStatus} IN ('DONE', 'NOT_REQUIRED') THEN CURRENT_TIMESTAMP ELSE NULL END)
 	</insert>
 
 	<select id="getSwRegisterByOrgFileNm" resultType="string">
@@ -1418,10 +1421,11 @@
 		       fileInfo.FILE_NO AS "fileNo",
 		       fileInfo.ORG_FILE_NM AS "orgFileNm",
 		       fileInfo.FILE_SIZE AS "fileSize",
+		       COALESCE(fileInfo.PROCESSING_STATUS, '') AS "processingStatus",
+		       COALESCE(fileInfo.PROCESSING_ERROR, '') AS "processingError",
 		       securityGrade.grade_cd AS "gradeCd",
 		       securityGrade.grade_nm AS "gradeNm",
 		       securityGrade.grade_level AS "gradeLevel",
-		       COALESCE(fileInfo.PROCESSING_STATUS, '') AS "processingStatus",
 		       fileInfo.FILE_PATH_NM AS "filePath"
 		FROM DOCS_SW sw
 		JOIN DOCS_SW_FILE fileInfo ON fileInfo.OBJECT_ID = sw.OBJECT_ID
@@ -1482,6 +1486,8 @@
 		       fileInfo.FILE_NO AS "fileNo",
 		       fileInfo.ORG_FILE_NM AS "orgFileNm",
 		       fileInfo.FILE_SIZE AS "fileSize",
+		       COALESCE(fileInfo.PROCESSING_STATUS, '') AS "processingStatus",
+		       COALESCE(fileInfo.PROCESSING_ERROR, '') AS "processingError",
 		       securityGrade.grade_cd AS "gradeCd",
 		       securityGrade.grade_nm AS "gradeNm",
 		       securityGrade.grade_level AS "gradeLevel",

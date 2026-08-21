@@ -77,7 +77,7 @@ class SecurityConfigAuditFilterTest {
         String source = new String(
                 Files.readAllBytes(Paths.get(
                         "src/main/java/kr/esob/tdms/config/SecurityConfig.java")),
-                StandardCharsets.UTF_8);
+                StandardCharsets.UTF_8).replace("\r\n", "\n");
 
         int mobileFilter = source.indexOf(
                 "http.addFilterAfter(\n\t\t\t\tmobileClientAccessFilter");

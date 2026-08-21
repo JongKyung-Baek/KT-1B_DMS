@@ -137,8 +137,38 @@
 		return /\.(?:stp|step)$/i.test(String(fileName).trim());
 	}
 
+	function getSwFileProcessingStatus(rowdata) {
+		return String(rowdata && (rowdata.processingStatus || rowdata.processingstatus || rowdata.PROCESSING_STATUS) || "")
+			.trim()
+			.toUpperCase();
+	}
+
+	function isSwFilePreviewBlocked(rowdata) {
+		var status = getSwFileProcessingStatus(rowdata);
+		return status === "PENDING"
+			|| status === "PROCESSING"
+			|| status === "WAITING"
+			|| status === "FAIL"
+			|| status === "FAILED"
+			|| status === "ERROR";
+	}
+
+	function isSwFileConversionDone(rowdata) {
+		var status = getSwFileProcessingStatus(rowdata);
+		return status === "DONE"
+			|| status === "SUCCESS"
+			|| status === "SUCCEEDED"
+			|| status === "COMPLETED"
+			|| status === "완료";
+	}
+
 	function isSwViewerPreviewFile(rowdata, fallbackName) {
-		return isSwPdfFile(rowdata, fallbackName) || isSwStepFile(rowdata, fallbackName);
+		if (isSwFilePreviewBlocked(rowdata)) {
+			return false;
+		}
+		return isSwPdfFile(rowdata, fallbackName)
+			|| isSwStepFile(rowdata, fallbackName)
+			|| isSwFileConversionDone(rowdata);
 	}
 
 	function formatSwFileName(cellValue, rowdata, useSubFileNo) {

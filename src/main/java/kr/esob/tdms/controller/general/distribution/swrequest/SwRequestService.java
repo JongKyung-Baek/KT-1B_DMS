@@ -23,6 +23,7 @@ import kr.esob.tdms.commonlogic.fileapi.FileApiClient;
 import kr.esob.tdms.commonlogic.mail.DocsMailEnum;
 import kr.esob.tdms.commonlogic.mail.DocsMailService;
 import kr.esob.tdms.commonlogic.mail.MailInfoVO;
+import kr.esob.tdms.commonlogic.pdfconversion.PdfConversionQueueService;
 import kr.esob.tdms.commonlogic.message.Prop;
 import kr.esob.tdms.commonlogic.result.ResultVO;
 import kr.esob.tdms.commonlogic.securityacl.SecurityAclService;
@@ -69,6 +70,8 @@ public class SwRequestService implements CommonService{
 	DistributionApprovalDetailDao approvalDetailDao;
 	@Inject
 	DocsMailService mailService;
+	@Inject
+	PdfConversionQueueService pdfConversionQueueService;
 	@Inject
 	Prop prop;
 	@Inject
@@ -196,6 +199,7 @@ public class SwRequestService implements CommonService{
 				.statusCd(statudCd)
 				.approver(approver)
 				.reviewerUser(reviewerUser)
+				.processingStatus(initialPreviewStatus(originalFileName))
 				.build();
 
 		String existingFileName = dao.getSwRegisterByOrgFileNm(objectId);
@@ -208,6 +212,13 @@ public class SwRequestService implements CommonService{
 			uploadMultipartToFileApi(file, savedFileName, "SW_REGISTER");
 			dao.insertSwRegisterInfo(swRegisterPopupParam);
 			dao.insertSwRegisterInfoFile(swRegisterPopupParam);
+			pdfConversionQueueService.enqueueUpload(
+					"SW",
+					swRegisterPopupParam.getObjectId(),
+					swRegisterPopupParam.getFileNo(),
+					swRegisterPopupParam.getOrgFileNm(),
+					swRegisterPopupParam.getFilePath(),
+					file);
 
 			saveSwSubFiles(subFiles, swRegisterPopupParam.getObjectId(), swRegisterPopupParam.getDistributeTypeCd());
 			securityAclService.initializeRegisteredSwAcl(swRegisterPopupParam.getObjectId());
@@ -578,9 +589,22 @@ public class SwRequestService implements CommonService{
 					.filePath(savedPath)
 					.fileSize(String.valueOf(savedSize))
 					.useYn("Y")
+					.processingStatus(initialPreviewStatus(originalName))
 					.build();
 			dao.insertSwSubFile(subFileParam);
+			pdfConversionQueueService.enqueueUpload(
+					"SW_SUB",
+					subFileParam.getObjectId(),
+					String.valueOf(subFileParam.getFileNo()),
+					subFileParam.getOrgFileNm(),
+					subFileParam.getFilePath(),
+					subFile);
 		}
+	}
+
+	private String initialPreviewStatus(String fileName) {
+		return TechnicalFileTypePolicy.isPdf(fileName)
+				|| TechnicalFileTypePolicy.isStep(fileName) ? "DONE" : "PENDING";
 	}
 
 	private SwRegisterPopupParam getFileSavedPath(SwRegisterPopupParam param, MultipartFile mf){

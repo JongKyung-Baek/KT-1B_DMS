@@ -364,10 +364,9 @@ public class SwRequestController extends AbstractController {
 		if (fileExists != null && !Boolean.parseBoolean(String.valueOf(fileExists))) {
 			return false;
 		}
-		String processingStatus = mapValue(row, "processingStatus", "").toUpperCase(java.util.Locale.ROOT);
-		return processingStatus.isEmpty() || "DONE".equals(processingStatus)
-				|| "SUCCESS".equals(processingStatus) || "COMPLETED".equals(processingStatus)
-				|| "완료".equals(processingStatus);
+		// Preview conversion and original download are separate permissions and
+		// lifecycles. A pending/failed preview must not hide a stored original.
+		return true;
 	}
 
 	private Map<String, Object> withoutServerPath(Map<String, Object> row) {

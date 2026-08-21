@@ -41,6 +41,9 @@
 \echo '[KT-1B] Applying viewer integration state and configuration cleanup...'
 \ir viewer_integration_ddl.sql
 
+\echo '[KT-1B] Applying durable source-hash PDF conversion state...'
+\ir pdf_conversion_ddl.sql
+
 \if :include_sample_data
 \echo '[KT-1B] Replacing business data with the local demonstration data set...'
 \ir sample_demo_data.sql

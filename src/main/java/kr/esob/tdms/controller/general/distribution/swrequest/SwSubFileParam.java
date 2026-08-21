@@ -20,4 +20,5 @@ public class SwSubFileParam extends CommonParam {
     private String filePath;
     private String fileSize;
     private String useYn;
+    private String processingStatus;
 }

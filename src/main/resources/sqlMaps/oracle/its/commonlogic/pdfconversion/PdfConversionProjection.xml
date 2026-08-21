@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="sql.PdfConversionProjection">
+    <update id="updateStatus" parameterType="hashmap">
+        <choose>
+            <when test="objectType == 'SW'">
+                UPDATE docs_sw_file
+                   SET processing_status = #{status},
+                       processing_error = NULLIF(#{lastError}, ''),
+                       processed_at = CASE
+                           WHEN #{status} IN ('DONE', 'FAIL', 'NOT_REQUIRED')
+                           THEN CURRENT_TIMESTAMP ELSE NULL END
+                 WHERE object_id = #{objectId}
+                   AND file_no::text = #{fileNo}
+                   AND EXISTS (
+                       SELECT 1
+                         FROM docs_pdf_conversion current_job
+                        WHERE current_job.conversion_id = CAST(#{conversionId} AS uuid)
+                          AND current_job.object_type = 'SW'
+                          AND current_job.object_id = #{objectId}
+                          AND current_job.file_no = #{fileNo}
+                          AND current_job.current_yn = TRUE
+                   )
+            </when>
+            <when test="objectType == 'SW_SUB'">
+                UPDATE docs_sw_sub_file
+                   SET processing_status = #{status},
+                       processing_error = NULLIF(#{lastError}, ''),
+                       processed_at = CASE
+                           WHEN #{status} IN ('DONE', 'FAIL', 'NOT_REQUIRED')
+                           THEN CURRENT_TIMESTAMP ELSE NULL END,
+                       update_dt = CURRENT_TIMESTAMP
+                 WHERE object_id = #{objectId}
+                   AND file_no::text = #{fileNo}
+                   AND EXISTS (
+                       SELECT 1
+                         FROM docs_pdf_conversion current_job
+                        WHERE current_job.conversion_id = CAST(#{conversionId} AS uuid)
+                          AND current_job.object_type = 'SW_SUB'
+                          AND current_job.object_id = #{objectId}
+                          AND current_job.file_no = #{fileNo}
+                          AND current_job.current_yn = TRUE
+                   )
+            </when>
+            <otherwise>
+				UPDATE docs_sw_file
+				   SET processing_status = processing_status
+				 WHERE FALSE
+            </otherwise>
+        </choose>
+    </update>
+
+    <!-- Rebuild the denormalized UI state from the durable current job. This
+         closes the crash window between a fenced terminal update and project(). -->
+    <update id="reconcileCurrentSw">
+        UPDATE docs_sw_file target
+           SET processing_status = CASE current_job.status_cd
+                   WHEN 'SUCCEEDED' THEN 'DONE'
+                   WHEN 'NOT_REQUIRED' THEN 'DONE'
+                   WHEN 'FAILED' THEN 'FAIL'
+                   WHEN 'PROCESSING' THEN 'PROCESSING'
+                   ELSE 'PENDING'
+               END,
+               processing_error = NULLIF(current_job.last_error, ''),
+               processed_at = CASE
+                   WHEN current_job.status_cd IN ('SUCCEEDED', 'NOT_REQUIRED', 'FAILED')
+                   THEN current_job.completed_at ELSE NULL END
+          FROM docs_pdf_conversion current_job
+         WHERE current_job.object_type = 'SW'
+           AND current_job.current_yn = TRUE
+           AND target.object_id = current_job.object_id
+           AND target.file_no::text = current_job.file_no
+           AND (
+               target.processing_status IS DISTINCT FROM CASE current_job.status_cd
+                   WHEN 'SUCCEEDED' THEN 'DONE'
+                   WHEN 'NOT_REQUIRED' THEN 'DONE'
+                   WHEN 'FAILED' THEN 'FAIL'
+                   WHEN 'PROCESSING' THEN 'PROCESSING'
+                   ELSE 'PENDING' END
+               OR target.processing_error IS DISTINCT FROM NULLIF(current_job.last_error, '')
+               OR target.processed_at IS DISTINCT FROM CASE
+                   WHEN current_job.status_cd IN ('SUCCEEDED', 'NOT_REQUIRED', 'FAILED')
+                   THEN current_job.completed_at ELSE NULL END
+           )
+    </update>
+
+    <update id="reconcileCurrentSwSub">
+        UPDATE docs_sw_sub_file target
+           SET processing_status = CASE current_job.status_cd
+                   WHEN 'SUCCEEDED' THEN 'DONE'
+                   WHEN 'NOT_REQUIRED' THEN 'DONE'
+                   WHEN 'FAILED' THEN 'FAIL'
+                   WHEN 'PROCESSING' THEN 'PROCESSING'
+                   ELSE 'PENDING'
+               END,
+               processing_error = NULLIF(current_job.last_error, ''),
+               processed_at = CASE
+                   WHEN current_job.status_cd IN ('SUCCEEDED', 'NOT_REQUIRED', 'FAILED')
+                   THEN current_job.completed_at ELSE NULL END,
+               update_dt = CURRENT_TIMESTAMP
+          FROM docs_pdf_conversion current_job
+         WHERE current_job.object_type = 'SW_SUB'
+           AND current_job.current_yn = TRUE
+           AND target.object_id = current_job.object_id
+           AND target.file_no::text = current_job.file_no
+           AND (
+               target.processing_status IS DISTINCT FROM CASE current_job.status_cd
+                   WHEN 'SUCCEEDED' THEN 'DONE'
+                   WHEN 'NOT_REQUIRED' THEN 'DONE'
+                   WHEN 'FAILED' THEN 'FAIL'
+                   WHEN 'PROCESSING' THEN 'PROCESSING'
+                   ELSE 'PENDING' END
+               OR target.processing_error IS DISTINCT FROM NULLIF(current_job.last_error, '')
+               OR target.processed_at IS DISTINCT FROM CASE
+                   WHEN current_job.status_cd IN ('SUCCEEDED', 'NOT_REQUIRED', 'FAILED')
+                   THEN current_job.completed_at ELSE NULL END
+           )
+    </update>
+</mapper>

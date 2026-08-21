@@ -60,10 +60,19 @@ class SwRegistrationFileTypeContractTest {
 
         assertTrue(popup.contains("function isSwPdfFile"));
         assertTrue(popup.contains("function isSwStepFile"));
+        assertTrue(popup.contains("function getSwFileProcessingStatus"));
+        assertTrue(popup.contains("function isSwFilePreviewBlocked"));
+        assertTrue(popup.contains("function isSwFileConversionDone"));
         assertTrue(popup.contains("function isSwViewerPreviewFile"));
         assertTrue(popup.contains("/\\.(?:stp|step)$/i"));
+        assertTrue(popup.contains("status === \"PENDING\""));
+        assertTrue(popup.contains("status === \"PROCESSING\""));
+        assertTrue(popup.contains("status === \"FAIL\""));
+        assertTrue(popup.contains("|| isSwFileConversionDone(rowdata)"));
         assertTrue(popup.contains("!isSwViewerPreviewFile(rowdata || {}, name)"));
         assertTrue(popup.contains("feature.techDetail.file.previewUnavailable"));
+        assertTrue(popup.contains("initSwFileGrid(\"gridSwMainFile\", mainFileRows)"));
+        assertTrue(popup.contains("initSwFileGrid(\"gridSwSubFile\", subFileRows)"));
     }
 
     @Test
@@ -71,11 +80,11 @@ class SwRegistrationFileTypeContractTest {
         String viewer = read("src/main/java/kr/esob/tdms/controller/general/distribution/doc_pdf_link_request/DocPdfLinkRequestController.java");
 
         assertTrue(viewer.contains("!TechnicalFileTypePolicy.isViewerPreview(orgFileNm)"));
-        assertTrue(viewer.contains("ViewerProvider viewerProvider = TechnicalFileTypePolicy.isStep(orgFileNm)"));
+        assertTrue(viewer.contains("ViewerProvider viewerProvider = TechnicalFileTypePolicy.isStep(viewerSourcePath)"));
         assertTrue(viewer.contains("? ViewerProvider.STEP : ViewerProvider.PDF"));
         assertTrue(viewer.contains("viewerIntegrationService.createRequestDocument(correlationId, viewerProvider)"));
-        assertTrue(viewer.contains("cacheSwFileApiForViewer("));
-        assertTrue(viewer.contains("orgFileNm, requestDocument, viewerProvider"));
+        assertTrue(viewer.contains("prepareSwViewerSource("));
+        assertTrue(viewer.contains("viewerSourcePath, requestDocument, viewerProvider"));
         assertTrue(viewer.contains("viewerIntegrationService.prepareLaunch("));
         assertTrue(viewer.contains("requestDocument, metadata, viewerProvider"));
         assertTrue(viewer.contains("splitFileApiPath(filePathNm, viewerProvider)"));

@@ -59,6 +59,7 @@ TRUNCATE TABLE
     docs_access_audit_log,
     docs_object_user_permission,
     docs_file_security_label,
+    docs_pdf_conversion,
     docs_sw_approval_comment,
     docs_sw_member,
     docs_sw_sub_file,

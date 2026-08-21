@@ -10,8 +10,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 
-import kr.esob.tdms.commonlogic.systemconfig.SystemConfig;
-
 public class LogoutSuccess implements LogoutSuccessHandler {
 
 	@Override
@@ -25,7 +23,6 @@ public class LogoutSuccess implements LogoutSuccessHandler {
 		catch(Exception e) {}
 
 		
-		if(SystemConfig.systemConfig != null)SystemConfig.systemConfig.clear();
 		response.setStatus(HttpServletResponse.SC_OK);
 
 		response.sendRedirect("/");

@@ -1098,16 +1098,165 @@ function Get-FullDatabaseFingerprint {
 
 function Get-SchemaFingerprint {
     param([string]$Database, [string]$AdminUser)
+    # Compare public schema structure through pg_catalog instead of comparing
+    # pg_dump SQL. PostgreSQL may render equivalent restored CHECK predicates
+    # and partial-index predicates with different redundant varchar/text casts.
+    # The two narrow replacements below canonicalize only that catalog-level
+    # no-op relabel; all object identity, metadata, grants, and definitions are
+    # still included in the deterministic stream.
+    $sql = @'
+WITH relation_objects AS (
+    SELECT c.oid, c.relname, c.relkind, c.relpersistence,
+           c.relrowsecurity, c.relforcerowsecurity, c.reloptions,
+           n.nspname, COALESCE(am.amname, '') AS access_method
+      FROM pg_catalog.pg_class c
+      JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+      LEFT JOIN pg_catalog.pg_am am ON am.oid = c.relam
+     WHERE n.nspname = 'public'
+       AND c.relkind IN ('r', 'p', 'v', 'm', 'f')
+), raw_lines AS (
+    SELECT 'RELATION'::text AS kind,
+           format('%I.%I', r.nspname, r.relname) AS identity,
+           concat_ws('|', r.relkind::text, r.relpersistence::text,
+               r.relrowsecurity::text, r.relforcerowsecurity::text,
+               r.access_method, COALESCE(array_to_string(r.reloptions, ','), ''),
+               CASE WHEN r.relkind IN ('v', 'm')
+                    THEN COALESCE(pg_catalog.pg_get_viewdef(r.oid, false), '')
+                    ELSE '' END) AS detail
+      FROM relation_objects r
+    UNION ALL
+    SELECT 'COLUMN', format('%I.%I.%s', r.nspname, r.relname, a.attnum),
+           concat_ws('|', a.attname, a.attnum::text,
+               pg_catalog.format_type(a.atttypid, a.atttypmod),
+               a.attnotnull::text, a.attidentity::text, a.attgenerated::text,
+               a.attstorage::text, a.attcompression::text,
+               CASE WHEN a.attcollation = 0 THEN ''
+                    ELSE format('%I.%I', cn.nspname, coll.collname) END,
+               COALESCE(pg_catalog.pg_get_expr(ad.adbin, ad.adrelid, false), ''))
+      FROM relation_objects r
+      JOIN pg_catalog.pg_attribute a ON a.attrelid = r.oid
+      LEFT JOIN pg_catalog.pg_attrdef ad
+        ON ad.adrelid = a.attrelid AND ad.adnum = a.attnum
+      LEFT JOIN pg_catalog.pg_collation coll ON coll.oid = a.attcollation
+      LEFT JOIN pg_catalog.pg_namespace cn ON cn.oid = coll.collnamespace
+     WHERE a.attnum > 0 AND NOT a.attisdropped
+    UNION ALL
+    SELECT 'CONSTRAINT', format('%I.%I.%I', r.nspname, r.relname, con.conname),
+           concat_ws('|', con.contype::text, con.condeferrable::text,
+               con.condeferred::text, con.convalidated::text,
+               COALESCE(array_to_string(con.conkey, ','), ''),
+               COALESCE(array_to_string(con.confkey, ','), ''),
+               COALESCE(pg_catalog.pg_get_constraintdef(con.oid, false), ''))
+      FROM relation_objects r
+      JOIN pg_catalog.pg_constraint con ON con.conrelid = r.oid
+    UNION ALL
+    SELECT 'INDEX', format('%I.%I.%I', r.nspname, r.relname, idx.relname),
+           concat_ws('|', i.indisunique::text, i.indisprimary::text,
+               i.indisexclusion::text, i.indimmediate::text,
+               i.indisvalid::text, i.indisready::text,
+               pg_catalog.pg_get_indexdef(i.indexrelid))
+      FROM relation_objects r
+      JOIN pg_catalog.pg_index i ON i.indrelid = r.oid
+      JOIN pg_catalog.pg_class idx ON idx.oid = i.indexrelid
+    UNION ALL
+    SELECT 'SEQUENCE', format('%I.%I', n.nspname, c.relname),
+           concat_ws('|', pg_catalog.format_type(s.seqtypid, NULL),
+               s.seqstart::text, s.seqincrement::text, s.seqmax::text,
+               s.seqmin::text, s.seqcache::text, s.seqcycle::text,
+               COALESCE(owned.owner_identity, ''))
+      FROM pg_catalog.pg_sequence s
+      JOIN pg_catalog.pg_class c ON c.oid = s.seqrelid
+      JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+      LEFT JOIN LATERAL (
+          SELECT format('%I.%I.%I', tn.nspname, tc.relname, a.attname)
+                    AS owner_identity
+            FROM pg_catalog.pg_depend d
+            JOIN pg_catalog.pg_class tc ON tc.oid = d.refobjid
+            JOIN pg_catalog.pg_namespace tn ON tn.oid = tc.relnamespace
+            JOIN pg_catalog.pg_attribute a
+              ON a.attrelid = tc.oid AND a.attnum = d.refobjsubid
+           WHERE d.classid = 'pg_catalog.pg_class'::regclass
+             AND d.objid = c.oid
+             AND d.refclassid = 'pg_catalog.pg_class'::regclass
+             AND d.deptype IN ('a', 'i')
+           ORDER BY tn.nspname COLLATE "C", tc.relname COLLATE "C", a.attnum
+           LIMIT 1
+      ) owned ON true
+     WHERE n.nspname = 'public'
+    UNION ALL
+    SELECT 'RELATION_GRANT', format('%I.%I', n.nspname, c.relname),
+           concat_ws('|', pg_catalog.pg_get_userbyid(x.grantor),
+               CASE WHEN x.grantee = 0 THEN 'PUBLIC'
+                    ELSE pg_catalog.pg_get_userbyid(x.grantee) END,
+               x.privilege_type, x.is_grantable::text)
+      FROM pg_catalog.pg_class c
+      JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+      CROSS JOIN LATERAL pg_catalog.aclexplode(COALESCE(c.relacl,
+          pg_catalog.acldefault(
+              CASE WHEN c.relkind = 'S' THEN 'S'::"char" ELSE 'r'::"char" END,
+              c.relowner))) x
+     WHERE n.nspname = 'public'
+       AND c.relkind IN ('r', 'p', 'v', 'm', 'f', 'S')
+    UNION ALL
+    SELECT 'COLUMN_GRANT', format('%I.%I.%I', n.nspname, c.relname, a.attname),
+           concat_ws('|', pg_catalog.pg_get_userbyid(x.grantor),
+               CASE WHEN x.grantee = 0 THEN 'PUBLIC'
+                    ELSE pg_catalog.pg_get_userbyid(x.grantee) END,
+               x.privilege_type, x.is_grantable::text)
+      FROM pg_catalog.pg_attribute a
+      JOIN pg_catalog.pg_class c ON c.oid = a.attrelid
+      JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+      CROSS JOIN LATERAL pg_catalog.aclexplode(a.attacl) x
+     WHERE n.nspname = 'public'
+       AND a.attnum > 0 AND NOT a.attisdropped AND a.attacl IS NOT NULL
+    UNION ALL
+    SELECT 'SCHEMA_GRANT', format('%I', n.nspname),
+           concat_ws('|', pg_catalog.pg_get_userbyid(x.grantor),
+               CASE WHEN x.grantee = 0 THEN 'PUBLIC'
+                    ELSE pg_catalog.pg_get_userbyid(x.grantee) END,
+               x.privilege_type, x.is_grantable::text)
+      FROM pg_catalog.pg_namespace n
+      CROSS JOIN LATERAL pg_catalog.aclexplode(COALESCE(n.nspacl,
+          pg_catalog.acldefault('n'::"char", n.nspowner))) x
+     WHERE n.nspname = 'public'
+    UNION ALL
+    SELECT 'DEFAULT_GRANT',
+           concat_ws('.', COALESCE(n.nspname, '*'), owner.rolname,
+               d.defaclobjtype::text),
+           concat_ws('|', pg_catalog.pg_get_userbyid(x.grantor),
+               CASE WHEN x.grantee = 0 THEN 'PUBLIC'
+                    ELSE pg_catalog.pg_get_userbyid(x.grantee) END,
+               x.privilege_type, x.is_grantable::text)
+      FROM pg_catalog.pg_default_acl d
+      JOIN pg_catalog.pg_roles owner ON owner.oid = d.defaclrole
+      LEFT JOIN pg_catalog.pg_namespace n ON n.oid = d.defaclnamespace
+      CROSS JOIN LATERAL pg_catalog.aclexplode(d.defaclacl) x
+     WHERE n.nspname = 'public' OR d.defaclnamespace = 0
+), normalized_lines AS (
+    SELECT kind, identity,
+           CASE WHEN kind IN ('CONSTRAINT', 'INDEX') THEN
+               regexp_replace(
+                   regexp_replace(detail,
+                       E'\\(([^()]+::character varying)\\)::text', E'\\1', 'g'),
+                   E'\\((ARRAY\\[[^,\\]]+::character varying(, [^,\\]]+::character varying)*\\])\\)::text\\[\\]',
+                   E'\\1', 'g')
+                ELSE detail END AS detail
+      FROM raw_lines
+)
+SELECT kind || '|' ||
+       pg_catalog.encode(pg_catalog.convert_to(identity, 'UTF8'), 'hex') || '|' ||
+       pg_catalog.encode(pg_catalog.convert_to(detail, 'UTF8'), 'hex')
+  FROM normalized_lines
+ ORDER BY kind COLLATE "C", identity COLLATE "C", detail COLLATE "C";
+'@
     $lines = @(Invoke-NativeChecked -Operation `
-        "Fingerprint schema in $Database" -Command {
-            & docker exec $script:DbContainer pg_dump -U $AdminUser `
-                -d $Database --schema-only --no-owner --no-privileges
+        "Fingerprint catalog structure in $Database" -Command {
+            $sql | & docker exec -i $script:DbContainer psql -X -qAt `
+                -v ON_ERROR_STOP=1 -U $AdminUser -d $Database
         })
-    $canonical = @($lines | ForEach-Object { [string]$_ } |
-        Where-Object {
-            $_ -notmatch '^\\(?:un)?restrict\s+' -and
-            $_ -notmatch '^-- Dumped (?:from database|by pg_dump) version '
-        }) -join "`n"
+    Assert-DeploymentCondition -Condition ($lines.Count -gt 0) `
+        -Message "Catalog structure fingerprint is empty: $Database"
+    $canonical = @($lines | ForEach-Object { [string]$_ }) -join "`n"
     $bytes = [Text.UTF8Encoding]::new($false).GetBytes($canonical)
     $algorithm = [Security.Cryptography.SHA256]::Create()
     try { $hash = $algorithm.ComputeHash($bytes) } finally { $algorithm.Dispose() }
@@ -1295,7 +1444,7 @@ function New-DatabaseBackupAndTestMigrations {
         [void](Invoke-NativeChecked -Operation 'Restore migration test DB' `
             -Command {
                 & docker exec $script:DbContainer pg_restore --exit-on-error `
-                    --no-owner --no-privileges -U $admin -d $tempDb `
+                    --no-owner -U $admin -d $tempDb `
                     $containerBackup
             })
         $originalDataFingerprint = Get-DatabaseFingerprint `
@@ -1334,10 +1483,10 @@ function New-DatabaseBackupAndTestMigrations {
             MigratedSchemaFingerprint = $schemaFirst
             OriginalDataFingerprint = $originalDataFingerprint
             OriginalFullDataFingerprint = $originalFullDataFingerprint
-            # Archive SQL is compared with the live schema. PostgreSQL may
-            # normalize equivalent CHECK/index expressions after restore, so
-            # the restored schema is retained separately for audit evidence.
-            OriginalSchemaFingerprint = $archiveSchemaFingerprint
+            # The archive SQL hash is retained only as audit evidence. The
+            # deterministic catalog fingerprint is the live schema gate.
+            OriginalSchemaFingerprint = $restoredSchemaFingerprint
+            ArchiveSchemaFingerprint = $archiveSchemaFingerprint
             RestoredSchemaFingerprint = $restoredSchemaFingerprint
             SqlRoot = $sqlRoot
         }
@@ -1630,7 +1779,7 @@ function New-PreOutageState {
         originalDatabaseFullFingerprint = [string]$databaseBackup.OriginalFullDataFingerprint
         restoredDatabaseFullFingerprint = [string]$databaseBackup.OriginalFullDataFingerprint
         originalDatabaseSchemaFingerprint = [string]$databaseBackup.OriginalSchemaFingerprint
-        archiveDatabaseSchemaFingerprint = [string]$databaseBackup.OriginalSchemaFingerprint
+        archiveDatabaseSchemaFingerprint = [string]$databaseBackup.ArchiveSchemaFingerprint
         restoredDatabaseSchemaFingerprint = [string]$databaseBackup.RestoredSchemaFingerprint
         databaseFingerprint = $databaseFingerprint
         databaseSchemaFingerprint = $databaseSchemaFingerprint
@@ -2095,7 +2244,7 @@ function Assert-AndRestoreDamagedData {
             [void](Invoke-NativeChecked -Operation 'Restore damaged database' `
                 -Command {
                     & docker exec $script:DbContainer pg_restore --exit-on-error `
-                        --no-owner --no-privileges `
+                        --no-owner `
                         -U ([string]$State.databaseAdminUser) `
                         -d ([string]$State.databaseName) $containerBackup
                 })

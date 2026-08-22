@@ -339,7 +339,7 @@ class PdfConversionDeploymentScriptContractTest {
     }
 
     @Test
-    void recoveryArchiveSchemaIsComparedWithoutRestoreNormalizationNoise()
+    void catalogStructureFingerprintAvoidsRestoreNormalizationNoise()
             throws IOException {
         String runner = read("Invoke-PdfConversionRelease.ps1");
         String normalizedRunner = runner.replace("\r\n", "\n");
@@ -351,19 +351,48 @@ class PdfConversionDeploymentScriptContractTest {
                 runner.indexOf("function Restore-RuntimeFileSet"));
 
         assertTrue(runner.contains("function Get-ArchiveSchemaFingerprint"));
+        assertTrue(runner.contains("WITH relation_objects AS"));
+        assertTrue(runner.contains("pg_catalog.pg_attribute"));
+        assertTrue(runner.contains("pg_catalog.pg_constraint"));
+        assertTrue(runner.contains("pg_catalog.pg_index"));
+        assertTrue(runner.contains("pg_catalog.pg_sequence"));
+        assertTrue(runner.contains("pg_catalog.aclexplode"));
+        assertTrue(runner.contains("ORDER BY kind COLLATE \"C\""));
+        assertTrue(runner.contains("docker exec -i $script:DbContainer psql"));
+        Pattern varcharArrayRelabel = Pattern.compile(
+                "\\((ARRAY\\[[^,\\]]+::character varying"
+                        + "(, [^,\\]]+::character varying)*\\])\\)::text\\[\\]");
+        assertTrue(varcharArrayRelabel.matcher(
+                "(ARRAY['A'::character varying, 'B'::character varying])::text[]")
+                .matches());
+        assertFalse(varcharArrayRelabel.matcher("(ARRAY[1, 2])::text[]")
+                .matches());
+        assertFalse(runner.contains("E'\\\\((ARRAY\\\\[[^]]+\\\\])"));
         assertTrue(normalizedRunner.contains(
                 "pg_restore --schema-only `\n"
                         + "                --no-owner --no-privileges --file=-"));
         assertTrue(prepare.contains("$archiveSchemaFingerprint"));
         assertTrue(prepare.contains("$restoredSchemaFingerprint"));
         assertTrue(prepare.contains(
-                "OriginalSchemaFingerprint = $archiveSchemaFingerprint"));
+                "OriginalSchemaFingerprint = $restoredSchemaFingerprint"));
+        assertTrue(prepare.contains(
+                "ArchiveSchemaFingerprint = $archiveSchemaFingerprint"));
+        assertTrue(prepare.contains(
+                "pg_restore --exit-on-error `\n"
+                        + "                    --no-owner -U $admin"));
+        assertFalse(prepare.contains(
+                "--no-owner --no-privileges -U $admin -d $tempDb"));
+        String explicitDataRestore = runner.substring(
+                runner.indexOf("function Assert-AndRestoreDamagedData"),
+                runner.indexOf("function Read-ApprovedState"));
+        assertFalse(explicitDataRestore.contains(
+                "--no-owner --no-privileges"));
         assertTrue(runner.contains(
                 "restoredDatabaseFullFingerprint = "
                         + "[string]$databaseBackup.OriginalFullDataFingerprint"));
         assertTrue(runner.contains(
                 "archiveDatabaseSchemaFingerprint = "
-                        + "[string]$databaseBackup.OriginalSchemaFingerprint"));
+                        + "[string]$databaseBackup.ArchiveSchemaFingerprint"));
         assertTrue(runner.contains(
                 "restoredDatabaseSchemaFingerprint = "
                         + "[string]$databaseBackup.RestoredSchemaFingerprint"));

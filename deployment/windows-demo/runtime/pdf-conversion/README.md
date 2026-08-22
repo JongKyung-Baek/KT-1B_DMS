@@ -129,8 +129,10 @@ read-only binds: `runtime\nginx.conf`, the external TLS private key,
 destination. Preflight verifies the post-hardening `runtime`/`nginx.conf` ACL
 SDDL fingerprint and runs the exact captured gateway image as a disposable
 `nginx -t` canary with `--network none`, a read-only root filesystem, all
-capabilities dropped, no-new-privileges, and only those four bind mounts. The
-same canary runs immediately before outage, immediately before the Apply
+capabilities dropped, no-new-privileges, the image's non-root nginx UID, and
+only those four bind mounts. Small `noexec,nosuid` tmpfs mounts are limited to
+nginx's required `/run` and `/var/cache/nginx` validation paths. The same
+canary runs immediately before outage, immediately before the Apply
 gateway start, and immediately before rollback starts the existing gateway.
 An existing release/phase canary name is a hard failure; the runner never
 deletes or reuses a stale canary. The approved state pins the gateway container

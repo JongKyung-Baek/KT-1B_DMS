@@ -197,7 +197,10 @@ function Get-GatewayCanaryDockerArguments {
     foreach ($argument in @('create', '--name', $Name, '--pull', 'never',
             '--cidfile', $CidFile,
             '--label', "com.esob.tdms.pdfconv.canary=$OwnershipToken",
-            '--network', 'none', '--read-only', '--cap-drop', 'ALL',
+            '--network', 'none', '--read-only', '--user', '101:101',
+            '--tmpfs', '/run:rw,noexec,nosuid,size=1m,mode=0755,uid=101,gid=101',
+            '--tmpfs', '/var/cache/nginx:rw,noexec,nosuid,size=4m,mode=0755,uid=101,gid=101',
+            '--cap-drop', 'ALL',
             '--security-opt', 'no-new-privileges', '--add-host',
             'app:127.0.0.1', '--entrypoint', 'nginx')) {
         [void]$arguments.Add([string]$argument)

@@ -256,7 +256,10 @@ class PdfConversionDeploymentScriptContractTest {
         assertTrue(common.contains("@('create', '--name'"));
         assertTrue(common.contains("'--cidfile', $CidFile"));
         assertTrue(common.contains("'--network', 'none'"));
-        assertTrue(common.contains("'--read-only', '--cap-drop', 'ALL'"));
+        assertTrue(common.contains("'--read-only', '--user', '101:101'"));
+        assertTrue(common.contains("'--tmpfs', '/run:rw,noexec,nosuid,size=1m,mode=0755,uid=101,gid=101'"));
+        assertTrue(common.contains("'--tmpfs', '/var/cache/nginx:rw,noexec,nosuid,size=4m,mode=0755,uid=101,gid=101'"));
+        assertTrue(common.contains("'--cap-drop', 'ALL'"));
         assertTrue(common.contains("'--security-opt', 'no-new-privileges'"));
         assertTrue(common.contains("'--entrypoint', 'nginx'"));
         assertTrue(common.contains("[void]$arguments.Add('-t')"));
@@ -265,6 +268,9 @@ class PdfConversionDeploymentScriptContractTest {
         assertTrue(canary.contains("ReadToEndAsync"));
         assertTrue(canary.contains("WaitForExit($TimeoutMilliseconds)"));
         assertTrue(canary.contains("TOTAL_BUDGET_SECONDS=30"));
+        assertTrue(canary.contains("USER=101:101"));
+        assertTrue(canary.contains("TMPFS_RUN=rw,noexec,nosuid"));
+        assertTrue(canary.contains("TMPFS_CACHE=rw,noexec,nosuid"));
         assertTrue(canary.contains(
                 "POST_CANARY_GATEWAY_RESERVE_SECONDS=10"));
         assertTrue(canary.contains("-MaximumMilliseconds 5000"));

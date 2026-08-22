@@ -1113,7 +1113,10 @@ function Invoke-GatewayConfigurationCanary {
     $imageId = Get-GatewayImageId -Deadline $canaryDeadline
     $canaryFingerprint = Get-DeploymentStringSha256 -Text (
         "GATEWAY_NGINX_TEST_V3`n$imageId`n$($bindContract.Fingerprint)`n" +
-        "$aclFingerprint`nNETWORK=none`nREAD_ONLY=true`nCAP_DROP=ALL`n" +
+        "$aclFingerprint`nNETWORK=none`nREAD_ONLY=true`nUSER=101:101`n" +
+        "TMPFS_RUN=rw,noexec,nosuid,size=1m,mode=0755,uid=101,gid=101`n" +
+        "TMPFS_CACHE=rw,noexec,nosuid,size=4m,mode=0755,uid=101,gid=101`n" +
+        "CAP_DROP=ALL`n" +
         "NO_NEW_PRIVILEGES=true`nMOUNTS=4`nCONFIG=/etc/nginx/nginx.conf`n" +
         "TOTAL_BUDGET_SECONDS=30`nCREATE_TIMEOUT_SECONDS=5`n" +
         "START_TIMEOUT_SECONDS=15`nCLEANUP_RESERVED_SECONDS=5`n" +

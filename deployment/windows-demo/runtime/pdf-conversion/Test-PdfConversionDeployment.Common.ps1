@@ -207,6 +207,14 @@ Assert-Test ($canaryArguments[0] -ceq 'create' -and
     $canaryArguments[([Array]::IndexOf($canaryArguments, '--network') + 1)] `
         -ceq 'none' -and
     $canaryArguments -ccontains '--read-only' -and
+    $canaryArguments -ccontains '--user' -and
+    $canaryArguments[([Array]::IndexOf($canaryArguments, '--user') + 1)] `
+        -ceq '101:101' -and
+    (@($canaryArguments | Where-Object { $_ -ceq '--tmpfs' })).Count -eq 2 -and
+    $canaryArguments -ccontains
+        '/run:rw,noexec,nosuid,size=1m,mode=0755,uid=101,gid=101' -and
+    $canaryArguments -ccontains
+        '/var/cache/nginx:rw,noexec,nosuid,size=4m,mode=0755,uid=101,gid=101' -and
     $canaryArguments -ccontains '--cidfile' -and
     $canaryArguments[([Array]::IndexOf($canaryArguments, '--cidfile') + 1)] `
         -ceq $canaryCidFile -and

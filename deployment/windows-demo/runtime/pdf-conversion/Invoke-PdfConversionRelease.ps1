@@ -1058,8 +1058,11 @@ function Get-DatabaseFingerprint {
             "ORDER BY ($projection)::text;"
         $rows = @(Invoke-NativeChecked -Operation `
             "Fingerprint protected table $table" -Command {
-                & docker exec $script:DbContainer psql -X -At `
-                    -v ON_ERROR_STOP=1 -U $AdminUser -d $Database -c $sql
+                # Stream SQL over stdin so Windows native argument parsing
+                # cannot strip the quotes required by legacy mixed-case table
+                # identifiers such as "CV_VIEW_MARKUP".
+                $sql | & docker exec -i $script:DbContainer psql -X -At `
+                    -v ON_ERROR_STOP=1 -U $AdminUser -d $Database
             })
         [void]$canonicalLines.Add("TABLE|$table|$($rows.Count)")
         foreach ($row in $rows) {

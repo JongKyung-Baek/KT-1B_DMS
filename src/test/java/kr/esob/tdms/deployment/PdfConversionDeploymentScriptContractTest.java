@@ -391,6 +391,21 @@ class PdfConversionDeploymentScriptContractTest {
     }
 
     @Test
+    void databaseFingerprintStreamsSqlSoMixedCaseIdentifiersSurviveWindows()
+            throws IOException {
+        String runner = read("Invoke-PdfConversionRelease.ps1");
+        String fingerprint = runner.substring(
+                runner.indexOf("function Get-DatabaseFingerprint"),
+                runner.indexOf("function Get-FullDatabaseFingerprint"));
+
+        assertTrue(fingerprint.contains(
+                "$sql | & docker exec -i $script:DbContainer psql"));
+        assertTrue(fingerprint.contains("public.`\"$table`\""));
+        assertFalse(fingerprint.contains("-d $Database -c $sql"));
+        assertTrue(fingerprint.contains("CV_VIEW_MARKUP"));
+    }
+
+    @Test
     void gatewayIsOnlyRestartedAsTheExistingContainer()
             throws IOException {
         String runner = read("Invoke-PdfConversionRelease.ps1");

@@ -20,7 +20,6 @@ public class AuditLogSessionListener implements HttpSessionListener {
     @Override
     public void sessionDestroyed(HttpSessionEvent se) {
         HttpSession session = se.getSession();
-        auditLogService.clearPendingLogoutTask(session);
         auditLogService.insertLogoutAuditLogIfNeeded(session, (String) null);
     }
 }

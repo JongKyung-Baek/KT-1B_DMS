@@ -64,9 +64,7 @@ public class RequestAuditFilter extends OncePerRequestFilter {
             uri = uri.substring(contextPath.length());
         }
         return "/login".equals(uri)
-                || uri.startsWith("/login/")
-                || "/general/organizationmanage/auditlog/notifyLogoutOnLeave".equals(uri)
-                || "/general/organizationmanage/auditlog/clearPendingLogoutOnStay".equals(uri);
+                || uri.startsWith("/login/");
     }
 
     @Override

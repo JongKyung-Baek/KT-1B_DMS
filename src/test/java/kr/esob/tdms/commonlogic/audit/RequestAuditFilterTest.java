@@ -134,11 +134,6 @@ class RequestAuditFilterTest {
         });
         verify(menuResolver, never()).resolve(login);
 
-        MockHttpServletRequest leave = new MockHttpServletRequest(
-                "POST", "/general/organizationmanage/auditlog/notifyLogoutOnLeave");
-        filter.doFilter(leave, new MockHttpServletResponse(), (req, res) -> {
-        });
-        verify(menuResolver, never()).resolve(leave);
     }
 
     @Test

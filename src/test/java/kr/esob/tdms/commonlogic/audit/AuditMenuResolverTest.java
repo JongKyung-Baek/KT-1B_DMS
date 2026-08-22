@@ -54,6 +54,19 @@ class AuditMenuResolverTest {
         assertEquals("MENU_221", registration.getMenuCd());
         assertEquals("기술자료관리 > 등록", registration.getMenuNm());
 
+        for (String registrationEndpoint : Arrays.asList(
+                "/general/distribution/swRequest/regist/",
+                "/general/distribution/swRequest/swRegisterPopup",
+                "/general/distribution/swRequest/swRegisterPopup/",
+                "/general/distribution/swRequest/nextSwNo",
+                "/general/distribution/swRequest/nextSwNo/",
+                "/general/distribution/swRequest/uploadSwRegisFile",
+                "/general/distribution/swRequest/uploadSwRegisFile/")) {
+            assertEquals("MENU_221",
+                    resolver.resolve(registrationEndpoint).getMenuCd(),
+                    registrationEndpoint);
+        }
+
         AuditMenuContext detail =
                 resolver.resolve("/general/distribution/swRequest/regist/detail");
         assertEquals("MENU_220", detail.getMenuCd());

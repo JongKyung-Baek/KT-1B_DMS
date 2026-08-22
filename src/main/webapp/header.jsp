@@ -7,80 +7,11 @@
 <script>
 	var defaultSessionTime = Number('<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${sessionScope['scopedTarget.session'].timeoutSecond}</spring:escapeBody>');
 	var timerchecker = null;
-	var auditLogoutSkip = false;
-	var auditInternalNavigation = false;
-	var auditLeaveNotified = false;
-
-	function markAuditInternalNavigation() {
-		auditInternalNavigation = true;
-	}
-
-	function skipAuditLogoutOnLeave() {
-		auditLogoutSkip = true;
-	}
 
 	function changeUiLanguage(language) {
 		var target = new URL(window.location.href);
 		target.searchParams.set('lang', language);
-		markAuditInternalNavigation();
 		window.location.assign(target.toString());
-	}
-
-	function buildAuditLeaveBody() {
-		var fields = ['event=leave'];
-		if (window.SdmsCsrf) {
-			var token = window.SdmsCsrf.getToken();
-			var parameterName = window.SdmsCsrf.getParameterName();
-			if (token && parameterName) {
-				fields.push(encodeURIComponent(parameterName) + '=' + encodeURIComponent(token));
-			}
-		}
-		return fields.join('&');
-	}
-
-	function notifyLogoutOnLeave() {
-		if (auditLeaveNotified || auditLogoutSkip || auditInternalNavigation) {
-			return;
-		}
-
-		auditLeaveNotified = true;
-		var notifyUrl = '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${pageContext.request.contextPath}</spring:escapeBody>/general/organizationmanage/auditlog/notifyLogoutOnLeave';
-		var requestBody = buildAuditLeaveBody();
-
-		if (navigator.sendBeacon) {
-			var logoutBlob = new Blob([requestBody], {type: 'application/x-www-form-urlencoded;charset=UTF-8'});
-			if (navigator.sendBeacon(notifyUrl, logoutBlob)) {
-				return;
-			}
-		}
-
-		if (window.fetch) {
-			var requestHeaders = {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'};
-			if (window.SdmsCsrf) {
-				requestHeaders = window.SdmsCsrf.headers(requestHeaders);
-			}
-			fetch(notifyUrl, {
-				method: 'POST',
-				body: requestBody,
-				headers: requestHeaders,
-				keepalive: true
-			});
-		}
-	}
-
-	function clearPendingLogoutOnStay() {
-		$.ajax({
-			url: '/general/organizationmanage/auditlog/clearPendingLogoutOnStay',
-			type: 'POST'
-		});
-	}
-
-	function isSameOriginNavigation(href) {
-		try {
-			return new URL(href, window.location.href).origin === window.location.origin;
-		} catch (e) {
-			return false;
-		}
 	}
 
 	var SessionTimer = (function() {
@@ -107,7 +38,6 @@
 				if (target) {
 					target.innerText = formatTime(0);
 				}
-				skipAuditLogoutOnLeave();
 				alertMessage(g_msg('msg.sessionTimeout'), function() {
 					logout();
 					$(this).dialog("close");
@@ -144,44 +74,6 @@
 	})();
 
 	$(document).ready(function(){
-		$(document).on('click', 'a[href]', function() {
-			var href = $(this).attr('href');
-			if (!href || href.indexOf('javascript:') === 0 || href.indexOf('#') === 0) {
-				return;
-			}
-
-			if (isSameOriginNavigation(href)) {
-				markAuditInternalNavigation();
-			}
-		});
-
-		$(document).on('submit', 'form', function() {
-			markAuditInternalNavigation();
-		});
-
-		$(document).on('keydown', function(event) {
-			if (event.key === 'F5' || ((event.ctrlKey || event.metaKey) && (event.key === 'r' || event.key === 'R'))) {
-				markAuditInternalNavigation();
-			}
-		});
-
-		window.addEventListener('pagehide', function(pageEvent) {
-			if (pageEvent.persisted) {
-				return;
-			}
-
-			notifyLogoutOnLeave();
-		});
-
-		window.addEventListener('pageshow', function() {
-			auditLogoutSkip = false;
-			auditInternalNavigation = false;
-			auditLeaveNotified = false;
-			clearPendingLogoutOnStay();
-		});
-
-		clearPendingLogoutOnStay();
-
 		$.ajax({
 			url: '/getRemainingSessionTime',
 			type: 'GET',
@@ -215,8 +107,6 @@
 
 	function logout(){
 		try { clearTimeout(timerchecker); } catch (e) {}
-		try { skipAuditLogoutOnLeave(); } catch (e) {}
-		try { markAuditInternalNavigation(); } catch (e) {}
 		var logoutForm = document.createElement('form');
 		logoutForm.method = 'POST';
 		logoutForm.action = '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${pageContext.request.contextPath}</spring:escapeBody>/login/logout';
@@ -234,7 +124,6 @@
 			type: 'GET',
 			success: function(response) {
 				if(response.sessionExpired) {
-					skipAuditLogoutOnLeave();
 					alertMessage(g_msg('msg.sessionTimeout'), function() {
 						window.location.href = '/login/loginPage';
 						$(this).dialog("close");

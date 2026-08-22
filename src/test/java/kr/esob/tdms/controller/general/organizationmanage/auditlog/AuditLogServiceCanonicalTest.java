@@ -7,12 +7,12 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Map;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpSession;
@@ -23,13 +23,6 @@ import kr.esob.tdms.util.RequestUtil;
 class AuditLogServiceCanonicalTest {
 
     private AuditLogService service;
-
-    @AfterEach
-    void shutdownExecutor() {
-        if (service != null) {
-            service.shutdownBrowserLeaveExecutor();
-        }
-    }
 
     @Test
     void mapsLegacyAuthenticationActionsToCanonicalEventsAndStoresUserCode() {
@@ -112,6 +105,28 @@ class AuditLogServiceCanonicalTest {
                 eq("PASSWORD_CHANGE"), eq("비밀번호 변경"), eq("SUCCESS"),
                 isNull(), isNull(), eq("127.0.0.1"), isNull(),
                 eq("TARGET-USER-CD"));
+    }
+
+    @Test
+    void explicitOrExpiredSessionLogoutIsRecordedExactlyOnceWithoutInvalidatingTheSession() {
+        service = service();
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        MockHttpSession session = new MockHttpSession();
+        request.setSession(session);
+        when(service.requestUtil.getClientIp(request)).thenReturn("127.0.0.1");
+
+        service.setSessionAuditInfo(
+                session, "USER-1", "admin", "관리자", request);
+        service.insertLogoutAuditLogIfNeeded(session, (String) null);
+        service.insertLogoutAuditLogIfNeeded(session, (String) null);
+
+        verify(service.securityAuditWriter, times(1)).writeAuthentication(
+                org.mockito.ArgumentMatchers.argThat(actor ->
+                        "USER-1".equals(actor.getUserCd())
+                                && "admin".equals(actor.getUserId())),
+                eq("LOGOUT"), eq("로그아웃"), eq("SUCCESS"),
+                isNull(), isNull(), eq("127.0.0.1"), eq(session.getId()), isNull());
+        assertDoesNotThrow(session::getId);
     }
 
     @Test

@@ -44,6 +44,16 @@ import java.util.stream.Collectors;
 @EnableWebSecurity
 //@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig extends WebSecurityConfigurerAdapter{
+	static final String[] TECHNICAL_REGISTRATION_ENDPOINTS = {
+			"/general/distribution/swRequest/regist",
+			"/general/distribution/swRequest/regist/",
+			"/general/distribution/swRequest/swRegisterPopup",
+			"/general/distribution/swRequest/swRegisterPopup/",
+			"/general/distribution/swRequest/nextSwNo",
+			"/general/distribution/swRequest/nextSwNo/",
+			"/general/distribution/swRequest/uploadSwRegisFile",
+			"/general/distribution/swRequest/uploadSwRegisFile/"
+	};
 
 	private final String ID_PARAMETER = "userId";
 	private final String PW_PARAMETER = "userPw";
@@ -145,12 +155,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 				// distribution-system account requests.
 				.antMatchers("/general/distribution/account-requests/**")
 				.hasAuthority("ROLE_MENU_231")
-				// Logout lifecycle callbacks are used by every authenticated session,
-				// independently of access/audit-history menu permission.
-				.antMatchers(HttpMethod.POST,
-						"/general/organizationmanage/auditlog/notifyLogoutOnLeave",
-						"/general/organizationmanage/auditlog/clearPendingLogoutOnStay")
-				.authenticated()
 				// Only the retired access-history root remains as a compatibility
 				// redirect. No legacy child API is exposed to the combined role.
 				.antMatchers(HttpMethod.GET,
@@ -158,6 +162,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 						"/general/distribution/viewPrintHistory/")
 				.hasAuthority("ROLE_MENU_218")
 				.antMatchers("/general/distribution/viewPrintHistory/**").denyAll()
+				// The registration page has its own menu role. Its supporting
+				// endpoints live beside, rather than below, /regist and would
+				// otherwise inherit one of the duplicated swRequest wildcard roles.
+				.antMatchers(TECHNICAL_REGISTRATION_ENDPOINTS)
+				.hasAuthority("ROLE_MENU_221")
 				// Distribution request pages are menu-authorized. Approval mutations
 				// also retain the service-level RG_001 check as defense in depth.
 				.antMatchers("/general/distribution/workflow/approval/**")

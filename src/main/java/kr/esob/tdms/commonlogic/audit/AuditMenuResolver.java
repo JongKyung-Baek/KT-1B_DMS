@@ -33,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class AuditMenuResolver {
     static final Duration DEFAULT_CACHE_TTL = Duration.ofSeconds(60);
+    static final String TECHNICAL_REGISTRATION_MENU_CD = "MENU_221";
 
     private final MenuDao menuDao;
     private final long cacheTtlNanos;
@@ -64,8 +65,17 @@ public class AuditMenuResolver {
             return null;
         }
 
+        MenuSnapshot current = currentSnapshot();
+        if (isTechnicalRegistrationEndpoint(path)) {
+            MenuDefinition registration = findByMenuCd(
+                    current, TECHNICAL_REGISTRATION_MENU_CD);
+            if (registration != null) {
+                return registration.toContext();
+            }
+        }
+
         MenuDefinition best = null;
-        for (MenuDefinition candidate : currentSnapshot().menus) {
+        for (MenuDefinition candidate : current.menus) {
             if (!matches(candidate.menuUrl, path)) {
                 continue;
             }
@@ -74,6 +84,25 @@ public class AuditMenuResolver {
             }
         }
         return best == null ? null : best.toContext();
+    }
+
+    private MenuDefinition findByMenuCd(MenuSnapshot current, String menuCd) {
+        for (MenuDefinition candidate : current.menus) {
+            if (menuCd.equals(candidate.menuCd)) {
+                return candidate;
+            }
+        }
+        return null;
+    }
+
+    private boolean isTechnicalRegistrationEndpoint(String path) {
+        String canonical = path.length() > 1 && path.endsWith("/")
+                ? path.substring(0, path.length() - 1)
+                : path;
+        return "/general/distribution/swRequest/regist".equals(canonical)
+                || "/general/distribution/swRequest/swRegisterPopup".equals(canonical)
+                || "/general/distribution/swRequest/nextSwNo".equals(canonical)
+                || "/general/distribution/swRequest/uploadSwRegisFile".equals(canonical);
     }
 
     private MenuSnapshot currentSnapshot() {

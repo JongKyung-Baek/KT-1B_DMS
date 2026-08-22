@@ -1,5 +1,6 @@
 services:
   app:
+    image: ${KT1B_APP_IMAGE:?KT1B_APP_IMAGE is required}
     environment:
       TDMS_PDF_CONVERSION_ENABLED: "true"
       TDMS_PDF_CONVERSION_BASE_URL: http://127.0.0.1:9001

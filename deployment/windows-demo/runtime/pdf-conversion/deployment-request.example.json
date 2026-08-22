@@ -1,0 +1,46 @@
+{
+  "protocolVersion": 2,
+  "exampleOnly": true,
+  "_documentation": {
+    "productionDefault": "Omit artifacts.publicProbeCa; the existing public-PKI release keeps exactly nine staged files.",
+    "optionalPublicProbeCa": {
+      "fileField": "safe-basename.pem",
+      "sha256Field": "64 hexadecimal characters"
+    }
+  },
+  "releaseId": "pdfconv-YYYYMMDD-HHMMSS",
+  "outageTimeoutSeconds": 180,
+  "images": {
+    "app": "kt1b-dms-app:REPLACE_WITH_APPROVED_TAG",
+    "fileApi": "kt1b-tdds-ft:REPLACE_WITH_APPROVED_TAG",
+    "fileApiId": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "converter": "kt1b-e-pdf-converter:REPLACE_WITH_APPROVED_TAG",
+    "converterId": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "artifacts": {
+    "war": {
+      "file": "SDMS-KT-1B.war",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "overlay": {
+      "file": "compose.pdf-conversion.yaml",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "releaseEnv": {
+      "file": "release.env",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "viewerDdl": {
+      "file": "viewer-integration.sql",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "pdfDdl": {
+      "file": "pdf-conversion.sql",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "fileApiImageArchive": {
+      "file": "file-api-image.tar",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  }
+}

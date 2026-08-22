@@ -1,6 +1,78 @@
 var emptyArray = [];
 var files = [];
 
+function swSupportingFileSelectionApi() {
+    if (!window.SwSupportingFileSelection) {
+        throw new Error("SwSupportingFileSelection is not loaded.");
+    }
+    return window.SwSupportingFileSelection;
+}
+
+function getSwAccumulatedSubFiles(input) {
+    if (!input || !Array.isArray(input._tdmsAccumulatedSubFiles)) {
+        return [];
+    }
+    return swSupportingFileSelectionApi().toArray(input._tdmsAccumulatedSubFiles);
+}
+
+function appendSwAccumulatedSubFiles(input, incomingFiles) {
+    if (!input) {
+        return [];
+    }
+    return setSwAccumulatedSubFiles(input, swSupportingFileSelectionApi().merge(
+        getSwAccumulatedSubFiles(input),
+        incomingFiles
+    ));
+}
+
+function setSwAccumulatedSubFiles(input, selectedFiles) {
+    if (!input) {
+        return [];
+    }
+
+    input._tdmsAccumulatedSubFiles = swSupportingFileSelectionApi().toArray(selectedFiles);
+
+    // Keep the native FileList in sync where the browser permits it. Submission
+    // still reads the accumulated list directly, so browsers that reject a
+    // programmatic FileList assignment retain the same behavior.
+    try {
+        if (typeof DataTransfer === "function") {
+            var dataTransfer = new DataTransfer();
+            input._tdmsAccumulatedSubFiles.forEach(function (file) {
+                dataTransfer.items.add(file);
+            });
+            input.files = dataTransfer.files;
+        }
+    } catch (ignored) {
+        // The accumulated list remains authoritative.
+    }
+
+    return getSwAccumulatedSubFiles(input);
+}
+
+function removeSwAccumulatedSubFile(input, index) {
+    return setSwAccumulatedSubFiles(input, swSupportingFileSelectionApi().removeAt(
+        getSwAccumulatedSubFiles(input),
+        index
+    ));
+}
+
+function appendSwAccumulatedSubFilesToFormData(formData, input, fieldName) {
+    return swSupportingFileSelectionApi().appendToFormData(
+        formData,
+        fieldName || "subFiles",
+        getSwAccumulatedSubFiles(input)
+    );
+}
+
+function clearSwAccumulatedSubFiles(input) {
+    if (!input) {
+        return;
+    }
+    setSwAccumulatedSubFiles(input, []);
+    input.value = "";
+}
+
 function fileUpload(){
     $('#swRegisFile').click();
 }

@@ -122,6 +122,16 @@ probes; it does not compare `NetworkSettings.SandboxKey`, because a
 container-mode joiner does not own the libnetwork sandbox and may report an
 empty or different key.
 
+The File API keeps its root filesystem read-only and publishes no host port.
+Both its application staging directory and Python/Waitress `TMPDIR` are fixed
+to `storage\.tdds-ft-tmp`, which is on the same persistent filesystem as the
+document destination. Its Compose entrypoint fails closed before starting
+Waitress unless that path is a physical child of the storage root, resolves on
+the same filesystem, and passes an actual create/write/fsync/delete probe.
+The health check repeats the Python default-temp selection and effective
+write/traverse access check without creating transient files that could race
+the release storage fingerprint.
+
 Gateway restart is also fail-closed. The existing gateway container's inspect
 mounts are authoritative and must exactly match the base Compose JSON for four
 read-only binds: `runtime\nginx.conf`, the external TLS private key,

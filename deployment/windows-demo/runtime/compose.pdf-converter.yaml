@@ -28,10 +28,40 @@ services:
       # Uploads must be staged on the same filesystem as the destination so
       # TDDS-FT's final os.replace remains atomic across Docker mounts.
       TDDSFT_TMP_DIR: /data/kt1b/files/.tdds-ft-tmp
+      # Waitress also spills large request bodies through Python's tempfile
+      # module. Point it at the same writable, persistent filesystem instead of
+      # the read-only container root.
+      TMPDIR: /data/kt1b/files/.tdds-ft-tmp
       TDDSFT_LOG_FILE: /var/log/tdds-ft/tdds-ft.log
       TDDSFT_MAX_UPLOAD_SIZE: "1073741824"
       TDDSFT_CHUNK_SIZE: "1048576"
       TZ: Asia/Seoul
+    entrypoint:
+      - python
+      - -c
+      - |
+        import os, sys, tempfile
+        from pathlib import Path
+        storage = Path(os.environ["TDDSFT_STORAGE_DIR"])
+        configured_tmp = Path(os.environ["TDDSFT_TMP_DIR"])
+        if configured_tmp.is_symlink():
+            raise SystemExit("File API temporary directory must not be a symlink")
+        configured_tmp.mkdir(parents=True, exist_ok=True)
+        storage = storage.resolve(strict=True)
+        configured_tmp = configured_tmp.resolve(strict=True)
+        if configured_tmp.parent != storage or configured_tmp.name != ".tdds-ft-tmp":
+            raise SystemExit("File API temporary directory is outside the storage root")
+        if os.stat(configured_tmp).st_dev != os.stat(storage).st_dev:
+            raise SystemExit("File API temporary directory is on a different filesystem")
+        os.environ["TMPDIR"] = str(configured_tmp)
+        tempfile.tempdir = None
+        if Path(tempfile.gettempdir()).resolve(strict=True) != configured_tmp:
+            raise SystemExit("Python tempfile did not select the configured directory")
+        with tempfile.NamedTemporaryFile(prefix=".startup-", dir=None) as probe:
+            probe.write(b"ok")
+            probe.flush()
+            os.fsync(probe.fileno())
+        os.execv(sys.executable, [sys.executable, "run_waitress.py"])
     volumes:
       - ../storage:/data/kt1b/files
       - ../logs/file-api:/var/log/tdds-ft
@@ -50,7 +80,11 @@ services:
         - python
         - -c
         - >-
-          import json,urllib.request;
+          import json,os,tempfile,urllib.request;
+          from pathlib import Path;
+          expected=Path(os.environ['TDDSFT_TMP_DIR']).resolve(strict=True);
+          assert Path(tempfile.gettempdir()).resolve(strict=True)==expected;
+          assert os.access(expected,os.W_OK|os.X_OK);
           body=json.load(urllib.request.urlopen('http://127.0.0.1:18080/api/v1/health',timeout=3));
           assert body=={'service':'TDDS-FT','status':'UP'}
       interval: 10s

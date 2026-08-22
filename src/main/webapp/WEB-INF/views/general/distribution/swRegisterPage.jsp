@@ -367,7 +367,9 @@
                         </header>
 
                         <script type="text/javascript"
-                            src="/resources/js/views/general/distribution/swRegisterPopup.js"></script>
+                            src="${pageContext.request.contextPath}/resources/js/views/general/distribution/swSupportingFileSelection.js?v=20260822.2"></script>
+                        <script type="text/javascript"
+                            src="${pageContext.request.contextPath}/resources/js/views/general/distribution/swRegisterPopup.js?v=20260822.2"></script>
 
                         <style>
                             .swRegisterPopup .popupFormGrid>li.half {
@@ -492,6 +494,60 @@
                                 box-sizing: border-box;
                             }
 
+                            .swRegisterPopup .supporting-file-list {
+                                display: flex;
+                                flex-wrap: wrap;
+                                gap: 8px;
+                                width: 100%;
+                                margin: 10px 0 0;
+                                padding: 0;
+                                list-style: none;
+                            }
+
+                            .swRegisterPopup .supporting-file-list:empty {
+                                display: none;
+                            }
+
+                            .swRegisterPopup .supporting-file-chip {
+                                display: inline-flex;
+                                align-items: center;
+                                gap: 6px;
+                                max-width: 100%;
+                                min-height: 30px;
+                                padding: 4px 6px 4px 10px;
+                                color: #1f4f8f;
+                                border: 1px solid #c7d8f3;
+                                border-radius: 999px;
+                                background: #f4f8ff;
+                            }
+
+                            .swRegisterPopup .supporting-file-chip__name {
+                                overflow: hidden;
+                                max-width: 320px;
+                                text-overflow: ellipsis;
+                                white-space: nowrap;
+                            }
+
+                            .swRegisterPopup .supporting-file-chip__remove {
+                                display: inline-grid;
+                                place-items: center;
+                                width: 22px;
+                                height: 22px;
+                                padding: 0;
+                                color: #52657f;
+                                border: 0;
+                                border-radius: 50%;
+                                background: transparent;
+                                cursor: pointer;
+                            }
+
+                            .swRegisterPopup .supporting-file-chip__remove:hover,
+                            .swRegisterPopup .supporting-file-chip__remove:focus-visible {
+                                color: #fff;
+                                background: #2f6fed;
+                                outline: none;
+                            }
+
                             .sw-register-page #formSwRegisterPopup .popupFormGrid>li.field-type,
                             .sw-register-page #formSwRegisterPopup .popupFormGrid>li.field-type-sub {
                                 display: flex !important;
@@ -554,6 +610,54 @@ var IS_SW_REGISTER_PAGE = "<spring:escapeBody htmlEscape="false" javaScriptEscap
                                 return args.reduce(function (text, value, index) {
                                     return String(text).replace(new RegExp("\\{" + index + "\\}", "g"), value);
                                 }, message);
+                            }
+                            var SW_REMOVE_SUPPORTING_FILE_LABEL = swRegisterMessage(
+                                "feature.techRegister.upload.removeFile",
+                                "선택 파일 제거"
+                            );
+
+                            function removeSwSubSelectedFile(index) {
+                                var input = $swPopupField('#swSubFiles')[0];
+                                removeSwAccumulatedSubFile(input, index);
+                                renderSwSubSelectedFiles();
+                            }
+
+                            function renderSwSubSelectedFiles() {
+                                var input = $swPopupField('#swSubFiles')[0];
+                                var files = getSwAccumulatedSubFiles(input);
+                                var $names = $swPopupField('#subFileNames');
+                                var $list = $swPopupField('#swSubFileSelectionList');
+                                $names.val(files.map(function (file) { return file.name; }).join(', '));
+                                $list.empty();
+
+                                files.forEach(function (file, index) {
+                                    var $item = $('<li>', { 'class': 'supporting-file-chip' });
+                                    $('<i>', {
+                                        'class': 'icon-base ti tabler-file',
+                                        'aria-hidden': 'true'
+                                    }).appendTo($item);
+                                    $('<span>', {
+                                        'class': 'supporting-file-chip__name',
+                                        'text': file.name,
+                                        'title': file.name
+                                    }).appendTo($item);
+                                    $('<button>', {
+                                        'type': 'button',
+                                        'class': 'supporting-file-chip__remove',
+                                        'aria-label': SW_REMOVE_SUPPORTING_FILE_LABEL + ': ' + file.name,
+                                        'title': SW_REMOVE_SUPPORTING_FILE_LABEL,
+                                        'text': '×'
+                                    }).on('click', function (event) {
+                                        event.preventDefault();
+                                        event.stopPropagation();
+                                        removeSwSubSelectedFile(index);
+                                    }).appendTo($item);
+                                    $list.append($item);
+                                });
+
+                                if (typeof updateSwRegisterStatus === 'function') {
+                                    updateSwRegisterStatus();
+                                }
                             }
                             var BUSINESS_TYPE_SUB_OPTIONS = [
                                 <c:forEach var="item" items="${businessTypeCd}" varStatus="status">
@@ -938,17 +1042,14 @@ var IS_SW_REGISTER_PAGE = "<spring:escapeBody htmlEscape="false" javaScriptEscap
                                     formData.append("objectId", $.trim(SW_PREV_OBJECT_ID));
                                     formData.append("isNewRevision", "true");
                                 }
-                                if (subFileInput && subFileInput.files && subFileInput.files.length > 0) {
-                                    Array.prototype.forEach.call(subFileInput.files, function (subFile) {
-                                        formData.append("subFiles", subFile);
-                                    });
-                                }
+                                appendSwAccumulatedSubFilesToFormData(formData, subFileInput, "subFiles");
 
                                 callAjaxUpload(formData, "/general/distribution/swRequest/uploadSwRegisFile", requestCrXCallback);
                             }
 
                             function requestCrXCallback(response) {
                                 if (response && response.success) {
+                                    clearSwSubSelectedFiles();
                                     infoMessage(response.message || swRegisterMessage(
                                         "feature.techRegister.result.complete",
                                         "등록이 완료되었습니다."
@@ -1050,17 +1151,10 @@ var IS_SW_REGISTER_PAGE = "<spring:escapeBody htmlEscape="false" javaScriptEscap
 
                             function clearSwSubSelectedFiles() {
                                 var $subFileInput = $swPopupField('#swSubFiles');
-                                var $subFileNames = $swPopupField('#subFileNames');
-                                if ($subFileInput.length) {
-                                    $subFileInput.val('');
-                                    if ($subFileInput[0]) {
-                                        $subFileInput[0].value = '';
-                                    }
+                                if ($subFileInput.length && $subFileInput[0]) {
+                                    clearSwAccumulatedSubFiles($subFileInput[0]);
                                 }
-                                $subFileNames.val('');
-                                if (typeof updateSwRegisterStatus === 'function') {
-                                    updateSwRegisterStatus();
-                                }
+                                renderSwSubSelectedFiles();
                             }
 
                             function bindSwFileDragDrop(inputSelector, allowMultiple) {
@@ -1104,15 +1198,15 @@ var IS_SW_REGISTER_PAGE = "<spring:escapeBody htmlEscape="false" javaScriptEscap
                                     if (!files || !files.length) return;
 
                                     var input = $fileInput[0];
+                                    if (allowMultiple) {
+                                        appendSwAccumulatedSubFiles(input, files);
+                                        input.value = '';
+                                        renderSwSubSelectedFiles();
+                                        return;
+                                    }
                                     if (window.DataTransfer) {
                                         var dt = new DataTransfer();
-                                        if (allowMultiple) {
-                                            for (var i = 0; i < files.length; i++) {
-                                                dt.items.add(files[i]);
-                                            }
-                                        } else {
-                                            dt.items.add(files[0]);
-                                        }
+                                        dt.items.add(files[0]);
                                         input.files = dt.files;
                                     }
                                     $fileInput.trigger('change');
@@ -1159,12 +1253,9 @@ var IS_SW_REGISTER_PAGE = "<spring:escapeBody htmlEscape="false" javaScriptEscap
                                 });
 
                                 $swPopupField('#swSubFiles').change(function () {
-                                    var files = this.files || [];
-                                    var names = [];
-                                    for (var i = 0; i < files.length; i++) {
-                                        names.push(files[i].name);
-                                    }
-                                    $swPopupField('#subFileNames').val(names.join(', '));
+                                    appendSwAccumulatedSubFiles(this, this.files || []);
+                                    this.value = '';
+                                    renderSwSubSelectedFiles();
                                 });
 
                                 $swPopupField("#businessTypeCd").on("change", function () {
@@ -1540,6 +1631,9 @@ var IS_SW_REGISTER_PAGE = "<spring:escapeBody htmlEscape="false" javaScriptEscap
                                                 text="파일 선택" /></span>
                                         </button>
                                     </div>
+                                    <ul id="swSubFileSelectionList" class="supporting-file-list"
+                                        aria-live="polite"
+                                        aria-label="<spring:message code='feature.techRegister.field.supportingFiles' text='보조파일' />"></ul>
                                 </li>
                             </ul>
                             <p class="upload-format-help">
@@ -1592,9 +1686,7 @@ var IS_SW_REGISTER_PAGE = "<spring:escapeBody htmlEscape="false" javaScriptEscap
                             var mainFile = mainFileInput && mainFileInput.files && mainFileInput.files.length
                                 ? mainFileInput.files[0]
                                 : null;
-                            var subFileCount = subFileInput && subFileInput.files
-                                ? subFileInput.files.length
-                                : 0;
+                            var subFileCount = getSwAccumulatedSubFiles(subFileInput).length;
 
                             updateSwRegisterSummaryValue(
                                 '#summaryDataName',

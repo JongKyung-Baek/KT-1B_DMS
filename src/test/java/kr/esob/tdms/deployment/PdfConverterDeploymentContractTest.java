@@ -75,6 +75,29 @@ class PdfConverterDeploymentContractTest {
                 "- ../storage:/data/kt1b/files"));
         assertTrue(fileApi.contains(
                 "TDDSFT_TMP_DIR: /data/kt1b/files/.tdds-ft-tmp"));
+        assertTrue(fileApi.contains(
+                "TMPDIR: /data/kt1b/files/.tdds-ft-tmp"));
+        assertTrue(fileApi.contains("entrypoint:"));
+        assertTrue(fileApi.contains(
+                "configured_tmp.resolve(strict=True)"));
+        assertTrue(fileApi.contains(
+                "configured_tmp.parent != storage"));
+        assertTrue(fileApi.contains(
+                "configured_tmp.name != \".tdds-ft-tmp\""));
+        assertTrue(fileApi.contains(
+                "configured_tmp.is_symlink()"));
+        assertTrue(fileApi.contains(
+                "os.stat(configured_tmp).st_dev != os.stat(storage).st_dev"));
+        assertTrue(fileApi.contains(
+                "Path(tempfile.gettempdir()).resolve(strict=True) != configured_tmp"));
+        assertTrue(fileApi.contains(
+                "tempfile.NamedTemporaryFile(prefix=\".startup-\", dir=None)"));
+        assertTrue(fileApi.contains(
+                "os.execv(sys.executable, [sys.executable, \"run_waitress.py\"])"));
+        assertTrue(fileApi.contains(
+                "assert os.access(expected,os.W_OK|os.X_OK)"));
+        assertFalse(fileApi.contains(
+                "tempfile.NamedTemporaryFile(prefix='.health-'"));
         assertFalse(fileApi.contains("\n    ports:"));
         assertTrue(fileApi.contains("read_only: true"));
         assertFalse(compose.contains("file-api-tmp:"));

@@ -128,9 +128,9 @@ to `storage\.tdds-ft-tmp`, which is on the same persistent filesystem as the
 document destination. Its Compose entrypoint fails closed before starting
 Waitress unless that path is a physical child of the storage root, resolves on
 the same filesystem, and passes an actual create/write/fsync/delete probe.
-The health check repeats the Python default-temp selection and effective
-write/traverse access check without creating transient files that could race
-the release storage fingerprint.
+The health check verifies the configured `TMPDIR` binding and effective
+write/traverse access without asking Python to probe candidate temp folders or
+creating transient files that could race the release storage fingerprint.
 
 Gateway restart is also fail-closed. The existing gateway container's inspect
 mounts are authoritative and must exactly match the base Compose JSON for four

@@ -80,10 +80,10 @@ services:
         - python
         - -c
         - >-
-          import json,os,tempfile,urllib.request;
+          import json,os,urllib.request;
           from pathlib import Path;
           expected=Path(os.environ['TDDSFT_TMP_DIR']).resolve(strict=True);
-          assert Path(tempfile.gettempdir()).resolve(strict=True)==expected;
+          assert Path(os.environ['TMPDIR']).resolve(strict=True)==expected;
           assert os.access(expected,os.W_OK|os.X_OK);
           body=json.load(urllib.request.urlopen('http://127.0.0.1:18080/api/v1/health',timeout=3));
           assert body=={'service':'TDDS-FT','status':'UP'}

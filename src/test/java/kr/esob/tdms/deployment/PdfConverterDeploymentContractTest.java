@@ -96,6 +96,10 @@ class PdfConverterDeploymentContractTest {
                 "os.execv(sys.executable, [sys.executable, \"run_waitress.py\"])"));
         assertTrue(fileApi.contains(
                 "assert os.access(expected,os.W_OK|os.X_OK)"));
+        assertTrue(fileApi.contains(
+                "Path(os.environ['TMPDIR']).resolve(strict=True)==expected"));
+        assertFalse(fileApi.substring(fileApi.indexOf("healthcheck:"))
+                .contains("tempfile.gettempdir()"));
         assertFalse(fileApi.contains(
                 "tempfile.NamedTemporaryFile(prefix='.health-'"));
         assertFalse(fileApi.contains("\n    ports:"));

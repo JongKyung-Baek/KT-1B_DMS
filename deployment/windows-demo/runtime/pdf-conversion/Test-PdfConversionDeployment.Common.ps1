@@ -97,6 +97,7 @@ $appId = 'b' * 64
 $appInspect = @{
     Id = $appId
     HostConfig = @{ PortBindings = @{ '3508/tcp' = $null } }
+    NetworkSettings = @{ SandboxKey = '/var/run/docker/netns/app-owner' }
 } | ConvertTo-Json -Depth 6 -Compress
 $fileInspect = @{
     Id = ('c' * 64)
@@ -104,6 +105,7 @@ $fileInspect = @{
         NetworkMode = "container:$appId"
         PortBindings = $null
     }
+    NetworkSettings = @{ SandboxKey = '' }
 } | ConvertTo-Json -Depth 6 -Compress
 $converterInspect = @{
     Id = ('d' * 64)
@@ -111,10 +113,31 @@ $converterInspect = @{
         NetworkMode = "container:$appId"
         PortBindings = @{}
     }
+    NetworkSettings = @{ SandboxKey = '/var/run/docker/netns/joiner-view' }
 } | ConvertTo-Json -Depth 6 -Compress
 Assert-SharedNetworkRuntimeContract -AppInspectJson $appInspect `
     -FileApiInspectJson $fileInspect -ConverterInspectJson $converterInspect
-Assert-Test $true 'shared app network has no private host port binding'
+Assert-Test $true `
+    'joiner SandboxKey is not namespace identity when exact app ID matches'
+
+$staleFileInspect = @{
+    Id = ('e' * 64)
+    HostConfig = @{
+        NetworkMode = ('container:' + ('f' * 64))
+        PortBindings = $null
+    }
+    NetworkSettings = @{ SandboxKey = '/var/run/docker/netns/app-owner' }
+} | ConvertTo-Json -Depth 6 -Compress
+$staleAppRejected = $false
+try {
+    Assert-SharedNetworkRuntimeContract -AppInspectJson $appInspect `
+        -FileApiInspectJson $staleFileInspect `
+        -ConverterInspectJson $converterInspect
+} catch {
+    $staleAppRejected = $true
+}
+Assert-Test $staleAppRejected `
+    'sidecar targeting a pre-recreate app container ID is rejected'
 
 $publishedAppInspect = @{
     Id = $appId
@@ -133,6 +156,89 @@ try {
     $publishedRejected = $true
 }
 Assert-Test $publishedRejected 'shared namespace host port publication is rejected'
+
+$gatewayInspectMounts = @(
+    @{ Type = 'bind'; Source = '/run/desktop/mnt/host/d/KT1B-DMS/runtime/nginx.conf';
+        Destination = '/etc/nginx/nginx.conf'; RW = $false },
+    @{ Type = 'bind'; Source = 'D:\CollabView\certs\key.pem';
+        Destination = '/etc/nginx/collabview-certs/key.pem'; RW = $false },
+    @{ Type = 'bind'; Source = 'D:\KT1B-DMS\certs\key.pass';
+        Destination = '/run/secrets/tls_key_passphrase'; RW = $false },
+    @{ Type = 'bind'; Source = 'D:\KT1B-DMS\certs';
+        Destination = '/etc/nginx/kt1b-certs'; RW = $false }
+)
+$gatewayComposeConfig = @{
+    services = @{
+        gateway = @{
+            volumes = @(
+                @{ type = 'bind'; source = 'D:\KT1B-DMS\runtime\nginx.conf';
+                    target = '/etc/nginx/nginx.conf'; read_only = $true },
+                @{ type = 'bind'; source = 'D:\CollabView\certs\key.pem';
+                    target = '/etc/nginx/collabview-certs/key.pem'; read_only = $true },
+                @{ type = 'bind'; source = 'D:\KT1B-DMS\certs\key.pass';
+                    target = '/run/secrets/tls_key_passphrase'; read_only = $true },
+                @{ type = 'bind'; source = 'D:\KT1B-DMS\certs';
+                    target = '/etc/nginx/kt1b-certs'; read_only = $true }
+            )
+        }
+    }
+} | ConvertTo-Json -Depth 8 -Compress
+$gatewayContract = Get-CanonicalGatewayBindContract `
+    -InspectMountsJson (ConvertTo-Json -InputObject $gatewayInspectMounts `
+        -Depth 6 -Compress) `
+    -ComposeConfigJson $gatewayComposeConfig `
+    -DeploymentRoot 'D:\KT1B-DMS' -RuntimeRoot 'D:\KT1B-DMS\runtime'
+Assert-Test ($gatewayContract.Fingerprint -match '^[0-9A-F]{64}$' -and
+    @($gatewayContract.Lines).Count -eq 4 -and
+    @($gatewayContract.Mounts).Count -eq 4) `
+    'gateway inspect and compose config share the exact four-bind allowlist'
+
+$gatewayImageId = 'sha256:' + ('e' * 64)
+$canaryOwnershipToken = '1' * 32
+$canaryCidFile = 'D:\KT1B-DMS\run-logs\canary.cid'
+$canaryArguments = @(Get-GatewayCanaryDockerArguments `
+    -Name 'kt1b-pdfconv-canary-preflight' -ImageId $gatewayImageId `
+    -OwnershipToken $canaryOwnershipToken -CidFile $canaryCidFile `
+    -BindContract $gatewayContract)
+$canaryText = $canaryArguments -join "`n"
+Assert-Test ($canaryArguments[0] -ceq 'create' -and
+    $canaryArguments -cnotcontains '--rm' -and
+    $canaryArguments -ccontains '--network' -and
+    $canaryArguments[([Array]::IndexOf($canaryArguments, '--network') + 1)] `
+        -ceq 'none' -and
+    $canaryArguments -ccontains '--read-only' -and
+    $canaryArguments -ccontains '--cidfile' -and
+    $canaryArguments[([Array]::IndexOf($canaryArguments, '--cidfile') + 1)] `
+        -ceq $canaryCidFile -and
+    $canaryArguments -ccontains
+        "com.esob.tdms.pdfconv.canary=$canaryOwnershipToken" -and
+    $canaryArguments -ccontains '--cap-drop' -and
+    $canaryArguments[([Array]::IndexOf($canaryArguments, '--cap-drop') + 1)] `
+        -ceq 'ALL' -and
+    $canaryArguments -ccontains 'no-new-privileges' -and
+    (@($canaryArguments | Where-Object { $_ -ceq '--mount' })).Count -eq 4 -and
+    $canaryText -notmatch '(?i)publish|--privileged' -and
+    $canaryArguments[$canaryArguments.Count - 4] -ceq $gatewayImageId -and
+    $canaryArguments[$canaryArguments.Count - 3] -ceq '-t' -and
+    $canaryArguments[$canaryArguments.Count - 2] -ceq '-c' -and
+    $canaryArguments[$canaryArguments.Count - 1] -ceq
+        '/etc/nginx/nginx.conf') `
+    'gateway nginx canary is disposable, isolated, read-only and least-privilege'
+
+$driftedCompose = $gatewayComposeConfig.Replace(
+    'D:\\KT1B-DMS\\runtime\\nginx.conf',
+    'D:\\KT1B-DMS\\runtime\\alternate.conf')
+$gatewayDriftRejected = $false
+try {
+    [void](Get-CanonicalGatewayBindContract `
+        -InspectMountsJson (ConvertTo-Json -InputObject $gatewayInspectMounts `
+            -Depth 6 -Compress) -ComposeConfigJson $driftedCompose `
+        -DeploymentRoot 'D:\KT1B-DMS' -RuntimeRoot 'D:\KT1B-DMS\runtime')
+} catch {
+    $gatewayDriftRejected = $true
+}
+Assert-Test $gatewayDriftRejected `
+    'gateway compose bind-source drift is rejected before outage'
 
 $testRoot = Join-Path ([IO.Path]::GetTempPath()) (
     'tdms-pdf-deploy-test-' + [Guid]::NewGuid().ToString('N'))

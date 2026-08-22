@@ -35,6 +35,185 @@ function Get-CanonicalWindowsPath {
     return $fullPath
 }
 
+function Get-DeploymentStringSha256 {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [AllowEmptyString()]
+        [string]$Text
+    )
+
+    $algorithm = [Security.Cryptography.SHA256]::Create()
+    try {
+        $bytes = [Text.UTF8Encoding]::new($false).GetBytes($Text)
+        return (($algorithm.ComputeHash($bytes) |
+                ForEach-Object { $_.ToString('X2') }) -join '')
+    } finally {
+        $algorithm.Dispose()
+    }
+}
+
+function ConvertTo-CanonicalGatewayBindSource {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Source
+    )
+
+    $candidate = $Source
+    $desktop = [regex]::Match($Source,
+        '^/(?:run/desktop/mnt/host|host_mnt)/(?<drive>[A-Za-z])/(?<tail>.+)$')
+    if ($desktop.Success) {
+        $candidate = $desktop.Groups['drive'].Value.ToUpperInvariant() + ':\' +
+            $desktop.Groups['tail'].Value.Replace('/', '\')
+    } elseif ($Source -notmatch '^[A-Za-z]:[\\/]') {
+        throw 'Gateway bind source is not a canonical Windows drive path.'
+    }
+    return (Get-CanonicalWindowsPath -Path $candidate.Replace('/', '\')).
+        ToUpperInvariant()
+}
+
+function Get-CanonicalGatewayBindContract {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$InspectMountsJson,
+
+        [Parameter(Mandatory = $true)]
+        [string]$ComposeConfigJson,
+
+        [Parameter(Mandatory = $true)]
+        [string]$DeploymentRoot,
+
+        [Parameter(Mandatory = $true)]
+        [string]$RuntimeRoot
+    )
+
+    $root = Get-CanonicalWindowsPath -Path $DeploymentRoot
+    $runtime = Get-CanonicalWindowsPath -Path $RuntimeRoot
+    Assert-DeploymentCondition -Condition ($runtime.Equals(
+            (Get-CanonicalWindowsPath -Path (
+                [IO.Path]::Combine($root, 'runtime'))),
+            [StringComparison]::OrdinalIgnoreCase)) `
+        -Message 'Gateway runtime root differs from the fixed deployment layout.'
+
+    $expected = @(
+        [pscustomobject]@{
+            Source = Get-CanonicalWindowsPath -Path (
+                [IO.Path]::Combine($runtime, 'nginx.conf'))
+            Destination = '/etc/nginx/nginx.conf'
+        },
+        [pscustomobject]@{
+            Source = Get-CanonicalWindowsPath -Path 'D:\CollabView\certs\key.pem'
+            Destination = '/etc/nginx/collabview-certs/key.pem'
+        },
+        [pscustomobject]@{
+            Source = Get-CanonicalWindowsPath -Path (
+                [IO.Path]::Combine($root, 'certs\key.pass'))
+            Destination = '/run/secrets/tls_key_passphrase'
+        },
+        [pscustomobject]@{
+            Source = Get-CanonicalWindowsPath -Path (
+                [IO.Path]::Combine($root, 'certs'))
+            Destination = '/etc/nginx/kt1b-certs'
+        }
+    )
+
+    try {
+        [object[]]$inspectMounts = ($InspectMountsJson | ConvertFrom-Json)
+        $compose = $ComposeConfigJson | ConvertFrom-Json
+    } catch {
+        throw 'Gateway bind evidence is not valid JSON.'
+    }
+    $gatewayProperty = $compose.services.PSObject.Properties['gateway']
+    Assert-DeploymentCondition -Condition ($null -ne $gatewayProperty) `
+        -Message 'Compose config does not contain the gateway service.'
+    $composeMounts = @($gatewayProperty.Value.volumes)
+    Assert-DeploymentCondition -Condition (
+        $inspectMounts.Count -eq $expected.Count -and
+        $composeMounts.Count -eq $expected.Count) `
+        -Message 'Gateway bind count differs from the exact four-mount allowlist.'
+
+    $canonical = [Collections.Generic.List[string]]::new()
+    foreach ($entry in $expected) {
+        $source = (Get-CanonicalWindowsPath -Path ([string]$entry.Source)).
+            ToUpperInvariant()
+        $destination = [string]$entry.Destination
+        $inspectMatches = @($inspectMounts | Where-Object {
+                [string]$_.Type -ceq 'bind' -and
+                -not [bool]$_.RW -and
+                [string]$_.Destination -ceq $destination -and
+                (ConvertTo-CanonicalGatewayBindSource `
+                    -Source ([string]$_.Source)) -ceq $source
+            })
+        $composeMatches = @($composeMounts | Where-Object {
+                [string]$_.type -ceq 'bind' -and
+                [bool]$_.read_only -and
+                [string]$_.target -ceq $destination -and
+                (ConvertTo-CanonicalGatewayBindSource `
+                    -Source ([string]$_.source)) -ceq $source
+            })
+        Assert-DeploymentCondition -Condition (
+            $inspectMatches.Count -eq 1 -and $composeMatches.Count -eq 1) `
+            -Message "Gateway bind contract differs at $destination."
+        [void]$canonical.Add("$destination|$source|RO")
+    }
+    $lines = @($canonical.ToArray() | Sort-Object)
+    $text = ($lines -join "`n") + "`n"
+    return [pscustomobject]@{
+        Fingerprint = Get-DeploymentStringSha256 -Text $text
+        Lines = $lines
+        Mounts = $expected
+    }
+}
+
+function Get-GatewayCanaryDockerArguments {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidatePattern('^[a-z0-9][a-z0-9_.-]{7,127}$')]
+        [string]$Name,
+
+        [Parameter(Mandatory = $true)]
+        [ValidatePattern('^sha256:[0-9a-f]{64}$')]
+        [string]$ImageId,
+
+        [Parameter(Mandatory = $true)]
+        [ValidatePattern('^[0-9a-f]{32}$')]
+        [string]$OwnershipToken,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$CidFile,
+
+        [Parameter(Mandatory = $true)]
+        [object]$BindContract
+    )
+
+    Assert-DeploymentCondition -Condition (@($BindContract.Mounts).Count -eq 4) `
+        -Message 'Gateway canary requires the exact four-mount bind contract.'
+    $arguments = [Collections.Generic.List[string]]::new()
+    foreach ($argument in @('create', '--name', $Name, '--pull', 'never',
+            '--cidfile', $CidFile,
+            '--label', "com.esob.tdms.pdfconv.canary=$OwnershipToken",
+            '--network', 'none', '--read-only', '--cap-drop', 'ALL',
+            '--security-opt', 'no-new-privileges', '--add-host',
+            'app:127.0.0.1', '--entrypoint', 'nginx')) {
+        [void]$arguments.Add([string]$argument)
+    }
+    foreach ($mount in @($BindContract.Mounts)) {
+        [void]$arguments.Add('--mount')
+        [void]$arguments.Add(('type=bind,source={0},target={1},readonly' -f
+                [string]$mount.Source, [string]$mount.Destination))
+    }
+    [void]$arguments.Add($ImageId)
+    [void]$arguments.Add('-t')
+    [void]$arguments.Add('-c')
+    [void]$arguments.Add('/etc/nginx/nginx.conf')
+    return $arguments.ToArray()
+}
+
 function Assert-DeploymentChildPath {
     [CmdletBinding()]
     param(
@@ -237,6 +416,10 @@ function Assert-SharedNetworkRuntimeContract {
     foreach ($entry in @(
             @{ Value = $fileApi; Name = 'File API' },
             @{ Value = $converter; Name = 'PDF converter' })) {
+        # Docker records service:app as container:<resolved app ID>. This is
+        # the authoritative join target. NetworkSettings.SandboxKey describes
+        # a libnetwork-owned sandbox; container-mode joiners do not own that
+        # sandbox and may expose an empty or different key in docker inspect.
         $networkMode = [string]$entry.Value.HostConfig.NetworkMode
         Assert-DeploymentCondition `
             -Condition ($networkMode -ceq $expectedNetwork) `
@@ -746,6 +929,10 @@ function Invoke-PdfRuntimeOnlyRollback {
 Export-ModuleMember -Function @(
     'Assert-DeploymentCondition',
     'Get-CanonicalWindowsPath',
+    'Get-DeploymentStringSha256',
+    'ConvertTo-CanonicalGatewayBindSource',
+    'Get-CanonicalGatewayBindContract',
+    'Get-GatewayCanaryDockerArguments',
     'Assert-DeploymentChildPath',
     'Test-ContainerNameInDockerList',
     'Test-PgRestoreTableDataEntry',

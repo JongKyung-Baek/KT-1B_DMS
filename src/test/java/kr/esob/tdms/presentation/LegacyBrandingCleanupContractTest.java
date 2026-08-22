@@ -137,6 +137,16 @@ class LegacyBrandingCleanupContractTest {
                         "이솝소프트(주) 회사소개 및 제품소개서(약식)_202303.pdf",
                         "");
             }
+            if (path.getFileName().toString().equals(
+                    "PdfConversionDeployment.Common.psm1")
+                    || path.getFileName().toString().equals(
+                            "Test-PdfConversionDeployment.Common.ps1")) {
+                // These exact values are the preserved external TLS bind and
+                // public test-server endpoint contracts, not UI branding.
+                text = text.replace("D:\\CollabView\\certs\\key.pem", "")
+                        .replace("/etc/nginx/collabview-certs/key.pem", "")
+                        .replace("demo.esob.kr", "");
+            }
             assertFalse(RETIRED_BRAND.matcher(text).find(),
                     "Retired customer/vendor branding remains in " + path);
         } catch (IOException exception) {

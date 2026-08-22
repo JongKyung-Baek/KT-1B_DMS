@@ -95,6 +95,7 @@ $script:LiveOverlayDirectory = Join-Path $script:Runtime 'pdf-conversion'
 $script:LiveOverlay = Join-Path $script:LiveOverlayDirectory `
     'compose.pdf-conversion.yaml'
 $script:BaseCompose = Join-Path $script:Runtime 'compose.remote.yaml'
+$script:GatewayConfig = Join-Path $script:Runtime 'nginx.conf'
 $script:BaseEnvironment = Join-Path $script:Root '.env'
 $script:LiveWar = Join-Path $script:Root 'app\SDMS-KT-1B.war'
 $script:Checksums = Join-Path $script:Root 'checksums.sha256'
@@ -735,6 +736,593 @@ function Assert-OverlayContract {
     }
 }
 
+function Get-GatewayBindAclFingerprint {
+    $currentSid = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value
+    $sections = [Security.AccessControl.AccessControlSections]::Access -bor
+        [Security.AccessControl.AccessControlSections]::Owner -bor
+        [Security.AccessControl.AccessControlSections]::Group
+    $records = [Collections.Generic.List[string]]::new()
+    foreach ($entry in @(
+            @{ Path = $script:Runtime; Type = 'Container';
+                Rights = [Security.AccessControl.FileSystemRights]::ReadAndExecute },
+            @{ Path = $script:GatewayConfig; Type = 'Leaf';
+                Rights = [Security.AccessControl.FileSystemRights]::Read })) {
+        $full = [IO.Path]::GetFullPath([string]$entry.Path).TrimEnd('\')
+        Assert-DeploymentCondition -Condition (
+            Test-Path -LiteralPath $full -PathType ([string]$entry.Type)) `
+            -Message "Gateway bind ACL target is missing: $full"
+        $item = Get-Item -LiteralPath $full -Force
+        Assert-DeploymentCondition -Condition (
+            [IO.Path]::GetFullPath($item.FullName).TrimEnd('\').Equals(
+                $full, [StringComparison]::OrdinalIgnoreCase) -and
+            -not ($item.Attributes -band [IO.FileAttributes]::ReparsePoint)) `
+            -Message "Gateway bind ACL target is not a physical canonical path: $full"
+        $acl = Get-Acl -LiteralPath $full
+        $rules = @($acl.GetAccessRules($true, $true,
+                [Security.Principal.SecurityIdentifier]) | Where-Object {
+                $_.IdentityReference.Value -ceq $currentSid
+            })
+        $expectedRights = [int64]$entry.Rights
+        $allowedRights = @($expectedRights,
+            ($expectedRights -bor
+                [int64][Security.AccessControl.FileSystemRights]::Synchronize)) |
+            Select-Object -Unique
+        Assert-DeploymentCondition -Condition (
+            $rules.Count -eq 1 -and
+            $rules[0].AccessControlType -eq
+                [Security.AccessControl.AccessControlType]::Allow -and
+            -not $rules[0].IsInherited -and
+            $rules[0].InheritanceFlags -eq
+                [Security.AccessControl.InheritanceFlags]::None -and
+            $rules[0].PropagationFlags -eq
+                [Security.AccessControl.PropagationFlags]::None -and
+            $allowedRights -ccontains [int64]$rules[0].FileSystemRights) `
+            -Message "Gateway bind ACL does not grant the exact deployment-account access: $full"
+        [void]$records.Add(($full.ToUpperInvariant() + '|' +
+                $acl.GetSecurityDescriptorSddlForm($sections)))
+    }
+    return Get-DeploymentStringSha256 -Text (
+        ((@($records.ToArray() | Sort-Object) -join "`n") + "`n"))
+}
+
+function Get-GatewayBindContractEvidence {
+    param([DateTime]$Deadline = [DateTime]::MaxValue)
+
+    if ($Deadline -eq [DateTime]::MaxValue) {
+        $inspectOutput = @(Invoke-NativeChecked `
+            -Operation 'Inspect authoritative gateway mounts' -Command {
+                & docker inspect --type container --format '{{json .Mounts}}' `
+                    $script:GatewayContainer
+            })
+    } else {
+        $inspectTimeout = Get-GatewayCanaryTimeoutMilliseconds `
+            -Deadline $Deadline -MaximumMilliseconds 1000 `
+            -ReserveMilliseconds 23000 `
+            -Operation 'authoritative mount inspection'
+        $inspectResult = Invoke-BoundedSafeDockerProcess -Arguments @(
+            'inspect', '--type', 'container', $script:GatewayContainer) `
+            -TimeoutMilliseconds $inspectTimeout
+        Assert-DeploymentCondition -Condition (-not $inspectResult.TimedOut -and
+            $inspectResult.ExitCode -eq 0 -and
+            -not [string]::IsNullOrWhiteSpace([string]$inspectResult.Stdout)) `
+            -Message 'Gateway mount inspection failed within its budget.'
+        try {
+            $inspectObjects = @(([string]$inspectResult.Stdout |
+                    ConvertFrom-Json))
+            Assert-DeploymentCondition -Condition ($inspectObjects.Count -eq 1) `
+                -Message 'Gateway mount inspection returned an invalid count.'
+            $inspectOutput = @((ConvertTo-Json `
+                    -InputObject @($inspectObjects[0].Mounts) `
+                    -Depth 8 -Compress))
+        } catch {
+            throw 'Gateway mount inspection returned invalid JSON.'
+        }
+    }
+    Assert-DeploymentCondition -Condition ($inspectOutput.Count -eq 1) `
+        -Message 'Gateway mount inspection returned an unexpected result.'
+    # Compose JSON can contain expanded environment values. It is kept only in
+    # memory, never written or emitted, and the pure validator returns paths
+    # and hashes only.
+    if ($Deadline -eq [DateTime]::MaxValue) {
+        $composeOutput = @(Invoke-BaseCompose -Arguments @(
+                'config', '--format', 'json') `
+            -Operation 'Read canonical base compose configuration')
+    } else {
+        $composeTimeout = Get-GatewayCanaryTimeoutMilliseconds `
+            -Deadline $Deadline -MaximumMilliseconds 2500 `
+            -ReserveMilliseconds 23000 `
+            -Operation 'canonical compose inspection'
+        $composeResult = Invoke-BoundedSafeDockerProcess -Arguments @(
+            'compose', '-p', 'kt1b-dms', '--env-file',
+            $script:BaseEnvironment, '-f', $script:BaseCompose,
+            'config', '--format', 'json') `
+            -TimeoutMilliseconds $composeTimeout
+        Assert-DeploymentCondition -Condition (-not $composeResult.TimedOut -and
+            $composeResult.ExitCode -eq 0 -and
+            -not [string]::IsNullOrWhiteSpace([string]$composeResult.Stdout)) `
+            -Message 'Base compose inspection failed within its budget.'
+        $composeOutput = @([string]$composeResult.Stdout)
+    }
+    Assert-DeploymentCondition -Condition ($composeOutput.Count -gt 0) `
+        -Message 'Base compose configuration returned no JSON.'
+    $composeJson = $composeOutput -join "`n"
+    try {
+        return Get-CanonicalGatewayBindContract `
+            -InspectMountsJson ([string]$inspectOutput[0]) `
+            -ComposeConfigJson $composeJson -DeploymentRoot $script:Root `
+            -RuntimeRoot $script:Runtime
+    } finally {
+        $composeJson = $null
+        $composeOutput = $null
+    }
+}
+
+function Get-GatewayImageId {
+    param([DateTime]$Deadline = [DateTime]::MaxValue)
+
+    if ($Deadline -eq [DateTime]::MaxValue) {
+        $output = @(Invoke-NativeChecked `
+            -Operation 'Inspect exact gateway image' -Command {
+                & docker inspect --type container --format '{{.Image}}' `
+                    $script:GatewayContainer
+            })
+    } else {
+        $timeout = Get-GatewayCanaryTimeoutMilliseconds -Deadline $Deadline `
+            -MaximumMilliseconds 1000 -ReserveMilliseconds 23000 `
+            -Operation 'gateway image inspection'
+        $result = Invoke-BoundedSafeDockerProcess -Arguments @(
+            'inspect', '--type', 'container', '--format={{.Image}}',
+            $script:GatewayContainer) -TimeoutMilliseconds $timeout
+        Assert-DeploymentCondition -Condition (-not $result.TimedOut -and
+            $result.ExitCode -eq 0) `
+            -Message 'Gateway image inspection failed within its budget.'
+        $output = @(([string]$result.Stdout -split "`r?`n") |
+            ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' })
+    }
+    Assert-DeploymentCondition -Condition ($output.Count -eq 1 -and
+        ([string]$output[0]).Trim() -match '^sha256:[0-9a-f]{64}$') `
+        -Message 'Gateway image inspection returned an invalid image ID.'
+    return ([string]$output[0]).Trim()
+}
+
+function Invoke-BoundedSafeDockerProcess {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string[]]$Arguments,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateRange(500, 15000)]
+        [int]$TimeoutMilliseconds
+    )
+
+    foreach ($argument in $Arguments) {
+        Assert-DeploymentCondition -Condition (
+            -not [string]::IsNullOrWhiteSpace($argument) -and
+            $argument -notmatch '[\s"'']') `
+            -Message 'Bounded Docker process received an unsafe argument.'
+    }
+    $dockerExecutable = (Get-Command docker.exe -CommandType Application `
+        -ErrorAction Stop).Source
+    $startInfo = [Diagnostics.ProcessStartInfo]::new()
+    $startInfo.FileName = $dockerExecutable
+    $startInfo.Arguments = $Arguments -join ' '
+    $startInfo.UseShellExecute = $false
+    $startInfo.CreateNoWindow = $true
+    $startInfo.RedirectStandardOutput = $true
+    $startInfo.RedirectStandardError = $true
+    $process = [Diagnostics.Process]::new()
+    $process.StartInfo = $startInfo
+    try {
+        Assert-DeploymentCondition -Condition $process.Start() `
+            -Message 'Bounded Docker process could not start.'
+        $stdoutTask = $process.StandardOutput.ReadToEndAsync()
+        $stderrTask = $process.StandardError.ReadToEndAsync()
+        $timedOut = -not $process.WaitForExit($TimeoutMilliseconds)
+        if ($timedOut) {
+            try { $process.Kill() } catch { }
+            [void]$process.WaitForExit(500)
+        } else {
+            $process.WaitForExit()
+        }
+        Assert-DeploymentCondition -Condition $process.HasExited `
+            -Message 'Timed-out Docker client could not be terminated.'
+        $stdout = $stdoutTask.GetAwaiter().GetResult()
+        [void]$stderrTask.GetAwaiter().GetResult()
+        return [pscustomobject]@{
+            TimedOut = $timedOut
+            ExitCode = if ($timedOut) { $null } else { $process.ExitCode }
+            Stdout = [string]$stdout
+        }
+    } finally {
+        $process.Dispose()
+    }
+}
+
+function Get-GatewayCanaryTimeoutMilliseconds {
+    param(
+        [Parameter(Mandatory = $true)]
+        [DateTime]$Deadline,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateRange(500, 15000)]
+        [int]$MaximumMilliseconds,
+
+        [ValidateRange(0, 26000)]
+        [int]$ReserveMilliseconds = 0,
+
+        [Parameter(Mandatory = $true)]
+        [string]$Operation
+    )
+
+    $remainingMilliseconds = [Math]::Floor(
+        ($Deadline.ToUniversalTime() - (Get-Date).ToUniversalTime()).
+            TotalMilliseconds) - $ReserveMilliseconds - 500
+    Assert-DeploymentCondition -Condition ($remainingMilliseconds -ge 500) `
+        -Message "Gateway canary exhausted its absolute budget before $Operation."
+    return [Math]::Min($MaximumMilliseconds,
+        [int]$remainingMilliseconds)
+}
+
+function Get-GatewayCanaryInspectObject {
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidatePattern('^[0-9a-f]{64}$')]
+        [string]$ContainerId,
+
+        [Parameter(Mandatory = $true)]
+        [DateTime]$Deadline
+    )
+
+    $timeout = Get-GatewayCanaryTimeoutMilliseconds -Deadline $Deadline `
+        -MaximumMilliseconds 1000 -Operation 'container inspection'
+    $result = Invoke-BoundedSafeDockerProcess `
+        -Arguments @('inspect', '--type', 'container', $ContainerId) `
+        -TimeoutMilliseconds $timeout
+    Assert-DeploymentCondition -Condition (-not $result.TimedOut -and
+        $result.ExitCode -eq 0 -and
+        -not [string]::IsNullOrWhiteSpace([string]$result.Stdout)) `
+        -Message 'Gateway canary ownership inspection failed.'
+    try {
+        $objects = @(([string]$result.Stdout | ConvertFrom-Json))
+    } catch {
+        throw 'Gateway canary ownership inspection returned invalid JSON.'
+    }
+    Assert-DeploymentCondition -Condition ($objects.Count -eq 1) `
+        -Message 'Gateway canary ownership inspection returned an invalid count.'
+    return $objects[0]
+}
+
+function Get-BoundedGatewayContainerId {
+    param(
+        [Parameter(Mandatory = $true)]
+        [DateTime]$Deadline
+    )
+
+    $timeout = Get-GatewayCanaryTimeoutMilliseconds -Deadline $Deadline `
+        -MaximumMilliseconds 1000 -ReserveMilliseconds 21000 `
+        -Operation 'gateway identity inspection'
+    $result = Invoke-BoundedSafeDockerProcess -Arguments @(
+        'inspect', '--type', 'container', '--format={{.Id}}',
+        $script:GatewayContainer) -TimeoutMilliseconds $timeout
+    $ids = @(([string]$result.Stdout -split "`r?`n") |
+        ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' })
+    Assert-DeploymentCondition -Condition (-not $result.TimedOut -and
+        $result.ExitCode -eq 0 -and $ids.Count -eq 1 -and
+        [string]$ids[0] -match '^[0-9a-f]{64}$') `
+        -Message 'Gateway identity inspection failed within its budget.'
+    return [string]$ids[0]
+}
+
+function Get-GatewayCanaryIdsByName {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Name,
+
+        [Parameter(Mandatory = $true)]
+        [DateTime]$Deadline,
+
+        [ValidateRange(0, 23000)]
+        [int]$ReserveMilliseconds = 0
+    )
+
+    $timeout = Get-GatewayCanaryTimeoutMilliseconds -Deadline $Deadline `
+        -MaximumMilliseconds 1000 `
+        -ReserveMilliseconds $ReserveMilliseconds `
+        -Operation 'exact-name lookup'
+    $lookup = Invoke-BoundedSafeDockerProcess -Arguments @(
+        'ps', '--all', '--no-trunc', '--filter', "name=^/$Name$",
+        '--format', '{{.ID}}') -TimeoutMilliseconds $timeout
+    Assert-DeploymentCondition -Condition (-not $lookup.TimedOut -and
+        $lookup.ExitCode -eq 0) `
+        -Message 'Gateway canary exact-name lookup failed.'
+    return @(([string]$lookup.Stdout -split "`r?`n") |
+        ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' })
+}
+
+function Resolve-OwnedGatewayCanaryId {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Name,
+
+        [Parameter(Mandatory = $true)]
+        [ValidatePattern('^[0-9a-f]{32}$')]
+        [string]$OwnershipToken,
+
+        [Parameter(Mandatory = $true)]
+        [DateTime]$Deadline,
+
+        [switch]$AllowAbsent
+    )
+
+    $ids = @(Get-GatewayCanaryIdsByName -Name $Name `
+        -Deadline $Deadline)
+    if ($ids.Count -eq 0) {
+        Assert-DeploymentCondition -Condition $AllowAbsent.IsPresent `
+            -Message 'Gateway canary is missing after creation.'
+        return $null
+    }
+    Assert-DeploymentCondition -Condition ($ids.Count -eq 1 -and
+        [string]$ids[0] -match '^[0-9a-f]{64}$') `
+        -Message 'Gateway canary exact-name lookup was ambiguous.'
+    $id = [string]$ids[0]
+    $inspect = Get-GatewayCanaryInspectObject -ContainerId $id `
+        -Deadline $Deadline
+    $labelProperty = $inspect.Config.Labels.PSObject.Properties[
+        'com.esob.tdms.pdfconv.canary']
+    Assert-DeploymentCondition -Condition (
+        [string]$inspect.Id -ceq $id -and
+        [string]$inspect.Name -ceq "/$Name" -and
+        $null -ne $labelProperty -and
+        [string]$labelProperty.Value -ceq $OwnershipToken) `
+        -Message 'Gateway canary ownership proof failed; it will not be removed.'
+    return $id
+}
+
+function Invoke-GatewayConfigurationCanary {
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateSet('Preflight', 'ApplyPreflight', 'PreOutage',
+            'ApplyGatewayStart', 'RollbackGatewayStart',
+            'ResumeGatewayStart')]
+        [string]$Phase,
+
+        [object]$ExpectedState,
+
+        [ValidateSet('Original', 'Release')]
+        [string]$RuntimeExpectation = 'Original',
+
+        [DateTime]$Deadline = [DateTime]::MaxValue,
+
+        [switch]$PassThru
+    )
+
+    $canaryDeadline = (Get-Date).ToUniversalTime().AddSeconds(30)
+    if ($Deadline -ne [DateTime]::MaxValue) {
+        $remaining = ($Deadline.ToUniversalTime() -
+            (Get-Date).ToUniversalTime()).TotalSeconds
+        Assert-DeploymentCondition -Condition ($remaining -ge 40) `
+            -Message "Gateway canary and gateway-start reserve is unavailable: $Phase"
+        $outerCanaryDeadline = $Deadline.ToUniversalTime().AddSeconds(-10)
+        if ($outerCanaryDeadline -lt $canaryDeadline) {
+            $canaryDeadline = $outerCanaryDeadline
+        }
+    }
+    $aclFingerprint = Get-GatewayBindAclFingerprint
+    $bindContract = Get-GatewayBindContractEvidence `
+        -Deadline $canaryDeadline
+    $imageId = Get-GatewayImageId -Deadline $canaryDeadline
+    $canaryFingerprint = Get-DeploymentStringSha256 -Text (
+        "GATEWAY_NGINX_TEST_V3`n$imageId`n$($bindContract.Fingerprint)`n" +
+        "$aclFingerprint`nNETWORK=none`nREAD_ONLY=true`nCAP_DROP=ALL`n" +
+        "NO_NEW_PRIVILEGES=true`nMOUNTS=4`nCONFIG=/etc/nginx/nginx.conf`n" +
+        "TOTAL_BUDGET_SECONDS=30`nCREATE_TIMEOUT_SECONDS=5`n" +
+        "START_TIMEOUT_SECONDS=15`nCLEANUP_RESERVED_SECONDS=5`n" +
+        "POST_CANARY_GATEWAY_RESERVE_SECONDS=10`n")
+    if ($null -ne $ExpectedState) {
+        Assert-DeploymentCondition -Condition (
+            (Get-BoundedGatewayContainerId -Deadline $canaryDeadline) -ceq
+                [string]$ExpectedState.gatewayContainerId -and
+            [string]$ExpectedState.gatewayImageId -ceq $imageId -and
+            [string]$ExpectedState.gatewayBindContractFingerprint -ceq
+                [string]$bindContract.Fingerprint -and
+            [string]$ExpectedState.gatewayAclSddlFingerprint -ceq
+                $aclFingerprint -and
+            [string]$ExpectedState.gatewayCanaryFingerprint -ceq
+                $canaryFingerprint) `
+            -Message 'Gateway ACL, bind, image, or canary contract changed.'
+        foreach ($entry in @(
+                @{ Path = $script:BaseCompose;
+                    Hash = [string]$ExpectedState.baseComposeSha256;
+                    Name = 'base compose' },
+                @{ Path = $script:BaseEnvironment;
+                    Hash = [string]$ExpectedState.baseEnvironmentSha256;
+                    Name = 'base environment' },
+                @{ Path = $script:SecretEnvironment;
+                    Hash = [string]$ExpectedState.secretEnvironmentSha256;
+                    Name = 'secret environment' })) {
+            Assert-DeploymentCondition -Condition (
+                (Get-FileHash -LiteralPath ([string]$entry.Path) `
+                    -Algorithm SHA256).Hash -ceq [string]$entry.Hash) `
+                -Message "Gateway pre-start $($entry.Name) changed."
+        }
+        $expectedWar = if ($RuntimeExpectation -ceq 'Release') {
+            [string]$ExpectedState.releaseWarSha256
+        } else { [string]$ExpectedState.originalWarSha256 }
+        $expectedChecksums = if ($RuntimeExpectation -ceq 'Release') {
+            [string]$ExpectedState.checksumsNextSha256
+        } else { [string]$ExpectedState.runtimeBackupHashes.checksums }
+        Assert-DeploymentCondition -Condition (
+            (Get-FileHash -LiteralPath $script:LiveWar -Algorithm SHA256).Hash `
+                -ceq $expectedWar -and
+            (Get-FileHash -LiteralPath $script:Checksums -Algorithm SHA256).Hash `
+                -ceq $expectedChecksums) `
+            -Message "Gateway pre-start $RuntimeExpectation WAR/checksum contract changed."
+        if ($RuntimeExpectation -ceq 'Release') {
+            Assert-DeploymentCondition -Condition (
+                Test-Path -LiteralPath $script:LiveOverlay -PathType Leaf) `
+                -Message 'Release gateway pre-start overlay is missing.'
+            Assert-DeploymentCondition -Condition (
+                (Get-FileHash -LiteralPath $script:LiveOverlay `
+                    -Algorithm SHA256).Hash -ceq
+                    [string]$ExpectedState.releaseOverlaySha256) `
+                -Message 'Release gateway pre-start overlay changed.'
+        } elseif ([bool]$ExpectedState.overlayExisted) {
+            Assert-DeploymentCondition -Condition (
+                Test-Path -LiteralPath $script:LiveOverlay -PathType Leaf) `
+                -Message 'Original gateway pre-start overlay is missing.'
+            Assert-DeploymentCondition -Condition (
+                (Get-FileHash -LiteralPath $script:LiveOverlay `
+                    -Algorithm SHA256).Hash -ceq
+                    [string]$ExpectedState.runtimeBackupHashes.overlay) `
+                -Message 'Original gateway pre-start overlay changed.'
+        } else {
+            Assert-DeploymentCondition -Condition (-not
+                (Test-Path -LiteralPath $script:LiveOverlay)) `
+                -Message 'Unexpected original gateway pre-start overlay exists.'
+        }
+    }
+
+    $canaryName = ('kt1b-pdfconv-gateway-{0}-{1}' -f
+        $ReleaseId, $Phase.ToLowerInvariant())
+    $existingCanaryIds = @(Get-GatewayCanaryIdsByName -Name $canaryName `
+        -Deadline $canaryDeadline -ReserveMilliseconds 21000)
+    Assert-DeploymentCondition -Condition ($existingCanaryIds.Count -eq 0) `
+        -Message "A gateway canary already exists and will not be reused: $canaryName"
+    $ownershipToken = [Guid]::NewGuid().ToString('N')
+    $cidPath = Join-Path $script:RunLogs ($canaryName + '.cid.partial')
+    Assert-DeploymentCondition -Condition (-not
+        (Test-Path -LiteralPath $cidPath)) `
+        -Message "A gateway canary CID file already exists: $cidPath"
+    $arguments = @(Get-GatewayCanaryDockerArguments -Name $canaryName `
+        -ImageId $imageId -OwnershipToken $ownershipToken `
+        -CidFile $cidPath -BindContract $bindContract)
+    $createdId = $null
+    $createTimedOut = $false
+    $createMayCompleteLate = $false
+    $primaryFailure = $null
+    $cleanupFailure = $null
+    try {
+        $createTimeout = Get-GatewayCanaryTimeoutMilliseconds `
+            -Deadline $canaryDeadline -MaximumMilliseconds 5000 `
+            -ReserveMilliseconds 21000 -Operation 'container creation'
+        $createMayCompleteLate = $true
+        $createResult = Invoke-BoundedSafeDockerProcess `
+            -Arguments $arguments -TimeoutMilliseconds $createTimeout
+        $createTimedOut = [bool]$createResult.TimedOut
+        if (-not $createTimedOut) { $createMayCompleteLate = $false }
+        if ($createResult.TimedOut -or $createResult.ExitCode -ne 0) {
+            $primaryFailure = "Gateway canary create failed or timed out: $Phase"
+        }
+        if (Test-Path -LiteralPath $cidPath -PathType Leaf) {
+            $cid = [IO.File]::ReadAllText($cidPath).Trim()
+            if ($cid -match '^[0-9a-f]{64}$') { $createdId = $cid }
+        }
+        if ([string]::IsNullOrWhiteSpace($createdId) -and
+                -not [string]::IsNullOrWhiteSpace([string]$createResult.Stdout)) {
+            $candidateId = ([string]$createResult.Stdout).Trim()
+            if ($candidateId -match '^[0-9a-f]{64}$') {
+                $createdId = $candidateId
+            }
+        }
+        if ([string]::IsNullOrWhiteSpace($primaryFailure)) {
+            $ownedId = Resolve-OwnedGatewayCanaryId -Name $canaryName `
+                -OwnershipToken $ownershipToken -Deadline $canaryDeadline
+            Assert-DeploymentCondition -Condition (
+                [string]::IsNullOrWhiteSpace($createdId) -or
+                $createdId -ceq $ownedId) `
+                -Message 'Gateway canary CID differs from its owned container.'
+            $createdId = $ownedId
+            $startTimeout = Get-GatewayCanaryTimeoutMilliseconds `
+                -Deadline $canaryDeadline -MaximumMilliseconds 15000 `
+                -ReserveMilliseconds 5500 -Operation 'nginx validation'
+            $startResult = Invoke-BoundedSafeDockerProcess `
+                -Arguments @('start', '--attach', $createdId) `
+                -TimeoutMilliseconds $startTimeout
+            if ($startResult.TimedOut -or $startResult.ExitCode -ne 0) {
+                $primaryFailure = "Gateway nginx canary exceeded 15s or failed: $Phase"
+            } else {
+                $completed = Get-GatewayCanaryInspectObject `
+                    -ContainerId $createdId -Deadline $canaryDeadline
+                if ([string]$completed.State.Status -cne 'exited' -or
+                        [int]$completed.State.ExitCode -ne 0) {
+                    $primaryFailure = "Gateway nginx canary state is invalid: $Phase"
+                }
+            }
+        }
+    } catch {
+        if ([string]::IsNullOrWhiteSpace($primaryFailure)) {
+            $primaryFailure = "Gateway canary validation failed: $Phase"
+        }
+    } finally {
+        try {
+            $lateCreationCutoff = (Get-Date).ToUniversalTime()
+            if ($createMayCompleteLate) {
+                $lateCreationCutoff = $lateCreationCutoff.AddSeconds(2)
+                $cleanupReserveCutoff = $canaryDeadline.AddSeconds(-4)
+                if ($cleanupReserveCutoff -lt $lateCreationCutoff) {
+                    $lateCreationCutoff = $cleanupReserveCutoff
+                }
+            }
+            do {
+                $ownedId = Resolve-OwnedGatewayCanaryId -Name $canaryName `
+                    -OwnershipToken $ownershipToken -Deadline $canaryDeadline `
+                    -AllowAbsent
+                if (-not [string]::IsNullOrWhiteSpace($ownedId) -or
+                        -not $createMayCompleteLate -or
+                        (Get-Date).ToUniversalTime() -ge $lateCreationCutoff) {
+                    break
+                }
+                Start-Sleep -Milliseconds 200
+            } while ($true)
+            if (-not [string]::IsNullOrWhiteSpace($ownedId)) {
+                if (-not [string]::IsNullOrWhiteSpace($createdId)) {
+                    Assert-DeploymentCondition -Condition (
+                        $createdId -ceq $ownedId) `
+                        -Message 'Gateway canary cleanup identity changed.'
+                }
+                $createdId = $ownedId
+                $removeTimeout = Get-GatewayCanaryTimeoutMilliseconds `
+                    -Deadline $canaryDeadline -MaximumMilliseconds 2000 `
+                    -Operation 'owned container cleanup'
+                $removeResult = Invoke-BoundedSafeDockerProcess `
+                    -Arguments @('rm', '--force', $createdId) `
+                    -TimeoutMilliseconds $removeTimeout
+                Assert-DeploymentCondition -Condition (-not
+                    $removeResult.TimedOut -and $removeResult.ExitCode -eq 0) `
+                    -Message 'Generated gateway canary cleanup failed.'
+            }
+            $residueId = Resolve-OwnedGatewayCanaryId -Name $canaryName `
+                -OwnershipToken $ownershipToken -Deadline $canaryDeadline `
+                -AllowAbsent
+            Assert-DeploymentCondition -Condition (
+                [string]::IsNullOrWhiteSpace($residueId)) `
+                -Message 'Generated gateway canary residue remains.'
+            if (Test-Path -LiteralPath $cidPath -PathType Leaf) {
+                Remove-Item -LiteralPath $cidPath -Force
+            }
+        } catch {
+            $cleanupFailure = $_.Exception.Message
+        }
+    }
+    if (-not [string]::IsNullOrWhiteSpace($cleanupFailure)) {
+        throw "MANUAL_RECOVERY_REQUIRED: $cleanupFailure"
+    }
+    if (-not [string]::IsNullOrWhiteSpace($primaryFailure)) {
+        throw $primaryFailure
+    }
+
+    if ($PassThru) {
+        return [pscustomobject]@{
+            GatewayImageId = $imageId
+            BindContractFingerprint = [string]$bindContract.Fingerprint
+            BindContractLines = @($bindContract.Lines)
+            AclSddlFingerprint = $aclFingerprint
+            CanaryFingerprint = $canaryFingerprint
+            VerifiedAt = (Get-Date).ToUniversalTime().ToString('o')
+        }
+    }
+}
+
 function Lock-ImmutableReleaseFiles {
     $expectedCount = if ($script:Artifacts.ContainsKey('publicProbeCa')) {
         10
@@ -954,6 +1542,16 @@ function Invoke-BaseCompose {
 }
 
 function Assert-LivePreflight {
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateSet('Preflight', 'ApplyPreflight', 'PreOutage')]
+        [string]$CanaryPhase,
+
+        [object]$ExpectedGatewayState,
+
+        [switch]$PassThru
+    )
+
     Assert-DeploymentCondition -Condition (
         Test-Path -LiteralPath $script:CurlExecutable -PathType Leaf) `
         -Message 'The fixed Windows curl executable is missing.'
@@ -1004,6 +1602,10 @@ function Assert-LivePreflight {
     Assert-DeploymentCondition -Condition ($https.Count -eq 1 -and
         ([string]$https[0]).Trim() -ceq '200') `
         -Message 'Live HTTPS login smoke failed.'
+    $gatewayEvidence = Invoke-GatewayConfigurationCanary `
+        -Phase $CanaryPhase -ExpectedState $ExpectedGatewayState `
+        -PassThru:$PassThru
+    if ($PassThru) { return $gatewayEvidence }
 }
 
 function Read-BaseEnvironment {
@@ -1563,6 +2165,11 @@ function Update-ChecksumManifest {
 }
 
 function New-PreOutageState {
+    param(
+        [Parameter(Mandatory = $true)]
+        [object]$GatewayEvidence
+    )
+
     $backupRoot = Join-Path $script:RunLogs `
         "pdf-conversion-backup-$ReleaseId"
     Assert-DeploymentCondition -Condition (-not
@@ -1756,6 +2363,8 @@ function New-PreOutageState {
             -LiteralPath $script:LiveWar -Algorithm SHA256).Hash
         releaseWarSha256 = (Get-FileHash `
             -LiteralPath $script:Artifacts['war'] -Algorithm SHA256).Hash
+        releaseOverlaySha256 = (Get-FileHash `
+            -LiteralPath $script:Artifacts['overlay'] -Algorithm SHA256).Hash
         originalAppImageId = $oldImageId
         originalAppImageReference = $oldImageReference
         rollbackImageTag = $rollbackTag
@@ -1769,6 +2378,15 @@ function New-PreOutageState {
             -LiteralPath $rollbackEnvironment -Algorithm SHA256).Hash
         appContainerId = Get-ContainerId -Name $script:AppContainer
         gatewayContainerId = Get-ContainerId -Name $script:GatewayContainer
+        gatewayImageId = [string]$GatewayEvidence.GatewayImageId
+        gatewayBindContractFingerprint =
+            [string]$GatewayEvidence.BindContractFingerprint
+        gatewayBindContractLines = @($GatewayEvidence.BindContractLines)
+        gatewayAclSddlFingerprint =
+            [string]$GatewayEvidence.AclSddlFingerprint
+        gatewayCanaryFingerprint =
+            [string]$GatewayEvidence.CanaryFingerprint
+        gatewayCanaryVerifiedAt = [string]$GatewayEvidence.VerifiedAt
         databaseContainerId = Get-ContainerId -Name $script:DbContainer
         databaseName = $dbName
         databaseAdminUser = $admin
@@ -1943,6 +2561,8 @@ function Resume-OriginalBeforeMutation {
         (Get-ContainerId -Name $script:GatewayContainer) -ceq
             [string]$State.gatewayContainerId) `
         -Message 'Original gateway identity changed before resume.'
+    [void](Invoke-GatewayConfigurationCanary -Phase 'ResumeGatewayStart' `
+        -ExpectedState $State -Deadline $Deadline)
     [void](Invoke-NativeChecked -Operation 'Resume unchanged gateway' `
         -Command { & docker start $script:GatewayContainer })
     Wait-Healthy -Name $script:GatewayContainer -Deadline $Deadline
@@ -2066,11 +2686,6 @@ function Invoke-RuntimeRollback {
                 $war -ceq [string]$State.originalWarSha256) `
                 -Message 'Runtime rollback restored the wrong WAR.'
             $restoredAppId = Get-ContainerId -Name $script:AppContainer
-            $restoredAppSandbox = (@(Invoke-NativeChecked `
-                -Operation 'Inspect restored app sandbox' -Command {
-                    & docker inspect --format '{{.NetworkSettings.SandboxKey}}' `
-                        $script:AppContainer
-                }))[0].ToString().Trim()
             foreach ($sidecar in @($State.originalFileApi,
                     $State.originalConverter)) {
                 if (-not [bool]$sidecar.existed) {
@@ -2088,8 +2703,6 @@ function Invoke-RuntimeRollback {
                 Assert-DeploymentCondition -Condition (
                     [string]$inspect.HostConfig.NetworkMode -ceq
                         "container:$restoredAppId" -and
-                    [string]$inspect.NetworkSettings.SandboxKey -ceq
-                        $restoredAppSandbox -and
                     -not (Test-PublishedBindingForPort `
                         -Bindings $inspect.HostConfig.PortBindings -Port 9001) -and
                     -not (Test-PublishedBindingForPort `
@@ -2126,6 +2739,9 @@ function Invoke-RuntimeRollback {
                 (Get-ContainerId -Name $script:GatewayContainer) -ceq
                 [string]$State.gatewayContainerId) `
                 -Message 'Gateway container was replaced during rollback.'
+            [void](Invoke-GatewayConfigurationCanary `
+                -Phase 'RollbackGatewayStart' -ExpectedState $State `
+                -Deadline $Deadline)
             [void](Invoke-NativeChecked -Operation 'Start existing gateway' `
                 -Command { & docker start $script:GatewayContainer })
             Wait-Healthy -Name $script:GatewayContainer `
@@ -2346,7 +2962,7 @@ function Read-ApprovedState {
     }
     foreach ($id in @($stateObject.originalAppImageId,
             $stateObject.preparedAppImageId, $stateObject.fileApiImageId,
-            $stateObject.converterImageId)) {
+            $stateObject.converterImageId, $stateObject.gatewayImageId)) {
         Assert-DeploymentCondition -Condition (
             [string]$id -match '^sha256:[0-9a-f]{64}$') `
             -Message 'Release state contains an invalid image id.'
@@ -2370,6 +2986,12 @@ function Read-ApprovedState {
             '^kt1b-dms-app:rollback-[a-z0-9][a-z0-9.-]{7,79}$') `
         -Message 'Release state contains an unsafe image reference.'
     foreach ($hash in @($stateObject.databaseBackupSha256,
+            $stateObject.baseEnvironmentSha256,
+            $stateObject.baseComposeSha256,
+            $stateObject.secretEnvironmentSha256,
+            $stateObject.originalWarSha256,
+            $stateObject.releaseWarSha256,
+            $stateObject.releaseOverlaySha256,
             $stateObject.originalDatabaseFingerprint,
             $stateObject.originalDatabaseFullFingerprint,
             $stateObject.restoredDatabaseFullFingerprint,
@@ -2386,11 +3008,26 @@ function Read-ApprovedState {
             $stateObject.runtimeBackupHashes.baseCompose,
             $stateObject.runtimeBackupHashes.secretEnvironment,
             $stateObject.runtimeBackupHashes.war,
-            $stateObject.runtimeBackupHashes.checksums)) {
+            $stateObject.runtimeBackupHashes.checksums,
+            $stateObject.gatewayBindContractFingerprint,
+            $stateObject.gatewayAclSddlFingerprint,
+            $stateObject.gatewayCanaryFingerprint)) {
         Assert-DeploymentCondition -Condition (
             [string]$hash -match '^[0-9A-F]{64}$') `
             -Message 'Release state contains an invalid integrity hash.'
     }
+    $gatewayBindLines = @($stateObject.gatewayBindContractLines |
+        ForEach-Object { [string]$_ })
+    Assert-DeploymentCondition -Condition (
+        $gatewayBindLines.Count -eq 4 -and
+        (Get-DeploymentStringSha256 -Text (
+                (($gatewayBindLines -join "`n") + "`n"))) -ceq
+            [string]$stateObject.gatewayBindContractFingerprint) `
+        -Message 'Release state gateway bind evidence is invalid.'
+    Assert-DeploymentCondition -Condition (
+        [string]$stateObject.gatewayCanaryVerifiedAt -match
+            '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{7}Z$') `
+        -Message 'Release state gateway canary timestamp is invalid.'
     Assert-DeploymentCondition -Condition (
         [string]$stateObject.databaseWalPosition -match
             '^[0-9A-F]+/[0-9A-F]+$') `
@@ -2437,17 +3074,19 @@ function Read-ApprovedState {
 
 function Invoke-PreflightMode {
     Read-ReleaseContract
-    Assert-LivePreflight
+    [void](Assert-LivePreflight -CanaryPhase 'Preflight')
     Assert-DeploymentCondition -Condition (
         [int]$script:Request.outageTimeoutSeconds -eq 180) `
         -Message 'Production outage budget must be exactly 180 seconds.'
     Write-Output 'PDF_RELEASE_RESULT=PREFLIGHT_OK'
-    Write-Output 'LIVE_MUTATIONS_APPLIED=False'
+    Write-Output 'LIVE_DEPLOYMENT_MUTATIONS_APPLIED=False'
+    Write-Output 'DISPOSABLE_GATEWAY_CANARY_EXECUTED=True'
 }
 
 function Invoke-ApplyMode {
     Read-ReleaseContract
-    Assert-LivePreflight
+    $initialGatewayEvidence = Assert-LivePreflight `
+        -CanaryPhase 'ApplyPreflight' -PassThru
     Assert-DeploymentCondition -Condition (
         [int]$script:Request.outageTimeoutSeconds -eq 180) `
         -Message 'Production outage budget must be exactly 180 seconds.'
@@ -2460,9 +3099,11 @@ function Invoke-ApplyMode {
     try {
         # All expensive or failure-prone preparation completes while the old
         # app and gateway remain healthy and user traffic remains available.
-        $script:State = New-PreOutageState
+        $script:State = New-PreOutageState `
+            -GatewayEvidence $initialGatewayEvidence
         Assert-RuntimeRollbackAssets -State $script:State
-        Assert-LivePreflight
+        [void](Assert-LivePreflight -CanaryPhase 'PreOutage' `
+            -ExpectedGatewayState $script:State)
         Write-Output "PRE_OUTAGE_STATE_SHA256=$($script:State.stateSha256)"
 
         $script:OutageStartedAt = Get-Date
@@ -2618,15 +3259,11 @@ function Invoke-ApplyMode {
             -AppInspectJson ([string]$appInspect) `
             -FileApiInspectJson ([string]$fileInspect) `
             -ConverterInspectJson ([string]$converterInspect)
-        $appObject = ([string]$appInspect | ConvertFrom-Json)
-        $fileObject = ([string]$fileInspect | ConvertFrom-Json)
-        $converterObject = ([string]$converterInspect | ConvertFrom-Json)
-        Assert-DeploymentCondition -Condition (
-            [string]$appObject.NetworkSettings.SandboxKey -ceq
-                [string]$fileObject.NetworkSettings.SandboxKey -and
-            [string]$appObject.NetworkSettings.SandboxKey -ceq
-                [string]$converterObject.NetworkSettings.SandboxKey) `
-            -Message 'Private sidecars do not share the app sandbox.'
+        # Docker resolves network_mode: service:app to container:<app ID> in
+        # HostConfig.NetworkMode. A container-mode joiner does not own the
+        # libnetwork sandbox and its inspect SandboxKey may therefore be empty
+        # or differ from the owner's key. The exact post-recreate app ID above,
+        # followed by both loopback probes below, is the runtime contract.
         Assert-DeploymentCondition -Condition (
             (Get-ContainerId -Name $script:DbContainer) -ceq
             [string]$script:State.databaseContainerId) `
@@ -2654,6 +3291,10 @@ function Invoke-ApplyMode {
             -Operation 'private integration probes'
 
         # The gateway is never recreated. Its original container is started.
+        [void](Invoke-GatewayConfigurationCanary `
+            -Phase 'ApplyGatewayStart' -ExpectedState $script:State `
+            -RuntimeExpectation 'Release' `
+            -Deadline $script:ApplyDeadline)
         [void](Invoke-NativeChecked -Operation 'Start existing gateway' `
             -Command { & docker start $script:GatewayContainer })
         Wait-Healthy -Name $script:GatewayContainer `

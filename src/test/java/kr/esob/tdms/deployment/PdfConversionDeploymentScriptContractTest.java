@@ -190,6 +190,149 @@ class PdfConversionDeploymentScriptContractTest {
     }
 
     @Test
+    void gatewayBindAclHasNonInheritedRuntimeTraversalAndExactRollback()
+            throws IOException {
+        String bindAcl = read("Prepare-PdfConversionBindAcl.ps1");
+        String readme = read("README.md");
+
+        assertTrue(bindAcl.contains(
+                "Path = Join-Path $root 'runtime'; Type = 'Container';"));
+        assertTrue(bindAcl.contains(
+                "Rights = 'ReadAndExecute'; ThisFolderOnly = $true"));
+        assertTrue(bindAcl.contains(
+                "Path = Join-Path $root 'runtime\\nginx.conf'; Type = 'Leaf';"));
+        assertTrue(bindAcl.contains("Rights = 'Read'"));
+        assertTrue(bindAcl.contains("$Target.Contains('ThisFolderOnly')"));
+        assertTrue(bindAcl.contains("$inheritChildren = $false"));
+        assertTrue(bindAcl.contains(
+                "$inheritance = [Security.AccessControl.InheritanceFlags]::None"));
+        assertTrue(bindAcl.contains("GetSecurityDescriptorSddlForm($sections)"));
+        assertTrue(bindAcl.contains("SetSecurityDescriptorSddlForm"));
+        assertTrue(bindAcl.contains("[array]::Reverse($restoreRecords)"));
+        assertTrue(bindAcl.contains("BIND_ACL_BACKUP_ROOT="));
+        assertTrue(bindAcl.contains("BIND_ACL_BACKUP_SHA256="));
+        assertTrue(bindAcl.contains(
+                "BIND_ACL_APPLIED_FINGERPRINT_SHA256="));
+        assertTrue(bindAcl.contains(
+                "BIND_ACL_RESTORED_FINGERPRINT_SHA256="));
+        assertTrue(bindAcl.contains("BIND_ACL_RESULT=ROLLED_BACK"));
+        assertTrue(bindAcl.contains(
+                "BIND_ACL_RESTORE_RESULT=ROLLED_BACK_TO_APPLIED"));
+        assertTrue(bindAcl.contains(
+                "Bind ACL readback differs from the minimum contract"));
+        assertFalse(bindAcl.contains(
+                "Set-ExactDeploymentAccountRule -Target $root"));
+        assertFalse(bindAcl.contains(
+                "Set-ExactDeploymentAccountRule -Target $staging"));
+        assertTrue(readme.contains("this-folder-only traversal"));
+        assertTrue(readme.contains("protected root ACL"));
+    }
+
+    @Test
+    void gatewayRestartUsesPinnedBindsAclEvidenceAndBoundedNginxCanaries()
+            throws IOException {
+        String runner = read("Invoke-PdfConversionRelease.ps1");
+        String common = read("PdfConversionDeployment.Common.psm1");
+        String helperTest = read("Test-PdfConversionDeployment.Common.ps1");
+        String readme = read("README.md");
+        String canary = runner.substring(
+                runner.indexOf("function Invoke-BoundedSafeDockerProcess"),
+                runner.indexOf("function Lock-ImmutableReleaseFiles"));
+
+        assertTrue(common.contains("function Get-CanonicalGatewayBindContract"));
+        assertTrue(common.contains("D:\\CollabView\\certs\\key.pem"));
+        assertTrue(common.contains("certs\\key.pass"));
+        assertTrue(common.contains("/etc/nginx/nginx.conf"));
+        assertTrue(common.contains("/etc/nginx/collabview-certs/key.pem"));
+        assertTrue(common.contains("/run/secrets/tls_key_passphrase"));
+        assertTrue(common.contains("/etc/nginx/kt1b-certs"));
+        assertTrue(common.contains("$inspectMounts.Count -eq $expected.Count"));
+        assertTrue(common.contains("$composeMounts.Count -eq $expected.Count"));
+        assertTrue(runner.contains("'config', '--format', 'json'"));
+        assertTrue(runner.contains("'{{json .Mounts}}'"));
+        assertTrue(runner.contains("Get-GatewayBindAclFingerprint"));
+        assertTrue(runner.contains("gatewayAclSddlFingerprint"));
+
+        assertTrue(common.contains("@('create', '--name'"));
+        assertTrue(common.contains("'--cidfile', $CidFile"));
+        assertTrue(common.contains("'--network', 'none'"));
+        assertTrue(common.contains("'--read-only', '--cap-drop', 'ALL'"));
+        assertTrue(common.contains("'--security-opt', 'no-new-privileges'"));
+        assertTrue(common.contains("'--entrypoint', 'nginx'"));
+        assertTrue(common.contains("[void]$arguments.Add('-t')"));
+        assertTrue(common.contains("[void]$arguments.Add('-c')"));
+        assertTrue(common.contains("'/etc/nginx/nginx.conf'"));
+        assertTrue(canary.contains("ReadToEndAsync"));
+        assertTrue(canary.contains("WaitForExit($TimeoutMilliseconds)"));
+        assertTrue(canary.contains("TOTAL_BUDGET_SECONDS=30"));
+        assertTrue(canary.contains(
+                "POST_CANARY_GATEWAY_RESERVE_SECONDS=10"));
+        assertTrue(canary.contains("-MaximumMilliseconds 5000"));
+        assertTrue(canary.contains("-MaximumMilliseconds 15000"));
+        assertTrue(runner.contains("-ReserveMilliseconds 23000"));
+        assertTrue(canary.contains("-ReserveMilliseconds 21000"));
+        assertTrue(canary.contains("-ReserveMilliseconds 5500"));
+        assertTrue(canary.contains("$process.Kill()"));
+        assertTrue(canary.contains("@('start', '--attach', $createdId)"));
+        assertTrue(canary.contains("@('rm', '--force', $createdId)"));
+        assertFalse(canary.contains("@('rm', '--force', $canaryName)"));
+        assertTrue(canary.contains("function Resolve-OwnedGatewayCanaryId"));
+        assertTrue(canary.contains("function Get-BoundedGatewayContainerId"));
+        assertTrue(canary.contains(
+                "Get-BoundedGatewayContainerId -Deadline $canaryDeadline"));
+        assertTrue(canary.contains("$inspect.Id -ceq $id"));
+        assertTrue(canary.contains("$inspect.Name -ceq \"/$Name\""));
+        assertTrue(canary.contains("com.esob.tdms.pdfconv.canary"));
+        assertTrue(canary.contains("A gateway canary already exists"));
+        assertTrue(canary.contains("$ownedId = Resolve-OwnedGatewayCanaryId"));
+        assertTrue(canary.contains("-AllowAbsent"));
+        assertTrue(canary.contains("$createTimedOut"));
+        assertTrue(canary.contains("$createMayCompleteLate = $true"));
+        assertTrue(canary.contains(
+                "if (-not $createTimedOut) { $createMayCompleteLate = $false }"));
+        assertTrue(canary.contains("$lateCreationCutoff"));
+        assertTrue(canary.contains("Start-Sleep -Milliseconds 200"));
+        assertTrue(canary.contains("MANUAL_RECOVERY_REQUIRED"));
+        assertFalse(canary.contains("-Message $primaryFailure"));
+        assertTrue(canary.contains(
+                "$primaryFailure = \"Gateway canary validation failed: $Phase\""));
+
+        for (String phase : new String[] { "Preflight", "ApplyPreflight",
+                "PreOutage", "ApplyGatewayStart", "ResumeGatewayStart",
+                "RollbackGatewayStart" }) {
+            assertTrue(runner.contains("'" + phase + "'"), phase);
+        }
+        assertTrue(runner.contains(
+                "-Phase 'ApplyGatewayStart' -ExpectedState $script:State"));
+        assertTrue(runner.contains("-Deadline $script:ApplyDeadline"));
+        assertTrue(runner.contains("-Deadline $Deadline"));
+        assertTrue(runner.contains("AddSeconds(90)"));
+        assertTrue(runner.contains("AddSeconds(180)"));
+
+        for (String field : new String[] { "gatewayContainerId",
+                "gatewayImageId", "gatewayBindContractFingerprint",
+                "gatewayBindContractLines", "gatewayAclSddlFingerprint",
+                "gatewayCanaryFingerprint", "gatewayCanaryVerifiedAt" }) {
+            assertTrue(runner.contains(field), field);
+        }
+        assertTrue(canary.contains("$ExpectedState.baseComposeSha256"));
+        assertTrue(canary.contains("$ExpectedState.baseEnvironmentSha256"));
+        assertTrue(canary.contains("$ExpectedState.secretEnvironmentSha256"));
+        assertTrue(canary.contains("$ExpectedState.releaseWarSha256"));
+        assertTrue(canary.contains("$ExpectedState.releaseOverlaySha256"));
+        assertTrue(canary.contains("$ExpectedState.checksumsNextSha256"));
+        assertTrue(canary.contains("$ExpectedState.originalWarSha256"));
+        assertTrue(canary.contains("$ExpectedState.runtimeBackupHashes.checksums"));
+        assertTrue(canary.contains("$RuntimeExpectation -ceq 'Release'"));
+        assertTrue(runner.contains("LIVE_DEPLOYMENT_MUTATIONS_APPLIED=False"));
+        assertTrue(runner.contains("DISPOSABLE_GATEWAY_CANARY_EXECUTED=True"));
+        assertTrue(helperTest.contains("gateway compose bind-source drift"));
+        assertTrue(helperTest.contains("gateway nginx canary is disposable"));
+        assertTrue(readme.contains("Runtime rollback validates them but never"));
+        assertTrue(readme.contains("BIND_ACL_BACKUP_SHA256"));
+    }
+
+    @Test
     void recursiveStageInventoryRejectsEveryDirectoryAndUnknownFile()
             throws IOException {
         String runner = read("Invoke-PdfConversionRelease.ps1");
@@ -444,7 +587,9 @@ class PdfConversionDeploymentScriptContractTest {
         assertTrue(common.contains("Assert-SharedNetworkRuntimeContract"));
         assertTrue(common.contains("'container:' + [string]$app.Id"));
         assertTrue(common.contains("@(9001, 18080)"));
-        assertTrue(runner.contains("SandboxKey"));
+        assertFalse(runner.contains("NetworkSettings.SandboxKey"));
+        assertTrue(common.contains("container-mode joiners do not own"));
+        assertTrue(runner.contains("exact post-recreate app ID"));
         assertTrue(runner.contains("18080/api/v1/health"));
         assertTrue(runner.contains("Status = '200'"));
         assertTrue(runner.contains("Status = '405'"));

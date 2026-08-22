@@ -31,6 +31,20 @@ Modify grant is forbidden. Back up and independently verify the ACLs and the
 application/container access path before publishing a release; keep the
 approved ACL rollback procedure outside this runner.
 
+Use the tracked `Prepare-PdfConversionBindAcl.ps1` helper for that separate,
+pinned pre-release step. In addition to the existing exact bind targets, it
+grants the deployment SID `ReadAndExecute` on the `runtime` directory with no
+inheritance (this-folder-only traversal) and `Read` on `runtime\nginx.conf`.
+This lets Docker re-open the existing gateway bind mount after a stop without
+relaxing the protected root ACL or granting access to other runtime children.
+The helper captures every target's exact SDDL before mutation, verifies each
+explicit ACE after mutation, and restores the captured SDDL in reverse order
+on failure or an explicitly pinned `Restore` invocation.
+Retain its `BIND_ACL_BACKUP_ROOT`, `BIND_ACL_BACKUP_SHA256`, and
+`BIND_ACL_APPLIED_FINGERPRINT_SHA256` readback as approval evidence. A prior
+SDDL is restored only by a separately invoked helper `Restore` with the pinned
+release id and backup hash; the release runner never performs that restore.
+
 1. Assemble all files named in `deployment-request.json`, plus the runner and
    common module, in a new local release directory. Replace every example hash
    and set `exampleOnly` to `false`.
@@ -101,7 +115,29 @@ The gateway is never recreated: the runner stops and starts its captured
 container identity. The application, File API, and converter are jointly
 recreated; both sidecars must share the exact application network namespace,
 must expose no host binding for ports 18080 or 9001, and must return the
-expected private probe statuses.
+expected private probe statuses. Docker resolves `network_mode: service:app`
+to `HostConfig.NetworkMode=container:<current-app-id>` when creating each
+sidecar. The runner verifies that exact post-recreate ID and both loopback
+probes; it does not compare `NetworkSettings.SandboxKey`, because a
+container-mode joiner does not own the libnetwork sandbox and may report an
+empty or different key.
+
+Gateway restart is also fail-closed. The existing gateway container's inspect
+mounts are authoritative and must exactly match the base Compose JSON for four
+read-only binds: `runtime\nginx.conf`, the external TLS private key,
+`certs\key.pass`, and the `certs` directory, each at its pinned container
+destination. Preflight verifies the post-hardening `runtime`/`nginx.conf` ACL
+SDDL fingerprint and runs the exact captured gateway image as a disposable
+`nginx -t` canary with `--network none`, a read-only root filesystem, all
+capabilities dropped, no-new-privileges, and only those four bind mounts. The
+same canary runs immediately before outage, immediately before the Apply
+gateway start, and immediately before rollback starts the existing gateway.
+An existing release/phase canary name is a hard failure; the runner never
+deletes or reuses a stale canary. The approved state pins the gateway container
+and image, canonical bind contract, ACL SDDL fingerprint, and successful
+canary contract. Runtime rollback validates them but never restores a prior ACL
+SDDL automatically. The separately pinned ACL helper's backup root and SHA-256
+are retained as the only authorized manual SDDL restore evidence.
 
 ## Rollback boundary
 

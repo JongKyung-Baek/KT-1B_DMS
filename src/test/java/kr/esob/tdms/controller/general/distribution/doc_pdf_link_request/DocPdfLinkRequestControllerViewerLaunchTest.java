@@ -357,6 +357,34 @@ class DocPdfLinkRequestControllerViewerLaunchTest {
     }
 
     @Test
+    void unsupportedSwViewerExtensionStopsBeforeQueueAndViewerPreparation() {
+        DocPdfLinkRequestController controller = new DocPdfLinkRequestController();
+        controller.dao = org.mockito.Mockito.mock(DocPdfLinkRequestDao.class);
+        controller.securityAclService = org.mockito.Mockito.mock(SecurityAclService.class);
+        controller.viewerIntegrationService = org.mockito.Mockito.mock(ViewerIntegrationService.class);
+        controller.pdfConversionQueueService = org.mockito.Mockito.mock(PdfConversionQueueService.class);
+        controller.fileApiClient = org.mockito.Mockito.mock(FileApiClient.class);
+        Authentication authentication = org.mockito.Mockito.mock(Authentication.class);
+        when(authentication.getPrincipal()).thenReturn(actor());
+        when(controller.dao.selectSwFile(any())).thenReturn("SW/source-archive.zip");
+        when(controller.dao.selectSubFileParent("SW", "SW-MAIN-UNSUPPORTED", "1")).thenReturn(null);
+        when(controller.dao.selectFileNmSW(any())).thenReturn("source-archive.zip");
+        ExtendedModelMap model = new ExtendedModelMap();
+
+        String view = controller.selectItem2(
+                "SW-MAIN-UNSUPPORTED", "SW", "REQ-SW-UNSUPPORTED", "1",
+                authentication, model);
+
+        assertEquals("/general/distribution/docConvertFail", view);
+        assertEquals("Y", model.get("convertFailRestricted"));
+        assertEquals("UNSUPPORTED_VIEWER", model.get("conversionStatus"));
+        assertEquals("N", model.get("conversionFailed"));
+        verifyNoInteractions(controller.pdfConversionQueueService);
+        verifyNoInteractions(controller.viewerIntegrationService);
+        verifyNoInteractions(controller.fileApiClient);
+    }
+
+    @Test
     void unavailableCompletedSwPdfDoesNotFallBackToLegacyOnDemandConversion() throws Exception {
         DocPdfLinkRequestController controller = new DocPdfLinkRequestController();
         controller.dao = org.mockito.Mockito.mock(DocPdfLinkRequestDao.class);

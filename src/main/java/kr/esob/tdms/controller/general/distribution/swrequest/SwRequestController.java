@@ -583,7 +583,12 @@ public class SwRequestController extends AbstractController {
 		model.addAttribute("registerUser", registerUser);
 		model.addAttribute("date", date);
 		model.addAttribute("treeCd", param.getTreeCd());
-		model.addAttribute("allowedTechnicalFileExtensions", TechnicalFileTypePolicy.acceptAttribute());
+		model.addAttribute("technicalDirectPdfExtensions", TechnicalFileTypePolicy.extensionCsv(
+				TechnicalFileTypePolicy.directPdfExtensions()));
+		model.addAttribute("technicalDirectStepExtensions", TechnicalFileTypePolicy.extensionCsv(
+				TechnicalFileTypePolicy.directStepExtensions()));
+		model.addAttribute("technicalPdfConversionExtensions", TechnicalFileTypePolicy.extensionCsv(
+				TechnicalFileTypePolicy.pdfConversionExtensions()));
 
 
 		// 파일유형, 사업단계

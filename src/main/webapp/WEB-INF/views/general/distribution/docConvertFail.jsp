@@ -36,10 +36,15 @@
 </head>
 <body>
 <c:set var="failed" value="${conversionStatus eq 'FAILED'}"/>
-<main class="conversion-card ${failed ? 'is-failed' : ''}" role="status" aria-live="polite">
-    <div class="conversion-icon" aria-hidden="true">${failed ? '!' : '↻'}</div>
+<c:set var="unsupported" value="${conversionStatus eq 'UNSUPPORTED_VIEWER'}"/>
+<main class="conversion-card ${(failed or unsupported) ? 'is-failed' : ''}" role="status" aria-live="polite">
+    <div class="conversion-icon" aria-hidden="true">${(failed or unsupported) ? '!' : '↻'}</div>
     <div class="conversion-eyebrow"><spring:message code="feature.pdfConversion.eyebrow"/></div>
     <c:choose>
+        <c:when test="${unsupported}">
+            <h1><spring:message code="feature.pdfConversion.unsupported.title"/></h1>
+            <p><spring:message code="feature.pdfConversion.unsupported.description"/></p>
+        </c:when>
         <c:when test="${failed}">
             <h1><spring:message code="feature.pdfConversion.failed.title"/></h1>
             <p><spring:message code="feature.pdfConversion.failed.description"/></p>

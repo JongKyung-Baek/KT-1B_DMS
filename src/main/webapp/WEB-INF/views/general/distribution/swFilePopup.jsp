@@ -148,6 +148,8 @@
 		return status === "PENDING"
 			|| status === "PROCESSING"
 			|| status === "WAITING"
+			|| status === "NOT_VIEWABLE"
+			|| status === "UNSUPPORTED_VIEWER"
 			|| status === "FAIL"
 			|| status === "FAILED"
 			|| status === "ERROR";
@@ -180,9 +182,14 @@
 			return escapeAttr(name);
 		}
 		if (!isSwViewerPreviewFile(rowdata || {}, name)) {
+			var processingStatus = getSwFileProcessingStatus(rowdata || {});
+			var unavailableLabel = processingStatus === "NOT_VIEWABLE"
+				|| processingStatus === "UNSUPPORTED_VIEWER"
+				? swFileMessage("feature.techDetail.file.originalOnly", "원본 보관 · 미리보기 미지원")
+				: swFileMessage("feature.techDetail.file.previewUnavailable", "미리보기 미지원");
 			return '<span class="sw-file-name-static">' + escapeAttr(name) + '</span>'
 				+ '<span class="sw-file-preview-unavailable">'
-				+ escapeAttr(swFileMessage("feature.techDetail.file.previewUnavailable", "미리보기 미지원"))
+				+ escapeAttr(unavailableLabel)
 				+ '</span>';
 		}
 		var objectId = rowdata.objectId || "";

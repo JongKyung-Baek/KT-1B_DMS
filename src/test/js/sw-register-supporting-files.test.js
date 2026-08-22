@@ -90,16 +90,23 @@ assert.equal(input.value, "");
 registerViews.forEach(viewPath => {
     const view = fs.readFileSync(viewPath, "utf8");
     const selectionScript = view.indexOf("swSupportingFileSelection.js");
+    const typePolicyScript = view.indexOf("swTechnicalFileTypePolicy.js");
     const registrationScript = view.indexOf("swRegisterPopup.js");
     assert.notEqual(selectionScript, -1, `${viewPath} must load the selection helper`);
     assert.ok(selectionScript < registrationScript,
         `${viewPath} must load the selection helper before its DOM adapter`);
+    assert.ok(selectionScript < typePolicyScript && typePolicyScript < registrationScript,
+        `${viewPath} must load the type policy before its DOM adapter`);
     assert.match(view, /appendSwAccumulatedSubFiles\(this, this\.files \|\| \[\]\)/);
     assert.match(view, /appendSwAccumulatedSubFiles\(this, this\.files \|\| \[\]\);\s*this\.value = ''/);
     assert.match(view, /appendSwAccumulatedSubFilesToFormData\(formData, subFileInput, "subFiles"\)/);
     assert.match(view, /id="swSubFileSelectionList"/);
     assert.match(view, /removeSwAccumulatedSubFile\(input, index\)/);
     assert.match(view, /renderSwSubSelectedFiles\(\)/);
+    assert.match(view, /appendSwTechnicalFileTypeBadge\(\$item, file\)/);
+    assert.match(view, /id="swMainFileTypeStatus"/);
+    assert.doesNotMatch(view, /accept="/,
+        `${viewPath} must let the native file picker show every file`);
     assert.match(view, /if \(response && response\.success\) \{\s*clearSwSubSelectedFiles\(\)/);
     assert.match(view,
         /if \(allowMultiple\) \{\s*appendSwAccumulatedSubFiles\(input, files\);\s*input\.value = '';\s*renderSwSubSelectedFiles\(\);\s*return;/,

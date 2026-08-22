@@ -37,7 +37,7 @@ assert.equal(context.isSwViewerPreviewFile({ orgFileNm: "model.step", processing
 assert.equal(context.isSwViewerPreviewFile({ orgFileNm: "guide.docx", processingStatus: "DONE" }), true);
 assert.equal(context.isSwViewerPreviewFile({ orgFileNm: "guide.docx", processingstatus: "succeeded" }), true);
 
-for (const processingStatus of ["PENDING", "PROCESSING", "FAIL"]) {
+for (const processingStatus of ["PENDING", "PROCESSING", "FAIL", "NOT_VIEWABLE", "UNSUPPORTED_VIEWER"]) {
     assert.equal(
         context.isSwViewerPreviewFile({ orgFileNm: "guide.docx", processingStatus }),
         false,
@@ -51,6 +51,8 @@ for (const processingStatus of ["PENDING", "PROCESSING", "FAIL"]) {
 }
 
 assert.equal(context.isSwViewerPreviewFile({ orgFileNm: "guide.docx" }), false);
+assert.equal(context.isSwViewerPreviewFile({ orgFileNm: "archive.zip", processingStatus: "NOT_VIEWABLE" }), false);
+assert.match(popup, /feature\.techDetail\.file\.originalOnly/);
 assert.match(popup, /initSwFileGrid\("gridSwMainFile", mainFileRows\)/);
 assert.match(popup, /initSwFileGrid\("gridSwSubFile", subFileRows\)/);
 assert.match(popup, /formatter: function \(cellValue, options, rowdata\) \{\s*return formatSwFileName/);

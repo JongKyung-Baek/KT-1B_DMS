@@ -69,7 +69,7 @@ class SwRequestMultipleSubFileRegistrationTest {
     }
 
     @Test
-    void repeatedSubFilePartsAreStoredAndQueuedIndependently() throws Exception {
+    void repeatedSubFilePartsAreStoredAndOnlyViewerSupportedFilesAreQueued() throws Exception {
         SwRequestDao dao = mock(SwRequestDao.class);
         PdfConversionQueueService conversionQueue = mock(PdfConversionQueueService.class);
         AtomicInteger nextSubFileNo = new AtomicInteger();
@@ -84,17 +84,21 @@ class SwRequestMultipleSubFileRegistrationTest {
         request.addFile(file("subFiles", "attachment-a.docx", "attachment A"));
         request.addFile(file("subFiles", "attachment-b.pdf", "attachment B"));
         request.addFile(file("subFiles", "model.step", "attachment C"));
+        request.addFile(file("subFiles", "source-archive.zip", "attachment D"));
 
         assertThat(service.saveSwRegisterFileX2(request).isSuccess()).isTrue();
 
         ArgumentCaptor<SwSubFileParam> inserted = ArgumentCaptor.forClass(SwSubFileParam.class);
-        verify(dao, times(3)).insertSwSubFile(inserted.capture());
+        verify(dao, times(4)).insertSwSubFile(inserted.capture());
         assertThat(inserted.getAllValues())
                 .extracting(SwSubFileParam::getFileNo)
-                .containsExactly(1, 2, 3);
+                .containsExactly(1, 2, 3, 4);
         assertThat(inserted.getAllValues())
                 .extracting(SwSubFileParam::getOrgFileNm)
-                .containsExactly("attachment-a.docx", "attachment-b.pdf", "model.step");
+                .containsExactly("attachment-a.docx", "attachment-b.pdf", "model.step", "source-archive.zip");
+        assertThat(inserted.getAllValues())
+                .extracting(SwSubFileParam::getProcessingStatus)
+                .containsExactly("PENDING", "DONE", "DONE", "NOT_VIEWABLE");
         assertThat(inserted.getAllValues())
                 .extracting(SwSubFileParam::getObjectId)
                 .doesNotHaveDuplicates();
@@ -115,7 +119,8 @@ class SwRequestMultipleSubFileRegistrationTest {
         assertThat(originalName.getAllValues()).containsExactly(
                 "main.docx", "attachment-a.docx", "attachment-b.pdf", "model.step");
         assertThat(objectId.getAllValues().subList(1, 4)).doesNotHaveDuplicates();
-        assertThat(uploadedPaths).hasSize(4);
+        assertThat(originalName.getAllValues()).doesNotContain("source-archive.zip");
+        assertThat(uploadedPaths).hasSize(5);
         assertThat(uploadedPaths).allMatch(path -> path.contains("folder=UPLOAD"));
     }
 

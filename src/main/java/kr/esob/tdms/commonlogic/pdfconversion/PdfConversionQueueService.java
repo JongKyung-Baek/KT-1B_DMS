@@ -33,6 +33,7 @@ public class PdfConversionQueueService {
                                           String originalFileName,
                                           String storedPath,
                                           MultipartFile upload) {
+        requireViewerProcessable(originalFileName);
         if (upload == null || upload.isEmpty()) {
             throw new IllegalArgumentException("Conversion upload is empty.");
         }
@@ -52,6 +53,7 @@ public class PdfConversionQueueService {
                                           String fileNo,
                                           String storedPath,
                                           String originalFileName) {
+        requireViewerProcessable(originalFileName);
         java.nio.file.Path source = sourceStore.materialize(
                 storedPath, PdfConversionSourceStore.extensionSuffix(originalFileName));
         try {
@@ -165,6 +167,13 @@ public class PdfConversionQueueService {
             throw new IllegalArgumentException("PDF conversion source SHA-256 is invalid.");
         }
         return normalized;
+    }
+
+    private void requireViewerProcessable(String originalFileName) {
+        if (!TechnicalFileTypePolicy.isViewerProcessable(originalFileName)) {
+            throw new IllegalArgumentException(
+                    "PDF conversion is not available for this file extension.");
+        }
     }
 
     private String safeError(String value) {

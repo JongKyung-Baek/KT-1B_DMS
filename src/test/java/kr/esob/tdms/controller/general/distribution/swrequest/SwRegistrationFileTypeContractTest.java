@@ -18,30 +18,39 @@ class SwRegistrationFileTypeContractTest {
 
         assertTrue(method.contains("sanitizeFileName(file.getOriginalFilename())"));
         assertFalse(method.contains("sanitizeFileName(request.getParameter(\"orgFileNm\"))"));
-        assertTrue(method.contains("findUnsupportedSubFileName(subFiles)"));
-        assertTrue(method.indexOf("findUnsupportedSubFileName(subFiles)")
+        assertTrue(method.contains("findInvalidSubFileName(subFiles)"));
+        assertTrue(method.indexOf("findInvalidSubFileName(subFiles)")
                 < method.indexOf("uploadMultipartToFileApi(file"));
         assertTrue(method.contains("objectId + \".\" + extension"));
 
         String subFiles = section(service, "private void saveSwSubFiles", "private SwRegisterPopupParam getFileSavedPath");
-        assertTrue(subFiles.contains("TechnicalFileTypePolicy.isAllowedFileName(originalName)"));
+        assertTrue(subFiles.contains("TechnicalFileTypePolicy.isSafeFileName(originalName)"));
         assertTrue(subFiles.contains("subObjectId + \".\" + extension"));
         assertFalse(subFiles.contains("subObjectId + \".pdf\""));
+        assertTrue(subFiles.contains("enqueuePreviewIfSupported("));
+        assertTrue(subFiles.contains("TechnicalFileTypePolicy.isViewerProcessable(originalFileName)"));
+        assertTrue(subFiles.contains("TechnicalFileTypePolicy.initialProcessingStatus(fileName)"));
     }
 
     @Test
-    void registrationUiUsesServerAllowlistAndReportsServerResult() throws Exception {
+    void registrationUiShowsAllFilesAndUsesServerPreviewPolicy() throws Exception {
         String page = read("src/main/webapp/WEB-INF/views/general/distribution/swRegisterPage.jsp");
         String popup = read("src/main/webapp/WEB-INF/views/general/distribution/swRegisterPopup.jsp");
         String controller = read("src/main/java/kr/esob/tdms/controller/general/distribution/swrequest/SwRequestController.java");
 
-        assertTrue(controller.contains("allowedTechnicalFileExtensions"));
-        assertTrue(controller.contains("TechnicalFileTypePolicy.acceptAttribute()"));
-        assertTrue(page.contains("accept=\"${allowedTechnicalFileExtensions}\""));
-        assertTrue(popup.contains("accept=\"${allowedTechnicalFileExtensions}\""));
+        assertTrue(controller.contains("technicalDirectPdfExtensions"));
+        assertTrue(controller.contains("technicalDirectStepExtensions"));
+        assertTrue(controller.contains("technicalPdfConversionExtensions"));
+        assertFalse(page.contains("accept=\""));
+        assertFalse(popup.contains("accept=\""));
+        assertTrue(page.contains("swTechnicalFileTypePolicy.js"));
+        assertTrue(popup.contains("swTechnicalFileTypePolicy.js"));
+        assertTrue(page.contains("appendSwTechnicalFileTypeBadge($item, file)"));
+        assertTrue(popup.contains("appendSwTechnicalFileTypeBadge($item, file)"));
+        assertTrue(page.contains("id=\"swMainFileTypeStatus\""));
+        assertTrue(popup.contains("id=\"swMainFileTypeStatus\""));
         assertTrue(page.contains("response.message || swRegisterMessage"));
         assertTrue(popup.contains("response.message || g_msg('msg.registerComplete')"));
-        assertFalse(page.contains("accept=\".pdf,application/pdf\""));
         assertFalse(page.contains("feature.techRegister.required.mainPdf"));
         assertFalse(page.contains("feature.techRegister.upload.requiredPdf"));
     }
@@ -76,10 +85,26 @@ class SwRegistrationFileTypeContractTest {
     }
 
     @Test
+    void unsupportedViewerFilesRemainTerminalAndDistributableWithoutAnOutboxStatus() throws Exception {
+        String swMapper = read(
+                "src/main/resources/sqlMaps/oracle/its/controller/general/distribution/swrequest/SwRequest.xml");
+        String workflowMapper = read(
+                "src/main/resources/sqlMaps/oracle/its/controller/general/distribution/workflow/DistributionWorkflow.xml");
+        String conversionDdl = read("src/main/resources/sql/pdf_conversion_ddl.sql");
+
+        assertTrue(swMapper.contains("IN ('DONE', 'NOT_REQUIRED', 'NOT_VIEWABLE')"));
+        assertTrue(workflowMapper.contains("IN ('DONE', 'NOT_VIEWABLE')"));
+        assertFalse(conversionDdl.contains("'UNSUPPORTED_VIEWER'"));
+        assertFalse(conversionDdl.contains("'NOT_VIEWABLE'"));
+    }
+
+    @Test
     void stepPreviewUsesTheStepProviderWithoutEnteringThePdfOnlyPath() throws Exception {
         String viewer = read("src/main/java/kr/esob/tdms/controller/general/distribution/doc_pdf_link_request/DocPdfLinkRequestController.java");
 
         assertTrue(viewer.contains("!TechnicalFileTypePolicy.isViewerPreview(orgFileNm)"));
+        assertTrue(viewer.contains("!TechnicalFileTypePolicy.isViewerProcessable(swSourceFileName)"));
+        assertTrue(viewer.contains("conversionUnavailable(\"UNSUPPORTED_VIEWER\", model)"));
         assertTrue(viewer.contains("ViewerProvider viewerProvider = TechnicalFileTypePolicy.isStep(viewerSourcePath)"));
         assertTrue(viewer.contains("? ViewerProvider.STEP : ViewerProvider.PDF"));
         assertTrue(viewer.contains("viewerIntegrationService.createRequestDocument(correlationId, viewerProvider)"));
@@ -95,11 +120,28 @@ class SwRegistrationFileTypeContractTest {
     void koreanAndEnglishMessagesDescribeDataNumbersAndSupportedFiles() throws Exception {
         String korean = read("src/main/webapp/messages/feature.properties");
         String english = read("src/main/webapp/messages/feature_en.properties");
+        String indonesian = read("src/main/webapp/messages/feature_id.properties");
 
         assertTrue(korean.contains("feature.techRegister.field.transmittalNo=자료번호"));
         assertTrue(english.contains("feature.techRegister.field.transmittalNo=Data No."));
-        assertTrue(korean.contains("feature.techRegister.validation.unsupportedFileType="));
-        assertTrue(english.contains("feature.techRegister.validation.unsupportedFileType="));
+        assertTrue(korean.contains("feature.techRegister.validation.invalidFileName="));
+        assertTrue(english.contains("feature.techRegister.validation.invalidFileName="));
+        assertTrue(korean.contains("feature.techRegister.fileType.unsupportedViewer="));
+        assertTrue(english.contains("feature.techRegister.fileType.unsupportedViewer="));
+        assertTrue(indonesian.contains("feature.techRegister.fileType.unsupportedViewer="));
+        for (String key : new String[] {
+                "feature.techRegister.fileType.directPdf=",
+                "feature.techRegister.fileType.directStep=",
+                "feature.techRegister.fileType.pdfConversion=",
+                "feature.techRegister.fileType.invalidFileName=",
+                "feature.techRegister.validation.invalidSupportingFileName=",
+                "feature.pdfConversion.unsupported.title=",
+                "feature.pdfConversion.unsupported.description="
+        }) {
+            assertTrue(korean.contains(key), "Korean missing: " + key);
+            assertTrue(english.contains(key), "English missing: " + key);
+            assertTrue(indonesian.contains(key), "Indonesian missing: " + key);
+        }
         assertFalse(korean.contains("feature.techRegister.validation.pdfOnly="));
         assertFalse(english.contains("feature.techRegister.validation.pdfOnly="));
     }

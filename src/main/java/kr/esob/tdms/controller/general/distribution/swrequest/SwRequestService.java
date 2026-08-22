@@ -129,19 +129,19 @@ public class SwRequestService implements CommonService{
 		}
 
 		String originalFileName = sanitizeFileName(file.getOriginalFilename());
-		if (!TechnicalFileTypePolicy.isAllowedFileName(originalFileName)) {
+		if (!TechnicalFileTypePolicy.isSafeFileName(originalFileName)) {
 			resultVo.setSuccess(false);
 			resultVo.setMessage(prop.messagesFormat(
-					"feature.techRegister.validation.unsupportedFileType",
+					"feature.techRegister.validation.invalidFileName",
 					LocaleContextHolder.getLocale(), originalFileName));
 			return resultVo;
 		}
-		String unsupportedSubFileName = findUnsupportedSubFileName(subFiles);
-		if (!unsupportedSubFileName.isEmpty()) {
+		String invalidSubFileName = findInvalidSubFileName(subFiles);
+		if (!invalidSubFileName.isEmpty()) {
 			resultVo.setSuccess(false);
 			resultVo.setMessage(prop.messagesFormat(
-					"feature.techRegister.validation.unsupportedSupportingFileType",
-					LocaleContextHolder.getLocale(), unsupportedSubFileName));
+					"feature.techRegister.validation.invalidSupportingFileName",
+					LocaleContextHolder.getLocale(), invalidSubFileName));
 			return resultVo;
 		}
 		String objectId = RandomStringGenerator.generateRandomString(32);
@@ -212,7 +212,7 @@ public class SwRequestService implements CommonService{
 			uploadMultipartToFileApi(file, savedFileName, "SW_REGISTER");
 			dao.insertSwRegisterInfo(swRegisterPopupParam);
 			dao.insertSwRegisterInfoFile(swRegisterPopupParam);
-			pdfConversionQueueService.enqueueUpload(
+			enqueuePreviewIfSupported(
 					"SW",
 					swRegisterPopupParam.getObjectId(),
 					swRegisterPopupParam.getFileNo(),
@@ -539,7 +539,7 @@ public class SwRequestService implements CommonService{
 		return names;
 	}
 
-	private String findUnsupportedSubFileName(List<MultipartFile> subFiles) {
+	private String findInvalidSubFileName(List<MultipartFile> subFiles) {
 		if (subFiles == null) {
 			return "";
 		}
@@ -548,7 +548,7 @@ public class SwRequestService implements CommonService{
 				continue;
 			}
 			String originalName = sanitizeFileName(subFile.getOriginalFilename());
-			if (!TechnicalFileTypePolicy.isAllowedFileName(originalName)) {
+			if (!TechnicalFileTypePolicy.isSafeFileName(originalName)) {
 				return originalName;
 			}
 		}
@@ -569,10 +569,10 @@ public class SwRequestService implements CommonService{
 
 			String subObjectId = RandomStringGenerator.generateRandomString(32);
 			String extension = TechnicalFileTypePolicy.extensionOf(originalName);
-			if (!TechnicalFileTypePolicy.isAllowedFileName(originalName)) {
+			if (!TechnicalFileTypePolicy.isSafeFileName(originalName)) {
 				throw new IllegalArgumentException(
 						prop.messagesFormat(
-								"feature.techRegister.validation.unsupportedSupportingFileType",
+								"feature.techRegister.validation.invalidSupportingFileName",
 								LocaleContextHolder.getLocale(),
 								originalName));
 			}
@@ -592,7 +592,7 @@ public class SwRequestService implements CommonService{
 					.processingStatus(initialPreviewStatus(originalName))
 					.build();
 			dao.insertSwSubFile(subFileParam);
-			pdfConversionQueueService.enqueueUpload(
+			enqueuePreviewIfSupported(
 					"SW_SUB",
 					subFileParam.getObjectId(),
 					String.valueOf(subFileParam.getFileNo()),
@@ -602,9 +602,24 @@ public class SwRequestService implements CommonService{
 		}
 	}
 
+	private void enqueuePreviewIfSupported(
+			String objectType,
+			String objectId,
+			String fileNo,
+			String originalFileName,
+			String storedPath,
+			MultipartFile upload) {
+		if (!TechnicalFileTypePolicy.isViewerProcessable(originalFileName)) {
+			log.info("[PDF_CONVERSION] skipped unsupported viewer extension objectType={}, objectId={}, fileNo={}",
+					objectType, objectId, fileNo);
+			return;
+		}
+		pdfConversionQueueService.enqueueUpload(
+				objectType, objectId, fileNo, originalFileName, storedPath, upload);
+	}
+
 	private String initialPreviewStatus(String fileName) {
-		return TechnicalFileTypePolicy.isPdf(fileName)
-				|| TechnicalFileTypePolicy.isStep(fileName) ? "DONE" : "PENDING";
+		return TechnicalFileTypePolicy.initialProcessingStatus(fileName);
 	}
 
 	private SwRegisterPopupParam getFileSavedPath(SwRegisterPopupParam param, MultipartFile mf){

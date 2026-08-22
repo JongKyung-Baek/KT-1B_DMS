@@ -1,6 +1,7 @@
 package kr.esob.tdms.commonlogic.pdfconversion;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -127,6 +128,29 @@ class PdfConversionQueueServiceTest {
         assertThat(projection.getValue())
                 .containsEntry("conversionId", result.getConversionId())
                 .containsEntry("status", "PENDING");
+    }
+
+    @Test
+    void unsupportedViewerExtensionNeverCreatesOrMaterializesAConversionJob() {
+        PdfConversionDao dao = mock(PdfConversionDao.class);
+        PdfConversionProjectionDao projectionDao = mock(PdfConversionProjectionDao.class);
+        PdfConversionSourceStore sourceStore = mock(PdfConversionSourceStore.class);
+        PdfConversionQueueService service = new PdfConversionQueueService(
+                dao, projectionDao, sourceStore, properties());
+
+        assertThatThrownBy(() -> service.enqueueUpload(
+                "SW", "OBJ-4", "1", "archive.zip", "SW/archive.zip",
+                new MockMultipartFile("file", "archive.zip", null, new byte[] {1, 2, 3})))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("not available");
+        assertThatThrownBy(() -> service.enqueueStored(
+                "SW", "OBJ-4", "1", "SW/archive.zip", "archive.zip"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("not available");
+
+        verify(dao, never()).enqueue(any(PdfConversionJob.class));
+        verify(sourceStore, never()).materialize(anyString(), anyString());
+        verify(projectionDao, never()).updateStatus(anyMap());
     }
 
     @Test

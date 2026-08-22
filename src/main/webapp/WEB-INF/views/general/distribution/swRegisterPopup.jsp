@@ -6,6 +6,8 @@
                 <script type="text/javascript"
                     src="${pageContext.request.contextPath}/resources/js/views/general/distribution/swSupportingFileSelection.js?v=20260822.2"></script>
                 <script type="text/javascript"
+                    src="${pageContext.request.contextPath}/resources/js/views/general/distribution/swTechnicalFileTypePolicy.js?v=20260822.1"></script>
+                <script type="text/javascript"
                     src="${pageContext.request.contextPath}/resources/js/views/general/distribution/swRegisterPopup.js?v=20260822.2"></script>
 
                 <style>
@@ -165,6 +167,48 @@
                         white-space: nowrap;
                     }
 
+                    .swRegisterPopup .file-type-status {
+                        display: none;
+                        margin: 8px 0 0;
+                        color: #52657f;
+                        font-size: 12px;
+                        line-height: 1.45;
+                    }
+
+                    .swRegisterPopup .file-type-status.is-visible {
+                        display: block;
+                    }
+
+                    .swRegisterPopup .file-type-status--unsupported,
+                    .swRegisterPopup .supporting-file-chip__status--unsupported {
+                        color: #9a5a00;
+                    }
+
+                    .swRegisterPopup .file-type-status--invalid,
+                    .swRegisterPopup .supporting-file-chip__status--invalid {
+                        color: #b42318;
+                    }
+
+                    .swRegisterPopup .supporting-file-chip__status {
+                        flex: 0 0 auto;
+                        padding: 2px 7px;
+                        border-radius: 999px;
+                        background: #e7effb;
+                        color: #245b9b;
+                        font-size: 10px;
+                        font-weight: 700;
+                        line-height: 1.4;
+                        white-space: nowrap;
+                    }
+
+                    .swRegisterPopup .supporting-file-chip__status--unsupported {
+                        background: #fff3df;
+                    }
+
+                    .swRegisterPopup .supporting-file-chip__status--invalid {
+                        background: #fff0ee;
+                    }
+
                     .swRegisterPopup .supporting-file-chip__remove {
                         display: inline-grid;
                         place-items: center;
@@ -194,6 +238,17 @@ var IS_SW_REVISION_UPDATE = "<spring:escapeBody htmlEscape="false" javaScriptEsc
 var SW_PREV_OBJECT_ID = "<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${param.objectId}</spring:escapeBody>";
 var IS_SW_REGISTER_PAGE = "<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${swRegisterPageMode}</spring:escapeBody>" === "true";
                     var SW_REMOVE_SUPPORTING_FILE_LABEL = "<spring:message code='feature.techRegister.upload.removeFile' text='선택 파일 제거' javaScriptEscape='true' />";
+                    configureSwTechnicalFileTypePolicy({
+                        directPdf: "<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${technicalDirectPdfExtensions}</spring:escapeBody>",
+                        directStep: "<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${technicalDirectStepExtensions}</spring:escapeBody>",
+                        pdfConversion: "<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${technicalPdfConversionExtensions}</spring:escapeBody>"
+                    }, {
+                        DIRECT_PDF: "<spring:message code='feature.techRegister.fileType.directPdf' text='PDF · 보안 뷰어' javaScriptEscape='true' />",
+                        DIRECT_STEP: "<spring:message code='feature.techRegister.fileType.directStep' text='3D · 전용 뷰어' javaScriptEscape='true' />",
+                        PDF_CONVERSION: "<spring:message code='feature.techRegister.fileType.pdfConversion' text='{0} · PDF 변환 후 열람' javaScriptEscape='true' />",
+                        UNSUPPORTED_VIEWER: "<spring:message code='feature.techRegister.fileType.unsupportedViewer' text='{0} · 원본만 등록 (미리보기 미지원)' javaScriptEscape='true' />",
+                        INVALID_FILE_NAME: "<spring:message code='feature.techRegister.fileType.invalidFileName' text='확장자를 확인할 수 없어 등록할 수 없습니다.' javaScriptEscape='true' />"
+                    });
 
                     function removeSwSubSelectedFile(index) {
                         var input = $swPopupField('#swSubFiles')[0];
@@ -216,6 +271,7 @@ var IS_SW_REGISTER_PAGE = "<spring:escapeBody htmlEscape="false" javaScriptEscap
                                 'text': file.name,
                                 'title': file.name
                             }).appendTo($item);
+                            appendSwTechnicalFileTypeBadge($item, file);
                             $('<button>', {
                                 'type': 'button',
                                 'class': 'supporting-file-chip__remove',
@@ -459,6 +515,21 @@ var IS_SW_REGISTER_PAGE = "<spring:escapeBody htmlEscape="false" javaScriptEscap
                                     return false;
                                 }
 
+                        var mainFileType = getSwTechnicalFileTypeInfo(file);
+                        if (!mainFileType.registrationAllowed) {
+                            alertMessage(file.name + ": " + swTechnicalFileTypeLabel(mainFileType));
+                            return false;
+                        }
+                        var invalidSupportingFile = findInvalidSwTechnicalFile(
+                            getSwAccumulatedSubFiles($swPopupField('#swSubFiles')[0])
+                        );
+                        if (invalidSupportingFile) {
+                            var invalidSupportingType = getSwTechnicalFileTypeInfo(invalidSupportingFile);
+                            alertMessage(invalidSupportingFile.name + ": "
+                                + swTechnicalFileTypeLabel(invalidSupportingType));
+                            return false;
+                        }
+
                         return true;
                     }
 
@@ -621,6 +692,7 @@ var IS_SW_REGISTER_PAGE = "<spring:escapeBody htmlEscape="false" javaScriptEscap
                             }
                         }
                         $fileName.val('');
+                        renderSwMainFileTypeStatus($swPopupField('#swMainFileTypeStatus'), null);
                     }
 
                     function clearSwSubSelectedFiles() {
@@ -720,6 +792,10 @@ var IS_SW_REGISTER_PAGE = "<spring:escapeBody htmlEscape="false" javaScriptEscap
                             if ($('#dataName').val() === '') {
                                 $('#dataName').val(filenameWithoutExtension); // Remove extension
                             }
+                            renderSwMainFileTypeStatus(
+                                $swPopupField('#swMainFileTypeStatus'),
+                                this.files && this.files.length ? this.files[0] : null
+                            );
                         });
 
                         $swPopupField('#swSubFiles').change(function () {
@@ -874,7 +950,6 @@ var IS_SW_REGISTER_PAGE = "<spring:escapeBody htmlEscape="false" javaScriptEscap
                                 <div class="uploadLine" title="Drag and drop a file to upload it, or click the button.">
                                     <form id="fileForm" name="fileForm" enctype="multipart/form-data">
                                         <input type="file" id="swRegisFile" name="swRegisFile" onchange="fileChange()"
-                                            accept="${allowedTechnicalFileExtensions}"
                                             style="display: none;" />
                                     </form>
                                     <div class="fileNameWrap">
@@ -887,6 +962,7 @@ var IS_SW_REGISTER_PAGE = "<spring:escapeBody htmlEscape="false" javaScriptEscap
                                     <button class="ui-button ui-corner-all fileUploadBtn" onclick="fileUpload()"><%--
                                             <spring:message code="btn.fileUpload" /> --%></button>
                                 </div>
+                                <p id="swMainFileTypeStatus" class="file-type-status" aria-live="polite"></p>
                         </li>
                         <li class="singleFileUpload full">
                             <label>
@@ -895,7 +971,6 @@ var IS_SW_REGISTER_PAGE = "<spring:escapeBody htmlEscape="false" javaScriptEscap
                             <div class="uploadLine" title="Drag and drop a file to upload it, or click the button.">
                                 <form id="subFileForm" name="subFileForm" enctype="multipart/form-data">
                                     <input type="file" id="swSubFiles" name="swSubFiles" multiple="multiple"
-                                        accept="${allowedTechnicalFileExtensions}"
                                         style="display: none;" />
                                 </form>
                                 <div class="fileNameWrap">

@@ -37,15 +37,15 @@ class SwRequestServiceI18nTest {
 	@Test
 	void mainFileValidationUsesActualMultipartNameAndRequestLocale() throws Exception {
 		SwRequestService service = serviceWithMessages(mock(SwRequestDao.class));
-		MockMultipartHttpServletRequest request = registrationRequest("malware.exe");
+		MockMultipartHttpServletRequest request = registrationRequest("missing-extension");
 		request.setParameter("orgFileNm", "spoofed.pdf");
 
 		LocaleContextHolder.setLocale(Locale.KOREAN);
-		assertEquals("허용되지 않는 주파일 형식입니다: malware.exe",
+		assertEquals("안전한 확장자를 확인할 수 없는 주파일명입니다: missing-extension",
 				service.saveSwRegisterFileX2(request).getMessage());
 
 		LocaleContextHolder.setLocale(Locale.ENGLISH);
-		assertEquals("The main file type is not allowed: malware.exe",
+		assertEquals("The main file name does not contain a safe, identifiable extension: missing-extension",
 				service.saveSwRegisterFileX2(request).getMessage());
 	}
 
@@ -53,14 +53,16 @@ class SwRequestServiceI18nTest {
 	void supportingFileValidationPreservesFileNameInLocalizedMessage() {
 		SwRequestService service = serviceWithMessages(mock(SwRequestDao.class));
 		List<MultipartFile> files = Arrays.asList(
-				new MockMultipartFile("subFiles", "run.cmd", "application/octet-stream", new byte[] { 1 }));
+				new MockMultipartFile("subFiles", "missing-extension", "application/octet-stream", new byte[] { 1 }));
 
 		LocaleContextHolder.setLocale(Locale.ENGLISH);
 		IllegalArgumentException error = assertThrows(
 				IllegalArgumentException.class,
 				() -> ReflectionTestUtils.invokeMethod(service, "saveSwSubFiles", files, "DOC-1", "TYPE"));
 
-		assertEquals("The supporting file type is not allowed: run.cmd", error.getMessage());
+		assertEquals(
+				"The supporting file name does not contain a safe, identifiable extension: missing-extension",
+				error.getMessage());
 	}
 
 	@Test
@@ -157,8 +159,12 @@ class SwRequestServiceI18nTest {
 
 	private Map<String, String> koreanMessages() {
 		Map<String, String> messages = new HashMap<>();
-		messages.put("feature.techRegister.validation.unsupportedFileType", "허용되지 않는 주파일 형식입니다: {0}");
-		messages.put("feature.techRegister.validation.unsupportedSupportingFileType", "허용되지 않는 보조파일 형식입니다: {0}");
+		messages.put(
+				"feature.techRegister.validation.invalidFileName",
+				"안전한 확장자를 확인할 수 없는 주파일명입니다: {0}");
+		messages.put(
+				"feature.techRegister.validation.invalidSupportingFileName",
+				"안전한 확장자를 확인할 수 없는 보조파일명입니다: {0}");
 		messages.put("feature.techList.withdraw.selectionRequired", "철회할 대상을 선택하세요.");
 		messages.put("feature.techList.approval.deletedDocument", "삭제된 문서는 승인할 수 없습니다.");
 		messages.put("feature.techList.approval.status.notApproved", "미승인");
@@ -169,10 +175,12 @@ class SwRequestServiceI18nTest {
 
 	private Map<String, String> englishMessages() {
 		Map<String, String> messages = new HashMap<>();
-		messages.put("feature.techRegister.validation.unsupportedFileType", "The main file type is not allowed: {0}");
 		messages.put(
-				"feature.techRegister.validation.unsupportedSupportingFileType",
-				"The supporting file type is not allowed: {0}");
+				"feature.techRegister.validation.invalidFileName",
+				"The main file name does not contain a safe, identifiable extension: {0}");
+		messages.put(
+				"feature.techRegister.validation.invalidSupportingFileName",
+				"The supporting file name does not contain a safe, identifiable extension: {0}");
 		messages.put("feature.techList.withdraw.selectionRequired", "Select an item to withdraw.");
 		messages.put(
 				"feature.techList.approval.deletedDocument",

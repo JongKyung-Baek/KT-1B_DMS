@@ -206,6 +206,9 @@ public class DocPdfLinkRequestController extends AbstractController {
 			swMetadataParam.put("FILE_NO", normalizedFileNo);
 			swSourceFileName = firstNonBlank(
 					dao.selectFileNmSW(swMetadataParam), toFileNameOnly(orgFileNm));
+			if (!TechnicalFileTypePolicy.isViewerProcessable(swSourceFileName)) {
+				return conversionUnavailable("UNSUPPORTED_VIEWER", model);
+			}
 			if (!TechnicalFileTypePolicy.isViewerPreview(orgFileNm)) {
 				String conversionObjectType = "SW_SUB".equals(aclObjectType)
 						? "SW_SUB" : "SW";

@@ -1,5 +1,73 @@
 var emptyArray = [];
 var files = [];
+var swTechnicalFilePolicy = null;
+var swTechnicalFileTypeLabels = {};
+
+function configureSwTechnicalFileTypePolicy(config, labels) {
+    if (!window.SwTechnicalFileTypePolicy) {
+        throw new Error("SwTechnicalFileTypePolicy is not loaded.");
+    }
+    swTechnicalFilePolicy = window.SwTechnicalFileTypePolicy.create(config || {});
+    swTechnicalFileTypeLabels = labels || {};
+    return swTechnicalFilePolicy;
+}
+
+function getSwTechnicalFileTypeInfo(fileOrName) {
+    if (!swTechnicalFilePolicy) {
+        throw new Error("SwTechnicalFileTypePolicy is not configured.");
+    }
+    return swTechnicalFilePolicy.classify(fileOrName);
+}
+
+function swTechnicalFileTypeLabel(info) {
+    var labels = swTechnicalFileTypeLabels || {};
+    var extension = String(info && info.extension || "").toUpperCase();
+    var label = labels[info && info.status] || labels.UNSUPPORTED_VIEWER || "";
+    return String(label).replace(/\{0\}/g, extension || "-");
+}
+
+function swTechnicalFileTypeClass(info) {
+    if (!info || info.status === "INVALID_FILE_NAME") return "invalid";
+    if (info.status === "UNSUPPORTED_VIEWER") return "unsupported";
+    return "supported";
+}
+
+function renderSwMainFileTypeStatus(target, file) {
+    var $target = target && target.jquery ? target : $(target);
+    if (!$target.length) return;
+    if (!file) {
+        $target.removeClass("is-visible file-type-status--supported file-type-status--unsupported file-type-status--invalid")
+            .text("");
+        return;
+    }
+    var info = getSwTechnicalFileTypeInfo(file);
+    var typeClass = swTechnicalFileTypeClass(info);
+    $target.removeClass("file-type-status--supported file-type-status--unsupported file-type-status--invalid")
+        .addClass("is-visible file-type-status--" + typeClass)
+        .text(swTechnicalFileTypeLabel(info));
+}
+
+function appendSwTechnicalFileTypeBadge($item, file) {
+    var info = getSwTechnicalFileTypeInfo(file);
+    var typeClass = swTechnicalFileTypeClass(info);
+    $("<span>", {
+        "class": "supporting-file-chip__status supporting-file-chip__status--" + typeClass,
+        "text": swTechnicalFileTypeLabel(info)
+    }).appendTo($item);
+    return info;
+}
+
+function findInvalidSwTechnicalFile(filesToValidate) {
+    var selected = window.SwSupportingFileSelection
+        ? window.SwSupportingFileSelection.toArray(filesToValidate)
+        : Array.prototype.slice.call(filesToValidate || []);
+    for (var index = 0; index < selected.length; index += 1) {
+        if (!getSwTechnicalFileTypeInfo(selected[index]).registrationAllowed) {
+            return selected[index];
+        }
+    }
+    return null;
+}
 
 function swSupportingFileSelectionApi() {
     if (!window.SwSupportingFileSelection) {

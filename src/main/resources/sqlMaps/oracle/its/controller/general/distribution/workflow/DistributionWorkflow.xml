@@ -201,7 +201,7 @@
               JOIN docs_sw_file main_file ON main_file.object_id = info.object_id
              WHERE info.object_id = #{value}
                AND COALESCE(info.deleted_yn, 'N') = 'N'
-               AND UPPER(COALESCE(NULLIF(BTRIM(main_file.processing_status), ''), 'DONE')) = 'DONE'
+               AND UPPER(COALESCE(NULLIF(BTRIM(main_file.processing_status), ''), 'DONE')) IN ('DONE', 'NOT_VIEWABLE')
             UNION ALL
             SELECT 'SW_SUB'::varchar AS object_type,
                    info.object_id,
@@ -217,7 +217,7 @@
              WHERE info.object_id = #{value}
                AND COALESCE(info.deleted_yn, 'N') = 'N'
                AND COALESCE(sub_file.use_yn, 'Y') = 'Y'
-               AND UPPER(COALESCE(NULLIF(BTRIM(sub_file.processing_status), ''), 'DONE')) = 'DONE'
+               AND UPPER(COALESCE(NULLIF(BTRIM(sub_file.processing_status), ''), 'DONE')) IN ('DONE', 'NOT_VIEWABLE')
         )
         SELECT document_file.object_type,
                document_file.object_id,
@@ -308,7 +308,7 @@
               JOIN docs_sw_file main_file ON main_file.object_id = info.object_id
              WHERE COALESCE(NULLIF(info.tree_cd, ''), NULLIF(info.business_type_cd, '')) = #{treeCd}
                AND COALESCE(info.deleted_yn, 'N') = 'N'
-               AND UPPER(COALESCE(NULLIF(BTRIM(main_file.processing_status), ''), 'DONE')) = 'DONE'
+               AND UPPER(COALESCE(NULLIF(BTRIM(main_file.processing_status), ''), 'DONE')) IN ('DONE', 'NOT_VIEWABLE')
             UNION ALL
             SELECT 'SW_SUB'::varchar AS object_type,
                    info.object_id,
@@ -324,7 +324,7 @@
              WHERE COALESCE(NULLIF(info.tree_cd, ''), NULLIF(info.business_type_cd, '')) = #{treeCd}
                AND COALESCE(info.deleted_yn, 'N') = 'N'
                AND COALESCE(sub_file.use_yn, 'Y') = 'Y'
-               AND UPPER(COALESCE(NULLIF(BTRIM(sub_file.processing_status), ''), 'DONE')) = 'DONE'
+               AND UPPER(COALESCE(NULLIF(BTRIM(sub_file.processing_status), ''), 'DONE')) IN ('DONE', 'NOT_VIEWABLE')
         ), evaluated_file AS (
             SELECT catalog_file.*,
                item_tree.tree_nm,

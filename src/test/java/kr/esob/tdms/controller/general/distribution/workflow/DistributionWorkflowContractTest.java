@@ -53,6 +53,7 @@ class DistributionWorkflowContractTest {
         assertFalse(mapper.contains("allViewable"));
         assertTrue(mapper.contains("BTRIM(main_file.processing_status)"));
         assertTrue(mapper.contains("BTRIM(sub_file.processing_status)"));
+        assertEquals(4, mapper.split("IN \\('DONE', 'NOT_VIEWABLE'\\)", -1).length - 1);
         assertTrue(mapper.contains("status IN ('DRAFT', 'PENDING_APPROVAL', 'APPROVED', 'REJECTED')"));
         assertTrue(mapper.contains("'parentTreeName', item.parent_tree_nm"));
         String service = read(SERVICE);

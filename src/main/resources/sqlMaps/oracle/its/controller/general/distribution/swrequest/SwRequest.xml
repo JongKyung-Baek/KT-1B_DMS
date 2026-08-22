@@ -1327,7 +1327,7 @@
 		COALESCE(NULLIF(#{sessionUser.userNm}, ''), #{sessionUser.username}),
 		COALESCE(NULLIF(#{processingStatus}, ''), 'PENDING'),
 		NULL,
-		CASE WHEN #{processingStatus} IN ('DONE', 'NOT_REQUIRED') THEN CURRENT_TIMESTAMP ELSE NULL END)
+		CASE WHEN #{processingStatus} IN ('DONE', 'NOT_REQUIRED', 'NOT_VIEWABLE') THEN CURRENT_TIMESTAMP ELSE NULL END)
 	</insert>
 
 	<insert id="insertSwSubFile" parameterType="kr.esob.tdms.controller.general.distribution.swrequest.SwSubFileParam">
@@ -1344,7 +1344,7 @@
 		COALESCE(NULLIF(#{useYn}, ''), 'Y'), COALESCE(NULLIF(#{sessionUser.userId}, ''), #{sessionUser.username}),
 		CURRENT_TIMESTAMP, NULL, NULL,
 		COALESCE(NULLIF(#{processingStatus}, ''), 'PENDING'), NULL,
-		CASE WHEN #{processingStatus} IN ('DONE', 'NOT_REQUIRED') THEN CURRENT_TIMESTAMP ELSE NULL END)
+		CASE WHEN #{processingStatus} IN ('DONE', 'NOT_REQUIRED', 'NOT_VIEWABLE') THEN CURRENT_TIMESTAMP ELSE NULL END)
 	</insert>
 
 	<select id="getSwRegisterByOrgFileNm" resultType="string">

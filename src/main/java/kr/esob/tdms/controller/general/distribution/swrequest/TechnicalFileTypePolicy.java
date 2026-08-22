@@ -5,37 +5,56 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
- * File-name policy for technical-data registration and original downloads.
- * Browser accept attributes are only a usability aid; server-side callers must
- * use this policy as the source of truth.
+ * File-name and preview policy for technical-data registration.
+ *
+ * Registration intentionally accepts every safely identifiable extension. The
+ * preview sets below only decide whether a stored original may be sent to a
+ * viewer or to the PDF converter; they are not a registration allowlist.
  */
 public final class TechnicalFileTypePolicy {
     public static final int MAX_FILE_NAME_LENGTH = 255;
 
-    private static final Set<String> ALLOWED_EXTENSIONS = Collections.unmodifiableSet(
+    private static final Set<String> PDF_CONVERSION_EXTENSIONS = Collections.unmodifiableSet(
             new LinkedHashSet<>(List.of(
-                    "pdf",
-                    "docx", "xlsx", "pptx",
-                    "hwp", "hwpx",
-                    "odt", "ods", "odp", "rtf",
-                    "txt", "csv", "xml", "json", "md",
-                    "stp", "step",
-                    "jpg", "jpeg", "png", "gif", "bmp", "tif", "tiff")));
+                    "doc", "docx", "xls", "xlsx", "ppt", "pptx", "hwp", "hwpx", "msg",
+                    "png", "jpg", "jpeg", "jpe", "jfif", "gif", "bmp", "dib", "tif", "tiff",
+                    "webp", "ico", "cur", "tga", "pcx", "pbm", "pgm", "ppm", "pnm", "pam",
+                    "psd", "8pbs", "cal", "cals", "g4", "cg4", "dcx", "pict", "ras", "rle",
+                    "sgi", "xbm", "xpm", "xwd", "pcd", "mac", "pntg", "cut", "bitmap", "bm",
+                    "tpic", "wd", "iff", "pct", "clp", "img", "brk", "fs", "gl", "ica", "msp",
+                    "dxf", "dwg", "hgl", "hpgl", "plt", "svg", "svgz", "eps", "epsf", "epi",
+                    "wmf", "wpg", "pal")));
+
+    private static final Set<String> DIRECT_PDF_EXTENSIONS = Set.of("pdf");
+    private static final Set<String> DIRECT_STEP_EXTENSIONS = Set.of("stp", "step");
 
     private TechnicalFileTypePolicy() {
     }
 
     public static Set<String> allowedExtensions() {
-        return ALLOWED_EXTENSIONS;
+        LinkedHashSet<String> extensions = new LinkedHashSet<>();
+        extensions.addAll(DIRECT_PDF_EXTENSIONS);
+        extensions.addAll(PDF_CONVERSION_EXTENSIONS);
+        extensions.addAll(DIRECT_STEP_EXTENSIONS);
+        return Collections.unmodifiableSet(extensions);
     }
 
-    public static String acceptAttribute() {
-        return ALLOWED_EXTENSIONS.stream()
-                .map(extension -> "." + extension)
-                .collect(Collectors.joining(","));
+    public static Set<String> pdfConversionExtensions() {
+        return PDF_CONVERSION_EXTENSIONS;
+    }
+
+    public static Set<String> directPdfExtensions() {
+        return DIRECT_PDF_EXTENSIONS;
+    }
+
+    public static Set<String> directStepExtensions() {
+        return DIRECT_STEP_EXTENSIONS;
+    }
+
+    public static String extensionCsv(Set<String> extensions) {
+        return String.join(",", extensions);
     }
 
     public static String extensionOf(String pathOrName) {
@@ -53,7 +72,7 @@ public final class TechnicalFileTypePolicy {
         return extension.matches("[a-z0-9]{1,16}") ? extension : "";
     }
 
-    public static boolean isAllowedFileName(String fileName) {
+    public static boolean isSafeFileName(String fileName) {
         if (fileName == null) {
             return false;
         }
@@ -63,7 +82,15 @@ public final class TechnicalFileTypePolicy {
                 || containsControlCharacter(normalized)) {
             return false;
         }
-        return ALLOWED_EXTENSIONS.contains(extensionOf(normalized));
+        return !extensionOf(normalized).isEmpty();
+    }
+
+    /**
+     * Kept for existing download and popup callers. "Allowed" now means safe
+     * to store/download, not supported by the viewer.
+     */
+    public static boolean isAllowedFileName(String fileName) {
+        return isSafeFileName(fileName);
     }
 
     public static boolean isAllowedStoredPath(String path) {
@@ -87,16 +114,30 @@ public final class TechnicalFileTypePolicy {
     }
 
     public static boolean isPdf(String pathOrName) {
-        return "pdf".equals(extensionOf(pathOrName));
+        return DIRECT_PDF_EXTENSIONS.contains(extensionOf(pathOrName));
     }
 
     public static boolean isStep(String pathOrName) {
-        String extension = extensionOf(pathOrName);
-        return "stp".equals(extension) || "step".equals(extension);
+        return DIRECT_STEP_EXTENSIONS.contains(extensionOf(pathOrName));
+    }
+
+    public static boolean requiresPdfConversion(String pathOrName) {
+        return PDF_CONVERSION_EXTENSIONS.contains(extensionOf(pathOrName));
+    }
+
+    public static boolean isViewerProcessable(String pathOrName) {
+        return isViewerPreview(pathOrName) || requiresPdfConversion(pathOrName);
     }
 
     public static boolean isViewerPreview(String pathOrName) {
         return isPdf(pathOrName) || isStep(pathOrName);
+    }
+
+    public static String initialProcessingStatus(String pathOrName) {
+        if (isViewerPreview(pathOrName)) {
+            return "DONE";
+        }
+        return requiresPdfConversion(pathOrName) ? "PENDING" : "NOT_VIEWABLE";
     }
 
     public static String[] splitRepositoryPath(String path) {

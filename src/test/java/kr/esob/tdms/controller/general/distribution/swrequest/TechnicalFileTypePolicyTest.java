@@ -6,29 +6,31 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.junit.jupiter.api.Test;
 
 class TechnicalFileTypePolicyTest {
 
     @Test
-    void allowsSupportedDocumentImageTextAndStepFormats() {
+    void allowsEverySafelyIdentifiableExtensionForOriginalRegistration() {
         for (String name : new String[] {
                 "manual.PDF", "설계.docx", "표.xlsx", "발표.pptx", "문서.hwp",
                 "문서.hwpx", "report.odt", "notes.txt", "data.csv", "image.png",
-                "assembly.STP", "engine.step"
+                "assembly.STP", "engine.step", "model.dwg", "archive.zip", "run.exe"
         }) {
-            assertTrue(TechnicalFileTypePolicy.isAllowedFileName(name), name);
+            assertTrue(TechnicalFileTypePolicy.isSafeFileName(name), name);
         }
     }
 
     @Test
-    void rejectsExecutableActiveContentArchivesAndUnsupportedThreeDimensionalFormats() {
+    void rejectsUnsafeOrUnidentifiableFileNames() {
         for (String name : new String[] {
-                "run.exe", "library.dll", "install.msi", "script.bat", "script.cmd",
-                "script.ps1", "page.html", "vector.svg", "macro.xlsm", "bundle.zip",
-                "model.dwg", "no-extension"
+                "no-extension", ".hidden", "../manual.pdf", "folder/manual.pdf",
+                "bad.exe\n.pdf", "report.확장자", "report.abcdefghijklmnopq"
         }) {
-            assertFalse(TechnicalFileTypePolicy.isAllowedFileName(name), name);
+            assertFalse(TechnicalFileTypePolicy.isSafeFileName(name), name);
         }
     }
 
@@ -52,19 +54,41 @@ class TechnicalFileTypePolicyTest {
         assertNull(TechnicalFileTypePolicy.splitRepositoryPath("C:\\files\\abc123.xlsx"));
         assertNull(TechnicalFileTypePolicy.splitRepositoryPath("UPLOAD/nested/abc123.xlsx"));
         assertNull(TechnicalFileTypePolicy.splitRepositoryPath("../UPLOAD/abc123.xlsx"));
-        assertNull(TechnicalFileTypePolicy.splitRepositoryPath("UPLOAD/abc123.exe"));
+        assertArrayEquals(new String[] { "UPLOAD", "abc123.exe" },
+                TechnicalFileTypePolicy.splitRepositoryPath("UPLOAD/abc123.exe"));
     }
 
     @Test
-    void exposesBrowserAcceptListFromTheServerPolicy() {
-        String accept = TechnicalFileTypePolicy.acceptAttribute();
-        assertTrue(accept.contains(".pdf"));
-        assertTrue(accept.contains(".docx"));
-        assertTrue(accept.contains(".hwp"));
-        assertTrue(accept.contains(".png"));
-        assertTrue(accept.contains(".stp"));
-        assertTrue(accept.contains(".step"));
-        assertFalse(accept.contains(".exe"));
+    void exposesTheExactConverterGateSeparatelyFromRegistration() {
+        Set<String> expectedConverterGate = Set.of(
+                "doc", "docx", "xls", "xlsx", "ppt", "pptx", "hwp", "hwpx", "msg", "pdf",
+                "png", "jpg", "jpeg", "jpe", "jfif", "gif", "bmp", "dib", "tif", "tiff",
+                "webp", "ico", "cur", "tga", "pcx", "pbm", "pgm", "ppm", "pnm", "pam",
+                "psd", "8pbs", "cal", "cals", "g4", "cg4", "dcx", "pict", "ras", "rle",
+                "sgi", "xbm", "xpm", "xwd", "pcd", "mac", "pntg", "cut", "bitmap", "bm",
+                "tpic", "wd", "iff", "pct", "clp", "img", "brk", "fs", "gl", "ica", "msp",
+                "dxf", "dwg", "hgl", "hpgl", "plt", "svg", "svgz", "eps", "epsf", "epi",
+                "wmf", "wpg", "pal");
+        Set<String> actualConverterGate = new HashSet<>(
+                TechnicalFileTypePolicy.pdfConversionExtensions());
+        actualConverterGate.addAll(TechnicalFileTypePolicy.directPdfExtensions());
+
+        assertEquals(expectedConverterGate, actualConverterGate);
+        assertEquals(74, actualConverterGate.size());
+        assertEquals(73, TechnicalFileTypePolicy.pdfConversionExtensions().size());
+        assertEquals(76, TechnicalFileTypePolicy.allowedExtensions().size());
+        for (String extension : new String[] {
+                "doc", "docx", "xls", "xlsx", "ppt", "pptx", "hwp", "hwpx", "msg",
+                "dwg", "dxf", "hgl", "hpgl", "plt", "svg", "svgz", "eps", "wmf", "pal"
+        }) {
+            assertTrue(TechnicalFileTypePolicy.requiresPdfConversion("sample." + extension), extension);
+        }
+        for (String extension : new String[] {
+                "pdf", "stp", "step", "odt", "ods", "odp", "rtf", "txt", "csv",
+                "xml", "json", "md", "exe", "zip"
+        }) {
+            assertFalse(TechnicalFileTypePolicy.requiresPdfConversion("sample." + extension), extension);
+        }
     }
 
     @Test
@@ -77,5 +101,12 @@ class TechnicalFileTypePolicyTest {
         assertTrue(TechnicalFileTypePolicy.isViewerPreview("assembly.stp"));
         assertTrue(TechnicalFileTypePolicy.isViewerPreview("engine.STEP"));
         assertFalse(TechnicalFileTypePolicy.isViewerPreview("notes.txt"));
+
+        assertTrue(TechnicalFileTypePolicy.isViewerProcessable("drawing.dwg"));
+        assertFalse(TechnicalFileTypePolicy.isViewerProcessable("notes.txt"));
+        assertFalse(TechnicalFileTypePolicy.isViewerProcessable("archive.zip"));
+        assertEquals("DONE", TechnicalFileTypePolicy.initialProcessingStatus("drawing.pdf"));
+        assertEquals("PENDING", TechnicalFileTypePolicy.initialProcessingStatus("drawing.dwg"));
+        assertEquals("NOT_VIEWABLE", TechnicalFileTypePolicy.initialProcessingStatus("archive.zip"));
     }
 }

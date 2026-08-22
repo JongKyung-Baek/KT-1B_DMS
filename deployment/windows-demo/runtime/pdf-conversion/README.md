@@ -91,7 +91,11 @@ C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -NoLogo -NoProfile -Ex
 Run `Preflight`, review its output, then run the same pinned file in `Apply`
 mode. Apply performs backup, isolated PostgreSQL 17 restore and two migration
 passes, image load/build, and production additive DDL while the old service is
-still online. Only then does it enter the 180-second joint replacement window.
+still online. The archive hash, catalog validation, archive schema, restored
+full-data, and restored schema fingerprints are retained as evidence. Normal online writes are
+not treated as a full-database equality gate; protected business data and the
+approved additive schema remain gated. Only then does it enter the 180-second
+joint replacement window.
 
 The gateway is never recreated: the runner stops and starts its captured
 container identity. The application, File API, and converter are jointly
@@ -105,9 +109,9 @@ An Apply failure after quiesce automatically performs `RuntimeOnly` rollback.
 It restores the old environment, compose files, secret ACL, WAR, checksums,
 image identity, application, and any pre-existing private sidecars. Sidecars
 introduced only by the failed release are removed. The runner then verifies
-the database and document-storage fingerprints are unchanged and starts the
-same gateway container. It never drops/restores the database and never
-replaces document storage.
+the protected business-data, schema, and document-storage fingerprints are
+unchanged and starts the same gateway container. It never drops/restores the
+database and never replaces document storage.
 
 Data restoration is a separate explicit Rollback invocation with
 `-RestoreData`, the approved state SHA-256, and a separately hashed evidence

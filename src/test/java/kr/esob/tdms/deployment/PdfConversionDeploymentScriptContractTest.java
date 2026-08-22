@@ -28,7 +28,6 @@ class PdfConversionDeploymentScriptContractTest {
     void onePinnedServerRunnerOwnsPreflightApplyAndRollback()
             throws IOException {
         String runner = read("Invoke-PdfConversionRelease.ps1");
-
         assertTrue(runner.contains("ValidateSet('Preflight', 'Apply', 'Rollback')"));
         assertTrue(runner.contains("$PSCommandPath"));
         assertTrue(runner.contains("ExpectedRunnerSha256"));
@@ -330,11 +329,59 @@ class PdfConversionDeploymentScriptContractTest {
 
         assertTrue(gatewayStop >= 0 && gatewayStop < appStop);
         assertTrue(appStop < stableGate && stableGate < firstMutation);
-        assertTrue(apply.contains("$quiescedDatabaseFull"));
+        assertFalse(apply.contains("$quiescedDatabaseFull"));
         assertTrue(apply.contains("$quiescedDatabaseSchema"));
         assertTrue(apply.contains("$quiescedStorage"));
         assertTrue(apply.contains("$quiescedStorageMetadata"));
+        assertTrue(apply.contains("$script:QuiesceEvidencePath"));
+        assertTrue(apply.contains("Write-DeploymentJsonAtomically"));
         assertTrue(apply.contains("Resume-OriginalBeforeMutation"));
+    }
+
+    @Test
+    void recoveryArchiveSchemaIsComparedWithoutRestoreNormalizationNoise()
+            throws IOException {
+        String runner = read("Invoke-PdfConversionRelease.ps1");
+        String normalizedRunner = runner.replace("\r\n", "\n");
+        String prepare = runner.substring(
+                runner.indexOf("function New-DatabaseBackupAndTestMigrations"),
+                runner.indexOf("function New-RestrictedBuildContext"));
+        String preOutage = runner.substring(
+                runner.indexOf("function New-PreOutageState"),
+                runner.indexOf("function Restore-RuntimeFileSet"));
+
+        assertTrue(runner.contains("function Get-ArchiveSchemaFingerprint"));
+        assertTrue(normalizedRunner.contains(
+                "pg_restore --schema-only `\n"
+                        + "                --no-owner --no-privileges --file=-"));
+        assertTrue(prepare.contains("$archiveSchemaFingerprint"));
+        assertTrue(prepare.contains("$restoredSchemaFingerprint"));
+        assertTrue(prepare.contains(
+                "OriginalSchemaFingerprint = $archiveSchemaFingerprint"));
+        assertTrue(runner.contains(
+                "restoredDatabaseFullFingerprint = "
+                        + "[string]$databaseBackup.OriginalFullDataFingerprint"));
+        assertTrue(runner.contains(
+                "archiveDatabaseSchemaFingerprint = "
+                        + "[string]$databaseBackup.OriginalSchemaFingerprint"));
+        assertTrue(runner.contains(
+                "restoredDatabaseSchemaFingerprint = "
+                        + "[string]$databaseBackup.RestoredSchemaFingerprint"));
+        assertTrue(preOutage.contains(
+                "$databaseFingerprint -ceq $databaseBackup.OriginalDataFingerprint"));
+        assertFalse(preOutage.contains("$databaseFullFingerprint -ceq"));
+        String runtimeRollback = runner.substring(
+                runner.indexOf("function Invoke-RuntimeRollback"),
+                runner.indexOf("function Assert-AndRestoreDamagedData"));
+        assertFalse(runtimeRollback.contains("Get-FullDatabaseFingerprint"));
+        String explicitRestore = normalizedRunner.substring(
+                normalizedRunner.indexOf("function Assert-AndRestoreDamagedData"),
+                normalizedRunner.indexOf("function Read-ApprovedState"));
+        assertTrue(explicitRestore.contains(
+                "[string]$State.restoredDatabaseSchemaFingerprint"));
+        assertFalse(explicitRestore.contains(
+                "[string]$State.originalDatabaseSchemaFingerprint) `\n"
+                        + "                -Message 'Explicit database restore schema"));
     }
 
     @Test

@@ -106,6 +106,8 @@ $script:ResultPath = Join-Path $script:RunLogs `
     "pdf-conversion-result-$ReleaseId-$($Mode.ToLowerInvariant()).json"
 $script:EvidencePath = Join-Path $script:RunLogs `
     "pdf-conversion-fingerprint-evidence-$ReleaseId.json"
+$script:QuiesceEvidencePath = Join-Path $script:RunLogs `
+    "pdf-conversion-quiesce-evidence-$ReleaseId.json"
 $script:OutageCompletionPath = Join-Path $script:RunLogs `
     "pdf-conversion-outage-complete-$ReleaseId.json"
 $script:SupervisorReadyPath = Join-Path $script:RunLogs `
@@ -1112,6 +1114,24 @@ function Get-SchemaFingerprint {
     return (($hash | ForEach-Object { $_.ToString('X2') }) -join '')
 }
 
+function Get-ArchiveSchemaFingerprint {
+    param([string]$ContainerPath)
+    $lines = @(Invoke-NativeChecked -Operation `
+        'Fingerprint schema stored in recovery archive' -Command {
+            & docker exec $script:DbContainer pg_restore --schema-only `
+                --no-owner --no-privileges --file=- $ContainerPath
+        })
+    $canonical = @($lines | ForEach-Object { [string]$_ } |
+        Where-Object {
+            $_ -notmatch '^\\(?:un)?restrict\s+' -and
+            $_ -notmatch '^-- Dumped (?:from database|by pg_dump) version '
+        }) -join "`n"
+    $bytes = [Text.UTF8Encoding]::new($false).GetBytes($canonical)
+    $algorithm = [Security.Cryptography.SHA256]::Create()
+    try { $hash = $algorithm.ComputeHash($bytes) } finally { $algorithm.Dispose() }
+    return (($hash | ForEach-Object { $_.ToString('X2') }) -join '')
+}
+
 function Get-ProtectedRowCounts {
     param([string]$Database, [string]$AdminUser)
     $sql = @'
@@ -1249,6 +1269,8 @@ function New-DatabaseBackupAndTestMigrations {
             & docker exec $script:DbContainer pg_restore --exit-on-error `
                 --no-owner --no-privileges --file=/dev/null $containerBackup
         })
+        $archiveSchemaFingerprint = Get-ArchiveSchemaFingerprint `
+            -ContainerPath $containerBackup
         [void](Invoke-NativeChecked -Operation 'Copy DB backup to host' `
             -Command {
                 & docker cp "${script:DbContainer}:$containerBackup" $hostBackup
@@ -1280,7 +1302,7 @@ function New-DatabaseBackupAndTestMigrations {
             -Database $tempDb -AdminUser $admin
         $originalFullDataFingerprint = Get-FullDatabaseFingerprint `
             -Database $tempDb -AdminUser $admin
-        $originalSchemaFingerprint = Get-SchemaFingerprint `
+        $restoredSchemaFingerprint = Get-SchemaFingerprint `
             -Database $tempDb -AdminUser $admin
         $protectedRowCounts = Get-ProtectedRowCounts -Database $tempDb `
             -AdminUser $admin
@@ -1312,7 +1334,11 @@ function New-DatabaseBackupAndTestMigrations {
             MigratedSchemaFingerprint = $schemaFirst
             OriginalDataFingerprint = $originalDataFingerprint
             OriginalFullDataFingerprint = $originalFullDataFingerprint
-            OriginalSchemaFingerprint = $originalSchemaFingerprint
+            # Archive SQL is compared with the live schema. PostgreSQL may
+            # normalize equivalent CHECK/index expressions after restore, so
+            # the restored schema is retained separately for audit evidence.
+            OriginalSchemaFingerprint = $archiveSchemaFingerprint
+            RestoredSchemaFingerprint = $restoredSchemaFingerprint
             SqlRoot = $sqlRoot
         }
     } finally {
@@ -1507,14 +1533,10 @@ function New-PreOutageState {
         -AdminUser $admin
     $databaseFingerprint = Get-DatabaseFingerprint -Database $dbName `
         -AdminUser $admin
-    $databaseFullFingerprint = Get-FullDatabaseFingerprint -Database $dbName `
-        -AdminUser $admin
     $databaseSchemaFingerprint = Get-SchemaFingerprint -Database $dbName `
         -AdminUser $admin
     Assert-DeploymentCondition -Condition (
         $databaseFingerprint -ceq $databaseBackup.OriginalDataFingerprint -and
-        $databaseFullFingerprint -ceq
-            $databaseBackup.OriginalFullDataFingerprint -and
         $databaseSchemaFingerprint -ceq
             $databaseBackup.OriginalSchemaFingerprint) `
         -Message 'Live database changed after the final recovery backup.'
@@ -1606,7 +1628,10 @@ function New-PreOutageState {
         databaseBackupSha256 = [string]$databaseBackup.Sha256
         originalDatabaseFingerprint = [string]$databaseBackup.OriginalDataFingerprint
         originalDatabaseFullFingerprint = [string]$databaseBackup.OriginalFullDataFingerprint
+        restoredDatabaseFullFingerprint = [string]$databaseBackup.OriginalFullDataFingerprint
         originalDatabaseSchemaFingerprint = [string]$databaseBackup.OriginalSchemaFingerprint
+        archiveDatabaseSchemaFingerprint = [string]$databaseBackup.OriginalSchemaFingerprint
+        restoredDatabaseSchemaFingerprint = [string]$databaseBackup.RestoredSchemaFingerprint
         databaseFingerprint = $databaseFingerprint
         databaseSchemaFingerprint = $databaseSchemaFingerprint
         databaseWalPosition = $databaseWalPosition
@@ -1927,9 +1952,6 @@ function Invoke-RuntimeRollback {
             $database = Get-DatabaseFingerprint `
                 -Database ([string]$State.databaseName) `
                 -AdminUser ([string]$State.databaseAdminUser)
-            $databaseFull = Get-FullDatabaseFingerprint `
-                -Database ([string]$State.databaseName) `
-                -AdminUser ([string]$State.databaseAdminUser)
             $databaseSchema = Get-SchemaFingerprint `
                 -Database ([string]$State.databaseName) `
                 -AdminUser ([string]$State.databaseAdminUser)
@@ -1938,10 +1960,6 @@ function Invoke-RuntimeRollback {
             Assert-DeploymentCondition -Condition (
                 $database -ceq [string]$State.databaseFingerprint) `
                 -Message 'Database fingerprint changed; gateway remains closed.'
-            Assert-DeploymentCondition -Condition (
-                $databaseFull -ceq
-                    [string]$State.originalDatabaseFullFingerprint) `
-                -Message 'Complete database fingerprint changed; gateway remains closed.'
             Assert-DeploymentCondition -Condition (
                 $databaseSchema -ceq
                     [string]$State.databaseSchemaFingerprint) `
@@ -2100,7 +2118,7 @@ function Assert-AndRestoreDamagedData {
                 (Get-SchemaFingerprint `
                     -Database ([string]$State.databaseName) `
                     -AdminUser ([string]$State.databaseAdminUser)) -ceq
-                    [string]$State.originalDatabaseSchemaFingerprint) `
+                    [string]$State.restoredDatabaseSchemaFingerprint) `
                 -Message 'Explicit database restore schema fingerprint mismatch.'
         } finally {
             try {
@@ -2205,7 +2223,10 @@ function Read-ApprovedState {
     foreach ($hash in @($stateObject.databaseBackupSha256,
             $stateObject.originalDatabaseFingerprint,
             $stateObject.originalDatabaseFullFingerprint,
+            $stateObject.restoredDatabaseFullFingerprint,
             $stateObject.originalDatabaseSchemaFingerprint,
+            $stateObject.archiveDatabaseSchemaFingerprint,
+            $stateObject.restoredDatabaseSchemaFingerprint,
             $stateObject.databaseFingerprint,
             $stateObject.databaseSchemaFingerprint,
             $stateObject.storageFingerprint,
@@ -2348,9 +2369,6 @@ function Invoke-ApplyMode {
         $quiescedDatabase = Get-DatabaseFingerprint `
             -Database ([string]$script:State.databaseName) `
             -AdminUser ([string]$script:State.databaseAdminUser)
-        $quiescedDatabaseFull = Get-FullDatabaseFingerprint `
-            -Database ([string]$script:State.databaseName) `
-            -AdminUser ([string]$script:State.databaseAdminUser)
         $quiescedDatabaseSchema = Get-SchemaFingerprint `
             -Database ([string]$script:State.databaseName) `
             -AdminUser ([string]$script:State.databaseAdminUser)
@@ -2359,10 +2377,22 @@ function Invoke-ApplyMode {
         $quiescedStorageMetadata = Get-StorageMetadataFingerprint
         Write-Output ('QUIESCED_WAL_MATCH=' +
             ($quiescedWal -ceq [string]$script:State.databaseWalPosition))
+        $quiesceEvidence = [ordered]@{
+            protocolVersion = 1
+            releaseId = $ReleaseId
+            capturedAt = (Get-Date).ToUniversalTime().ToString('o')
+            stateSha256 = [string]$script:State.stateSha256
+            databaseContainerId = [string]$script:State.databaseContainerId
+            databaseWalPosition = $quiescedWal
+            databaseFingerprint = $quiescedDatabase
+            databaseSchemaFingerprint = $quiescedDatabaseSchema
+            storageFingerprint = $quiescedStorage
+            storageMetadataFingerprint = $quiescedStorageMetadata
+        }
+        Write-DeploymentJsonAtomically -Value $quiesceEvidence `
+            -Path $script:QuiesceEvidencePath
         $gateIsStable =
             $quiescedDatabase -ceq [string]$script:State.databaseFingerprint -and
-            $quiescedDatabaseFull -ceq
-                [string]$script:State.originalDatabaseFullFingerprint -and
             $quiescedDatabaseSchema -ceq
                 [string]$script:State.databaseSchemaFingerprint -and
             $quiescedStorage -ceq [string]$script:State.storageFingerprint -and

@@ -724,7 +724,7 @@ function Assert-OverlayContract {
             -Message "Overlay publishes private port mapping $port."
     }
     Assert-DeploymentCondition -Condition ($text -notmatch
-        '(?im)[A-Z]:[\\/]') `
+        '(?im)(?:^|[\s"''])[A-Z]:[\\/]') `
         -Message 'Overlay cannot reference an absolute Windows host path.'
     foreach ($forbidden in @(
             'internal_only_cleanup', 'reset_demo_data', 'sample_demo_data')) {

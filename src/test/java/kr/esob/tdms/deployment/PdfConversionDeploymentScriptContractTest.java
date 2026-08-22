@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.regex.Pattern;
 
 import org.junit.jupiter.api.Test;
 
@@ -371,6 +372,22 @@ class PdfConversionDeploymentScriptContractTest {
         assertTrue(runner.contains("18080/api/v1/health"));
         assertTrue(runner.contains("Status = '200'"));
         assertTrue(runner.contains("Status = '405'"));
+    }
+
+    @Test
+    void overlayWindowsPathGuardAllowsUrlsAndContainerVolumesOnly()
+            throws IOException {
+        String runner = read("Invoke-PdfConversionRelease.ps1");
+        String overlay = readProject(
+                "deployment/windows-demo/runtime/compose.pdf-converter.yaml");
+        Pattern windowsHostPath = Pattern.compile(
+                "(?im)(?:^|[\\s\"'])[A-Z]:[\\\\/]");
+
+        assertTrue(runner.contains(
+                "(?im)(?:^|[\\s\"''])[A-Z]:[\\\\/]"));
+        assertFalse(windowsHostPath.matcher(overlay).find());
+        assertTrue(windowsHostPath.matcher(
+                "    - \"D:\\\\data:/data/kt1b/files\"").find());
     }
 
     @Test

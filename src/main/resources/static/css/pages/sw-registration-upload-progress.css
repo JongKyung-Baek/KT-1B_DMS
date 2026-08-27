@@ -1,0 +1,152 @@
+.sw-registration-upload {
+	box-sizing: border-box;
+	width: 100%;
+	margin: 18px 0 0;
+	padding: 16px 18px;
+	border: 1px solid #b9cce3;
+	border-radius: 10px;
+	background: #f5f9fe;
+	box-shadow: 0 8px 22px rgba(20, 57, 91, 0.08);
+	color: #263746;
+}
+
+.sw-registration-upload[hidden] {
+	display: none !important;
+}
+
+.sw-registration-upload__header,
+.sw-registration-upload__details {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+.sw-registration-upload__status {
+	min-width: 0;
+	color: #173f68;
+	font-size: 14px;
+	font-weight: 800;
+	line-height: 1.4;
+}
+
+.sw-registration-upload__elapsed,
+.sw-registration-upload__metrics,
+.sw-registration-upload__percent {
+	color: #52697d;
+	font-size: 12px;
+	font-variant-numeric: tabular-nums;
+	line-height: 1.4;
+}
+
+.sw-registration-upload__elapsed,
+.sw-registration-upload__percent {
+	flex: 0 0 auto;
+	font-weight: 750;
+}
+
+.sw-registration-upload__bar-row {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	gap: 10px;
+	align-items: center;
+	margin: 11px 0 8px;
+}
+
+.sw-registration-upload__bar {
+	position: relative;
+	overflow: hidden;
+	height: 10px;
+	border-radius: 999px;
+	background: #dbe6f1;
+}
+
+.sw-registration-upload__bar-fill {
+	display: block;
+	height: 100%;
+	border-radius: inherit;
+	background: linear-gradient(90deg, #1a5c99 0%, #3d8ad1 100%);
+	transition: width 0.2s ease;
+}
+
+.sw-registration-upload__bar.is-indeterminate .sw-registration-upload__bar-fill {
+	animation: sw-registration-upload-indeterminate 1.25s ease-in-out infinite;
+}
+
+.sw-registration-upload__metrics {
+	min-width: 0;
+	overflow-wrap: anywhere;
+}
+
+.sw-registration-upload__cancel {
+	flex: 0 0 auto;
+	min-height: 32px;
+	padding: 6px 11px;
+	border: 1px solid #8aa9c8;
+	border-radius: 6px;
+	background: #fff;
+	color: #28567f;
+	font-size: 12px;
+	font-weight: 750;
+	cursor: pointer;
+}
+
+.sw-registration-upload__cancel:hover,
+.sw-registration-upload__cancel:focus-visible {
+	border-color: #315f8b;
+	background: #eaf2fa;
+	outline: 2px solid rgba(49, 95, 139, 0.2);
+	outline-offset: 2px;
+}
+
+.sw-registration-upload__cancel[hidden] {
+	display: none !important;
+}
+
+.sw-registration-upload__cancel:disabled {
+	cursor: not-allowed;
+	opacity: 0.55;
+}
+
+.sw-registration-upload__notice {
+	margin: 9px 0 0;
+	color: #65788b;
+	font-size: 11px;
+	line-height: 1.5;
+}
+
+.swRegisterPopup.is-uploading button.is-upload-locked,
+.technical-register-page.is-uploading button.is-upload-locked {
+	cursor: not-allowed !important;
+	opacity: 0.6;
+}
+
+@keyframes sw-registration-upload-indeterminate {
+	0% {
+		transform: translateX(-115%);
+	}
+	50% {
+		transform: translateX(82%);
+	}
+	100% {
+		transform: translateX(265%);
+	}
+}
+
+@media (max-width: 640px) {
+	.sw-registration-upload__header,
+	.sw-registration-upload__details {
+		align-items: flex-start;
+		flex-direction: column;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.sw-registration-upload__bar-fill {
+		transition: none;
+	}
+
+	.sw-registration-upload__bar.is-indeterminate .sw-registration-upload__bar-fill {
+		animation-duration: 2.4s;
+	}
+}

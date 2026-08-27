@@ -17,7 +17,7 @@
 					<%@ include file="/WEB-INF/jspf/csrf-meta.jspf" %>
 					<%@ include file="/WEB-INF/jspf/favicon.jspf" %>
 
-					<script type="text/javascript" src="/resources/js/common_util.js"></script>
+					<script type="text/javascript" src="/resources/js/common_util.js?v=20260827.1"></script>
 					<script type="text/javascript" src="/resources/js/common_dialog.js?v=20260802.1"></script>
 						<link type="text/css" rel="stylesheet" href="/resources/css/popup-common.css?v=20260802.2" media="screen" />
 					<script type="text/javascript" src="/resources/js/common_validation.js"></script>

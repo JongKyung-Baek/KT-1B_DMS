@@ -18,10 +18,12 @@ import org.junit.jupiter.api.Test;
 class CommonJsCacheBustContractTest {
 
 	private static final String RELEASE_VERSION = "?v=20260802.1";
+	private static final String COMMON_UTIL_VERSION = "?v=20260827.1";
 	private static final List<String> SHARED_SCRIPTS = Arrays.asList(
 			"resources/js/common.js",
 			"resources/js/common_dialog.js",
 			"resources/js/i18n/common_i18n.js");
+	private static final String COMMON_UTIL_SCRIPT = "resources/js/common_util.js";
 
 	@Test
 	void everySharedScriptIncludeUsesTheCurrentReleaseVersion() throws Exception {
@@ -48,5 +50,26 @@ class CommonJsCacheBustContractTest {
 
 		includeCounts.forEach((script, count) -> assertFalse(count == 0,
 				"No shared script includes were found for " + script));
+	}
+
+	@Test
+	void everyCommonUploadUtilityIncludeInvalidatesTheLegacyBrowserCache() throws Exception {
+		int[] includeCount = {0};
+		try (Stream<Path> files = Files.walk(Paths.get("src/main/webapp"))) {
+			files.filter(path -> path.getFileName().toString().endsWith(".jsp"))
+					.forEach(path -> {
+						try {
+							String source = new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
+							if (source.contains(COMMON_UTIL_SCRIPT)) {
+								includeCount[0]++;
+								assertTrue(source.contains(COMMON_UTIL_SCRIPT + COMMON_UTIL_VERSION),
+										path + " must invalidate cached " + COMMON_UTIL_SCRIPT);
+							}
+						} catch (Exception e) {
+							throw new IllegalStateException(e);
+						}
+					});
+		}
+		assertFalse(includeCount[0] == 0, "No common upload utility includes were found");
 	}
 }

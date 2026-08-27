@@ -2984,8 +2984,136 @@ function checkBoolean(param, url){
 	return bRet;
 }
 
-function callAjaxUpload(param, url, callback){
-	$.ajax({
+/**
+ * multipart 업로드 공통 호출.
+ *
+ * 기존 3인자 호출은 그대로 동작한다. 장시간 업로드 화면은 선택적인 네 번째
+ * options 인자로 진행 상태와 요청 생명주기를 구독하고, 반환된 jqXHR의 abort()
+ * 를 사용자 취소에 사용할 수 있다. 이 함수 자체에는 업로드 제한 시간을 두지
+ * 않는다.
+ *
+ * options:
+ *   onStart(xhr)
+ *   onProgress({loaded, total, lengthComputable, percent, elapsedMs, event})
+ *   onUploadComplete({loaded, total, elapsedMs, event})
+ *   onSuccess(response)
+ *   onError({type, status, textStatus, errorThrown, xhr, elapsedMs})
+ *   onAbort(errorInfo)
+ *   onComplete({state, response, error, xhr, elapsedMs})
+ *   handleDefaultError: false  // 화면에서 오류 안내를 직접 처리할 때만 사용
+ *   global: false              // 공통 LOADING overlay를 사용하지 않을 때
+ */
+function callAjaxUpload(param, url, callback, options){
+	options = options || {};
+	var startedAt = Date.now();
+	var completed = false;
+	var sessionRefreshed = false;
+
+	function elapsedMs(){
+		return Math.max(0, Date.now() - startedAt);
+	}
+
+	function completeOnce(result){
+		if(completed){
+			return;
+		}
+		completed = true;
+		result.elapsedMs = elapsedMs();
+		try{
+			if(typeof options.onComplete === 'function'){
+				options.onComplete(result);
+			}
+		}finally{
+			if(options.global === false && !sessionRefreshed
+					&& typeof refreshSessionTimer === 'function'){
+				sessionRefreshed = true;
+				refreshSessionTimer(result.xhr);
+			}
+		}
+	}
+
+	function createUploadXhr(){
+		var xhr = $.ajaxSettings.xhr.call($.ajaxSettings);
+		if(xhr && xhr.upload && typeof xhr.upload.addEventListener === 'function'){
+			if(typeof options.onProgress === 'function'){
+				xhr.upload.addEventListener('progress', function(event){
+					var loaded = Math.max(0, Number(event.loaded) || 0);
+					var eventTotal = Number(event.total) || 0;
+					var lengthComputable = event.lengthComputable === true && eventTotal > 0;
+					var total = lengthComputable ? eventTotal : null;
+					options.onProgress({
+						loaded: loaded,
+						total: total,
+						lengthComputable: lengthComputable,
+						percent: lengthComputable ? Math.min(100, (loaded / total) * 100) : null,
+						elapsedMs: elapsedMs(),
+						event: event
+					});
+				}, false);
+			}
+			if(typeof options.onUploadComplete === 'function'){
+				var uploadCompleted = false;
+				xhr.upload.addEventListener('load', function(event){
+					if(uploadCompleted){
+						return;
+					}
+					uploadCompleted = true;
+					var eventTotal = Number(event.total) || 0;
+					options.onUploadComplete({
+						loaded: Math.max(0, Number(event.loaded) || 0),
+						total: event.lengthComputable === true && eventTotal > 0 ? eventTotal : null,
+						elapsedMs: elapsedMs(),
+						event: event
+					});
+				}, false);
+			}
+		}
+		if(typeof options.onStart === 'function'){
+			options.onStart(xhr);
+		}
+		return xhr;
+	}
+
+	function classifyError(xhr, textStatus, errorThrown){
+		var status = xhr && typeof xhr.status === 'number' ? xhr.status : 0;
+		var type = 'http';
+		if(textStatus === 'abort'){
+			type = 'abort';
+		}else if(status === 401){
+			type = 'unauthorized';
+		}else if(status === 403){
+			type = 'forbidden';
+		}else if(status === 413){
+			type = 'payload-too-large';
+		}else if(textStatus === 'timeout'){
+			type = 'timeout';
+		}else if(status === 0){
+			type = 'network';
+		}else if(status >= 500){
+			type = 'server';
+		}
+		return {
+			type: type,
+			status: status,
+			textStatus: textStatus,
+			errorThrown: errorThrown,
+			xhr: xhr,
+			elapsedMs: elapsedMs()
+		};
+	}
+
+	function handleDefaultError(errorInfo){
+		var xhr = errorInfo.xhr;
+		if(errorInfo.status === 401){
+			parent.parent.location.href = '/login/loginPage';
+		}else if(errorInfo.status === 403){
+			alertMessage(g_msg("msg.accessDenied"));
+		}else{
+			alertMessage(g_msg('msg.error') + '[' + xhr + ']');
+		}
+	}
+
+	return $.ajax({
 		url: url
 		, type: "POST"
 		, data: param
@@ -2993,19 +3121,49 @@ function callAjaxUpload(param, url, callback){
 		, processData: false
 		, contentType: false
 		, encType: 'multipart/form-data'
-		, success: function(response){
-			if('undefined' !== typeof callback){
-				callback(response);
+		, global: options.global !== false
+		, xhr: createUploadXhr
+		, success: function(response, textStatus, xhr){
+			try{
+				if(typeof callback === 'function'){
+					callback(response);
+				}
+				if(typeof options.onSuccess === 'function'){
+					options.onSuccess(response);
+				}
+			}finally{
+				completeOnce({state: 'success', response: response, xhr: xhr});
 			}
 		}
-		, error: function(e){
-
-			if(e.status == 401){
-				parent.parent.location.href = '/login/loginPage';
-			}else if(e.status == 403){
-				alertMessage(g_msg("msg.accessDenied"));
-			}else{
-				alertMessage(g_msg('msg.error') + '[' + e + ']');
+		, error: function(xhr, textStatus, errorThrown){
+			var errorInfo = classifyError(xhr, textStatus, errorThrown);
+			try{
+				if(errorInfo.type === 'abort'){
+					if(typeof options.onAbort === 'function'){
+						options.onAbort(errorInfo);
+					}
+				}else if(typeof options.onError === 'function'){
+					options.onError(errorInfo);
+				}
+				if(options.handleDefaultError !== false){
+					handleDefaultError(errorInfo);
+				}
+			}finally{
+				completeOnce({
+					state: errorInfo.type === 'abort' ? 'abort' : 'error',
+					error: errorInfo,
+					xhr: xhr
+				});
+			}
+		}
+		, complete: function(xhr, textStatus){
+			if(!completed){
+				var errorInfo = classifyError(xhr, textStatus, textStatus);
+				completeOnce({
+					state: errorInfo.type === 'abort' ? 'abort' : 'error',
+					error: errorInfo,
+					xhr: xhr
+				});
 			}
 		}
 	});

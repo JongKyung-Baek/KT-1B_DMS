@@ -62,7 +62,7 @@
 	loadBundles('<spring:escapeBody htmlEscape="false" javaScriptEscape="true"><%=LocaleUtil.getCurrentLanguage(request) %></spring:escapeBody>', '<spring:escapeBody htmlEscape="false" javaScriptEscape="true">${pageContext.request.contextPath}</spring:escapeBody>');
 	</script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common.js?v=20260802.1"></script>
-	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common_util.js"></script>
+	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common_util.js?v=20260827.1"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common_dialog.js?v=20260802.1"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common_form.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common_toolbar.js"></script>

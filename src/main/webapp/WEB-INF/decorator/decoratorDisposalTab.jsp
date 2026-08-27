@@ -38,7 +38,7 @@
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/esapi/esapi.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/esapi/ESAPI_Standard_en_US.properties.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/esapi/Base.esapi.properties.js"></script>
-	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common_util.js"></script>
+	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common_util.js?v=20260827.1"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common_validation.js"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common_dialog.js?v=20260802.1"></script>
 	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/common_form.js"></script>

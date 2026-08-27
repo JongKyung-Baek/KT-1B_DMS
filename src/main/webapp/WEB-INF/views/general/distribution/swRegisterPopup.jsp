@@ -3,12 +3,14 @@
         <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
             <%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
 
+                <link rel="stylesheet"
+                    href="${pageContext.request.contextPath}/resources/css/pages/sw-registration-upload-progress.css?v=20260827.1" />
                 <script type="text/javascript"
                     src="${pageContext.request.contextPath}/resources/js/views/general/distribution/swSupportingFileSelection.js?v=20260822.2"></script>
                 <script type="text/javascript"
                     src="${pageContext.request.contextPath}/resources/js/views/general/distribution/swTechnicalFileTypePolicy.js?v=20260822.1"></script>
                 <script type="text/javascript"
-                    src="${pageContext.request.contextPath}/resources/js/views/general/distribution/swRegisterPopup.js?v=20260822.2"></script>
+                    src="${pageContext.request.contextPath}/resources/js/views/general/distribution/swRegisterPopup.js?v=20260827.1"></script>
 
                 <style>
                     .swRegisterPopup .popupFormGrid>li.half {
@@ -248,6 +250,30 @@ var IS_SW_REGISTER_PAGE = "<spring:escapeBody htmlEscape="false" javaScriptEscap
                         PDF_CONVERSION: "<spring:message code='feature.techRegister.fileType.pdfConversion' text='{0} · PDF 변환 후 열람' javaScriptEscape='true' />",
                         UNSUPPORTED_VIEWER: "<spring:message code='feature.techRegister.fileType.unsupportedViewer' text='{0} · 원본만 등록 (미리보기 미지원)' javaScriptEscape='true' />",
                         INVALID_FILE_NAME: "<spring:message code='feature.techRegister.fileType.invalidFileName' text='확장자를 확인할 수 없어 등록할 수 없습니다.' javaScriptEscape='true' />"
+                    });
+                    configureSwRegistrationUploadProgressMessages({
+                        uploading: "<spring:message code='feature.techRegister.uploadProgress.uploading' text='파일을 전송하고 있습니다.' javaScriptEscape='true' />",
+                        processing: "<spring:message code='feature.techRegister.uploadProgress.processing' text='파일 전송 완료 · 서버에서 등록 처리 중입니다.' javaScriptEscape='true' />",
+                        cancelling: "<spring:message code='feature.techRegister.uploadProgress.cancelling' text='업로드를 취소하고 있습니다.' javaScriptEscape='true' />",
+                        slowNotice: "<spring:message code='feature.techRegister.uploadProgress.slowNotice' text='느린 회선에서는 업로드에 여러 분이 걸릴 수 있습니다. 이 창을 닫거나 새로고침하지 마세요.' javaScriptEscape='true' />",
+                        processingNotice: "<spring:message code='feature.techRegister.uploadProgress.processingNotice' text='파일 전송은 끝났습니다. 등록 결과가 표시될 때까지 기다려 주세요.' javaScriptEscape='true' />",
+                        elapsed: "<spring:message code='feature.techRegister.uploadProgress.elapsed' text='경과 {0}' javaScriptEscape='true' />",
+                        percent: "<spring:message code='feature.techRegister.uploadProgress.percent' text='{0}%' javaScriptEscape='true' />",
+                        determinate: "<spring:message code='feature.techRegister.uploadProgress.determinate' text='{0} / {1} MB' javaScriptEscape='true' />",
+                        indeterminate: "<spring:message code='feature.techRegister.uploadProgress.indeterminate' text='{0} MB 전송됨 · 전체 크기 확인 중' javaScriptEscape='true' />",
+                        inProgress: "<spring:message code='feature.techRegister.uploadProgress.inProgress' text='진행 중' javaScriptEscape='true' />",
+                        measuring: "<spring:message code='feature.techRegister.uploadProgress.measuring' text='전송량을 확인하고 있습니다.' javaScriptEscape='true' />",
+                        leaveWarning: "<spring:message code='feature.techRegister.uploadProgress.leaveWarning' text='파일 업로드가 진행 중입니다. 이 페이지를 나가면 업로드가 중단될 수 있습니다.' javaScriptEscape='true' />",
+                        cancelConfirm: "<spring:message code='feature.techRegister.uploadProgress.cancelConfirm' text='파일 전송을 취소할까요?' javaScriptEscape='true' />",
+                        cancelled: "<spring:message code='feature.techRegister.uploadProgress.cancelled' text='업로드가 취소되었습니다.' javaScriptEscape='true' />",
+                        verifyRegistration: "<spring:message code='feature.techRegister.uploadProgress.verifyRegistration' text='목록에서 등록 여부를 확인한 뒤 다시 시도해 주세요.' javaScriptEscape='true' />",
+                        unauthorized: "<spring:message code='feature.techRegister.uploadProgress.error.unauthorized' text='로그인 세션이 만료되었습니다. 다시 로그인한 뒤 등록해 주세요.' javaScriptEscape='true' />",
+                        forbidden: "<spring:message code='feature.techRegister.uploadProgress.error.forbidden' text='기술자료를 등록할 권한이 없습니다. 권한을 확인해 주세요.' javaScriptEscape='true' />",
+                        payloadTooLarge: "<spring:message code='feature.techRegister.uploadProgress.error.payloadTooLarge' text='첨부파일이 서버의 업로드 허용 크기를 초과했습니다. 파일 크기를 줄이거나 관리자에게 문의해 주세요.' javaScriptEscape='true' />",
+                        network: "<spring:message code='feature.techRegister.uploadProgress.error.network' text='네트워크 연결이 끊겨 업로드하지 못했습니다. 연결을 확인한 뒤 다시 시도해 주세요.' javaScriptEscape='true' />",
+                        server: "<spring:message code='feature.techRegister.uploadProgress.error.server' text='서버에서 등록을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.' javaScriptEscape='true' />",
+                        timeout: "<spring:message code='feature.techRegister.uploadProgress.error.timeout' text='네트워크 또는 중간 장비에서 응답 시간이 초과되었습니다. 연결을 확인한 뒤 다시 시도해 주세요.' javaScriptEscape='true' />",
+                        http: "<spring:message code='feature.techRegister.uploadProgress.error.http' text='업로드 요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.' javaScriptEscape='true' />"
                     });
 
                     function removeSwSubSelectedFile(index) {
@@ -535,10 +561,9 @@ var IS_SW_REGISTER_PAGE = "<spring:escapeBody htmlEscape="false" javaScriptEscap
 
 
                     function saveX() {
-                        if (!isValidationX()) {
-                            return;
-                        }
-
+                        if (isSwRegistrationUploadActive()) return;
+                        if (!isValidationX()) return;
+                        try {
                         for (var i = 0; i < emptyArray2.length; i++) {
                             if (emptyArray2[i]) {
                                 emptyArray2[i].dataName = $('#dataName').val();
@@ -570,6 +595,8 @@ var IS_SW_REGISTER_PAGE = "<spring:escapeBody htmlEscape="false" javaScriptEscap
                             return;
                         }
 
+                        if (!beginSwRegistrationUpload()) return;
+
                         var fileInput = document.getElementById("swRegisFile");
                         var subFileInput = document.getElementById("swSubFiles");
 
@@ -597,10 +624,20 @@ var IS_SW_REGISTER_PAGE = "<spring:escapeBody htmlEscape="false" javaScriptEscap
                         }
                         appendSwAccumulatedSubFilesToFormData(formData, subFileInput, "subFiles");
 
-                        callAjaxUpload(formData, "/general/distribution/swRequest/uploadSwRegisFile", requestCrXCallback);
+                        var uploadHandle = callAjaxUpload(
+                            formData,
+                            "/general/distribution/swRequest/uploadSwRegisFile",
+                            requestCrXCallback,
+                            createSwRegistrationUploadAjaxOptions()
+                        );
+                        attachSwRegistrationUploadHandle(uploadHandle);
+                        } catch (error) {
+                            handleSwRegistrationUploadError({ type: "network", errorThrown: error });
+                        }
                     }
 
                     function requestCrXCallback(response) {
+                        finishSwRegistrationUploadUi(response && response.success ? "success" : "response-error");
                         if (response && response.success) {
                             clearSwSubSelectedFiles();
                             infoMessage(response.message || g_msg('msg.registerComplete'), function () {
@@ -988,6 +1025,46 @@ var IS_SW_REGISTER_PAGE = "<spring:escapeBody htmlEscape="false" javaScriptEscap
                                 aria-label="<spring:message code='feature.techRegister.field.supportingFiles' text='보조파일' />"></ul>
                         </li>
                     </ul>
+                    <section class="sw-registration-upload" data-sw-upload-progress hidden
+                        role="status" aria-live="polite" aria-busy="false"
+                        aria-label="<spring:message code='feature.techRegister.uploadProgress.aria' text='기술자료 업로드 진행 상황' />">
+                        <div class="sw-registration-upload__header">
+                            <strong class="sw-registration-upload__status" data-sw-upload-status>
+                                <spring:message code="feature.techRegister.uploadProgress.uploading"
+                                    text="파일을 전송하고 있습니다." />
+                            </strong>
+                            <span class="sw-registration-upload__elapsed" data-sw-upload-elapsed>
+                                <spring:message code="feature.techRegister.uploadProgress.elapsedInitial"
+                                    text="경과 00:00" />
+                            </span>
+                        </div>
+                        <div class="sw-registration-upload__bar-row">
+                            <div class="sw-registration-upload__bar is-indeterminate" data-sw-upload-bar
+                                role="progressbar" aria-valuemin="0" aria-valuemax="100"
+                                aria-label="<spring:message code='feature.techRegister.uploadProgress.barAria' text='파일 전송 진행률' />">
+                                <span class="sw-registration-upload__bar-fill" data-sw-upload-bar-fill></span>
+                            </div>
+                            <span class="sw-registration-upload__percent" data-sw-upload-percent>
+                                <spring:message code="feature.techRegister.uploadProgress.inProgress" text="진행 중" />
+                            </span>
+                        </div>
+                        <div class="sw-registration-upload__details">
+                            <span class="sw-registration-upload__metrics" data-sw-upload-metrics>
+                                <spring:message code="feature.techRegister.uploadProgress.measuring"
+                                    text="전송량을 확인하고 있습니다." />
+                            </span>
+                            <button type="button" class="sw-registration-upload__cancel"
+                                data-sw-upload-cancel hidden disabled aria-disabled="true"
+                                onclick="cancelSwRegistrationUpload()">
+                                <spring:message code="feature.techRegister.uploadProgress.cancel"
+                                    text="업로드 취소" />
+                            </button>
+                        </div>
+                        <p class="sw-registration-upload__notice" data-sw-upload-notice>
+                            <spring:message code="feature.techRegister.uploadProgress.slowNotice"
+                                text="느린 회선에서는 업로드에 여러 분이 걸릴 수 있습니다. 이 창을 닫거나 새로고침하지 마세요." />
+                        </p>
+                    </section>
                     <div class="dialogBtnSet">
                         <div class="left"></div>
                         <div class="right">

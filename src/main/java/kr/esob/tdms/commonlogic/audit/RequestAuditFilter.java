@@ -217,6 +217,7 @@ public class RequestAuditFilter extends OncePerRequestFilter {
         if (containsAny(source, "viewer", "/view", "preview")) {
             return new Action("VIEW", "열람");
         }
+        if ("resetotp".equals(handlerName)) return new Action("OTP_RESET", "OTP 초기화");
         if (containsAny(source, "resetpwd", "passwordreset", "resetpassword")) {
             return new Action("PASSWORD_RESET", "비밀번호 초기화");
         }

@@ -93,8 +93,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 
 	@Bean
 	public AuthenticationSuccessHandler successhandler() {
-		LoginSuccess handler = new LoginSuccess();
-		return handler;
+		return new MfaStart();
 	}
 
 	@Bean
@@ -136,6 +135,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 						"/login/duplication",
 						"/messages/*.properties").permitAll()
 				.antMatchers(HttpMethod.POST, "/login/loginProcess").permitAll()
+				.antMatchers(HttpMethod.GET, "/login/mfa").permitAll()
+				.antMatchers(HttpMethod.POST, "/login/mfa").permitAll()
 				.antMatchers("/error").permitAll()
 				// Duanzong/PDM exchange is intentionally deferred. Re-enable only
 				// after signed, replay-safe POST contracts are implemented.
@@ -213,13 +214,16 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 		http
 //				.exceptionHandling().accessDeniedPage("/login/loginPage");
 				.exceptionHandling().accessDeniedHandler(accessDeniedHandler());
-		http.formLogin()
-				.loginPage("/login/loginPage")
-				.loginProcessingUrl("/login/loginProcess")
-				.successHandler(successhandler())
-				.failureHandler(failurehandler())
-				.usernameParameter(ID_PARAMETER)
-				.passwordParameter(PW_PARAMETER);
+		http.exceptionHandling().authenticationEntryPoint(
+				new org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint("/login/loginPage"));
+		MfaPasswordFilter passwordFilter = new MfaPasswordFilter();
+		passwordFilter.setRequiresAuthenticationRequestMatcher(new AntPathRequestMatcher("/login/loginProcess", "POST"));
+		passwordFilter.setAuthenticationManager(authenticationManagerBean());
+		passwordFilter.setUsernameParameter(ID_PARAMETER);
+		passwordFilter.setPasswordParameter(PW_PARAMETER);
+		passwordFilter.setAuthenticationSuccessHandler(successhandler());
+		passwordFilter.setAuthenticationFailureHandler(failurehandler());
+		http.addFilterAt(passwordFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
 		http.logout()
 			.logoutRequestMatcher(new AntPathRequestMatcher("/login/logout", "POST"))
 //			.logoutSuccessUrl("/login/loginPage")

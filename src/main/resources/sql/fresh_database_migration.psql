@@ -43,6 +43,7 @@
 
 \echo '[KT-1B] Applying durable source-hash PDF conversion state...'
 \ir pdf_conversion_ddl.sql
+\ir mfa_totp_ddl.sql
 
 \if :include_sample_data
 \echo '[KT-1B] Replacing business data with the local demonstration data set...'

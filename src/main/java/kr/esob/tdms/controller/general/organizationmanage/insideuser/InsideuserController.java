@@ -32,6 +32,14 @@ public class InsideuserController extends AbstractController {
 	@Inject
 	InsideuserService service;
 
+	@Inject
+	kr.esob.tdms.controller.login.MfaStore mfaStore;
+
+	private boolean canResetOtp(Authentication actor) {
+		return actor != null && actor.isAuthenticated() && actor.getPrincipal() instanceof UserVO
+				&& "RG_001".equals(((UserVO) actor.getPrincipal()).getRoleGroup());
+	}
+
 	@Autowired
 	ComboService comboService;
 
@@ -42,7 +50,8 @@ public class InsideuserController extends AbstractController {
 	AuditLogService auditLogService;
 
 	@RequestMapping(value="/")
-	public String home(Model model) throws JsonProcessingException {
+	public String home(Model model, Authentication actor) throws JsonProcessingException {
+		model.addAttribute("canResetOtp", canResetOtp(actor));
 		model.addAttribute("formInfo", JSONArray.fromObject(formService.selectFormInfo("formInsideUser")));
 		model.addAttribute("toolbarInfo", JSONArray.fromObject(toolbarService.selectToolbarInfo("toolbarInsideUser")));
 		model.addAttribute("gridInfo", JSONArray.fromObject(gridService.selectGridInfo("gridInsideUserList")));
@@ -64,6 +73,14 @@ public class InsideuserController extends AbstractController {
 	@PostMapping("/resetPwd")
 	public @ResponseBody ResultVO resetPwd(@RequestBody UserVO userVo) throws Exception {
 		return service.resetPwd(userVo);
+	}
+
+	@PostMapping("/resetOtp")
+	public @ResponseBody ResultVO resetOtp(@org.springframework.web.bind.annotation.RequestParam String userCd, Authentication actor) {
+		if (!canResetOtp(actor)) throw new org.springframework.security.access.AccessDeniedException("Administrator required");
+		ResultVO result = new ResultVO();
+		result.setSuccess(mfaStore.reset(userCd));
+		return result;
 	}
 
 	@RequestMapping(value= {"/registerUserPopup", "/editUserPopup"})

@@ -18,6 +18,7 @@ function getAuditActionLabel(actionType) {
         LOGOUT: ["feature.audit.action.logout", "로그아웃"],
         PASSWORD_CHANGE: ["feature.audit.action.passwordChange", "비밀번호 변경"],
         PASSWORD_RESET: ["feature.audit.action.passwordReset", "비밀번호 초기화"],
+        OTP_RESET: ["feature.mfa.reset.button", "OTP 초기화"],
         DOWNLOAD: ["feature.audit.action.download", "다운로드"],
         PRINT: ["feature.audit.action.print", "출력"],
         VIEW: ["feature.audit.action.view", "열람"],

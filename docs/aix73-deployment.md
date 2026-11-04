@@ -38,12 +38,19 @@ export TZ=Asia/Seoul
 export KT1B_DB_URL='jdbc:postgresql://<pg17-host>:5432/kt1b'
 export KT1B_DB_USERNAME='<db-service-user>'
 export KT1B_DB_PASSWORD='<db-password>'
+export TDMS_MFA_KEY='<base64-encoded-32-random-bytes>'
 
 export KT1B_FILE_ROOT=/data/kt1b/files
 export KT1B_TEMP_ROOT=/data/kt1b/tmp
 export KT1B_LOG_DIR=/var/log/kt1b
 export OPENJ9_JAVA_OPTIONS="-Dfile.encoding=UTF-8 -Duser.language=ko -Duser.country=KR -Duser.timezone=Asia/Seoul -Djava.io.tmpdir=$KT1B_TEMP_ROOT"
 ```
+
+### Microsoft Authenticator 로그인 준비
+
+기존 DB에는 `src/main/resources/sql/mfa_totp_ddl.sql`을 먼저 적용한다. 신규 DB 전체 마이그레이션에는 포함되어 있다. 환경별로 암호학적 난수 32바이트를 생성해 Base64로 인코딩한 값을 서비스 환경변수 `TDMS_MFA_KEY`로 주입한다. 모든 앱 인스턴스와 재시작 시 동일한 키가 필요하다. 키는 DB와 분리해 백업하고 서버 시각을 동기화한다. 배포 전 기존 로그인 세션을 종료한다.
+
+최초 로그인은 비밀번호 확인 후 제시되는 계정과 설정 키를 Microsoft Authenticator의 기타 계정에 수동 입력하고 6자리 코드를 제출하면 등록된다. 이후에는 코드만 입력한다. 최초 등록 전 임시·공유 비밀번호를 사용하는 계정의 소유자를 확인한다. 기기를 잃은 경우 관리자가 본인 확인 후 사용자관리에서 대상 한 명을 선택해 **OTP 초기화**를 실행한다. 다음 로그인에서 새 키를 등록한다. 초기화는 이미 로그인한 세션을 종료하지 않는다.
 
 외부 인터페이스를 승인한 뒤에만 필요한 값을 추가한다. 핵심 문서 기능만 시험하는 단계에서는 설정하지 않는다.
 

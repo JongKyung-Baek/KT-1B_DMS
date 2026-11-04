@@ -1,6 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
 <%@ taglib prefix="custom" tagdir="/WEB-INF/tags" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
 <spring:message code="feature.locale.code" text="ko" var="pageLocale"/>
 <spring:message code="feature.organization.user.browserTitle" text="사용자 관리" var="pageTitle"/>
@@ -182,6 +183,29 @@ var formId = 'formInsideUser';
 		}
 	}
 
+	function resetOtp(button) {
+		var grid = $("#" + gridId);
+		var selected = grid.getGridParam("selarrrow") || [];
+		if (selected.length !== 1) {
+			alertMessage("<spring:message code='feature.mfa.reset.select' javaScriptEscape='true'/>");
+			return;
+		}
+		var row = grid.jqGrid("getRowData", selected[0]);
+		var prompt = "<spring:message code='feature.mfa.reset.confirm' javaScriptEscape='true'/>";
+		if (!window.confirm((row.userId || row.userCd) + "\n" + prompt)) return;
+		button.disabled = true;
+		$.ajax({
+			url: "<c:url value='/general/organizationmanage/insideuser/resetOtp'/>",
+			type: "POST", contentType: "application/x-www-form-urlencoded; charset=UTF-8",
+			data: {userCd: row.userCd}, dataType: "json"
+		}).done(function(result) {
+			if (result.success) infoMessage("<spring:message code='feature.mfa.reset.done' javaScriptEscape='true'/>");
+			else alertMessage("<spring:message code='feature.mfa.reset.none' javaScriptEscape='true'/>");
+		}).fail(function() {
+			alertMessage(organizationText('feature.common.requestFailed', '요청이 실패했습니다.'));
+		}).always(function() { button.disabled = false; });
+	}
+
 	/**
 	 * 요청 후 결과 메시지 출력
 	 * @param response
@@ -268,6 +292,11 @@ var formId = 'formInsideUser';
 	<div class="distribution-invoice-page organization-management-page">
 		<section class="organization-management-results-card" aria-label="${resultsAria}">
 			<custom:listTemplateInvoice gridId="gridInsideUserList"/>
+			<c:if test="${canResetOtp}">
+				<button type="button" class="btn btn-primary" onclick="resetOtp(this)">
+					<spring:message code="feature.mfa.reset.button"/>
+				</button>
+			</c:if>
 		</section>
 	</div>
 </body>

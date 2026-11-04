@@ -19,7 +19,7 @@
     var gridId = 'gridInsideAuditLogList';
     var formId = 'formInsideAuditLog';
 </script>
-<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/views/general/organizationmanage/auditlog/auditlogList.js?v=20260801.1"></script>
+<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/views/general/organizationmanage/auditlog/auditlogList.js?v=20261104.1"></script>
 </head>
 <body>
     <div class="distribution-invoice-page audit-log-page">

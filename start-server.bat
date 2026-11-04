@@ -9,6 +9,7 @@ set "LOCAL_ENV_FILE=%APP_HOME%\.env.local"
 if exist "%LOCAL_ENV_FILE%" (
     echo [INFO] Loading local integration settings from ".env.local"...
     for /f "usebackq eol=# tokens=1,* delims==" %%A in ("%LOCAL_ENV_FILE%") do (
+        if /i "%%A"=="TDMS_MFA_KEY" set "TDMS_MFA_KEY=%%B"
         if /i "%%A"=="TDMS_VIEWER_ENABLED" set "TDMS_VIEWER_ENABLED=%%B"
         if /i "%%A"=="TDMS_VIEWER_BASE_URL" set "TDMS_VIEWER_BASE_URL=%%B"
         if /i "%%A"=="TDMS_VIEWER_CLIENT_ID" set "TDMS_VIEWER_CLIENT_ID=%%B"

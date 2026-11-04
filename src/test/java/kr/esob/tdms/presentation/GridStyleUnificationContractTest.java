@@ -85,7 +85,7 @@ class GridStyleUnificationContractTest {
                 .contains("font-size: 11px !important"));
         assertTrue(css.contains("background: var(--audit-primary-soft) !important"));
         assertTrue(page.contains("audit-log.css?v=20260802.2"));
-        assertTrue(page.contains("auditlogList.js?v=20260801.1"));
+        assertTrue(page.contains("auditlogList.js?v=20261104.1"));
     }
 
     @Test

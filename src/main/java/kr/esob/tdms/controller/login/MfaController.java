@@ -34,12 +34,22 @@ public class MfaController {
     }
 
     @GetMapping
-    public String challenge(HttpServletRequest req, Model model) {
+    public String challenge(HttpServletRequest req, HttpServletResponse res, Model model) {
+        res.setHeader("Cache-Control", "no-store");
+        res.setHeader("Pragma", "no-cache");
+        res.setHeader("Referrer-Policy", "no-referrer");
         MfaStart.Challenge challenge = pending(req.getSession(false));
         if (challenge == null) return "redirect:/login/loginPage";
         if (challenge.enrollment() != null) {
-            model.addAttribute("setupKey", new Base32().encodeToString(challenge.enrollment()));
+            String setupKey = new Base32().encodeToString(challenge.enrollment());
+            model.addAttribute("setupKey", setupKey);
             model.addAttribute("account", challenge.userId());
+            try {
+                model.addAttribute("setupQr", MfaSetupQr.pngDataUrl(challenge.userId(), setupKey));
+            } catch (IllegalStateException e) {
+                // Manual enrollment remains available if the image encoder is unavailable.
+                model.addAttribute("setupQrUnavailable", true);
+            }
         }
         return "/login/mfa";
     }

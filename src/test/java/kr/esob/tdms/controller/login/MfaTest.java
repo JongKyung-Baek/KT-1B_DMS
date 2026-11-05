@@ -5,11 +5,59 @@ import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.*;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.ui.ExtendedModelMap;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class MfaTest {
     @org.junit.jupiter.api.AfterEach void cleanup() { SecurityContextHolder.clearContext(); }
+
+    @Test void pendingEnrollmentIncludesQrAndManualKeyWithoutCompletingAuthentication() {
+        var store = mock(MfaStore.class);
+        var users = mock(LoginService.class);
+        var success = mock(LoginSuccess.class);
+        var controller = new MfaController(store, users, success);
+        var request = new MockHttpServletRequest();
+        byte[] seed = "12345678901234567890".getBytes(StandardCharsets.US_ASCII);
+        request.getSession().setAttribute(MfaStart.PENDING,
+                new MfaStart.Challenge("alice", "U1", new byte[32], System.currentTimeMillis() + 300000, 0, seed));
+        var response = new MockHttpServletResponse();
+        var model = new ExtendedModelMap();
+        assertEquals("/login/mfa", controller.challenge(request, response, model));
+        assertEquals("alice", model.get("account"));
+        assertEquals("GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ", model.get("setupKey"));
+        assertTrue(((String) model.get("setupQr")).startsWith("data:image/png;base64,"));
+        assertEquals("no-store", response.getHeader("Cache-Control"));
+        assertEquals("no-referrer", response.getHeader("Referrer-Policy"));
+        var refreshed = new ExtendedModelMap();
+        controller.challenge(request, new MockHttpServletResponse(), refreshed);
+        assertEquals(model, refreshed);
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+        verifyNoInteractions(store, users, success);
+    }
+
+    @Test void enrolledUsersNeverReceiveSetupMaterial() {
+        var controller = new MfaController(mock(MfaStore.class), mock(LoginService.class), mock(LoginSuccess.class));
+        var request = new MockHttpServletRequest();
+        request.getSession().setAttribute(MfaStart.PENDING,
+                new MfaStart.Challenge("alice", "U1", new byte[32], System.currentTimeMillis() + 300000, 1, null));
+        var model = new ExtendedModelMap();
+        assertEquals("/login/mfa", controller.challenge(request, new MockHttpServletResponse(), model));
+        assertTrue(model.isEmpty());
+    }
+
+    @Test void anonymousAndExpiredChallengesNeverReceiveSetupMaterial() {
+        var controller = new MfaController(mock(MfaStore.class), mock(LoginService.class), mock(LoginSuccess.class));
+        var request = new MockHttpServletRequest();
+        var model = new ExtendedModelMap();
+        assertEquals("redirect:/login/loginPage", controller.challenge(request, new MockHttpServletResponse(), model));
+        assertNull(request.getSession(false));
+        request.getSession().setAttribute(MfaStart.PENDING,
+                new MfaStart.Challenge("alice", "U1", new byte[32], 0, 1, new byte[20]));
+        assertEquals("redirect:/login/loginPage", controller.challenge(request, new MockHttpServletResponse(), model));
+        assertTrue(model.isEmpty());
+        assertNull(request.getSession().getAttribute(MfaStart.PENDING));
+    }
 
     @Test void secondFactorIsRequiredBeforeOriginalLoginHandlerRuns() throws Exception {
         var store = mock(MfaStore.class);
